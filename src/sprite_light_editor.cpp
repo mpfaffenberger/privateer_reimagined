@@ -102,10 +102,14 @@ static float g_zoom = 1.0f;
 //   - any time a new spot is placed (so back-to-back placements stay
 //     identical without ever touching the right-column editor)
 //
-// Shift-click for blue is preserved for muscle-memory: it overrides the
-// sticky colour for that one placement (and updates the sticky to blue,
-// so the next plain click also gets blue — "shift = switch to the OTHER
-// colour, then keep going" matches what users naturally expect).
+// Modifier-clicks are quick presets that ALSO update the sticky values,
+// so back-to-back plain clicks keep repeating whatever you last chose
+// ("modifier = switch to this preset, then keep going"):
+//   shift-click → steady blue   (port nav / cool accents)
+//   ctrl-click  → steady red    (starboard nav / warnings)
+//   cmd-click   → green Strobe @ 3 Hz  (blinking beacon)
+// Each preset sets colour AND kind AND hz together so switching back
+// from the blinking-green beacon to a steady colour clears the strobe.
 static HMM_Vec3  g_sticky_color = HMM_V3(1.00f, 0.10f, 0.10f);   // hot red
 static float     g_sticky_hz    = 0.0f;
 static float     g_sticky_phase = 0.0f;
@@ -475,14 +479,29 @@ void build(std::vector<SpriteObject>& sprites,
                 g_sel_light = hit_light;
             } else if (mouse_uv.x >= 0 && mouse_uv.x <= 1 &&
                        mouse_uv.y >= 0 && mouse_uv.y <= 1) {
-                // Shift-click → switch to blue (port nav / cool accents) AND
-                // make blue the new sticky colour for subsequent clicks; plain
-                // click → use whatever sticky colour is currently set
-                // (defaults to hot red on first launch). kind/hz/phase ALWAYS
-                // come from the sticky values so authoring runs of identical
-                // lights doesn't require re-picking everything per spot.
-                const bool shift = ImGui::GetIO().KeyShift;
-                if (shift) g_sticky_color = HMM_V3(0.20f, 0.55f, 1.00f);
+                // Modifier-click presets. Each sets colour + kind + hz and
+                // makes them the new sticky values, so subsequent plain
+                // clicks repeat the same light. kind/hz/phase otherwise
+                // come from the sticky values so authoring runs of
+                // identical lights doesn't require re-picking per spot.
+                // Priority cmd > ctrl > shift if somehow chorded.
+                const ImGuiIO& io = ImGui::GetIO();
+                if (io.KeySuper) {
+                    // Cmd-click → blinking green beacon at 3 Hz.
+                    g_sticky_color = HMM_V3(0.10f, 0.85f, 0.25f);
+                    g_sticky_kind  = LightKind::Strobe;
+                    g_sticky_hz    = 3.0f;
+                } else if (io.KeyCtrl) {
+                    // Ctrl-click → steady red.
+                    g_sticky_color = HMM_V3(1.00f, 0.10f, 0.10f);
+                    g_sticky_kind  = LightKind::Steady;
+                    g_sticky_hz    = 0.0f;
+                } else if (io.KeyShift) {
+                    // Shift-click → steady blue.
+                    g_sticky_color = HMM_V3(0.20f, 0.55f, 1.00f);
+                    g_sticky_kind  = LightKind::Steady;
+                    g_sticky_hz    = 0.0f;
+                }
                 LightSpot ls{};
                 ls.u = mouse_uv.x;
                 ls.v = mouse_uv.y;
@@ -627,6 +646,7 @@ void build(std::vector<SpriteObject>& sprites,
             }
         } else {
             ImGui::TextDisabled("Click a light to edit, or click the sprite to add one.");
+            ImGui::TextDisabled("  plain=last colour  shift=blue  ctrl=red  cmd=green strobe 3Hz");
         }
     }
     ImGui::EndChild();

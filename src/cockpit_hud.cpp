@@ -704,6 +704,55 @@ void draw_radar_mfd(const Camera& cam, const StarSystem& system, int selected_na
     ImGui::PopStyleColor(2);
 }
 
+// ---- nav-point name labels ----------------------------------------------
+//
+// Floats the name of EVERY nav point next to its projected screen
+// position. Distinct from draw_nav_reticle (which only marks the
+// CURRENTLY-TARGETED nav with an amber crosshair): this is a permanent
+// "what is this thing" overlay, useful for the mesh_showroom scene
+// where one nav point is auto-generated per ship and you want to know
+// which hull is which at a glance.
+//
+// Cheap projection: we skip anything behind the camera or far outside
+// the view frustum so 100-nav scenes don't pay for off-screen draws.
+// No edge-clamping — labels don't make sense floating against the
+// window border the way a target reticle does.
+void draw_nav_labels(const Camera& cam, const StarSystem& system) {
+    if (system.nav_points.empty()) return;
+
+    const auto     s      = screen_size();
+    const float    fb_w   = s.w, fb_h = s.h;
+    const float    aspect = fb_w / fb_h;
+    const HMM_Mat4 vp     = HMM_MulM4(cam.projection(aspect), cam.view());
+    auto*          dl     = ImGui::GetForegroundDrawList();
+
+    for (const auto& nav : system.nav_points) {
+        const HMM_Vec3 d       = HMM_SubV3(nav.position, cam.position);
+        const float    fwd_dot = HMM_DotV3(d, cam.forward());
+        if (fwd_dot <= 0.0f) continue;                  // behind camera
+
+        const HMM_Vec4 ph   = { nav.position.X, nav.position.Y, nav.position.Z, 1.0f };
+        const HMM_Vec4 clip = HMM_MulM4V4(vp, ph);
+        if (clip.W <= 0.0f) continue;
+        const float ndc_x = clip.X / clip.W;
+        const float ndc_y = clip.Y / clip.W;
+        // 1.15× frustum slop — labels just barely off-screen don't pop
+        // in/out as the camera turns, but we cull aggressively beyond.
+        if (ndc_x < -1.15f || ndc_x > 1.15f) continue;
+        if (ndc_y < -1.15f || ndc_y > 1.15f) continue;
+
+        const float sx = (ndc_x * 0.5f + 0.5f) * fb_w;
+        const float sy = (ndc_y * 0.5f + 0.5f) * fb_h;
+
+        // Tiny dot at the exact position, name floating just above.
+        dl->AddCircleFilled(ImVec2(sx, sy), 2.5f, kDimAmber);
+        const char*  name  = nav.name.c_str();
+        const ImVec2 tsize = ImGui::CalcTextSize(name);
+        dl->AddText(ImVec2(sx - tsize.x * 0.5f, sy - tsize.y - 6.0f),
+                    kHudWhite, name);
+    }
+}
+
 } // anonymous namespace
 
 void build(const Camera& cam, const StarSystem& system, int selected_nav,
@@ -712,6 +761,7 @@ void build(const Camera& cam, const StarSystem& system, int selected_nav,
     draw_crosshair(fly_by_wire);
     draw_aim_cursor(mouse_x, mouse_y, fly_by_wire);
     draw_nav_reticle(cam, system, selected_nav);
+    draw_nav_labels (cam, system);
     draw_player_status(ships);
     draw_nav_mfd   (cam, system, selected_nav);
     draw_target_mfd(cam, ships, target_ship_id);

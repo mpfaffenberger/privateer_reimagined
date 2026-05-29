@@ -8,7 +8,7 @@
   "placed_sprites": [],
   "placed_meshes": [
     {
-      "obj": "ships/talon/talon.obj",
+      "obj": "meshes/ships_wcnews/talmil.obj",
       "position": [-14, 0, 0],
       "euler_deg": [0, 0, 0],
       "length_meters": 18,

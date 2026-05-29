@@ -99,3 +99,18 @@ assets/ships/*/wcnews_sprites/
 
 # Atlas cells derived from wcnews wcpedia (still derived from Origin IP)
 assets/ships/*/sprites_wcnews/
+
+# ────────────────────────────────────────────────────────────────────
+# Privateer GOG-derived data — copyrighted Origin/EA, never commit.
+# Re-create with: tools/extract_privateer.sh
+# Derived facts (stats/labels/prices) live in docs/privateer_db/ and ARE tracked.
+# ────────────────────────────────────────────────────────────────────
+/gog_extracted/
+
+# ────────────────────────────────────────────────────────────────────
+# Vendored DMJC/wctools — source patched-in-tree IS tracked,
+# build artifacts are not.
+# Build with: cd third_party/wctools/wctre && make
+# ────────────────────────────────────────────────────────────────────
+/third_party/wctools/wctre/wctre
+/third_party/wctools/unpak/unpak

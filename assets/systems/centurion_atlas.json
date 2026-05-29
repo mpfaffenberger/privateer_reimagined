@@ -9,7 +9,7 @@
   "placed_ship_sprites": [],
   "placed_meshes": [
     {
-      "obj": "meshes/ships/centurion.obj",
+      "obj": "meshes/ships_wcnews/fighter.obj",
       "position": [0, 0, 0],
       "euler_deg": [0, 0, 180],
       "length_meters": 30,

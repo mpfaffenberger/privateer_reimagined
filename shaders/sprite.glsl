@@ -69,21 +69,39 @@ layout(binding=1) uniform fs_params {
 in  vec2 v_uv;
 out vec4 frag;
 
-void main() {
-    vec4 c = texture(sampler2D(u_tex, u_smp), v_uv);
-    // DISCARD fully-transparent texels so the sprite's bounding quad does
-    // NOT write depth at those pixels. If we let them write depth, later
-    // additive effects (sun corona, bloom composite flare) get depth-tested
-    // *out* inside the sprite's bounding box even though the art there is
-    // transparent — you end up with a hard rectangular "hole" in the
-    // atmospheric glow around every sprite. Threshold is intentionally low
-    // so anti-aliased edge fringes still blend; anything truly empty dies.
-    if (c.a < 0.01) discard;
+// ── Pixel-art post knobs ──────────────────────────────────────────────
+// Tuned for the ~512px 3D-rendered atlas cells. PIXEL_RES is the number
+// of "virtual pixels" across the sprite's longest edge — lower = chunkier.
+// COLOR_LEVELS is the per-channel palette depth (6 → 6³ = 216 colours,
+// close to the 256-colour VGA palette the original Privateer ran in).
+// ALPHA_CUTOFF is bumped well above zero so the chunked edge reads as a
+// hard 1-bit mask (crisp blocky silhouette) instead of soft AA fringe.
+const float PIXEL_RES    = 200.0;   // subtle pixel grid (96→160→200)
+const float COLOR_LEVELS = 16.0;    // mild posterize (6→12→16)
+const float ALPHA_CUTOFF = 0.35;
 
-    // Multiply RGB by tint.rgb (lets code flash a sprite red on damage,
-    // dim a distant base, etc). Alpha is multiplied by tint.a so a single
-    // uniform controls fade-in/out for both alpha-blend AND additive modes.
-    frag = vec4(c.rgb * tint.rgb, c.a * tint.a);
+void main() {
+    // Snap the UV to the centre of its virtual-pixel cell. Adjacent
+    // screen fragments inside the same cell now sample the same point,
+    // which is what produces the blocky "big pixel" look regardless of
+    // how close the camera gets to the billboard.
+    vec2 px_uv = (floor(v_uv * PIXEL_RES) + 0.5) / PIXEL_RES;
+
+    vec4 c = texture(sampler2D(u_tex, u_smp), px_uv);
+    // Hard alpha mask — see ALPHA_CUTOFF note. Also keeps the sprite's
+    // bounding quad from writing depth on (now-chunked) empty texels so
+    // additive atmospherics don't get punched out around the silhouette.
+    if (c.a < ALPHA_CUTOFF) discard;
+
+    // Palette quant(posterize) each channel to COLOR_LEVELS steps. This
+    // is what sells the retro look — smooth hull gradients collapse into
+    // a handful of flat shades like a hand-indexed 256-colour sprite.
+    vec3 q = floor(c.rgb * COLOR_LEVELS + 0.5) / COLOR_LEVELS;
+
+    // Multiply RGB by tint.rgb (damage flash, distance-dim, etc). Alpha
+    // is forced to 1.0 post-cutoff so the kept pixels are fully opaque
+    // (no soft edge), then scaled by tint.a for global fade control.
+    frag = vec4(q * tint.rgb, tint.a);
 }
 @end
 

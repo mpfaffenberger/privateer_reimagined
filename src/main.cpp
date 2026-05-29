@@ -44,6 +44,7 @@
 #include "ship_sprite.h"
 #include "sprite_light_editor.h"
 #include "sprite_generation_tool.h"
+#include "mesh_orient_editor.h"
 
 #include <unordered_map>
 #include "obj_loader.h"
@@ -443,6 +444,7 @@ void init_cb() {
     sprite_light_editor::init();
     atlas_grid_viewer::init();
     sprite_generation_tool::init();
+    mesh_orient_editor::init();
 
     // Dev remote: HTTP control channel on 127.0.0.1. Lets external
     // tools (code puppy, curl, shell scripts) teleport the camera,
@@ -1330,7 +1332,7 @@ void frame_cb() {
         sdtx_puts("W/S throttle   A/D strafe   R/F up/down\n");
         sdtx_puts("mouse aim      SPACE toggle cursor   TAB cruise\n");
         sdtx_puts("X brake        N cycle nav target  T cycle ship target\n");
-        sdtx_puts("CTRL+M debug   F2 lights   F3 ship-frame HUD   F6 sprite-gen   ESC x2 quit\n");
+        sdtx_puts("CTRL+M debug   F2 lights   F3 ship-frame HUD   F5 mesh-orient   F6 sprite-gen   ESC x2 quit\n");
     }
 
     // --- draw ---------------------------------------------------------------
@@ -1519,6 +1521,8 @@ void frame_cb() {
         }
     }
     sprite_light_editor::build(g.placed_sprites, ship_cell_targets);
+    // F5 — mesh orientation editor. Mutates PlacedMesh.euler_deg in place.
+    mesh_orient_editor::build(g.placed_meshes);
     // F4 — atlas grid viewer. Mutates ShipSpriteFrame fields directly,
     // so changes flow into the next render frame with no apply step.
     atlas_grid_viewer::build(g.ship_sprite_atlases);
@@ -1866,6 +1870,9 @@ void event_cb(const sapp_event* ev) {
     if (sprite_light_editor::handle_event(ev)) return;
     if (atlas_grid_viewer::handle_event(ev)) return;
     if (sprite_generation_tool::handle_event(ev)) return;
+    // F5 — live PlacedMesh orientation slider. Sits ahead of debug_panel
+    // so the F5 toggle works even when an ImGui window has focus.
+    if (mesh_orient_editor::handle_event(ev))    return;
     if (debug_panel::handle_event(ev)) return;
 
     switch (ev->type) {

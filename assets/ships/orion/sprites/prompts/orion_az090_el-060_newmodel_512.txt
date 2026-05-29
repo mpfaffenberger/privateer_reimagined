@@ -22,13 +22,18 @@ the angle the engine will sample at this slot in the view-sphere atlas — any
 deviation will cause the sprite to twist visibly when the player orbits the
 ship. Match the silhouette, foreshortening, and visible facets exactly.
 
-REFERENCE IMAGE (use directly as image conditioning — this is the ONLY
-image and it dictates BOTH pose and design):
-/Users/mpfaffenberger/code/new_privateer/assets/ships/orion/renders/orion_az090_el-060.png
+REFERENCE IMAGES:
+  PRIMARY (this exact angle — match silhouette and pose 1:1):
+  - /Users/mpfaffenberger/code/new_privateer/assets/ships/orion/renders/orion_az090_el-060.png
+  CANONICAL DESIGN SHEET (multiple angles — use ONLY for paint scheme,
+  hull colour, material finish, and overall design fidelity; do NOT
+  copy any specific angle from this sheet):
+  - /Users/mpfaffenberger/code/new_privateer/assets/ships/orion/canonical_reference.png
+  - /Users/mpfaffenberger/code/new_privateer/assets/ships/orion/canonical_reference_2.png
 
 === DESIGN — what this ship IS ===
 Distinguishing features (every cell must show these regardless of angle):
-compact heavy military gunship with FIVE engine pods total — NOT two, NOT four, EXACTLY FIVE. The arrangement is the defining feature and must be clearly visible at every angle: FOUR engines clustered on TOP of the fuselage in a wide horizontal spread (left-outer SMALL, left-inner LARGE, right-inner LARGE, right-outer SMALL — like a galaxy-class freighter's outboard pylons but tighter and on top, not on the corners), PLUS one additional smaller engine mounted ventrally underneath the rear hull dead-center. Every engine is a stout cylindrical pod covered in dense vertical paneling and ribs running fore-to-aft (like Saturn-V booster strakes). On TOP of the main hull, between the upper engine cluster, sits a prominent DORSAL RADOME — a large grey sensor sphere on a short stub post (NOT a whip antenna, NOT small — a basketball-sized sensor dome). Forward fuselage is a wedge-shaped angled hull block with a flat slanted prow (stubby, NOT a pointed fighter nose). REAR FACE of the ship is dominated by a HEXAGONAL cargo bay door panel painted with diagonal yellow-and-black hazard chevrons, with one small blue running-light at each of the four corners of the hexagon. Underside has angular landing-gear / pylon structures flanking the ventral engine. Overall proportions: short and compact, roughly as wide as it is long, definitively NOT a fighter, NOT a freighter, NOT sleek, NOT a TIE-bomber, NOT a Y-wing, NOT a hauler — a CHUNKY MERCENARY GUNSHIP.
+chunky industrial heavy gunship with a CENTRAL WEDGE FUSELAGE flanked by FOUR LARGE OUTBOARD ENGINE PODS on long pylon-like booms — the engines are mounted in a wide X-pattern, two on each side at the rear, all stout cylindrical pods with prominent ribbed paneling running fore-to-aft (Saturn-V booster strakes). Engine bell INTERIORS at the rear glow tan/copper-brown (oxidised brass, NOT orange, NOT red). On TOP of the central fuselage, just behind the cockpit, sits a small DORSAL SENSOR SPHERE on a short post. The cockpit is a forward-mounted angular canopy block with a horizontal viewport (red-eye sight visible head-on). Forward fuselage steps down to a stubby wedge prow with a drop-down cargo door / landing gear assembly hanging underneath. Hull plating is gunmetal grey with TAN / KHAKI trim panels around the engine collars and dorsal greebles, a YELLOW + BLACK HAZARD STRIPE PANEL on the upper hull behind the cockpit, and small RED nav lights along the side flanks. Overall proportions: WIDE (engine pods give it a broad horizontal stance) but with clear nose-to-tail length, definitively NOT a fighter, NOT a sleek racer, NOT a Y-wing — a CHUNKY MULTI-ENGINE MERCENARY GUNSHIP that looks built to haul cargo through hostile space and shoot back.
 
 Do not invent extra fins, wings, cockpits, or modules not implied by the
 reference. Do not delete features the reference shows.
@@ -37,17 +42,31 @@ reference. Do not delete features the reference shows.
 - 1993 DOS / Wing Commander: Privateer pixel art
 - chunky pixels, hand-authored sprite readability
 - dithered shading, limited palette
-- matte gunmetal-grey industrial hull with darker panel seams, engine pod bodies painted the same gunmetal-grey but with glowing TAN / COPPER-BROWN exhaust nozzle interiors at the rear (NOT orange, NOT red — copper / amber-brown like oxidised brass), prominent diagonal yellow + black hazard chevron stripes inside the hexagonal rear cargo bay door, four small bright blue running lights at the corners of the cargo bay hexagon, weathered military gunship finish — mercenary surplus, not pristine
+- matte gunmetal-grey industrial hull with darker engine pod bodies, TAN / KHAKI accent trim around engine collars and upper hull greebles, glowing TAN / COPPER-BROWN engine bell interiors at the rear (oxidised brass, NOT orange/red), one prominent diagonal YELLOW-AND-BLACK HAZARD STRIPE PANEL on the upper hull behind the cockpit, scattered small bright RED running lights along the side flanks and cockpit rim, weathered industrial-tug finish — mercenary surplus, not pristine
 - transparent background
 - readable sprite first, texture detail second
 - pixel grid 512 on longest side, palette ~40 colours
 
 MATERIAL — READ THIS CAREFULLY:
-The reference is a low-fidelity 3D viewport screenshot. It may have placeholder
+The PRIMARY reference is a low-fidelity 3D viewport screenshot with placeholder
 textures baked into the model (stone-block patterns, untextured cockpits, etc).
 Those patterns are a TEXTURING BUG, not a design choice. DO NOT REPRODUCE THEM.
-Use the reference STRICTLY for silhouette, pose, and proportions; the textual
-palette description below dictates the actual surface finish.
+
+The CANONICAL DESIGN SHEET shows the correct surface finish:
+- glossy polished aerospace alloy — think F-22 Raptor, B-2 Spirit, X-wing,
+  Cylon Raider, mirrored chrome, brushed titanium
+- showroom-fresh painted military hull, clean off the production line
+- panel SEAMS are paper-thin scribed lines (1 pixel wide max) — NOT thick
+  mortar grooves between blocks
+- broad smooth metallic regions with gradient shading from directional lighting
+- specular highlights along edges and curved surfaces
+- a few crisp painted insignia / numbers / accent stripes (sparse, not
+  every panel)
+
+Use the PRIMARY reference for SILHOUETTE / POSE / PROPORTIONS only.
+Use the CANONICAL reference for MATERIAL / FINISH / PAINT JOB.
+These roles are non-negotiable — never let the primary's bricky textures
+leak into your output.
 
 === AVOID ===
 - painterly blur, mushy silhouette
