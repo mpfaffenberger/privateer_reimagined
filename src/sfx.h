@@ -29,6 +29,12 @@
 // -----------------------------------------------------------------------------
 
 #include <HandmadeMath.h>
+#include <cstdint>
+
+// Forward-declared so the facade stays lean (no need to drag gun.h's
+// std::string/string_view into every sfx.h includer). Must match the
+// definition in gun.h exactly - enum class GunType : uint8_t.
+enum class GunType : uint8_t;
 
 namespace sfx {
 
@@ -38,7 +44,11 @@ namespace sfx {
 void load_all();
 
 // ---- combat -----------------------------------------------------------------
-void gun_fired(HMM_Vec3 world_pos, bool is_player);
+// Per-gun firing sound: `type` selects the sample (each GunType binds to
+// its own original Privateer SFX in load_all, falling back to the generic
+// laser_fire when no per-gun sample is present). Player shots play 2D
+// (always audible); NPC shots are positional + coalesced (see impl).
+void gun_fired(GunType type, HMM_Vec3 world_pos, bool is_player);
 void impact(HMM_Vec3 world_pos, bool shield);      // shield=true: absorbed thunk
 void ship_exploded(HMM_Vec3 world_pos, bool big);  // big: cargo/capital hulls
 

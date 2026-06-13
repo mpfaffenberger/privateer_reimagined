@@ -9,12 +9,61 @@
 #include "sfx.h"
 
 #include "audio.h"
+#include "gun.h"            // GunType, kGunTypeCount, gun::to_name
 #include "sokol_time.h"
 
 #include <cmath>
 #include <cstdio>
+#include <fstream>
 
 namespace {
+
+// Resolve+load one event's WAV, preferring the local-only original over
+// the committed procedural placeholder. The originals live in the
+// GITIGNORED assets/sfx/original/ (converted from the user's OWN
+// SOUNDFX.PAK by tools/extract_soundfx_pak.py — local use only, never
+// committed); the placeholders in assets/sfx/ stay the fallback so a
+// clean clone still ships with audio. Only the load resolution changes
+// here — the facade and every call site below are untouched.
+SampleId load_pref(const char* name) {
+    char orig[256], place[256];
+    std::snprintf(orig,  sizeof orig,  "assets/sfx/original/%s.wav", name);
+    std::snprintf(place, sizeof place, "assets/sfx/%s.wav",          name);
+    // Probe for the original WITHOUT calling audio::load first — a missing
+    // file there is the normal clean-clone case, not an error to log loudly.
+    if (std::ifstream(orig).good()) {
+        const SampleId id = audio::load(orig);
+        if (id != 0) {
+            std::printf("[sfx] %-16s <- original\n", name);
+            return id;
+        }
+        std::printf("[sfx] %-16s <- placeholder (original failed to load)\n", name);
+    } else {
+        std::printf("[sfx] %-16s <- placeholder\n", name);
+    }
+    return audio::load(place);
+}
+
+// Resolve one gun's firing sample. Per-gun originals are LOCAL-ONLY
+// (gitignored assets/sfx/original/gun_<name>.wav, converted from the
+// user's OWN SOUNDFX.PAK). There is NO committed per-gun placeholder:
+// when a gun's original is absent we fall back to the generic
+// laser_fire SampleId (already loaded), so a clean clone still hears
+// *something* for every gun. `fallback` is laser_fire; `name` is the
+// gun's short name ("mass_driver", ...). Logs the source per gun.
+SampleId load_gun(const char* name, SampleId fallback) {
+    char orig[256];
+    std::snprintf(orig, sizeof orig, "assets/sfx/original/gun_%s.wav", name);
+    if (std::ifstream(orig).good()) {
+        const SampleId id = audio::load(orig);
+        if (id != 0) {
+            std::printf("[sfx] gun %-18s <- original gun_%s\n", name, name);
+            return id;
+        }
+    }
+    std::printf("[sfx] gun %-18s <- placeholder laser_fire\n", name);
+    return fallback;
+}
 
 // ---- sample table -------------------------------------------------------------
 struct SfxTable {
@@ -29,6 +78,10 @@ struct SfxTable {
     SampleId missile_fire    = 0;
     SampleId lock_seeking    = 0;
     SampleId lock_acquired   = 0;
+    // Per-GunType firing samples, indexed by (int)GunType. Populated in
+    // load_all from per-gun originals with a laser_fire fallback. Guns
+    // that share a canonical sound just point at the same SampleId.
+    SampleId gun_sounds[kGunTypeCount] = {};
 };
 SfxTable g_sfx;
 
@@ -47,6 +100,18 @@ uint64_t g_last_impact_ticks         = 0;
 uint64_t g_last_suppress_log_ticks   = 0;
 int      g_suppressed_since_last_log = 0;
 
+// ---- NPC gunfire coalescing (np-3va) -------------------------------------------
+// The impact gate above already collapses thunk-spam; NPC gunfire had NO
+// gate, so a 17-ship furball fired one play_world() per shot per mount
+// per frame — dozens of near-identical laser zaps a frame, all stealing
+// voices. They carry no extra information past the first few, so coalesce
+// near-simultaneous NPC shots to a representative ~12/sec (1/12s spacing).
+// Player gunfire is exempt: it's a single 2D source already paced by the
+// gun refire cooldown, and "my guns are always audible" is the point.
+uint64_t g_last_npc_gun_ticks        = 0;
+uint64_t g_last_gun_suppress_log     = 0;
+int      g_gun_suppressed_since_log  = 0;
+
 // Attenuation radii (meters). Gunfire is a close-quarters cue — you
 // care about shots near you, not across the system. Explosions carry:
 // a kill should be audible from typical engagement standoff range.
@@ -59,17 +124,17 @@ constexpr float k_explosion_ref_m = 400.0f,  k_explosion_max_m = 20000.0f;
 namespace sfx {
 
 void load_all() {
-    g_sfx.laser_fire      = audio::load("assets/sfx/laser_fire.wav");
-    g_sfx.impact_shield   = audio::load("assets/sfx/impact_shield.wav");
-    g_sfx.impact_armor    = audio::load("assets/sfx/impact_armor.wav");
-    g_sfx.explosion_small = audio::load("assets/sfx/explosion_small.wav");
-    g_sfx.explosion_big   = audio::load("assets/sfx/explosion_big.wav");
-    g_sfx.engine_hum      = audio::load("assets/sfx/engine_hum.wav");
-    g_sfx.cruise_windup   = audio::load("assets/sfx/cruise_windup.wav");
-    g_sfx.ui_click        = audio::load("assets/sfx/ui_click.wav");
-    g_sfx.missile_fire    = audio::load("assets/sfx/missile_fire.wav");
-    g_sfx.lock_seeking    = audio::load("assets/sfx/lock_seeking.wav");
-    g_sfx.lock_acquired   = audio::load("assets/sfx/lock_acquired.wav");
+    g_sfx.laser_fire      = load_pref("laser_fire");
+    g_sfx.impact_shield   = load_pref("impact_shield");
+    g_sfx.impact_armor    = load_pref("impact_armor");
+    g_sfx.explosion_small = load_pref("explosion_small");
+    g_sfx.explosion_big   = load_pref("explosion_big");
+    g_sfx.engine_hum      = load_pref("engine_hum");
+    g_sfx.cruise_windup   = load_pref("cruise_windup");
+    g_sfx.ui_click        = load_pref("ui_click");
+    g_sfx.missile_fire    = load_pref("missile_fire");
+    g_sfx.lock_seeking    = load_pref("lock_seeking");
+    g_sfx.lock_acquired   = load_pref("lock_acquired");
 
     const int loaded = (g_sfx.laser_fire != 0) + (g_sfx.impact_shield != 0)
                      + (g_sfx.impact_armor != 0) + (g_sfx.explosion_small != 0)
@@ -79,6 +144,14 @@ void load_all() {
                      + (g_sfx.lock_acquired != 0);
     std::printf("[sfx] %d/11 gameplay samples loaded\n", loaded);
 
+    // Per-gun firing sounds. Each GunType prefers its own local-only
+    // original (assets/sfx/original/gun_<name>.wav) and falls back to
+    // the generic laser_fire when absent (e.g. Laser/Steltek here, and
+    // any gun on a clean clone). The source is logged per gun.
+    for (int t = 0; t < kGunTypeCount; ++t) {
+        g_sfx.gun_sounds[t] = load_gun(gun::to_name((GunType)t), g_sfx.laser_fire);
+    }
+
     // Engine hum: start silent, looping, 2D (it's OUR engine — it has
     // no world position). update_engine_hum rides the gain from here on.
     if (g_sfx.engine_hum != 0) {
@@ -87,15 +160,37 @@ void load_all() {
     }
 }
 
-void gun_fired(HMM_Vec3 world_pos, bool is_player) {
-    if (g_sfx.laser_fire == 0) return;
+void gun_fired(GunType type, HMM_Vec3 world_pos, bool is_player) {
+    // Pick this gun's sample; out-of-range or unbound types fall back to
+    // the generic laser_fire. The coalescing/gating below is unchanged
+    // (np-3va) - only WHICH sample plays now depends on the gun type.
+    const int ti = (int)type;
+    const SampleId s = (ti >= 0 && ti < kGunTypeCount && g_sfx.gun_sounds[ti] != 0)
+                     ? g_sfx.gun_sounds[ti] : g_sfx.laser_fire;
+    if (s == 0) return;
     VoiceId v;
     if (is_player) {
         // 2D, modest gain: always audible, never startling. 0.35 sits
         // under impacts/explosions so sustained fire doesn't fatigue.
-        v = audio::play(g_sfx.laser_fire, 0.35f);
+        v = audio::play(s, 0.35f);
     } else {
-        v = audio::play_world(g_sfx.laser_fire, world_pos, k_gun_ref_m, k_gun_max_m);
+        // Coalesce a furball's near-simultaneous NPC shots (see note).
+        const uint64_t now = stm_now();
+        constexpr double k_npc_gun_spacing_s = 1.0 / 12.0;
+        if (g_last_npc_gun_ticks != 0 &&
+            stm_sec(stm_diff(now, g_last_npc_gun_ticks)) < k_npc_gun_spacing_s) {
+            ++g_gun_suppressed_since_log;
+            if (g_last_gun_suppress_log == 0 ||
+                stm_sec(stm_diff(now, g_last_gun_suppress_log)) > 1.0) {
+                std::printf("[sfx] npc gun coalesce: suppressed %d in last window\n",
+                            g_gun_suppressed_since_log);
+                g_last_gun_suppress_log    = now;
+                g_gun_suppressed_since_log = 0;
+            }
+            return;
+        }
+        g_last_npc_gun_ticks = now;
+        v = audio::play_world(s, world_pos, k_gun_ref_m, k_gun_max_m);
     }
     // Throttled visibility: one log line per second summarizing the
     // volley rate — per-shot logging in a 17-ship furball is its own
@@ -106,10 +201,10 @@ void gun_fired(HMM_Vec3 world_pos, bool is_player) {
     const uint64_t now = stm_now();
     if (s_last_log == 0 || stm_sec(stm_diff(now, s_last_log)) > 1.0) {
         float gl = 0, gr = 0; audio::voice_gains(v, &gl, &gr);
-        std::printf("[sfx] gun_fired x%d this window (last: %s, voice %u, "
-                    "gain L/R %.2f/%.2f, pos %.0f,%.0f,%.0f)\n",
-                    s_shots, is_player ? "player" : "npc", v, gl, gr,
-                    world_pos.X, world_pos.Y, world_pos.Z);
+        std::printf("[sfx] gun_fired x%d this window (last: %s %s, sample %u, "
+                    "voice %u, gain L/R %.2f/%.2f, pos %.0f,%.0f,%.0f)\n",
+                    s_shots, is_player ? "player" : "npc", gun::to_name(type),
+                    s, v, gl, gr, world_pos.X, world_pos.Y, world_pos.Z);
         s_last_log = now;
         s_shots    = 0;
     }

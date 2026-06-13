@@ -92,41 +92,40 @@ bool gun::load_table(const std::string& json_path) {
         g.energy_cost_gj = read_num_or_null(v.find("Energy Use (GJ)"),  energy_null);
         g.complete       = !refire_null && !energy_null;
 
-        // Demo-time tuning. Five knobs scale the canonical numbers for
-        // the feel Mike wants. Applied AFTER load so they actually
-        // multiply the loaded values rather than the zero-initialised
-        // pre-load values.
+        // Tuning knobs. Applied AFTER load so they multiply the loaded
+        // values rather than the zero-initialised pre-load values.
         //
-        //   range  × 2.0   — bullets relevant at long engagement
+        // FIRING CADENCE — now CANONICAL (restored May 2025).
+        //   refire × 1.0   — guns fire at the real Privateer cadence
+        //                     (e.g. Mass Driver every 0.35s) instead of
+        //                     the old 0.167 "6x arcade" tracer stream.
+        //   damage × 1.0   — canonical per-shot armour penetration.
+        //   energy × 1.0   — canonical per-shot energy cost.
+        //
+        //   The old build coupled all three at 0.167 (6x faster fire,
+        //   6x smaller per-shot damage + energy). Because DPS =
+        //   damage/refire and energy-drain/sec = energy/refire, scaling
+        //   damage, energy AND refire by the SAME factor leaves both
+        //   per-second rates UNCHANGED — the 0.167 build was already
+        //   canonical in net DPS / energy economy; it only differed in
+        //   *texture* (fast weak tracers vs slow punchy shots).
+        //   Restoring all three to 1.0 therefore preserves net balance
+        //   (time-to-kill, energy starvation behaviour) while making
+        //   shots fire at the genuine Privateer rate with full per-shot
+        //   magnitude. The JSON refire values were also corrected to
+        //   Damage/DamageRate so the canonical DPS column is now exact.
+        //
+        // ENGINE-SCALE FEEL TWEAKS — still demo (NOT firing-rate related).
+        //   range × 2.0    — bullets relevant at long engagement
         //                     distances after afterburner extensions.
-        //   speed  × 2.0   — projectiles snap to target instead of
+        //   speed × 2.0    — projectiles snap to target instead of
         //                     drifting; proper space-shooter feel.
-        //   refire × 0.167 — 0.6s Mass Driver -> ~0.1s rapid-fire.
-        //                     Sustained streams of tracers.
-        //   energy × 0.167 — same factor as refire, so per-second
-        //                     energy DRAIN stays at canonical levels.
-        //                     Without this, 6x faster firing produces
-        //                     6x faster energy drain and the
-        //                     higher-cost guns (Particle, Tachyon)
-        //                     get starved out — only Mass Drivers
-        //                     fire because they're cheapest.
-        //   damage × 0.167 — same factor as refire, so per-second
-        //                     DAMAGE OUTPUT also stays at canonical
-        //                     levels. Without this, 6x faster firing
-        //                     produces 6x faster kills — Tarsus and
-        //                     Talon both die in under 2 seconds, the
-        //                     player dies in <1s once the AI locks on,
-        //                     and the demo collapses to "everyone dead,
-        //                     no one shooting". Visual texture (rapid
-        //                     tracer streams) preserved; balance
-        //                     restored.
-        //
-        // Drop any multiplier to 1.0 to revert to canon.
-        constexpr float k_range_multiplier  = 2.0f;
-        constexpr float k_speed_multiplier  = 2.0f;
-        constexpr float k_refire_multiplier = 0.167f;
-        constexpr float k_energy_multiplier = 0.167f;
-        constexpr float k_damage_multiplier = 0.167f;
+        //   Set these two to 1.0 for full canon range/velocity.
+        constexpr float k_range_multiplier  = 2.0f;  // demo feel tweak
+        constexpr float k_speed_multiplier  = 2.0f;  // demo feel tweak
+        constexpr float k_refire_multiplier = 1.0f;  // canonical cadence
+        constexpr float k_energy_multiplier = 1.0f;  // canonical per-shot
+        constexpr float k_damage_multiplier = 1.0f;  // canonical per-shot
         g.range_m        *= k_range_multiplier;
         g.speed_mps      *= k_speed_multiplier;
         g.refire_delay_s *= k_refire_multiplier;
@@ -134,6 +133,16 @@ bool gun::load_table(const std::string& json_path) {
         g.damage_cm      *= k_damage_multiplier;
         ++n_loaded;
         if (g.complete) ++n_complete;
+
+        // One-time load dump: prove effective post-multiplier cadence and
+        // DPS match the canonical Damage Rate column in the JSON. DPS is
+        // computed from the effective (post-multiplier) numbers; with the
+        // firing multipliers at 1.0 it should equal Damage Rate exactly.
+        if (g.complete && g.refire_delay_s > 0.0f) {
+            std::printf("[gun] %-18s refire=%.3fs dps=%.2f\n",
+                        g.name, g.refire_delay_s,
+                        g.damage_cm / g.refire_delay_s);
+        }
     }
 
     std::printf("[gun] loaded %d gun types (%d complete) from %s\n",

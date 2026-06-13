@@ -875,9 +875,13 @@ void build_system_scene(bool first_time) {
     }
 
     for (const auto& sd : g.system.placed_ship_sprites) {
-        auto [it, inserted] = g.ship_sprite_atlases.try_emplace(sd.atlas, ShipSpriteAtlas{});
-        if (inserted && !load_ship_sprite_atlas(sd.atlas, it->second, g.sprite_art)) {
-            std::fprintf(stderr, "[main] skipping ship sprite atlas '%s'\n", sd.atlas.c_str());
+        // np-wdk: route every system-JSON ship atlas stem through the central
+        // resolver so it loads the sprites_3d/ variant. The cache key is the
+        // RESOLVED stem so later finds (encounter spawn, talon debug) agree.
+        const std::string atlas_stem = resolve_ship_atlas_stem(sd.atlas);
+        auto [it, inserted] = g.ship_sprite_atlases.try_emplace(atlas_stem, ShipSpriteAtlas{});
+        if (inserted && !load_ship_sprite_atlas(atlas_stem, it->second, g.sprite_art)) {
+            std::fprintf(stderr, "[main] skipping ship sprite atlas '%s'\n", atlas_stem.c_str());
             g.ship_sprite_atlases.erase(it);
             continue;
         }
@@ -1082,7 +1086,10 @@ void build_system_scene(bool first_time) {
     for (const EncounterRuleDef& rule : g.system.encounters) {
         for (const EncounterWeight& cw : rule.classes) {
             if (cw.name.empty()) continue;
-            const std::string atlas_stem = "ships/" + cw.name + "/atlas_manifest";
+            // np-wdk: resolve to the _3d atlas before load AND use it as the
+            // cache key, so encounter_spawn's later find() hits the same slot.
+            const std::string atlas_stem =
+                resolve_ship_atlas_stem("ships/" + cw.name + "/atlas_manifest");
             auto [it, inserted] = g.ship_sprite_atlases.try_emplace(atlas_stem, ShipSpriteAtlas{});
             if (inserted && !load_ship_sprite_atlas(atlas_stem, it->second, g.sprite_art)) {
                 std::fprintf(stderr, "[encounter] could not preload atlas '%s' "
@@ -1367,7 +1374,9 @@ void apply_ship_debug_requests() {
         g.ship_debug.spawn_talon = false;
 
         const ShipClass* klass = ship_class::find("talon");
-        auto atlas_it = g.ship_sprite_atlases.find("ships/talon/atlas_manifest");
+        // np-wdk: resolve to match the key the preload loop cached under.
+        auto atlas_it = g.ship_sprite_atlases.find(
+            resolve_ship_atlas_stem("ships/talon/atlas_manifest"));
         if (!klass || atlas_it == g.ship_sprite_atlases.end()) {
             std::fprintf(stderr, "[debug_spawn] talon class or atlas not loaded "
                                  "in this system; spawn ignored\n");
@@ -1630,7 +1639,10 @@ static float encounter_class_length(const std::string& cls) {
 // register in the slot-map. Returns the new ship's monotonic id, or 0 if
 // the class/atlas isn't loaded in this system (director skips a 0).
 static uint32_t encounter_spawn(const encounters::SpawnRequest& req) {
-    const std::string atlas_key = "ships/" + req.class_name + "/atlas_manifest";
+    // np-wdk: resolve to the _3d cache key so this find() matches the slot
+    // the encounter-director preload loop populated.
+    const std::string atlas_key =
+        resolve_ship_atlas_stem("ships/" + req.class_name + "/atlas_manifest");
     const ShipClass*  klass     = ship_class::find(req.class_name);
     auto atlas_it = g.ship_sprite_atlases.find(atlas_key);
     if (!klass || atlas_it == g.ship_sprite_atlases.end()) {

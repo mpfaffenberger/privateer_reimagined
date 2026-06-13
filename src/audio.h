@@ -35,6 +35,23 @@
 //                `alive` directly (the callback might be mid-slot), so
 //                it raises `kill` and the callback clears both at the
 //                top of its next pass.
+//   * `reload` — INSTANT voice-steal handoff (np-3va). The game thread
+//                must NEVER block, so it can't wait for a live victim's
+//                `alive` to fall before reusing the slot. Instead it
+//                writes the new sound's {sample,loop} into the slot's
+//                `pending_*` fields, updates the MAIN-OWNED bookkeeping
+//                (world_pos/dists/base_gain/gains/started_seq/gen) in
+//                place, then raises `reload` LAST (release). The callback
+//                consumes `reload` (acquire) at the top of its next pass:
+//                it copies pending->active, rewinds the cursor to 0, and
+//                the NEW sound begins that same buffer. Only the callback
+//                ever writes `sample_idx`/`loop`/`cursor` while a slot is
+//                live, so the steal is race free with no wait. (Residual:
+//                if the steal lands in the exact buffer the victim
+//                one-shot finishes, the retire may win and strand the
+//                newcomer — the next alloc sees the slot free and
+//                recovers; net effect is at most one dropped SFX, never
+//                corruption or a stuck slot.)
 //
 // Per-frame parameter updates (listener movement, set_voice_gain) write
 // the voice's atomic gain fields directly — last-write-wins float
@@ -47,10 +64,19 @@
 // NEW sample slots rather than mutating old ones.)
 // =============================================================================
 //
-// Voice stealing: play() on a full pool steals the oldest non-looping
-// voice (loops are assumed to be long-lived ambience — engine hum —
-// that would be jarring to drop). At 24 voices and Privateer-scale
-// combat this should be rare; the steal logs so we notice if not.
+// Voice stealing (np-3va, non-blocking): on a full pool alloc picks the
+// WEAKEST live non-looping voice (lowest current L/R gain, oldest on a
+// tie) and steals it INSTANTLY via the `reload` handoff above — the game
+// thread never busy-waits. Loops (engine hum) are NEVER eligible: the
+// ambience must survive saturation. A steal only happens if the incoming
+// sound is at least as loud as that weakest incumbent; a quieter newcomer
+// (a distant tiny impact) is DROPPED instead of evicting something the
+// player can actually hear. The mixer keeps the full 24-voice pool —
+// more pool means less thrash — but two extra valves cap furball load:
+// play_world() drops one-shots whose attenuated gain is inaudible before
+// they ever take a slot, and a per-frame budget (k_max_world_starts_per_
+// frame in audio.cpp) caps NEW world one-shot starts so a single furball
+// frame can't flood the mixer.
 //
 // WAV loading: hand-rolled RIFF/WAVE PCM16 parser (audio.cpp), mono or
 // stereo, resampled to the device rate at load time via linear

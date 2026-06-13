@@ -125,9 +125,11 @@ void firing::tick(ShipRegistry& ships,
             s.energy_gj         -= gs.energy_cost_gj;
             s.gun_cooldowns[i]   = gs.refire_delay_s;
 
-            // One shot fired -> one sound. Player shots are 2D (always
-            // audible), NPC shots positional — policy in sfx.cpp.
-            sfx::gun_fired(p.position, s.is_player);
+            // One shot fired -> one sound. The gun type selects the
+            // sample (per-gun originals, laser_fire fallback); player
+            // shots are 2D (always audible), NPC shots positional --
+            // policy in sfx.cpp.
+            sfx::gun_fired(m.type, p.position, s.is_player);
         }
     }
 }

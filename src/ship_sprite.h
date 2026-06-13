@@ -101,6 +101,28 @@ struct ShipSpriteObject {
 // reuse scheme layered on top.
 void update_ship_sprite_motion(std::deque<ShipSpriteObject>& ships, float dt);
 
+// POLICY (np-wdk): ship sprites ALWAYS render from the sprites_3d/ atlas.
+// Every ship atlas stem — whether it comes from system JSON
+// (PlacedShipSpriteDef.atlas), ShipClass.atlas_manifest, or a hardcoded
+// "ships/<class>/atlas_manifest" in main.cpp — is funneled through this one
+// resolver at the LOAD boundary AND at every cache-key site so that current
+// AND future content gets the 3D variant for free, with zero per-reference
+// data edits. Mapping rules:
+//   * stem already ending in "_3d"  -> returned unchanged (idempotent; the
+//     load site and the cache-key site can both resolve without ever
+//     producing a double "_3d_3d").
+//   * stem + "_3d" exists on disk   -> return the _3d twin (the normal case:
+//     "ships/talon/atlas_manifest" -> "ships/talon/atlas_manifest_3d").
+//   * _3d twin missing on disk      -> SAFE FALLBACK to the original 2D stem
+//     so a content gap degrades instead of crashing. For the canonical
+//     "atlas_manifest" stem this is a genuine gap and gets a LOUD warning;
+//     for special authoring variants (e.g. atlas_manifest_militia_wcnews)
+//     having no _3d twin is expected, so those resolve back silently and
+//     the wcnews compare scene keeps working.
+// The .tuning.json sidecar follows the resolved stem automatically because
+// load_ship_sprite_atlas derives the tuning path from the stem it's handed.
+std::string resolve_ship_atlas_stem(std::string stem);
+
 bool load_ship_sprite_atlas(const std::string& atlas_stem,
                             ShipSpriteAtlas& atlas,
                             std::unordered_map<std::string, SpriteArt>& art_cache);

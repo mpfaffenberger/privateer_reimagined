@@ -51,12 +51,22 @@ std::deque<Sample> g_samples;
 constexpr int k_voice_count = 24;
 
 struct Voice {
-    // Payload — written by main thread BEFORE alive goes true; read-only
-    // on the audio thread while alive. uint32 sample index (not pointer)
-    // into g_samples (a deque — stable element addresses, so the mixer's
-    // held Sample& survives a concurrent load() push_back).
+    // Payload — written by main thread on the FREE-slot path before alive
+    // goes true, OR swapped in by the AUDIO thread from pending_* on a
+    // reload steal. Either way only ONE thread writes these while the
+    // slot is live (see THREADING CONTRACT). uint32 sample index (not
+    // pointer) into g_samples (a deque — stable element addresses, so the
+    // mixer's held Sample& survives a concurrent load() push_back).
     uint32_t sample_idx = 0;
     bool     loop       = false;
+
+    // Instant-steal handoff (np-3va). Main writes these then raises
+    // `reload`; the audio thread copies them into sample_idx/loop and
+    // rewinds the cursor at the top of its next pass. Main never touches
+    // sample_idx/loop/cursor of a LIVE slot — it goes through here.
+    uint32_t pending_sample_idx = 0;
+    bool     pending_loop       = false;
+    std::atomic<bool> reload{ false };
 
     // Mix params — atomically updated by the main thread any time
     // (spatialization, set_voice_gain); read by the callback per buffer.
@@ -89,6 +99,18 @@ struct Voice {
 
 Voice    g_voices[k_voice_count];
 uint64_t g_play_seq = 0;          // main thread only
+
+// Per-frame world one-shot start budget (np-3va). A single furball frame
+// can request dozens of NPC gun/impact/explosion sounds; without a cap
+// they'd all try to steal and flood the mixer. Cap NEW world one-shot
+// starts per frame — surplus requests drop. 8 covers "a few distinct
+// events you can actually pick out" while killing the wall-of-noise.
+// Reset by set_listener() once per frame (before that frame's play_world
+// calls, per the header). 2D/UI sounds are exempt — they're never the
+// spam source and must stay responsive.
+constexpr int k_max_world_starts_per_frame = 8;
+int g_world_starts_this_frame = 0;   // main thread only
+int g_world_drops_window      = 0;   // budget-dropped starts since last log
 
 bool g_ready = false;
 
@@ -284,6 +306,18 @@ void stream_cb(float* buffer, int num_frames, int num_channels) {
 
     for (Voice& v : g_voices) {
         if (!v.alive.load(std::memory_order_acquire)) continue;
+
+        // Instant-steal handoff (np-3va): main published a new sound over
+        // this LIVE slot. Swap pending->active and rewind the cursor; the
+        // new sound begins THIS buffer. We are the only writer of
+        // sample_idx/loop/cursor while live, so this is race free.
+        if (v.reload.load(std::memory_order_acquire)) {
+            v.sample_idx = v.pending_sample_idx;
+            v.loop       = v.pending_loop;
+            v.cursor     = 0.0f;
+            v.kill.store(false, std::memory_order_relaxed);  // fresh sound
+            v.reload.store(false, std::memory_order_release);
+        }
         if (v.kill.load(std::memory_order_relaxed)) {
             v.kill.store(false, std::memory_order_relaxed);
             v.alive.store(false, std::memory_order_release);
@@ -315,7 +349,13 @@ void stream_cb(float* buffer, int num_frames, int num_channels) {
             cursor += 1.0f;   // sample is already at device rate (resampled on load)
         }
         v.cursor = cursor;
-        if (done) v.alive.store(false, std::memory_order_release);
+        // Retire finished one-shots — but NOT if a steal just queued a
+        // fresh sound for this slot (np-3va): retiring would strand the
+        // newcomer. (Main still recovers if the store below races ahead,
+        // by reusing the now-free slot; worst case one dropped SFX.)
+        if (done && !v.reload.load(std::memory_order_acquire)) {
+            v.alive.store(false, std::memory_order_release);
+        }
     }
 
     // Soft clamp. tanh flattens the worst-case 24-voice pileup into
@@ -328,54 +368,62 @@ void stream_cb(float* buffer, int num_frames, int num_channels) {
 
 // ---- voice allocation (main thread) -------------------------------------------
 
-// Find a slot: free first, else steal the oldest non-looping voice.
-// Returns -1 only when every slot is a loop (refuse rather than cut
-// ambience — see header).
-int alloc_slot() {
+// Pick a slot for a new sound of effective loudness `incoming_gain`.
+// NON-BLOCKING (np-3va): the game thread NEVER waits on the audio
+// thread. Three outcomes:
+//   (a) a free slot      -> take it,
+//   (b) steal the WEAKEST live one-shot if `incoming_gain` is at least
+//       as loud as that incumbent — published instantly via the reload
+//       handoff in publish(); no spin, no wait,
+//   (c) drop (return -1) when every voice is a loop, or the newcomer is
+//       quieter than everything already playing (let the audible sounds
+//       keep their slots — a distant tiny impact just doesn't play).
+// Loops (engine hum) are NEVER stolen: ambience must survive saturation.
+int alloc_slot(float incoming_gain) {
     for (int i = 0; i < k_voice_count; ++i) {
         if (!g_voices[i].alive.load(std::memory_order_acquire)) return i;
     }
-    int      oldest     = -1;
-    uint64_t oldest_seq = UINT64_MAX;
+    // Pool full: find the weakest non-loop victim by CURRENT mixed gain
+    // (quietest/furthest), oldest on a tie so equal-gain spam rotates
+    // out the one closest to finishing.
+    int   victim  = -1;
+    float weakest = 3.402823466e38f;   // FLT_MAX
     for (int i = 0; i < k_voice_count; ++i) {
-        if (g_voices[i].loop) continue;
-        if (g_voices[i].started_at_seq < oldest_seq) {
-            oldest_seq = g_voices[i].started_at_seq;
-            oldest     = i;
-        }
+        Voice& v = g_voices[i];
+        if (v.loop) continue;          // never cull the hum
+        const float g = std::fmax(v.gain_l.load(std::memory_order_relaxed),
+                                  v.gain_r.load(std::memory_order_relaxed));
+        const bool better = (g < weakest) ||
+            (g == weakest && victim >= 0 &&
+             v.started_at_seq < g_voices[victim].started_at_seq);
+        if (better) { weakest = g; victim = i; }
     }
-    if (oldest >= 0) {
-        std::printf("[audio] voice pool full — stealing slot %d\n", oldest);
-        // Raise kill and wait for nothing: we overwrite the payload
-        // below only after alive flips false. One callback period
-        // (~5ms at 256 frames) of spin is the worst case; in practice
-        // the next buffer retires it. Busy-wait is acceptable on this
-        // rare, logged path; a lock in the callback is not.
-        g_voices[oldest].kill.store(true, std::memory_order_relaxed);
-        // Bounded spin: normally the next callback (~5ms) retires it.
-        // If the audio thread has stalled we must NOT hang the main
-        // thread forever — cap the wait at a few ms and refuse the steal
-        // (the kill flag stays raised; the voice retires whenever the
-        // callback next runs). Refusing one rare SFX beats a freeze.
-        const auto deadline =
-            std::chrono::steady_clock::now() + std::chrono::milliseconds(5);
-        while (g_voices[oldest].alive.load(std::memory_order_acquire)) {
-            if (std::chrono::steady_clock::now() > deadline) {
-                std::printf("[audio] steal spin timed out — refusing voice\n");
-                return -1;
-            }
-        }
-    }
-    return oldest;
+    if (victim < 0) return -1;         // every slot is a loop: refuse
+
+    // Priority gate: only evict the weakest incumbent if the newcomer is
+    // at least ~as loud (k_steal_bias slack lets an equal newcomer win).
+    // A clearly quieter sound is the least important on screen — drop it
+    // rather than silence something the player can better hear.
+    constexpr float k_steal_bias = 0.9f;
+    if (incoming_gain < weakest * k_steal_bias) return -1;
+    return victim;
 }
 
-// Publish a configured voice (contract: payload first, alive last).
+// Publish a configured voice. Two paths sharing one body (DRY): the
+// MAIN-OWNED bookkeeping (spatialization source, base gain, gains,
+// started-seq, generation) is written in place either way — the audio
+// thread never reads those. The {sample,loop,cursor,alive} handoff
+// differs by whether the chosen slot is already LIVE (a steal):
+//   * free slot  -> write sample/loop/cursor directly and raise alive
+//                   LAST (the classic publish; audio isn't touching it).
+//   * live slot  -> hand off via pending_* + reload (the audio thread
+//                   owns sample/loop/cursor of a live slot). No wait.
 VoiceId publish(int slot, uint32_t sample_idx, bool loop, bool is_world,
                 HMM_Vec3 pos, float ref_d, float max_d, float gain) {
     Voice& v = g_voices[slot];
-    v.sample_idx     = sample_idx;
-    v.loop           = loop;
-    v.cursor         = 0.0f;
+    const bool steal = v.alive.load(std::memory_order_acquire);
+
+    // --- main-owned bookkeeping (audio thread never reads these) ------
     v.is_world       = is_world;
     v.world_pos      = pos;
     v.ref_dist       = std::fmax(ref_d, 1.0f);
@@ -383,10 +431,6 @@ VoiceId publish(int slot, uint32_t sample_idx, bool loop, bool is_world,
     v.base_gain      = gain;
     v.started_at_seq = ++g_play_seq;
     v.generation++;
-    // Clear any stale kill from this slot's PREVIOUS occupant before we
-    // publish: otherwise an old stop() that raced in could be consumed
-    // against this fresh voice and silence it on its very first buffer.
-    v.kill.store(false, std::memory_order_relaxed);
 
     if (is_world) {
         spatialize(v);   // initial gains from current listener pose
@@ -397,7 +441,31 @@ VoiceId publish(int slot, uint32_t sample_idx, bool loop, bool is_world,
         v.gain_r.store(gain * k_center, std::memory_order_relaxed);
     }
 
-    v.alive.store(true, std::memory_order_release);   // publish — LAST write
+    if (steal) {
+        // Instant steal: the audio thread owns sample/loop/cursor of a
+        // live slot, so we hand the new sound off via pending_* and let
+        // the callback swap it in (rewinding the cursor) on its next
+        // pass. We do NOT touch v.loop here — the callback is its sole
+        // writer while live (writing it would race the mixer's per-buffer
+        // read). alloc_slot's victim scan stays correct regardless: a
+        // stolen victim is already a non-loop (v.loop == false) and the
+        // newcomer is too, so loop-ness is unchanged. reload is the LAST
+        // write (release).
+        v.pending_sample_idx = sample_idx;
+        v.pending_loop       = loop;
+        v.reload.store(true, std::memory_order_release);
+    } else {
+        // Free slot: audio isn't touching it, so write the payload
+        // directly. Clear any orphaned reload/kill from a PREVIOUS
+        // occupant (an old stop() or a stranded steal) before we go live
+        // — otherwise it could be consumed against this fresh voice.
+        v.reload.store(false, std::memory_order_relaxed);
+        v.kill.store(false, std::memory_order_relaxed);
+        v.sample_idx = sample_idx;
+        v.loop       = loop;
+        v.cursor     = 0.0f;
+        v.alive.store(true, std::memory_order_release);   // publish — LAST
+    }
     return make_voice_id(slot, v.generation);
 }
 
@@ -459,7 +527,10 @@ SampleId load(const std::string& path) {
 
 VoiceId play(SampleId s, float gain) {
     if (!g_ready || s == 0 || s >= g_samples.size()) return 0;
-    const int slot = alloc_slot();
+    // 2D/UI sounds are exempt from the world per-frame budget — they're
+    // intentional (clicks, the player's own guns), never the spam source.
+    constexpr float k_center = 0.70710678f;
+    const int slot = alloc_slot(gain * k_center);
     if (slot < 0) return 0;
     return publish(slot, s, /*loop=*/false, /*world=*/false,
                    HMM_V3(0, 0, 0), 1.0f, 2.0f, gain);
@@ -467,7 +538,9 @@ VoiceId play(SampleId s, float gain) {
 
 VoiceId play_loop(SampleId s, float gain) {
     if (!g_ready || s == 0 || s >= g_samples.size()) return 0;
-    const int slot = alloc_slot();
+    // Loops are long-lived ambience (engine hum) — give them top priority
+    // so they always claim a slot if any non-loop one can be stolen.
+    const int slot = alloc_slot(3.402823466e38f /*FLT_MAX*/);
     if (slot < 0) return 0;
     return publish(slot, s, /*loop=*/true, /*world=*/false,
                    HMM_V3(0, 0, 0), 1.0f, 2.0f, gain);
@@ -484,15 +557,27 @@ VoiceId play_world(SampleId s, HMM_Vec3 world_pos,
     // 5km+ otherwise floods the pool with silence and steals slots
     // from sounds the player can actually hear. Loops are exempt: a
     // looping source persists, so the listener CAN fly into range.
+    float incoming = 3.402823466e38f;   // FLT_MAX: loops always win a slot
     if (!loop) {
         const float dist = HMM_LenV3(HMM_SubV3(world_pos, g_listener_pos));
         const float att  = (dist < max_dist) ? ref_dist / std::fmax(dist, ref_dist) : 0.0f;
         constexpr float k_audible_floor = 0.01f;   // < -40dB: nobody hears it
         if (att < k_audible_floor) return 0;
+        incoming = att;   // base_gain is 1.0 for world sounds
+
+        // Per-frame start budget (np-3va): a single furball frame can
+        // request dozens of world one-shots — cap the NEW starts so the
+        // mixer can't be flooded. Surplus requests drop (counted for the
+        // furball log in set_listener). Loops are exempt (the line above).
+        if (g_world_starts_this_frame >= k_max_world_starts_per_frame) {
+            ++g_world_drops_window;
+            return 0;
+        }
     }
 
-    const int slot = alloc_slot();
+    const int slot = alloc_slot(incoming);
     if (slot < 0) return 0;
+    if (!loop) ++g_world_starts_this_frame;
     return publish(slot, s, loop, /*world=*/true,
                    world_pos, ref_dist, max_dist, 1.0f);
 }
@@ -501,10 +586,36 @@ void set_listener(HMM_Vec3 pos, HMM_Vec3 right) {
     if (!g_ready) return;
     g_listener_pos   = pos;
     g_listener_right = right;
+    int active = 0;
     for (Voice& v : g_voices) {
         if (!v.alive.load(std::memory_order_acquire)) continue;
+        ++active;
         if (v.is_world) spatialize(v);
     }
+
+    // Furball instrumentation (np-3va). The PREVIOUS frame's start budget
+    // is now complete (set_listener runs once/frame BEFORE this frame's
+    // play_world calls). Surface peak voices + dropped starts on
+    // SIGNIFICANT change only — throttled to ~1/sec and silent when combat
+    // is calm, so it proves the budget/cull works without becoming spam.
+    static int  s_peak_active = 0;
+    static int  s_peak_drop   = 0;
+    static auto s_last_log    = std::chrono::steady_clock::now();
+    if (active             > s_peak_active) s_peak_active = active;
+    if (g_world_drops_window > s_peak_drop) s_peak_drop   = g_world_drops_window;
+    const bool busy = g_world_drops_window > 0 || active >= k_voice_count - 2;
+    const auto now  = std::chrono::steady_clock::now();
+    if (busy && now - s_last_log > std::chrono::seconds(1)) {
+        std::printf("[audio] furball: voices peak %d/%d, world starts dropped %d "
+                    "(budget %d/frame, last ~1s)\n",
+                    s_peak_active, k_voice_count, s_peak_drop,
+                    k_max_world_starts_per_frame);
+        s_last_log    = now;
+        s_peak_active = active;
+        s_peak_drop   = 0;
+    }
+    g_world_drops_window      = 0;
+    g_world_starts_this_frame = 0;   // reset the per-frame start budget
 }
 
 void stop(VoiceId id) {

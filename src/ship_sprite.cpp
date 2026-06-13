@@ -5,6 +5,7 @@
 
 #include <cmath>
 #include <cstdio>
+#include <cstring>
 #include <filesystem>
 
 namespace {
@@ -72,6 +73,43 @@ bool compute_cam_az_el(const HMM_Vec3& ship_pos,
 }
 
 } // namespace
+
+// See the header for the full policy writeup. One central resolver, applied
+// at the load + cache-key boundary, so all ship references (current and
+// future) resolve to the sprites_3d/ atlas without scattered data edits.
+std::string resolve_ship_atlas_stem(std::string stem) {
+    // Idempotent: an already-3D stem is handed back untouched so the same
+    // input can be resolved at both the load site and the cache-key site
+    // without ever producing a double "_3d_3d".
+    if (stem.size() >= 3 && stem.compare(stem.size() - 3, 3, "_3d") == 0) {
+        return stem;
+    }
+
+    // Canonical "...atlas_manifest" stems are the ones we expect to have a
+    // _3d twin; a missing twin there is a real content gap worth shouting
+    // about. Special variants (e.g. "...atlas_manifest_militia_wcnews") do
+    // not, so their fallback stays quiet.
+    constexpr const char* kCanonical = "atlas_manifest";
+    const size_t canon_len = std::strlen(kCanonical);
+    const bool canonical = stem.size() >= canon_len &&
+                           stem.compare(stem.size() - canon_len, canon_len, kCanonical) == 0;
+
+    const std::string candidate = stem + "_3d";
+    if (std::filesystem::exists("assets/" + candidate + ".json")) {
+        return candidate;
+    }
+
+    // SAFE FALLBACK: a missing-file crash is worse than rendering the 2D
+    // atlas, so degrade to the authored stem. The user said "always", but
+    // the loud warning keeps the gap visible instead of silently shipping 2D.
+    if (canonical) {
+        std::fprintf(stderr,
+                     "[ship_sprite] WARN: assets/%s.json missing, "
+                     "falling back to 2D %s\n",
+                     candidate.c_str(), stem.c_str());
+    }
+    return stem;
+}
 
 bool load_ship_sprite_atlas(const std::string& atlas_stem,
                             ShipSpriteAtlas& atlas,
