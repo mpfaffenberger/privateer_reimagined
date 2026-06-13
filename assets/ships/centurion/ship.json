@@ -7,7 +7,7 @@
   "name":           "centurion",
   "display_name":   "Centurion",
   "class_label":    "Bounty Hunter Heavy Fighter",
-  "atlas_manifest": "ships/centurion/atlas_manifest.json",
+  "atlas_manifest": "ships/centurion/atlas_manifest_3d.json",
   "default_faction": "hunter",
 
   "armor_fore_cm": 20,

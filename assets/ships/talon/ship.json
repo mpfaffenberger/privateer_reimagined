@@ -2,7 +2,7 @@
   "name":           "talon",
   "display_name":   "Talon",
   "class_label":    "Light Fighter (used by militia, Church of Man, pirates)",
-  "atlas_manifest": "ships/talon/atlas_manifest.json",
+  "atlas_manifest": "ships/talon/atlas_manifest_3d.json",
   "default_faction": "pirate",
 
   "armor_fore_cm": 10,

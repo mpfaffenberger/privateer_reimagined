@@ -2,7 +2,7 @@
   "name":           "galaxy",
   "display_name":   "Galaxy",
   "class_label":    "Merchant Ship",
-  "atlas_manifest": "ships/galaxy/atlas_manifest.json",
+  "atlas_manifest": "ships/galaxy/atlas_manifest_3d.json",
   "default_faction": "merchant",
 
   "armor_fore_cm":  25,

@@ -6,7 +6,7 @@
   "name":           "orion",
   "display_name":   "Orion",
   "class_label":    "Mercenary Gunship",
-  "atlas_manifest": "ships/orion/atlas_manifest.json",
+  "atlas_manifest": "ships/orion/atlas_manifest_3d.json",
   "default_faction": "civilian",
 
   "armor_fore_cm": 48,

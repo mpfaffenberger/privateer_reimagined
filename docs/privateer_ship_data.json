@@ -206,7 +206,7 @@
       "Damage Eff.": 5.2,
       "Speed (kps)": 1100,
       "Range (m)": 3740,
-      "Refire Delay (s)": 0.6,
+      "Refire Delay (s)": 0.35,
       "Energy Use (GJ)": 6
     },
     {
@@ -236,7 +236,7 @@
       "Damage Eff.": 3.91,
       "Speed (kps)": 1000,
       "Range (m)": 3400,
-      "Refire Delay (s)": 0.6,
+      "Refire Delay (s)": 0.5,
       "Energy Use (GJ)": 11
     },
     {
@@ -256,7 +256,7 @@
       "Damage Eff.": 3.6,
       "Speed (kps)": 1200,
       "Range (m)": 4080,
-      "Refire Delay (s)": 0.7,
+      "Refire Delay (s)": 0.6,
       "Energy Use (GJ)": 15
     },
     {
@@ -266,7 +266,7 @@
       "Damage Eff.": 3.79,
       "Speed (kps)": 940,
       "Range (m)": 3196,
-      "Refire Delay (s)": 0.8,
+      "Refire Delay (s)": 0.72,
       "Energy Use (GJ)": 22
     },
     {
@@ -398,6 +398,7 @@
     "Damage Eff.": "Damage per GJ of energy (Damage / Energy Use). Higher = more efficient.",
     "Speed (kps)": "Projectile velocity in kilometers per second",
     "Range (m)": "Maximum range in meters",
+    "Refire Delay (s)": "Seconds between shots. For complete guns this is derived as Damage(cm)/DamageRate so the file is internally consistent with the canonical Damage Rate (DPS) column. PENDING wcnews/wcpedia cross-check when web search is back online.",
     "RF": "Rapid Fire variant"
   },
   "shields": [

@@ -2,7 +2,7 @@
   "name":           "tarsus",
   "display_name":   "Tarsus",
   "class_label":    "Merchant Scout",
-  "atlas_manifest": "ships/tarsus/atlas_manifest.json",
+  "atlas_manifest": "ships/tarsus/atlas_manifest_3d.json",
   "default_faction": "merchant",
 
   "armor_fore_cm": 10,
