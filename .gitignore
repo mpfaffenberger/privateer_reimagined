@@ -100,6 +100,14 @@ assets/ships/*/wcnews_sprites/
 # Atlas cells derived from wcnews wcpedia (still derived from Origin IP)
 assets/ships/*/sprites_wcnews/
 
+# Original Privateer SFX converted from the user's OWN SOUNDFX.PAK via
+# tools/extract_soundfx_pak.py. Local-use only (OpenMW legal model) —
+# never commit the extracted/converted audio. The procedural placeholders
+# in assets/sfx/ stay the committed fallback; sfx::load_all prefers these
+# originals when present. *.voc covers any stray extracted Creative VOCs.
+assets/sfx/original/
+*.voc
+
 # ────────────────────────────────────────────────────────────────────
 # Privateer GOG-derived data — copyrighted Origin/EA, never commit.
 # Re-create with: tools/extract_privateer.sh
