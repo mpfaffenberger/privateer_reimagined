@@ -218,7 +218,7 @@ const ShipSpriteFrame* choose_ship_sprite_frame(const ShipSpriteAtlas& atlas,
     return choose_ship_sprite_frame_by_angles(atlas, az, el);
 }
 
-void append_ship_sprites_for_camera(std::vector<ShipSpriteObject>& ships,
+void append_ship_sprites_for_camera(std::deque<ShipSpriteObject>& ships,
                                     const Camera& cam,
                                     std::vector<SpriteObject>& out_sprites) {
     // Per-frame billboard roll: align each cell's CAPTURE-UP direction
@@ -364,7 +364,7 @@ void append_ship_sprites_for_camera(std::vector<ShipSpriteObject>& ships,
 // end fights floating-point drift over many composes (same trick as
 // camera.cpp::compose_local).
 // -----------------------------------------------------------------------------
-void update_ship_sprite_motion(std::vector<ShipSpriteObject>& ships, float dt) {
+void update_ship_sprite_motion(std::deque<ShipSpriteObject>& ships, float dt) {
     for (ShipSpriteObject& s : ships) {
         // Static-ship fast path. Both checks are needed because either DOF
         // alone is meaningful — a ship with forward_speed = 0 but non-zero

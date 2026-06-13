@@ -2,8 +2,10 @@
 
 #include "gun.h"
 #include "projectile.h"
+#include "sfx.h"
 #include "ship.h"
 #include "ship_class.h"
+#include "ship_registry.h"
 #include "ship_sprite.h"   // for sprite->forward_speed read
 
 #include <algorithm>
@@ -49,7 +51,7 @@ HMM_Vec3 body_to_world(const HMM_Quat& q, HMM_Vec3 v_body) {
 
 } // namespace
 
-void firing::tick(std::vector<Ship>& ships,
+void firing::tick(ShipRegistry& ships,
                   std::vector<Projectile>& projectiles,
                   float dt) {
     for (Ship& s : ships) {
@@ -122,6 +124,10 @@ void firing::tick(std::vector<Ship>& ships,
 
             s.energy_gj         -= gs.energy_cost_gj;
             s.gun_cooldowns[i]   = gs.refire_delay_s;
+
+            // One shot fired -> one sound. Player shots are 2D (always
+            // audible), NPC shots positional — policy in sfx.cpp.
+            sfx::gun_fired(p.position, s.is_player);
         }
     }
 }

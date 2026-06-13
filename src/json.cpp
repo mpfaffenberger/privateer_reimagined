@@ -77,11 +77,17 @@ std::string Value::string_or(const std::string& fallback) const {
 
 namespace {
 
+// Recursion depth cap (#10): hostile deeply-nested input could otherwise
+// blow the native stack via the mutual recursion below. 200 levels is far
+// past anything our hand-written config files reach.
+constexpr int k_max_depth = 200;
+
 struct Parser {
     const char* p;
     const char* end;
     int line = 1;
     int col  = 1;
+    int depth = 0;
     bool failed = false;
 
     void fail(const char* msg) {
@@ -164,13 +170,28 @@ Value Parser::parse_string() {
 }
 
 Value Parser::parse_number() {
-    // Delegate to strtod — handles sign, decimal, exponent. JSON disallows
-    // a leading '+' but strtod accepts it; that's a minor spec drift we'll
-    // live with for now.
+    // Copy the numeric token into a bounded NUL-terminated buffer BEFORE
+    // strtod (#6): strtod scans to a NUL, but the public parse(string_view)
+    // entry is not guaranteed NUL-terminated — handing strtod `p` directly
+    // could read past `end`. Scan only the chars a JSON number can hold,
+    // capped to the buffer (any real number is a handful of chars; a token
+    // longer than this is malformed and strtod stops at the first bad one).
+    char   buf[64];
+    size_t n = 0;
+    for (const char* q = p; q < end && n + 1 < sizeof buf; ++q) {
+        const char ch = *q;
+        const bool numeric = (ch >= '0' && ch <= '9') ||
+                             ch == '+' || ch == '-' || ch == '.' ||
+                             ch == 'e' || ch == 'E';
+        if (!numeric) break;
+        buf[n++] = ch;
+    }
+    buf[n] = '\0';
+
     char* endp = nullptr;
-    double d = std::strtod(p, &endp);
-    if (endp == p) { fail("bad number"); return {}; }
-    int consumed = (int)(endp - p);
+    double d = std::strtod(buf, &endp);
+    if (endp == buf) { fail("bad number"); return {}; }
+    int consumed = (int)(endp - buf);
     for (int i = 0; i < consumed; ++i) bump();
     Value v;
     v.type = Value::Number_;
@@ -243,8 +264,15 @@ Value Parser::parse_value() {
     if (eof()) { fail("unexpected end of input"); return {}; }
     char c = *p;
     if (c == '"')                               return parse_string();
-    if (c == '{')                               return parse_object();
-    if (c == '[')                               return parse_array();
+    if (c == '{' || c == '[') {
+        // Bounded recursion (#10): each object/array nest is one native
+        // stack frame via parse_value; cap the descent so hostile input
+        // can't overflow the stack.
+        if (++depth > k_max_depth) { fail("max nesting depth exceeded"); --depth; return {}; }
+        Value v = (c == '{') ? parse_object() : parse_array();
+        --depth;
+        return v;
+    }
     if (c == '-' || (c >= '0' && c <= '9'))     return parse_number();
     if (c == 't' || c == 'f' || c == 'n')       return parse_keyword();
     fail("unexpected character");

@@ -31,13 +31,16 @@
 
 struct Ship;
 struct Projectile;
+class ShipRegistry;
 
 namespace firing {
 
 // Per-frame tick. Updates cooldowns + energy, spawns projectiles for
 // any ship with controller.fire_guns set whose mounts are ready. Player
 // ships fire too — fire_guns is populated by main's input code.
-void tick(std::vector<Ship>& ships,
+// Iterates the registry (slot-map) — occupied slots only, alive checks
+// unchanged from the old vector walk.
+void tick(ShipRegistry& ships,
           std::vector<Projectile>& projectiles,
           float dt);
 

@@ -6,10 +6,14 @@
 // Controls:
 //   mouse          — look (pointer captured; right-click to release)
 //   W / S          — throttle forward / reverse
-//   A / D          — strafe left / right
-//   Space / LShift — thrust up / down
+//   Q / E          — strafe left / right
+//   R / F          — thrust up / down
+//   Z / C          — roll left / right
 //   Tab (hold)     — cruise engine: windup → high speed, windown on release
 //   X              — full brake (zero velocity)
+//   N              — cycle selected nav point (Alt+N: navmap overlay)
+//   A              — autopilot to selected nav (hostile-gated; any input cancels)
+//   D              — dock at selected base when cleared
 //   Escape (×2)    — quit (double-tap within 1s so accidental taps are safe)
 // -----------------------------------------------------------------------------
 
@@ -23,21 +27,44 @@
 #include "armor.h"
 #include "asteroid.h"
 #include "atlas_grid_viewer.h"
+#include "audio.h"
 #include "camera.h"
 #include "cockpit_hud.h"
+#include "comm.h"
+#include "commodity.h"
+#include "economy.h"
+#include "outfitting.h"
+#include "missions.h"
+#include "player.h"
+#include "savegame.h"
+#include "base_screens.h"
 #include "debug_panel.h"
 #include "dev_remote.h"
+#include "docking.h"
+#include "autopilot.h"
+#include "threat.h"
+#include "jump.h"
+#include "encounters.h"
 #include "dust.h"
 #include "faction.h"
+#include "game_state.h"
 #include "gun.h"
 #include "mesh_render.h"
 #include "explosion.h"
 #include "firing.h"
+
+// Defined in mesh_render.cpp (external linkage). Forward-declared at global
+// scope so the dev_remote /project publish in frame() resolves to the
+// real symbol instead of an anonymous-namespace ghost.
+HMM_Mat4 model_matrix(HMM_Vec3 pos, HMM_Vec3 euler_deg, float s);
 #include "perception.h"
 #include "world_scale.h"
 #include "projectile.h"
+#include "missile.h"
+#include "sfx.h"
 #include "ship.h"
 #include "ship_ai.h"
+#include "ship_registry.h"
 #include "ship_class.h"
 #include "shield.h"
 #include "sprite.h"
@@ -56,6 +83,7 @@
 #include "star_presets.h"
 #include "sun.h"
 #include "system_def.h"
+#include "galaxy.h"
 
 
 #include "imgui.h"   // ImGui::GetIO() for WantCaptureMouse handoff
@@ -71,6 +99,25 @@ namespace {
 
 struct AppState {
     sg_pass_action scene_pass_action{};
+
+    // Top-level game-mode machine (Flight | Landed | Dying | Loading).
+    // Transitions are requested via game_state::request_mode (from the
+    // debug panel combo or the non-Flight Escape handler) and applied
+    // at the top of frame_cb — never mid-frame. See game_state.h.
+    GameState      game{};
+
+    // Request-landing + autodock approach (np-9cu.1). Owns the Flight↔
+    // Landed bridge; tick'd inside the Flight path, drives the camera
+    // during the auto-approach and requests the Landed mode flip.
+    Docking        docking{};
+
+    // Nav-point cruise autopilot (np-opa.3). Press A to fly to the
+    // selected nav. Like docking it owns the camera while engaged
+    // (controls_locked mutes pilot input), but it's a traversal
+    // controller — it ends in free flight at the nav, not a mode flip.
+    // Hostile-gated through threat:: (stub today; live with np-ma2.3).
+    Autopilot      autopilot{};
+
     Camera         camera{};
     Skybox         skybox{};
     Sun            sun{};
@@ -94,29 +141,69 @@ struct AppState {
     std::unordered_map<std::string, SpriteArt>           sprite_art;
     std::vector<SpriteObject>                            placed_sprites;
     std::unordered_map<std::string, ShipSpriteAtlas>      ship_sprite_atlases;
-    std::vector<ShipSpriteObject>                        placed_ship_sprites;
-    // Per-instance Ship objects. ships[0] is reserved for the player
-    // (is_player=true, no sprite, pose synced from camera each frame).
-    // ships[1..] are NPCs in lockstep with placed_ship_sprites:
-    // ships[1+i].sprite == &placed_ship_sprites[i] for every i. The
-    // +1 offset keeps player-vs-NPC the only special case — every
-    // perception / behaviour / damage code path otherwise treats
-    // ships uniformly. The cap-at-construction is OK because no current
-    // code path appends ships after startup; if/when dynamic spawning
-    // lands, this needs to be a slot-map (handle -> index).
-    std::vector<Ship>                                    ships;
+    // NPC ship sprites. std::deque (NOT vector) so growth never
+    // relocates elements — Ship::sprite holds pointers into this
+    // container for the ship's whole lifetime, and runtime spawning
+    // (debug buttons today, encounter generation per np-ma2.3 later)
+    // appends without dangling every existing back-pointer. Slots are
+    // never erased: a despawned ship's sprite slot gets atlas=nullptr
+    // (renderer + integrator both skip it) and its index parks in
+    // free_sprite_slots for the next spawn to reuse. Chosen over a
+    // second slot-map because sprites need no handles — the OWNING
+    // Ship's lifetime is the sprite's lifetime, nothing else refers
+    // to a sprite slot across frames.
+    std::deque<ShipSpriteObject>                         placed_ship_sprites;
+    std::vector<size_t>                                  free_sprite_slots;
+    // Per-instance Ship objects, slot-map storage (ship_registry.h).
+    // The player spawns FIRST at startup and therefore always occupies
+    // slot 0 (ShipRegistry::player_handle()); NPCs fill subsequent
+    // slots in JSON order, exactly matching the old vector's layout.
+    // The old ships[1+i] <-> placed_ship_sprites[i] positional lockstep
+    // is GONE — the only sprite linkage is the explicit Ship::sprite
+    // pointer, which deque storage keeps stable (see above).
+    ShipRegistry                                         ships;
 
-    // Player's per-faction reputation. Default zero ("unknown stranger")
-    // so faction baselines determine starting stance: Pirates jump you
-    // (-30 baseline), Confeds tolerate you (0), Kilrathi attack on sight
-    // (-100). Future commits will mutate this on kills / quests.
-    PlayerReputation                                     player_rep;
+    // Persistent player state — credits, cargo, owned ship + equipment,
+    // per-faction reputation, location (player.h). Initialized by
+    // player::new_game() in init_cb (honoring the --system override);
+    // the trading / dealer / save-load features all mutate this struct
+    // and nothing else. Reputation lives at g.player.rep now — default
+    // zero ("unknown stranger") so faction baselines determine starting
+    // stance: Pirates jump you (-30 baseline), Confeds tolerate you (0),
+    // Kilrathi attack on sight (-100).
+    PlayerState                                          player;
 
     // Live projectiles. Spawned by firing::tick (when controller.fire_guns
     // is set on a ship with off-cooldown mounts), advanced by
     // projectile::tick, drawn by SpriteRenderer::draw_tracers. Empty in
     // the steady state until someone pulls a trigger.
     std::vector<Projectile>                              projectiles;
+
+    // Live guided missiles (np-zte.2). Spawned on the missile-fire key
+    // (finite ammo in g.player.missiles), steered + detonated by
+    // missile::tick / missile::collide_and_damage, drawn alongside the
+    // projectile tracers. Empty until the player launches one.
+    std::vector<Missile>                                 missiles;
+    // Currently-selected missile type for the fire key (index into
+    // MissileType: 0=DF,1=HS,2=IR). Cycled with the missile-type key.
+    // Transient UI state — NOT persisted (ammo counts are, in PlayerState).
+    int                                                  selected_missile = 0;
+    // Edge-triggered fire request: the missile-fire key sets this in
+    // event_cb (one per press, key-repeat suppressed); frame_cb consumes
+    // it where the player ship's pose is fresh so the missile spawns from
+    // the right muzzle and gets its first integration step.
+    bool                                                 missile_fire_request = false;
+    // Target-lock state machine for HS/IR missiles. progress_s grows while
+    // the player holds a target with a lock-requiring missile selected;
+    // IR needs the build-up (k_ir_lock_time), HS locks instantly. `locked`
+    // flips true on completion; `locked_id` is the ship we're locked onto;
+    // seek_beep_s paces the seeking tone.
+    struct MissileLock {
+        float    progress_s   = 0.0f;
+        bool     locked       = false;
+        uint32_t locked_id    = 0;
+        float    seek_beep_s  = 0.0f;
+    } missile_lock;
 
     // Active explosion FX. One Explosion per ship death, lifetime ~1.2s.
     // Drawn additively via the same spot pipeline as tracers, just with
@@ -183,12 +270,67 @@ struct AppState {
     uint64_t escape_armed_ticks = 0;
 
     std::string system_name = "troy";   // assets/systems/<name>.json
+    // Dev affordance (np-9cu.4): --dev-land <base_id> boots straight into
+    // Landed mode at that base so you can iterate on concourse art / base
+    // screens without flying 150 km and autodocking every launch. "" = off.
+    std::string dev_land_base;
+    // Save-load boot (np-ymp.1): --load <slot> / --continue (slot 0) ask
+    // init_cb to deserialize that slot over the fresh new_game() state.
+    // -1 = no load requested (default = new game, as before). When set and
+    // --system was NOT explicitly passed, we adopt the save's recorded
+    // system so we load the world the player saved in (see init_cb).
+    int         load_slot       = -1;
+    // Death-test affordance (np-ma2.2): --dev-kill-at <secs> raises the
+    // "kill player" request once after that many seconds of Flight, so the
+    // death->Dying->respawn cycle can be exercised headlessly (the GUI
+    // button needs a human clicking ImGui). <0 = off.
+    float       dev_kill_at_s   = -1.0f;
+    float       dev_run_clock_s = 0.0f;    // wall-ish clock for dev timers
+    bool        system_explicit = false;   // true once --system is seen on the CLI
     bool        capture_clean = false;  // hide HUD/cockpit overlay for atlas screenshots
     // Ship-sprite frame HUD: prints camera az/el and picked atlas cell az/el
     // for every placed_ship_sprites entry, every frame. F3 toggles. Hidden by
     // --capture-clean so screenshots stay HUD-free without extra flags.
     bool        show_ship_frame_hud = false;
     StarSystem  system{};
+
+    // Galaxy graph (np-6al.1) — the system catalog + jump topology, parsed
+    // once at boot from assets/galaxy.json. Drives runtime system switching
+    // (load_and_build_system) and, later, the jump mechanic (np-6al.3).
+    galaxy::Galaxy galaxy{};
+    bool           system_loaded = false;   // true once a scene has been built
+
+    // Deferred (frame-boundary) system switch. The timers / debug dropdown
+    // set `pending_goto`; it's consumed at the TOP of frame_cb so a switch
+    // never tears down GPU/scene state mid-frame (same deferral discipline
+    // as game-mode transitions + the debug spawn requests). Empty = none.
+    std::string pending_goto;
+    // Pending jump (np-6al.3). Set when the player presses J at an eligible
+    // gate; consumed during the Loading cinematic by execute_jump(), which
+    // rebuilds the destination system and drops the player at arrival_nav
+    // (the reciprocal gate on the far side). Both empty = no jump in flight.
+    std::string pending_jump_system;   // destination galaxy id
+    std::string pending_jump_nav;      // arrival gate name in that system
+    // --goto <id>: fire a single deferred switch after goto_at_s of Flight,
+    // proving runtime switching WITHOUT the jump mechanic (np-6al.3).
+    std::string goto_system;
+    float       goto_at_s     = 2.0f;
+    // --goto-soak <n>: cycle the galaxy's systems n times on an interval —
+    // the leak/crash soak. Quits cleanly afterward so cleanup_cb runs.
+    int         soak_remaining = 0;
+    float       soak_interval  = 1.0f;
+    float       switch_clock_s = 0.0f;
+    int         soak_index     = 0;
+    bool        soak_quit      = false;
+
+    // --dev-jump-soak <n> (np-6al.3): headless J-press driver. Auto-jumps
+    // through the first surveyed gate n times on dev_jump_interval, then
+    // quits cleanly (leak audit). dev_jump_quit lingers one interval after
+    // the last jump lands so the final arrival renders before shutdown.
+    int         dev_jump_remaining = 0;
+    float       dev_jump_interval  = 2.5f;
+    float       dev_jump_clock_s   = 0.0f;
+    bool        dev_jump_quit      = false;
 
     // Targeting / nav-cycling. -1 = no target. Press N to advance through
     // g.system.nav_points. Persists for the lifetime of the loaded system
@@ -207,9 +349,57 @@ struct AppState {
     // top-down view of the system's nav points + ship contacts; clicking
     // a nav selects it (matches the N-key cycle's effect).
     bool show_navmap = false;
+
+    // Deferred ship spawn/despawn requests from the debug panel's
+    // registry smoke-test buttons. Applied at the top of frame_cb —
+    // never mid-frame — because half the frame's systems hold Ship&s
+    // and slot indices across the sim pass. Same deferral discipline
+    // as game-mode transitions.
+    debug_panel::ShipDebugRequests  ship_debug;
+    // Audio smoke-test requests (np-3gw.1), consumed alongside.
+    debug_panel::AudioDebugRequests audio_debug;
+
+    // Test SFX sample ids, loaded at init right after audio::init.
+    // 0 = load failed (audio runs silent, buttons no-op with a log).
+    SampleId sfx_blip  = 0;
+    SampleId sfx_burst = 0;
+    SampleId sfx_hum   = 0;
 };
 
 AppState g;
+
+// ---- ship-sprite pool helpers -----------------------------------------------
+//
+// Claim/park a slot in g.placed_ship_sprites. The encounter director
+// (spawn/despawn), the debug spawn/despawn buttons, and the NPC death-reap
+// path (np-zte.1) all need EXACTLY this dance — reuse a parked slot if one's
+// free, else append (deque growth keeps every Ship::sprite pointer valid);
+// to park, linear-scan for the slot a sprite pointer aliases, wipe it to
+// atlas=nullptr (the "unoccupied" marker renderer + integrator both skip)
+// and push its index onto the free-list. Extracted to kill the 4x copy.
+size_t claim_sprite_slot() {
+    size_t slot;
+    if (!g.free_sprite_slots.empty()) {
+        slot = g.free_sprite_slots.back();
+        g.free_sprite_slots.pop_back();
+    } else {
+        slot = g.placed_ship_sprites.size();
+        g.placed_ship_sprites.emplace_back();
+    }
+    g.placed_ship_sprites[slot] = ShipSpriteObject{};   // clear any prior occupant
+    return slot;
+}
+
+void free_sprite_slot(ShipSpriteObject* sprite) {
+    if (!sprite) return;
+    for (size_t i = 0; i < g.placed_ship_sprites.size(); ++i) {
+        if (&g.placed_ship_sprites[i] == sprite) {
+            g.placed_ship_sprites[i] = ShipSpriteObject{};   // atlas=nullptr -> parked
+            g.free_sprite_slots.push_back(i);
+            return;
+        }
+    }
+}
 
 // ---- input → camera mapping -------------------------------------------------
 //
@@ -220,14 +410,23 @@ HMM_Vec3 thrust_from_keys() {
     HMM_Vec3 t{0, 0, 0};
     if (g.keys_down[SAPP_KEYCODE_W])            t.Z -= 1.0f;  // forward (-Z view)
     if (g.keys_down[SAPP_KEYCODE_S])            t.Z += 1.0f;
-    if (g.keys_down[SAPP_KEYCODE_A])            t.X -= 1.0f;
-    if (g.keys_down[SAPP_KEYCODE_D])            t.X += 1.0f;
+    // Strafe moved off A/D to Q/E (np-opa.3): A is now the nav autopilot
+    // toggle, so the lateral thrusters live on Q (left) / E (right).
+    if (g.keys_down[SAPP_KEYCODE_Q])            t.X -= 1.0f;
+    if (g.keys_down[SAPP_KEYCODE_E])            t.X += 1.0f;
     // SPACE used to be 'thrust up' but is now the fly-by-wire mode
     // toggle (handled in event_cb). R/F take over up/down strafe.
     if (g.keys_down[SAPP_KEYCODE_R])            t.Y += 1.0f;
     if (g.keys_down[SAPP_KEYCODE_F])            t.Y -= 1.0f;
     return t;
 }
+
+// ---- system (re)load orchestration (np-6al.1) -------------------------------
+// Forward decls so init_cb + frame_cb can drive the runtime switch. Defined
+// just below init_cb.
+void unload_current_system();
+void build_system_scene(bool first_time);
+bool load_and_build_system(const std::string& id, bool first_time);
 
 // ---- sokol callbacks --------------------------------------------------------
 
@@ -291,18 +490,53 @@ void init_cb() {
         std::exit(1);
     }
 
-    // ---- load the star system definition ---------------------------------
-    // Everything past this point is configured by the JSON: which skybox to
-    // paint on the walls, which star preset to tune the sun, where the
-    // player spawns, and any number of asteroid fields. Hot-reload-friendly
-    // because main.cpp no longer bakes in ANY sector-specific values.
-    if (auto sys = load_system(g.system_name)) {
-        g.system = std::move(*sys);
-    } else {
+    // ---- save-load: adopt the saved system (np-ymp.1) ---------------------
+    // When resuming a save (--load/--continue), load the world the player
+    // saved IN — unless --system was explicitly passed, in which case the
+    // explicit override wins (documented precedence: explicit CLI > save >
+    // default "troy"). We only need the recorded system name here, so peek()
+    // reads it without applying the whole save; the full PlayerState load
+    // happens after new_game() below.
+    if (g.load_slot >= 0 && !g.system_explicit) {
+        const savegame::SlotInfo info = savegame::peek(g.load_slot);
+        if (info.exists && !info.system.empty()) {
+            std::printf("[save] slot %d recorded system '%s' — loading it\n",
+                        g.load_slot, info.system.c_str());
+            g.system_name = info.system;
+        }
+    }
+
+    // ---- galaxy graph (np-6al.1) -----------------------------------------
+    // The system catalog + jump topology, parsed once before any system.
+    // Non-fatal if missing — single-system play still works, you just
+    // can't switch / jump.
+    if (!galaxy::load("assets/galaxy.json", g.galaxy)) {
+        std::fprintf(stderr, "[main] galaxy load failed — single-system mode\n");
+    }
+
+    // ---- build the initial system ----------------------------------------
+    // Everything past this point (skybox, sun, belts, sprites, ships,
+    // encounters) lives in build_system_scene so the EXACT same path can
+    // tear down + rebuild for a runtime jump (load_and_build_system).
+    // first_time=true runs the genuinely one-time work — GPU renderer
+    // inits, design-data tables, the player's PlayerState + slot-0 Ship —
+    // which the switch path must NOT repeat (the player persists across a
+    // jump, carrying ship, cargo, credits and rep).
+    if (!load_and_build_system(g.system_name, /*first_time=*/true)) {
         std::fprintf(stderr, "[main] could not load system '%s' — quitting\n",
                      g.system_name.c_str());
         std::exit(1);
     }
+}
+
+// ---- runtime-rerunnable scene build (np-6al.1) ------------------------------
+//
+// Builds the live scene from g.system (already parsed by the caller). Split
+// out of init_cb so a runtime jump can re-run it after unload_current_system().
+// `first_time` gates the one-time work (GPU renderer inits, design-data table
+// loads, the player's slot-0 Ship + PlayerState) that must persist across a
+// switch rather than be rebuilt.
+void build_system_scene(bool first_time) {
     g.camera.position = g.system.player_start;
 
     // Optional spawn aim. The camera's default forward is -Z (identity
@@ -338,6 +572,9 @@ void init_cb() {
     // tables, so those must be populated first. None of these touch the
     // GPU; they're pure data loaders, safe to run after system_def and
     // before any rendering init.
+    // np-6al.1: one-time only — design-data catalogs + player state survive
+    // a system switch, so the jump path must not reload or reset them.
+    if (first_time) {
     faction::init();
     {
         const std::string ship_data = "docs/privateer_ship_data.json";
@@ -346,6 +583,64 @@ void init_cb() {
         armor::load_table(ship_data);
     }
     ship_class::load_all("assets/ships");
+    // Commodity catalog — pure data, same family as the tables above.
+    // Trading screens (np-9cu.2) consume it; today it just proves the
+    // canonical 1995 cargo list round-trips into the engine.
+    commodity::load("docs/privateer_db/cargo.toml");
+    // Per-base commodity pricing (np-9cu.2). Reads canonical category prices
+    // + archetypes from assets/data, and each base's market archetype. Then
+    // register the Commodity Exchange screen body via the np-9cu.4 hook seam.
+    economy::load("assets/data/commodity_prices.json", "assets/bases");
+    economy::register_exchange_screen();
+    // Outfitting (np-9cu.3): hull + equipment prices, and the Ship Dealer +
+    // Equipment screen bodies registered via the same np-9cu.4 hook seam.
+    outfitting::load("assets/data/ship_prices.json",
+                     "assets/data/equipment_prices.json");
+    outfitting::register_screens();
+    // Mission computer (np-zte.1): generated cargo-delivery + bounty jobs.
+    // No data file to load (missions are generated from the commodity catalog
+    // + galaxy graph); just register the screen body via the np-9cu.4 seam.
+    // The per-base board is (re)generated on each dock, below.
+    missions::register_screen();
+    // Faction comm chatter table (np-ma2.1) — flavour lines surfaced on
+    // the HUD when a kill moves reputation. Missing file is non-fatal.
+    comm::load("assets/data/comm_lines.json");
+
+    // Fresh-start player state. --system override flows through so the
+    // recorded location matches the world we actually loaded. A --load
+    // replaces this wholesale just below.
+    g.player = player::new_game(g.system_name);
+
+    // Save-load boot (np-ymp.1): if a slot was requested, deserialize it
+    // over the fresh new_game() state. On failure (missing/corrupt/version)
+    // load() leaves g.player untouched and we silently keep the new game —
+    // never crash on a bad save. The speed-caps block below reads g.player
+    // AFTER this, so a loaded ship/engine tier seeds the right caps.
+    if (g.load_slot >= 0) {
+        if (savegame::load(g.player, g.load_slot)) {
+            // If an explicit --system overrode the world we loaded, keep the
+            // player's recorded location consistent with that world (the
+            // saved current_system would otherwise disagree with reality).
+            if (g.system_explicit) g.player.current_system = g.system_name;
+            std::printf("[save] resumed slot %d — %lld cr, ship '%s', system '%s', base '%s'\n",
+                        g.load_slot, (long long)g.player.credits,
+                        g.player.ship_class_name.c_str(),
+                        g.player.current_system.c_str(),
+                        g.player.last_docked_base.c_str());
+        } else {
+            std::fprintf(stderr, "[save] could not load slot %d — starting a new game\n",
+                         g.load_slot);
+        }
+    }
+
+    // Seed the camera's flight speed caps from the starting hull + engine
+    // (np-9cu.3). Stock Tarsus @ engine L0 reproduces the 300/600 defaults.
+    {
+        const outfitting::SpeedCaps caps = outfitting::effective_speed_caps(g.player);
+        g.camera.max_speed_cruise0 = caps.cruise0;
+        g.camera.max_speed_cruise1 = caps.cruise1;
+    }
+    }  // end if (first_time) — one-time tables + player state
 
     const std::string dir = "assets/skybox/" + g.system.skybox_seed;
     if (!g.skybox.init(dir, g.system.skybox_seed)) {
@@ -354,7 +649,7 @@ void init_cb() {
         std::exit(1);
     }
 
-    if (!g.sun.init())  { std::fprintf(stderr, "[main] sun init failed\n");  std::exit(1); }
+    if (first_time && !g.sun.init())  { std::fprintf(stderr, "[main] sun init failed\n");  std::exit(1); }
     if (const StarPreset* sp = find_star_preset(g.system.star_preset)) {
         apply_star_preset(g.sun, *sp);
     } else {
@@ -428,31 +723,47 @@ void init_cb() {
         g.asteroid_fields.push_back(std::move(f));
     }
 
-    if (!g.dust.init()) { std::fprintf(stderr, "[main] dust init failed\n"); std::exit(1); }
+    if (first_time && !g.dust.init()) { std::fprintf(stderr, "[main] dust init failed\n"); std::exit(1); }
 
     // Mesh renderer + placed mesh instances. Load OBJs from disk now; any
     // file that fails to parse is skipped with a warning so one bad entry
     // doesn't take the whole system down.
-    if (!g.mesh_render.init()) {
+    if (first_time && !g.mesh_render.init()) {
         std::fprintf(stderr, "[main] mesh renderer init failed\n");
         std::exit(1);
     }
 
     // Dear ImGui debug overlay. Must come after sg_setup() so the sokol
     // backend has a valid device/context to build its pipeline against.
-    debug_panel::init();
-    sprite_light_editor::init();
-    atlas_grid_viewer::init();
-    sprite_generation_tool::init();
-    mesh_orient_editor::init();
+    if (first_time) {
+        debug_panel::init();
+        sprite_light_editor::init();
+        atlas_grid_viewer::init();
+        sprite_generation_tool::init();
+        mesh_orient_editor::init();
+    }
 
     // Dev remote: HTTP control channel on 127.0.0.1. Lets external
     // tools (code puppy, curl, shell scripts) teleport the camera,
     // grab screenshots, and read state. Non-fatal if it can't bind.
     // Port 47001 picked to avoid collisions with common local dev
     // servers (3000, 5000, 8080, 8765, …).
-    dev_remote::start(47001);
+    if (first_time) {
+        dev_remote::start(47001);
+    }
     dev_remote::publish_system_name(g.system.name.c_str());
+
+    // Audio device + test samples. Failure is non-fatal by design —
+    // audio::init logs and every later call no-ops, the game runs
+    // silent (same resilience philosophy as dev_remote above).
+    if (first_time) {
+        audio::init();
+        g.sfx_blip  = audio::load("assets/sfx/blip.wav");
+        g.sfx_burst = audio::load("assets/sfx/burst.wav");
+        g.sfx_hum   = audio::load("assets/sfx/hum.wav");
+        // Gameplay SFX table + the (silent until throttled) engine-hum loop.
+        sfx::load_all();
+    }
     for (const auto& pm_def : g.system.placed_meshes) {
         PlacedMesh pm;
         pm.name        = pm_def.obj_path;
@@ -530,7 +841,7 @@ void init_cb() {
     // animated-light sidecar (authored by the light editor, np-0kv.5).
     // SpriteArt is cached by stem so repeated references share one GPU
     // texture upload.
-    if (!g.sprite_render.init()) {
+    if (first_time && !g.sprite_render.init()) {
         std::fprintf(stderr, "[main] sprite renderer init failed\n");
         std::exit(1);
     }
@@ -602,16 +913,16 @@ void init_cb() {
     // by extracting the second slash-segment ("ships/talon/atlas_manifest"
     // -> "talon") — every existing scene happens to follow that
     // convention, so we get class binding for free.
-    g.ships.reserve(g.placed_ship_sprites.size() + 1);
-
-    // Player ship at index 0. No class, no sprite — pose is filled in
-    // each frame from g.camera before perception runs. Adding the
-    // player to g.ships unifies the perception + AI inner loops on a
-    // single "all ships" iteration; without this every later layer
-    // would need a special case for "target the player".
-    g.ships.push_back(ship::spawn_player());
-    g.ships.front().position    = g.camera.position;
-    g.ships.front().orientation = g.camera.orientation;
+    // Player ship FIRST so it lands in registry slot 0 — the well-known
+    // ShipRegistry::player_handle() convention. No class, no sprite —
+    // pose is filled in each frame from g.camera before perception runs.
+    // Adding the player to g.ships unifies the perception + AI inner
+    // loops on a single "all ships" iteration; without this every later
+    // layer would need a special case for "target the player".
+    // np-6al.1: the player Ship is spawned ONCE (slot 0) and PERSISTS across
+    // a system switch — only its pose is re-seeded to the new spawn (below).
+    if (first_time) {
+    g.ships.spawn(ship::spawn_player());
 
     // Player ship — Tarsus class until the ship-picker flow lands.
     // Class assignment gives the player real armor/shield/energy from
@@ -620,27 +931,12 @@ void init_cb() {
     // camera input, not the flight controller — class.cruise_speed /
     // accel / max_ypr are not consulted for player kinematics.
     {
-        Ship& player = g.ships.front();
+        Ship& player = *g.ships.player();
         if (const ShipClass* tarsus = ship_class::find("tarsus")) {
             player.klass = tarsus;
-            // Mirror ship::spawn()'s health-from-class init since the
-            // player path doesn't go through that function. (When the
-            // ship-picker flow lands, this'll move into a shared
-            // ship::init_from_class helper.)
-            player.armor_fore_cm = tarsus->armor_fore_cm;
-            player.armor_aft_cm  = tarsus->armor_aft_cm;
-            player.armor_side_cm = tarsus->armor_side_cm;
-            if (tarsus->default_armor) {
-                player.armor_fore_cm += tarsus->default_armor->front_cm;
-                player.armor_aft_cm  += tarsus->default_armor->back_cm;
-                player.armor_side_cm += tarsus->default_armor->side_cm;
-            }
-            if (tarsus->default_shield) {
-                player.shield_fore_cm = tarsus->default_shield->front_cm;
-                player.shield_aft_cm  = tarsus->default_shield->back_cm;
-                player.shield_side_cm = tarsus->default_shield->side_cm;
-            }
-            player.energy_gj = tarsus->energy_max;
+            // Health from class via the shared helper (np-ma2.2) so the
+            // spawn path and the respawn path can't drift apart.
+            ship::heal_to_full(player);
         }
         // Custom loadout: 2x Meson Blaster, mounts on left and right and
         // dropped ~5° below the crosshair. Y offset (engine quirk: world
@@ -659,6 +955,14 @@ void init_cb() {
         player.mounts        = { meson_l, meson_r };
         player.gun_cooldowns = { 0.0f, 0.0f };
     }
+    }  // end if (first_time) — one-time player Ship spawn + loadout
+
+    // Re-seed the player pose to the new system's spawn every build. The
+    // player persists across a jump; only their position/orientation move.
+    if (Ship* p = g.ships.player()) {
+        p->position    = g.camera.position;
+        p->orientation = g.camera.orientation;
+    }
 
     int n_with_behavior = 0;
     int n_inert         = 0;
@@ -669,13 +973,14 @@ void init_cb() {
         // Inert mode — visual-only mannequin for atlas/capture scenes.
         // alive=false makes perception/AI/firing/projectile-collision all
         // skip this Ship, so the sprite renders but the simulation
-        // pretends it isn't there. Indices stay aligned with
-        // placed_ship_sprites because we still push something.
+        // pretends it isn't there. The Ship::sprite pointer is the only
+        // sprite linkage (deque storage keeps it stable); registry slot
+        // order no longer needs to mirror sprite order.
         if (sd.inert) {
             Ship mannequin{};
             mannequin.sprite = &g.placed_ship_sprites[i];
             mannequin.alive  = false;
-            g.ships.push_back(mannequin);
+            g.ships.spawn(std::move(mannequin));
             ++n_inert;
             continue;
         }
@@ -698,12 +1003,12 @@ void init_cb() {
             std::fprintf(stderr, "[main] no ship_class for atlas '%s' (derived '%s'); "
                                  "sprite will run on legacy motion only\n",
                          sd.atlas.c_str(), class_name.c_str());
-            // Push a placeholder Ship anyway so the indices stay aligned.
-            // Behavior is None, so it does nothing — the existing motion
-            // path drives the sprite as today.
+            // Spawn a placeholder Ship anyway so the sprite still has an
+            // owner. Behavior is None, so it does nothing — the existing
+            // motion path drives the sprite as today.
             Ship placeholder{};
             placeholder.sprite = &g.placed_ship_sprites[i];
-            g.ships.push_back(placeholder);
+            g.ships.spawn(std::move(placeholder));
             continue;
         }
 
@@ -762,10 +1067,36 @@ void init_cb() {
             }
         }
 
-        g.ships.push_back(inst);
+        g.ships.spawn(std::move(inst));
     }
     std::printf("[ship] %zu instances spawned (%d with active behavior, %d inert)\n",
                 g.ships.size(), n_with_behavior, n_inert);
+
+    // ---- encounter director (np-ma2.3) ---------------------------------
+    // Pre-load the sprite atlas for every ship class an encounter rule can
+    // spawn. The placed-fleet loop above only loaded atlases for ships it
+    // actually placed; a rule may draw a class that isn't in the static
+    // scene (a roaming Orion in an otherwise Talon-only system). Without
+    // this, encounter_spawn would hit "atlas not loaded" and skip. Same
+    // try_emplace + load pattern as the placed-sprite loop.
+    for (const EncounterRuleDef& rule : g.system.encounters) {
+        for (const EncounterWeight& cw : rule.classes) {
+            if (cw.name.empty()) continue;
+            const std::string atlas_stem = "ships/" + cw.name + "/atlas_manifest";
+            auto [it, inserted] = g.ship_sprite_atlases.try_emplace(atlas_stem, ShipSpriteAtlas{});
+            if (inserted && !load_ship_sprite_atlas(atlas_stem, it->second, g.sprite_art)) {
+                std::fprintf(stderr, "[encounter] could not preload atlas '%s' "
+                             "(class '%s' rules will spawn nothing)\n",
+                             atlas_stem.c_str(), cw.name.c_str());
+                g.ship_sprite_atlases.erase(it);
+            }
+        }
+    }
+    // Parse the spawn tables into runtime rule state, and hand the live
+    // ship registry + player reputation to the threat oracle so
+    // threat::hostiles_near() (autopilot gate) queries the real world.
+    encounters::init(g.system);
+    threat::set_world(&g.ships, &g.player.rep);
 
     // Fly-by-wire defaults OFF. Player toggles it with SPACE. This is much
     // friendlier for tools/capture scripts and prevents the camera from
@@ -778,6 +1109,655 @@ void init_cb() {
     g.last_fps_ticks   = g.last_frame_ticks;
     std::printf("[new_privateer] backend=%d, '%s' loaded\n",
                 (int)sg_query_backend(), g.system.name.c_str());
+
+    // --dev-land <base>: skip the flight + autodock and boot straight into
+    // the base concourse (np-9cu.4 dev affordance). The transition is
+    // applied at the top of the first frame_cb, which calls
+    // base_screens::enter(last_docked_base) for us.
+    if (first_time && !g.dev_land_base.empty()) {
+        g.player.last_docked_base = g.dev_land_base;
+        g.player.docked           = true;
+        game_state::request_mode(g.game, GameMode::Landed);
+        std::printf("[new_privateer] --dev-land '%s' — booting into Landed\n",
+                    g.dev_land_base.c_str());
+    }
+}
+
+// ---- system teardown (np-6al.1) ---------------------------------------------
+//
+// The teardown half of a runtime jump. Frees EVERY GPU/scene resource the
+// scene-build path allocated, in dependency order (holders before the things
+// they point into), so a switch never leaks a sokol image/view/buffer and the
+// player can hop systems indefinitely. What survives: the player (slot-0 Ship
+// + PlayerState), and the long-lived renderers (sun geometry, dust, mesh +
+// sprite renderers) which are system-independent and re-used by the next
+// build. Audited resource list (each paired with its sg_destroy):
+//   * Skybox          — cubemap image/view + sampler + vbuf/ibuf + shader/pipeline
+//   * AsteroidField[] — per-variant instance buffers + shader/pipeline
+//   * PlacedMesh[]    — vbuf/ibuf + every Material's diffuse/spec/glow/normal
+//                       image+view (Mesh::destroy walks the material table)
+//   * SpriteArt cache — hull/lights image+view+sampler; this also owns the GPU
+//                       textures behind every ShipSpriteAtlas (the atlases just
+//                       hold SpriteArt* into this cache), so clearing it frees
+//                       both placed-sprite and ship-sprite imagery in one pass
+//   * ShipSpriteAtlas map + placed_ship_sprites + placed_sprites — CPU-side
+//                       holders, cleared after the GPU textures they reference
+// Director bookkeeping + transient FX vectors are pure CPU and just cleared.
+void unload_current_system() {
+    const size_t n_fields  = g.asteroid_fields.size();
+    const size_t n_sprites = g.placed_sprites.size();
+    const size_t n_atlases = g.ship_sprite_atlases.size();
+    const size_t n_meshes  = g.placed_meshes.size();
+
+    // 1. Director state first (ids only — the registry owns the ships), then
+    //    drop every NPC / encounter ship, keeping the player in slot 0.
+    encounters::shutdown();
+    const size_t n_ships = g.ships.clear_except_player();
+
+    // 2. Transient FX + per-frame scratch — pure CPU vectors.
+    g.projectiles.clear();
+    g.missiles.clear();
+    g.explosions.clear();
+    g.shield_flashes.clear();
+    g.armor_flashes.clear();
+    g.frame_sprites.clear();
+
+    // 3. CPU-side sprite holders BEFORE the GPU textures they point into.
+    //    (ShipSpriteAtlas frames hold SpriteArt* into g.sprite_art; the
+    //    ShipSpriteObjects hold ShipSpriteAtlas*; clear inner-most first.)
+    g.placed_ship_sprites.clear();
+    g.free_sprite_slots.clear();
+    g.ship_sprite_atlases.clear();
+    g.placed_sprites.clear();
+
+    // 4. GPU resources — every sg_make_* in the scene path gets its paired
+    //    sg_destroy here. sokol treats destroy-on-invalid as a no-op, so a
+    //    first-time/empty container is harmless.
+    for (auto& [_, art] : g.sprite_art) art.destroy();   // sprite + ship-atlas imagery
+    g.sprite_art.clear();
+    for (auto& pm : g.placed_meshes) pm.mesh.destroy();   // vbuf/ibuf + material textures
+    g.placed_meshes.clear();
+    for (auto& f : g.asteroid_fields) f.destroy();        // instance buffers + pipeline
+    g.asteroid_fields.clear();
+    g.skybox.destroy();                                   // cubemap/view/sampler/buffers/pipeline
+
+    // 5. Targeting / traversal state that referenced the old system.
+    g.selected_nav     = -1;
+    g.player_target_id = 0;
+    g.show_navmap      = false;
+    g.autopilot = Autopilot{};
+    g.docking   = Docking{};
+
+    std::printf("[system] unloading %s: freed %zu asteroid fields, %zu sprites, "
+                "%zu ship atlases, %zu meshes, %zu NPC ships\n",
+                g.system.name.c_str(), n_fields, n_sprites, n_atlases,
+                n_meshes, n_ships);
+}
+
+// ---- load + (re)build a system (np-6al.1) -----------------------------------
+//
+// The single entry point both startup and the runtime jump go through. On a
+// switch (first_time=false): validate the new system loads BEFORE tearing down
+// the old one (so a typo'd id leaves the current world intact), unload, then
+// build. The player's PlayerState is untouched the whole time — only
+// current_system is updated to the new world.
+bool load_and_build_system(const std::string& id, bool first_time) {
+    if (!first_time) {
+        std::printf("[system] === switching '%s' -> '%s' ===\n",
+                    g.player.current_system.c_str(), id.c_str());
+    }
+
+    // Resolve the per-system JSON path through the galaxy catalog when the id
+    // is a known galaxy id; otherwise fall back to treating `id` as a
+    // system name/path directly (so --system <file> + legacy flows still work).
+    std::string load_arg = id;
+    if (const galaxy::SystemEntry* e = g.galaxy.find(id); e && !e->json_path.empty()) {
+        load_arg = e->json_path;
+    }
+
+    auto loaded = load_system(load_arg);
+    if (!loaded) {
+        std::fprintf(stderr, "[system] load of '%s' failed\n", id.c_str());
+        return false;   // nothing torn down yet — current world still intact
+    }
+
+    if (!first_time) unload_current_system();
+    g.system = std::move(*loaded);
+    build_system_scene(first_time);
+
+    g.player.current_system = id;
+    g.system_loaded = true;
+    g.system_name   = id;
+    dev_remote::publish_system_name(g.system.name.c_str());
+    sapp_set_window_title(("new_privateer — " + g.system.name).c_str());
+    std::printf("[system] built %s: %zu asteroid fields, %zu sprites, "
+                "%zu ship atlases, %zu nav points, registry=%zu ships "
+                "(player persists: %lld cr, ship '%s')\n",
+                g.system.name.c_str(), g.asteroid_fields.size(),
+                g.placed_sprites.size(), g.ship_sprite_atlases.size(),
+                g.system.nav_points.size(), g.ships.size(),
+                (long long)g.player.credits, g.player.ship_class_name.c_str());
+    return true;
+}
+
+// ---- jump execution (np-6al.3) ----------------------------------------------
+//
+// How long the hyperspace flash holds before the world swaps. Short enough
+// to feel snappy, long enough that the white flash reads as a transition
+// rather than a single-frame glitch.
+static constexpr float k_jump_loading_s = 0.9f;
+
+// Perform the queued jump. Called from frame_cb once the Loading beat has
+// elapsed. Reuses load_and_build_system (np-6al.1) so the player's ship /
+// cargo / credits / reputation persist exactly as the dev --goto path proves;
+// then drops the player at the reciprocal gate (galaxy::jump_target gave us
+// the arrival nav), nudged a hair toward system center and facing INTO the
+// system (away from the gate) with a modest inward drift. Any failure still
+// returns to Flight so the player is never stranded on the Loading screen.
+void execute_jump() {
+    const std::string dest = g.pending_jump_system;
+    const std::string nav  = g.pending_jump_nav;
+    g.pending_jump_system.clear();
+    g.pending_jump_nav.clear();
+
+    if (!load_and_build_system(dest, /*first_time=*/false)) {
+        std::fprintf(stderr, "[jump] build of '%s' failed — aborting jump\n",
+                     dest.c_str());
+        game_state::request_mode(g.game, GameMode::Flight);
+        return;
+    }
+
+    // Locate the arrival gate by name in the freshly-built destination.
+    const NavPointDef* gate = nullptr;
+    for (const auto& n : g.system.nav_points) {
+        if (n.name == nav) { gate = &n; break; }
+    }
+    if (gate) {
+        // "Into the system" = toward the origin/sun. A gate sitting exactly
+        // at the origin (none today) degenerates to the camera's default
+        // forward (-Z) rather than a NaN direction.
+        HMM_Vec3    into = HMM_MulV3F(gate->position, -1.0f);
+        const float len  = HMM_LenV3(into);
+        into = (len > 1e-3f) ? HMM_DivV3F(into, len) : HMM_V3(0.0f, 0.0f, -1.0f);
+
+        constexpr float k_arrival_offset = 1500.0f;  // clear of the gate hull
+        constexpr float k_arrival_speed  = 60.0f;     // gentle inward coast
+        g.camera.position = HMM_AddV3(gate->position,
+                                      HMM_MulV3F(into, k_arrival_offset));
+        g.camera.velocity = HMM_MulV3F(into, k_arrival_speed);
+
+        // Orient toward `into` (shortest arc from default forward -Z), same
+        // construction build_system_scene uses for player_look_at.
+        const HMM_Vec3 def_fwd = HMM_V3(0.0f, 0.0f, -1.0f);
+        const HMM_Vec3 axis    = HMM_Cross(def_fwd, into);
+        const float    sin2    = HMM_DotV3(axis, axis);
+        if (sin2 > 1e-10f) {
+            const float sin_a = std::sqrt(sin2);
+            const float cos_a = std::clamp(HMM_DotV3(def_fwd, into), -1.0f, 1.0f);
+            const float angle = std::atan2(sin_a, cos_a);
+            g.camera.orientation = HMM_QFromAxisAngle_RH(HMM_DivV3F(axis, sin_a), angle);
+        } else {
+            g.camera.orientation = HMM_Q(0.0f, 0.0f, 0.0f, 1.0f);
+        }
+        // Arrive coasting, not cruising — no leftover spool from the origin.
+        g.camera.cruise_target = 0.0f;
+        g.camera.cruise_level  = 0.0f;
+
+        std::printf("[jump] arrived in %s at gate '%s' — pos %.0f,%.0f,%.0f, "
+                    "facing into-system\n",
+                    g.system.name.c_str(), nav.c_str(),
+                    g.camera.position.X, g.camera.position.Y, g.camera.position.Z);
+    } else {
+        std::fprintf(stderr, "[jump] arrival nav '%s' not found in %s — "
+                     "spawning at default player_start\n",
+                     nav.c_str(), g.system.name.c_str());
+    }
+
+    // Sync the slot-0 player Ship pose to the new camera immediately so the
+    // first Flight frame's perception/AI don't see a one-frame teleport
+    // ghost (the registry was just rebuilt around the persisted player).
+    if (Ship* p = g.ships.player()) {
+        p->position = g.camera.position;
+    }
+
+    game_state::request_mode(g.game, GameMode::Flight);
+}
+
+// ---- debug ship spawn/despawn (registry smoke test, np-eag.1) ---------------
+//
+// Consumes the deferred requests set by debug_panel's buttons. Runs at
+// the top of frame_cb, BEFORE any system iterates the registry, so a
+// spawn/despawn never mutates storage mid-frame. This is the first
+// runtime exercise of the slot-map machinery — real encounter
+// generation (np-ma2.3) will follow the same recipe:
+//
+//   1. claim a sprite slot (reuse a freed one, else append — deque
+//      growth keeps every existing Ship::sprite pointer valid),
+//   2. ship::spawn(klass) for class-derived health/mounts/AI,
+//   3. registry.spawn(std::move(ship)) -> handle.
+//
+// Despawn is the reverse: park the sprite slot (atlas=nullptr makes
+// renderer + integrator skip it) and registry.despawn(handle), which
+// bumps the slot generation so any stale handle resolves to nullptr.
+void apply_ship_debug_requests() {
+    // --dev-kill-at <secs>: fire the death test once, in Flight, after the
+    // clock crosses the threshold. One-shot (we disarm by clearing the
+    // threshold) so respawn doesn't immediately re-die.
+    if (g.dev_kill_at_s >= 0.0f && g.game.mode == GameMode::Flight) {
+        g.dev_run_clock_s += (float)sapp_frame_duration();
+        if (g.dev_run_clock_s >= g.dev_kill_at_s) {
+            g.ship_debug.kill_player = true;
+            g.dev_kill_at_s = -1.0f;   // disarm
+            std::printf("[dev] --dev-kill-at fired at %.1fs\n", g.dev_run_clock_s);
+        }
+    }
+
+    // np-ma2.1 reputation test: run the player-kill rep logic against the
+    // chosen victim faction directly. Deterministic — surfaces the same
+    // rep deltas / stance flips / taunts as a real projectile kill would.
+    if (g.ship_debug.sim_kill_faction >= 0) {
+        const Faction vf = (Faction)g.ship_debug.sim_kill_faction;
+        g.ship_debug.sim_kill_faction = -1;
+        std::printf("[debug] simulate player kill of %s\n", faction::to_name(vf));
+        comm::report_player_kill(g.player, vf);
+        missions::on_player_kill(g.player, vf);   // advance matching bounties
+    }
+
+    if (g.ship_debug.spawn_talon) {
+        g.ship_debug.spawn_talon = false;
+
+        const ShipClass* klass = ship_class::find("talon");
+        auto atlas_it = g.ship_sprite_atlases.find("ships/talon/atlas_manifest");
+        if (!klass || atlas_it == g.ship_sprite_atlases.end()) {
+            std::fprintf(stderr, "[debug_spawn] talon class or atlas not loaded "
+                                 "in this system; spawn ignored\n");
+        } else {
+            // Claim a sprite slot (reuse parked, else append — see helper).
+            const size_t slot = claim_sprite_slot();
+            ShipSpriteObject& spr = g.placed_ship_sprites[slot];
+            spr.atlas      = &atlas_it->second;
+            // 500 m ahead of the camera — close enough to see immediately,
+            // far enough to not clip through the cockpit.
+            spr.position   = HMM_AddV3(g.camera.position,
+                                       HMM_MulV3F(g.camera.forward(), 500.0f));
+            spr.world_size = 80.0f * world_scale::k_ship_size_scale;  // matches troy.json talons
+
+            Ship inst   = ship::spawn(*klass);
+            inst.sprite = &spr;
+            inst.ai.enabled = true;             // joins the brawl like its JSON kin
+            const ShipHandle h = g.ships.spawn(std::move(inst));
+            std::printf("[debug_spawn] talon spawned: handle {%u, %u}, sprite slot %zu\n",
+                        h.index, h.generation, slot);
+        }
+    }
+
+    if (g.ship_debug.despawn_target) {
+        g.ship_debug.despawn_target = false;
+
+        const ShipHandle h = g.ships.find_handle_by_id(g.player_target_id);
+        const Ship* t = g.ships.get(h);
+        if (!t) {
+            std::printf("[debug_despawn] no valid target locked (T-cycle first)\n");
+        } else if (t->is_player) {
+            std::printf("[debug_despawn] refusing to despawn the player, nice try\n");
+        } else {
+            // Park the sprite slot for reuse (atlas=nullptr is the
+            // "unoccupied" marker the renderer + integrator skip).
+            free_sprite_slot(t->sprite);
+            g.ships.despawn(h);
+            g.player_target_id = 0;
+            // Prove the staleness contract: the handle we just retired
+            // must now resolve to nullptr. Cheap, loud if ever broken.
+            if (g.ships.get(h) != nullptr) {
+                std::fprintf(stderr, "[debug_despawn] BUG: stale handle still resolves!\n");
+            } else {
+                std::printf("[debug_despawn] despawned; stale handle {%u, %u} "
+                            "now resolves to nullptr (good)\n", h.index, h.generation);
+            }
+        }
+    }
+}
+
+// ---- system-switch dev timers (np-6al.1) ------------------------------------
+//
+// Advances the --goto / --goto-soak dev clocks and QUEUES frame-boundary
+// switches — it only ever sets g.pending_goto; the actual teardown+build runs
+// at the top of frame_cb. --goto fires one switch; --goto-soak cycles the
+// galaxy's systems N times then quits cleanly (so cleanup_cb runs and the
+// shutdown path is part of the leak audit).
+void update_system_switch_timers(float dt) {
+    g.switch_clock_s += dt;
+
+    // --goto <id>: a single deferred switch, goto_at_s after Flight begins.
+    if (!g.goto_system.empty() && g.switch_clock_s >= g.goto_at_s) {
+        g.pending_goto = g.goto_system;
+        g.goto_system.clear();
+        return;
+    }
+
+    // --goto-soak <n>: cycle through the galaxy's systems on an interval.
+    if (g.soak_remaining > 0 && g.switch_clock_s >= g.soak_interval) {
+        if (!g.galaxy.systems.empty()) {
+            const int n = (int)g.galaxy.systems.size();
+            for (int step = 0; step < n; ++step) {
+                g.soak_index = (g.soak_index + 1) % n;
+                const std::string& cand = g.galaxy.systems[g.soak_index].id;
+                if (cand != g.player.current_system) {
+                    g.pending_goto = cand;
+                    break;
+                }
+            }
+        }
+        --g.soak_remaining;
+        if (g.soak_remaining <= 0) {
+            g.soak_quit = true;   // last switch queued; quit once it lands
+            std::printf("[system] --goto-soak: final switch queued\n");
+        }
+        return;
+    }
+
+    // Soak finished: let the final system render a beat, then quit cleanly.
+    if (g.soak_quit && g.soak_remaining <= 0 && g.pending_goto.empty()
+        && g.switch_clock_s >= g.soak_interval) {
+        std::printf("[system] --goto-soak complete; quitting for clean shutdown\n");
+        sapp_request_quit();
+    }
+}
+
+// ---- jump soak dev driver (np-6al.3) ----------------------------------------
+//
+// The headless stand-in for a human pressing J. On the dev_jump_interval,
+// while in Flight with no jump already in flight: select the first surveyed
+// jump gate in the current system, teleport just inside its trigger range,
+// and fire the jump through the EXACT same code path the J keypress uses
+// (jump::evaluate -> pending_jump + Loading). Because Troy's first gate leads
+// to Pyrenees and Pyrenees' only gate leads back to Troy, this ping-pongs the
+// round-trip indefinitely — a leak/stability soak over repeated teardown+build.
+void update_dev_jump_soak(float dt) {
+    if (g.dev_jump_remaining <= 0 && !g.dev_jump_quit) return;
+    if (!g.pending_jump_system.empty()) return;   // a jump is mid-flight
+
+    g.dev_jump_clock_s += dt;
+    if (g.dev_jump_clock_s < g.dev_jump_interval) return;
+    g.dev_jump_clock_s = 0.0f;
+
+    // Final-jump linger: let the last arrival render a beat, then quit clean.
+    if (g.dev_jump_quit) {
+        std::printf("[dev] --dev-jump-soak complete; quitting for clean shutdown\n");
+        sapp_request_quit();
+        return;
+    }
+
+    // First surveyed gate in this system.
+    int idx = -1;
+    for (int i = 0; i < (int)g.system.nav_points.size(); ++i) {
+        const NavPointDef& n = g.system.nav_points[i];
+        if (n.kind != "jump") continue;
+        if (!g.galaxy.jump_target(g.player.current_system, n.name).ok) continue;
+        idx = i;
+        break;
+    }
+    if (idx < 0) {
+        std::printf("[dev] --dev-jump-soak: no surveyed gate in %s; quitting\n",
+                    g.system.name.c_str());
+        sapp_request_quit();
+        return;
+    }
+
+    // Teleport just clear of the gate (toward system center), inside range.
+    g.selected_nav = idx;
+    const NavPointDef& gate = g.system.nav_points[idx];
+    HMM_Vec3    into = HMM_MulV3F(gate.position, -1.0f);
+    const float len  = HMM_LenV3(into);
+    into = (len > 1e-3f) ? HMM_DivV3F(into, len) : HMM_V3(0.0f, 0.0f, -1.0f);
+    g.camera.position = HMM_AddV3(gate.position, HMM_MulV3F(into, 1000.0f));
+    g.camera.velocity = HMM_V3(0.0f, 0.0f, 0.0f);
+
+    const jump::Eligibility e = jump::evaluate(
+        g.camera, g.system, g.galaxy, g.player.current_system, idx);
+    if (e.status == jump::Status::Ready) {
+        std::printf("[dev] --dev-jump-soak: auto-J %s -> %s via %s (%d remaining)\n",
+                    g.player.current_system.c_str(), e.dest_id.c_str(),
+                    gate.name.c_str(), g.dev_jump_remaining - 1);
+        g.pending_jump_system = e.dest_id;
+        g.pending_jump_nav    = e.arrival_nav;
+        sfx::jump();
+        game_state::request_mode(g.game, GameMode::Loading);
+    } else {
+        std::printf("[dev] --dev-jump-soak: gate '%s' not ready (%s); skipping\n",
+                    gate.name.c_str(), jump::status_str(e.status));
+    }
+
+    --g.dev_jump_remaining;
+    if (g.dev_jump_remaining <= 0) g.dev_jump_quit = true;
+}
+
+// ---- player death & respawn (np-ma2.2) --------------------------------------
+//
+// How long the death cinematic holds before we respawn. The explosion FX
+// lifetime is ~1.2s; we linger a beat past that so the fireball fully
+// blooms-and-fades over the cockpit before the screen swaps to the base.
+static constexpr float k_death_cinematic_s = 3.0f;
+
+// Drop the player back into the world after a death. POLICY (Privateer-
+// authentic): reload the autosave (slot 0, written on every dock by
+// docking::tick) and land the player at their last docked base. The
+// consequence — by design — is that you lose any progress made since
+// that last landing (credits earned, cargo bought, reputation shifts):
+// the classic "save-at-base" tension that pairs with np-ymp.1's
+// autosave-on-dock. If no autosave exists yet (died before ever docking)
+// we fall back to the new_game baseline in the current system and respawn
+// in free Flight where the wreck was, since there's no base to land at.
+static void respawn_player() {
+    // 1) Restore the persistent half of the player from the autosave.
+    PlayerState restored;
+    const bool from_save = savegame::load(restored, savegame::k_autosave_slot);
+    if (from_save) {
+        g.player = restored;
+        std::printf("[respawn] restored autosave: base=%s, system=%s, %lld cr\n",
+                    g.player.last_docked_base.c_str(),
+                    g.player.current_system.c_str(),
+                    (long long)g.player.credits);
+    } else {
+        g.player = player::new_game(g.player.current_system);
+        std::printf("[respawn] no autosave found — new_game baseline (%lld cr)\n",
+                    (long long)g.player.credits);
+    }
+
+    // 2) Heal the player ship to full from its (possibly restored) class.
+    //    Re-bind klass from the owned ship name so a future ship-swap save
+    //    respawns in the right hull; today that's always the Tarsus.
+    if (Ship* pl = g.ships.player()) {
+        if (const ShipClass* k = ship_class::find(g.player.ship_class_name)) {
+            pl->klass = k;
+        }
+        ship::heal_to_full(*pl);
+    }
+
+    // 3) Clear anything that could act on / kill the fresh player: in-flight
+    //    projectiles, the death FX, and any autopilot/docking ownership.
+    g.projectiles.clear();
+    g.missiles.clear();
+    g.explosions.clear();
+    if (autopilot::engaged(g.autopilot)) {
+        autopilot::disengage(g.autopilot, g.camera, "");
+    }
+    g.docking = Docking{};
+    g.player_target_id = 0;
+    g.camera.velocity     = HMM_V3(0.0f, 0.0f, 0.0f);
+    g.camera.cruise_level = 0.0f;
+    g.camera.cruise_target = 0.0f;
+
+    // 4) Destination. With a last docked base, drop the player Landed there
+    //    (apply_pending's transition handler runs base_screens::enter for
+    //    us). Otherwise free Flight at the current spot.
+    if (!g.player.last_docked_base.empty()) {
+        g.player.docked = true;
+        game_state::request_mode(g.game, GameMode::Landed);
+        std::printf("[respawn] RESPAWNING AT %s — Landed\n",
+                    g.player.last_docked_base.c_str());
+    } else {
+        g.player.docked = false;
+        game_state::request_mode(g.game, GameMode::Flight);
+        std::printf("[respawn] RESPAWNING in free flight (no base on record)\n");
+    }
+}
+
+// ---- encounter director host hooks (np-ma2.3) -------------------------------
+//
+// The director (src/encounters.cpp) decides WHEN/WHERE/WHO; these two
+// functions are the WHAT — the exact np-eag.1 spawn/despawn recipe the
+// debug button above runs, lifted into reusable hooks the director calls
+// through encounters::SpawnFn / DespawnFn. They live here (not in
+// encounters.cpp) because the sprite-slot pool + atlas map + registry all
+// live in AppState; the director stays AppState-free by going through
+// these.
+
+// Per-class display length (world metres, pre-scale) for director spawns,
+// mirroring the sizes the troy.json fleet uses so director ships read at
+// the same scale as their hand-placed kin. Unknown classes fall back to a
+// fighter-ish 80 m.
+static float encounter_class_length(const std::string& cls) {
+    if (cls == "galaxy") return 120.0f;
+    if (cls == "orion")  return 60.0f;
+    if (cls == "tarsus") return 100.0f;
+    return 80.0f;   // talon + anything unrecognised
+}
+
+// Spawn recipe: claim a sprite slot (reuse freed, else append — deque
+// growth keeps every Ship::sprite pointer valid), attach the class atlas,
+// ship::spawn() for class-derived stats, assign faction + enable AI, and
+// register in the slot-map. Returns the new ship's monotonic id, or 0 if
+// the class/atlas isn't loaded in this system (director skips a 0).
+static uint32_t encounter_spawn(const encounters::SpawnRequest& req) {
+    const std::string atlas_key = "ships/" + req.class_name + "/atlas_manifest";
+    const ShipClass*  klass     = ship_class::find(req.class_name);
+    auto atlas_it = g.ship_sprite_atlases.find(atlas_key);
+    if (!klass || atlas_it == g.ship_sprite_atlases.end()) {
+        std::fprintf(stderr, "[encounter] spawn failed: class/atlas '%s' not loaded\n",
+                     req.class_name.c_str());
+        return 0;
+    }
+
+    const size_t slot = claim_sprite_slot();
+    ShipSpriteObject& spr = g.placed_ship_sprites[slot];
+    spr.atlas      = &atlas_it->second;
+    spr.position   = req.position;
+    spr.world_size = encounter_class_length(req.class_name) * world_scale::k_ship_size_scale;
+
+    Ship inst       = ship::spawn(*klass);
+    inst.sprite     = &spr;
+    inst.faction    = req.faction;
+    inst.ai.enabled = true;
+    inst.ai.state   = req.initial_ai_state;
+    inst.ai.patrol_anchor     = req.patrol_anchor;
+    inst.ai.has_patrol_anchor = true;   // loiter / flee-home tether at spawn
+
+    const uint32_t id = inst.id;        // ship::spawn already minted it
+    g.ships.spawn(std::move(inst));
+    return id;
+}
+
+// Despawn recipe (the reverse): park the sprite slot (atlas=nullptr makes
+// renderer + integrator skip it) and despawn the registry slot (bumps the
+// generation so any stale handle resolves to nullptr). No-op on an
+// already-gone id.
+static void encounter_despawn(uint32_t id) {
+    const ShipHandle h = g.ships.find_handle_by_id(id);
+    Ship* s = g.ships.get(h);
+    if (!s) return;
+    free_sprite_slot(s->sprite);
+    g.ships.despawn(h);
+}
+
+// ---- non-Flight stub screens ------------------------------------------------
+//
+// Landed / Dying / Loading don't have real screens yet (np-eag.2 only adds
+// the state machine). Each renders a dark clear + a one-line debugtext
+// label so it's unmistakable which mode you're in, plus the debug panel
+// (so the Game Mode combo can drive you back out) and the dev_remote
+// hooks (so /screenshot keeps working for validation). Escape returns to
+// Flight — wired in event_cb. ASCII-only labels because the sokol
+// debugtext fonts have no glyphs past the 8-bit range.
+void frame_stub() {
+    // Keep the dev channel responsive: queued commands (screenshot,
+    // camera pokes) still drain even though the sim is paused.
+    dev_remote::drain_commands(g.camera);
+
+    // Fade the engine hum out — landed/dying/loading ships don't thrum.
+    // Uses the real frame dt is unavailable here (stub skips the
+    // timestep block), so approximate with the display refresh; the
+    // lerp only needs "roughly seconds" to fade smoothly.
+    sfx::update_engine_hum(0.0f, 0.0f, /*flight_mode=*/false,
+                           (float)sapp_frame_duration());
+
+    // Landed mode draws the data-driven base screens (np-9cu.4) over the
+    // whole framebuffer; Dying/Loading still show a one-line debugtext
+    // label. ASCII-only labels (the debugtext fonts have no glyphs past
+    // the 8-bit range).
+    // Jump hyperspace flash (np-6al.3): when a jump is queued, the Loading
+    // screen blows out white at entry and fades to the void over the jump
+    // beat — a cheap, satisfying "snap into hyperspace" cue (no bespoke FX
+    // pass; just the clear colour animated against time_in_mode_s). `flash`
+    // is 1 at entry, 0 by the time execute_jump swaps the world.
+    const bool  jumping = (g.game.mode == GameMode::Loading &&
+                           !g.pending_jump_system.empty());
+    float       flash   = 0.0f;
+    if (jumping) {
+        const float t = g.game.time_in_mode_s / k_jump_loading_s;  // 0..1
+        flash = 1.0f - std::min(1.0f, std::max(0.0f, t));
+        flash = flash * flash;   // ease-out so the white lingers then snaps off
+    }
+
+    const bool landed = (g.game.mode == GameMode::Landed);
+    if (!landed) {
+        const float fb_w = (float)sapp_width();
+        const float fb_h = (float)sapp_height();
+        sdtx_canvas(fb_w * 0.5f, fb_h * 0.5f);
+        sdtx_font(0);
+        sdtx_color3f(0.7f, 1.0f, 0.9f);
+        sdtx_pos(2.0f, 2.0f);
+        switch (g.game.mode) {
+            case GameMode::Dying:   sdtx_puts("DYING - death sequence TBD\n");  break;
+            case GameMode::Loading:
+                if (jumping) sdtx_printf("JUMPING TO %s...\n",
+                                         g.pending_jump_system.c_str());
+                else         sdtx_puts("LOADING - load screens TBD\n");
+                break;
+            default:                sdtx_puts("? - unknown mode\n");            break;
+        }
+        sdtx_font(1);
+        sdtx_color3f(0.5f, 0.6f, 0.7f);
+        sdtx_printf("\nmode '%s' for %.1fs   ESC returns to flight\n",
+                    game_state::to_name(g.game.mode), g.game.time_in_mode_s);
+    }
+
+    // ImGui frame so the Ctrl+M debug panel (Game Mode combo) stays
+    // usable while parked on a stub screen. debug_panel::build issues
+    // simgui_new_frame(), so base_screens::build (which records ImGui draw
+    // commands) must follow it and precede debug_panel::render().
+    debug_panel::build(g.placed_meshes, g.placed_ship_sprites, g.game,
+                       g.ship_debug, g.audio_debug, g.player);
+    if (landed) {
+        base_screens::build(g.player, g.ships.player(), g.docking, g.camera, g.game);
+    }
+
+    sg_pass p{};
+    p.swapchain = sglue_swapchain();
+    p.action.colors[0].load_action = SG_LOADACTION_CLEAR;
+    // Lerp the void toward white by the jump flash (0 = normal dark clear).
+    p.action.colors[0].clear_value = {
+        0.02f + (1.0f - 0.02f) * flash,
+        0.02f + (1.0f - 0.02f) * flash,
+        0.05f + (1.0f - 0.05f) * flash,
+        1.0f };
+    sg_begin_pass(&p);
+    if (!landed) sdtx_draw();
+    debug_panel::render();
+    sg_end_pass();
+    sg_commit();
+
+    dev_remote::maybe_capture_screenshot();
 }
 
 void frame_cb() {
@@ -786,20 +1766,138 @@ void frame_cb() {
     const float    dt  = (float)stm_sec(stm_diff(now, g.last_frame_ticks));
     g.last_frame_ticks = now;
 
+    // --- deferred system switch (np-6al.1, frame boundary only) -------------
+    // Dev timers (--goto / --goto-soak) and the debug dropdown queue a switch
+    // in g.pending_goto; we apply it HERE, at a clean frame boundary, never
+    // mid-frame (the switch tears down + rebuilds the entire scene). Gated to
+    // Flight so we don't yank the world out from under a base screen. After a
+    // switch we present nothing else this frame and let the next frame run
+    // the freshly-built world.
+    if (g.game.mode == GameMode::Flight) {
+        update_system_switch_timers(dt);
+        update_dev_jump_soak(dt);
+    }
+    if (!g.pending_goto.empty()) {
+        const std::string target = g.pending_goto;
+        g.pending_goto.clear();
+        g.switch_clock_s = 0.0f;
+        load_and_build_system(target, /*first_time=*/false);
+        g.keys_down.fill(false);   // no key ghosts across the switch
+        return;
+    }
+
+    // --- game-mode transition (frame start, never mid-frame) ----------------
+    // Any request_mode() calls from last frame land here. On a transition,
+    // wipe held-key state so a key held across the flip doesn't ghost-
+    // thrust (or ghost-fire) when we re-enter Flight later.
+    if (game_state::apply_pending(g.game, dt)) {
+        g.keys_down.fill(false);
+        // Base-screen lifecycle (np-9cu.4): enter loads the docked base's
+        // concourse art + hotspot JSON when we land; exit frees the GPU
+        // texture when we leave Landed (launch, or any other exit).
+        if (g.game.mode == GameMode::Landed) {
+            base_screens::enter(g.player.last_docked_base);
+            // Mission board (np-zte.1): regenerate this base's offers on each
+            // dock from a base-id + slow-clock seed, so the board feels alive
+            // between visits but is stable within a sitting. Reads the galaxy
+            // graph for reachable delivery destinations.
+            missions::generate_board(g.player.last_docked_base,
+                                     g.player.current_system, g.galaxy);
+        } else if (g.game.prev_mode == GameMode::Landed) {
+            base_screens::exit();
+            // Outfitting (np-9cu.3): fold the player's hull + engine_level into
+            // the camera's flight speed caps as we launch back into Flight.
+            // engine_level 0 on the stock Tarsus reproduces the old 300/600.
+            const outfitting::SpeedCaps caps = outfitting::effective_speed_caps(g.player);
+            g.camera.max_speed_cruise0 = caps.cruise0;
+            g.camera.max_speed_cruise1 = caps.cruise1;
+            std::printf("[outfit] launch speed caps -> %.0f / %.0f (engine L%d)\n",
+                        caps.cruise0, caps.cruise1, g.player.engine_level);
+        }
+    }
+
+    // Debug spawn/despawn requests — applied here, before any system
+    // iterates the registry or holds Ship&s for the frame.
+    apply_ship_debug_requests();
+
+    // Jump transition (np-6al.3): while parked in the Loading cinematic with
+    // a queued jump, hold for the hyperspace flash (k_jump_loading_s) then
+    // warp — rebuild the destination system + drop the player at the
+    // reciprocal gate, and request a return to Flight. Same deferred
+    // discipline as the system switch above: the heavy teardown/build runs
+    // at a clean frame boundary, never mid-frame.
+    if (g.game.mode == GameMode::Loading && !g.pending_jump_system.empty()
+        && g.game.time_in_mode_s >= k_jump_loading_s) {
+        execute_jump();
+    }
+
+    // Dying cinematic (np-ma2.2): hold for k_death_cinematic_s while the
+    // explosion plays out, then reload the autosave and drop the player
+    // back at their last base. We DON'T short-circuit to frame_stub here —
+    // Dying falls through to the full Flight sim+render below (gated to
+    // freeze player control) so the fireball is actually visible blooming
+    // over the dead cockpit. respawn_player() requests the next mode; the
+    // flip lands at the top of the following frame.
+    if (g.game.mode == GameMode::Dying &&
+        g.game.time_in_mode_s >= k_death_cinematic_s) {
+        respawn_player();
+    }
+
+    // Landed / Loading render a stub screen and skip the entire sim +
+    // render path below. Flight (and the Dying cinematic) fall through.
+    if (g.game.mode != GameMode::Flight && g.game.mode != GameMode::Dying) {
+        frame_stub();
+        return;
+    }
+
+    // During the Dying cinematic the sim keeps running (NPCs, projectiles,
+    // explosions) but the player is a dead wreck — freeze pilot input so
+    // the camera holds on the blast instead of drifting under stale keys.
+    const bool dying = (g.game.mode == GameMode::Dying);
+
     // --- fly-by-wire aim ----------------------------------------------------
     // Drive yaw/pitch from the absolute mouse position. We skip when the
     // player has popped into free-cursor mode (SPACE) and ALSO when
     // ImGui wants the mouse (e.g. they're hovering the debug panel) —
     // otherwise the ship would lurch every time the user reaches for a
     // slider in CTRL+M.
-    if (g.fly_by_wire && !ImGui::GetIO().WantCaptureMouse) {
-        const float dpi = sapp_dpi_scale();
-        const float w   = (float)sapp_width()  / dpi;
-        const float h   = (float)sapp_height() / dpi;
-        const float cx  = w * 0.5f;
-        const float cy  = h * 0.5f;
-        const float off_x = (g.mouse_x - cx) / cx;
-        const float off_y = (g.mouse_y - cy) / cy;
+    // Autodock (np-9cu.1) and the nav autopilot (np-opa.3) each own the
+    // ship while engaged — mute the pilot's aim so they can't fight the
+    // autopilot. nav_autopilot may be cancelled by manual input just
+    // below, so it's recomputed after that.
+    const float dpi = sapp_dpi_scale();
+    const float view_w = (float)sapp_width()  / dpi;
+    const float view_h = (float)sapp_height() / dpi;
+    const float off_x = (g.mouse_x - view_w * 0.5f) / (view_w * 0.5f);
+    const float off_y = (g.mouse_y - view_h * 0.5f) / (view_h * 0.5f);
+
+    const bool dock_autopilot = docking::controls_locked(g.docking);
+
+    // Manual-override cancel (bead np-opa.3): once engaged, any deliberate
+    // flight input hands the stick back — the throttle/strafe/roll/brake
+    // keys, or a hard mouse-steer past the dead-zone (a resting cursor
+    // doesn't count, or the ship would never autopilot at all).
+    if (autopilot::engaged(g.autopilot)) {
+        const bool key_input =
+            g.keys_down[SAPP_KEYCODE_W] || g.keys_down[SAPP_KEYCODE_S] ||
+            g.keys_down[SAPP_KEYCODE_Q] || g.keys_down[SAPP_KEYCODE_E] ||
+            g.keys_down[SAPP_KEYCODE_R] || g.keys_down[SAPP_KEYCODE_F] ||
+            g.keys_down[SAPP_KEYCODE_Z] || g.keys_down[SAPP_KEYCODE_C] ||
+            g.keys_down[SAPP_KEYCODE_X] || g.keys_down[SAPP_KEYCODE_TAB];
+        const bool mouse_steer =
+            g.fly_by_wire && !ImGui::GetIO().WantCaptureMouse &&
+            (std::fabs(off_x) > 0.35f || std::fabs(off_y) > 0.35f);
+        if (key_input || mouse_steer) {
+            autopilot::disengage(g.autopilot, g.camera,
+                                 "AUTOPILOT DISENGAGED - MANUAL OVERRIDE");
+            std::printf("[autopilot] manual input — control returned\n");
+        }
+    }
+    const bool nav_autopilot = autopilot::controls_locked(g.autopilot);
+    const bool autopilot_lock = dock_autopilot || nav_autopilot;
+
+    if (g.fly_by_wire && !ImGui::GetIO().WantCaptureMouse && !autopilot_lock
+        && !dying) {
         g.camera.apply_mouse_aim(off_x, off_y, dt);
     }
 
@@ -811,34 +1909,120 @@ void frame_cb() {
     // --- physics ------------------------------------------------------------
     // Hold-Tab cruise: drive target to 1 while held, 0 otherwise. Camera
     // smooths the lerp so it feels like winding up and winding down.
-    g.camera.cruise_target = g.keys_down[SAPP_KEYCODE_TAB] ? 1.0f : 0.0f;
-    if (g.keys_down[SAPP_KEYCODE_X]) g.camera.brake();
-    // Roll input — Q/E rotate around the view axis. Opposing keys cancel
-    // (the same once-per-axis read pattern as thrust_from_keys()).
-    float roll_input = 0.0f;
-    if (g.keys_down[SAPP_KEYCODE_Q]) roll_input -= 1.0f;
-    if (g.keys_down[SAPP_KEYCODE_E]) roll_input += 1.0f;
-    if (roll_input != 0.0f) g.camera.apply_roll(roll_input, dt);
-    g.camera.apply_thrust(thrust_from_keys(), dt);
-    g.camera.integrate(dt);
+    // Skipped entirely under dock autopilot — docking::tick moves the
+    // camera itself, and we don't want manual thrust/integrate doubling
+    // up on its position update.
+    if (!autopilot_lock && !dying) {
+        // Afterburner fuel gate (np-zte.2). The cruise system IS the
+        // afterburner here (there's no second engine — see camera.h), so we
+        // gate cruise engage on g.player.afterburner_fuel: holding TAB with
+        // fuel drains it and drives cruise_target to 1; at empty the engine
+        // cuts out (target forced to 0) and the player must release to let
+        // it regen. Regen runs whenever we're NOT actively afterburning.
+        // Rates are tunable constants in player.h.
+        const bool want_ab = g.keys_down[SAPP_KEYCODE_TAB];
+        if (want_ab && g.player.afterburner_fuel > 0.0f) {
+            g.camera.cruise_target = 1.0f;
+            const float drained = player::drain_afterburner(g.player,
+                                      player::k_afterburner_drain_per_s * dt);
+            // Log the cutout edge once, when the tank just hit empty.
+            if (g.player.afterburner_fuel <= 0.0f && drained > 0.0f)
+                std::printf("[afterburner] fuel exhausted — cutout\n");
+        } else {
+            g.camera.cruise_target = 0.0f;
+            if (!want_ab)
+                player::regen_afterburner(g.player, player::k_afterburner_regen_per_s * dt);
+        }
+        if (g.keys_down[SAPP_KEYCODE_X]) g.camera.brake();
+        // Roll input — Z/C rotate around the view axis. Moved off Q/E
+        // (np-opa.3) since strafe relocated there when A became autopilot.
+        // Opposing keys cancel (same once-per-axis read as thrust_from_keys).
+        float roll_input = 0.0f;
+        if (g.keys_down[SAPP_KEYCODE_Z]) roll_input -= 1.0f;
+        if (g.keys_down[SAPP_KEYCODE_C]) roll_input += 1.0f;
+        if (roll_input != 0.0f) g.camera.apply_roll(roll_input, dt);
+        g.camera.apply_thrust(thrust_from_keys(), dt);
+        g.camera.integrate(dt);
+    }
+
+    // Autodock step (np-9cu.1). Drives the camera during the approach,
+    // holds the docking beat, then requests GameMode::Landed; also bleeds
+    // the post-launch cooldown. No-op in free flight. Runs after manual
+    // physics so its pose is the one the audio listener + render see.
+    docking::tick(g.docking, g.camera, g.game, g.player, dt);
+
+    // Nav autopilot step (np-opa.3). While engaged it owns the camera:
+    // orients toward the selected nav, winds up the cruise engine, and
+    // eases to a stop on arrival (or drops out if threat:: trips). No-op
+    // in free flight. Runs after manual physics for the same reason.
+    autopilot::tick(g.autopilot, g.camera, dt);
+
+    // Audio listener follows the camera. Before any play_world calls
+    // this frame so new voices spatialize against the fresh pose;
+    // existing world voices re-pan/attenuate here too.
+    audio::set_listener(g.camera.position, g.camera.right());
+
+    // Engine hum rides the throttle: speed fraction vs the cruise-1 max
+    // plus the cruise spool level. We're in the Flight path here, so
+    // flight_mode is unconditionally true; the non-Flight stub calls
+    // this with false to fade the bed out (see frame_stub).
+    {
+        const float speed_frac = HMM_LenV3(g.camera.velocity)
+                               / std::fmax(g.camera.max_speed_cruise1, 1.0f);
+        sfx::update_engine_hum(speed_frac, g.camera.cruise_level,
+                               /*flight_mode=*/true, dt);
+    }
+
+    // Audio smoke-test buttons (debug panel). 2D = centered blip; 3D =
+    // blip at the selected nav point (or 2km ahead when none selected,
+    // so the button always makes a sound you can hunt by ear). Logs the
+    // computed L/R gains + distance — the audible check and the math
+    // check in one line.
+    if (g.audio_debug.play_blip_2d) {
+        g.audio_debug.play_blip_2d = false;
+        const VoiceId v = audio::play(g.sfx_blip, 1.0f);
+        float gl = 0, gr = 0; audio::voice_gains(v, &gl, &gr);
+        std::printf("[audio] voice %u playing blip 2D  gain L/R %.2f/%.2f\n",
+                    v, gl, gr);
+    }
+    if (g.audio_debug.play_blip_nav) {
+        g.audio_debug.play_blip_nav = false;
+        HMM_Vec3 pos;
+        const char* where;
+        if (g.selected_nav >= 0 && g.selected_nav < (int)g.system.nav_points.size()) {
+            pos   = g.system.nav_points[g.selected_nav].position;
+            where = g.system.nav_points[g.selected_nav].name.c_str();
+        } else {
+            pos   = HMM_AddV3(g.camera.position,
+                              HMM_MulV3F(g.camera.forward(), 2000.0f));
+            where = "<2km ahead — no nav selected>";
+        }
+        // ref 500m / max 50km: a nav-point beacon should be loud up
+        // close and audible across most of the play bubble.
+        const VoiceId v = audio::play_world(g.sfx_blip, pos, 500.0f, 50000.0f);
+        const float dist = HMM_LenV3(HMM_SubV3(pos, g.camera.position));
+        float gl = 0, gr = 0; audio::voice_gains(v, &gl, &gr);
+        std::printf("[audio] voice %u playing blip 3D at %s  "
+                    "gain L/R %.2f/%.2f  dist %.0fm\n",
+                    v, where, gl, gr, dist);
+    }
 
     // Pose sync: every ship's canonical position/orientation field
     // (used by perception + AI) gets refreshed from its source of
-    // truth. Player (index 0) gets the camera; NPCs get their sprite
-    // (the integrator's owner). After this, downstream code reads
-    // `s.position` uniformly with no special cases.
-    if (!g.ships.empty() && g.ships.front().is_player) {
-        Ship& player = g.ships.front();
-        player.position       = g.camera.position;
-        player.orientation    = g.camera.orientation;
+    // truth. Player (registry slot 0) gets the camera; NPCs get their
+    // sprite (the integrator's owner). After this, downstream code
+    // reads `s.position` uniformly with no special cases.
+    if (Ship* player = g.ships.player(); player) {
+        player->position       = g.camera.position;
+        player->orientation    = g.camera.orientation;
         // Camera carries the player's full 3D world velocity (forward
         // thrust + lateral strafes + persistent coasting under zero
         // damping). Projectiles inherit this in firing.cpp so tracers
         // move with the player's reference frame instead of drifting.
-        player.world_velocity = g.camera.velocity;
+        player->world_velocity = g.camera.velocity;
     }
-    for (size_t i = 1; i < g.ships.size(); ++i) {
-        ship::sync_from_sprite(g.ships[i]);
+    for (Ship& s : g.ships) {
+        if (!s.is_player) ship::sync_from_sprite(s);
     }
 
     // Perception: every ship learns who's in radar range this tick and
@@ -847,7 +2031,7 @@ void frame_cb() {
     // wants to read perception ("chase nearest hostile") sees fresh
     // data. O(N²) over alive ships; cheap at the demo's scale, will
     // need spatial bucketing past ~100 ships.
-    perception::tick(g.ships, g.player_rep);
+    perception::tick(g.ships, g.player.rep);
 
     // AI state machine: between perception (input) and ship::tick
     // (output). For each ai-enabled ship it transitions the state and
@@ -858,6 +2042,17 @@ void frame_cb() {
         const float t_now = (float)stm_sec(stm_now());   // process uptime
         for (Ship& s : g.ships) ship_ai::tick(s, g.ships, t_now);
     }
+
+    // Encounter director (np-ma2.3): maintain the live NPC population
+    // around the player — spawn fresh contacts 8-15 km out when a rule is
+    // armed + under budget, retire ones that drift past 40 km without a
+    // fight. Runs here (after AI, as a standalone call — NOT nested in a
+    // registry iteration) so a spawn/despawn never mutates storage while
+    // something holds a Ship&; a ship spawned this frame is simply picked
+    // up by perception/AI next frame. Flight-only by virtue of the
+    // mode-gate return far above.
+    encounters::tick(g.ships, g.camera.position, dt,
+                     encounter_spawn, encounter_despawn);
 
     // Player firing input. Hold LEFT_CTRL to fire — clear, modifier-style
     // key that doesn't conflict with the existing W/A/S/D thrust + Q/E
@@ -872,18 +2067,16 @@ void frame_cb() {
     // reticle, so the player sees "green crosshair → tracers go
     // there". Outside the cone, falls back to camera-forward and the
     // player has to rotate the ship to engage.
-    if (!g.ships.empty() && g.ships.front().is_player) {
-        Ship& player = g.ships.front();
+    if (Ship* player_p = g.ships.player(); player_p) {
+        Ship& player = *player_p;
         player.controller.fire_guns =
             g.keys_down[SAPP_KEYCODE_LEFT_CONTROL] ||
             g.keys_down[SAPP_KEYCODE_RIGHT_CONTROL];
 
         HMM_Vec3 aim = g.camera.forward();
         if (g.player_target_id != 0) {
-            const Ship* target = nullptr;
-            for (const Ship& s : g.ships) {
-                if (s.id == g.player_target_id && s.alive) { target = &s; break; }
-            }
+            const Ship* target = g.ships.find_by_id(g.player_target_id);
+            if (target && !target->alive) target = nullptr;
             if (target) {
                 // Average projectile speed across player mounts.
                 float proj_speed = 1100.0f;
@@ -935,34 +2128,147 @@ void frame_cb() {
         player.controller.desired_forward = aim;
     }
 
+    // ---- missile target-lock state machine (np-zte.2) ------------------
+    // Runs every Flight frame. The selected missile type decides whether a
+    // lock is needed (HS/IR) and whether it must BUILD UP (IR ~1.5s). We
+    // reuse the T-cycle target (g.player_target_id) as the lock subject:
+    //   * no lock-type selected, or no/dead target -> reset to "none".
+    //   * HS (instant): locks the moment a target is held.
+    //   * IR (build-up): accrues progress_s while the target's held; locks
+    //     at k_ir_lock_time. The seeking tone beeps on a cadence until then.
+    // Lock-acquired plays once on the seeking->locked rising edge.
+    {
+        constexpr float k_ir_lock_time   = 1.5f;   // IR build-up window (s)
+        constexpr float k_seek_beep_period = 0.45f; // seeking beep cadence (s)
+        const MissileStats& sel = g_missile_stats[g.selected_missile];
+        AppState::MissileLock& lk = g.missile_lock;
+
+        const Ship* tgt = (g.player_target_id != 0)
+                        ? g.ships.find_by_id(g.player_target_id) : nullptr;
+        const bool have_target = tgt && tgt->alive;
+
+        if (!sel.needs_lock || !have_target) {
+            // Dumbfire selected, or nothing to lock onto: drop any lock.
+            lk = AppState::MissileLock{};
+        } else {
+            // Target changed since last frame -> restart the acquire.
+            if (lk.locked_id != g.player_target_id) {
+                lk = AppState::MissileLock{};
+                lk.locked_id = g.player_target_id;
+            }
+            const bool was_locked = lk.locked;
+            if (!sel.lock_buildup) {
+                lk.locked = true;                 // HS: instant heat lock
+            } else {
+                lk.progress_s += dt;              // IR: hold to build up
+                if (lk.progress_s >= k_ir_lock_time) lk.locked = true;
+            }
+            if (lk.locked && !was_locked) {
+                sfx::lock_acquired();             // rising-edge confirmation
+            } else if (!lk.locked) {
+                // Still seeking — beep on a cadence.
+                lk.seek_beep_s -= dt;
+                if (lk.seek_beep_s <= 0.0f) {
+                    sfx::lock_seeking();
+                    lk.seek_beep_s = k_seek_beep_period;
+                }
+            }
+        }
+    }
+
+    // ---- missile fire (np-zte.2) ---------------------------------------
+    // Consume the edge-triggered request raised by the ENTER key. Spawns
+    // from the player's muzzle along camera-forward, inheriting ship
+    // velocity (same as guns). Refuses (dry click) on an empty rack or a
+    // lock-type fired without a completed lock. Finite ammo: success
+    // decrements g.player.missiles[type].
+    if (g.missile_fire_request) {
+        g.missile_fire_request = false;
+        if (Ship* pl = g.ships.player(); pl && !dying) {
+            const int           ti  = g.selected_missile;
+            const MissileStats& sel = g_missile_stats[ti];
+            const bool has_ammo = player::missile_count(g.player, ti) > 0;
+            const bool lock_ok  = !sel.needs_lock || g.missile_lock.locked;
+            if (!has_ammo) {
+                sfx::out_of_ammo();
+                std::printf("[missile] FIRE refused: %s rack empty\n", sel.short_name);
+            } else if (!lock_ok) {
+                sfx::out_of_ammo();
+                std::printf("[missile] FIRE refused: %s needs a lock (none)\n", sel.short_name);
+            } else {
+                player::consume_missile(g.player, ti);
+                const uint32_t target_id = sel.needs_lock ? g.missile_lock.locked_id : 0;
+                const HMM_Vec3 muzzle = HMM_AddV3(pl->position,
+                                          HMM_MulV3F(g.camera.forward(), 30.0f));
+                Missile m = missile::spawn((MissileType)ti, muzzle,
+                                           g.camera.forward(), pl->world_velocity,
+                                           pl->id, target_id);
+                g.missiles.push_back(m);
+                sfx::missile_fired();
+                std::printf("[missile] FIRE %s -> target %u | remaining %d | "
+                            "pos %.0f,%.0f,%.0f dmg %.0f\n",
+                            sel.short_name, target_id,
+                            player::missile_count(g.player, ti),
+                            muzzle.X, muzzle.Y, muzzle.Z, m.damage_cm);
+            }
+        }
+    }
+
     // Firing -> spawn projectiles. Runs after AI/player set fire_guns,
     // before projectile motion so a freshly-spawned projectile gets a
     // first-frame integration step (otherwise it'd appear stuck at the
     // muzzle for one frame).
     firing::tick(g.ships, g.projectiles, dt);
     projectile::tick(g.projectiles, dt);
+    // Guided missiles (np-zte.2): steer + advance BEFORE the snapshot/damage
+    // pass below, exactly like projectiles, so their detonations are caught
+    // by the same kill-detection + explosion FX that gunfire uses.
+    missile::tick(g.missiles, g.ships, dt);
 
     // Snapshot alive flags BEFORE damage so we can detect kills this
     // frame and spawn explosions at the right positions. Cheap (one
     // bool per ship); a static thread-local buffer reuses storage so
-    // we don't allocate every frame in the steady state.
+    // we don't allocate every frame in the steady state. Indexed by
+    // registry SLOT (free slots snapshot harmlessly as dead) — slot
+    // indices are stable across the damage pass below because nothing
+    // despawns mid-frame; the buffers are re-snapshotted every frame
+    // so spawn/despawn between frames can't alias either.
     static thread_local std::vector<bool> was_alive;
-    was_alive.resize(g.ships.size());
-    for (size_t i = 0; i < g.ships.size(); ++i) was_alive[i] = g.ships[i].alive;
+    was_alive.resize(g.ships.slot_count());
+    for (size_t i = 0; i < g.ships.slot_count(); ++i) {
+        const Ship* s = g.ships.ship_at(i);
+        was_alive[i] = s && s->alive;
+    }
+
+    // np-ma2.2 death test: the debug panel's "kill player" button routes
+    // through the REAL damage pipeline so the death pass below catches the
+    // alive->dead flip exactly as it would for a pirate's killing blow.
+    // Applied here (after was_alive is snapshotted, so the transition is
+    // visible) rather than in apply_ship_debug_requests (which runs before
+    // the snapshot and would make the kill invisible to detection).
+    if (g.ship_debug.kill_player) {
+        g.ship_debug.kill_player = false;
+        if (Ship* pl = g.ships.player(); pl && pl->alive) {
+            ship::take_damage(*pl, 1.0e9f, HitFacing::Fore);
+            std::printf("[debug] kill player — applied lethal damage\n");
+        }
+    }
 
     // Same idea for shield + armor values — record per-facing cm so we
     // can spawn flashes whenever any facing decreases. 6 floats per ship
     // total; ~400 bytes per frame at the demo's scale.
     struct HpSnap { float sh_fore, sh_aft, sh_side, ar_fore, ar_aft, ar_side; };
     static thread_local std::vector<HpSnap> hp_prev;
-    hp_prev.resize(g.ships.size());
-    for (size_t i = 0; i < g.ships.size(); ++i) {
-        hp_prev[i] = { g.ships[i].shield_fore_cm,
-                       g.ships[i].shield_aft_cm,
-                       g.ships[i].shield_side_cm,
-                       g.ships[i].armor_fore_cm,
-                       g.ships[i].armor_aft_cm,
-                       g.ships[i].armor_side_cm };
+    hp_prev.resize(g.ships.slot_count());
+    for (size_t i = 0; i < g.ships.slot_count(); ++i) {
+        const Ship* s = g.ships.ship_at(i);
+        if (!s) { hp_prev[i] = {}; continue; }
+        hp_prev[i] = { s->shield_fore_cm,
+                       s->shield_aft_cm,
+                       s->shield_side_cm,
+                       s->armor_fore_cm,
+                       s->armor_aft_cm,
+                       s->armor_side_cm };
     }
 
     // Collision + damage. Runs AFTER projectile::tick — by this point
@@ -975,17 +2281,42 @@ void frame_cb() {
     // recently-hit facings honour their pause-after-hit timer before
     // refilling.
     projectile::collide_and_damage(g.projectiles, g.ships, dt);
+    // Missile detonation + damage through the SAME ship::take_damage path
+    // (no forked damage logic) — proximity to the locked target or a direct
+    // swept hit. Runs alongside the gun collision so a missile kill flows
+    // through the identical death-detection below.
+    missile::collide_and_damage(g.missiles, g.ships, dt);
     for (Ship& s : g.ships) ship::regen_shields(s, dt);
 
     // Death detection: any ship that flipped alive: true -> false this
     // frame just got killed; spawn an explosion at its last visible
     // position. Use sprite->position (the post-integration latest)
     // when available so the FX lines up with the rendered death pose.
-    for (size_t i = 0; i < g.ships.size() && i < was_alive.size(); ++i) {
-        if (was_alive[i] && !g.ships[i].alive) {
-            const HMM_Vec3 pos = g.ships[i].sprite
-                ? g.ships[i].sprite->position
-                : g.ships[i].position;
+    for (size_t i = 0; i < g.ships.slot_count() && i < was_alive.size(); ++i) {
+        const Ship* s = g.ships.ship_at(i);
+        if (s && was_alive[i] && !s->alive) {
+            const HMM_Vec3 pos = s->sprite
+                ? s->sprite->position
+                : s->position;
+            // Death rumble. "Big" = cargo-class hulls (>= 100 cargo
+            // units: Tarsus, Galaxy — fat freighters make fat booms);
+            // fighters and class-less placeholders get the small one.
+            sfx::ship_exploded(pos, s->klass && s->klass->cargo_units >= 100);
+
+            // Reputation fallout (np-ma2.1): if the PLAYER landed the
+            // killing shot, the victim's faction (and everyone who cares
+            // about them) updates its opinion. killed_by_id is stamped by
+            // projectile::collide_and_damage at the lethal hit. We skip
+            // the player's own death and any non-projectile cause (id 0).
+            if (!s->is_player && s->killed_by_id != 0) {
+                const Ship* pl = g.ships.player();
+                if (pl && s->killed_by_id == pl->id) {
+                    comm::report_player_kill(g.player, s->faction);
+                    // Bounty progress rides the SAME kill-attribution path
+                    // (np-zte.1) — no second source of truth for kills.
+                    missions::on_player_kill(g.player, s->faction);
+                }
+            }
             // Capture the camera basis at the moment of death so the
             // disc shockwave stays where it was if the camera rotates
             // afterwards. Player-facing disc at t=0 reads as a clean
@@ -993,9 +2324,45 @@ void frame_cb() {
             // angle if the camera moved, which adds parallax.
             explosion::spawn(g.explosions, pos,
                              g.camera.right(), g.camera.up());
+
+            // Player death (np-ma2.2): kick off the Dying cinematic. The
+            // mode flip is deferred (lands next frame), so the rest of
+            // THIS frame still renders the explosion in the Flight path.
+            // Guard on Flight so multiple lethal hits the same frame can't
+            // double-request (and so a stray death-flag while already
+            // Dying/Landed is ignored). Hand back anything that owns the
+            // ship and freeze the camera so the wreck holds in view.
+            if (s->is_player && g.game.mode == GameMode::Flight) {
+                if (autopilot::engaged(g.autopilot)) {
+                    autopilot::disengage(g.autopilot, g.camera, "");
+                }
+                g.docking = Docking{};
+                g.camera.velocity      = HMM_V3(0.0f, 0.0f, 0.0f);
+                g.camera.cruise_target = 0.0f;
+                game_state::request_mode(g.game, GameMode::Dying);
+                std::printf("[death] player ship destroyed — entering Dying\n");
+            }
+
+            // Corpse reap (np-zte.1): a dead NON-player ship has had its
+            // explosion/sfx/kill-attribution emitted above — now free its
+            // resources so registry slots + the sprite pool don't leak and
+            // the encounter director's hard-cap gate (ships.size() >= cap)
+            // can keep spawning past 64 cumulative kills. v1 reaps
+            // IMMEDIATELY (no linger timer): the explosion FX lives in
+            // g.explosions independent of the ship, so the boom outlives
+            // the corpse. The player is NEVER reaped here — the
+            // death->respawn path (Dying mode, above) owns that hull.
+            // The encounter director's prune just erase()s the now-stale
+            // managed id next tick (find_by_id -> nullptr); it never
+            // double-despawns, so no stale-handle use.
+            if (!s->is_player) {
+                free_sprite_slot(s->sprite);
+                g.ships.despawn(g.ships.find_handle_by_id(s->id));
+            }
         }
     }
     explosion::tick(g.explosions, dt);
+    comm::tick(dt);   // age the reputation/taunt HUD feed (np-ma2.1)
 
     // Shield + armor impact detection. Walk every ship and check if any
     // facing dropped this frame; spawn the appropriate flash. Skip dead
@@ -1004,8 +2371,10 @@ void frame_cb() {
     // camera position and just fill the view, so we only flag the
     // screen-edge vignette for the player rather than spawning a
     // bubble. NPC armor / shield bubbles render as world-space glows.
-    for (size_t i = 0; i < g.ships.size() && i < hp_prev.size(); ++i) {
-        const Ship& s = g.ships[i];
+    for (size_t i = 0; i < g.ships.slot_count() && i < hp_prev.size(); ++i) {
+        const Ship* sp = g.ships.ship_at(i);
+        if (!sp) continue;
+        const Ship& s = *sp;
         if (!s.alive) continue;
         const HpSnap& prev = hp_prev[i];
         const bool sh_hit = (prev.sh_fore > s.shield_fore_cm)
@@ -1017,12 +2386,21 @@ void frame_cb() {
         if (!(sh_hit || ar_hit)) continue;
 
         if (s.is_player) {
-            // Player: screen-edge vignette instead of a bubble.
+            // Player: screen-edge vignette instead of a bubble. Impact
+            // sound still plays — 2D-ish by virtue of being at the
+            // listener (full ref-dist gain, centered pan).
             g.player_hit_intensity = 1.0f;
+            sfx::impact(s.position, /*shield=*/sh_hit);
             continue;
         }
 
         const HMM_Vec3 pos = s.sprite ? s.sprite->position : s.position;
+        // Impact thunk. Shield-vs-armor distinction mirrors the flash
+        // logic above: sh_hit gets the soft absorbed thunk; pure armor
+        // damage (shields already down) gets the harsh crack. When both
+        // dropped in one frame the shield sound wins — the shield ate
+        // first, physically. Rate-limited globally in sfx.cpp.
+        sfx::impact(pos, /*shield=*/sh_hit);
         const float r = ship::hit_radius_m(s);
 
         if (sh_hit) {
@@ -1134,16 +2512,23 @@ void frame_cb() {
         constexpr float k_elasticity        = 0.6f;   // 0=plastic, 1=fully elastic
         constexpr float k_player_hit_radius = 30.0f * 1.4f;  // matches ship::hit_radius_m
 
-        for (size_t i = 0; i < g.ships.size(); ++i) {
-            Ship& a = g.ships[i];
+        // Slot-indexed double loop (j starts at i+1 so each pair tests
+        // once). ship_at returns nullptr for free slots — skipped the
+        // same way dead ships are.
+        for (size_t i = 0; i < g.ships.slot_count(); ++i) {
+            Ship* a_p = g.ships.ship_at(i);
+            if (!a_p) continue;
+            Ship& a = *a_p;
             if (!a.alive) continue;
             const HMM_Vec3 a_pos = a.sprite ? a.sprite->position : a.position;
             const float a_r = ship::hit_radius_m(a);
             if (a_r <= 0.0f) continue;
             const HMM_Vec3 a_vel = a.is_player ? g.camera.velocity : a.world_velocity;
 
-            for (size_t j = i + 1; j < g.ships.size(); ++j) {
-                Ship& b = g.ships[j];
+            for (size_t j = i + 1; j < g.ships.slot_count(); ++j) {
+                Ship* b_p = g.ships.ship_at(j);
+                if (!b_p) continue;
+                Ship& b = *b_p;
                 if (!b.alive) continue;
                 const HMM_Vec3 b_pos = b.sprite ? b.sprite->position : b.position;
                 const float b_r = ship::hit_radius_m(b);
@@ -1244,6 +2629,28 @@ void frame_cb() {
                       : (g.camera.cruise_level > 0.05f) ? "SPOOL "
                       :                                   "NORMAL";
 
+    // Death cinematic overlay (np-ma2.2): a big centered "SHIP DESTROYED"
+    // and the impending respawn target while the explosion blooms. Drawn
+    // even under capture_clean so screenshots of the death moment carry
+    // the banner. Columns = canvas_px / 8 (the debugtext cell width).
+    if (dying) {
+        const float cols = fb_w * 0.5f / 8.0f;
+        const float rows = fb_h * 0.5f / 8.0f;
+        sdtx_font(0);
+        sdtx_color3f(1.0f, 0.25f, 0.18f);
+        sdtx_pos(cols * 0.5f - 11.0f, rows * 0.5f - 1.0f);
+        sdtx_puts("*** SHIP DESTROYED ***\n");
+        sdtx_color3f(0.9f, 0.8f, 0.4f);
+        if (!g.player.last_docked_base.empty()) {
+            sdtx_pos(cols * 0.5f - 11.0f, rows * 0.5f + 1.0f);
+            sdtx_printf("RESPAWNING AT %s\n", g.player.last_docked_base.c_str());
+        } else {
+            sdtx_pos(cols * 0.5f - 11.0f, rows * 0.5f + 1.0f);
+            sdtx_puts("NO BASE ON RECORD - RESETTING\n");
+        }
+        sdtx_color3f(0.7f, 1.0f, 0.9f);   // restore default for later blocks
+    }
+
     if (!g.capture_clean) {
         sdtx_font(0);
         sdtx_color3f(0.7f, 1.0f, 0.9f);
@@ -1252,6 +2659,21 @@ void frame_cb() {
         sdtx_printf("MODE   %s\n",        mode);
         sdtx_printf("D(SUN) %7.0f u\n",   dist);
         sdtx_printf("POS    %5.0f %5.0f %5.0f\n", p.X, p.Y, p.Z);
+
+        // Autopilot status (np-opa.3). Persistent green indicator while
+        // engaged ("AUTOPILOT — <nav>"), plus a transient amber banner
+        // for the engage/disengage/refusal flashes (NO NAV SELECTED,
+        // HOSTILES, ARRIVED, ...). The banner dwell timer is decayed in
+        // autopilot::tick so it fades on its own.
+        if (autopilot::engaged(g.autopilot)) {
+            sdtx_color3f(0.4f, 1.0f, 0.5f);
+            sdtx_printf("AUTOPILOT - %s\n", g.autopilot.nav_name.c_str());
+        }
+        if (g.autopilot.msg_timer_s > 0.0f) {
+            sdtx_color3f(1.0f, 0.8f, 0.3f);
+            sdtx_printf("%s\n", g.autopilot.msg);
+        }
+        sdtx_color3f(0.7f, 1.0f, 0.9f);   // restore default for later blocks
 
         // Ship-sprite frame HUD. Prints, per placed ship sprite, the raw
         // camera-relative az/el AND the authored atlas frame the engine
@@ -1263,9 +2685,8 @@ void frame_cb() {
 
             // Player HP block. Sums per-facing shield + armor; if
             // anything's missing (no class) we just don't print.
-            if (!g.ships.empty() && g.ships.front().is_player
-                && g.ships.front().klass) {
-                const Ship& pl = g.ships.front();
+            if (g.ships.player() && g.ships.player()->klass) {
+                const Ship& pl = *g.ships.player();
                 if (pl.alive) {
                     sdtx_printf("PLAYER  shield F%.0f A%.0f S%.0f  armor F%.0f A%.0f S%.0f\n",
                                 pl.shield_fore_cm, pl.shield_aft_cm, pl.shield_side_cm,
@@ -1292,17 +2713,21 @@ void frame_cb() {
                 std::memcpy(short_buf, short_key, copy_len);
                 short_buf[copy_len] = '\0';
                 const char* tag = s.manual_frame_enabled ? " [MANUAL]" : "";
-                // Perception column: H/A/N counts pulled from the matching
-                // Ship. ships[0] is the player; NPC sprites[i] pair with
-                // ships[i+1], hence the +1 offset. Empty string when no
-                // Ship has perception (placeholder rows). HP column is
-                // sum-of-shields and sum-of-armor across all 3 facings —
-                // compact "how alive is this thing" readout.
+                // Perception column: H/A/N counts pulled from the OWNING
+                // Ship, found by matching Ship::sprite back-pointers (the
+                // old positional ships[i+1] lockstep is gone). Linear scan
+                // per row — fine for a debug HUD at demo N. Empty string
+                // when no Ship owns this sprite or it has no class. HP
+                // column is sum-of-shields and sum-of-armor across all 3
+                // facings — compact "how alive is this thing" readout.
                 char percept_buf[32] = {0};
                 char hp_buf[64] = {0};
-                const size_t ship_idx = i + 1;
-                if (ship_idx < g.ships.size() && g.ships[ship_idx].klass) {
-                    const Ship& sh = g.ships[ship_idx];
+                const Ship* owner = nullptr;
+                for (const Ship& cand : g.ships) {
+                    if (cand.sprite == &s) { owner = &cand; break; }
+                }
+                if (owner && owner->klass) {
+                    const Ship& sh = *owner;
                     const ShipPerception& p = sh.perception;
                     std::snprintf(percept_buf, sizeof(percept_buf),
                                   " [H%d A%d N%d]",
@@ -1329,9 +2754,9 @@ void frame_cb() {
         sdtx_font(1);
         sdtx_color3f(0.5f, 0.6f, 0.7f);
         sdtx_pos(1.0f, fb_h * 0.5f / 8.0f - 4.0f);   // 4 lines up from bottom
-        sdtx_puts("W/S throttle   A/D strafe   R/F up/down\n");
+        sdtx_puts("W/S throttle   Q/E strafe   R/F up/down   Z/C roll\n");
         sdtx_puts("mouse aim      SPACE toggle cursor   TAB cruise\n");
-        sdtx_puts("X brake        N cycle nav target  T cycle ship target\n");
+        sdtx_puts("X brake        N cycle nav   A autopilot   D dock   T target\n");
         sdtx_puts("CTRL+M debug   F2 lights   F3 ship-frame HUD   F5 mesh-orient   F6 sprite-gen   ESC x2 quit\n");
     }
 
@@ -1365,6 +2790,20 @@ void frame_cb() {
                 f.draw(g.camera, aspect, time_sec, g.sun.position, g.sun.core_color);
             }
         }
+        // Publish the render matrices for the dev_remote /project endpoint
+        // (used by tools/render_3d_sprite_atlases.py to project 3D nav-light
+        // positions into each sprite cell). Only meaningful in the single-
+        // mesh capture scenes, so we publish placed_meshes[0]'s transform;
+        // harmless otherwise. model_matrix() is the same helper the mesh
+        // renderer uses, so the projection matches the render exactly.
+        if (!g.placed_meshes.empty()) {
+            const PlacedMesh& pm0 = g.placed_meshes[0];
+            const HMM_Mat4 vp    = HMM_MulM4(g.camera.projection(aspect),
+                                             g.camera.view());
+            const HMM_Mat4 model = model_matrix(pm0.position, pm0.euler_deg,
+                                                pm0.scale);
+            dev_remote::publish_render_matrices(vp, model, g.camera.position);
+        }
         g.mesh_render.draw(g.placed_meshes, g.camera, aspect,
                            g.sun.position, g.sun.core_color);
         // Sprites go AFTER opaque meshes and BEFORE the sun so the sun's
@@ -1384,7 +2823,8 @@ void frame_cb() {
         // target object on the cleared background.
         if (!g.capture_clean) {
             std::vector<SpriteRenderer::Tracer> tracers;
-            tracers.reserve(g.projectiles.size() + g.explosions.size() * 2);
+            tracers.reserve(g.projectiles.size() + g.missiles.size()
+                            + g.explosions.size() * 2);
 
             // Projectile tracers. Color from the gun type, size scales
             // with damage so Plasma reads chunkier than Laser.
@@ -1395,6 +2835,24 @@ void frame_cb() {
                 t.position = p.position;
                 t.color    = gs.tracer_color;
                 t.size = 5.0f + p.damage_cm;
+                tracers.push_back(t);
+            }
+
+            // Missile tracers (np-zte.2). Bigger + hotter than a bullet so a
+            // missile reads as a distinct burning mote streaking toward its
+            // mark; a faint per-type tint (DF white, HS orange, IR cyan)
+            // hints at what's inbound. Reuses the same additive-glow path —
+            // no bespoke missile mesh in v1.
+            for (const Missile& m : g.missiles) {
+                if (!m.alive) continue;
+                SpriteRenderer::Tracer t;
+                t.position = m.position;
+                switch (m.type) {
+                    case MissileType::HS: t.color = HMM_V3(2.4f, 1.2f, 0.5f); break;
+                    case MissileType::IR: t.color = HMM_V3(0.7f, 1.8f, 2.4f); break;
+                    default:              t.color = HMM_V3(2.2f, 2.2f, 2.0f); break;
+                }
+                t.size = 22.0f;
                 tracers.push_back(t);
             }
 
@@ -1500,7 +2958,8 @@ void frame_cb() {
     // Build the ImGui frame OUTSIDE any pass. This is only widget state;
     // no draw calls are issued yet. Slider mutations feed back into the
     // live PlacedMesh list so changes take effect on the *next* frame.
-    debug_panel::build(g.placed_meshes, g.placed_ship_sprites);
+    debug_panel::build(g.placed_meshes, g.placed_ship_sprites, g.game,
+                       g.ship_debug, g.audio_debug, g.player);
 
     // Surface every ship-sprite atlas cell as an extra editable target so
     // F2 can author lights on individual frames (engine glow, nav strobes,
@@ -1529,14 +2988,64 @@ void frame_cb() {
     // F6 — sprite-generation workbench. Front-end only; launches Python jobs.
     sprite_generation_tool::build();
     if (!g.capture_clean) {
+        // Docking prompt for the NAV MFD (np-9cu.1). Probe can_request
+        // against the selected nav: cleared -> "PRESS D TO DOCK" (green),
+        // dockable-but-not-yet -> "DOCK: <reason>" (amber). Non-dockable
+        // navs leave the line blank.
+        const char* dock_prompt = nullptr;
+        bool        dock_ready  = false;
+        if (g.selected_nav >= 0 && g.selected_nav < (int)g.system.nav_points.size()) {
+            const NavPointDef& nav = g.system.nav_points[g.selected_nav];
+            if (nav.kind == "jump") {
+                // Jump gate selected (np-6al.3): surface the J prompt in the
+                // SAME NAV MFD slot dock uses — a gate is never also a dock
+                // base, so they can't collide. jump::prompt feeds the green/
+                // amber line straight off the eligibility verdict.
+                const jump::Eligibility e = jump::evaluate(
+                    g.camera, g.system, g.galaxy, g.player.current_system,
+                    g.selected_nav);
+                bool ready = false;
+                dock_prompt = jump::prompt(e, &ready);
+                dock_ready  = ready;
+            } else {
+                const DockResult r = docking::can_request(
+                    g.docking, g.camera.position, g.camera.velocity, nav);
+                static char buf[48];
+                if (r == DockResult::Cleared) {
+                    dock_prompt = "PRESS D TO DOCK";
+                    dock_ready  = true;
+                } else if (r != DockResult::NotDockable) {
+                    std::snprintf(buf, sizeof(buf), "DOCK: %s", docking::result_str(r));
+                    dock_prompt = buf;
+                }
+            }
+        }
         cockpit_hud::build(g.camera, g.system, g.selected_nav,
                            g.mouse_x, g.mouse_y, g.fly_by_wire,
-                           g.ships, g.player_target_id);
+                           g.ships, g.player_target_id,
+                           dock_prompt, dock_ready);
+        // Weapons + afterburner-fuel status (np-zte.2). Snapshot the
+        // missile selection, lock state, and fuel into the HUD struct.
+        {
+            cockpit_hud::WeaponsHudState w;
+            const MissileStats& sel = g_missile_stats[g.selected_missile];
+            w.missile_name  = sel.short_name;
+            w.missile_count = g.player.missiles[g.selected_missile];
+            w.needs_lock    = sel.needs_lock;
+            w.lock_state    = g.missile_lock.locked ? 2
+                            : (g.player_target_id != 0 && sel.needs_lock ? 1 : 0);
+            w.lock_progress = sel.lock_buildup ? (g.missile_lock.progress_s / 1.5f) : 1.0f;
+            w.fuel_frac     = g.player.afterburner_fuel / player::k_afterburner_fuel_max;
+            w.fuel_empty    = g.player.afterburner_fuel <= 0.0f;
+            cockpit_hud::build_weapons_status(w);
+        }
         // Big system navmap (Alt+N to toggle). Drawn AFTER the regular
         // HUD so it overlays on top. Mutates selected_nav when the
         // player clicks a nav point — same effect as the N-cycle.
         cockpit_hud::build_navmap(g.camera, g.system, g.selected_nav,
                                    g.ships, g.show_navmap);
+        // Reputation + comm-taunt feed (np-ma2.1), drawn over the HUD.
+        comm::draw();
     }
 
     // ---- ship-target indicator ------------------------------------
@@ -1546,11 +3055,8 @@ void frame_cb() {
     // edge pointing toward where they are. Text below shows class
     // name + distance + faction stance. Drawn into the simgui
     // foreground draw list so it renders on top of everything.
-    if (!g.capture_clean && g.player_target_id != 0 && !g.ships.empty()) {
-        const Ship* target = nullptr;
-        for (const Ship& s : g.ships) {
-            if (s.id == g.player_target_id) { target = &s; break; }
-        }
+    if (!g.capture_clean && g.player_target_id != 0 && g.ships.player()) {
+        const Ship* target = g.ships.find_by_id(g.player_target_id);
         if (target && target->alive) {
             // Engine quirks (mirror cockpit_hud.cpp's well-tested path):
             //   1. ImGui draw lists work in LOGICAL pixels; sapp_width/
@@ -1600,8 +3106,8 @@ void frame_cb() {
             ImU32 col_neutral = IM_COL32(255, 220,  60, 255);
             ImU32 col_allied  = IM_COL32( 80, 255,  80, 255);
             ImU32 color = col_hostile;
-            float distance_m = HMM_LenV3(HMM_SubV3(target->position, g.ships.front().position));
-            const ShipPerception& pp = g.ships.front().perception;
+            float distance_m = HMM_LenV3(HMM_SubV3(target->position, g.ships.player()->position));
+            const ShipPerception& pp = g.ships.player()->perception;
             for (const PerceivedContact& c : pp.visible) {
                 if (c.ship_id == g.player_target_id) {
                     distance_m = c.distance_m;
@@ -1698,7 +3204,7 @@ void frame_cb() {
             // the target itself, just where to aim. Off-screen targets
             // already have the directional arrow above.
             if (!offscreen) {
-                const Ship& player = g.ships.front();
+                const Ship& player = *g.ships.player();
                 HMM_Vec3 t_pos = target->sprite ? target->sprite->position
                                                  : target->position;
                 HMM_Vec3 t_vel = HMM_V3(0, 0, 0);
@@ -1839,6 +3345,7 @@ void frame_cb() {
 
 void cleanup_cb() {
     dev_remote::stop();
+    audio::shutdown();
     sdtx_shutdown();
     g.post.destroy();
     g.rt.destroy();
@@ -1875,6 +3382,34 @@ void event_cb(const sapp_event* ev) {
     if (mesh_orient_editor::handle_event(ev))    return;
     if (debug_panel::handle_event(ev)) return;
 
+    // Non-Flight modes: the sim is paused, so game input is ignored.
+    // Escape is the lone affordance — request a return to Flight (the
+    // transition lands at the top of the next frame_cb). The dev-editor
+    // and ImGui handlers above still see events so the panels stay usable.
+    if (g.game.mode != GameMode::Flight) {
+        if (ev->type == SAPP_EVENTTYPE_KEY_DOWN &&
+            ev->key_code == SAPP_KEYCODE_ESCAPE) {
+            // Landed: Escape first backs out of a sub-screen to the
+            // Concourse (np-9cu.4); on the Concourse it falls through to
+            // the docking launch path (np-9cu.1) — places the ship off
+            // the pad, clears the docked flag, arms the re-dock cooldown,
+            // and requests Flight. Dying/Loading keep the plain np-eag.2
+            // debug return-to-Flight.
+            if (g.game.mode == GameMode::Landed) {
+                if (!base_screens::handle_escape()) {
+                    docking::launch(g.docking, g.camera, g.game, g.player);
+                }
+            } else if (g.game.mode == GameMode::Dying) {
+                // Death cinematic owns the transition (auto-respawn at
+                // k_death_cinematic_s). Swallow Escape so a panicked tap
+                // can't dump the player into Flight as a dead wreck.
+            } else {
+                game_state::request_mode(g.game, GameMode::Flight);
+            }
+        }
+        return;
+    }
+
     switch (ev->type) {
     case SAPP_EVENTTYPE_KEY_DOWN:
         if (ev->key_code == SAPP_KEYCODE_ESCAPE) {
@@ -1901,8 +3436,63 @@ void event_cb(const sapp_event* ev) {
             } else if (!g.system.nav_points.empty()) {
                 const int n = (int)g.system.nav_points.size();
                 g.selected_nav = (g.selected_nav + 1) % n;
+                sfx::ui_click();
                 std::printf("[nav] target → %s\n",
                             g.system.nav_points[g.selected_nav].name.c_str());
+            }
+        }
+        // A — toggle the nav autopilot (np-opa.3). KEY_DOWN edge so one
+        // press = one toggle. Engaged → cancel (hand control back); idle
+        // → try to engage toward the selected nav. try_engage handles the
+        // no-nav and hostile-gate refusals (stashing the HUD banner +
+        // logging); we just route the press. Meaningless outside Flight,
+        // and event_cb already early-returns for non-Flight modes above.
+        if (ev->key_code == SAPP_KEYCODE_A) {
+            if (autopilot::engaged(g.autopilot)) {
+                autopilot::disengage(g.autopilot, g.camera,
+                                     "AUTOPILOT DISENGAGED");
+                std::printf("[autopilot] cancelled by pilot (A)\n");
+            } else {
+                autopilot::try_engage(g.autopilot, g.camera, g.system,
+                                      g.selected_nav);
+            }
+        }
+        // D — request docking at the selected nav point (np-9cu.1).
+        // Strafe moved off D to Q/E (np-opa.3), so D is now a clean
+        // docking-only key: this down-edge only DOES anything when the
+        // nav is a base and we're cleared. Rejections log their reason
+        // for HUD/console feedback.
+        if (ev->key_code == SAPP_KEYCODE_D &&
+            g.selected_nav >= 0 &&
+            g.selected_nav < (int)g.system.nav_points.size()) {
+            docking::request(g.docking, g.camera.position, g.camera.velocity,
+                             g.system.nav_points[g.selected_nav]);
+        }
+        // J — jump through the selected jump gate (np-6al.3). Twin of the D
+        // docking key: down-edge only, only acts when the selected nav is a
+        // surveyed jump point we're cleared to take (in range, no hostiles).
+        // On success we queue the destination + arrival gate and flip to the
+        // Loading hyperspace cinematic; execute_jump() does the warp once the
+        // flash has held. Refusals log their reason (the HUD already shows it
+        // via the jump prompt). Re-checks eligibility here so a stale prompt
+        // frame can't smuggle through an out-of-range / under-fire jump.
+        if (ev->key_code == SAPP_KEYCODE_J && g.autopilot.phase == AutopilotPhase::Idle) {
+            const jump::Eligibility e = jump::evaluate(
+                g.camera, g.system, g.galaxy, g.player.current_system,
+                g.selected_nav);
+            if (e.status == jump::Status::Ready) {
+                const char* src_nav = g.system.nav_points[g.selected_nav].name.c_str();
+                std::printf("[jump] %s -> %s via %s (%.0fu out) — engaging\n",
+                            g.player.current_system.c_str(), e.dest_id.c_str(),
+                            src_nav, e.distance_m);
+                g.pending_jump_system = e.dest_id;
+                g.pending_jump_nav    = e.arrival_nav;
+                sfx::jump();
+                game_state::request_mode(g.game, GameMode::Loading);
+            } else if (e.status != jump::Status::NotJumpNav) {
+                std::printf("[jump] refused at %s: %s\n",
+                            g.system.nav_points[g.selected_nav].name.c_str(),
+                            jump::status_str(e.status));
             }
         }
         // T — cycle target through nearby ships (player's perception).
@@ -1911,8 +3501,8 @@ void event_cb(const sapp_event* ev) {
         // selects the nearest contact; if the current target has fallen
         // out of perception range since last frame, the search-by-id
         // fails and we restart at index 0.
-        if (ev->key_code == SAPP_KEYCODE_T && !g.ships.empty()) {
-            const Ship& player = g.ships.front();
+        if (ev->key_code == SAPP_KEYCODE_T && g.ships.player()) {
+            const Ship& player = *g.ships.player();
             std::vector<PerceivedContact> sorted = player.perception.visible;
             std::sort(sorted.begin(), sorted.end(),
                       [](const PerceivedContact& a, const PerceivedContact& b) {
@@ -1930,18 +3520,33 @@ void event_cb(const sapp_event* ev) {
                 }
                 const int next = (cur + 1) % (int)sorted.size();
                 g.player_target_id = sorted[next].ship_id;
+                sfx::ui_click();
                 // Look up the ship to print a friendly name.
                 const char* name = "?";
-                for (const Ship& s : g.ships) {
-                    if (s.id == g.player_target_id) {
-                        name = s.klass ? s.klass->name.c_str()
-                             : s.is_player ? "player" : "?";
-                        break;
-                    }
+                if (const Ship* s = g.ships.find_by_id(g.player_target_id); s) {
+                    name = s->klass ? s->klass->name.c_str()
+                         : s->is_player ? "player" : "?";
                 }
                 std::printf("[target] → %s (id=%u, %.0f m)\n",
                             name, g.player_target_id, sorted[next].distance_m);
             }
+        }
+        // ENTER — fire the selected missile (np-zte.2). Edge-triggered:
+        // key_repeat suppressed so holding it doesn't dump the whole rack;
+        // we just RAISE a request here and frame_cb spawns it where the
+        // player pose is fresh. The ammo/lock checks live there too.
+        if (ev->key_code == SAPP_KEYCODE_ENTER && !ev->key_repeat) {
+            g.missile_fire_request = true;
+        }
+        // M — cycle the selected missile type (DF -> HS -> IR -> DF). Pure
+        // UI state; resets the lock so switching to a lock type re-acquires.
+        if (ev->key_code == SAPP_KEYCODE_M && !ev->key_repeat) {
+            g.selected_missile = (g.selected_missile + 1) % kMissileTypeCount;
+            g.missile_lock = AppState::MissileLock{};   // fresh lock for the new type
+            sfx::ui_click();
+            std::printf("[missile] selected %s (x%d)\n",
+                        missile::to_name((MissileType)g.selected_missile),
+                        g.player.missiles[g.selected_missile]);
         }
         // F3 — toggle the ship-sprite frame HUD. Useful while flying around a
         // sprite ship: lets you see exactly which atlas cell the engine picks
@@ -1987,10 +3592,50 @@ sapp_desc sokol_main(int argc, char** argv) {
 
     for (int i = 1; i < argc; ++i) {
         if (std::strcmp(argv[i], "--system") == 0 && i + 1 < argc) {
-            g.system_name = argv[i + 1];
+            g.system_name     = argv[i + 1];
+            g.system_explicit = true;   // explicit --system wins over a saved system
             ++i;
         } else if (std::strcmp(argv[i], "--capture-clean") == 0) {
             g.capture_clean = true;
+        } else if (std::strcmp(argv[i], "--dev-land") == 0 && i + 1 < argc) {
+            g.dev_land_base = argv[i + 1];
+            ++i;
+        } else if (std::strcmp(argv[i], "--load") == 0 && i + 1 < argc) {
+            g.load_slot = std::atoi(argv[i + 1]);
+            ++i;
+        } else if (std::strcmp(argv[i], "--continue") == 0) {
+            g.load_slot = savegame::k_autosave_slot;   // resume the autosave
+        } else if (std::strcmp(argv[i], "--dev-kill-at") == 0 && i + 1 < argc) {
+            g.dev_kill_at_s = (float)std::atof(argv[i + 1]);
+            ++i;
+        } else if (std::strcmp(argv[i], "--goto") == 0 && i + 1 < argc) {
+            // Deferred single switch to <system> a couple seconds after boot
+            // — proves runtime system switching WITHOUT the jump mechanic.
+            g.goto_system = argv[i + 1];
+            ++i;
+        } else if (std::strcmp(argv[i], "--goto-at") == 0 && i + 1 < argc) {
+            g.goto_at_s = (float)std::atof(argv[i + 1]);
+            ++i;
+        } else if (std::strcmp(argv[i], "--goto-soak") == 0 && i + 1 < argc) {
+            // Cycle the galaxy's systems <n> times then quit cleanly — the
+            // resource-leak / crash soak for repeated teardown+rebuild.
+            g.soak_remaining = std::atoi(argv[i + 1]);
+            ++i;
+        } else if (std::strcmp(argv[i], "--goto-interval") == 0 && i + 1 < argc) {
+            g.soak_interval = (float)std::atof(argv[i + 1]);
+            ++i;
+        } else if (std::strcmp(argv[i], "--dev-jump-soak") == 0 && i + 1 < argc) {
+            // np-6al.3: auto-fire the J jump through the first surveyed gate
+            // <n> times on an interval (teleporting into range first), then
+            // quit cleanly. Exercises the full jump path — eligibility,
+            // Loading cinematic, reciprocal arrival, repeated teardown+build
+            // — headlessly, so the round-trip + leak/stability soak can run
+            // without a human at the J key. Ping-pongs Troy<->Pyrenees.
+            g.dev_jump_remaining = std::atoi(argv[i + 1]);
+            ++i;
+        } else if (std::strcmp(argv[i], "--dev-jump-interval") == 0 && i + 1 < argc) {
+            g.dev_jump_interval = (float)std::atof(argv[i + 1]);
+            ++i;
         }
     }
 

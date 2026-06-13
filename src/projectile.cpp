@@ -37,12 +37,13 @@ void projectile::tick(std::vector<Projectile>& projectiles, float dt) {
 }
 
 #include "ship.h"
+#include "ship_registry.h"
 #include "ship_sprite.h"   // for sprite->position read
 
 #include <algorithm>
 
 void projectile::collide_and_damage(std::vector<Projectile>& projectiles,
-                                    std::vector<Ship>&        ships,
+                                    ShipRegistry&             ships,
                                     float                     dt) {
     for (Projectile& p : projectiles) {
         if (!p.alive) continue;
@@ -88,6 +89,10 @@ void projectile::collide_and_damage(std::vector<Projectile>& projectiles,
                 // loop so a single bullet can't cascade through ships.
                 const HitFacing facing = ship::facing_of_hit(s, closest);
                 ship::take_damage(s, p.damage_cm, facing);
+                // Kill attribution (np-ma2.1): if THIS hit was lethal,
+                // remember who fired it. The death pass in main.cpp uses
+                // this to bill reputation when the killer is the player.
+                if (!s.alive) s.killed_by_id = p.owner_id;
                 p.alive = false;
                 break;
             }

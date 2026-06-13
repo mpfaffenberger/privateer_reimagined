@@ -25,6 +25,7 @@
 #include <cstdint>
 #include <string>
 #include <string_view>
+#include <vector>
 
 enum class Faction : uint8_t {
     Civilian = 0,
@@ -58,6 +59,31 @@ struct PlayerReputation {
 // (-100, no rep can save you).
 extern int8_t g_faction_baseline_to_player[kFactionCount];
 
+// ---------------------------------------------------------------------------
+// Reputation consequences of player kills (np-ma2.1)
+// ---------------------------------------------------------------------------
+// Global scope (like Stance / PlayerReputation above) — only the functions
+// live in namespace faction.
+//
+// How one faction's opinion of the player moved as a result of a single
+// player kill. Returned by faction::apply_player_kill so the comm/HUD layer
+// can surface the change (rep line + taunt) and log stance-threshold flips
+// without re-deriving who-cares-about-whom.
+enum class KillReaction : uint8_t {
+    None,     // rep moved but the faction stays quiet (e.g. outlaw shrugging off a dead comrade)
+    Praise,   // player did this faction a favour (rep up) — killed their enemy
+    Anger,    // player wronged this faction (rep down) — killed them or their ally
+};
+
+struct RepKillEffect {
+    Faction      faction       = Faction::Civilian;
+    int8_t       before        = 0;        // rep before the kill
+    int8_t       after         = 0;        // rep after (clamped to [-100,100])
+    Stance       stance_before = Stance::Neutral;
+    Stance       stance_after  = Stance::Neutral;
+    KillReaction reaction      = KillReaction::None;
+};
+
 namespace faction {
 
 // Populate the static tables (stance matrix + player baselines). Idempotent.
@@ -78,5 +104,28 @@ const char* to_name(Faction f);
 //   else        -> Neutral
 Stance stance_npc_vs_npc(Faction a, Faction b);
 Stance stance_npc_vs_player(Faction npc, const PlayerReputation& rep);
+
+// Apply the reputation fallout of the player destroying a `victim`-faction
+// ship. Mutates `rep` in place (clamped) and returns the per-faction
+// effects (only factions whose rep actually moved are listed).
+//
+// Who-likes-whom is DERIVED, not hardcoded:
+//   * The victim's ALLIES (g_faction_stance == Allied) resent the kill.
+//   * The victim's ENEMIES (g_faction_stance == Hostile) approve of it.
+//   * Whether the victim is an OUTLAW is read from
+//     g_faction_baseline_to_player: a negative baseline (Pirate/Retro/
+//     Kilrathi) marks a faction the lawful universe already distrusts —
+//     killing them is policing (small swings). A non-negative baseline
+//     (Civilian/Merchant/Confed/Militia/Hunter) marks the lawful, and
+//     killing them unprovoked is a CRIME (large swings against the
+//     victim + its allies). No hardcoded faction pairs.
+//
+// Witness model (v1): GLOBAL. The whole faction "hears about" the kill
+// regardless of who was in sensor range — simple, deterministic, and
+// true to the original game where rep is a single galaxy-wide number per
+// faction. A perception-gated variant (only factions with a witness in
+// radar range react, with smaller deltas for hearsay) is future work;
+// see the np-ma2.1 close note.
+std::vector<RepKillEffect> apply_player_kill(PlayerReputation& rep, Faction victim);
 
 } // namespace faction

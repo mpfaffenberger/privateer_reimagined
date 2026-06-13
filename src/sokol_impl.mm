@@ -20,3 +20,8 @@
 #include "sokol_glue.h"
 #include "sokol_time.h"
 #include "sokol_debugtext.h"
+// sokol_audio.h vendored 2026-04 from github.com/floooh/sokol
+// @ 33da1e816c18cf2ab218a1cd6f4c6e586d278fd4 (same vintage as the rest
+// of the family above). Uses CoreAudio on macOS — AudioToolbox is
+// already in CMakeLists' framework list.
+#include "sokol_audio.h"

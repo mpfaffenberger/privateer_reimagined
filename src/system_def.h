@@ -193,6 +193,66 @@ struct NavPointDef {
     std::string name;                       // human-readable, shown on HUD
     std::string kind     = "nav";           // "station" | "jump" | "planet" | ...
     HMM_Vec3    position = { 0.0f, 0.0f, 0.0f };
+
+    // Docking metadata (np-9cu.1). `dockable` gates whether the player
+    // can request a landing here; `base_id` (empty = not a base) is the
+    // stable key the landed-mode / base-screen layer (np-9cu.4) and the
+    // player's last_docked_base field key off of. Kept on the nav point
+    // rather than the sprite because docking is a navigation affordance
+    // (you target it with N, you land at the same point) and not every
+    // dockable beacon needs a visible hull.
+    bool        dockable = false;
+    std::string base_id;                    // "achilles" | "hector" | ... ; "" = none
+
+    // Jump-link metadata (np-6al.1). Only meaningful on kind=="jump" nav
+    // points: names the galaxy system this gate leads to and (optionally)
+    // the arrival nav point on the far side. The authoritative jump graph
+    // lives in assets/galaxy.json; these fields mirror it onto the nav
+    // point so the jump mechanic (np-6al.3) can read a destination
+    // straight off the targeted gate without a galaxy lookup. Empty =
+    // unsurveyed / dangling gate (e.g. Troy's "War Jump").
+    std::string links_to;                   // galaxy system id, e.g. "pyrenees"
+    std::string links_to_nav;               // arrival nav name on the far side
+};
+
+// ---- encounter director spawn tables (np-ma2.3) -----------------------------
+//
+// Per-system data driving the procedural NPC traffic in encounters.{h,cpp}.
+// A StarSystem carries a list of EncounterRuleDef; the director (init at
+// system load, tick in the Flight loop) maintains a live population from
+// them — spawning offscreen-ish near the player, despawning when ships
+// drift far away. This is data, not code: tune the feel of a system by
+// editing its JSON, no recompile.
+//
+// `region` decides WHERE a rule's ships appear AND when the rule is even
+// active (the player has to be near the region for it to fire):
+//   "belt"     — inside asteroid_fields[field_index]'s AABB; active when
+//                the player is near that belt. Pirate territory.
+//   "lane"     — along the polyline through the named nav points
+//                (e.g. Achilles → Hector → Helen); active near the lane.
+//                Merchant / militia traffic.
+//   "anywhere" — no region gate, always active. Roaming hunters that
+//                shadow the player wherever they fly.
+//
+// Faction + class are weighted draws so one rule can mix (e.g. mostly
+// Talons with the occasional Orion). Weights are relative within the rule.
+struct EncounterWeight {
+    std::string name;            // faction name OR ship-class key
+    float       weight = 1.0f;   // relative; <=0 entries are ignored
+};
+
+struct EncounterRuleDef {
+    std::string name = "encounter";          // for logs only
+    std::string region = "anywhere";          // "belt" | "lane" | "anywhere"
+    int         field_index = 0;              // belt: index into asteroid_fields
+    std::vector<std::string> lane;            // lane: nav-point names (polyline)
+
+    std::vector<EncounterWeight> factions;    // weighted faction mix
+    std::vector<EncounterWeight> classes;     // weighted ship-class mix
+
+    int         max_concurrent = 4;           // cap for THIS rule's live ships
+    float       spawn_interval = 8.0f;        // seconds between spawn attempts
+    std::string initial_ai_state = "patrol";  // seed state ("idle"|"patrol"|...)
 };
 
 struct StarSystem {
@@ -214,6 +274,7 @@ struct StarSystem {
     std::vector<PlacedSpriteDef>     placed_sprites;
     std::vector<PlacedShipSpriteDef> placed_ship_sprites;
     std::vector<NavPointDef>         nav_points;
+    std::vector<EncounterRuleDef>    encounters;
 
     HMM_Vec3    player_start = { 0.0f, 0.0f, 30000.0f };
 

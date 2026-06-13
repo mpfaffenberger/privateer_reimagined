@@ -1,6 +1,7 @@
 #include "perception.h"
 
 #include "ship.h"
+#include "ship_registry.h"
 #include "ship_class.h"
 #include "ship_sprite.h"
 
@@ -26,7 +27,7 @@ static Stance classify_pair(const Ship& observer, const Ship& other,
     return faction::stance_npc_vs_npc(observer.faction, other.faction);
 }
 
-void perception::tick(std::vector<Ship>& ships, const PlayerReputation& player_rep) {
+void perception::tick(ShipRegistry& ships, const PlayerReputation& player_rep) {
     // O(N²) double-loop. Each observer's perception is rebuilt from
     // scratch — no incremental updates today (fast enough at N ≤ 50).
     // Inside the inner loop we early-out on dead/sprite-less ships and

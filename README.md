@@ -37,10 +37,15 @@ That's it. It works on any macOS with a Metal GPU.
 | `mouse`             | look (pointer captured FPS-style)                 |
 | `right-click`       | toggle pointer capture                            |
 | `W` / `S`           | throttle forward / reverse                        |
-| `A` / `D`           | strafe left / right                               |
-| `Space` / `L-Shift` | thrust up / down                                  |
+| `Q` / `E`           | strafe left / right                               |
+| `R` / `F`           | thrust up / down                                  |
+| `Z` / `C`           | roll left / right                                 |
 | `Tab` (hold)        | cruise engine — 10× thrust + FOV widen            |
 | `X`                 | full brake                                        |
+| `N` (`Alt+N`)       | cycle selected nav point (Alt+N: navmap overlay)  |
+| `A`                 | autopilot to selected nav (hostile-gated; any input cancels) |
+| `D`                 | dock at selected base when cleared                |
+| `T`                 | cycle selected ship target                        |
 | `1`..`6`            | swap star (yellow / blue / red / green / orange / purple) |
 | `Esc` ×2            | quit (double-tap within 1s)                       |
 

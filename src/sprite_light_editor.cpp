@@ -105,11 +105,12 @@ static float g_zoom = 1.0f;
 // Modifier-clicks are quick presets that ALSO update the sticky values,
 // so back-to-back plain clicks keep repeating whatever you last chose
 // ("modifier = switch to this preset, then keep going"):
-//   shift-click → steady blue   (port nav / cool accents)
-//   ctrl-click  → steady red    (starboard nav / warnings)
-//   cmd-click   → green Strobe @ 3 Hz  (blinking beacon)
-// Each preset sets colour AND kind AND hz together so switching back
-// from the blinking-green beacon to a steady colour clears the strobe.
+//   shift-click  → steady blue   (port nav / cool accents)
+//   cmd-click    → steady red    (starboard nav / warnings)
+//   option-click → green Strobe @ 3 Hz  (blinking beacon)
+// (macOS: Cmd surfaces as io.KeyCtrl, Option as io.KeyAlt — see the
+// click handler for the why.) Each preset sets colour AND kind AND hz
+// together so switching back from the green beacon clears the strobe.
 static HMM_Vec3  g_sticky_color = HMM_V3(1.00f, 0.10f, 0.10f);   // hot red
 static float     g_sticky_hz    = 0.0f;
 static float     g_sticky_phase = 0.0f;
@@ -481,18 +482,25 @@ void build(std::vector<SpriteObject>& sprites,
                        mouse_uv.y >= 0 && mouse_uv.y <= 1) {
                 // Modifier-click presets. Each sets colour + kind + hz and
                 // makes them the new sticky values, so subsequent plain
-                // clicks repeat the same light. kind/hz/phase otherwise
-                // come from the sticky values so authoring runs of
-                // identical lights doesn't require re-picking per spot.
-                // Priority cmd > ctrl > shift if somehow chorded.
+                // clicks repeat the same light.
+                //
+                // macOS modifier reality check: with ImGui's mac behaviour
+                // the Cmd key surfaces as io.KeyCtrl (NOT io.KeySuper), and
+                // the physical Ctrl key / KeySuper aren't reliably reachable.
+                // So we bind to the three modifiers that DO come through
+                // cleanly: Shift, Cmd(=KeyCtrl), and Option(=KeyAlt).
+                //   shift  → blue
+                //   cmd    → red
+                //   option → green strobe @ 3 Hz
+                // Priority option > cmd > shift if chorded.
                 const ImGuiIO& io = ImGui::GetIO();
-                if (io.KeySuper) {
-                    // Cmd-click → blinking green beacon at 3 Hz.
+                if (io.KeyAlt) {
+                    // Option/Alt-click → blinking green beacon at 3 Hz.
                     g_sticky_color = HMM_V3(0.10f, 0.85f, 0.25f);
                     g_sticky_kind  = LightKind::Strobe;
                     g_sticky_hz    = 3.0f;
                 } else if (io.KeyCtrl) {
-                    // Ctrl-click → steady red.
+                    // Cmd-click (mac) / Ctrl-click (other) → steady red.
                     g_sticky_color = HMM_V3(1.00f, 0.10f, 0.10f);
                     g_sticky_kind  = LightKind::Steady;
                     g_sticky_hz    = 0.0f;
@@ -646,7 +654,7 @@ void build(std::vector<SpriteObject>& sprites,
             }
         } else {
             ImGui::TextDisabled("Click a light to edit, or click the sprite to add one.");
-            ImGui::TextDisabled("  plain=last colour  shift=blue  ctrl=red  cmd=green strobe 3Hz");
+            ImGui::TextDisabled("  plain=last  shift=blue  cmd=red  option=green strobe 3Hz");
         }
     }
     ImGui::EndChild();

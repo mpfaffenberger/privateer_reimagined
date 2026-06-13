@@ -108,7 +108,49 @@ NavPointDef parse_nav(const json::Value& v) {
     if (auto* p = v.find("name")) n.name = p->as_string();
     if (auto* p = v.find("kind")) n.kind = p->as_string();
     n.position = vec3_or(v.find("position"), n.position);
+    // Docking metadata (np-9cu.1). Both optional — a plain nav point
+    // omits them and stays non-dockable with an empty base_id.
+    if (auto* p = v.find("dockable")) n.dockable = p->as_bool();
+    if (auto* p = v.find("base_id"))  n.base_id  = p->as_string();
+    // Jump-link metadata (np-6al.1) — both optional; a non-jump nav or a
+    // dangling frontier gate simply omits them.
+    if (auto* p = v.find("links_to"))     n.links_to     = p->as_string();
+    if (auto* p = v.find("links_to_nav")) n.links_to_nav = p->as_string();
     return n;
+}
+
+// A weighted faction/class entry: { "name": "talon", "weight": 3 }.
+// Weight defaults to 1.0 so a bare { "name": "x" } is a uniform pick.
+EncounterWeight parse_weight(const json::Value& v) {
+    EncounterWeight w;
+    if (auto* p = v.find("name"))   w.name   = p->as_string();
+    if (auto* p = v.find("weight")) w.weight = p->as_float();
+    return w;
+}
+
+// An encounter spawn rule. Region defaults to "anywhere" so a minimal
+// rule needs only a faction + class mix to roam near the player.
+EncounterRuleDef parse_encounter(const json::Value& v) {
+    EncounterRuleDef e;
+    if (auto* p = v.find("name"))           e.name        = p->as_string();
+    if (auto* p = v.find("region"))         e.region      = p->as_string();
+    if (auto* p = v.find("field_index"))    e.field_index = p->as_int();
+    if (auto* p = v.find("max_concurrent")) e.max_concurrent = p->as_int();
+    if (auto* p = v.find("spawn_interval")) e.spawn_interval = p->as_float();
+    if (auto* p = v.find("initial_state"))  e.initial_ai_state = p->as_string();
+
+    if (auto* lane = v.find("lane"); lane && lane->is_array()) {
+        for (const auto& n : lane->as_array()) {
+            if (n.is_string()) e.lane.push_back(n.as_string());
+        }
+    }
+    if (auto* fs = v.find("factions"); fs && fs->is_array()) {
+        for (const auto& f : fs->as_array()) e.factions.push_back(parse_weight(f));
+    }
+    if (auto* cs = v.find("classes"); cs && cs->is_array()) {
+        for (const auto& c : cs->as_array()) e.classes.push_back(parse_weight(c));
+    }
+    return e;
 }
 
 AsteroidFieldDef parse_field(const json::Value& v) {
@@ -193,6 +235,12 @@ std::optional<StarSystem> load_system(const std::string& name_or_path) {
         }
     }
 
+    if (auto* enc = root.find("encounters"); enc && enc->is_array()) {
+        for (const auto& e : enc->as_array()) {
+            s.encounters.push_back(parse_encounter(e));
+        }
+    }
+
     if (auto* ps = root.find("player_start")) {
         s.player_start = vec3_or(ps->find("position"), s.player_start);
         if (auto* la = ps->find("look_at")) {
@@ -206,5 +254,9 @@ std::optional<StarSystem> load_system(const std::string& name_or_path) {
                 s.star_preset.c_str(), s.asteroid_fields.size(),
                 s.placed_meshes.size(), s.placed_sprites.size(),
                 s.placed_ship_sprites.size(), s.nav_points.size());
+    if (!s.encounters.empty()) {
+        std::printf("[system] '%s' has %zu encounter rule(s)\n",
+                    s.name.c_str(), s.encounters.size());
+    }
     return s;
 }

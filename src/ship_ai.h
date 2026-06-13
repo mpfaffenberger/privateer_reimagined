@@ -43,9 +43,10 @@
 
 #include <HandmadeMath.h>
 #include <cstdint>
-#include <vector>
+#include <string_view>
 
 struct Ship;
+class ShipRegistry;
 
 enum class AIState : uint8_t {
     Idle = 0,
@@ -110,14 +111,15 @@ namespace ship_ai {
 // to consume this frame. Called once per ship per frame between
 // perception::tick (L2) and ship::tick (L1).
 //
-// `all_ships` is needed for target lookup by ID (Engage / Flee resolve
+// `all_ships` is the ship registry (slot-map, see ship_registry.h) —
+// needed for target lookup by ID (Engage / Flee resolve
 // nearest_hostile_id from perception into the target's actual position).
-// Linear scan; cheap at the demo's N — promote to a hash on the way to
-// hundreds of ships.
+// Linear scan via ShipRegistry::find_by_id; cheap at the demo's N —
+// promote to a hash on the way to hundreds of ships.
 //
 // `t_now` is the engine's monotonic seconds counter; used to stamp
 // state_entered_at for future hysteresis logic.
-void tick(Ship& s, const std::vector<Ship>& all_ships, float t_now);
+void tick(Ship& s, const ShipRegistry& all_ships, float t_now);
 
 // Convert AIState to / from JSON-friendly lowercase strings.
 const char* to_name(AIState st);

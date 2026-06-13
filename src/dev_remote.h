@@ -24,6 +24,14 @@
 //   POST /camera/set     → { x, y, z, yaw, pitch, roll }   (all optional)
 //   POST /screenshot     → saves a PNG to /tmp/np_shot.png,
 //                          returns { path, ok }
+//   POST /project        → projects mesh-local 3D points into screen
+//                          UV using the live render matrices. Body is a
+//                          flat float array [x,y,z,nx,ny,nz, ...] (6 per
+//                          point: position + outward normal). Returns
+//                          { results: [ {u,v,front,facing}, ... ] } where
+//                          u,v are 0..1 image-space (0,0 = top-left),
+//                          `front` = in front of camera, `facing` =
+//                          normal points toward camera (rough visibility).
 //
 // Everything else 404s.
 // -----------------------------------------------------------------------------
@@ -61,5 +69,15 @@ void maybe_capture_screenshot();
 // current system name (we don't hold a reference to the StarSystem
 // to keep coupling low).
 void publish_system_name(const char* name);
+
+// Publish the render matrices the `/project` endpoint needs: the current
+// view-projection, the model matrix of the mesh being projected against
+// (the capture scene has exactly one placed mesh at the origin), and the
+// world-space camera position (for the normal-facing visibility test).
+// Call once per frame from the main thread, after the camera + placed
+// mesh transforms are finalised for the frame.
+void publish_render_matrices(const HMM_Mat4& view_proj,
+                             const HMM_Mat4& model,
+                             HMM_Vec3 cam_pos);
 
 } // namespace dev_remote

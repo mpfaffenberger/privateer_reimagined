@@ -200,6 +200,32 @@ Ship ship::spawn(const ShipClass& klass) {
     return s;
 }
 
+void ship::heal_to_full(Ship& s) {
+    // Full reset of the durability state. Mirrors the health-from-class
+    // init in spawn(); kept here so the player-spawn block and respawn
+    // share one definition (see header). Clears the regen pauses too —
+    // a fresh hull shouldn't inherit a suppressed-shield timer from the
+    // wreck it's replacing.
+    s.alive             = true;
+    s.shield_pause_fore = 0.0f;
+    s.shield_pause_aft  = 0.0f;
+    s.shield_pause_side = 0.0f;
+    if (!s.klass) return;   // class-less player: health doesn't apply yet
+    const ShipClass& k = *s.klass;
+    s.armor_fore_cm = k.armor_fore_cm;
+    s.armor_aft_cm  = k.armor_aft_cm;
+    s.armor_side_cm = k.armor_side_cm;
+    if (k.default_armor) {
+        s.armor_fore_cm += k.default_armor->front_cm;
+        s.armor_aft_cm  += k.default_armor->back_cm;
+        s.armor_side_cm += k.default_armor->side_cm;
+    }
+    s.shield_fore_cm = k.default_shield ? k.default_shield->front_cm : 0.0f;
+    s.shield_aft_cm  = k.default_shield ? k.default_shield->back_cm  : 0.0f;
+    s.shield_side_cm = k.default_shield ? k.default_shield->side_cm  : 0.0f;
+    s.energy_gj      = k.energy_max;
+}
+
 void ship::tick(Ship& s, float dt) {
     if (!s.alive)     return;
     if (s.is_player)  return;   // player flies via camera input, not the controller
@@ -302,7 +328,10 @@ void ship::take_damage(Ship& s, float damage_cm, HitFacing facing) {
     *t.pause = k_shield_pause_after_hit;
 
     // Shield first (with implicit effect_pct = 100% for v1; the per-shield
-    // multiplier is loaded but not yet folded in — TODO before L5).
+    // effectiveness multiplier is loaded but not yet folded in — tracked as
+    // np-3ca). NB: the np-9cu.3 brief called this the "engine multiplier" —
+    // that's a different concern and is now wired (engine_level -> player
+    // speed) in outfitting::effective_speed_caps; this remains a SHIELD TODO.
     if (*t.shield > 0.0f) {
         const float absorbed = std::min(*t.shield, damage_cm);
         *t.shield  -= absorbed;

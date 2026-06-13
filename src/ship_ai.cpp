@@ -5,6 +5,7 @@
 #include "shield.h"
 #include "ship.h"
 #include "ship_class.h"
+#include "ship_registry.h"
 #include "ship_sprite.h"   // for sprite->forward_speed read in lead prediction
 
 #include <cmath>
@@ -13,13 +14,9 @@
 
 namespace {
 
-// Linear lookup. N is small (demo: 3 ships); upgrade to an
-// unordered_map<id, idx> when ships start spawning by the dozens.
-const Ship* find_by_id(const std::vector<Ship>& ships, uint32_t id) {
-    if (id == 0) return nullptr;
-    for (const Ship& s : ships) if (s.id == id) return &s;
-    return nullptr;
-}
+// Target resolution now lives on the registry (ShipRegistry::find_by_id,
+// same linear scan as the local helper this replaced — still fine at
+// demo N, still upgradeable to a hash when ships spawn by the dozens).
 
 // Health fraction, 0..1. Sums armor + shield across all three facings
 // against the per-class max (base hull + fitted armor + fitted shield).
@@ -50,7 +47,7 @@ constexpr float k_flee_threshold = 0.30f;
 
 } // namespace
 
-void ship_ai::tick(Ship& s, const std::vector<Ship>& all_ships, float t_now) {
+void ship_ai::tick(Ship& s, const ShipRegistry& all_ships, float t_now) {
     if (!s.alive || s.is_player) return;
     if (!s.ai.enabled)            return;
 
@@ -159,7 +156,7 @@ void ship_ai::tick(Ship& s, const std::vector<Ship>& all_ships, float t_now) {
         // position, U-turn, plow back, repeat — the scissors).
         // Breaking out perpendicular gains separation for a clean
         // attack run from a fresh angle.
-        if (const Ship* t = find_by_id(all_ships, s.ai.target_id); t) {
+        if (const Ship* t = all_ships.find_by_id(s.ai.target_id); t) {
             const HMM_Vec3 to_t = HMM_SubV3(t->position, s.position);
             if (HMM_DotV3(to_t, to_t) < k_break_distance_m * k_break_distance_m) {
                 next = AIState::BreakOff;
@@ -236,7 +233,7 @@ void ship_ai::tick(Ship& s, const std::vector<Ship>& all_ships, float t_now) {
             // of perpendicular + away gives a satisfying diagonal
             // escape; renormalise to keep unit length.
             HMM_Vec3 away_world = HMM_V3(0, 0, 1);
-            if (const Ship* t = find_by_id(all_ships, s.ai.target_id); t) {
+            if (const Ship* t = all_ships.find_by_id(s.ai.target_id); t) {
                 HMM_Vec3 to_t = HMM_SubV3(t->position, s.position);
                 const float l2 = HMM_DotV3(to_t, to_t);
                 if (l2 > 1e-6f) {
@@ -296,7 +293,7 @@ void ship_ai::tick(Ship& s, const std::vector<Ship>& all_ships, float t_now) {
             break;
         }
         case AIState::Engage: {
-            const Ship* t = find_by_id(all_ships, s.ai.target_id);
+            const Ship* t = all_ships.find_by_id(s.ai.target_id);
             if (!t || !t->alive) {
                 // Target died or was never resolvable. Drop it so the
                 // next perception tick can pick a fresh hostile.
@@ -394,7 +391,7 @@ void ship_ai::tick(Ship& s, const std::vector<Ship>& all_ships, float t_now) {
             break;
         }
         case AIState::Flee: {
-            const Ship* threat = find_by_id(all_ships, s.ai.target_id);
+            const Ship* threat = all_ships.find_by_id(s.ai.target_id);
             if (!threat || !threat->alive) {
                 s.ai.target_id  = 0;
                 s.behavior.kind = ShipBehavior::None;

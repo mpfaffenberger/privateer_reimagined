@@ -46,6 +46,7 @@
 #include <vector>
 
 struct Ship;
+class ShipRegistry;
 
 struct PerceivedContact {
     uint32_t ship_id    = 0;
@@ -80,6 +81,10 @@ namespace perception {
 // when classifying contacts that involve the player ship
 // (is_player==true on either side of the relationship). For NPC-vs-NPC
 // pairs it's unused — the symmetric stance matrix is consulted instead.
-void tick(std::vector<Ship>& ships, const PlayerReputation& player_rep);
+//
+// Takes the ShipRegistry (slot-map, see ship_registry.h) — iteration
+// covers every occupied slot, alive checks unchanged from the old
+// vector walk.
+void tick(ShipRegistry& ships, const PlayerReputation& player_rep);
 
 } // namespace perception

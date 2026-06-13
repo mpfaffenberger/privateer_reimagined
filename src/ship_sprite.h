@@ -11,6 +11,7 @@
 #include "camera.h"
 #include "sprite.h"
 
+#include <deque>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -90,9 +91,15 @@ struct ShipSpriteObject {
 
 // Per-frame integration of orientation + position for every ship that has
 // non-zero angular_velocity or forward_speed. No-op for static ships, so
-// it's safe to call unconditionally on the full vector. Call once before
+// it's safe to call unconditionally on the full container. Call once before
 // append_ship_sprites_for_camera so cell selection sees the post-step pose.
-void update_ship_sprite_motion(std::vector<ShipSpriteObject>& ships, float dt);
+//
+// std::deque (not vector) because Ship::sprite holds long-lived pointers
+// into this container: deque growth never relocates existing elements,
+// so runtime spawning can append sprite slots without dangling every
+// NPC's back-pointer. See AppState::placed_ship_sprites for the slot-
+// reuse scheme layered on top.
+void update_ship_sprite_motion(std::deque<ShipSpriteObject>& ships, float dt);
 
 bool load_ship_sprite_atlas(const std::string& atlas_stem,
                             ShipSpriteAtlas& atlas,
@@ -106,6 +113,6 @@ const ShipSpriteFrame* choose_ship_sprite_frame_by_angles(const ShipSpriteAtlas&
                                                           float az_deg,
                                                           float el_deg);
 
-void append_ship_sprites_for_camera(std::vector<ShipSpriteObject>& ships,
+void append_ship_sprites_for_camera(std::deque<ShipSpriteObject>& ships,
                                     const Camera& cam,
                                     std::vector<SpriteObject>& out_sprites);

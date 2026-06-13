@@ -27,6 +27,7 @@
 #include <mutex>
 #include <string>
 #include <thread>
+#include <vector>
 
 // Declared in dev_remote_macos.mm — captures the game's NSWindow via
 // screencapture -l<wid>. Returns true on success. Uses C linkage so
@@ -78,6 +79,16 @@ std::mutex g_cam_snapshot_mu;
 HMM_Vec3   g_cam_pos{};
 HMM_Vec3   g_cam_euler{};
 
+// Render-matrix snapshot for /project. Published once per frame by the
+// main thread (publish_render_matrices); read by the HTTP thread inside
+// handle_project. Guarded by its own mutex so a /project request never
+// races a mid-frame matrix write.
+std::mutex g_proj_mu;
+HMM_Mat4   g_view_proj{};
+HMM_Mat4   g_model{};
+HMM_Vec3   g_proj_cam_pos{};
+bool       g_proj_ready = false;   // false until first publish
+
 std::thread       g_thread;
 std::atomic<bool> g_running{false};
 int               g_listen_fd = -1;
@@ -101,6 +112,31 @@ bool extract_float(const std::string& body, const char* key, float* out) {
     if (pos == std::string::npos) return false;
     *out = std::strtof(body.c_str() + pos + 1, nullptr);
     return true;
+}
+
+// Scan a string for every floating-point token and return them in order.
+// Used by /project: the client sends a flat array of numbers and we just
+// read them all sequentially (6 per point: x y z nx ny nz). Brackets,
+// commas, and whitespace are skipped by strtof's own tokenising — we
+// step the cursor past each parsed number and resume scanning for the
+// next numeric character.
+std::vector<float> extract_all_floats(const std::string& body) {
+    std::vector<float> out;
+    const char* p   = body.c_str();
+    const char* end = p + body.size();
+    while (p < end) {
+        // Advance to the next character that could start a number.
+        if ((*p >= '0' && *p <= '9') || *p == '-' || *p == '+' || *p == '.') {
+            char* next = nullptr;
+            float v = std::strtof(p, &next);
+            if (next == p) { ++p; continue; }   // not actually a number
+            out.push_back(v);
+            p = next;
+        } else {
+            ++p;
+        }
+    }
+    return out;
 }
 
 std::string json_state() {
@@ -201,6 +237,64 @@ void handle_camera_set(int fd, const std::string& body) {
     send_json(fd, "{\"ok\":true}");
 }
 
+// Project mesh-local 3D points into screen UV using the published render
+// matrices. Body is a flat float array [x,y,z,nx,ny,nz, ...]; we read 6
+// floats per point (position + outward normal). Pure read of the snapshot
+// — no command queued, no main-thread round trip needed, because the
+// matrices are already published each frame.
+void handle_project(int fd, const std::string& body) {
+    HMM_Mat4 vp, model;
+    HMM_Vec3 cam;
+    bool ready;
+    {
+        std::lock_guard lk(g_proj_mu);
+        vp = g_view_proj; model = g_model; cam = g_proj_cam_pos;
+        ready = g_proj_ready;
+    }
+    if (!ready) {
+        send_json(fd, "{\"results\":[],\"error\":\"no render matrices yet\"}");
+        return;
+    }
+
+    const std::vector<float> nums = extract_all_floats(body);
+    std::string out = "{\"results\":[";
+    const size_t n_pts = nums.size() / 6;
+    for (size_t i = 0; i < n_pts; ++i) {
+        const float px = nums[i*6+0], py = nums[i*6+1], pz = nums[i*6+2];
+        const float nx = nums[i*6+3], ny = nums[i*6+4], nz = nums[i*6+5];
+
+        // Local → world → clip. w=1 for the position (affine transform).
+        const HMM_Vec4 world = HMM_MulM4V4(model, HMM_V4(px, py, pz, 1.0f));
+        const HMM_Vec4 clip  = HMM_MulM4V4(vp, world);
+        const bool front = clip.W > 1e-4f;
+        float u = 0.0f, v = 0.0f;
+        if (front) {
+            const float ndc_x = clip.X / clip.W;
+            const float ndc_y = clip.Y / clip.W;
+            u = ndc_x * 0.5f + 0.5f;
+            v = 1.0f - (ndc_y * 0.5f + 0.5f);   // image row 0 = top = +ndc.y
+        }
+
+        // Normal-facing visibility: transform the outward normal by the
+        // model matrix (w=0 → rotation+scale only) and check it points
+        // toward the camera. Uniform scale keeps the direction valid.
+        const HMM_Vec4 nworld = HMM_MulM4V4(model, HMM_V4(nx, ny, nz, 0.0f));
+        const HMM_Vec3 to_cam = HMM_SubV3(cam, HMM_V3(world.X, world.Y, world.Z));
+        const float dot = nworld.X*to_cam.X + nworld.Y*to_cam.Y + nworld.Z*to_cam.Z;
+        const bool facing = dot > 0.0f;
+
+        char buf[160];
+        std::snprintf(buf, sizeof(buf),
+            "%s{\"u\":%.5f,\"v\":%.5f,\"front\":%s,\"facing\":%s}",
+            i ? "," : "", u, v,
+            front  ? "true" : "false",
+            facing ? "true" : "false");
+        out += buf;
+    }
+    out += "]}";
+    send_json(fd, out);
+}
+
 void handle_screenshot(int fd) {
     ScreenshotWaiter w;
     w.path = "/tmp/np_shot.png";
@@ -286,6 +380,7 @@ void handle_connection(int fd) {
     if      (method == "GET"  && path == "/state")      handle_state(fd);
     else if (method == "POST" && path == "/camera/set") handle_camera_set(fd, body);
     else if (method == "POST" && path == "/screenshot") handle_screenshot(fd);
+    else if (method == "POST" && path == "/project")    handle_project(fd, body);
     else                                                send_404(fd);
 
     ::close(fd);
@@ -436,6 +531,16 @@ void maybe_capture_screenshot() {
 void publish_system_name(const char* name) {
     std::lock_guard lk(g_system_mu);
     g_system_name = name ? name : "";
+}
+
+void publish_render_matrices(const HMM_Mat4& view_proj,
+                             const HMM_Mat4& model,
+                             HMM_Vec3 cam_pos) {
+    std::lock_guard lk(g_proj_mu);
+    g_view_proj   = view_proj;
+    g_model       = model;
+    g_proj_cam_pos = cam_pos;
+    g_proj_ready  = true;
 }
 
 } // namespace dev_remote

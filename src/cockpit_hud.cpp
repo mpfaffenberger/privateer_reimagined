@@ -23,6 +23,7 @@
 #include "shield.h"
 #include "ship.h"
 #include "ship_class.h"
+#include "ship_registry.h"
 #include "ship_sprite.h"
 #include "system_def.h"
 
@@ -251,9 +252,14 @@ void draw_nav_reticle(const Camera& cam, const StarSystem& system, int selected_
 // (selected with the N key). Renamed from "TARGET" since a real ship
 // target panel now sits separately (top-right) — "target" should mean
 // "the ship I'm shooting at", not "the nav point I'm flying to".
-void draw_nav_mfd(const Camera& cam, const StarSystem& system, int selected_nav) {
+void draw_nav_mfd(const Camera& cam, const StarSystem& system, int selected_nav,
+                  const char* dock_prompt, bool dock_ready) {
     const auto s = screen_size();
-    constexpr float w = 240.0f, h = 96.0f, margin = 16.0f;
+    const bool has_prompt = dock_prompt && dock_prompt[0] != '\0';
+    // Grow the panel a touch when a docking prompt is showing so the
+    // extra line doesn't clip under the AZ/EL row (np-9cu.1).
+    const float w = 240.0f, margin = 16.0f;
+    const float h = has_prompt ? 116.0f : 96.0f;
 
     ImGui::SetNextWindowPos(ImVec2(s.w - w - margin, s.h - h - margin),
                             ImGuiCond_Always);
@@ -294,6 +300,14 @@ void draw_nav_mfd(const Camera& cam, const StarSystem& system, int selected_nav)
             else                ImGui::Text("DIST  %6.1f k u", len * 0.001f);
             ImGui::Text("AZ %+4.0f  EL %+3.0f", az_deg, el_deg);
             ImGui::PopStyleColor();
+
+            // Docking feedback line (np-9cu.1). Green when cleared
+            // ("PRESS D TO DOCK"), amber otherwise ("DOCK: TOO FAST").
+            if (has_prompt) {
+                ImGui::PushStyleColor(ImGuiCol_Text, dock_ready ? kGreen : kAmber);
+                ImGui::TextUnformatted(dock_prompt);
+                ImGui::PopStyleColor();
+            }
         }
     }
     ImGui::End();
@@ -317,13 +331,10 @@ void draw_nav_mfd(const Camera& cam, const StarSystem& system, int selected_nav)
 //
 // Distinct from the NAV panel (bottom-right) which tracks the
 // nav-point N-key cycle. Both panels can be active simultaneously.
-void draw_target_mfd(const Camera& cam, const std::vector<Ship>& ships,
+void draw_target_mfd(const Camera& cam, const ShipRegistry& ships,
                      uint32_t target_ship_id) {
     // Resolve target id -> Ship*. Linear scan; ships count is small.
-    const Ship* target = nullptr;
-    for (const Ship& s : ships) {
-        if (s.id == target_ship_id) { target = &s; break; }
-    }
+    const Ship* target = ships.find_by_id(target_ship_id);
 
     const auto sz = screen_size();
     constexpr float w = 280.0f, h = 152.0f, margin = 16.0f;
@@ -380,8 +391,8 @@ void draw_target_mfd(const Camera& cam, const std::vector<Ship>& ships,
                 ? faction::to_name(target->faction) : "?";
             float        dist_m   = 0.0f;
             Stance       stance   = Stance::Neutral;
-            if (!ships.empty() && ships.front().is_player) {
-                for (const PerceivedContact& c : ships.front().perception.visible) {
+            if (const Ship* player = ships.player(); player) {
+                for (const PerceivedContact& c : player->perception.visible) {
                     if (c.ship_id == target_ship_id) {
                         dist_m = c.distance_m;
                         stance = c.stance;
@@ -473,13 +484,14 @@ void draw_target_mfd(const Camera& cam, const std::vector<Ship>& ships,
 
 // Top-left STATUS panel — player ship's hull integrity at a glance.
 // Mirrors the TARGET panel's layout (class label + 6 progress bars
-// for shield + armor per facing) but for ships[0] = player. No
+// for shield + armor per facing) but for the registry's player. No
 // thumbnail since the player has no sprite. Energy displayed as a
 // numeric current/max instead of a bar — energy ticks fast enough
 // during sustained fire that a bar would just look noisy.
-void draw_player_status(const std::vector<Ship>& ships) {
-    if (ships.empty() || !ships.front().is_player) return;
-    const Ship& player = ships.front();
+void draw_player_status(const ShipRegistry& ships) {
+    const Ship* player_p = ships.player();
+    if (!player_p) return;
+    const Ship& player = *player_p;
 
     const auto sz = screen_size();
     constexpr float w = 280.0f, h = 184.0f, margin = 16.0f;
@@ -581,7 +593,7 @@ void draw_player_status(const std::vector<Ship>& ships) {
 }
 
 void draw_radar_mfd(const Camera& cam, const StarSystem& system, int selected_nav,
-                    const std::vector<Ship>& ships, uint32_t target_ship_id) {
+                    const ShipRegistry& ships, uint32_t target_ship_id) {
     const auto s = screen_size();
     constexpr float w = 168.0f, h = 168.0f, margin = 16.0f;
 
@@ -658,8 +670,8 @@ void draw_radar_mfd(const Camera& cam, const StarSystem& system, int selected_na
         // center — that's the steady-state engagement bubble; nav
         // points spread out farther because they're system-scale
         // (planets, jump points 100+ km away).
-        if (!ships.empty() && ships.front().is_player) {
-            const Ship& player = ships.front();
+        if (const Ship* player_p = ships.player(); player_p) {
+            const Ship& player = *player_p;
             for (const PerceivedContact& c : player.perception.visible) {
                 // Reconstruct world position from cached unit + distance.
                 const HMM_Vec3 contact_pos =
@@ -757,15 +769,71 @@ void draw_nav_labels(const Camera& cam, const StarSystem& system) {
 
 void build(const Camera& cam, const StarSystem& system, int selected_nav,
            float mouse_x, float mouse_y, bool fly_by_wire,
-           const std::vector<Ship>& ships, uint32_t target_ship_id) {
+           const ShipRegistry& ships, uint32_t target_ship_id,
+           const char* dock_prompt, bool dock_ready) {
     draw_crosshair(fly_by_wire);
     draw_aim_cursor(mouse_x, mouse_y, fly_by_wire);
     draw_nav_reticle(cam, system, selected_nav);
     draw_nav_labels (cam, system);
     draw_player_status(ships);
-    draw_nav_mfd   (cam, system, selected_nav);
+    draw_nav_mfd   (cam, system, selected_nav, dock_prompt, dock_ready);
     draw_target_mfd(cam, ships, target_ship_id);
     draw_radar_mfd (cam, system, selected_nav, ships, target_ship_id);
+}
+
+void build_weapons_status(const WeaponsHudState& w) {
+    const ScreenSize ss = screen_size();
+    ImDrawList* dl = ImGui::GetForegroundDrawList();
+
+    // Anchored above the bottom-left radar MFD, left edge. Three short
+    // lines + a gauge; foreground drawlist so it never steals input.
+    const float x = 24.0f;
+    float       y = ss.h - 280.0f;
+    if (y < 70.0f) y = 70.0f;   // tiny windows: don't collide with the top
+
+    char line[64];
+
+    // ---- missile readout: "MSL  IR x3" ---------------------------------
+    const ImU32 ammo_col = (w.missile_count > 0) ? kAmber : kDimAmber;
+    std::snprintf(line, sizeof(line), "MSL  %s x%d", w.missile_name, w.missile_count);
+    dl->AddText(ImVec2(x, y), ammo_col, line);
+    y += 18.0f;
+
+    // ---- lock state -----------------------------------------------------
+    // DF (no lock) just shows "DUMBFIRE"; HS/IR show seeking/locked with
+    // an IR build-up bar so the ~1.5s acquire is visible, not mysterious.
+    if (!w.needs_lock) {
+        dl->AddText(ImVec2(x, y), kDimAmber, "DUMBFIRE");
+    } else if (w.lock_state == 2) {
+        dl->AddText(ImVec2(x, y), kGreen, "LOCKED");
+    } else if (w.lock_state == 1) {
+        dl->AddText(ImVec2(x, y), kCyan, "LOCK\xE2\x80\xA6");   // "LOCK…"
+        // Build-up bar to the right of the label.
+        const float bx = x + 64.0f, bw = 80.0f, bh = 8.0f;
+        dl->AddRect(ImVec2(bx, y + 2.0f), ImVec2(bx + bw, y + 2.0f + bh), kDimAmber);
+        const float f = std::clamp(w.lock_progress, 0.0f, 1.0f);
+        dl->AddRectFilled(ImVec2(bx + 1, y + 3.0f),
+                          ImVec2(bx + 1 + (bw - 2) * f, y + 1.0f + bh), kCyan);
+    } else {
+        dl->AddText(ImVec2(x, y), kDimAmber, "NO TARGET");
+    }
+    y += 22.0f;
+
+    // ---- afterburner fuel gauge ----------------------------------------
+    dl->AddText(ImVec2(x, y), kHudWhite, "AB FUEL");
+    const float gx = x, gy = y + 18.0f, gw = 150.0f, gh = 12.0f;
+    dl->AddRect(ImVec2(gx, gy), ImVec2(gx + gw, gy + gh), kAmber);
+    const float ff = std::clamp(w.fuel_frac, 0.0f, 1.0f);
+    // Green when healthy, amber low, red empty (matches the cutout state).
+    ImU32 fcol = kGreen;
+    if (w.fuel_empty)     fcol = IM_COL32(235, 90, 80, 240);
+    else if (ff < 0.30f)  fcol = kAmber;
+    dl->AddRectFilled(ImVec2(gx + 1, gy + 1),
+                      ImVec2(gx + 1 + (gw - 2) * ff, gy + gh - 1), fcol);
+    if (w.fuel_empty) {
+        dl->AddText(ImVec2(gx + gw + 8.0f, gy - 2.0f),
+                    IM_COL32(235, 90, 80, 240), "CUTOUT");
+    }
 }
 
 // ---- big navmap overlay --------------------------------------------------
@@ -781,7 +849,7 @@ void build(const Camera& cam, const StarSystem& system, int selected_nav,
 // vertical (X, Y) projection so altitude is also legible.
 void build_navmap(const Camera& cam, const StarSystem& system,
                   int& selected_nav_in_out,
-                  const std::vector<Ship>& ships,
+                  const ShipRegistry& ships,
                   bool& shown_in_out) {
     if (!shown_in_out) return;
 
@@ -840,8 +908,8 @@ void build_navmap(const Camera& cam, const StarSystem& system,
 
         // Ship contacts under nav points so navs don't get hidden by
         // densely packed ship dots.
-        if (!ships.empty() && ships.front().is_player) {
-            const Ship& player = ships.front();
+        if (const Ship* player_p = ships.player(); player_p) {
+            const Ship& player = *player_p;
             for (const PerceivedContact& c : player.perception.visible) {
                 const HMM_Vec3 p = HMM_AddV3(
                     player.position, HMM_MulV3F(c.to_unit, c.distance_m));

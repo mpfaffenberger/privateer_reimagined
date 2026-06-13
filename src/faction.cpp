@@ -100,3 +100,81 @@ Stance faction::stance_npc_vs_player(Faction npc, const PlayerReputation& r) {
     if (eff >= +25) return Stance::Allied;
     return Stance::Neutral;
 }
+
+namespace {
+
+// Reputation deltas (points on the [-100,+100] scale) for ONE player kill.
+// Tuned so a short run of kills crosses the +/-25 stance thresholds in
+// faction.h: ~5 favourable kills (5 x +5 = +25) flips a faction to Allied;
+// two unprovoked murders (2 x -15 = -30) flips the victim's faction to
+// Hostile from neutral. These are gameplay-tuning knobs, not facts, hence
+// named constants.
+constexpr int k_kill_outlaw_victim_penalty = -3;   // killed an outlaw: their own faction mildly annoyed
+constexpr int k_kill_outlaw_enemy_bonus    = +5;   // an outlaw's enemies approve (public service)
+constexpr int k_kill_lawful_victim_penalty = -15;  // murdered the lawful: their faction furious
+constexpr int k_kill_lawful_ally_penalty   = -8;   // the victim's allies hear of the crime
+constexpr int k_kill_lawful_enemy_bonus    = +2;   // the victim's enemies are mildly amused
+
+// Derived (not hardcoded): factions that distrust strangers on sight
+// (negative baseline-to-player) are the universe's outlaws. Killing one
+// is policing; killing a lawful faction member is a crime.
+bool is_outlaw_faction(Faction f) {
+    return g_faction_baseline_to_player[(int)f] < 0;
+}
+
+int8_t clamp_rep(int v) {
+    return (int8_t)std::clamp(v, -100, 100);
+}
+
+} // namespace
+
+std::vector<RepKillEffect> faction::apply_player_kill(PlayerReputation& rep,
+                                                      Faction victim) {
+    std::vector<RepKillEffect> effects;
+    if ((int)victim < 0 || (int)victim >= kFactionCount) return effects;
+
+    const bool victim_outlaw = is_outlaw_faction(victim);
+
+    for (int i = 0; i < kFactionCount; ++i) {
+        const Faction f = (Faction)i;
+        int          delta    = 0;
+        KillReaction reaction = KillReaction::None;
+
+        if (f == victim) {
+            // A faction always resents losing one of its own. Outlaws
+            // grumble (no taunt); the lawful are enraged.
+            delta    = victim_outlaw ? k_kill_outlaw_victim_penalty
+                                     : k_kill_lawful_victim_penalty;
+            reaction = victim_outlaw ? KillReaction::None
+                                     : KillReaction::Anger;
+        } else {
+            const Stance st = g_faction_stance[i][(int)victim];
+            if (st == Stance::Hostile) {
+                // f hates the victim, so the player did f a favour.
+                delta    = victim_outlaw ? k_kill_outlaw_enemy_bonus
+                                         : k_kill_lawful_enemy_bonus;
+                reaction = KillReaction::Praise;
+            } else if (st == Stance::Allied && !victim_outlaw) {
+                // f is the lawful victim's ally and files a police
+                // report. An OUTLAW's "allies" are other outlaws who
+                // don't, so they're skipped (delta stays 0).
+                delta    = k_kill_lawful_ally_penalty;
+                reaction = KillReaction::Anger;
+            }
+            // Neutral -> no change.
+        }
+
+        if (delta == 0) continue;
+
+        RepKillEffect e;
+        e.faction       = f;
+        e.before        = rep.rep[i];
+        e.stance_before = stance_npc_vs_player(f, rep);
+        rep.rep[i]      = clamp_rep((int)rep.rep[i] + delta);
+        e.after         = rep.rep[i];
+        e.stance_after  = stance_npc_vs_player(f, rep);
+        e.reaction      = reaction;
+        effects.push_back(e);
+    }
+    return effects;
+}

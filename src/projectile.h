@@ -41,6 +41,7 @@ struct Projectile {
 };
 
 struct Ship;
+class ShipRegistry;
 
 namespace projectile {
 
@@ -58,7 +59,7 @@ void tick(std::vector<Projectile>& projectiles, float dt);
 // THROUGH a ship in a single frame between two point-tests. dt is the
 // same value passed to projectile::tick.
 void collide_and_damage(std::vector<Projectile>& projectiles,
-                        std::vector<Ship>&        ships,
+                        ShipRegistry&             ships,
                         float                     dt);
 
 } // namespace projectile

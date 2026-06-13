@@ -24,11 +24,11 @@
 #pragma once
 
 #include <cstdint>
-#include <vector>
 
 struct Camera;
 struct StarSystem;
 struct Ship;
+class ShipRegistry;
 
 namespace cockpit_hud {
 
@@ -41,14 +41,36 @@ namespace cockpit_hud {
 //                  mouse). false = cursor mode (OS cursor visible,
 //                  ship doesn't turn). We HIDE the in-game aim
 //                  reticle in cursor mode so we don't double-draw.
-//   ships          live ship list (ships[0] = player). Used by the
-//                  radar to project the player's perception contacts
-//                  onto the same disc that already shows nav points.
+//   ships          live ship registry (player at the well-known slot-0
+//                  handle; see ship_registry.h). Used by the radar to
+//                  project the player's perception contacts onto the
+//                  same disc that already shows nav points.
 //   target_ship_id currently-locked ship target (T-cycle); 0 = none.
 //                  The radar adds a highlight ring to that blip.
+//   dock_prompt    docking feedback line for the NAV MFD (np-9cu.1):
+//                  nullptr/"" draws nothing; otherwise the string is
+//                  shown under the nav data. `dock_ready` tints it
+//                  green ("PRESS D TO DOCK") vs amber ("DOCK: TOO FAST").
 void build(const Camera& cam, const StarSystem& system, int selected_nav,
            float mouse_x, float mouse_y, bool fly_by_wire,
-           const std::vector<Ship>& ships, uint32_t target_ship_id);
+           const ShipRegistry& ships, uint32_t target_ship_id,
+           const char* dock_prompt = nullptr, bool dock_ready = false);
+
+// Weapons + afterburner-fuel status block (np-zte.2). A small left-edge HUD
+// readout: selected missile type + remaining count, the target-lock state
+// (---- / SEEK / LOCK with an IR build-up bar), and an afterburner fuel
+// gauge. Pure draw — the caller (main.cpp) owns the lock state machine and
+// passes a snapshot. Drawn each Flight frame after build().
+struct WeaponsHudState {
+    const char* missile_name   = "DF";   // selected type short name
+    int         missile_count  = 0;      // remaining of the selected type
+    bool        needs_lock     = false;  // selected type homes (HS/IR)
+    int         lock_state     = 0;      // 0 none, 1 seeking, 2 locked
+    float       lock_progress  = 0.0f;   // 0..1 IR build-up (seeking only)
+    float       fuel_frac      = 1.0f;   // afterburner fuel, 0..1
+    bool        fuel_empty     = false;  // true -> gauge flashes red "CUTOUT"
+};
+void build_weapons_status(const WeaponsHudState& w);
 
 // Big top-down navigation map. Open/close gated by the caller (Alt+N
 // in main.cpp toggles the bool); when shown_in_out is true this draws
@@ -59,7 +81,7 @@ void build(const Camera& cam, const StarSystem& system, int selected_nav,
 // the regular HUD.
 void build_navmap(const Camera& cam, const StarSystem& system,
                   int& selected_nav_in_out,
-                  const std::vector<Ship>& ships,
+                  const ShipRegistry& ships,
                   bool& shown_in_out);
 
 } // namespace cockpit_hud

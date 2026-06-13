@@ -83,6 +83,14 @@ struct Ship {
     Faction           faction   = Faction::Civilian;
     bool              is_player = false;    // toggled on by ship::spawn_player()
 
+    // Kill attribution (np-ma2.1): the owner_id of the projectile that
+    // landed the lethal hit, stamped by projectile::collide_and_damage at
+    // the moment alive flips false. 0 = died to a non-projectile cause
+    // (debug self-kill, future collision/environmental). The death pass
+    // in main.cpp reads this to decide whether the PLAYER earned the kill
+    // and owes a reputation consequence.
+    uint32_t          killed_by_id = 0;
+
     // ---- canonical pose ------------------------------------------------
     // Authoritative for perception + AI logic. Synced once per frame from
     // the source of truth, which differs by ship kind:
@@ -197,6 +205,16 @@ Ship spawn_player();
 // two field copies — but bundled into a function so the per-frame
 // sync code in main.cpp reads cleanly.
 void sync_from_sprite(Ship& s);
+
+// Refill a ship to full from its class: armor + shield (incl. fitted
+// armor/shield tiers) to max, energy to max, all shield-regen pauses
+// cleared, alive=true. Null-class-safe (leaves the player's
+// zero-by-default health untouched). The single source of truth for
+// "health from class" — both the initial player spawn (main.cpp) and
+// respawn (np-ma2.2) call it so the two paths can't drift. Does NOT
+// touch the sprite (the player has none; NPC sprite world_size restore
+// isn't needed because respawn only ever heals the player).
+void       heal_to_full(Ship& s);
 
 // Damage-pipeline support — see implementation in ship.cpp for
 // per-function notes. All in cm-of-durasteel (same unit as gun damage).
