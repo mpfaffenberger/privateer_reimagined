@@ -1,0 +1,72 @@
+{
+  // Pender's Star — reached via Troy's Nav 3 jump point. A dim red dwarf
+  // sitting in the Clarke Sector frontier; the sector_5518 skybox gives it
+  // a colder, emptier feel than Troy. An agricultural colony orbits far
+  // out, fed by the occasional merchant run. Pirates know the lane is
+  // lightly policed, so the place has an edge to it.
+  "name":        "Pender's Star",
+  "description": "Red-dwarf frontier system in the Clarke Sector. A far-orbit farm colony and a thin merchant lane; pirates work the gaps.",
+  "skybox_seed": "sector_5518",
+  "star":        { "preset": "red" },
+
+  "asteroid_fields": [
+    {
+      "center":      [-30000, -4000, 50000],
+      "half_extent": [18000, 6000, 18000],
+      "count":       180,
+      "base_radius": 95,
+      "seed":        88517043
+    }
+  ],
+
+  "placed_sprites": [
+    {
+      "sprite":        "sprites/helen_planet",
+      "position":      [60000, -10000, 90000],
+      "length_meters": 10000
+    },
+    {
+      "sprite":        "sprites/mining_base",
+      "position":      [-30000, -4000, 50000],
+      "length_meters": 2600
+    }
+  ],
+
+  "nav_points": [
+    // Jump back to Troy — reciprocal of Troy's "Pender's Star Jump".
+    { "name": "Troy Jump",       "kind": "jump",    "position": [40000, 30000, -50000],
+      "links_to": "troy", "links_to_nav": "Pender's Star Jump" },
+    { "name": "Clarke Farm",     "kind": "planet",  "position": [60000, -10000, 90000],
+      "dockable": true, "base_id": "clarke_farm" },
+    { "name": "Drummond Rock",   "kind": "station", "position": [-30000, -4000, 50000],
+      "dockable": true, "base_id": "drummond" }
+  ],
+
+  "encounters": [
+    {
+      "name":           "lane merchants",
+      "region":         "lane",
+      "lane":           [ "Clarke Farm", "Drummond Rock" ],
+      "factions":       [ { "name": "merchant", "weight": 1.0 } ],
+      "classes":        [ { "name": "tarsus", "weight": 2.0 },
+                          { "name": "galaxy", "weight": 1.0 } ],
+      "max_concurrent": 2,
+      "spawn_interval": 11.0,
+      "initial_state":  "patrol"
+    },
+    {
+      "name":           "roaming raiders",
+      "region":         "anywhere",
+      "factions":       [ { "name": "pirate", "weight": 1.0 } ],
+      "classes":        [ { "name": "talon", "weight": 1.0 } ],
+      "max_concurrent": 2,
+      "spawn_interval": 9.0,
+      "initial_state":  "patrol"
+    }
+  ],
+
+  "player_start": {
+    "position": [0, 0, 30000],
+    "look_at":  [60000, -10000, 90000]
+  }
+}

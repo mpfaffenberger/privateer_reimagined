@@ -228,15 +228,102 @@
   // the duplication is intentional for now (sprites and nav have
   // different lifecycles — a wreck might be a sprite without a nav,
   // a long-range nav might be just a beacon with no sprite).
+  //
+  // `dockable` + `base_id` (np-9cu.1): the three POIs that have hulls
+  // (Achilles, Hector, Helen) are landing sites. Jump points and the
+  // summoned-ship marker stay non-dockable. base_id is the stable key
+  // the landed/base-screen layer (np-9cu.4) and player.last_docked_base
+  // index by.
   "nav_points": [
-    { "name": "Pyrenees Jump",      "kind": "jump",    "position": [100000,   66667,  133333] },
-    { "name": "Achilles Mining",    "kind": "station", "position": [200000, -133333,       0] },
-    { "name": "Pender's Star Jump", "kind": "jump",    "position": [100000,  133333, -133333] },
-    { "name": "Hector Mining",      "kind": "station", "position": [166667, -133333, -200000] },
-    { "name": "Regallis Jump",      "kind": "jump",    "position": [150000, -100000,  -66667] },
-    { "name": "Helen Planet",       "kind": "planet",  "position": [166667,  -66667,  100000] },
+    { "name": "Pyrenees Jump",      "kind": "jump",    "position": [100000,   66667,  133333],
+      "links_to": "pyrenees", "links_to_nav": "Troy Jump" },
+    { "name": "Achilles Mining",    "kind": "station", "position": [200000, -133333,       0],
+      "dockable": true, "base_id": "achilles" },
+    { "name": "Pender's Star Jump", "kind": "jump",    "position": [100000,  133333, -133333],
+      "links_to": "penders_star", "links_to_nav": "Troy Jump" },
+    { "name": "Hector Mining",      "kind": "station", "position": [166667, -133333, -200000],
+      "dockable": true, "base_id": "hector" },
+    { "name": "Regallis Jump",      "kind": "jump",    "position": [150000, -100000,  -66667],
+      "links_to": "regallis", "links_to_nav": "Troy Jump" },
+    { "name": "Helen Planet",       "kind": "planet",  "position": [166667,  -66667,  100000],
+      "dockable": true, "base_id": "helen" },
     { "name": "Summoned Tarsus",    "kind": "ship",    "position": [ 50000, -100000,   33150] },
     { "name": "War Jump",           "kind": "jump",    "position": [     0,       0,  150000] }
+  ],
+
+  // ---- encounter director spawn tables (np-ma2.3) -----------------------
+  // Procedural NPC traffic layered ON TOP of the hand-placed fleet above.
+  // The director keeps a living population around the player: each rule is
+  // armed only when the player is near its region, spawns ships 8-15 km
+  // out (offscreen-ish, they fly in under their own power), and retires
+  // them once they drift past 40 km without a fight. Global budget caps
+  // the whole director at 8 concurrent ships regardless of these numbers,
+  // so the world stays lively but never a furball. Faction + class are
+  // independent weighted draws within a rule.
+  //
+  // Region semantics:
+  //   "belt"     - inside asteroid_fields[field_index]; armed near the belt
+  //   "lane"     - along the named nav-point polyline; armed near the lane
+  //   "anywhere" - no region gate; always armed (roams with the player)
+  "encounters": [
+    {
+      // Pirate Talons (+ the odd heavier Orion) working the inner belt.
+      // Hostile to the player by baseline rep (-30) — fly into the belt
+      // and you WILL get jumped, which is the whole point.
+      "name":           "belt pirates",
+      "region":         "belt",
+      "field_index":    0,
+      "factions":       [ { "name": "pirate", "weight": 1.0 } ],
+      "classes":        [ { "name": "talon", "weight": 3.0 },
+                          { "name": "orion", "weight": 1.0 } ],
+      "max_concurrent": 4,
+      "spawn_interval": 6.0,
+      "initial_state":  "patrol"
+    },
+    {
+      // Merchant traffic plying the Achilles -> Hector -> Helen lanes.
+      // Neutral to the player; flees when pirates close in (Coward
+      // personality on the Tarsus/Galaxy classes). The civilian colour of
+      // a 'living' system.
+      "name":           "lane merchants",
+      "region":         "lane",
+      "lane":           [ "Achilles Mining", "Hector Mining", "Helen Planet" ],
+      "factions":       [ { "name": "merchant", "weight": 1.0 } ],
+      "classes":        [ { "name": "tarsus", "weight": 3.0 },
+                          { "name": "galaxy", "weight": 1.0 } ],
+      "max_concurrent": 3,
+      "spawn_interval": 9.0,
+      "initial_state":  "patrol"
+    },
+    {
+      // Militia Talons patrolling the station lane between the two mining
+      // bases. Engage pirates (matrix Militia-vs-Pirate = Hostile),
+      // neutral to the player — the law, such as it is.
+      "name":           "lane militia",
+      "region":         "lane",
+      "lane":           [ "Achilles Mining", "Hector Mining" ],
+      "factions":       [ { "name": "militia", "weight": 1.0 } ],
+      "classes":        [ { "name": "talon", "weight": 1.0 } ],
+      "max_concurrent": 2,
+      "spawn_interval": 12.0,
+      "initial_state":  "patrol"
+    },
+    {
+      // Roaming raiders that shadow the player anywhere in the system —
+      // mostly pirate (hostile), occasionally a neutral hunter. Kept to 2
+      // concurrent so deep space feels edgy without being a gauntlet.
+      // This is the rule that makes the threat gate fire on a fresh spawn
+      // and gives the autopilot something to drop out for.
+      "name":           "roaming raiders",
+      "region":         "anywhere",
+      "factions":       [ { "name": "pirate", "weight": 3.0 },
+                          { "name": "hunter", "weight": 1.0 } ],
+      "classes":        [ { "name": "talon", "weight": 2.0 },
+                          { "name": "orion", "weight": 1.0 } ],
+      "max_concurrent": 2,
+      "spawn_interval": 10.0,
+      "initial_state":  "patrol"
+    }
   ],
 
   // Nav 8 from the WCU wiki — the canonical 'you arrive in Troy here'

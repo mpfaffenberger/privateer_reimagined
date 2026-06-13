@@ -1,0 +1,29 @@
+{
+  // ---------------------------------------------------------------------------
+  // ship_prices.json — HAND-AUTHORED, TUNABLE hull pricing for the Ship Dealer
+  // (np-9cu.3). Same philosophy as commodity_prices.json: the original game's
+  // BASES.IFF price bytes aren't decoded yet (see docs/privateer_db/README.md),
+  // so prices live here, authored by hand against Privateer canon and freely
+  // tuned. outfitting.cpp reads this; the dealer never hardcodes a number.
+  //
+  // Canon ballpark: the Tarsus is the cheap merchant starter (you basically
+  // begin owning one), the Centurion is the premium combat hull (most
+  // expensive), and the Galaxy (big hold) / Orion (gunship) sit mid-range.
+  //
+  // Trade-in: selling your CURRENT hull on a new purchase credits back
+  // trade_in_pct of that hull's listed price. 0.55 = you eat ~45% depreciation
+  // swapping ships, so hull-hopping has a real cost (Privateer-ish feel).
+  // ---------------------------------------------------------------------------
+
+  "trade_in_pct": 0.55,
+
+  // ARRAY (not object) so the dealer lists hulls in this authored order — the
+  // json:: parser's objects are unordered, this isn't. id matches the
+  // ShipClass registry key (assets/ships/<id>/ship.json).
+  "hulls": [
+    { "id": "tarsus",    "price": 22000  },
+    { "id": "orion",     "price": 95000  },
+    { "id": "galaxy",    "price": 130000 },
+    { "id": "centurion", "price": 185000 }
+  ]
+}

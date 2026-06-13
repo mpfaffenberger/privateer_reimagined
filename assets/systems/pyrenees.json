@@ -1,0 +1,56 @@
+{
+  // Pyrenees — Troy's nearest neighbour, reached via Troy's Nav 1 jump
+  // point. A K-type orange dwarf wrapped in the pyrenees nebula skybox.
+  // Quieter than Troy: one ore belt, a single mining outpost, light
+  // militia presence. Lightweight on purpose — this is a starter-cluster
+  // neighbour authored for the np-6al.1 system-switch plumbing, not a
+  // fully dressed sector yet.
+  "name":        "Pyrenees",
+  "description": "Orange-dwarf border system. A lone mining outpost works the inner belt; militia patrols keep the jump lane to Troy honest.",
+  "skybox_seed": "pyrenees",
+  "star":        { "preset": "orange" },
+
+  "asteroid_fields": [
+    {
+      "center":      [40000, 0, 0],
+      "half_extent": [22000, 8000, 22000],
+      "count":       260,
+      "base_radius": 110,
+      "seed":        1471203991
+    }
+  ],
+
+  "placed_sprites": [
+    {
+      "sprite":        "sprites/mining_base",
+      "position":      [40000, 0, 0],
+      "length_meters": 3000
+    }
+  ],
+
+  "nav_points": [
+    // Jump back to Troy — reciprocal of Troy's "Pyrenees Jump" (galaxy.json).
+    { "name": "Troy Jump",     "kind": "jump",    "position": [-60000, 20000, 80000],
+      "links_to": "troy", "links_to_nav": "Pyrenees Jump" },
+    { "name": "Bonifay Outpost", "kind": "station", "position": [40000, 0, 0],
+      "dockable": true, "base_id": "bonifay" }
+  ],
+
+  "encounters": [
+    {
+      "name":           "belt prospectors",
+      "region":         "belt",
+      "field_index":    0,
+      "factions":       [ { "name": "militia", "weight": 1.0 } ],
+      "classes":        [ { "name": "talon", "weight": 1.0 } ],
+      "max_concurrent": 2,
+      "spawn_interval": 10.0,
+      "initial_state":  "patrol"
+    }
+  ],
+
+  "player_start": {
+    "position": [0, 0, 30000],
+    "look_at":  [40000, 0, 0]
+  }
+}

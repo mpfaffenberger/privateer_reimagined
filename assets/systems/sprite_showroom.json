@@ -18,7 +18,7 @@
         400.0
       ],
       "length_meters": 120.0,
-      "lights_enabled": false,
+      "lights_enabled": true,
       "inert": true
     },
     {
@@ -29,7 +29,7 @@
         400.0
       ],
       "length_meters": 120.0,
-      "lights_enabled": false,
+      "lights_enabled": true,
       "inert": true
     },
     {
@@ -40,7 +40,7 @@
         400.0
       ],
       "length_meters": 120.0,
-      "lights_enabled": false,
+      "lights_enabled": true,
       "inert": true
     },
     {
@@ -51,7 +51,7 @@
         400.0
       ],
       "length_meters": 120.0,
-      "lights_enabled": false,
+      "lights_enabled": true,
       "inert": true
     },
     {
@@ -62,7 +62,7 @@
         400.0
       ],
       "length_meters": 120.0,
-      "lights_enabled": false,
+      "lights_enabled": true,
       "inert": true
     },
     {
@@ -73,7 +73,7 @@
         400.0
       ],
       "length_meters": 120.0,
-      "lights_enabled": false,
+      "lights_enabled": true,
       "inert": true
     },
     {
@@ -84,7 +84,7 @@
         0.0
       ],
       "length_meters": 120.0,
-      "lights_enabled": false,
+      "lights_enabled": true,
       "inert": true
     },
     {
@@ -95,7 +95,7 @@
         0.0
       ],
       "length_meters": 120.0,
-      "lights_enabled": false,
+      "lights_enabled": true,
       "inert": true
     },
     {
@@ -106,7 +106,7 @@
         0.0
       ],
       "length_meters": 120.0,
-      "lights_enabled": false,
+      "lights_enabled": true,
       "inert": true
     },
     {
@@ -117,7 +117,7 @@
         0.0
       ],
       "length_meters": 120.0,
-      "lights_enabled": false,
+      "lights_enabled": true,
       "inert": true
     },
     {
@@ -128,7 +128,7 @@
         0.0
       ],
       "length_meters": 120.0,
-      "lights_enabled": false,
+      "lights_enabled": true,
       "inert": true
     },
     {
@@ -139,7 +139,7 @@
         0.0
       ],
       "length_meters": 120.0,
-      "lights_enabled": false,
+      "lights_enabled": true,
       "inert": true
     },
     {
@@ -150,7 +150,7 @@
         -400.0
       ],
       "length_meters": 120.0,
-      "lights_enabled": false,
+      "lights_enabled": true,
       "inert": true
     },
     {
@@ -161,7 +161,7 @@
         -400.0
       ],
       "length_meters": 120.0,
-      "lights_enabled": false,
+      "lights_enabled": true,
       "inert": true
     },
     {
@@ -172,7 +172,7 @@
         -400.0
       ],
       "length_meters": 120.0,
-      "lights_enabled": false,
+      "lights_enabled": true,
       "inert": true
     },
     {
@@ -183,7 +183,7 @@
         -400.0
       ],
       "length_meters": 120.0,
-      "lights_enabled": false,
+      "lights_enabled": true,
       "inert": true
     },
     {
@@ -194,7 +194,7 @@
         -400.0
       ],
       "length_meters": 120.0,
-      "lights_enabled": false,
+      "lights_enabled": true,
       "inert": true
     }
   ],

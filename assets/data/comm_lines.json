@@ -1,0 +1,81 @@
+{
+  // comm_lines.json — faction comm chatter for reputation events (np-ma2.1).
+  //
+  // Keyed by faction (lowercase canonical name, see faction.cpp k_names)
+  // then by event type:
+  //   kill_their_enemy        — player destroyed a ship this faction hates;
+  //                             they radio approval.
+  //   killed_by_player_crime  — player destroyed this faction or an ally
+  //                             unprovoked; they radio a threat.
+  // comm::pick_line() picks one line at random. Add/remove freely — the
+  // engine ships no inline fallback strings, this file is the source.
+  "factions": {
+    "civilian": {
+      "kill_their_enemy": [
+        "Civilian Freighter: 'Thanks for the cover, pilot!'",
+        "Civilian Transport: 'You saved our cargo — and our necks.'"
+      ],
+      "killed_by_player_crime": [
+        "Civilian Freighter: 'Mayday! We're under attack by a maniac!'",
+        "Civilian Transport: 'Why?! We're just haulers!'"
+      ]
+    },
+    "merchant": {
+      "kill_their_enemy": [
+        "Merchant Guild: 'Trade lanes are safer thanks to you.'",
+        "Guild Convoy: 'Appreciated, pilot. The Guild remembers friends.'"
+      ],
+      "killed_by_player_crime": [
+        "Merchant Guild: 'You'll never dock at a Guild port again, butcher.'",
+        "Guild Convoy: 'A bounty's going on your head for that.'"
+      ]
+    },
+    "confed": {
+      "kill_their_enemy": [
+        "Confed Patrol: 'Nice shooting, civilian.'",
+        "Confed Command: 'That's one less scumbag. Carry on.'",
+        "Confed Wing: 'Appreciate the assist out there, pilot.'"
+      ],
+      "killed_by_player_crime": [
+        "Confed Patrol: 'You just made the kill list, civilian.'",
+        "Confed Command: 'Confirmed hostile. All units, weapons free.'"
+      ]
+    },
+    "militia": {
+      "kill_their_enemy": [
+        "Militia Patrol: 'Good kill. The sector owes you one.'",
+        "Militia Watch: 'Keep it up and you're an honorary deputy.'"
+      ],
+      "killed_by_player_crime": [
+        "Militia Patrol: 'You'll pay for that, murderer!'",
+        "Militia Watch: 'Marking you hostile. Run while you can.'"
+      ]
+    },
+    "hunter": {
+      "kill_their_enemy": [
+        "Bounty Hunter: 'Heh. Not bad for a freelancer.'"
+      ],
+      "killed_by_player_crime": [
+        "Bounty Hunter: 'Now THAT'S a contract worth taking.'"
+      ]
+    },
+    "pirate": {
+      "kill_their_enemy": [
+        "Pirate Raider: 'Ha! Another one for the scrapyard!'"
+      ],
+      "killed_by_player_crime": [
+        "Pirate Raider: 'Big mistake, spacer. We don't forget.'"
+      ]
+    },
+    "retro": {
+      "killed_by_player_crime": [
+        "Retro Zealot: 'Technology-loving heretic! You will burn!'"
+      ]
+    },
+    "kilrathi": {
+      "killed_by_player_crime": [
+        "Kilrathi Warrior: 'Hrraa! Your pelt will line my throne, ape!'"
+      ]
+    }
+  }
+}

@@ -1,0 +1,72 @@
+{
+  // ---------------------------------------------------------------------------
+  // commodity_prices.json — canonical, HAND-AUTHORED, TUNABLE economy data.
+  //
+  // Why this file exists: docs/privateer_db/cargo.toml gives us the 50
+  // commodities and their 11 categories, but its `_trailing_hex` bytes are
+  // NOT decoded yet (see docs/privateer_db/README.md) so we have no canonical
+  // per-commodity base price from the original game. Until BASES.IFF is
+  // parsed, prices live here — authored by hand, by CATEGORY (not 50 rows by
+  // hand), and freely tunable. economy.cpp computes a quote as:
+  //
+  //     base      = category_base_price[commodity.category]   (this file)
+  //     mult,stock= archetype.categories[category] (else .default)
+  //     buy_price = round(base * mult)
+  //     sell_price= round(buy_price * (1 - spread_pct/100))   (buy > sell)
+  //     available = stock   (0 => not stocked here; still sellable if carried)
+  //
+  // A base picks its archetype in assets/bases/<id>/base.json's "market"
+  // block. Mining bases (Achilles/Hector) buy ore/metals cheap and charge a
+  // premium for food/luxury; the agricultural colony (Helen) is the mirror —
+  // cheap food, dear ore/tech. The buy>sell spread means a flip on the same
+  // base loses money; profit requires CARRYING goods somewhere they're scarce.
+  // ---------------------------------------------------------------------------
+
+  // Global buy/sell spread. sell = buy * (1 - spread_pct/100). 18% keeps
+  // round-trip arbitrage (Achilles ore -> Helen) solidly positive while a
+  // same-base instant flip is a guaranteed loss.
+  "spread_pct": 18,
+
+  // Canonical base price (credits/unit) per category. The anchor every
+  // archetype modifier scales. Tuned so a Tarsus hold (100u) of cheap ore
+  // bought at Achilles roughly doubles when sold at Helen.
+  "category_base_price": {
+    "FOOD":    32,
+    "RAWMAT":  28,
+    "PROCESS": 65,
+    "CAPGOOD": 110,
+    "MICRO":   180,
+    "LUXURY":  140,
+    "WEAPONS": 260,
+    "FUELS":   85,
+    "MAGIC":   600,
+    "SLAVES":  200,
+    "EJECT":   0
+  },
+
+  // Base archetypes. categories[X] overrides the default for category X.
+  // price_mult scales the canonical base price; stock is units offered for
+  // sale (0 = listed/sellable but not stocked to buy here).
+  "archetypes": {
+    "mining": {
+      "default": { "price_mult": 1.20, "stock": 0 },
+      "categories": {
+        "RAWMAT":  { "price_mult": 0.55, "stock": 600 },
+        "CAPGOOD": { "price_mult": 0.85, "stock": 200 },
+        "PROCESS": { "price_mult": 1.15, "stock": 80  },
+        "FOOD":    { "price_mult": 1.50, "stock": 40  },
+        "LUXURY":  { "price_mult": 1.60, "stock": 20  }
+      }
+    },
+    "agricultural": {
+      "default": { "price_mult": 1.25, "stock": 0 },
+      "categories": {
+        "FOOD":    { "price_mult": 0.55, "stock": 600 },
+        "PROCESS": { "price_mult": 1.10, "stock": 100 },
+        "LUXURY":  { "price_mult": 1.30, "stock": 40  },
+        "RAWMAT":  { "price_mult": 1.50, "stock": 0   },
+        "MICRO":   { "price_mult": 1.60, "stock": 0   }
+      }
+    }
+  }
+}

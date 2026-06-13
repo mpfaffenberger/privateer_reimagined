@@ -1,0 +1,33 @@
+{
+  // Achilles Mining Base (Troy, Nav 2) — Confederation-aligned industrial
+  // complex working the inner belt. Data-driven base description consumed by
+  // base_screens.cpp (np-9cu.4). Hotspot rects are NORMALIZED 0..1 screen
+  // coords (origin top-left) so the layout is resolution-independent.
+  //
+  // concourse_art is relative to assets/ (loader prepends it). The PNG here
+  // is a procedural PLACEHOLDER from tools/gen_placeholder_concourse.py —
+  // real pixel-art concourse is tracked as a separate art issue.
+  "display_name":  "Achilles Mining Base",
+  "faction":       "Confederation",
+  "concourse_art": "bases/achilles/concourse.png",
+
+  // Economy archetype (np-9cu.2). Drives per-base prices via
+  // assets/data/commodity_prices.json — "mining" buys ore/metals cheap and
+  // charges a premium for food/luxury.
+  "market": { "archetype": "mining" },
+
+  "hotspots": [
+    { "target": "Bar",               "label": "BAR",
+      "rect": [0.04, 0.50, 0.26, 0.16], "tooltip": "Drinks, rumours, and fixers" },
+    { "target": "CommodityExchange", "label": "COMMODITY EXCHANGE",
+      "rect": [0.37, 0.50, 0.26, 0.16], "tooltip": "Buy and sell cargo" },
+    { "target": "ShipDealer",        "label": "SHIP DEALER",
+      "rect": [0.70, 0.50, 0.26, 0.16], "tooltip": "Trade up your hull" },
+    { "target": "Equipment",         "label": "EQUIPMENT",
+      "rect": [0.04, 0.72, 0.26, 0.16], "tooltip": "Guns, shields, engines" },
+    { "target": "MissionComputer",   "label": "MISSION COMPUTER",
+      "rect": [0.37, 0.72, 0.26, 0.16], "tooltip": "Find work" },
+    { "target": "Launch",            "label": "LAUNCH",
+      "rect": [0.70, 0.72, 0.26, 0.16], "tooltip": "Return to flight" }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  // Helen Agricultural Planet (Troy, Nav 6) — far-orbit colony farm that
+  // feeds the system. Merchant-guild flavoured rather than industrial. See
+  // achilles/base.json for the schema notes (normalized hotspot rects,
+  // placeholder concourse art).
+  "display_name":  "Helen Agricultural Colony",
+  "faction":       "Merchant Guild",
+  "concourse_art": "bases/helen/concourse.png",
+
+  // Economy archetype (np-9cu.2) — "agricultural": cheap food, dear ore/tech.
+  // The mirror of the mining bases, so ore bought at Achilles sells high
+  // here. See assets/data/commodity_prices.json.
+  "market": { "archetype": "agricultural" },
+
+  "hotspots": [
+    { "target": "Bar",               "label": "BAR",
+      "rect": [0.04, 0.50, 0.26, 0.16], "tooltip": "Drinks, rumours, and fixers" },
+    { "target": "CommodityExchange", "label": "COMMODITY EXCHANGE",
+      "rect": [0.37, 0.50, 0.26, 0.16], "tooltip": "Buy and sell cargo" },
+    { "target": "ShipDealer",        "label": "SHIP DEALER",
+      "rect": [0.70, 0.50, 0.26, 0.16], "tooltip": "Trade up your hull" },
+    { "target": "Equipment",         "label": "EQUIPMENT",
+      "rect": [0.04, 0.72, 0.26, 0.16], "tooltip": "Guns, shields, engines" },
+    { "target": "MissionComputer",   "label": "MISSION COMPUTER",
+      "rect": [0.37, 0.72, 0.26, 0.16], "tooltip": "Find work" },
+    { "target": "Launch",            "label": "LAUNCH",
+      "rect": [0.70, 0.72, 0.26, 0.16], "tooltip": "Return to flight" }
+  ]
+}

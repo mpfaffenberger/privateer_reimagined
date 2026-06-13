@@ -1,0 +1,66 @@
+{
+  // Regallis — reached via Troy's Nav 5 jump point. A hot blue giant
+  // glaring across the deep_void skybox; the brightest, most exposed of
+  // Troy's neighbours. Two debris belts mark an old wreck site, and the
+  // place draws scavengers and the pirates who prey on them. The least
+  // friendly stop in the starter cluster.
+  "name":        "Regallis",
+  "description": "Blue-giant system over a deep-void backdrop. Twin debris belts mark a salvage site that scavengers — and pirates — both work.",
+  "skybox_seed": "deep_void",
+  "star":        { "preset": "blue" },
+
+  "asteroid_fields": [
+    {
+      "center":      [25000, 0, 35000],
+      "half_extent": [16000, 5000, 16000],
+      "count":       300,
+      "base_radius": 90,
+      "seed":        2003991117
+    },
+    {
+      "center":      [-40000, 3000, -20000],
+      "half_extent": [12000, 4000, 12000],
+      "count":       120,
+      "base_radius": 130,
+      "size_min":    0.6,
+      "size_max":    3.4,
+      "seed":        744120093
+    }
+  ],
+
+  "placed_sprites": [
+    {
+      "sprite":        "sprites/mining_base",
+      "position":      [25000, 0, 35000],
+      "length_meters": 2800
+    }
+  ],
+
+  "nav_points": [
+    // Jump back to Troy — reciprocal of Troy's "Regallis Jump".
+    { "name": "Troy Jump",      "kind": "jump",    "position": [-50000, -30000, -40000],
+      "links_to": "troy", "links_to_nav": "Regallis Jump" },
+    { "name": "Salvage Anchor", "kind": "station", "position": [25000, 0, 35000],
+      "dockable": true, "base_id": "salvage_anchor" }
+  ],
+
+  "encounters": [
+    {
+      "name":           "belt scavengers",
+      "region":         "belt",
+      "field_index":    0,
+      "factions":       [ { "name": "pirate", "weight": 2.0 },
+                          { "name": "hunter", "weight": 1.0 } ],
+      "classes":        [ { "name": "talon", "weight": 2.0 },
+                          { "name": "orion", "weight": 1.0 } ],
+      "max_concurrent": 3,
+      "spawn_interval": 7.0,
+      "initial_state":  "patrol"
+    }
+  ],
+
+  "player_start": {
+    "position": [0, 0, 30000],
+    "look_at":  [25000, 0, 35000]
+  }
+}

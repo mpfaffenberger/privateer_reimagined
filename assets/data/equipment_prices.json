@@ -1,0 +1,40 @@
+{
+  // ---------------------------------------------------------------------------
+  // equipment_prices.json — HAND-AUTHORED, TUNABLE outfitting prices for the
+  // Equipment shop (np-9cu.3). Companion to ship_prices.json; same rationale
+  // (no decoded canonical prices yet, so authored by hand + tunable here).
+  //
+  // outfitting.cpp reads this:
+  //   * guns          — price to buy one gun of that type into a free mount.
+  //                     Keyed by gun.cpp's lowercase_underscore short_name.
+  //                     A gun absent here (or priced 0) is NOT for sale.
+  //   * shield_level_price[L] — credits to UPGRADE the shield to level L
+  //                     (index = target level; [0] is stock/free). Cumulative
+  //                     ladder: each step costs shield_level_price[new_level].
+  //   * engine_level_price[L] — same idea for the engine ladder.
+  //   * engine_speed_mult_per_level — each engine level adds this fraction to
+  //                     the hull's effective top speed (camera caps). 0.08 =
+  //                     +8%/level, so an Orion at L5 flies ~40% faster.
+  //   * cargo_expansion_price — one-time flag; bumps hold to cargo_units_max
+  //                     (the +50% the ShipClass already advertises).
+  // ---------------------------------------------------------------------------
+
+  "guns": {
+    "laser":              1500,
+    "mass_driver":        3000,
+    "meson_blaster":      5500,
+    "neutron_gun":        9000,
+    "particle_cannon":    12000,
+    "ionic_pulse_cannon": 15000,
+    "tachyon_cannon":     18000,
+    "plasma_gun":         24000
+  },
+
+  "shield_level_price": [0, 9000, 22000, 45000],
+
+  "engine_level_price": [0, 7000, 16000, 28000, 44000, 64000],
+
+  "engine_speed_mult_per_level": 0.08,
+
+  "cargo_expansion_price": 12000
+}

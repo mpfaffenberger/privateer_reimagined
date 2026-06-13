@@ -1,0 +1,27 @@
+{
+  // Hector Mining Base (Troy, Nav 4) — Confederation-aligned, the southern
+  // sibling of Achilles working the same belt. See achilles/base.json for the
+  // schema notes (normalized hotspot rects, placeholder concourse art).
+  "display_name":  "Hector Mining Base",
+  "faction":       "Confederation",
+  "concourse_art": "bases/hector/concourse.png",
+
+  // Economy archetype (np-9cu.2) — sibling mining base, same price biases
+  // as Achilles. See assets/data/commodity_prices.json.
+  "market": { "archetype": "mining" },
+
+  "hotspots": [
+    { "target": "Bar",               "label": "BAR",
+      "rect": [0.04, 0.50, 0.26, 0.16], "tooltip": "Drinks, rumours, and fixers" },
+    { "target": "CommodityExchange", "label": "COMMODITY EXCHANGE",
+      "rect": [0.37, 0.50, 0.26, 0.16], "tooltip": "Buy and sell cargo" },
+    { "target": "ShipDealer",        "label": "SHIP DEALER",
+      "rect": [0.70, 0.50, 0.26, 0.16], "tooltip": "Trade up your hull" },
+    { "target": "Equipment",         "label": "EQUIPMENT",
+      "rect": [0.04, 0.72, 0.26, 0.16], "tooltip": "Guns, shields, engines" },
+    { "target": "MissionComputer",   "label": "MISSION COMPUTER",
+      "rect": [0.37, 0.72, 0.26, 0.16], "tooltip": "Find work" },
+    { "target": "Launch",            "label": "LAUNCH",
+      "rect": [0.70, 0.72, 0.26, 0.16], "tooltip": "Return to flight" }
+  ]
+}

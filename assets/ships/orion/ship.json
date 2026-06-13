@@ -1,0 +1,41 @@
+{
+  // Authored from docs/privateer_ship_data.json (np-9cu.3): the Orion is the
+  // heavily-armoured mercenary gunship — slow and tanky, the highest engine
+  // ceiling of the player hulls (Max Engine Level 5). Sprites existed
+  // already; this is the stat/loadout side the dealer + flight code read.
+  "name":           "orion",
+  "display_name":   "Orion",
+  "class_label":    "Mercenary Gunship",
+  "atlas_manifest": "ships/orion/atlas_manifest.json",
+  "default_faction": "civilian",
+
+  "armor_fore_cm": 48,
+  "armor_aft_cm":  50,
+  "armor_side_cm": 35,
+
+  "cruise_speed":      350,
+  "afterburner_speed": 800,
+  "acceleration":      "average",
+  "max_ypr":           "poor",
+
+  "personality":       "standard",
+
+  "radar_range":   25000,
+  "weapons_range": 5000,
+
+  "max_engine_level": 5,
+  "max_shield_level": 3,
+  "default_shield":   "Shield Generator 3",
+  "default_armor":    "Tungsten Armor",
+
+  "default_guns": [
+    { "offset_body": [-3.0, 0.0, 3.0], "type": "mass_driver" },
+    { "offset_body": [ 3.0, 0.0, 3.0], "type": "mass_driver" }
+  ],
+
+  "energy_max":      220,
+  "energy_recharge": 30,
+
+  "cargo_units":     50,
+  "cargo_units_max": 75
+}

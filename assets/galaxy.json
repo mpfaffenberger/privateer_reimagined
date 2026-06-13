@@ -1,0 +1,74 @@
+{
+  // ---------------------------------------------------------------------------
+  // galaxy.json — the top-level universe descriptor (np-6al.1).
+  //
+  // This is the data layer the jump mechanic (np-6al.3) rides on. It does TWO
+  // things and nothing else:
+  //
+  //   1. `systems` — the catalog of every known star system. Each entry maps a
+  //      stable `id` (the key everything else references: player.current_system,
+  //      save files, jump links) to its display name, sector, a coarse 2D
+  //      `galaxy_position` for the future jump-map UI, and the `json_path` of
+  //      the per-system file the existing load_system() already knows how to
+  //      parse. The game still loads exactly ONE system's full JSON at a time —
+  //      this file just tells it which files exist and how they connect.
+  //
+  //   2. `jumps` — the jump topology. Each link is DIRECTED: from a (system,
+  //      nav-point) to a (system, arrival nav-point). We author them in
+  //      reciprocal pairs (Troy→Pyrenees AND Pyrenees→Troy) so a ship can jump
+  //      back the way it came and arrive at the matching gate. galaxy::jump_target
+  //      (system, nav) walks this list to answer "where does this jump point
+  //      lead, and which gate do I pop out of on the far side?".
+  //
+  // Authoring note: the `from_nav` / `to_nav` strings MUST match a NavPointDef
+  // `name` of kind "jump" in the respective system JSON, or the link resolves
+  // to nothing. The starter cluster below is Troy + three neighbours named for
+  // Troy's existing jump-point stubs (Pyrenees, Pender's Star, Regallis). The
+  // fourth Troy stub ("War Jump") is intentionally left dangling — an unsurveyed
+  // frontier gate, here so the "jump leads nowhere yet" path has test coverage.
+  // ---------------------------------------------------------------------------
+  "systems": [
+    {
+      "id":              "troy",
+      "display_name":    "Troy",
+      "sector":          "Troy Sector",
+      "galaxy_position": [0, 0],
+      "json_path":       "assets/systems/troy.json"
+    },
+    {
+      "id":              "pyrenees",
+      "display_name":    "Pyrenees",
+      "sector":          "Troy Sector",
+      "galaxy_position": [-3, 1],
+      "json_path":       "assets/systems/pyrenees.json"
+    },
+    {
+      "id":              "penders_star",
+      "display_name":    "Pender's Star",
+      "sector":          "Clarke Sector",
+      "galaxy_position": [2, 3],
+      "json_path":       "assets/systems/penders_star.json"
+    },
+    {
+      "id":              "regallis",
+      "display_name":    "Regallis",
+      "sector":          "Clarke Sector",
+      "galaxy_position": [3, -2],
+      "json_path":       "assets/systems/regallis.json"
+    }
+  ],
+
+  "jumps": [
+    // Troy <-> Pyrenees
+    { "from": "troy",         "from_nav": "Pyrenees Jump",      "to": "pyrenees",     "to_nav": "Troy Jump" },
+    { "from": "pyrenees",     "from_nav": "Troy Jump",          "to": "troy",         "to_nav": "Pyrenees Jump" },
+
+    // Troy <-> Pender's Star
+    { "from": "troy",         "from_nav": "Pender's Star Jump", "to": "penders_star", "to_nav": "Troy Jump" },
+    { "from": "penders_star", "from_nav": "Troy Jump",          "to": "troy",         "to_nav": "Pender's Star Jump" },
+
+    // Troy <-> Regallis
+    { "from": "troy",         "from_nav": "Regallis Jump",      "to": "regallis",     "to_nav": "Troy Jump" },
+    { "from": "regallis",     "from_nav": "Troy Jump",          "to": "troy",         "to_nav": "Regallis Jump" }
+  ]
+}
