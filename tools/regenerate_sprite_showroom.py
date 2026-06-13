@@ -83,7 +83,7 @@ def build_showroom(names: list[str], cols: int, spacing: float,
         "atlas":          f"ships/{name}/atlas_manifest_3d",
         "position":       [round(x, 2), 0, round(z, 2)],
         "length_meters":  length,
-        "lights_enabled": False,   # 3D-render sprites have no light spots authored
+        "lights_enabled": True,    # show authored .lights.json sidecars in-scene
         "inert":          True,    # static showroom — no AI / physics
     } for name, x, z in placed]
 

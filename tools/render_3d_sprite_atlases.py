@@ -128,6 +128,13 @@ def _build_ship_list() -> list[dict]:
 
 SHIPS = _build_ship_list()
 
+# Window aspect (width/height) — sokol_main creates the window at 1280x800.
+# The screencapture screenshot is the whole window: title bar on top, then
+# the render content which fills the full width at this aspect. Knowing the
+# aspect lets us derive the exact content rect (and thus title-bar height)
+# from the screenshot dimensions, instead of guessing a fixed pixel count.
+WINDOW_ASPECT = 1280.0 / 800.0
+
 CAPTURE_LENGTH_M = 30.0          # nominal ship length in the capture scene
 # Camera distance ≈ 2× ship length. At 1.2× (radius 35) the diagonal
 # extent of asymmetric ships (paradigm wings, orion engine outriggers)
@@ -294,7 +301,7 @@ def _black_to_alpha_crop(src: Path, dst: Path, cell_size: int,
                 px[x, y] = (0, 0, 0, 0)
     bbox = im.getbbox()
     if bbox is None:
-        return False
+        return None
     cropped = im.crop(bbox)
     cw, ch  = cropped.size
     target  = int(cell_size * (1.0 - 2 * margin_pct))
@@ -303,12 +310,21 @@ def _black_to_alpha_crop(src: Path, dst: Path, cell_size: int,
     new_h   = max(1, int(round(ch * scale)))
     resized = cropped.resize((new_w, new_h), Image.LANCZOS)
     canvas  = Image.new("RGBA", (cell_size, cell_size), (0, 0, 0, 0))
-    canvas.paste(resized, ((cell_size - new_w) // 2,
-                            (cell_size - new_h) // 2),
-                 resized)
+    off_x   = (cell_size - new_w) // 2
+    off_y   = (cell_size - new_h) // 2
+    canvas.paste(resized, (off_x, off_y), resized)
     dst.parent.mkdir(parents=True, exist_ok=True)
     canvas.save(dst, "PNG")
-    return True
+    # Return the full placement transform so the caller can map a render-
+    # framebuffer UV (from /project) all the way into cell UV space:
+    #   screenshot_px = render_uv → (sx, sy)   [via window aspect]
+    #   crop_rel      = (sx - bbox_x0, sy - bbox_y0)
+    #   cell_px       = (off_x + crop_rel_x*scale, off_y + crop_rel_y*scale)
+    #   cell_uv       = cell_px / cell_size
+    return {"off_x": off_x, "off_y": off_y, "new_w": new_w, "new_h": new_h,
+            "cell_size": cell_size, "scale": scale,
+            "bbox_x0": bbox[0], "bbox_y0": bbox[1],
+            "img_w": w, "img_h": h}
 
 
 def _az_tag(az: float) -> str:
@@ -355,6 +371,128 @@ def _kill_game(proc: subprocess.Popen) -> None:
             os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
 
 
+# ───────────────────────── auto nav-light projection ─────────────────────
+
+
+def _project_via_engine(flat: list[float]) -> list[dict]:
+    """POST a flat [x,y,z,nx,ny,nz, ...] array to the engine's /project
+    endpoint; return the per-point [{u,v,front,facing}, ...] results.
+    Empty list on any error (lights are best-effort)."""
+    if not flat:
+        return []
+    try:
+        body = json.dumps(flat).encode()
+        req  = urllib.request.Request(f"{API}/project", data=body, method="POST")
+        with urllib.request.urlopen(req, timeout=5) as r:
+            return json.loads(r.read().decode()).get("results", [])
+    except (urllib.error.URLError, TimeoutError, ValueError):
+        return []
+
+
+def _load_lights3d(codename: str) -> dict | None:
+    """Load the 3D feature-light definition for a ship, or None if the
+    extraction step hasn't been run for it."""
+    p = REPO / "assets" / "meshes" / "ships_wcnews" / f"{codename}.lights3d.json"
+    if not p.exists():
+        return None
+    return json.loads(p.read_text())
+
+
+def _aabb_corners(aabb: list) -> list[tuple[float, float, float]]:
+    """8 corners of the [[minx,miny,minz],[maxx,maxy,maxz]] box."""
+    (x0, y0, z0), (x1, y1, z1) = aabb[0], aabb[1]
+    return [(x, y, z) for x in (x0, x1) for y in (y0, y1) for z in (z0, z1)]
+
+
+def _project_cell(lights3d: dict) -> dict | None:
+    """Project every feature light for the CURRENT camera pose (caller must
+    have already /camera/set this frame). Returns {"lights": [...]} of raw
+    {u,v,front,facing} results, or None if the engine projection failed.
+
+    We map render-UV → cell-UV via the known window aspect (see
+    _cell_lights_from_projection), so we no longer need to project the
+    AABB corners for self-calibration.
+    """
+    flat: list[float] = []
+    for l in lights3d["lights"]:
+        flat += l["pos"] + l["normal"]
+    res = _project_via_engine(flat)
+    if len(res) < len(lights3d["lights"]):
+        return None
+    return {"lights": res}
+
+
+def _cell_lights_from_projection(proj: dict, lights3d: dict, xform: dict,
+                                 mirror: bool) -> list[dict]:
+    """Turn a cell's raw projection + crop transform into a list of
+    LightSpot dicts in the editor's .lights.json schema. Only emits lights
+    that are in front of the camera AND facing it (rough visibility).
+
+    Mapping chain (render-UV from /project → cell UV):
+      1. render-UV → screenshot pixel, using the window aspect to place the
+         content rect exactly under the title bar.
+      2. screenshot pixel → cropped-and-resized cell pixel, via the crop
+         transform captured during post-process.
+      3. cell pixel → cell UV (÷ cell_size).
+    `mirror=True` flips U for the symmetry-mirrored half (their pixels are
+    a left-right flip of the unique partner cell).
+    """
+    img_w = xform["img_w"]
+    img_h = xform["img_h"]
+    # Content rect: full width, height = width / aspect, sitting below the
+    # title bar. Derives the title-bar height exactly from the geometry.
+    content_h  = img_w / WINDOW_ASPECT
+    title_bar  = img_h - content_h
+    cs    = xform["cell_size"]
+    scale = xform["scale"]
+    out: list[dict] = []
+    for spec, r in zip(lights3d["lights"], proj["lights"]):
+        if not (r["front"] and r["facing"]):
+            continue
+        # render-UV → screenshot pixel. /project's v already accounts for
+        # one NDC→image flip, but the engine's billboard/sprite UV path
+        # applies its own V flip (sprite.glsl: uv = 1 - a_uv.y), so the
+        # net mapping needs v inverted here to land lights right-side up.
+        sx = r["u"] * img_w
+        sy = title_bar + (1.0 - r["v"]) * content_h
+        # screenshot pixel → cell pixel (crop + resize + centre)
+        cell_x = xform["off_x"] + (sx - xform["bbox_x0"]) * scale
+        cell_y = xform["off_y"] + (sy - xform["bbox_y0"]) * scale
+        cell_u = cell_x / cs
+        cell_v = cell_y / cs
+        if mirror:
+            cell_u = 1.0 - cell_u
+        # Drop lights that land well outside the cell (projection slop or a
+        # light genuinely off-frame); keep small overshoots clamped.
+        if cell_u < -0.05 or cell_u > 1.05 or cell_v < -0.05 or cell_v > 1.05:
+            continue
+        cell_u = min(1.0, max(0.0, cell_u))
+        cell_v = min(1.0, max(0.0, cell_v))
+        out.append({
+            "u": round(cell_u, 6), "v": round(cell_v, 6),
+            "color": spec["color"], "size": 5,
+            "hz": spec["hz"], "phase": 0,
+            "kind": spec["kind"],
+        })
+    return out
+
+
+def _write_cell_lights(cell_path: Path, lights: list[dict]) -> None:
+    """Write a .lights.json sidecar next to a cell PNG, in the same compact
+    one-light-per-line style the F2 editor writes (so hand-edits merge
+    cleanly). Removes the file if there are no lights for this angle."""
+    sidecar = cell_path.with_suffix("").with_suffix(".lights.json") \
+        if cell_path.suffix else cell_path
+    sidecar = cell_path.parent / (cell_path.stem + ".lights.json")
+    if not lights:
+        if sidecar.exists():
+            sidecar.unlink()
+        return
+    body = "[\n" + ",\n".join(
+        "  " + json.dumps(l, separators=(", ", ": ")) for l in lights) + "\n]\n"
+    sidecar.write_text(body)
+
+
 def _render_one_ship(ship: dict, cell_size: int, skip_render: bool
                      ) -> tuple[int, int]:
     """Run the full capture+post pipeline for one ship.
@@ -366,6 +504,12 @@ def _render_one_ship(ship: dict, cell_size: int, skip_render: bool
     raw_dir   = SHIPS_DIR / name / "sprites_3d" / "raw"
     cell_dir  = SHIPS_DIR / name / "sprites_3d"
     raw_dir.mkdir(parents=True, exist_ok=True)
+
+    # Auto nav-lights: if a <codename>.lights3d.json exists we project its
+    # feature lights into each cell. `projections[(az,el)]` caches the raw
+    # /project result captured while the engine was live for that pose.
+    lights3d    = _load_lights3d(ship["codename"])
+    projections: dict[tuple[float, float], dict] = {}
 
     if not skip_render:
         scene_path = _write_capture_scene(ship)
@@ -384,6 +528,10 @@ def _render_one_ship(ship: dict, cell_size: int, skip_render: bool
                 for az in UNIQUE_AZIMUTHS:
                     _set_camera(az, el, ORBIT_RADIUS_M)
                     time.sleep(0.08)              # let camera apply
+                    if lights3d is not None:
+                        pr = _project_cell(lights3d)
+                        if pr is not None:
+                            projections[(az, el)] = pr
                     shot = _take_screenshot()
                     out  = raw_dir / _cell_name(name, az, el)
                     shutil.copyfile(shot, out)
@@ -397,6 +545,10 @@ def _render_one_ship(ship: dict, cell_size: int, skip_render: bool
             for polar_el in POLAR_ELEVATIONS:
                 _set_camera(0.0, polar_el, ORBIT_RADIUS_M)
                 time.sleep(0.08)
+                if lights3d is not None:
+                    pr = _project_cell(lights3d)
+                    if pr is not None:
+                        projections[(0.0, polar_el)] = pr
                 shot = _take_screenshot()
                 out  = raw_dir / _cell_name(name, 0.0, polar_el)
                 shutil.copyfile(shot, out)
@@ -424,17 +576,40 @@ def _render_one_ship(ship: dict, cell_size: int, skip_render: bool
     # we count them as blank.
     all_views = ([(az, el) for el in ELEVATIONS for az in AZIMUTHS] +
                  [(0.0, el) for el in POLAR_ELEVATIONS])
-    n_ok = n_blank = 0
+    n_ok = n_blank = n_lit = 0
     for az, el in all_views:
         raw  = raw_dir  / _cell_name(name, az, el)
         cell = cell_dir / _cell_name(name, az, el)
         if not raw.exists():
             n_blank += 1
             continue
-        if _black_to_alpha_crop(raw, cell, cell_size):
-            n_ok += 1
-        else:
+        xform = _black_to_alpha_crop(raw, cell, cell_size)
+        if xform is None:
             n_blank += 1
+            continue
+        n_ok += 1
+
+        # Auto nav-lights. A unique/polar cell uses its own projection;
+        # a mirror cell (az>180) reuses its source azimuth's projection
+        # with the U coordinate flipped, since its pixels are a left-right
+        # flip of the source. `xform` already reflects this cell's own
+        # crop, so the only mirror-specific step is the U flip in
+        # _cell_lights_from_projection.
+        if lights3d is not None:
+            src_az = _mirror_source_az(az)
+            mirror = src_az is not None
+            proj   = projections.get((az, el)) if not mirror \
+                     else projections.get((src_az, el))
+            if proj is not None:
+                cell_lights = _cell_lights_from_projection(
+                    proj, lights3d, xform, mirror)
+                _write_cell_lights(cell, cell_lights)
+                if cell_lights:
+                    n_lit += 1
+
+    if lights3d is not None:
+        print(f"  → auto-lit {n_lit}/{len(all_views)} cells "
+              f"({len(lights3d['lights'])} feature lights/ship)")
 
     # Atlas manifest — same shape every other ship in the engine uses,
     # plus the two polar-cap samples appended at the end.
