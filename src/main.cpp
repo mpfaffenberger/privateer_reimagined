@@ -111,13 +111,39 @@ namespace {
 // also needs to see it.
 std::string g_player_ship_override;
 
-// Pre-static-init trace so we can tell whether we made it past the C++
-// static-init phase on Windows. If [trace] static-init prints to stderr
-// but [trace] sokol_main entered does not, AppState's ctor or some other
-// global is fastfailing. If NEITHER prints, the CRT init itself is broken.
+// Pre-static-init trace + crash-trap installers. On Windows, runtime
+// failures during static init (bad CRT param, terminate, purecall, etc.)
+// invoke __fastfail with code 0xC0000409, killing the process before any
+// of our code runs and printing nothing. Install handlers as the FIRST
+// static initializer in this TU so anything failing later — here or in
+// another TU's globals — hits our trap with file/line info before dying.
+#ifdef _WIN32
+#include <crtdbg.h>
+#include <stdlib.h>
+#include <exception>
+static void _np_invalid_parameter(const wchar_t* expr, const wchar_t* func,
+                                  const wchar_t* file, unsigned int line,
+                                  uintptr_t /*reserved*/) {
+    std::fprintf(stderr,
+        "[trace] CRT invalid_parameter: expr=%ls func=%ls file=%ls:%u\n",
+        expr ? expr : L"<null>", func ? func : L"<null>",
+        file ? file : L"<null>", line);
+    std::fflush(stderr);
+}
+static void _np_terminate() {
+    std::fprintf(stderr, "[trace] std::terminate() called\n");
+    std::fflush(stderr);
+    std::abort();
+}
+#endif
 struct _StaticInitTrace {
     _StaticInitTrace() {
         std::fprintf(stderr, "[trace] static-init phase reached\n");
+#ifdef _WIN32
+        _set_invalid_parameter_handler(_np_invalid_parameter);
+        _CrtSetReportMode(_CRT_ASSERT, 0);   // don't pop dialogs
+        std::set_terminate(_np_terminate);
+#endif
         std::fflush(stderr);
     }
 };
