@@ -1,5 +1,13 @@
 cmake_minimum_required(VERSION 3.20)
-project(new_privateer LANGUAGES C CXX OBJC OBJCXX)
+# OBJC / OBJCXX are macOS-only here (the sokol_impl TU is built as .mm on
+# Apple to bridge Cocoa + Metal). MSVC has no ObjC compiler, so we'd fail
+# CMake's CheckOBJCCompilerFlag try-compile the moment we list it. Gate it
+# by APPLE so Linux/Windows builds get plain C/C++.
+if(APPLE)
+    project(new_privateer LANGUAGES C CXX OBJC OBJCXX)
+else()
+    project(new_privateer LANGUAGES C CXX)
+endif()
 
 # ---------------------------------------------------------------------------
 # Global config
@@ -78,15 +86,24 @@ compile_shader(post_composite)
 # ---------------------------------------------------------------------------
 # Target: new_privateer
 # ---------------------------------------------------------------------------
-# The Obj-C++ TU exists only on Apple; elsewhere we compile sokol_impl as
-# plain C++ (we'll rename the file extension at add_executable time).
+# The Obj-C++ TU exists only on Apple (Metal + Foundation headers force ObjC
+# syntax). On Windows / Linux the same SOKOL_IMPL block lives in plain C++
+# in src/sokol_impl.cpp. Exactly one of the two is compiled per platform to
+# keep the SOKOL_IMPL one-definition rule.
 if(APPLE)
     set(SOKOL_IMPL_SRC src/sokol_impl.mm)
 else()
-    # On non-Apple, we just set a compile-definition and reuse main.cpp's
-    # SOKOL_IMPL block via a tiny .cpp shim. For now, only Apple is wired
-    # because that's what Mike is on. Add Linux/Win later.
-    set(SOKOL_IMPL_SRC src/sokol_impl.mm)
+    set(SOKOL_IMPL_SRC src/sokol_impl.cpp)
+endif()
+
+# dev_remote: macOS gets the real POSIX-sockets + Cocoa-screenshot pair
+# (dev_remote.cpp + dev_remote_macos.mm); other platforms get a tiny stub
+# that satisfies the namespace and no-ops every call. See
+# src/dev_remote_stub.cpp for the rationale + porting note.
+if(APPLE)
+    set(DEV_REMOTE_SRC src/dev_remote.cpp src/dev_remote_macos.mm)
+else()
+    set(DEV_REMOTE_SRC src/dev_remote_stub.cpp)
 endif()
 
 # Dear ImGui — pulled into third_party/imgui/ by hand (see commit log). We
@@ -170,8 +187,7 @@ src/bolt_art.cpp
     src/sound_labeler.cpp
     src/music_labeler.cpp
     src/cockpit_hud.cpp
-    src/dev_remote.cpp
-    src/dev_remote_macos.mm
+    ${DEV_REMOTE_SRC}
     ${IMGUI_SRC}
     ${SOKOL_IMPL_SRC}
     ${SHADER_OUTPUTS}
