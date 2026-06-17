@@ -397,7 +397,13 @@ struct AppState {
     SampleId sfx_hum   = 0;
 };
 
+// Trace before g's ctor (whose static-init order vs. g_trace_static_init
+// is deterministic within this TU — top-to-bottom).
+struct _PreG { _PreG()  { std::fprintf(stderr, "[trace] pre-g\n");  std::fflush(stderr); } };
+static _PreG g_trace_pre_g;
 AppState g;
+struct _PostG { _PostG() { std::fprintf(stderr, "[trace] post-g\n"); std::fflush(stderr); } };
+static _PostG g_trace_post_g;
 
 // ---- ship-sprite pool helpers -----------------------------------------------
 //
