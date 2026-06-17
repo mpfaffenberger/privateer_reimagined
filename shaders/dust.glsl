@@ -38,7 +38,12 @@ void main() {
     v_alpha = clamp(1.0 - smoothstep(0.75, 1.0, edge), 0.0, 1.0);
 
     gl_Position  = view_proj * vec4(p, 1.0);
+    // gl_PointSize is GL-only; HLSL/Metal POINT primitives are always one
+    // pixel. On the GL backend we bump dust specks to ~5 px so MSAA doesn't
+    // eat them; on the others dust is intentionally a one-pixel sparkle.
+#if defined(SOKOL_GLCORE) || defined(SOKOL_GLES3)
     gl_PointSize = field_params.y;
+#endif
 }
 @end
 
@@ -47,11 +52,17 @@ in  float v_alpha;
 out vec4  frag_color;
 
 void main() {
+#if defined(SOKOL_GLCORE) || defined(SOKOL_GLES3)
     // Soft round dot via distance to point-center in [-0.5, 0.5].
     vec2  d = gl_PointCoord - vec2(0.5);
     float r = length(d);
     if (r > 0.5) discard;
     float a = smoothstep(0.5, 0.1, r) * v_alpha;
+#else
+    // HLSL/Metal POINT primitives are 1 pixel and have no gl_PointCoord;
+    // just emit a flat alpha at v_alpha for every speck.
+    float a = v_alpha;
+#endif
     // Slightly warm white — reads as 'icy dust' against the nebula.
     frag_color = vec4(vec3(1.0, 1.0, 1.0), a);
 }
