@@ -3967,7 +3967,7 @@ void event_cb(const sapp_event* ev) {
 } // namespace
 
 #ifdef _WIN32
-#include "platform/win32_launch_dialog.h"
+#include "platform/win32_desktop_res.h"
 #endif
 
 namespace {
@@ -4057,14 +4057,13 @@ sapp_desc sokol_main(int argc, char** argv) {
     sapp_desc desc = make_app_desc();
 
 #ifdef _WIN32
-    int launch_w = 0, launch_h = 0;
-    bool launch_fs = false;
-    if (win32::pick_resolution(&launch_w, &launch_h, &launch_fs)) {
-        desc.width      = launch_w;
-        desc.height     = launch_h;
-        desc.fullscreen = launch_fs;
-        std::fprintf(stderr, "[launch] user selected %dx%d %s\n",
-                     launch_w, launch_h, launch_fs ? "fullscreen" : "windowed");
+    int desktop_w = 0, desktop_h = 0;
+    if (win32::desktop_resolution(&desktop_w, &desktop_h)) {
+        desc.width      = desktop_w;
+        desc.height     = desktop_h;
+        desc.fullscreen = true;
+        std::fprintf(stderr, "[launch] using desktop resolution %dx%d fullscreen\n",
+                     desktop_w, desktop_h);
         std::fflush(stderr);
     }
 #endif

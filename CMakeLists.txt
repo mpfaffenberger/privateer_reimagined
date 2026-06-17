@@ -194,9 +194,7 @@ src/bolt_art.cpp
 )
 
 # Platform-specific helpers (kept out of main.cpp so the core stays portable).
-if(WIN32)
-    target_sources(new_privateer PRIVATE src/platform/win32_launch_dialog.cpp)
-endif()
+# (Currently none — win32 helpers are header-only.)
 
 # Bake the asset path into the runtime so we can launch from anywhere. For
 # now we just use a relative path + chdir-to-source; for shipping we'd copy
