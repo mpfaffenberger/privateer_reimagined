@@ -1,0 +1,158 @@
+# ---------------------------------------------------------------------------
+# windows.yml — Windows build + rolling "nightly" release.
+#
+# What this does (and doesn't):
+#
+#   on push / PR -> Windows build is verified, exe uploaded as a CI artifact
+#                   you can grab from the Actions tab. Cheap, catches
+#                   Windows-only breakage on every commit.
+#
+#   on push to main -> ALSO bundles the exe + assets/ into a zip and
+#                   force-publishes it to the github release tagged
+#                   `nightly`. There is exactly one nightly release; each
+#                   push overwrites it. Players hit
+#                   https://github.com/<owner>/<repo>/releases/tag/nightly
+#                   and always get the latest.
+#
+# What this does NOT do (intentionally):
+#
+#   - no signed installer. Unsigned exe in a zip. Windows SmartScreen will
+#     yell once per user; sue me.
+#   - no macOS / Linux build. Mac users clone + build; nobody else asked.
+#   - no semver releases. Add a second workflow on `push tags v*` when you
+#     actually want sticky versions to live alongside `nightly`.
+#
+# Sokol-shdc: the repo only checks in the macOS-arm64 binary (CMake picks
+# it up via CMAKE_EXECUTABLE_SUFFIX). On Windows we curl the .exe from
+# floooh/sokol-tools-bin into the same path so CMakeLists doesn't care
+# which platform it's on.
+# ---------------------------------------------------------------------------
+name: windows
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel an in-flight run on the same branch when a new push arrives —
+# the latest commit is the one we care about.
+concurrency:
+  group: windows-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    permissions:
+      contents: write   # needed to publish the rolling nightly release
+    steps:
+      - name: Check out source (with LFS)
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+          # Full history not needed; shallow clone is faster.
+          fetch-depth: 1
+
+      - name: Fetch sokol-shdc.exe (Windows)
+        shell: pwsh
+        run: |
+          $url = 'https://github.com/floooh/sokol-tools-bin/raw/master/bin/win32/sokol-shdc.exe'
+          $out = 'third_party/bin/sokol-shdc.exe'
+          New-Item -ItemType Directory -Force -Path third_party/bin | Out-Null
+          Invoke-WebRequest -Uri $url -OutFile $out
+          if (-not (Test-Path $out)) { throw "shdc download failed" }
+          Write-Host "shdc -> $((Get-Item $out).Length) bytes"
+
+      - name: Configure (CMake + Ninja)
+        shell: pwsh
+        # ninja is preinstalled on windows-latest as part of the VS
+        # workload; -G "Ninja" keeps the build dir layout identical to
+        # what we use locally (build/new_privateer.exe, no Release/Debug
+        # subdir to chase).
+        run: |
+          # The VS dev-environment isn't in PATH by default for cmd/pwsh
+          # on the runner. Importing it gives us cl.exe, link.exe, the
+          # Windows SDK headers, and the right LIB paths.
+          $vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" `
+            -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 `
+            -property installationPath
+          Import-Module (Join-Path $vsPath 'Common7\Tools\Microsoft.VisualStudio.DevShell.dll')
+          Enter-VsDevShell -VsInstallPath $vsPath -SkipAutomaticLocation -DevCmdArguments '-arch=x64 -host_arch=x64'
+          cmake -B build -G "Ninja" -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build new_privateer
+        shell: pwsh
+        run: |
+          $vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" `
+            -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 `
+            -property installationPath
+          Import-Module (Join-Path $vsPath 'Common7\Tools\Microsoft.VisualStudio.DevShell.dll')
+          Enter-VsDevShell -VsInstallPath $vsPath -SkipAutomaticLocation -DevCmdArguments '-arch=x64 -host_arch=x64'
+          cmake --build build --target new_privateer
+
+      # Always upload the exe as a CI artifact (handy for PR review or for
+      # grabbing a one-off build from a branch). Cheap; 90-day retention.
+      - name: Upload exe as CI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: new_privateer-windows-x64
+          path: build/new_privateer.exe
+          if-no-files-found: error
+          retention-days: 14
+
+      # ------------------------------------------------------------------
+      # Rolling "nightly" release: only on a real push to main (skip PRs).
+      # ------------------------------------------------------------------
+      - name: Stage release tree (exe + assets)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        shell: pwsh
+        run: |
+          # Layout the player sees after unzip:
+          #   new_privateer/
+          #     new_privateer.exe
+          #     assets/...
+          # Shaders are compiled into the binary (src/generated/*.glsl.h),
+          # so we don't ship the shaders/ dir.
+          New-Item -ItemType Directory -Force -Path dist/new_privateer | Out-Null
+          Copy-Item build/new_privateer.exe dist/new_privateer/
+          Copy-Item -Recurse assets dist/new_privateer/assets
+          # Tag the build with the short SHA so testers can tell us
+          # exactly which commit they're on.
+          $sha = "${{ github.sha }}".Substring(0,7)
+          "build: $sha`r`nbranch: ${{ github.ref_name }}`r`ndate: $(Get-Date -Format o)" `
+            | Out-File dist/new_privateer/BUILD_INFO.txt -Encoding utf8
+
+      - name: Zip
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        shell: pwsh
+        run: |
+          $sha = "${{ github.sha }}".Substring(0,7)
+          $zip = "new_privateer-nightly-$sha-windows-x64.zip"
+          Compress-Archive -Path dist/new_privateer -DestinationPath $zip -CompressionLevel Optimal
+          Write-Host "wrote $zip ($((Get-Item $zip).Length) bytes)"
+          "ZIP_NAME=$zip" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Publish / update the rolling nightly release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: nightly
+          name: Nightly (latest main)
+          # prerelease=true so it stays out of the "Latest release" tile
+          # on the repo home page (semver tags will own that slot once we
+          # add them).
+          prerelease: true
+          # Force-overwrite the nightly release each push so we don't pile
+          # up assets. The tag is recreated to point at the new commit.
+          make_latest: 'false'
+          body: |
+            Rolling Windows build cut from `main` on every push.
+            **No installer** — just a zip: extract anywhere, run
+            `new_privateer.exe`. Unsigned, so Windows SmartScreen will
+            warn the first time. "More info" -> "Run anyway".
+
+            Commit: ${{ github.sha }}
+            Workflow run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          files: ${{ env.ZIP_NAME }}
+          fail_on_unmatched_files: true

@@ -46,6 +46,7 @@
 #include "encounters.h"
 #include "dust.h"
 #include "warp_streaks.h"
+#include "jump_gate.h"
 #include "faction.h"
 #include "game_state.h"
 #include "gun.h"
@@ -134,6 +135,7 @@ struct AppState {
     Sun            sun{};
     DustField      dust{};
     WarpStreaks    warp_streaks{};   // autopilot cruise overlay (np-streaks)
+    JumpGate       jump_gate{};      // pulsing translucent gate spheres
     RenderTargets  rt{};
     PostProcess    post{};
 
@@ -735,6 +737,9 @@ void build_system_scene(bool first_time) {
     if (first_time && !g.dust.init()) { std::fprintf(stderr, "[main] dust init failed\n"); std::exit(1); }
     if (first_time && !g.warp_streaks.init()) {
         std::fprintf(stderr, "[main] warp_streaks init failed\n"); std::exit(1);
+    }
+    if (first_time && !g.jump_gate.init()) {
+        std::fprintf(stderr, "[main] jump_gate init failed\n"); std::exit(1);
     }
 
     // Mesh renderer + placed mesh instances. Load OBJs from disk now; any
@@ -3004,6 +3009,21 @@ void frame_cb() {
         append_ship_sprites_for_camera(g.placed_ship_sprites, g.camera, g.frame_sprites);
         g.sprite_render.draw(g.frame_sprites, g.camera, aspect, time_sec);
 
+        // Jump-gate spheres: translucent additive shells at every
+        // kind=="jump" nav point. Drawn AFTER opaque ships/stations/rocks
+        // so the depth-test correctly hides shell pixels where a hull is
+        // in front of the gate, but BEFORE the additive sun/tracer/bolt
+        // glow layer so the gate sits in the same translucent stack.
+        // Capture-clean skips it for the same reason it skips tracers/etc.
+        if (!g.capture_clean) {
+            std::vector<HMM_Vec3> gate_positions;
+            gate_positions.reserve(g.system.nav_points.size());
+            for (const NavPointDef& n : g.system.nav_points) {
+                if (n.kind == "jump") gate_positions.push_back(n.position);
+            }
+            g.jump_gate.draw(g.camera, aspect, time_sec, gate_positions);
+        }
+
         // Additive glow billboards via the sprite spot pipeline.
         // Combines projectile tracers + explosion FX (flash + shockwave)
         // into one tracer list and submits in one draw call. HDR color
@@ -3613,6 +3633,7 @@ void cleanup_cb() {
     for (auto& f : g.asteroid_fields) f.destroy();
         g.dust.destroy();
         g.warp_streaks.destroy();
+        g.jump_gate.destroy();
     g.sun.destroy();
     g.skybox.destroy();
     sg_shutdown();

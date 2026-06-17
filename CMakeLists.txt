@@ -37,7 +37,7 @@ message(STATUS "shader target    : ${SHADER_SLANG}")
 # sokol-shdc: cross-compile shaders/*.glsl -> src/generated/*.glsl.h
 # Each .glsl file produces one header you can `#include`.
 # ---------------------------------------------------------------------------
-set(SHDC ${CMAKE_SOURCE_DIR}/third_party/bin/sokol-shdc)
+set(SHDC ${CMAKE_SOURCE_DIR}/third_party/bin/sokol-shdc${CMAKE_EXECUTABLE_SUFFIX})
 set(GEN_DIR ${CMAKE_SOURCE_DIR}/src/generated)
 file(MAKE_DIRECTORY ${GEN_DIR})
 
@@ -66,6 +66,7 @@ compile_shader(sun_glow)
 compile_shader(sun_gas)
 compile_shader(dust)
 compile_shader(warp_streaks)
+compile_shader(jump_gate)
 compile_shader(asteroid)
 compile_shader(mesh)
 compile_shader(atmosphere)
@@ -112,6 +113,7 @@ add_executable(new_privateer
     src/sun_gas.cpp
     src/dust.cpp
     src/warp_streaks.cpp
+    src/jump_gate.cpp
     src/rendertargets.cpp
     src/postprocess.cpp
     src/postprocess_composite.cpp
