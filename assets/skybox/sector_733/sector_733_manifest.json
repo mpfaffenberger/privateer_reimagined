@@ -1,0 +1,18 @@
+{
+  "seed": "sector_733",
+  "resolution": 1024,
+  "prefix": "sector_733",
+  "faces": {
+    "right":  "sector_733_right.png",
+    "left":   "sector_733_left.png",
+    "top":    "sector_733_top.png",
+    "bottom": "sector_733_bottom.png",
+    "front":  "sector_733_front.png",
+    "back":   "sector_733_back.png"
+  },
+  "sun": {
+    "present": true,
+    "direction": [-0.545889, 0.267574, -0.793983],
+    "color":     [0.570941, 0.541028, 0.419109]
+  }
+}

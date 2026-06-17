@@ -1,0 +1,18 @@
+{
+  "seed": "troy_intense",
+  "resolution": 1024,
+  "prefix": "troy_intense",
+  "faces": {
+    "right":  "troy_intense_right.png",
+    "left":   "troy_intense_left.png",
+    "top":    "troy_intense_top.png",
+    "bottom": "troy_intense_bottom.png",
+    "front":  "troy_intense_front.png",
+    "back":   "troy_intense_back.png"
+  },
+  "sun": {
+    "present": true,
+    "direction": [0.971247, -0.177670, 0.158470],
+    "color":     [0.969820, 0.763074, 0.393635]
+  }
+}

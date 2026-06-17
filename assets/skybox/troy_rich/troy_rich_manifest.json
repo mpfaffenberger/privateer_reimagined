@@ -1,0 +1,18 @@
+{
+  "seed": "troy_rich",
+  "resolution": 1024,
+  "prefix": "troy_rich",
+  "faces": {
+    "right":  "troy_rich_right.png",
+    "left":   "troy_rich_left.png",
+    "top":    "troy_rich_top.png",
+    "bottom": "troy_rich_bottom.png",
+    "front":  "troy_rich_front.png",
+    "back":   "troy_rich_back.png"
+  },
+  "sun": {
+    "present": true,
+    "direction": [-0.869191, 0.431353, 0.241746],
+    "color":     [0.065163, 0.335288, 0.200214]
+  }
+}

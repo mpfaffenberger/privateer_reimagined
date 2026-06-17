@@ -1,0 +1,18 @@
+{
+  "seed": "sector_5518",
+  "resolution": 1024,
+  "prefix": "sector_5518",
+  "faces": {
+    "right":  "sector_5518_right.png",
+    "left":   "sector_5518_left.png",
+    "top":    "sector_5518_top.png",
+    "bottom": "sector_5518_bottom.png",
+    "front":  "sector_5518_front.png",
+    "back":   "sector_5518_back.png"
+  },
+  "sun": {
+    "present": false,
+    "direction": [1.000000, 0.000000, 0.000000],
+    "color":     [1.000000, 1.000000, 1.000000]
+  }
+}

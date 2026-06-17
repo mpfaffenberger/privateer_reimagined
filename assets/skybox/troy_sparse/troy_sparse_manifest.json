@@ -1,0 +1,18 @@
+{
+  "seed": "troy_sparse",
+  "resolution": 1024,
+  "prefix": "troy_sparse",
+  "faces": {
+    "right":  "troy_sparse_right.png",
+    "left":   "troy_sparse_left.png",
+    "top":    "troy_sparse_top.png",
+    "bottom": "troy_sparse_bottom.png",
+    "front":  "troy_sparse_front.png",
+    "back":   "troy_sparse_back.png"
+  },
+  "sun": {
+    "present": true,
+    "direction": [-0.884756, -0.427419, -0.185795],
+    "color":     [0.505918, 0.130526, 0.221251]
+  }
+}

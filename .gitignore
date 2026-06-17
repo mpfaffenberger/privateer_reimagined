@@ -65,9 +65,12 @@ compile_commands.json
 ._*
 
 # Generated skyboxes (regenerated on demand by tools/gen_skybox.sh).
-# Keep 'troy' so the binary has a default cubemap out of the box.
-assets/skybox/*
-!assets/skybox/troy/
+# All used seeds (troy + every skybox_seed referenced from assets/systems/*.json)
+# need to ship with the repo so a fresh clone on any platform can render every
+# system, not just Troy. Previously only 'troy' was tracked, which broke
+# Windows clones the moment the player jumped to Pyrenees / Pender's Star /
+# any other system that asks for its own cubemap. If you generate a new
+# experimental seed that you DON'T want committed, ignore it explicitly here.
 
 # runtime logs
 *.log
