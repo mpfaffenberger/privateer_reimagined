@@ -1096,6 +1096,13 @@ void build_system_scene(bool first_time) {
             }
             player.gun_cooldowns.assign(player.mounts.size(), 0.0f);
         }
+        std::printf("[player] equipped: klass=%s mounts=%zu shield F/A/S=%.0f/%.0f/%.0f "
+                    "armor F/A/S=%.0f/%.0f/%.0f energy=%.0f\n",
+                    player.klass ? player.klass->name.c_str() : "<null>",
+                    player.mounts.size(),
+                    player.shield_fore_cm, player.shield_aft_cm, player.shield_side_cm,
+                    player.armor_fore_cm, player.armor_aft_cm, player.armor_side_cm,
+                    player.energy_gj);
     }
     }  // end if (first_time) — one-time player Ship spawn + loadout
 
@@ -3730,6 +3737,19 @@ void cleanup_cb() {
 }
 
 void event_cb(const sapp_event* ev) {
+    // Track mouse-button state FIRST, before any ImGui / dev-editor handler
+    // can early-return and swallow the event. Firing is a core flight input
+    // and must never be eaten by debug tooling or an ImGui hover. (HUD
+    // windows are NoInputs so they don't capture, but the debug panel and
+    // dev editors do — without this, opening one silently kills the guns.)
+    if (ev->type == SAPP_EVENTTYPE_MOUSE_DOWN) {
+        if (ev->mouse_button == 0) g.mouse_left_held  = true;
+        if (ev->mouse_button == 1) g.mouse_right_held = true;
+    } else if (ev->type == SAPP_EVENTTYPE_MOUSE_UP) {
+        if (ev->mouse_button == 0) g.mouse_left_held  = false;
+        if (ev->mouse_button == 1) g.mouse_right_held = false;
+    }
+
     // Give ImGui first crack at the event. If the panel is focused or the
     // mouse is over a widget it'll swallow the input; we only forward to
     // the camera / keymap when it doesn't.
@@ -3965,14 +3985,6 @@ void event_cb(const sapp_event* ev) {
         g.mouse_y = ev->mouse_y / dpi;
         break;
     }
-    case SAPP_EVENTTYPE_MOUSE_DOWN:
-        if (ev->mouse_button == 0) g.mouse_left_held = true;
-        if (ev->mouse_button == 1) g.mouse_right_held = true;
-        break;
-    case SAPP_EVENTTYPE_MOUSE_UP:
-        if (ev->mouse_button == 0) g.mouse_left_held = false;
-        if (ev->mouse_button == 1) g.mouse_right_held = false;
-        break;
     default:
         break;
     }
