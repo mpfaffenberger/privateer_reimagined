@@ -213,15 +213,25 @@ target_include_directories(new_privateer PRIVATE
 # Dear ImGui is a big codebase that triggers lots of unused-function /
 # unused-parameter warnings under -Wall -Wextra. We trust upstream, so
 # silence those *just for the imgui TUs* — our own code stays strict.
-set_source_files_properties(${IMGUI_SRC} PROPERTIES
-    COMPILE_OPTIONS "-w"
-)
+# (MSVC uses /w; GCC/Clang use -w. set() picks the right one.)
+if(MSVC)
+    set_source_files_properties(${IMGUI_SRC} PROPERTIES COMPILE_OPTIONS "/w")
+else()
+    set_source_files_properties(${IMGUI_SRC} PROPERTIES COMPILE_OPTIONS "-w")
+endif()
 
 target_compile_definitions(new_privateer PRIVATE ${SOKOL_BACKEND})
 
-target_compile_options(new_privateer PRIVATE
-    -Wall -Wextra -Wno-unused-parameter -Wno-unused-function
-)
+# Warning flags split by toolchain. GCC/Clang use -W*, MSVC uses /W*. We
+# keep both vocal but don't promote anything to errors here so a fresh
+# Windows port isn't blocked by hundreds of style warnings on day one.
+if(MSVC)
+    target_compile_options(new_privateer PRIVATE /W3 /wd4244 /wd4267 /wd4305 /wd4146 /permissive-)
+else()
+    target_compile_options(new_privateer PRIVATE
+        -Wall -Wextra -Wno-unused-parameter -Wno-unused-function
+    )
+endif()
 
 # ---------------------------------------------------------------------------
 # Platform libraries
