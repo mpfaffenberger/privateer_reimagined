@@ -230,6 +230,17 @@ target_compile_definitions(new_privateer PRIVATE ${SOKOL_BACKEND})
 if(MSVC)
     target_compile_definitions(new_privateer PRIVATE
         _USE_MATH_DEFINES NOMINMAX WIN32_LEAN_AND_MEAN _CRT_SECURE_NO_WARNINGS)
+    # sokol_app picks WinMain by default on Windows -> linker auto-selects
+    # SUBSYSTEM:WINDOWS -> no console -> all our printf / stderr output
+    # silently goes to nowhere, which makes debugging asset-load failures
+    # nearly impossible. Force the entry point back to plain `main()` and
+    # link as SUBSYSTEM:CONSOLE so launching the exe spawns a debug
+    # console the runtime can speak through. (Ship build can drop this
+    # later with a CMake option, but the cost during dev is zero.)
+    target_compile_definitions(new_privateer PRIVATE SOKOL_WIN32_FORCE_MAIN)
+    set_target_properties(new_privateer PROPERTIES
+        LINK_FLAGS "/SUBSYSTEM:CONSOLE"
+    )
 endif()
 
 # Warning flags split by toolchain. GCC/Clang use -W*, MSVC uses /W*. We
