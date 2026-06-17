@@ -3886,6 +3886,8 @@ void event_cb(const sapp_event* ev) {
 
 sapp_desc sokol_main(int argc, char** argv) {
     std::setvbuf(stdout, nullptr, _IOLBF, 0);
+    std::fprintf(stderr, "[trace] sokol_main entered, argc=%d\n", argc);
+    std::fflush(stderr);
 
     for (int i = 1; i < argc; ++i) {
         if (std::strcmp(argv[i], "--system") == 0 && i + 1 < argc) {
