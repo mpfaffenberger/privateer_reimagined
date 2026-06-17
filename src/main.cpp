@@ -3967,7 +3967,14 @@ void event_cb(const sapp_event* ev) {
 } // namespace
 
 sapp_desc sokol_main(int argc, char** argv) {
-    std::setvbuf(stdout, nullptr, _IOLBF, 0);
+    // _IONBF (unbuffered) so every printf flushes immediately — same
+    // practical effect as line-buffering for our diagnostic prints,
+    // and unlike _IOLBF (size>=2 required) it accepts size=0/null buf,
+    // which MSVC's setvbuf strictly enforces. The old _IOLBF/size=0
+    // combo was the cause of the silent-exit-with-0xC0000409 on the
+    // first Windows port: setvbuf hit invalid_parameter -> __fastfail.
+    std::setvbuf(stdout, nullptr, _IONBF, 0);
+    std::setvbuf(stderr, nullptr, _IONBF, 0);
     std::fprintf(stderr, "[trace] sokol_main entered, argc=%d\n", argc);
     std::fflush(stderr);
 
