@@ -122,11 +122,32 @@ std::string g_player_ship_override;
 #include <stdlib.h>
 #include <exception>
 #include <windows.h>
+#include <dbghelp.h>
+#pragma comment(lib, "dbghelp.lib")
 static void _np_print_stack() {
+    static bool sym_inited = false;
+    if (!sym_inited) {
+        SymInitialize(GetCurrentProcess(), nullptr, TRUE);
+        SymSetOptions(SYMOPT_LOAD_LINES | SYMOPT_UNDNAME);
+        sym_inited = true;
+    }
     void* frames[24] = {};
     USHORT n = CaptureStackBackTrace(0, 24, frames, nullptr);
+    char buf[sizeof(SYMBOL_INFO) + 256] = {};
+    SYMBOL_INFO* sym = (SYMBOL_INFO*)buf;
+    sym->SizeOfStruct = sizeof(SYMBOL_INFO);
+    sym->MaxNameLen = 255;
+    IMAGEHLP_LINE64 line = {}; line.SizeOfStruct = sizeof(line);
     for (USHORT i = 0; i < n; ++i) {
-        std::fprintf(stderr, "  [%u] %p\n", i, frames[i]);
+        DWORD64 disp = 0; DWORD line_disp = 0;
+        const char* name = "<unknown>"; const char* file = ""; DWORD ln = 0;
+        if (SymFromAddr(GetCurrentProcess(), (DWORD64)frames[i], &disp, sym)) {
+            name = sym->Name;
+        }
+        if (SymGetLineFromAddr64(GetCurrentProcess(), (DWORD64)frames[i], &line_disp, &line)) {
+            file = line.FileName; ln = line.LineNumber;
+        }
+        std::fprintf(stderr, "  [%u] %p %s  (%s:%lu)\n", i, frames[i], name, file, ln);
     }
     std::fflush(stderr);
 }

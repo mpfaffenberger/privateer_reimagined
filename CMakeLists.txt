@@ -238,8 +238,13 @@ if(MSVC)
     # console the runtime can speak through. (Ship build can drop this
     # later with a CMake option, but the cost during dev is zero.)
     target_compile_definitions(new_privateer PRIVATE SOKOL_WIN32_FORCE_MAIN)
+    # /Zi (C7-compatible PDB) + /DEBUG (linker) generates symbols even in
+    # the Release config so our in-process stack walker (dbghelp) can
+    # resolve names instead of bare addresses. Pairs with /OPT:REF + ICF
+    # so we keep the symbol table without bloating the exe.
+    target_compile_options(new_privateer PRIVATE /Zi)
     set_target_properties(new_privateer PROPERTIES
-        LINK_FLAGS "/SUBSYSTEM:CONSOLE"
+        LINK_FLAGS "/SUBSYSTEM:CONSOLE /DEBUG /OPT:REF /OPT:ICF"
     )
 endif()
 
