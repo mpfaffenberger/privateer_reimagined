@@ -222,6 +222,16 @@ endif()
 
 target_compile_definitions(new_privateer PRIVATE ${SOKOL_BACKEND})
 
+# MSVC's <cmath> hides M_PI, M_E, etc. behind _USE_MATH_DEFINES per the C
+# standard (which says those constants are non-standard). Define it for
+# the whole target so existing code reading M_PI doesn't have to know.
+# Also bump NOMINMAX / WIN32_LEAN_AND_MEAN to keep <windows.h> from
+# stomping on std::min / std::max if anything pulls it in transitively.
+if(MSVC)
+    target_compile_definitions(new_privateer PRIVATE
+        _USE_MATH_DEFINES NOMINMAX WIN32_LEAN_AND_MEAN _CRT_SECURE_NO_WARNINGS)
+endif()
+
 # Warning flags split by toolchain. GCC/Clang use -W*, MSVC uses /W*. We
 # keep both vocal but don't promote anything to errors here so a fresh
 # Windows port isn't blocked by hundreds of style warnings on day one.
