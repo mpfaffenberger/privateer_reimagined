@@ -228,36 +228,9 @@ int main() {
     // 5. Afterburner fuel: drain to cutout, then regen.
     // -------------------------------------------------------------------
     std::printf("\n--- 5. afterburner fuel drain/cutout/regen ---\n");
-    {
-        PlayerState p = player::new_game("troy");
-        std::printf("  full tank = %.0f (drain %.0f/s, regen %.0f/s)\n",
-                    (double)p.afterburner_fuel,
-                    (double)player::k_afterburner_drain_per_s,
-                    (double)player::k_afterburner_regen_per_s);
-        CHECK("new game starts with a full tank",
-              p.afterburner_fuel == player::k_afterburner_fuel_max);
-
-        // Hold the burner: drain 1s worth at a time until empty (mirrors the
-        // frame loop's per-dt drain, accumulated).
-        const float dt = 1.0f / 60.0f;
-        float t = 0.0f;
-        bool cutout = false;
-        for (int frame = 0; frame < 60 * 20; ++frame) {
-            player::drain_afterburner(p, player::k_afterburner_drain_per_s * dt);
-            t += dt;
-            if (p.afterburner_fuel <= 0.0f) { cutout = true; break; }
-        }
-        std::printf("  drained to empty in %.2fs (expected ~%.2fs)\n", t,
-                    (double)(player::k_afterburner_fuel_max / player::k_afterburner_drain_per_s));
-        CHECK("afterburner drains to cutout", cutout && p.afterburner_fuel == 0.0f);
-
-        // Release: regen back toward full.
-        for (int frame = 0; frame < 60 * 20; ++frame)
-            player::regen_afterburner(p, player::k_afterburner_regen_per_s * dt);
-        std::printf("  regenerated to %.0f after release\n", (double)p.afterburner_fuel);
-        CHECK("afterburner regenerates to full",
-              p.afterburner_fuel == player::k_afterburner_fuel_max);
-    }
+    std::printf("  SKIPPED \u2014 afterburner_fuel merged into Ship::energy_gj\n");
+    std::printf("  (drained directly from the gun energy pool now; tested via the\n");
+    std::printf("   firing energy tick in firing.cpp + the cruise gate in main.cpp).\n");
 
     std::printf("\n=== %s ===\n", g_fail == 0 ? "ALL CHECKS PASSED" : "FAILURES DETECTED");
     return g_fail == 0 ? 0 : 1;

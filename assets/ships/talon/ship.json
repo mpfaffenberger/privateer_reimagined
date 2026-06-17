@@ -39,9 +39,9 @@
   // (Aim accuracy is unaffected; tracers still fly parallel along the
   // ship's forward axis -- no convergence.)
   "default_guns": [
-    { "offset_body": [-6.0, 0.0, 4.0], "type": "mass_driver"     },
-    { "offset_body": [ 6.0, 0.0, 4.0], "type": "mass_driver"     },
-    { "offset_body": [ 0.0, 2.0, 5.0], "type": "particle_cannon" }
+    { "offset_body": [-6.0, 0.0, 4.0], "type": "laser"       },
+    { "offset_body": [ 6.0, 0.0, 4.0], "type": "laser"       },
+    { "offset_body": [ 0.0, 2.0, 5.0], "type": "mass_driver" }
   ],
 
   "energy_max":      150,

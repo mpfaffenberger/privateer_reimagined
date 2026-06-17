@@ -69,14 +69,21 @@ float max_roll_rate   = 2.0f;
 // half-screen radius. 0.05 = ignore the inner 5 % so the player
 // can fly straight without micrometre-perfect cursor placement.
 float mouse_dead_zone = 0.05f;
-    // Newtonian flight: thrust accelerates, the cap clamps the peak,
-    // damping is OFF so released keys mean "coast at current velocity"
-    // instead of bleeding to zero. Hold W to wind up to 300 m/s, let
-    // go and stay there indefinitely. X explicitly brakes to zero;
-    // A/D/R/F lateral inputs also persist (space, no friction).
-    // Keep damping > 0 if you want WC1-style auto-deceleration back.
-    float thrust_accel      = 200.0f;   // units / s^2, normal flight
-    float linear_damping    = 0.0f;     // 0 = pure Newtonian (no friction)
+    // Arcade flight: forward/back keys command SPEED directly (no
+    // inertia), lerping toward the target at the ship's acceleration rate.
+    // Strafe (Q/E/R/F) still uses Newtonian thrust so lateral motion feels
+    // responsive without stick. Damping bleeds velocity to zero on release
+    // for snappy stop feel. X brakes everything to zero.
+    float thrust_accel      = 200.0f;   // units / s^2, for strafe Q/E/R/F
+    float linear_damping    = 4.0f;     // arcade stop feel on strafe release
+    float desired_forward_speed = 0.0f; // set by + / - keys, lerped toward each frame
+
+    // Ram tumble: angular velocity (world frame, rad/s) injected on a
+    // ship-vs-ship collision impact. Integrated into orientation each
+    // frame and exponentially decayed so the player's view lurches
+    // off-aim for ~0.5 s after a ram, then the mouse-aim takes over.
+    HMM_Vec3 ram_tumble_w_world{ 0.0f, 0.0f, 0.0f };
+    float    ram_tumble_t_remaining = 0.0f;
 
     // Hard velocity cap, applied in integrate() AFTER damping. Mike's
     // preferred feel: top speed is fixed at 300 m/s normal, 600 m/s
@@ -127,6 +134,17 @@ void apply_roll(float rate_sign, float dt);
     //   local_dir.x = strafe right
     //   local_dir.y = thrust up
     //   local_dir.z = thrust forward (negative = backwards along view)
+    // Set the desired forward speed (m/s). Positive = forward along
+    // camera -Z, negative = backward. The integrate step lerps the actual
+    // velocity's forward component toward this at the class accel rate,
+    // so pressing W sets max speed and releasing bleeds to stop with
+    // no drift. Strafe/thrust axes (X/Y in apply_thrust) are unaffected.
+    void set_forward_input(float speed_mps);
+
+    // Apply a thrust vector *in camera-local space* for `dt` seconds.
+    //   local_dir.x = strafe right (Q/E)
+    //   local_dir.y = thrust up/down (R/F)
+    //   local_dir.z = ignored — forward is now speed-controlled (W/S/+/-)
     // Internally multiplies by the current cruise_level, so callers don't
     // need to know about cruise mode.
     void apply_thrust(HMM_Vec3 local_dir, float dt);

@@ -74,6 +74,15 @@ struct ShipSpriteObject {
     // bit, then settle back to pure aircraft-style motion.
     HMM_Vec3 collision_velocity{0.0f, 0.0f, 0.0f};
 
+    // Ram tumble: angular velocity (body frame, rad/s) injected on
+    // collision impact. Integrated into orientation each frame and
+    // exponentially decayed so the ship lurches off-course for ~0.5 s
+    // after a ram, then the AI's normal aim corrections take over.
+    // Independent of `angular_velocity` (which the AI overwrites every
+    // tick from its desired-facing pursuit math).
+    HMM_Vec3 ram_tumble_w_body{0.0f, 0.0f, 0.0f};
+    float    ram_tumble_t_remaining = 0.0f;
+
     // Atlas inspector override. When enabled, the in-world ship displays
     // the nearest authored frame to manual_{az,el}_deg instead of selecting
     // from camera position. This lets Mike scrub the Tarsus pose while the

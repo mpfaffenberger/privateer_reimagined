@@ -82,9 +82,14 @@ void Camera::apply_roll(float rate_sign, float dt) {
     orientation = HMM_NormQ(HMM_MulQ(orientation, dq_roll));
 }
 
+void Camera::set_forward_input(float speed_mps) {
+    desired_forward_speed = speed_mps;
+}
+
 void Camera::apply_thrust(HMM_Vec3 local_dir, float dt) {
-    // Cruise multiplier lerps with cruise_level so engage/disengage feels
-    // like a ramp, not a binary switch.
+    // Forward (Z) is now speed-controlled — ignore it here. Only Q/E (X)
+    // and R/F (Y) do Newtonian thrust so lateral movement stays arcade-snappy.
+    local_dir.Z = 0.0f;
     const float t_mult  = 1.0f + (cruise_thrust_mult - 1.0f) * cruise_level;
     const HMM_Mat4 R = world_from_camera(*this);
     const HMM_Vec3 world_accel = HMM_MulV3F(mul_dir(R, local_dir),
@@ -94,39 +99,77 @@ void Camera::apply_thrust(HMM_Vec3 local_dir, float dt) {
 
 void Camera::integrate(float dt) {
     // Smooth cruise_level toward its target with an exponential rate.
-    // k = 1 - exp(-rate * dt) lerps toward the target by k each frame,
-    // which is frame-rate independent and gives an asymptotic approach.
     const float k = 1.0f - std::exp(-cruise_lerp_rate * dt);
     cruise_level += (cruise_target - cruise_level) * k;
 
-    // Cruise also *reduces* damping (higher terminal velocity AND coastier
-    // feel) so engaging cruise reads as "the engine wound up."
-    const float d_div = 1.0f + (cruise_damp_div - 1.0f) * cruise_level;
-    const float damp  = linear_damping / d_div;
-
-    if (damp > 0.0f) {
-        velocity = HMM_MulV3F(velocity, std::exp(-damp * dt));
+    // Ram tumble: integrate the post-impact angular velocity into
+    // orientation, then decay it. Runs BEFORE the kinematics so this
+    // frame's forward/right/up basis includes the lurch. World-frame
+    // angular velocity (axis-angle) so it doesn't depend on whatever
+    // way the camera is currently pointing.
+    if (ram_tumble_t_remaining > 0.0f) {
+        const float w2 = HMM_DotV3(ram_tumble_w_world, ram_tumble_w_world);
+        if (w2 > 1e-10f) {
+            const float w_mag = std::sqrt(w2);
+            const HMM_Vec3 axis = HMM_DivV3F(ram_tumble_w_world, w_mag);
+            const HMM_Quat dq = HMM_QFromAxisAngle_RH(axis, w_mag * dt);
+            // World-frame compose: orientation = dq * orientation.
+            orientation = HMM_NormQ(HMM_MulQ(dq, orientation));
+        }
+        ram_tumble_w_world = HMM_MulV3F(ram_tumble_w_world, std::exp(-4.0f * dt));
+        ram_tumble_t_remaining -= dt;
+        if (ram_tumble_t_remaining < 0.0f) ram_tumble_t_remaining = 0.0f;
     }
 
-    // Speed cap. Lerps from max_speed_cruise0 (no afterburner) to
-    // max_speed_cruise1 (full afterburner) by cruise_level. Applied
-    // after damping so the cap reflects the actual end-of-frame
-    // velocity; clamps the magnitude without changing direction.
     const float max_speed = max_speed_cruise0
         + (max_speed_cruise1 - max_speed_cruise0) * cruise_level;
-    const float v2 = HMM_DotV3(velocity, velocity);
-    if (v2 > max_speed * max_speed) {
-        velocity = HMM_MulV3F(velocity, max_speed / std::sqrt(v2));
+    const float t_mult = 1.0f + (cruise_thrust_mult - 1.0f) * cruise_level;
+
+    // Decompose velocity into camera-forward (Z) and strafe (X/Y) parts.
+    // Forward is ARCADE: lerp toward desired_forward_speed at class accel.
+    // Strafe is NEWTONIAN with damping: bleeds on key-release for stop feel.
+    const HMM_Vec3 fwd_world  = forward();
+    const HMM_Vec3 right_world = right();
+    const HMM_Vec3 up_world   = Camera::up();
+
+
+    // Project the live velocity onto the camera axes.
+    float v_fwd  = HMM_DotV3(velocity, fwd_world);
+    float v_right = HMM_DotV3(velocity, right_world);
+    float v_up   = HMM_DotV3(velocity, up_world);
+
+    // Arcade forward: accelerate toward desired_forward_speed (clamped to
+    // max_speed). max_step = accel * dt — never overshoots, stops sharply.
+    const float max_step = thrust_accel * t_mult * dt;
+    const float step_fwd = std::clamp(desired_forward_speed - v_fwd,
+                                      -max_step, +max_step);
+    v_fwd += step_fwd;
+    v_fwd  = std::clamp(v_fwd, -max_speed, max_speed);
+
+    // Arcade strafe damping: 4/s decay means velocity halves every ~175 ms
+    // — snappy stop feel. Cruise boost makes strafe feel floatier at top speed.
+    const float d_div  = 1.0f + (cruise_damp_div - 1.0f) * cruise_level;
+    const float damp   = linear_damping / d_div;
+    if (damp > 0.0f) {
+        const float decay = std::exp(-damp * dt);
+        v_right *= decay;
+        v_up   *= decay;
     }
 
-    // Global game-pacing knob — see world_scale.h. Scales movement
-    // through space without affecting damping, cruise-engagement
-    // timing, or any other dt-driven feedback.
+    // Reconstruct velocity from the three clamped components.
+    velocity = HMM_AddV3(HMM_AddV3(
+        HMM_MulV3F(fwd_world,   v_fwd),
+        HMM_MulV3F(right_world, v_right)),
+        HMM_MulV3F(up_world,    v_up));
+
     position = HMM_AddV3(position,
         HMM_MulV3F(velocity, dt * world_scale::k_world_velocity_scale));
 }
 
-void Camera::brake() { velocity = HMM_V3(0.0f, 0.0f, 0.0f); }
+void Camera::brake() {
+    velocity = HMM_V3(0.0f, 0.0f, 0.0f);
+    desired_forward_speed = 0.0f;
+}
 
 // ---- queries ---------------------------------------------------------------
 
@@ -153,3 +196,5 @@ HMM_Mat4 Camera::projection(float aspect) const {
 float Camera::effective_fov() const {
     return fov_y_radians + cruise_fov_extra * cruise_level;
 }
+// touch 1781714977142598000
+// 1781714994393339000

@@ -767,6 +767,49 @@ void draw_nav_labels(const Camera& cam, const StarSystem& system) {
 
 } // anonymous namespace
 
+// Top-centre FLIGHT panel. Mirrors STATUS / TARGET in style (dark bg +
+// amber border, amber title, separator) so the data-at-the-top reads as
+// part of the same HUD vocabulary instead of free-floating text. Public
+// (not in the anon namespace) so main.cpp can drive it with the live
+// camera + autopilot snapshot every flight frame.
+void draw_flight_status_mfd(const FlightStatusHudState& s) {
+    const auto sz = screen_size();
+    constexpr float w = 280.0f, margin = 16.0f;
+    // Height grows if autopilot rows are present so the box always frames
+    // the content snugly.
+    float h = 110.0f;
+    if (s.autopilot_nav) h += 18.0f;
+    if (s.autopilot_msg) h += 18.0f;
+    ImGui::SetNextWindowPos(ImVec2(sz.w * 0.5f - w * 0.5f, margin),
+                            ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(w, h), ImGuiCond_Always);
+    ImGui::SetNextWindowBgAlpha(0.55f);
+    push_hud_style();
+
+    if (ImGui::Begin("##flight_status", nullptr, kHudWindowFlags)) {
+        ImGui::PushStyleColor(ImGuiCol_Text, kAmber);
+        ImGui::TextUnformatted("FLIGHT");
+        ImGui::PopStyleColor();
+        ImGui::Separator();
+        ImGui::Text("SPEED  %7.0f u/s", s.speed);
+        ImGui::Text("MODE   %s",        s.mode);
+        ImGui::Text("D(SUN) %7.0f u",   s.d_sun);
+        ImGui::Text("POS    %5.0f %5.0f %5.0f", s.pos_x, s.pos_y, s.pos_z);
+        if (s.autopilot_nav) {
+            ImGui::PushStyleColor(ImGuiCol_Text, kGreen);
+            ImGui::Text("AUTOPILOT - %s", s.autopilot_nav);
+            ImGui::PopStyleColor();
+        }
+        if (s.autopilot_msg) {
+            ImGui::PushStyleColor(ImGuiCol_Text, kAmber);
+            ImGui::TextUnformatted(s.autopilot_msg);
+            ImGui::PopStyleColor();
+        }
+    }
+    ImGui::End();
+    pop_hud_style();
+}
+
 void build(const Camera& cam, const StarSystem& system, int selected_nav,
            float mouse_x, float mouse_y, bool fly_by_wire,
            const ShipRegistry& ships, uint32_t target_ship_id,
@@ -819,21 +862,10 @@ void build_weapons_status(const WeaponsHudState& w) {
     }
     y += 22.0f;
 
-    // ---- afterburner fuel gauge ----------------------------------------
-    dl->AddText(ImVec2(x, y), kHudWhite, "AB FUEL");
-    const float gx = x, gy = y + 18.0f, gw = 150.0f, gh = 12.0f;
-    dl->AddRect(ImVec2(gx, gy), ImVec2(gx + gw, gy + gh), kAmber);
-    const float ff = std::clamp(w.fuel_frac, 0.0f, 1.0f);
-    // Green when healthy, amber low, red empty (matches the cutout state).
-    ImU32 fcol = kGreen;
-    if (w.fuel_empty)     fcol = IM_COL32(235, 90, 80, 240);
-    else if (ff < 0.30f)  fcol = kAmber;
-    dl->AddRectFilled(ImVec2(gx + 1, gy + 1),
-                      ImVec2(gx + 1 + (gw - 2) * ff, gy + gh - 1), fcol);
-    if (w.fuel_empty) {
-        dl->AddText(ImVec2(gx + gw + 8.0f, gy - 2.0f),
-                    IM_COL32(235, 90, 80, 240), "CUTOUT");
-    }
+    // Afterburner fuel gauge removed (np-zte.2 merged pool). The STATUS
+    // panel's ENERGY bar is the burner gauge now — same pool, one
+    // readout. Don't re-add a bar here unless we re-split the resources.
+    (void)y;
 }
 
 // ---- big navmap overlay --------------------------------------------------
@@ -984,3 +1016,4 @@ void build_navmap(const Camera& cam, const StarSystem& system,
 }
 
 } // namespace cockpit_hud
+// 1781715641501136000

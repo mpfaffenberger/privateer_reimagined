@@ -75,149 +75,35 @@
       "position":      [166667, -133333, -200000],
       "length_meters": 3000
     },
-    // Nav 6 — Helen Agricultural Planet. 10 km billboard sprite (504×512
-    // pixel-art subject with atmospheric rim glow baked in). Sized
-    // ~3.3× the mining bases — reads as a proper planet from medium
-    // range without dwarfing every other landmark. Flat billboard, so
-    // flying close-and-around is still a future feature (would need
-    // the icosphere mesh path).
+    // Nav 6 — Helen Agricultural Planet. 2 km billboard sprite (504×512
+    // pixel-art subject with atmospheric rim glow baked in). Sized to
+    // ~20% of the previous 10 km blocker — reads as a distant world
+    // instead of dominating the skybox from anywhere in-system. Flat
+    // billboard, so flying close-and-around is still a future feature
+    // (would need the icosphere mesh path).
     {
       "sprite":        "sprites/helen_planet",
       "position":      [166667, -66667, 100000],
-      "length_meters": 10000
+      "length_meters": 2000
     }
   ],
 
   // Multi-view ship billboards. The Tarsus uses all 32 generated views from
   // assets/ships/tarsus/atlas_manifest.json and chooses the nearest frame
   // at render time based on camera position.
+  //
+  // Quiet starting fleet: just two merchant Tarsuses parked next to the
+  // player. No pirates, no militia, no convoy — enough to verify sprite
+  // rendering, faction-stance reads, and the targeting cycle without the
+  // player getting jumped before they've learned the controls. Re-add the
+  // pirate/militia trio (or the bigger brawl) from git history when we
+  // want combat at spawn again.
   "placed_ship_sprites": [
-    // Tarsus — merchant scout, now AI-driven under the Coward
-    // personality. Spawns Idle, perception sees the Talon as hostile
-    // (faction matrix Mer-vs-Pir = Hostile), Coward gate forces Flee
-    // regardless of HP. Flee state runs the evasion math: escape away
-    // from threat, jink perpendicular on a sinusoid (~25° amplitude,
-    // ~3s period). Tarsus's bumped 380 m/s cruise still lags the
-    // Talon's 400 m/s, so the chase is winnable for the pirate but
-    // the merchant survives long enough for evasion to read on screen.
-    //
-    // Replaced the legacy `motion` block (clean circle around anchor)
-    // — the AI now owns the kinematics. Revert by adding back the
-    // motion block + dropping `ai`.
-    {
-      "atlas":         "ships/tarsus/atlas_manifest",
-      "position":      [50000, -100000, 33150],
-      "length_meters": 100,
-      "ai": {
-        "initial_state": "idle"
-      }
-    },
-    // Talon spawned 500u east of the Tarsus's anchor. AI state machine
-    // drives this one: starts in Idle, perception sees the Tarsus
-    // (matrix Pirate-vs-Merchant = Hostile) and the player (baseline
-    // -30 -> Hostile too) inside its 25 km radar, transitions to
-    // Engage with whichever is nearest. Engage state writes
-    // PursueTarget pointed at the target's CURRENT position every
-    // frame, so the Talon dynamically chases the moving Tarsus rather
-    // than parking at a static waypoint. This is the L3 "AI is alive"
-    // moment — the Talon now reacts to the world.
-    //
-    // Revert to scripted PursueTarget by replacing the `ai` block with
-    // `behavior: { kind: "pursue_target", target_pos: [...] }`.
-    {
-      "atlas":         "ships/talon/atlas_manifest",
-      "position":      [50500, -100000, 33150],
-      "length_meters": 80,
-      "ai": {
-        "initial_state": "idle"
-      }
-    },
-
-    // ----- Bulk fleet (Mike's request: a real fight) ------------------
-    // 3 pirate Talons spread out as attackers; 4 militia Talons forming
-    // a defensive ring (faction override since the class defaults to
-    // pirate); 4 merchant Tarsuses scattered around the player as the
-    // protected convoy. Faction matrix gives us:
-    //   Pirate vs Merchant  = Hostile  -> pirates hunt freighters
-    //   Pirate vs Militia   = Hostile  -> militia engages pirates
-    //   Militia vs Merchant = Allied   -> militia defends freighters
-    //   Player (rep 0) baselines: pirate -30 (Hostile), militia 0
-    //                              (Neutral), merchant +10 (Neutral)
-    // So pirates target everyone non-pirate, militia engages pirates
-    // only, merchants flee whoever's chasing them.
-
-    // 5 additional pirate Talons (bumped from 3 — first wave got
-    // wiped out by the militia + player counterattack).
-    { "atlas": "ships/talon/atlas_manifest", "length_meters": 80,
-      "position": [55000, -100500, 38000],
-      "ai": { "initial_state": "idle" } },
-    { "atlas": "ships/talon/atlas_manifest", "length_meters": 80,
-      "position": [45000, -100500, 28000],
-      "ai": { "initial_state": "idle" } },
-    { "atlas": "ships/talon/atlas_manifest", "length_meters": 80,
-      "position": [55000,  -99500, 28000],
-      "ai": { "initial_state": "idle" } },
-    { "atlas": "ships/talon/atlas_manifest", "length_meters": 80,
-      "position": [45000,  -99500, 38000],
-      "ai": { "initial_state": "idle" } },
-    { "atlas": "ships/talon/atlas_manifest", "length_meters": 80,
-      "position": [50000, -100500, 25000],
-      "ai": { "initial_state": "idle" } },
-
-    // 4 militia Talons (faction override).
-    { "atlas": "ships/talon/atlas_manifest", "length_meters": 80,
-      "position": [50000,  -99500, 30000], "faction": "militia",
-      "ai": { "initial_state": "idle" } },
-    { "atlas": "ships/talon/atlas_manifest", "length_meters": 80,
-      "position": [50000, -100500, 36000], "faction": "militia",
-      "ai": { "initial_state": "idle" } },
-    { "atlas": "ships/talon/atlas_manifest", "length_meters": 80,
-      "position": [46000,  -99500, 33000], "faction": "militia",
-      "ai": { "initial_state": "idle" } },
-    { "atlas": "ships/talon/atlas_manifest", "length_meters": 80,
-      "position": [54000, -100500, 33000], "faction": "militia",
-      "ai": { "initial_state": "idle" } },
-
-    // ----- 100-ship brawl removed -----------------------------------
-    // The previous 50 pirate Talons + 50 militia Talons stress-test was
-    // hilarious, but it made the default Troy scene too noisy for normal
-    // dev work. Re-add from git history if we want the furball benchmark.
-
-    // Galaxy — the big merchant freighter, dropped roughly dead ahead
-    // of the player_start look_at vector at ~3 km so it fills the screen
-    // at spawn. 120 m display (canonical Galaxy is ~60-120 m depending
-    // on which Privateer source you trust; we err big because the new
-    // textured sprite atlas reads as a chunky industrial hauler — "big
-    // and slow" is more diagetic than "fast cargo runabout"). Default
-    // merchant faction = pirates will hunt it, militia will defend it,
-    // player can decide their allegiance with the trigger.
-    { "atlas": "ships/galaxy/atlas_manifest", "length_meters": 120,
-      "position": [53000, -100000, 32300],
-      "ai": { "initial_state": "idle" } },
-
-    // Orion — heavy mercenary gunship escorting the convoy. 60 m display
-    // (canonical Orion is ~30-50 m, the textured atlas reads as a chunky
-    // gunship and we want it visibly bigger than a Tarsus but smaller than
-    // the Galaxy it's protecting). Stationed off the Galaxy's port-aft
-    // quarter, between it and the Tarsus cluster, to read as a hired
-    // muscle role visually. Default merchant faction (same as the rest
-    // of the convoy) so it acts as a wingman, not a separate faction.
-    { "atlas": "ships/orion/atlas_manifest", "length_meters": 60,
-      "position": [50500, -100000, 33100],
-      "ai": { "initial_state": "idle" } },
-
-    // 4 additional merchant Tarsuses.
     { "atlas": "ships/tarsus/atlas_manifest", "length_meters": 100,
-      "position": [48000, -100000, 32000],
+      "position": [49000, -100000, 33000],
       "ai": { "initial_state": "idle" } },
     { "atlas": "ships/tarsus/atlas_manifest", "length_meters": 100,
-      "position": [52000, -100000, 32000],
-      "ai": { "initial_state": "idle" } },
-    { "atlas": "ships/tarsus/atlas_manifest", "length_meters": 100,
-      "position": [48000, -100000, 34000],
-      "ai": { "initial_state": "idle" } },
-    { "atlas": "ships/tarsus/atlas_manifest", "length_meters": 100,
-      "position": [52000, -100000, 34000],
+      "position": [51000, -100000, 33000],
       "ai": { "initial_state": "idle" } }
   ],
 
@@ -252,79 +138,15 @@
   ],
 
   // ---- encounter director spawn tables (np-ma2.3) -----------------------
-  // Procedural NPC traffic layered ON TOP of the hand-placed fleet above.
-  // The director keeps a living population around the player: each rule is
-  // armed only when the player is near its region, spawns ships 8-15 km
-  // out (offscreen-ish, they fly in under their own power), and retires
-  // them once they drift past 40 km without a fight. Global budget caps
-  // the whole director at 8 concurrent ships regardless of these numbers,
-  // so the world stays lively but never a furball. Faction + class are
-  // independent weighted draws within a rule.
-  //
-  // Region semantics:
-  //   "belt"     - inside asteroid_fields[field_index]; armed near the belt
-  //   "lane"     - along the named nav-point polyline; armed near the lane
-  //   "anywhere" - no region gate; always armed (roams with the player)
-  "encounters": [
-    {
-      // Pirate Talons (+ the odd heavier Orion) working the inner belt.
-      // Hostile to the player by baseline rep (-30) — fly into the belt
-      // and you WILL get jumped, which is the whole point.
-      "name":           "belt pirates",
-      "region":         "belt",
-      "field_index":    0,
-      "factions":       [ { "name": "pirate", "weight": 1.0 } ],
-      "classes":        [ { "name": "talon", "weight": 3.0 },
-                          { "name": "orion", "weight": 1.0 } ],
-      "max_concurrent": 4,
-      "spawn_interval": 6.0,
-      "initial_state":  "patrol"
-    },
-    {
-      // Merchant traffic plying the Achilles -> Hector -> Helen lanes.
-      // Neutral to the player; flees when pirates close in (Coward
-      // personality on the Tarsus/Galaxy classes). The civilian colour of
-      // a 'living' system.
-      "name":           "lane merchants",
-      "region":         "lane",
-      "lane":           [ "Achilles Mining", "Hector Mining", "Helen Planet" ],
-      "factions":       [ { "name": "merchant", "weight": 1.0 } ],
-      "classes":        [ { "name": "tarsus", "weight": 3.0 },
-                          { "name": "galaxy", "weight": 1.0 } ],
-      "max_concurrent": 3,
-      "spawn_interval": 9.0,
-      "initial_state":  "patrol"
-    },
-    {
-      // Militia Talons patrolling the station lane between the two mining
-      // bases. Engage pirates (matrix Militia-vs-Pirate = Hostile),
-      // neutral to the player — the law, such as it is.
-      "name":           "lane militia",
-      "region":         "lane",
-      "lane":           [ "Achilles Mining", "Hector Mining" ],
-      "factions":       [ { "name": "militia", "weight": 1.0 } ],
-      "classes":        [ { "name": "talon", "weight": 1.0 } ],
-      "max_concurrent": 2,
-      "spawn_interval": 12.0,
-      "initial_state":  "patrol"
-    },
-    {
-      // Roaming raiders that shadow the player anywhere in the system —
-      // mostly pirate (hostile), occasionally a neutral hunter. Kept to 2
-      // concurrent so deep space feels edgy without being a gauntlet.
-      // This is the rule that makes the threat gate fire on a fresh spawn
-      // and gives the autopilot something to drop out for.
-      "name":           "roaming raiders",
-      "region":         "anywhere",
-      "factions":       [ { "name": "pirate", "weight": 3.0 },
-                          { "name": "hunter", "weight": 1.0 } ],
-      "classes":        [ { "name": "talon", "weight": 2.0 },
-                          { "name": "orion", "weight": 1.0 } ],
-      "max_concurrent": 2,
-      "spawn_interval": 10.0,
-      "initial_state":  "patrol"
-    }
-  ],
+  // DISABLED for the current quiet-start tuning: the four production rules
+  // (belt pirates / lane merchants / lane militia / roaming raiders) used
+  // to layer procedural traffic on top of the hand-placed fleet, but the
+  // "anywhere" raider rule was jumping the player before they could learn
+  // the controls. Empty array means the director still arms (cheap), just
+  // never picks a rule, so the only NPCs in-system are the 2 Tarsuses
+  // placed above. Re-enable from git history when we want a living world
+  // again — the rule shape is unchanged, just the array is empty.
+  "encounters": [],
 
   // Nav 8 from the WCU wiki — the canonical 'you arrive in Troy here'
   // spawn point. After the Y↔Z swap, spawn is at Y=-100000 (well below

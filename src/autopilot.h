@@ -76,17 +76,27 @@ struct Autopilot {
     // per-frame call keeps it bookkept even when phase == Idle.
     char  msg[64]      = { 0 };
     float msg_timer_s  = 0.0f;
+
+    // Camera speed-cap value before autopilot bumped it up to the high
+    // autopilot cruising speed. Restored on disengage so player manual
+    // throttle still respects the ship's engine_level cap.
+    float saved_cruise1 = 0.0f;
 };
 
 namespace autopilot {
 
 // ---- tuning knobs -----------------------------------------------------------
-constexpr float k_arrival_radius_m = 5000.0f;  // "we're here" — ease to a stop
+// Arrival radius bumped from 5 km to 15 km so autopilot ends well outside
+// nav-point furniture (stations, planet billboards) rather than threading
+// you in close. Pairs with the 15 km radar/target-lock ceiling — the
+// autopilot drops out at the same range past which contacts disappear.
+constexpr float k_arrival_radius_m = 15000.0f; // "we're here" — ease to a stop
 constexpr float k_threat_radius_m  = 8000.0f;  // hostile bubble for the gate
 constexpr float k_stop_speed       = 5.0f;     // u/s below which Arriving -> Idle
 constexpr float k_turn_rate        = 2.0f;     // facing-slerp time constant (1/s)
 constexpr float k_brake_rate       = 3.0f;     // arrival velocity-ease rate (1/s)
 constexpr float k_msg_secs         = 2.0f;     // HUD banner dwell time
+constexpr float k_cruise_speed     = 3000.0f;  // autopilot cruising speed (m/s)
 
 // True while the autopilot owns the ship — main.cpp uses this to mute
 // pilot thrust/aim/cruise so manual physics doesn't double-drive the
@@ -101,7 +111,7 @@ bool engaged(const Autopilot& a);
 // system.nav_points; -1 = none). Vets nav-selected + the hostile gate,
 // stashes the right HUD banner for every outcome, and returns the
 // verdict. On success: phase = Cruising, target/name cached.
-EngageResult try_engage(Autopilot& a, const Camera& cam,
+EngageResult try_engage(Autopilot& a, Camera& cam,
                         const StarSystem& system, int selected_nav);
 
 // Hand control back. Sets a HUD banner from `reason`, cuts the cruise

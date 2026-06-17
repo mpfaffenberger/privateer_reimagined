@@ -60,7 +60,7 @@ namespace autopilot {
 bool controls_locked(const Autopilot& a) { return a.phase != AutopilotPhase::Idle; }
 bool engaged(const Autopilot& a)         { return a.phase != AutopilotPhase::Idle; }
 
-EngageResult try_engage(Autopilot& a, const Camera& cam,
+EngageResult try_engage(Autopilot& a, Camera& cam,
                         const StarSystem& system, int selected_nav) {
     // No target → nothing to fly to. Flash and bail (the bead's
     // "no-op gracefully" path).
@@ -84,6 +84,11 @@ EngageResult try_engage(Autopilot& a, const Camera& cam,
     a.nav_name  = nav.name;
     a.target    = nav.position;
     a.log_accum = 0.0f;
+    // Stash the player's normal afterburn cap and bump it to the high
+    // autopilot cruising speed. Restored in disengage so manual flight
+    // afterward still tops out at the engine-level-respecting limit.
+    a.saved_cruise1       = cam.max_speed_cruise1;
+    cam.max_speed_cruise1 = k_cruise_speed;
     set_msg(a, "AUTOPILOT ENGAGED");
     sfx::ui_click();   // engage blip; the cruise windup rides the cruise edge
     const float dist = HMM_LenV3(HMM_SubV3(nav.position, cam.position));
@@ -94,6 +99,11 @@ EngageResult try_engage(Autopilot& a, const Camera& cam,
 
 void disengage(Autopilot& a, Camera& cam, const char* reason) {
     cam.cruise_target = 0.0f;             // let the engine wind back down
+    cam.set_forward_input(0.0f);          // and command a stop
+    if (a.saved_cruise1 > 0.0f) {
+        cam.max_speed_cruise1 = a.saved_cruise1;
+        a.saved_cruise1 = 0.0f;
+    }
     a.phase     = AutopilotPhase::Idle;
     a.nav_index = -1;
     a.log_accum = 0.0f;
@@ -130,11 +140,12 @@ void tick(Autopilot& a, Camera& cam, float dt) {
 
     if (a.phase == AutopilotPhase::Cruising) {
         // Reuse the camera's cruise engine: drive the throttle to full
-        // and thrust along body-forward. integrate() applies the
-        // engine_level-adjusted speed cap (camera.max_speed_cruise*),
-        // so a beefier engine autopilots faster for free.
+        // and set the desired forward speed to k_cruise_speed. integrate()
+        // ramps v_fwd toward it at accel rate, clamped to the autopilot-
+        // bumped max_speed_cruise1, so a beefier engine autopilots faster
+        // for free (within the bump).
         cam.cruise_target = 1.0f;
-        cam.apply_thrust(HMM_V3(0.0f, 0.0f, -1.0f), dt);
+        cam.set_forward_input(k_cruise_speed);
         cam.integrate(dt);
 
         // Progress log, throttled to ~2/s (matches docking's cadence).
@@ -157,6 +168,7 @@ void tick(Autopilot& a, Camera& cam, float dt) {
     // Arriving: cruise cut, velocity easing to zero, integrate for the
     // last of the coast. Disengage (hand control back) once stopped.
     cam.cruise_target = 0.0f;
+    cam.set_forward_input(0.0f);          // command a stop
     cam.velocity = HMM_LerpV3(cam.velocity, ease_k(k_brake_rate, dt),
                               HMM_V3(0.0f, 0.0f, 0.0f));
     cam.integrate(dt);

@@ -56,21 +56,35 @@ void build(const Camera& cam, const StarSystem& system, int selected_nav,
            const ShipRegistry& ships, uint32_t target_ship_id,
            const char* dock_prompt = nullptr, bool dock_ready = false);
 
-// Weapons + afterburner-fuel status block (np-zte.2). A small left-edge HUD
-// readout: selected missile type + remaining count, the target-lock state
-// (---- / SEEK / LOCK with an IR build-up bar), and an afterburner fuel
-// gauge. Pure draw — the caller (main.cpp) owns the lock state machine and
-// passes a snapshot. Drawn each Flight frame after build().
+// Weapons + ordnance status block (np-zte.2). A small left-edge HUD
+// readout: selected missile type + remaining count and the target-lock
+// state (---- / SEEK / LOCK with an IR build-up bar). Afterburner fuel
+// is gone here — the energy bar in the STATUS panel doubles as the
+// burner gauge now that gun and afterburner share one pool. Pure draw
+// — the caller (main.cpp) owns the lock state machine and passes a
+// snapshot. Drawn each Flight frame after build().
 struct WeaponsHudState {
     const char* missile_name   = "DF";   // selected type short name
     int         missile_count  = 0;      // remaining of the selected type
     bool        needs_lock     = false;  // selected type homes (HS/IR)
     int         lock_state     = 0;      // 0 none, 1 seeking, 2 locked
     float       lock_progress  = 0.0f;   // 0..1 IR build-up (seeking only)
-    float       fuel_frac      = 1.0f;   // afterburner fuel, 0..1
-    bool        fuel_empty     = false;  // true -> gauge flashes red "CUTOUT"
 };
 void build_weapons_status(const WeaponsHudState& w);
+
+// Top-centre FLIGHT panel — speed / cruise mode / sun distance / position,
+// plus optional autopilot status lines. Same amber-border boxed styling as
+// the STATUS / TARGET panels in the screen corners. Replaces the old
+// sdtx text block that used to sit free-floating at the top.
+struct FlightStatusHudState {
+    float       speed = 0.0f;            // m/s (length of camera velocity)
+    const char* mode  = "NORMAL";        // NORMAL / SPOOL / CRUISE
+    float       d_sun = 0.0f;            // world units to the system sun
+    float       pos_x = 0.0f, pos_y = 0.0f, pos_z = 0.0f;
+    const char* autopilot_nav = nullptr; // null = none engaged
+    const char* autopilot_msg = nullptr; // null = no transient banner
+};
+void draw_flight_status_mfd(const FlightStatusHudState& s);
 
 // Big top-down navigation map. Open/close gated by the caller (Alt+N
 // in main.cpp toggles the bool); when shown_in_out is true this draws

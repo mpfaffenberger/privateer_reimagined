@@ -24,7 +24,8 @@ namespace {
 
 // ---- tuning knobs (the only ones the feature exposes) ----------------------
 constexpr double k_credits_per_armor_cm = 20.0;   // hull repair
-constexpr double k_credits_per_fuel     =  5.0;   // afterburner top-off
+// k_credits_per_fuel removed: afterburner now shares the ship's energy bank
+// (recharges for free, no top-off service to sell).
 // Per-missile restock price, indexed by MissileType (DF/HS/IR). Mirrors the
 // rough firepower ordering (IR dearest).
 constexpr int64_t k_missile_price[3] = { 250, 600, 1200 };
@@ -70,10 +71,11 @@ Quote quote(const Ship* ship, const PlayerState& p) {
         }
     }
 
-    const float fuel_missing = player::k_afterburner_fuel_max - p.afterburner_fuel;
+    const float fuel_missing = 0.0f;   // afterburner shares energy_gj now;
+                                       // no top-off charge any more.
     if (fuel_missing > 0.5f) {
         q.fuel_low  = true;
-        q.fuel_cost = (int64_t)std::ceil(fuel_missing * k_credits_per_fuel);
+        q.fuel_cost = 0;
     }
 
     for (int i = 0; i < 3; ++i) {
@@ -111,24 +113,6 @@ bool repair_hull(Ship& ship, PlayerState& p) {
     return true;
 }
 
-bool refuel(PlayerState& p) {
-    const Quote q = quote(nullptr, p);
-    if (!q.fuel_low) {
-        std::printf("[repair] refuel refused: tank already full\n");
-        return false;
-    }
-    if (!player::spend_credits(p, q.fuel_cost)) {
-        std::printf("[repair] refuel refused: costs %lld, have %lld\n",
-                    (long long)q.fuel_cost, (long long)p.credits);
-        return false;
-    }
-    const float before = p.afterburner_fuel;
-    player::refuel_full(p);
-    std::printf("[repair] afterburner refueled: %.0f -> %.0f | paid %lld | credits %lld\n",
-                before, p.afterburner_fuel, (long long)q.fuel_cost, (long long)p.credits);
-    return true;
-}
-
 bool rearm(PlayerState& p) {
     const Quote q = quote(nullptr, p);
     if (!q.missiles_low) {
@@ -151,3 +135,4 @@ bool rearm(PlayerState& p) {
 }
 
 } // namespace repair
+// 1781715641492252000

@@ -490,6 +490,85 @@ void SpriteRenderer::draw(const std::vector<SpriteObject>& sprites,
     }
 }
 
+void SpriteRenderer::draw_bolts(const std::vector<Bolt>& bolts,
+                                const std::vector<sg_view>& textures,
+                                const Camera& cam,
+                                float aspect,
+                                float time_sec) const {
+    if (bolts.empty() || textures.empty()) return;
+
+    const HMM_Mat4 view = cam.view();
+    const HMM_Mat4 vp   = HMM_MulM4(cam.projection(aspect), view);
+    HMM_Vec3 cam_right, cam_up;
+    camera_basis(view, cam_right, cam_up);
+
+    sg_apply_pipeline(pipeline_lights);
+    sg_bindings b{};
+    b.vertex_buffers[0]    = vbuf;
+    b.index_buffer         = ibuf;
+    b.samplers[SMP_u_smp]  = sampler;
+
+    for (const Bolt& bolt : bolts) {
+        if (bolt.texture_id < 0 || bolt.texture_id >= (int)textures.size())
+            continue;
+
+        // Per-bolt quad expansion axes. Spheres expand along the camera
+        // basis (camera-facing billboard). Beams (laser) expand along the
+        // world velocity (long axis) and a side vector perpendicular to
+        // both velocity AND the view direction (thin axis), so the ray
+        // exists in 3D space, faces the camera edge-on, and collapses to a
+        // dot when fired straight down the view axis.
+        HMM_Vec3 axis_x, axis_y;
+        float half_extent, scale_x, scale_y;
+        if (bolt.beam) {
+            HMM_Vec3 dir = bolt.velocity_dir;
+            HMM_Vec3 to_cam = HMM_SubV3(cam.position, bolt.position);
+            const float tl = HMM_LenV3(to_cam);
+            to_cam = (tl > 1e-4f) ? HMM_DivV3F(to_cam, tl) : cam_up;
+            HMM_Vec3 side = HMM_Cross(dir, to_cam);
+            float sl = HMM_LenV3(side);
+            if (sl < 1e-4f) { side = cam_right; sl = 1.0f; }   // beam ~along view
+            side = HMM_DivV3F(side, sl);
+            axis_x = dir;
+            axis_y = side;
+            half_extent = bolt.beam_length * 0.5f;
+            scale_x = 1.0f;
+            scale_y = (half_extent > 1e-4f)
+                    ? (bolt.size * 0.5f) / half_extent : 1.0f;
+        } else {
+            axis_x = cam_right;
+            axis_y = cam_up;
+            half_extent = bolt.size * 0.5f;
+            scale_x = (bolt.aspect >= 1.0f) ? 1.0f : bolt.aspect;
+            scale_y = (bolt.aspect >= 1.0f) ? 1.0f / bolt.aspect : 1.0f;
+        }
+
+        vs_params_t vsp{};
+        std::memcpy(vsp.view_proj, &vp, sizeof(float) * 16);
+        vsp.cam_right[0] = axis_x.X; vsp.cam_right[1] = axis_x.Y;
+        vsp.cam_right[2] = axis_x.Z; vsp.cam_right[3] = 0.0f;
+        vsp.cam_up[0]    = axis_y.X; vsp.cam_up[1]    = axis_y.Y;
+        vsp.cam_up[2]    = axis_y.Z; vsp.cam_up[3]    = 0.0f;
+        vsp.inst_pos[0]  = bolt.position.X;
+        vsp.inst_pos[1]  = bolt.position.Y;
+        vsp.inst_pos[2]  = bolt.position.Z;
+        vsp.inst_pos[3]  = half_extent;
+        vsp.inst_scale[0] = scale_x;
+        vsp.inst_scale[1] = scale_y;
+        vsp.inst_scale[2] = 1.0f;   // no screen-space roll
+        vsp.inst_scale[3] = 0.0f;
+
+        fs_params_t fsp{};
+        fsp.tint[0] = 1.0f; fsp.tint[1] = 1.0f;
+        fsp.tint[2] = 1.0f; fsp.tint[3] = 0.97f;  // bolt opacity
+
+        b.views[VIEW_u_tex] = textures[bolt.texture_id];
+        sg_apply_bindings(&b);
+        sg_apply_uniforms(UB_vs_params, SG_RANGE(vsp));
+        sg_apply_uniforms(UB_fs_params, SG_RANGE(fsp));
+        sg_draw(0, 6, 1);
+    }
+}
 // ----------------------------------------------------------------------------
 // Tracer rendering — same pipeline + shader as the sprite "spot" pass, just
 // without the UV-into-billboard projection. Each tracer is one additive glow

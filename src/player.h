@@ -108,13 +108,14 @@ struct PlayerState {
     // the index meaning is the stable contract, mirrored by MissileType.
     int missiles[3] = { 0, 0, 0 };
 
-    // ---- afterburner fuel (np-zte.2) --------------------------------------
-    // A finite resource the cruise/afterburner engine (camera.cpp's cruise
-    // system — there is no SEPARATE afterburner) drains while engaged.
-    // Regenerates slowly when not afterburning and refuels at a base. At
-    // zero the engine cuts out until it recovers. Persisted so a half-empty
-    // tank survives save/load. See the tuning constants below.
-    float afterburner_fuel = 0.0f;
+    // ---- afterburner fuel (np-zte.2) -- MERGED INTO MAIN ENERGY POOL ----
+    // The separate `afterburner_fuel` float is gone. The cruise/afterburner
+    // engine now drains from the player Ship's `energy_gj` (the same pool
+    // the guns spend from), and energy regen (firing.cpp) is the only
+    // refill source — holding TAB burns the bank, releasing lets it
+    // recharge. Drain rate constant below is the only knob still relevant.
+    // Fewer state fields, one bar in the HUD, one tactical decision
+    // ("burst speed or burst fire?"). No base refuel service needed.
 
     // ---- accepted missions ------------------------------------------------
     // Missions the player has taken on (mission computer, np-zte.1). Cargo
@@ -144,17 +145,14 @@ PlayerState new_game(const std::string& start_system);
 // bankroll barely covering one cargo run, which is the feel we want.
 constexpr int64_t k_new_game_credits = 2000;
 
-// ---- afterburner-fuel tuning (np-zte.2) ------------------------------------
-// All seconds-based so they read directly: a full tank gives
-// k_afterburner_fuel_max / k_afterburner_drain_per_s seconds of cruise
-// (100 / 25 = 4s burst), and refills from empty over
-// k_afterburner_fuel_max / k_afterburner_regen_per_s seconds of NOT cruising
-// (100 / 12 ≈ 8.3s). Drain > regen on purpose — afterburner is a sprint,
-// not a cruise speed you hold forever. Tweak these to taste; they're the
-// only knobs the feature exposes.
-constexpr float k_afterburner_fuel_max   = 100.0f;  // full tank
-constexpr float k_afterburner_drain_per_s = 25.0f;  // burned while afterburning
-constexpr float k_afterburner_regen_per_s = 12.0f;  // recovered while not
+// ---- afterburner energy drain (np-zte.2 / merged pool) ---------------------
+// Afterburner now spends from the player Ship's energy_gj (shared with the
+// guns). Drain rate matches the Tarsus's 50 GJ/s recharge so holding TAB
+// exactly cancels regen — sustained afterburn parks energy at zero (no
+// gun shots until you let off the boost), short bursts pop in and out as
+// the bank recovers. No separate fuel tank, no separate regen rate, no
+// base refuel service — simpler model, single resource decision.
+constexpr float k_afterburner_drain_per_s = 50.0f;  // GJ/s drained from energy_gj
 
 // New-game / new-hull starting missile loadout, indexed by MissileType
 // (DF/HS/IR). A handful of each so the player has ordnance to learn the
@@ -195,13 +193,9 @@ int  missile_count(const PlayerState& p, int type_index);
 bool consume_missile(PlayerState& p, int type_index);
 void add_missiles(PlayerState& p, int type_index, int count);
 
-// ---- afterburner fuel (np-zte.2) -------------------------------------------
-// Clamped helpers so call sites never have to remember the [0,max] bounds.
-// drain returns the fuel actually consumed (which can be less than the ask
-// when the tank runs dry mid-step) so the caller can tell when it bottomed
-// out. regen tops up toward max. refuel_full sets it to max (base service).
-float drain_afterburner(PlayerState& p, float amount);
-void  regen_afterburner(PlayerState& p, float amount);
-void  refuel_full(PlayerState& p);
+// ---- afterburner fuel (np-zte.2) -- merged into energy pool -------------
+// drain_afterburner / regen_afterburner / refuel_full are gone: callers now
+// touch the player Ship's energy_gj directly (firing.cpp owns its regen).
+// No declarations needed.
 
 } // namespace player

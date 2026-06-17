@@ -415,11 +415,14 @@ void update_ship_sprite_motion(std::deque<ShipSpriteObject>& ships, float dt) {
     for (ShipSpriteObject& s : ships) {
         // Static-ship fast path. Both checks are needed because either DOF
         // alone is meaningful — a ship with forward_speed = 0 but non-zero
-        // angular_velocity should still spin in place.
+        // angular_velocity should still spin in place. A pending ram-tumble
+        // also keeps the loop alive so a stationary ship still lurches.
         const float omega2 = HMM_DotV3(s.angular_velocity, s.angular_velocity);
-        const bool turning = omega2 > 1e-10f;             // ~6 millideg/s threshold
-        const bool moving  = std::fabs(s.forward_speed) > 1e-6f;
-        if (!turning && !moving) continue;
+        const bool turning  = omega2 > 1e-10f;             // ~6 millideg/s threshold
+        const bool moving   = std::fabs(s.forward_speed) > 1e-6f;
+        const bool tumbling = s.ram_tumble_t_remaining > 0.0f;
+        const bool drifting = HMM_DotV3(s.collision_velocity, s.collision_velocity) > 1e-6f;
+        if (!turning && !moving && !tumbling && !drifting) continue;
 
         if (turning) {
             const float omega_mag = std::sqrt(omega2);
@@ -455,5 +458,26 @@ void update_ship_sprite_motion(std::deque<ShipSpriteObject>& ships, float dt) {
             s.collision_velocity = HMM_MulV3F(s.collision_velocity,
                                               std::exp(-0.5f * dt));
         }
+
+        // Ram tumble. Set by the ship-vs-ship collision pass on impact.
+        // Adds an exponentially-decaying angular velocity (body frame) to
+        // the orientation on top of whatever the AI's flight controller
+        // commanded this frame -- the ship lurches off course for ~0.5 s
+        // then the AI's aim corrections recover it.
+        if (s.ram_tumble_t_remaining > 0.0f) {
+            const float w2 = HMM_DotV3(s.ram_tumble_w_body, s.ram_tumble_w_body);
+            if (w2 > 1e-10f) {
+                const float w_mag = std::sqrt(w2);
+                const HMM_Vec3 axis = HMM_DivV3F(s.ram_tumble_w_body, w_mag);
+                const HMM_Quat dq = HMM_QFromAxisAngle_RH(axis, w_mag * dt);
+                s.orientation = HMM_NormQ(HMM_MulQ(s.orientation, dq));
+            }
+            // Decay constant 4/s -> e^-2 at t=0.5 s, ~14% remaining.
+            s.ram_tumble_w_body  = HMM_MulV3F(s.ram_tumble_w_body, std::exp(-4.0f * dt));
+            s.ram_tumble_t_remaining -= dt;
+            if (s.ram_tumble_t_remaining < 0.0f) s.ram_tumble_t_remaining = 0.0f;
+        }
     }
 }
+// touch 1781714977149421000
+// 1781714994397788000

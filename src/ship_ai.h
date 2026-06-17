@@ -89,6 +89,14 @@ struct ShipAIState {
     HMM_Vec3  break_dir_world  = { 0.0f, 0.0f, 0.0f };
     float     break_duration_s = 5.0f;
 
+    // Break-off EXTENSION distance (world meters). Set per break-off entry
+    // to a random 3-5 km. The break-off maneuver is held (won't re-select
+    // an attack) until the ship has actually opened this much range, so
+    // ships fly a proper extension out to 3-5 km before turning back for
+    // another pass — instead of flipping back the instant they cross the
+    // ~1 km pursuit boundary. Zero = not currently extending.
+    float     break_extend_dist = 0.0f;
+
     // Maximum continuous-FIRING duration (seconds). Randomised on
     // Engage entry. The trigger is bound to fire_guns being held
     // true, NOT to time-in-Engage — a ship that's still closing the

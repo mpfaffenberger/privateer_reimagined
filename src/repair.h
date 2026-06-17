@@ -2,18 +2,20 @@
 // -----------------------------------------------------------------------------
 // repair.h — paid hull repair + rearm at a base (np-zte.2).
 //
-// A base service: for credits, restore the player's hull armor to full,
-// refill the afterburner tank, and restock missiles. The hull state lives
-// on the in-flight Ship (transient, per-session) while fuel + ammo live on
-// PlayerState (persistent), so the repair functions take BOTH and route
-// every credit movement through player::spend_credits (one enforcement
-// path, same discipline as outfitting.cpp).
+// A base service: for credits, restore the player's hull armor to full and
+// restock missiles. Afterburner fuel used to be a third line item; the
+// fuel pool merged into the ship's energy bank (player.h note), which
+// recharges for free — there's nothing to sell, so the refuel option is
+// gone. The hull state lives on the in-flight Ship (transient,
+// per-session) while ammo lives on PlayerState (persistent), so the
+// repair functions take BOTH and route every credit movement through
+// player::spend_credits (one enforcement path, same discipline as
+// outfitting.cpp).
 //
 // Pricing scales with what's actually consumed:
-//   * hull   — credits per cm of armor missing across all facings, so a
-//              lightly-scratched hull is cheap and a near-wreck is dear.
-//   * fuel   — credits per unit of afterburner fuel missing.
-//   * ammo   — flat per-missile restock price, per type, up to a cap.
+//   * hull — credits per cm of armor missing across all facings, so a
+//            lightly-scratched hull is cheap and a near-wreck is dear.
+//   * ammo — flat per-missile restock price, per type, up to a cap.
 // All constants live in repair.cpp and are the feature's only tuning knobs.
 //
 // Headless-safe: links against ship.cpp + player.cpp with no UI/audio, so
@@ -32,11 +34,13 @@ namespace repair {
 // the sum; a field is 0 when nothing of that kind needs doing.
 struct Quote {
     int64_t hull_cost    = 0;   // restore armor to full
-    int64_t fuel_cost    = 0;   // top off afterburner
+    int64_t fuel_cost    = 0;   // legacy field, always 0 (kept so UI binds
+                                // don't have to be churned; can be deleted
+                                // alongside any lingering refuel buttons)
     int64_t missile_cost = 0;   // restock to the standard loadout
     int64_t total        = 0;
     bool    hull_damaged = false;
-    bool    fuel_low     = false;
+    bool    fuel_low     = false;  // legacy field, always false
     bool    missiles_low = false;
 };
 
@@ -48,10 +52,6 @@ Quote quote(const Ship* ship, const PlayerState& p);
 // Returns false (no mutation) if the ship is null, undamaged, or the player
 // can't afford it. Logs the before/after for the validation trail.
 bool repair_hull(Ship& ship, PlayerState& p);
-
-// Top off the afterburner tank for fuel_cost. False if already full or
-// unaffordable.
-bool refuel(PlayerState& p);
 
 // Restock missiles to the standard loadout for missile_cost. False if
 // already stocked or unaffordable.

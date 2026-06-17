@@ -132,6 +132,28 @@ struct SpriteRenderer {
     void draw_tracers(const std::vector<Tracer>& tracers,
                       const Camera& cam,
                       float aspect) const;
+
+    // Textured additive bolt billboards — replaces the procedural glow for
+    // guns that have extracted sprite art. Spherical bolts (most guns) are
+    // camera-facing billboards. Beam bolts (laser) are velocity-stretched:
+    // the quad's long axis follows the projectile's 3D world velocity and
+    // its thin profile rotates around that axis to face the camera — a
+    // real ray in space, not a flat decal. Collapses to a dot when fired
+    // straight along the view axis, exactly like a physical bolt.
+    struct Bolt {
+        HMM_Vec3 position;
+        HMM_Vec3 velocity_dir;   // normalized travel direction (world)
+        int      texture_id = 0; // index into the caller's per-type cache
+        float    size = 30.0f;   // sphere diameter, or beam THICKNESS
+        float    aspect = 1.0f;  // texture w/h (spheres only)
+        bool     beam = false;   // true = velocity-stretched ray (laser)
+        float    beam_length = 120.0f; // world-space length for beams
+    };
+    void draw_bolts(const std::vector<Bolt>& bolts,
+                    const std::vector<sg_view>& textures,
+                    const Camera& cam,
+                    float aspect,
+                    float time_sec) const;
 };
 
 // Load the `<base_path>.png` + `<base_path>_lights.png` pair into `art`.

@@ -70,9 +70,9 @@ PlayerState make_mutated() {
         { "iron",   42, 35 },
         { "tungsten", 7, 410 },
     };
-    // np-zte.2: distinctive missile counts + a partial afterburner tank.
+    // np-zte.2: distinctive missile counts. afterburner_fuel field removed
+    // (merged into Ship::energy_gj), so nothing to round-trip there.
     p.missiles[0] = 3; p.missiles[1] = 1; p.missiles[2] = 5;
-    p.afterburner_fuel = 37.0f;
     p.current_system   = "pentonville";
     p.last_docked_base = "achilles";
     p.docked           = true;
@@ -156,9 +156,8 @@ int main() {
     CHECK_EQ("missiles[DF]", dst.missiles[0], src.missiles[0]);
     CHECK_EQ("missiles[HS]", dst.missiles[1], src.missiles[1]);
     CHECK_EQ("missiles[IR]", dst.missiles[2], src.missiles[2]);
-    std::printf("  afterburner_fuel: %.0f vs %.0f\n",
-                (double)src.afterburner_fuel, (double)dst.afterburner_fuel);
-    CHECK_EQ("afterburner_fuel", (int)dst.afterburner_fuel, (int)src.afterburner_fuel);
+    // afterburner_fuel round-trip removed: field merged into Ship::energy_gj
+    // (np-zte.2), no longer persisted on PlayerState.
 
     // ---- 3. failure paths -------------------------------------------------
     std::printf("\n--- failure-path tests (must return false, never crash) ---\n");

@@ -201,30 +201,55 @@ void draw() {
     const float dpi = sapp_dpi_scale();
     const float sw  = (float)sapp_width()  / dpi;
 
-    ImDrawList* dl = ImGui::GetForegroundDrawList();
+    // Boxed COMMS panel anchored top-centre, just below the FLIGHT panel.
+    // Same amber-border / dark-bg style as cockpit_hud's STATUS / TARGET
+    // / FLIGHT MFDs so the feed reads as part of the same HUD vocabulary
+    // instead of free-floating text. Height grows with the line count
+    // (title + separator + ~18 px/line). Window flags mirror cockpit_hud's
+    // kHudWindowFlags exactly so the panel can't steal input.
+    constexpr float w_box = 600.0f;
+    const float h_box = 36.0f + (float)g_feed.size() * 18.0f;
+    constexpr float top_pad = 16.0f + 140.0f;   // sit under the FLIGHT panel
+    ImGui::SetNextWindowPos(ImVec2(sw * 0.5f - w_box * 0.5f, top_pad),
+                            ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(w_box, h_box), ImGuiCond_Always);
+    ImGui::SetNextWindowBgAlpha(0.55f);
 
-    // Top-centre-ish column, below where the upper HUD furniture sits.
-    const float x      = sw * 0.5f - 230.0f;
-    float       y      = 90.0f;
-    const float line_h = 20.0f;
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, IM_COL32( 10,  14,  20, 220));
+    ImGui::PushStyleColor(ImGuiCol_Border,   IM_COL32(255, 217,  77, 240));
+    ImGui::PushStyleVar  (ImGuiStyleVar_WindowBorderSize, 1.0f);
+    ImGui::PushStyleVar  (ImGuiStyleVar_WindowPadding,    ImVec2(8.0f, 6.0f));
 
-    for (const FeedLine& l : g_feed) {
-        // Fade alpha over the final k_fade_s of the lifetime.
-        const float remain = k_line_lifetime_s - l.age_s;
-        float a = 1.0f;
-        if (remain < k_fade_s) a = remain / k_fade_s;
-        if (a < 0.0f) a = 0.0f;
-        const int alpha = (int)(a * 255.0f);
+    constexpr ImGuiWindowFlags hud_flags =
+        ImGuiWindowFlags_NoTitleBar         | ImGuiWindowFlags_NoResize        |
+        ImGuiWindowFlags_NoMove             | ImGuiWindowFlags_NoScrollbar     |
+        ImGuiWindowFlags_NoCollapse         | ImGuiWindowFlags_NoSavedSettings |
+        ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav           |
+        ImGuiWindowFlags_NoInputs;
 
-        // Amber for comm chatter, cool white for rep status — mirrors the
-        // cockpit_hud palette so the feed reads as part of the same HUD.
-        const ImU32 col = l.taunt ? IM_COL32(255, 217, 77, alpha)
-                                  : IM_COL32(210, 225, 235, alpha);
-        // Cheap drop shadow for legibility over bright scenes.
-        dl->AddText(ImVec2(x + 1.0f, y + 1.0f), IM_COL32(0, 0, 0, alpha), l.text.c_str());
-        dl->AddText(ImVec2(x, y), col, l.text.c_str());
-        y += line_h;
+    if (ImGui::Begin("##comm_feed", nullptr, hud_flags)) {
+        ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 217, 77, 240));
+        ImGui::TextUnformatted("COMMS");
+        ImGui::PopStyleColor();
+        ImGui::Separator();
+        for (const FeedLine& l : g_feed) {
+            // Fade alpha over the final k_fade_s of the lifetime.
+            const float remain = k_line_lifetime_s - l.age_s;
+            float a = 1.0f;
+            if (remain < k_fade_s) a = remain / k_fade_s;
+            if (a < 0.0f) a = 0.0f;
+            const int alpha = (int)(a * 255.0f);
+            // Amber for comm chatter, cool white for rep status.
+            const ImU32 col = l.taunt ? IM_COL32(255, 217,  77, alpha)
+                                      : IM_COL32(210, 225, 235, alpha);
+            ImGui::PushStyleColor(ImGuiCol_Text, col);
+            ImGui::TextUnformatted(l.text.c_str());
+            ImGui::PopStyleColor();
+        }
     }
+    ImGui::End();
+    ImGui::PopStyleVar  (2);
+    ImGui::PopStyleColor(2);
 }
 #else  // COMM_HEADLESS
 void draw() {}   // no-op in the offline test driver

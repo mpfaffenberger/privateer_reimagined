@@ -23,7 +23,7 @@
     {
       "sprite":        "sprites/helen_planet",
       "position":      [60000, -10000, 90000],
-      "length_meters": 10000
+      "length_meters": 2000
     },
     {
       "sprite":        "sprites/mining_base",

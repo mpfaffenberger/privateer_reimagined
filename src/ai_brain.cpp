@@ -617,10 +617,21 @@ void run_maneuver(Ctx& c, AIManeuver m) {
         break;
     }
 
-    case AIManeuver::BreakOff:
-        // Afterburn extend along the cached lateral+away diagonal.
-        aim_at(s, s.ai.break_dir_world, k_aim_distance, /*ab*/true, false, 1.0f);
+    case AIManeuver::BreakOff: {
+        // Afterburn extension run. Blend the cached lateral jink (flavor)
+        // with the LIVE away vector each frame so the ship keeps gaining
+        // REAL separation even as the target maneuvers — weighted toward
+        // away (0.7) so the range actually opens to the 3-5 km extension
+        // distance before the state machine lets it turn back (run_combat
+        // holds break-off until break_extend_dist is reached).
+        HMM_Vec3 away = HMM_MulV3F(HMM_DivV3F(c.to_target, c.dist), -1.0f);
+        HMM_Vec3 dir  = HMM_AddV3(HMM_MulV3F(away, 0.7f),
+                                  HMM_MulV3F(s.ai.break_dir_world, 0.3f));
+        const float l2 = HMM_DotV3(dir, dir);
+        if (l2 > 1e-6f) dir = HMM_DivV3F(dir, std::sqrt(l2));
+        aim_at(s, dir, k_aim_distance, /*ab*/true, false, 1.0f);
         break;
+    }
 
     case AIManeuver::EvadeJink:
         // Pure cardinal jink (cached), afterburn, no fire.
@@ -737,7 +748,16 @@ void run_maneuver(Ctx& c, AIManeuver m) {
 
 // Per-maneuver entry actions (cache jink/break geometry once at selection).
 void on_enter(Ship& s, const Ctx& c, AIManeuver m) {
-    if (m == AIManeuver::BreakOff)  cache_break_dir(s, c, /*blend_away*/true);
+    if (m == AIManeuver::BreakOff) {
+        cache_break_dir(s, c, /*blend_away*/true);
+        // Pick a fresh 3-5 km extension target so each break-off run opens
+        // real range before turning back. Per-pilot seed keeps it varied
+        // but deterministic; bucketed by entry time so repeated breaks
+        // don't all pick the same number.
+        const float r = seed01(s.ai.personality_seed,
+                               c.t_now * 0.37f + (float)s.ai.jink_axis);
+        s.ai.break_extend_dist = 3000.0f + r * 2000.0f;   // 3000..5000 m
+    }
     if (m == AIManeuver::EvadeJink) cache_break_dir(s, c, /*blend_away*/false);
     if (m == AIManeuver::AttackRun) s.ai.fire_solution_at = -1.0f;
 }
@@ -787,6 +807,32 @@ void ai_brain::run_combat(Ship& s, const ShipRegistry& all, float t_now) {
     Ctx c = make_ctx(s, *target, all, t_now);
     s.ai.morale_tier = pick_tier(s);
     const AIMoraleTier& tier = tbl->tiers[std::clamp(s.ai.morale_tier, 0, 2)];
+
+    // --- Sticky break-off extension ------------------------------------
+    // Once a ship peels off (break-off selected within ~680 m), HOLD the
+    // extension until it has actually opened break_extend_dist (3-5 km) of
+    // range — instead of letting the ~1 km pursuit boundary yank it back
+    // for another pass the instant it crosses. This makes attack/disengage
+    // loops fly a proper extension out to 3-5 km, then return. A safety
+    // timeout prevents a faster pursuer from trapping it forever, and a
+    // hull-critical flee can still preempt the run.
+    if (s.ai.cur_maneuver == AIManeuver::BreakOff && s.ai.break_extend_dist > 0.0f) {
+        const float elapsed = (s.ai.maneuver_started_at >= 0.0f)
+                            ? (t_now - s.ai.maneuver_started_at) : 999.0f;
+        const bool reached = c.dist >= s.ai.break_extend_dist;
+        const bool timeout = elapsed >= 12.0f;
+        const AILogicItem* preempt =
+            select(c, tier.interrupt, /*interrupt*/true, s.ai.cur_priority);
+        const bool flee_now = preempt && preempt->maneuver == AIManeuver::FleeHome;
+        if (!reached && !timeout && !flee_now) {
+            run_maneuver(c, AIManeuver::BreakOff);
+            const AIState mapped = ship_ai::from_name(
+                ai_maneuver::maneuver_state_label(AIManeuver::BreakOff));
+            if (mapped != s.ai.state) { s.ai.state = mapped; s.ai.state_entered_at = t_now; }
+            return;
+        }
+        s.ai.break_extend_dist = 0.0f;   // extension complete (reached/timeout/flee)
+    }
 
     const bool expired = (s.ai.maneuver_started_at < 0.0f)
                       || ((t_now - s.ai.maneuver_started_at) >= s.ai.cur_duration);

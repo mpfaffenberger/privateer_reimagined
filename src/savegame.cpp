@@ -233,7 +233,8 @@ bool save(const PlayerState& p, int slot) {
           w.key("hs"); w.value_int(p.missiles[1]);
           w.key("ir"); w.value_int(p.missiles[2]);
         w.end_object();
-        w.key("afterburner_fuel"); w.value_int((long long)(p.afterburner_fuel + 0.5f));
+        // afterburner_fuel removed (np-zte.2 merged pool). Old keys in v3
+        // saves are ignored on load; new saves omit the key entirely.
 
         w.key("current_system");   w.value_string(p.current_system);
         w.key("last_docked_base"); w.value_string(p.last_docked_base);
@@ -387,25 +388,21 @@ bool load(PlayerState& p, int slot) {
             }
         }
 
-        // ordnance + fuel (np-zte.2, v3). Missiles default to 0 (an old save
-        // genuinely had none); fuel defaults to a FULL tank so a v1/v2 save
-        // doesn't load grounded with a dry afterburner.
-        out.afterburner_fuel = player::k_afterburner_fuel_max;
+        // ordnance (np-zte.2, v3). Missiles default to 0 (an old save
+        // genuinely had none). The legacy `afterburner_fuel` key is no
+        // longer a PlayerState field — the fuel pool merged into the
+        // player Ship's energy_gj. We tolerate the key in older saves by
+        // just ignoring it; new saves don't emit it.
         if (const json::Value* ms = pl.find("missiles"); ms && ms->is_object()) {
             out.missiles[0] = ms->contains("df") ? (int)(*ms)["df"].number_or(0) : 0;
             out.missiles[1] = ms->contains("hs") ? (int)(*ms)["hs"].number_or(0) : 0;
             out.missiles[2] = ms->contains("ir") ? (int)(*ms)["ir"].number_or(0) : 0;
         }
-        if (pl.contains("afterburner_fuel"))
-            out.afterburner_fuel = (float)pl["afterburner_fuel"].number_or(player::k_afterburner_fuel_max);
 
-        // Clamp loaded ordnance/fuel to their invariants (#8): a
-        // hand-edited save mustn't smuggle negative or over-cap values
-        // past the player:: setters, same as rep is clamped above.
+        // Clamp loaded ordnance to its invariants (#8): a hand-edited
+        // save mustn't smuggle negative values past the player:: setters,
+        // same as rep is clamped above.
         for (int& m : out.missiles) { if (m < 0) m = 0; }
-        if (out.afterburner_fuel < 0.0f) out.afterburner_fuel = 0.0f;
-        if (out.afterburner_fuel > player::k_afterburner_fuel_max)
-            out.afterburner_fuel = player::k_afterburner_fuel_max;
 
         out.current_system   = pl.contains("current_system")   ? pl["current_system"].string_or("")   : "";
         out.last_docked_base = pl.contains("last_docked_base") ? pl["last_docked_base"].string_or("") : "";
@@ -454,3 +451,4 @@ SlotInfo peek(int slot) {
 }
 
 } // namespace savegame
+// 1781715641488072000

@@ -548,17 +548,9 @@ void draw_equipment(BaseContext& ctx) {
             ImGui::EndDisabled();
         }
 
-        // Afterburner fuel.
-        if (!q.fuel_low) {
-            ImGui::PushStyleColor(ImGuiCol_Text, kGreen);
-            ImGui::TextUnformatted("AB fuel     FULL");
-            ImGui::PopStyleColor();
-        } else {
-            char b[48]; std::snprintf(b, sizeof(b), "Refuel afterburner (%lld)", (long long)q.fuel_cost);
-            ImGui::BeginDisabled(!player::can_afford(p, q.fuel_cost));
-            if (ImGui::SmallButton(b)) { if (repair::refuel(p)) sfx::ui_click(); }
-            ImGui::EndDisabled();
-        }
+        // Afterburner fuel row removed (np-zte.2 merged pool). The
+        // burner shares the ship's energy bank now; it recharges for
+        // free in flight, so there's nothing to sell here.
 
         // Missiles.
         ImGui::Text("Missiles    DF %d / HS %d / IR %d", p.missiles[0], p.missiles[1], p.missiles[2]);
@@ -585,3 +577,4 @@ void register_screens() {
 #endif // OUTFITTING_HEADLESS
 
 } // namespace outfitting
+// 1781715641497550000

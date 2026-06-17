@@ -65,6 +65,7 @@ compile_shader(sun)
 compile_shader(sun_glow)
 compile_shader(sun_gas)
 compile_shader(dust)
+compile_shader(warp_streaks)
 compile_shader(asteroid)
 compile_shader(mesh)
 compile_shader(atmosphere)
@@ -110,6 +111,7 @@ add_executable(new_privateer
     src/sun_corona.cpp
     src/sun_gas.cpp
     src/dust.cpp
+    src/warp_streaks.cpp
     src/rendertargets.cpp
     src/postprocess.cpp
     src/postprocess_composite.cpp
@@ -149,6 +151,7 @@ add_executable(new_privateer
     src/perception.cpp
     src/firing.cpp
     src/projectile.cpp
+src/bolt_art.cpp
     src/missile.cpp
     src/repair.cpp
     src/explosion.cpp

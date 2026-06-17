@@ -28,9 +28,8 @@ PlayerState new_game(const std::string& start_system) {
     // agree with the class default_guns, which it does (np-e3x).
     p.gun_mounts      = { "mass_driver", "mass_driver" };
     p.current_system  = start_system;
-    // Start with a topped-off tank + a starter missile loadout (np-zte.2)
-    // so the new feature is exercisable from the first launch.
-    p.afterburner_fuel = k_afterburner_fuel_max;
+    // Starter missile loadout (np-zte.2). Afterburner now shares the
+    // ship's energy bank (no separate fuel tank to initialize).
     for (int i = 0; i < 3; ++i) p.missiles[i] = k_new_game_missiles[i];
     // rep zero-initialized = unknown stranger; faction baselines decide
     // first impressions (see faction.h).
@@ -111,24 +110,9 @@ void add_missiles(PlayerState& p, int type_index, int count) {
     p.missiles[type_index] += count;
 }
 
-// ---- afterburner fuel -------------------------------------------------------
-
-float drain_afterburner(PlayerState& p, float amount) {
-    if (amount <= 0.0f) return 0.0f;
-    const float taken = std::min(amount, p.afterburner_fuel);
-    p.afterburner_fuel -= taken;
-    if (p.afterburner_fuel < 0.0f) p.afterburner_fuel = 0.0f;
-    return taken;
-}
-
-void regen_afterburner(PlayerState& p, float amount) {
-    if (amount <= 0.0f) return;
-    p.afterburner_fuel = std::min(k_afterburner_fuel_max, p.afterburner_fuel + amount);
-}
-
-void refuel_full(PlayerState& p) {
-    p.afterburner_fuel = k_afterburner_fuel_max;
-}
+// drain_afterburner / regen_afterburner / refuel_full removed (np-zte.2):
+// afterburner now drains from the player Ship's energy_gj. Callers touch
+// energy_gj directly; firing.cpp owns the regen tick.
 
 bool remove_cargo(PlayerState& p, const std::string& commodity_id, int units) {
     if (units <= 0) return false;
@@ -144,3 +128,4 @@ bool remove_cargo(PlayerState& p, const std::string& commodity_id, int units) {
 }
 
 } // namespace player
+// 1781715641481656000

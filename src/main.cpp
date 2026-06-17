@@ -4,13 +4,10 @@
 // Stage 3 of N: flight + star + dust.
 //
 // Controls:
-//   mouse          — look (pointer captured; right-click to release)
-//   W / S          — throttle forward / reverse
-//   Q / E          — strafe left / right
-//   R / F          — thrust up / down
-//   Z / C          — roll left / right
-//   Tab (hold)     — cruise engine: windup → high speed, windown on release
-//   X              — full brake (zero velocity)
+//   mouse          — aim (fly-by-wire: the nose chases the cursor)
+//   + / - (hold)   — throttle: ramp cruising speed up / down
+//   Tab (hold)     — afterburner: snap to full afterburn speed; release
+//                    returns to the throttle setting
 //   N              — cycle selected nav point (Alt+N: navmap overlay)
 //   A              — autopilot to selected nav (hostile-gated; any input cancels)
 //   D              — dock at selected base when cleared
@@ -48,6 +45,7 @@
 #include "jump.h"
 #include "encounters.h"
 #include "dust.h"
+#include "warp_streaks.h"
 #include "faction.h"
 #include "game_state.h"
 #include "gun.h"
@@ -61,6 +59,7 @@
 HMM_Mat4 model_matrix(HMM_Vec3 pos, HMM_Vec3 euler_deg, float s);
 #include "perception.h"
 #include "world_scale.h"
+#include "bolt_art.h"
 #include "projectile.h"
 #include "missile.h"
 #include "sfx.h"
@@ -134,6 +133,7 @@ struct AppState {
     Skybox         skybox{};
     Sun            sun{};
     DustField      dust{};
+    WarpStreaks    warp_streaks{};   // autopilot cruise overlay (np-streaks)
     RenderTargets  rt{};
     PostProcess    post{};
 
@@ -150,6 +150,9 @@ struct AppState {
     // caches SpriteArt by stem path so the same PNG pair loads exactly
     // once even when multiple instances reference it.
     SpriteRenderer                                       sprite_render{};
+    BoltArtSet                                           bolt_art;
+    std::vector<sg_view>                                 bolt_textures;
+    int                                                  bolt_tex_offsets[kGunTypeCount]{};
     std::unordered_map<std::string, SpriteArt>           sprite_art;
     std::vector<SpriteObject>                            placed_sprites;
     std::unordered_map<std::string, ShipSpriteAtlas>      ship_sprite_atlases;
@@ -415,23 +418,13 @@ void free_sprite_slot(ShipSpriteObject* sprite) {
 
 // ---- input → camera mapping -------------------------------------------------
 //
-// Accumulates a local-space thrust vector from the currently-held keys. Keys
-// are queried *once per axis* so pressing opposing keys cleanly cancels
-// instead of flickering.
-HMM_Vec3 thrust_from_keys() {
-    HMM_Vec3 t{0, 0, 0};
-    if (g.keys_down[SAPP_KEYCODE_W])            t.Z -= 1.0f;  // forward (-Z view)
-    if (g.keys_down[SAPP_KEYCODE_S])            t.Z += 1.0f;
-    // Strafe moved off A/D to Q/E (np-opa.3): A is now the nav autopilot
-    // toggle, so the lateral thrusters live on Q (left) / E (right).
-    if (g.keys_down[SAPP_KEYCODE_Q])            t.X -= 1.0f;
-    if (g.keys_down[SAPP_KEYCODE_E])            t.X += 1.0f;
-    // SPACE used to be 'thrust up' but is now the fly-by-wire mode
-    // toggle (handled in event_cb). R/F take over up/down strafe.
-    if (g.keys_down[SAPP_KEYCODE_R])            t.Y += 1.0f;
-    if (g.keys_down[SAPP_KEYCODE_F])            t.Y -= 1.0f;
-    return t;
-}
+// The player's cruising speed setting (m/s), dialed by the + / - keys.
+// This is the ONLY manual flight input now: the ship aims by mouse and
+// holds whatever speed this says. Afterburner (Tab) temporarily overrides
+// it to full afterburn speed; on release we snap back to this value.
+// File-scope so event_cb (which edits it) and frame_cb (which reads it)
+// share the same value.
+static float g_speed_input_ref = 0.0f;
 
 // ---- system (re)load orchestration (np-6al.1) -------------------------------
 // Forward decls so init_cb + frame_cb can drive the runtime switch. Defined
@@ -740,6 +733,9 @@ void build_system_scene(bool first_time) {
     }
 
     if (first_time && !g.dust.init()) { std::fprintf(stderr, "[main] dust init failed\n"); std::exit(1); }
+    if (first_time && !g.warp_streaks.init()) {
+        std::fprintf(stderr, "[main] warp_streaks init failed\n"); std::exit(1);
+    }
 
     // Mesh renderer + placed mesh instances. Load OBJs from disk now; any
     // file that fails to parse is skipped with a warning so one bad entry
@@ -867,6 +863,12 @@ void build_system_scene(bool first_time) {
         std::fprintf(stderr, "[main] sprite renderer init failed\n");
         std::exit(1);
     }
+    // Load bolt sprite art (per-GunType animated frames from assets/bolts/).
+    // Flattened into bolt_textures with per-type offsets for the renderer.
+    if (first_time) {
+        g.bolt_art.load("assets/bolts");
+        g.bolt_art.flatten(g.bolt_textures, g.bolt_tex_offsets);
+    }
     for (const auto& sd : g.system.placed_sprites) {
         const std::string stem_full = "assets/" + sd.sprite;  // e.g. assets/sprites/mining_base
 
@@ -989,18 +991,14 @@ void build_system_scene(bool first_time) {
             // point; the ITTS gimbal block above lets aim track the locked
             // target within a small cone, so the muzzles appear visibly
             // below while the bullets land where the reticle says.
-            player.mounts = picked->default_guns;   // TYPE from class (mass_driver etc.)
+            player.mounts = picked->default_guns;   // offsets from class
+            // Force 2x Laser for the player loadout (vanilla Tarsus
+            // starter feel). Laser has the procedural red-ray bolt art
+            // — a clean visual baseline for testing the new bolt system.
+            for (auto& m : player.mounts) m.type = GunType::Laser;
             if (player.mounts.size() >= 2) {
                 player.mounts[0].offset_body = HMM_V3(-10.0f, 5.0f, 0.0f);
                 player.mounts[1].offset_body = HMM_V3( 10.0f, 5.0f, 0.0f);
-            }
-            // Three-mount loadout (Talon: 2x mass driver + 1x particle
-            // cannon centered): place the centerline gun visibly ABOVE the
-            // two chin guns so the three tracer streams fan from three
-            // distinct screen-space origins. Y is +down per the engine
-            // quirk noted above, so -8 = 8 units up.
-            if (player.mounts.size() >= 3) {
-                player.mounts[2].offset_body = HMM_V3(0.0f, -8.0f, 0.0f);
             }
             player.gun_cooldowns.assign(player.mounts.size(), 0.0f);
         }
@@ -1989,35 +1987,53 @@ void frame_cb() {
     // camera itself, and we don't want manual thrust/integrate doubling
     // up on its position update.
     if (!autopilot_lock && !dying) {
-        // Afterburner fuel gate (np-zte.2). The cruise system IS the
-        // afterburner here (there's no second engine — see camera.h), so we
-        // gate cruise engage on g.player.afterburner_fuel: holding TAB with
-        // fuel drains it and drives cruise_target to 1; at empty the engine
-        // cuts out (target forced to 0) and the player must release to let
-        // it regen. Regen runs whenever we're NOT actively afterburning.
-        // Rates are tunable constants in player.h.
-        const bool want_ab = g.keys_down[SAPP_KEYCODE_TAB];
-        if (want_ab && g.player.afterburner_fuel > 0.0f) {
+        // Afterburner energy gate (np-zte.2, merged pool). The cruise system
+        // IS the afterburner here (there's no second engine — see camera.h),
+        // and it now drains from the player Ship's energy_gj — the SAME pool
+        // the guns spend from. Holding TAB with energy on hand drains it and
+        // drives cruise_target to 1; at empty the engine cuts out (target
+        // forced to 0) and the player must release to let firing.cpp's
+        // energy_recharge refill the bank. One pool, one bar, one tactical
+        // call: burst speed vs. burst fire.
+        const bool want_ab   = g.keys_down[SAPP_KEYCODE_TAB];
+        Ship* pl_for_ab = g.ships.player();
+        const float ab_energy = pl_for_ab ? pl_for_ab->energy_gj : 0.0f;
+        const bool ab_active = want_ab && ab_energy > 0.0f && pl_for_ab != nullptr;
+        if (ab_active) {
             g.camera.cruise_target = 1.0f;
-            const float drained = player::drain_afterburner(g.player,
-                                      player::k_afterburner_drain_per_s * dt);
-            // Log the cutout edge once, when the tank just hit empty.
-            if (g.player.afterburner_fuel <= 0.0f && drained > 0.0f)
-                std::printf("[afterburner] fuel exhausted — cutout\n");
+            const float drain = player::k_afterburner_drain_per_s * dt;
+            const float taken = std::min(drain, pl_for_ab->energy_gj);
+            pl_for_ab->energy_gj -= taken;
+            if (pl_for_ab->energy_gj < 0.0f) pl_for_ab->energy_gj = 0.0f;
+            // Log the cutout edge once, when the bank just hit empty.
+            if (pl_for_ab->energy_gj <= 0.0f && taken > 0.0f)
+                std::printf("[afterburner] energy exhausted \u2014 cutout\n");
         } else {
             g.camera.cruise_target = 0.0f;
-            if (!want_ab)
-                player::regen_afterburner(g.player, player::k_afterburner_regen_per_s * dt);
+            // No explicit regen here — firing.cpp's tick rebuilds energy_gj
+            // every frame at klass->energy_recharge. Releasing TAB just
+            // stops the drain; the bank refills on its own.
         }
-        if (g.keys_down[SAPP_KEYCODE_X]) g.camera.brake();
-        // Roll input — Z/C rotate around the view axis. Moved off Q/E
-        // (np-opa.3) since strafe relocated there when A became autopilot.
-        // Opposing keys cancel (same once-per-axis read as thrust_from_keys).
-        float roll_input = 0.0f;
-        if (g.keys_down[SAPP_KEYCODE_Z]) roll_input -= 1.0f;
-        if (g.keys_down[SAPP_KEYCODE_C]) roll_input += 1.0f;
-        if (roll_input != 0.0f) g.camera.apply_roll(roll_input, dt);
-        g.camera.apply_thrust(thrust_from_keys(), dt);
+        // Throttle: HOLD + / - to ramp the cruising speed up/down at
+        // k_throttle_rate m/s per second (smooth, no tapping). Capped at
+        // normal cruise; afterburn speed is Tab-only.
+        constexpr float k_throttle_rate = 150.0f;   // m/s per second held
+        const float thr_step = k_throttle_rate * dt;
+        if (g.keys_down[SAPP_KEYCODE_EQUAL])
+            g_speed_input_ref = std::min(g_speed_input_ref + thr_step,
+                                         g.camera.max_speed_cruise0);
+        if (g.keys_down[SAPP_KEYCODE_MINUS])
+            g_speed_input_ref = std::max(g_speed_input_ref - thr_step,
+                                        -g.camera.max_speed_cruise0);
+
+        // Forward speed is the ONLY manual flight input now (the ship aims
+        // by mouse). + / - set the cruising speed in g_speed_input_ref;
+        // holding Tab overrides to full afterburn speed and snaps back to
+        // the setting on release. integrate() lerps at the ship's accel
+        // rate, so afterburn reads as a hard kick forward.
+        const float desired = ab_active ? g.camera.max_speed_cruise1
+                                        : g_speed_input_ref;
+        g.camera.set_forward_input(desired);
         g.camera.integrate(dt);
     }
 
@@ -2032,6 +2048,42 @@ void frame_cb() {
     // eases to a stop on arrival (or drops out if threat:: trips). No-op
     // in free flight. Runs after manual physics for the same reason.
     autopilot::tick(g.autopilot, g.camera, dt);
+
+    // ---- warp streaks driver (np-streaks) -------------------------------
+    // Spool the cruise streaks in/out based on autopilot state + speed.
+    // The streaks ramp in only while autopilot is engaged AND the player
+    // is actually moving fast enough for the elongation to read (>800 m/s,
+    // i.e. well past normal manual cruise). Streak length is proportional
+    // to speed and capped so the wrap-cube doesn't get filled edge-to-edge.
+    {
+        const HMM_Vec3 vel  = g.camera.velocity;
+        const float    spd  = HMM_LenV3(vel);
+        const bool     ap   = autopilot::engaged(g.autopilot);
+        constexpr float k_speed_floor = 800.0f;     // below this, no streaks
+        constexpr float k_speed_full  = 2500.0f;    // at-and-above: full effect
+        constexpr float k_len_per_mps = 0.10f;      // streak_len_m per m/s
+        constexpr float k_len_max     = 350.0f;     // cap (cube is 600 half-extent)
+        constexpr float k_fade_rate   = 4.0f;       // 1/s ease in & out (~0.25s)
+
+        float target_i = 0.0f;
+        float target_L = 0.0f;
+        HMM_Vec3 target_dir = g.warp_streaks.vel_dir;   // hold last when off
+        if (ap && spd > k_speed_floor) {
+            target_i = std::clamp((spd - k_speed_floor)
+                                  / (k_speed_full - k_speed_floor), 0.0f, 1.0f);
+            target_L = std::min(spd * k_len_per_mps, k_len_max);
+            target_dir = HMM_DivV3F(vel, spd);          // unit velocity
+        }
+
+        // Exponential ease toward the targets so engage/disengage spools
+        // smoothly instead of popping. Direction snaps when on (since the
+        // streak orientation depends on it), but the master intensity fade
+        // hides that on the engage edge.
+        const float k = 1.0f - std::exp(-k_fade_rate * dt);
+        g.warp_streaks.intensity    += (target_i - g.warp_streaks.intensity)    * k;
+        g.warp_streaks.streak_len_m += (target_L - g.warp_streaks.streak_len_m) * k;
+        if (target_i > 0.0f) g.warp_streaks.vel_dir = target_dir;
+    }
 
     // Audio listener follows the camera. Before any play_world calls
     // this frame so new voices spatialize against the fresh pose;
@@ -2154,6 +2206,25 @@ void frame_cb() {
     // player has to rotate the ship to engage.
     if (Ship* player_p = g.ships.player(); player_p) {
         Ship& player = *player_p;
+
+        // Drop the player's ship-target lock if the contact has wandered
+        // past the 15 km radar/lock ceiling — mirrors the HUD-targeting
+        // rule that nothing beyond 15 km is targetable in the first place.
+        // Also clears a target that's gone dead (sprite reaped) so the
+        // firing/missile paths below don't aim at a corpse.
+        if (g.player_target_id != 0) {
+            const Ship* t = g.ships.find_by_id(g.player_target_id);
+            if (!t || !t->alive) {
+                g.player_target_id = 0;
+            } else {
+                const float d = HMM_LenV3(HMM_SubV3(t->position, player.position));
+                if (d > 15000.0f) {
+                    std::printf("[target] dropped: out of range (%.0f m > 15000)\n", d);
+                    g.player_target_id = 0;
+                }
+            }
+        }
+
         player.controller.fire_guns =
             g.keys_down[SAPP_KEYCODE_LEFT_CONTROL] ||
             g.keys_down[SAPP_KEYCODE_RIGHT_CONTROL];
@@ -2585,15 +2656,13 @@ void frame_cb() {
     // velocity, not the sprite — bounce hits g.camera.velocity
     // directly instead of the (nonexistent) player sprite.
     {
-        // Damage per impact: linear in closing speed plus a base.
-        // 50 cm minimum so a slow nudge isn't free; up to 250 cm for a
-        // head-on at high relative velocity. Shields/armor are 30 cm
-        // each so even a slow bump knocks half a shield down,
-        // high-speed ramming chunks armor immediately. Mike's call:
-        // "a lot of damage".
-        constexpr float k_base_dmg          = 50.0f;
-        constexpr float k_dmg_per_mps       = 0.5f;
-        constexpr float k_dmg_max           = 250.0f;
+        // Damage per impact: linear in closing speed plus a base. Was
+        // 50/0.5/250; scaled to 1/5 (10/0.1/50) so ramming no longer
+        // shreds armor in one bump. Pairs with the random tumble below
+        // — ramming is now mostly a control-loss event, not a damage one.
+        constexpr float k_base_dmg          = 10.0f;
+        constexpr float k_dmg_per_mps       = 0.1f;
+        constexpr float k_dmg_max           = 50.0f;
         constexpr float k_elasticity        = 0.6f;   // 0=plastic, 1=fully elastic
         constexpr float k_player_hit_radius = 30.0f * 1.4f;  // matches ship::hit_radius_m
 
@@ -2696,6 +2765,49 @@ void frame_cb() {
                     HMM_MulV3F(n, a_r));
                 ship::take_damage(a, dmg_a, ship::facing_of_hit(a, hit_point));
                 ship::take_damage(b, dmg_b, ship::facing_of_hit(b, hit_point));
+
+                // Ram tumble. Pick a random axis-angle for each ship so
+                // they lurch independently. Magnitude scales with closing
+                // speed (capped) so a slow nudge gives a small wobble,
+                // a head-on at speed gives a real spin. 0.5 s lifetime,
+                // decay ~4/s -> ~14% remaining at the end. World frame
+                // for the player camera, body frame for NPCs (the sprite
+                // integrator picks the right composition order).
+                auto rand_unit = [](uint32_t seed) {
+                    auto frac = [](uint32_t x) {
+                        x ^= x << 13; x ^= x >> 17; x ^= x << 5;
+                        return (float)(x & 0xFFFFFFu) / (float)0xFFFFFFu;
+                    };
+                    const float u  = frac(seed) * 2.0f - 1.0f;
+                    const float th = frac(seed ^ 0x9E3779B9u) * 6.2831853f;
+                    const float r  = std::sqrt(std::max(0.0f, 1.0f - u * u));
+                    return HMM_V3(r * std::cos(th), r * std::sin(th), u);
+                };
+                const float closing = std::fabs(v_rel_n);
+                // 4 rad/s baseline + up to 4 more from closing speed (cap
+                // at ~200 m/s relative). 0.5 s lifetime.
+                const float w_mag = 4.0f + std::min(closing * 0.02f, 4.0f);
+                const float t_seed = (float)stm_sec(stm_now());
+                const uint32_t seed_a = (uint32_t)a.id * 2654435761u
+                                      ^ (uint32_t)(t_seed * 1000.0f);
+                const uint32_t seed_b = (uint32_t)b.id * 2654435761u
+                                      ^ (uint32_t)(t_seed * 1000.0f) ^ 0xDEADBEEFu;
+                const HMM_Vec3 axis_a = HMM_MulV3F(rand_unit(seed_a), w_mag);
+                const HMM_Vec3 axis_b = HMM_MulV3F(rand_unit(seed_b), w_mag);
+                if (a.is_player) {
+                    g.camera.ram_tumble_w_world      = axis_a;
+                    g.camera.ram_tumble_t_remaining  = 0.5f;
+                } else if (a.sprite) {
+                    a.sprite->ram_tumble_w_body      = axis_a;
+                    a.sprite->ram_tumble_t_remaining = 0.5f;
+                }
+                if (b.is_player) {
+                    g.camera.ram_tumble_w_world      = axis_b;
+                    g.camera.ram_tumble_t_remaining  = 0.5f;
+                } else if (b.sprite) {
+                    b.sprite->ram_tumble_w_body      = axis_b;
+                    b.sprite->ram_tumble_t_remaining = 0.5f;
+                }
             }
         }
         (void)k_player_hit_radius;
@@ -2737,27 +2849,17 @@ void frame_cb() {
     }
 
     if (!g.capture_clean) {
+        // Top-centre FLIGHT panel is now drawn alongside the other
+        // cockpit_hud MFDs (see the cockpit_hud::build call site below),
+        // where simgui_new_frame() has already opened an ImGui frame.
+        // sdtx text below (controls reminder etc.) runs independently.
+
         sdtx_font(0);
         sdtx_color3f(0.7f, 1.0f, 0.9f);
-        sdtx_pos(1.0f, 1.0f);
-        sdtx_printf("SPEED  %7.0f u/s\n", speed);
-        sdtx_printf("MODE   %s\n",        mode);
-        sdtx_printf("D(SUN) %7.0f u\n",   dist);
-        sdtx_printf("POS    %5.0f %5.0f %5.0f\n", p.X, p.Y, p.Z);
 
-        // Autopilot status (np-opa.3). Persistent green indicator while
-        // engaged ("AUTOPILOT — <nav>"), plus a transient amber banner
-        // for the engage/disengage/refusal flashes (NO NAV SELECTED,
-        // HOSTILES, ARRIVED, ...). The banner dwell timer is decayed in
-        // autopilot::tick so it fades on its own.
-        if (autopilot::engaged(g.autopilot)) {
-            sdtx_color3f(0.4f, 1.0f, 0.5f);
-            sdtx_printf("AUTOPILOT - %s\n", g.autopilot.nav_name.c_str());
-        }
-        if (g.autopilot.msg_timer_s > 0.0f) {
-            sdtx_color3f(1.0f, 0.8f, 0.3f);
-            sdtx_printf("%s\n", g.autopilot.msg);
-        }
+        // Top-centre flight status block moved to cockpit_hud's boxed
+        // FLIGHT MFD (see draw_flight_status_mfd above this block). The
+        // old sdtx text here is intentionally removed.
         sdtx_color3f(0.7f, 1.0f, 0.9f);   // restore default for later blocks
 
         // Ship-sprite frame HUD. Prints, per placed ship sprite, the raw
@@ -2871,6 +2973,9 @@ void frame_cb() {
         if (!g.capture_clean) {
             g.skybox.draw(g.camera, aspect);
             g.dust.draw(g.camera, aspect);
+            // Warp streaks layer over dust (additive). Self-gates on
+            // intensity > 0 so this is cheap when autopilot is off.
+            g.warp_streaks.draw(g.camera, aspect);
             for (const auto& f : g.asteroid_fields) {
                 f.draw(g.camera, aspect, time_sec, g.sun.position, g.sun.core_color);
             }
@@ -2908,19 +3013,46 @@ void frame_cb() {
         // target object on the cleared background.
         if (!g.capture_clean) {
             std::vector<SpriteRenderer::Tracer> tracers;
-            tracers.reserve(g.projectiles.size() + g.missiles.size()
+            tracers.reserve(g.missiles.size()
                             + g.explosions.size() * 2);
+            std::vector<SpriteRenderer::Bolt> bolts;
+            bolts.reserve(g.projectiles.size());
 
-            // Projectile tracers. Color from the gun type, size scales
-            // with damage so Plasma reads chunkier than Laser.
+            // Projectile bolts. Guns with extracted sprite art (all but
+            // steltek) render as textured additive billboards; the laser
+            // aligns its elongated ray with travel direction. Guns
+            // without art fall back to the procedural glow below.
             for (const Projectile& p : g.projectiles) {
                 if (!p.alive) continue;
-                const GunStats& gs = g_gun_stats[(int)p.type];
-                SpriteRenderer::Tracer t;
-                t.position = p.position;
-                t.color    = gs.tracer_color;
-                t.size = 5.0f + p.damage_cm;
-                tracers.push_back(t);
+                if (g.bolt_art.has_bolts(p.type)) {
+                    SpriteRenderer::Bolt b;
+                    b.position = p.position;
+                    HMM_Vec3 v  = p.velocity;
+                    float    vl = HMM_LenV3(v);
+                    b.velocity_dir = vl > 0.0f
+                        ? HMM_MulV3F(v, 1.0f / vl)
+                        : HMM_V3(0, 0, 1);
+                    b.texture_id = g.bolt_tex_offsets[(int)p.type]
+                                 + g.bolt_art.frame_index(p.type, time_sec);
+                    if (p.type == GunType::Laser) {
+                        // Velocity-stretched 3D ray. size = thickness,
+                        // beam_length = world-space dash length.
+                        b.beam        = true;
+                        b.size        = 12.0f;    // thickness (world units)
+                        b.beam_length = 160.0f;   // dash length (world units)
+                    } else {
+                        b.size   = 5.0f;    // uniform sphere size, all guns
+                        b.aspect = g.bolt_art.aspect(p.type);
+                    }
+                    bolts.push_back(b);
+                } else {
+                    const GunStats& gs = g_gun_stats[(int)p.type];
+                    SpriteRenderer::Tracer t;
+                    t.position = p.position;
+                    t.color    = gs.tracer_color;
+                    t.size     = 5.0f + p.damage_cm;
+                    tracers.push_back(t);
+                }
             }
 
             // Missile tracers (np-zte.2). Bigger + hotter than a bullet so a
@@ -3025,6 +3157,10 @@ void frame_cb() {
             }
 
             g.sprite_render.draw_tracers(tracers, g.camera, aspect);
+            if (!bolts.empty()) {
+                g.sprite_render.draw_bolts(bolts, g.bolt_textures,
+                                           g.camera, aspect, time_sec);
+            }
         }
 
         if (!g.capture_clean) {
@@ -3045,6 +3181,7 @@ void frame_cb() {
     // live PlacedMesh list so changes take effect on the *next* frame.
     debug_panel::build(g.placed_meshes, g.placed_ship_sprites, g.game,
                        g.ship_debug, g.audio_debug, g.player);
+
 
     // Surface every ship-sprite atlas cell as an extra editable target so
     // F2 can author lights on individual frames (engine glow, nav strobes,
@@ -3117,8 +3254,29 @@ void frame_cb() {
                            g.mouse_x, g.mouse_y, g.fly_by_wire,
                            g.ships, g.player_target_id,
                            dock_prompt, dock_ready);
-        // Weapons + afterburner-fuel status (np-zte.2). Snapshot the
-        // missile selection, lock state, and fuel into the HUD struct.
+
+        // Top-centre boxed FLIGHT panel — matches the STATUS/TARGET style.
+        // Has to live HERE (after simgui_new_frame inside debug_panel::build)
+        // because ImGui::Begin requires an active frame; the old free-
+        // floating sdtx text up at the HUD-build step ran before that.
+        if (!g.capture_clean) {
+            const HMM_Vec3 pp = g.camera.position;
+            cockpit_hud::FlightStatusHudState fs;
+            fs.speed = HMM_LenV3(g.camera.velocity);
+            fs.mode  = (g.camera.cruise_level > 0.5f)  ? "CRUISE"
+                     : (g.camera.cruise_level > 0.05f) ? "SPOOL "
+                     :                                   "NORMAL";
+            fs.d_sun = HMM_LenV3(HMM_SubV3(g.sun.position, pp));
+            fs.pos_x = pp.X; fs.pos_y = pp.Y; fs.pos_z = pp.Z;
+            if (autopilot::engaged(g.autopilot))
+                fs.autopilot_nav = g.autopilot.nav_name.c_str();
+            if (g.autopilot.msg_timer_s > 0.0f)
+                fs.autopilot_msg = g.autopilot.msg;
+            cockpit_hud::draw_flight_status_mfd(fs);
+        }
+        // Weapons + ordnance status (np-zte.2). Afterburner fuel bar
+        // removed — the energy bar in the STATUS panel already shows the
+        // shared bank that drives both guns and the burner.
         {
             cockpit_hud::WeaponsHudState w;
             const MissileStats& sel = g_missile_stats[g.selected_missile];
@@ -3128,8 +3286,6 @@ void frame_cb() {
             w.lock_state    = g.missile_lock.locked ? 2
                             : (g.player_target_id != 0 && sel.needs_lock ? 1 : 0);
             w.lock_progress = sel.lock_buildup ? (g.missile_lock.progress_s / 1.5f) : 1.0f;
-            w.fuel_frac     = g.player.afterburner_fuel / player::k_afterburner_fuel_max;
-            w.fuel_empty    = g.player.afterburner_fuel <= 0.0f;
             cockpit_hud::build_weapons_status(w);
         }
         // Big system navmap (Alt+N to toggle). Drawn AFTER the regular
@@ -3453,8 +3609,10 @@ void cleanup_cb() {
     g.mesh_render.destroy();
     for (auto& [_, art] : g.sprite_art) art.destroy();
     g.sprite_render.destroy();
+    g.bolt_art.destroy();
     for (auto& f : g.asteroid_fields) f.destroy();
-    g.dust.destroy();
+        g.dust.destroy();
+        g.warp_streaks.destroy();
     g.sun.destroy();
     g.skybox.destroy();
     sg_shutdown();
@@ -3602,7 +3760,14 @@ void event_cb(const sapp_event* ev) {
         // fails and we restart at index 0.
         if (ev->key_code == SAPP_KEYCODE_T && g.ships.player()) {
             const Ship& player = *g.ships.player();
-            std::vector<PerceivedContact> sorted = player.perception.visible;
+            std::vector<PerceivedContact> sorted;
+            sorted.reserve(player.perception.visible.size());
+            // Hard 15 km cap: contacts past that are off-radar and not
+            // lockable. Same number that drops a stale lock per-frame
+            // up in the firing block — keep the two in lockstep.
+            for (const PerceivedContact& c : player.perception.visible) {
+                if (c.distance_m <= 15000.0f) sorted.push_back(c);
+            }
             std::sort(sorted.begin(), sorted.end(),
                       [](const PerceivedContact& a, const PerceivedContact& b) {
                           return a.distance_m < b.distance_m;
@@ -3765,3 +3930,8 @@ sapp_desc sokol_main(int argc, char** argv) {
     desc.logger.func  = slog_func;
     return desc;
 }
+// 1781714421
+// touch 1781714977133978000
+// 1781714994388554000
+// 1781715631188585000
+// 1781715641475509000
