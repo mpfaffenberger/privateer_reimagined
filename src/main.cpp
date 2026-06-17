@@ -111,6 +111,18 @@ namespace {
 // also needs to see it.
 std::string g_player_ship_override;
 
+// Pre-static-init trace so we can tell whether we made it past the C++
+// static-init phase on Windows. If [trace] static-init prints to stderr
+// but [trace] sokol_main entered does not, AppState's ctor or some other
+// global is fastfailing. If NEITHER prints, the CRT init itself is broken.
+struct _StaticInitTrace {
+    _StaticInitTrace() {
+        std::fprintf(stderr, "[trace] static-init phase reached\n");
+        std::fflush(stderr);
+    }
+};
+static _StaticInitTrace g_trace_static_init;
+
 struct AppState {
     sg_pass_action scene_pass_action{};
 
