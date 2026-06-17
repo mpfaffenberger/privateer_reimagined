@@ -3966,6 +3966,30 @@ void event_cb(const sapp_event* ev) {
 
 } // namespace
 
+#ifdef _WIN32
+#include "platform/win32_launch_dialog.h"
+#endif
+
+namespace {
+
+sapp_desc make_app_desc() {
+    sapp_desc desc{};
+    desc.init_cb      = init_cb;
+    desc.frame_cb     = frame_cb;
+    desc.cleanup_cb   = cleanup_cb;
+    desc.event_cb     = event_cb;
+    desc.width        = 1280;
+    desc.height       = 800;
+    static std::string title = "new_privateer — " + g.system_name;
+    desc.window_title = title.c_str();
+    desc.high_dpi     = true;
+    desc.sample_count = kSceneSampleCount;   // MSAA off → matches offscreen
+    desc.logger.func  = slog_func;
+    return desc;
+}
+
+} // namespace
+
 sapp_desc sokol_main(int argc, char** argv) {
     // _IONBF (unbuffered) so every printf flushes immediately — same
     // practical effect as line-buffering for our diagnostic prints,
@@ -4030,18 +4054,21 @@ sapp_desc sokol_main(int argc, char** argv) {
         }
     }
 
-    sapp_desc desc{};
-    desc.init_cb      = init_cb;
-    desc.frame_cb     = frame_cb;
-    desc.cleanup_cb   = cleanup_cb;
-    desc.event_cb     = event_cb;
-    desc.width        = 1280;
-    desc.height       = 800;
-    static std::string title = "new_privateer — " + g.system_name;
-    desc.window_title = title.c_str();
-    desc.high_dpi     = true;
-    desc.sample_count = kSceneSampleCount;   // MSAA off → matches offscreen
-    desc.logger.func  = slog_func;
+    sapp_desc desc = make_app_desc();
+
+#ifdef _WIN32
+    int launch_w = 0, launch_h = 0;
+    bool launch_fs = false;
+    if (win32::pick_resolution(&launch_w, &launch_h, &launch_fs)) {
+        desc.width      = launch_w;
+        desc.height     = launch_h;
+        desc.fullscreen = launch_fs;
+        std::fprintf(stderr, "[launch] user selected %dx%d %s\n",
+                     launch_w, launch_h, launch_fs ? "fullscreen" : "windowed");
+        std::fflush(stderr);
+    }
+#endif
+
     return desc;
 }
 // 1781714421

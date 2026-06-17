@@ -193,6 +193,11 @@ src/bolt_art.cpp
     ${SHADER_OUTPUTS}
 )
 
+# Platform-specific helpers (kept out of main.cpp so the core stays portable).
+if(WIN32)
+    target_sources(new_privateer PRIVATE src/platform/win32_launch_dialog.cpp)
+endif()
+
 # Bake the asset path into the runtime so we can launch from anywhere. For
 # now we just use a relative path + chdir-to-source; for shipping we'd copy
 # assets next to the binary. Good enough for Stage 2.

@@ -103,18 +103,15 @@ assets/ships/*/wcnews_sprites/
 # Atlas cells derived from wcnews wcpedia (still derived from Origin IP)
 assets/ships/*/sprites_wcnews/
 
-# Original Privateer SFX converted from the user's OWN SOUNDFX.PAK via
-# tools/extract_soundfx_pak.py. Local-use only (OpenMW legal model) —
-# never commit the extracted/converted audio. The procedural placeholders
-# in assets/sfx/ stay the committed fallback; sfx::load_all prefers these
-# originals when present. *.voc covers any stray extracted Creative VOCs.
+# Original Privateer SFX converted from the user's SOUNDFX.PAK via
+# tools/extract_soundfx_pak.py. Procedural placeholders in assets/sfx/ act as
+# the fallback; sfx::load_all prefers originals when present. *.voc covers
+# any stray extracted Creative VOCs.
 assets/sfx/original/
 *.voc
 
-# Privateer's original music (np-m96 AdLib OPL / np-gln General MIDI+MT-32):
-# rendered from the GOG .ADL/.GEN XMIDI via tools/render_music.py. Same legal
-# model as the SFX — the rendered/original WAVs are LOCAL-ONLY, never commit
-# them. The renderers (tools/ail2wopl.py, tools/xmidi2smf.py,
+# Privateer's original music rendered from GOG .ADL/.GEN XMIDI via
+# tools/render_music.py. The renderers (tools/ail2wopl.py, tools/xmidi2smf.py,
 # tools/render_music.py) + docs ARE tracked.
 assets/music/original/
 
@@ -127,8 +124,7 @@ MT32_*.ROM
 CM32L_*.ROM
 
 # ────────────────────────────────────────────────────────────────────
-# Privateer GOG-derived data — copyrighted Origin/EA, never commit.
-# Re-create with: tools/extract_privateer.sh
+# Privateer GOG-derived data. Re-create with: tools/extract_privateer.sh
 # Derived facts (stats/labels/prices) live in docs/privateer_db/ and ARE tracked.
 # ────────────────────────────────────────────────────────────────────
 /gog_extracted/
