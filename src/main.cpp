@@ -355,6 +355,8 @@ struct AppState {
     // drawing the on-screen aim cursor).
     float    mouse_x = 0.0f;
     float    mouse_y = 0.0f;
+    bool     mouse_left_held  = false;
+    bool     mouse_right_held = false;
 
     uint64_t last_frame_ticks = 0;
     uint64_t last_fps_ticks   = 0;
@@ -1081,10 +1083,13 @@ void build_system_scene(bool first_time) {
             // target within a small cone, so the muzzles appear visibly
             // below while the bullets land where the reticle says.
             player.mounts = picked->default_guns;   // offsets from class
-            // Force 2x Laser for the player loadout (vanilla Tarsus
-            // starter feel). Laser has the procedural red-ray bolt art
-            // — a clean visual baseline for testing the new bolt system.
-            for (auto& m : player.mounts) m.type = GunType::Laser;
+            // Preserve the ship-class default gun types (Tarsus = 2x Mass
+            // Driver per assets/ships/tarsus/ship.json). The old forced-Laser
+            // override made every starter feel identical and broke the
+            // canonical loadout.
+            for (auto& m : player.mounts) {
+                m.cone_half_angle_deg = 1.0f;
+            }
             if (player.mounts.size() >= 2) {
                 player.mounts[0].offset_body = HMM_V3(-10.0f, 5.0f, 0.0f);
                 player.mounts[1].offset_body = HMM_V3( 10.0f, 5.0f, 0.0f);
@@ -2316,7 +2321,8 @@ void frame_cb() {
 
         player.controller.fire_guns =
             g.keys_down[SAPP_KEYCODE_LEFT_CONTROL] ||
-            g.keys_down[SAPP_KEYCODE_RIGHT_CONTROL];
+            g.keys_down[SAPP_KEYCODE_RIGHT_CONTROL] ||
+            g.mouse_left_held;
 
         HMM_Vec3 aim = g.camera.forward();
         if (g.player_target_id != 0) {
@@ -3959,6 +3965,14 @@ void event_cb(const sapp_event* ev) {
         g.mouse_y = ev->mouse_y / dpi;
         break;
     }
+    case SAPP_EVENTTYPE_MOUSE_DOWN:
+        if (ev->mouse_button == 0) g.mouse_left_held = true;
+        if (ev->mouse_button == 1) g.mouse_right_held = true;
+        break;
+    case SAPP_EVENTTYPE_MOUSE_UP:
+        if (ev->mouse_button == 0) g.mouse_left_held = false;
+        if (ev->mouse_button == 1) g.mouse_right_held = false;
+        break;
     default:
         break;
     }
