@@ -129,6 +129,12 @@ VoiceId play_loop(SampleId s, float gain);
 // current pose; existing world voices re-spatialize here too.
 void set_listener(HMM_Vec3 pos, HMM_Vec3 right);
 
+// Current listener position (last value passed to set_listener). Lets callers
+// compute distance-to-source themselves -- e.g. sfx.cpp uses this to apply a
+// stepped per-zone gain curve to NPC gun shots instead of SoLoud's smooth
+// inverse rolloff.
+HMM_Vec3 listener_position();
+
 // Manual control. Both tolerate stale/finished ids (no-op) — a VoiceId
 // may outlive its voice when the sample ends or the slot is stolen;
 // generation tags make stale ids miss instead of poking a stranger.

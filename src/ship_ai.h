@@ -41,6 +41,8 @@
 // chatter; we'll add it when the demo demands it.
 // -----------------------------------------------------------------------------
 
+#include "ai_maneuver.h"
+
 #include <HandmadeMath.h>
 #include <cstdint>
 #include <string_view>
@@ -103,6 +105,57 @@ struct ShipAIState {
     // controller.fire_guns goes false (out of arc, out of range, AI
     // doesn't have a solution) or the ship leaves Engage.
     float     firing_started_at = -1.0f;
+
+    // ---- decoded-vanilla maneuver state (docs/ai_model.md §9.4) --------
+    // Privateer's Engage is two phases split at the 1000-unit
+    // pursue->attack-run boundary (§9.4.2):
+    //   * beyond 1000u  -> lead-pursuit (true intercept).
+    //   * within 1000u  -> a TIMED attack run: guns hot from tick 76 to
+    //                      153, then the run is "complete" and we break.
+    // attack_run_started_at stamps when the ship first crossed inside
+    // 1000u for the current run (-1 = not in an attack run). The tick
+    // window is converted to seconds via ship_ai's kAiHz (the real AI
+    // cadence / dt is still [?] from the disasm — see §9.3 / §9.8).
+    float     attack_run_started_at = -1.0f;
+
+    // EVADE/jink (§9.4.3): the break maneuver picks one of 4 cardinal
+    // rotation axes + a roll in {-1,0,+1} at entry and holds it. Cached
+    // here so the jink stays coherent for the whole break (re-rolling
+    // every tick would just smear into noise). Set in the BreakOff
+    // entry action; jink_roll scales the roll component.
+    int       jink_axis = 0;       // 0:+pitch 1:-pitch 2:+yaw 3:-yaw
+    float     jink_roll = 0.0f;    // -1 / 0 / +1
+
+    // Comm/taunt bark cooldown (§11.1): wall-clock time of this ship's
+    // last hostile bark, so f1-range chatter is rate-limited instead of
+    // firing every frame the target sits inside comms_f1.
+    float     last_bark_at = -1000.0f;
+
+    // ---- data-driven brain runtime (src/ai_maneuver.h, ai_brain.cpp) ---
+    // The combat brain is now a condition->maneuver table evaluator. The
+    // STATIC table (3 morale tiers of logic+interrupt rules) is shared and
+    // loaded from assets/ai/*.ai.json; only the per-ship RUNTIME state lives
+    // here. `brain` is resolved lazily on first combat tick (by faction /
+    // class, fallback "default"). `morale_tier` is seeded from CNST f6
+    // (low=fanatical, high=timid). The current maneuver runs until
+    // (t_now - maneuver_started_at) >= cur_duration, then the logic channel
+    // reselects; the interrupt channel can preempt earlier if a
+    // higher-priority rule's window passes. `personality_seed` is a stable
+    // per-pilot RNG stamp (like PGG's personalityseed) layered on top of the
+    // per-faction CNST so same-faction pilots vary.
+    const AILogicTable* brain               = nullptr;
+    int                 morale_tier         = 1;     // 0 timid /1 steady /2 fanatical
+    AIManeuver          cur_maneuver        = AIManeuver::LeadPursuit;
+    float               cur_priority        = 0.0f;
+    float               cur_duration        = 0.0f;
+    float               maneuver_started_at = -1.0f;
+    uint32_t            personality_seed    = 0;      // 0 = not yet stamped
+
+    // Reaction-time fire gate (firing upgrade): wall-clock time at which the
+    // firing solution first became valid (cone aligned + in range). Guns are
+    // held until t_now >= solution_at + per-pilot reaction time, so pilots
+    // don't snap-fire the instant the cone lines up. -1 = no current solution.
+    float               fire_solution_at    = -1.0f;
 };
 
 namespace ship_ai {

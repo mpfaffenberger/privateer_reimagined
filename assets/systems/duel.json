@@ -1,0 +1,50 @@
+{
+  // ---------------------------------------------------------------------
+  // duel.json -- minimal 1v1 AI playtest sandbox: the player + ONE hostile
+  // pirate Talon, nothing else. Encounter spawner disabled. Launch with:
+  //   ./build/new_privateer --system duel
+  // Troy is left untouched (this is a separate, throwaway sandbox system).
+  // ---------------------------------------------------------------------
+  "name":        "Duel",
+  "description": "1v1 AI playtest sandbox: player vs a single pirate Talon.",
+
+  "skybox_seed": "sector_4774",
+  "star":        { "preset": "blue" },
+
+  // One station for visual/lighting reference + a nav anchor.
+  "placed_sprites": [
+    {
+      "sprite":        "sprites/mining_base",
+      "position":      [200000, -133333, 0],
+      "length_meters": 3000
+    }
+  ],
+
+  // The lone opponent: a pirate Talon (class default faction = pirate ->
+  // baseline -30 rep -> Hostile to the player). AI starts Idle, perception
+  // picks up the player inside sensor range and the brain engages.
+  // Placed ~5 km dead ahead of the player_start look_at so the full
+  // approach -> attack-run -> break-off -> re-pass loop is on screen.
+  "placed_ship_sprites": [
+    {
+      "atlas":         "ships/talon/atlas_manifest",
+      "position":      [54700, -100000, 31650],
+      "length_meters": 80,
+      "ai": { "initial_state": "idle" }
+    }
+  ],
+
+  "nav_points": [
+    { "name": "Achilles Mining", "kind": "station", "position": [200000, -133333, 0],
+      "dockable": true, "base_id": "achilles" },
+    { "name": "Bandit",          "kind": "ship",    "position": [54700, -100000, 31650] }
+  ],
+
+  // No dynamic encounters -- keep it a clean duel.
+  "encounters": [],
+
+  "player_start": {
+    "position": [50000, -100000, 33333],
+    "look_at":  [54700, -100000, 31650]
+  }
+}

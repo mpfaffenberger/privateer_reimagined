@@ -54,6 +54,14 @@ std::string pick_line(Faction f, Event e);
 // logs every rep change + stance-threshold flip to stdout.
 void report_player_kill(PlayerState& player, Faction victim);
 
+// Hostile comm bark: an NPC of `speaker` faction has a hostile target
+// inside its CNST comms_f1 chatter range (docs/ai_model.md §11.1) and is
+// taunting it. Reuses the aggressive `KilledByPlayerCrime` line pool.
+// Only surfaces on the HUD feed when `target_is_player` (the player can
+// only "hear" barks aimed at them); NPC-vs-NPC barks are silent flavour.
+// The CALLER owns rate-limiting (ship_ai stamps ShipAIState::last_bark_at).
+void npc_engage_bark(Faction speaker, bool target_is_player);
+
 // ---- HUD comm feed -------------------------------------------------------
 struct FeedLine {
     std::string text;          // already-formatted, ready to draw

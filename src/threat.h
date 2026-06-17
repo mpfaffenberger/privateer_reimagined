@@ -45,4 +45,14 @@ void set_world(const ShipRegistry* ships, const PlayerReputation* player_rep);
 // Returns false when no world has been wired (see set_world).
 bool hostiles_near(HMM_Vec3 player_pos, float radius);
 
+// Distance (world units) from `player_pos` to the NEAREST alive,
+// hostile-to-the-player ship, or FLT_MAX when there are none (or no
+// world has been wired). Same "hostile" definition as hostiles_near —
+// the two share one stance/alive predicate (threat.cpp) so they can't
+// drift apart. Unlike hostiles_near (which short-circuits on the first
+// in-range hit), this does a full nearest scan; the music director
+// (np-ida) uses it to tier the in-flight combat score by how close the
+// closest threat is (>5km vs <=5km).
+float nearest_hostile_distance(HMM_Vec3 player_pos);
+
 } // namespace threat

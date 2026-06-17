@@ -1,0 +1,2603 @@
+                                
+                    Wing Commander: Privateer
+                                
+                       and Righteous Fire
+                                
+                Unofficial Strategy Guide and FAQ
+                                
+                         by Kasey Chang
+                                
+                   released December 20, 2002
+
+
+0    Introduction
+
+This FAQ now also covers Righteous Fire expansion pack.
+
+If you like this FAQ, send me USD$1.00. :-)
+
+
+0.1   A WORD FROM THE AUTHOR
+
+Privateer is one of the most flexible games created that allows
+you to live out a variety of "lifestyles" in the Wing Commander
+universe. It's quite sad to see EA/Origin drop the universe
+completely.
+
+This is a FAQ, NOT a manual. You won't learn how to play the game
+with this document, and I'm NOT about to add it to ease the life
+of software pirates.
+
+This USG only covers the PC version since that's the only version
+that I have (and exists?).
+
+Some of you may recognize my name as the editor for the XCOM and
+XCOM2: TFTD FAQ's, among others.
+
+
+0.2   TERMS OF DISTRIBUTION
+
+This document is copyrighted by Kuo-Sheng "Kasey" Chang (c) 2002,
+all rights reserved excepted as noted above in the disclaimer
+section.
+
+This document is available FREE of charge subjected to the
+following conditions:
+
+1) This notice and author's name must accompany all copies of
+this document: "Wing Commander: Privateer/Righteous Fire
+Unofficial Strategy Guide and FAQ" is copyrighted (c) 2002 by
+Kasey K.S. Chang, all rights reserved except as noted in the
+disclaimer."
+
+2) This document must NOT be modified in any form or manner
+without prior permission of the author with the following
+exception: if you wish to convert this document to a different
+file format or archive format, with no change to the content,
+then no permission is needed.
+
+2a) In case you can't read, that means TXT only. No banners, no
+HTML borders, no cutting up into multiple pages to get you more
+banner hits, and esp. no adding your site name to the site list.
+(Put it in a frame is fine)
+
+3) No charge other than "reasonable" compensation should charged
+for its distribution.  (Free is preferred) Sale of this
+information is expressly prohibited. If you see any one selling
+this guide, drop me a line.
+
+4) If you used material from this, PLEASE ACKNOWLEDGE the source,
+else it is plagiarism.
+
+5) The author hereby grants all games-related web sites the right
+to archive and link to this document to share among the game
+fandom, provided that all above restrictions are followed.
+
+Sidenote: The above conditions are known as a statutory contract.
+If you meet them, then you are entitled to the rights I give you
+in 5), i.e. archive and display this document on your website. If
+you don't follow them, you did not meet the statutory contract
+conditions, you have no right to display this document. If you
+still do so, then you are infringing upon my copyright. This
+section was added for any websites who don't seem to understand
+this.
+
+For the gamers: You are under NO obligation to send me ANY
+compensation.  However, I do ask for a VOLUNTARY contribution of
+one (1) US Dollar if you live in the United States, and if you
+believe this guide helped your game. If you choose to do so,
+please make your US$1.00 check or $1.00 worth of stamp to "Kuo-
+Sheng Chang", and send it to "2220 Turk Blvd. #6, San Francisco,
+CA 94118 USA".
+
+If you don't live in the US, please send me some local stamps. I
+collect stamps too.
+
+
+0.3   DISTRIBUTION
+
+This USG should be available at Gamefaqs
+(http://www.gamefaqs.com) and other major PC game websites such
+as gamesdomain.com and IGN.com. I personally only release it to
+Gamefaqs.com so if you find it anywhere else, they probably got
+it from gamefaqs.com.
+
+To webmasters who wish to archive this FAQ on their website,
+please read the terms of distribution in section 0.2. It is quite
+clear. In case you can't understand it, it says "no
+modifications". This means you may NOT modify any bits of it!
+Read that carefully. It says exactly what it says.
+
+
+0.4    CONTACTING THE AUTHOR
+
+PLEASE let me know if there's a confusing or missing remark... If
+you find a question about this game that is not covered in the
+USG, e-mail it to me at the address specified later.  I'll try to
+answer it and include it in the next update. See below for
+contact info.
+
+Do write to me about: vague statements, mistakes, alternate
+solutions, cheat codes, etc. This is so I can improve the FAQ.
+
+Do NOT write to me about: stuff already in the FAQ (you're too
+lazy to find your own answer), asking me for permission to host
+the FAQ (it's already given! Read above!), technical support
+(what do you think the publisher is for?), flaming me for any
+reason (I don't put up with it any more than you would). If you
+do any of these things, do NOT expect an answer.
+
+
+0.5   THE AUTHOR
+
+I am just a game player who decided to write my own FAQs when the
+ones I find don't cover what I want to see.  Lots of people like
+what I did, so I kept doing it.
+
+Previously, I've written Unofficial Strategy Guides (USGs) for
+XCOM, XCOM2:TFTD, Wing Commander 3, Wing Commander 4, Spycraft,
+688(I) Hunter/Killer. Mechwarrior 3, MW3 Expansion Pack, Need for
+Speed: Porsche Unleashed, Mechwarrior 4 and MW4: Black Knight,
+DS9: The Fallen, Rally Masters, Starfleet Command, Airport
+Tycoon, Mob Rule, and more.
+
+If you need to write me, send e-mail to address below. Any spam
+will be reported to respective authorities. The address below is
+spelled out phonetically so spammers can't use spambots on it:
+
+Kilo-Sierra-Charlie-Hotel-Alpha-November-Golf-Seven-Seven AT
+Yankee-Alpha-Hotel-Oscar-Oscar DOT Charlie-Oscar-Mike
+
+To decipher this, simply read the first letter off each word
+except for the numbers and the punctuation. This is "military
+phonetics" or "aeronautical phonetics" in case you're wondering.
+
+
+0.6   DISCLAIMER/ COPYRIGHT INFORMATION
+
+Origin, Wing Commander, the distinctive Wing Commander logo,
+Secret Missions, Special Operations, Vengeance of the Kilrathi,
+Heart of the Tiger, Privateer, Wing Commander Academy, and Wing
+Commander: Armada are trademarks of Origin Systems, Inc.  Origin
+Systems is a wholly owned subsidiary of Electronic Arts.
+
+This USG is not endorsed or authorized by Origin or Electronic
+Arts.
+
+
+0.7   REVISION HISTORY
+
+07-JAN-2002    Initial Release
+
+20-DEC-2002    Updated spelling and grammar mistakes, some info
+on getting the game to work on more modern machines, and updated
+weapon specs. Added Righteous Fire info.
+
+
+0.8   THE MOST FREQUENTLY ASKED QUESTIONS
+
+Q: Can you send me Privateer and/or Righteous Fire (or portions
+thereof)?
+A: No.
+
+Q: Can you send me the manual (or portions thereof)?
+A: No.
+
+Q: Can you tell me how to play the game?
+A: Read the manual.
+
+Q: Can you help me get the game working?
+A: No. This is a DOS game and getting it to work in Windows, esp.
+XP, is nearly impossible. Use a bootdisk. You may also want to
+look into some utilities which emulates plain-old Soundblaster
+and older VESA VGA with modern hardware. However, that is not
+within the purview of this FAQ. See
+http://www.angelfire.com/yt/privater/ for some tips
+
+Q: Why is your FAQ shorter than other similar FAQs?
+A: I don't repeat the stuff that's already in the manual. You can
+read that yourself.
+
+Q: What's the latest version?
+A: This is before games get patches.
+
+Q: Where are the cheat codes?
+A: There are no cheat codes in this game. Just go into options
+and turn on the invulnerability or other "cheats".
+
+Q: Why didn't I make any money on that last run?
+A: You don't make money while having a "cheat" turned on, like
+invulnerability. You also cannot complete a mission in any way,
+shape, or form.
+
+Q: Why did some of my cargo disappeared after landing?
+A: You cannot accept delivery missions for multiple destinations
+at once. As soon as you land in the first base, all delivery
+mission cargo NOT marked for that base will disappear. You,
+however, do NOT get a penalty for failing other delivery
+missions.
+
+Q: How many factions are there?
+A: Seven. See section [2] for details.
+
+Q: How do I make more money?
+
+A: You either trade (see section [6]) or accept missions (see
+section [7])
+
+Q: I can't mount a tractor beam!
+A: You need a turret to mount tractor beam. Buy a turret first.
+
+Q: I shoot a guided missile but it won't follow the enemy!
+A: Only level 2 or higher scanner feature "target lock" for
+guided missiles. If you still have your level 1 scanner guided
+missiles won't guide.
+
+Q: I have the tractor beam. How do I salvage objects in space?
+A: To salvage a object, scan and locate the object. Fly up next
+to it (don't bump it!), turn ship around so your rear turret is
+facing the object. Switch to tractor beam, aim at the object, and
+hit the trigger. The beam will reach out and drag it in. If you
+don't get a beam, you're not close enough.
+
+Q: I got the best scanners (level 3). Why do I see multiple ITTS
+cross-hairs of different colors?
+A: You got more than one type of guns and they're all active. As
+each type of gun has different shot velocity, you get different
+amounts of target lead, requiring multiple cross-hairs.
+
+Q: When I buy a new ship and trade in the old one, what are
+transferred?
+A: Your maps, your jump drive, your scanner, and the secret
+compartment (see 11.4) if you got them. You have to buy
+everything else.
+
+Q: What's the maximum number of missions you can take on at a
+time?
+A: I believe it's six, but finding that many you can take in one
+trip would be difficult.
+
+Q: At Oxford, I was escorting Drayman in. I killed all the
+attackers, but I still failed!
+A: Make sure the Drayman transmits "thank you" upon reaching the
+planet BEFORE you land. If you land before it reaches the planet
+you fail the mission.
+
+Q: I can't survive that green thing chasing me around!
+A: If you're not on a mission, just turn on "invulnerability" and
+make it to a mining base other than Rygannon to hear some advice.
+
+Q: What if I have questions about certain missions?
+A: See specific mission walkthru.
+
+
+
+1    Game Information
+
+
+1.1   A LITTLE HISTORY LESSON...
+
+Privateer is a spiritual descendent of the game called Elite,
+which is a VERY old game, having first came out for the 8-bit
+computers using monochrome screens. Elite itself is partially
+based on Game Designer Workshop's paper-and-pencil sci-fi role-
+playing game called Travellers.
+
+Elite basically starts you in a small ship with very little
+armament or money, and a rating of harmless. Your objective is to
+travel the known universe (8 galaxies in the original) each with
+hundreds of different star systems, each system with different
+government and different commodity availability and prices. You
+use jump drive to jump from one system to another, and you dock
+at the space station to trade. You will encounter a lot of other
+ships, form friendly to hostile. If you have a "scoop", you can
+get free fuel from the local star, and salvage cargo. You can
+even mine asteroids with a mining laser. You can upgrade your
+ship to better weapons and other equipment, even an auto-docking
+computer. Your ultimate objective is to reach the Elite rating.
+
+Privateer took most of the flexibility, put a Wing Commander spin
+on the whole thing, reduced it in size somewhat, updated it with
+an improved WC2 graphics engine and the infamous Origin talking
+heads, a plot, and came up with one of the modern PC gaming
+classics.
+
+
+1.2   ABOUT THIS GAME.
+
+You are a private pilot with a small scoutship (Tarsus class)
+near the front-line with the Kilrathi. You have 4 different
+quadrants you can fly to, total of SIXTY-NINE total systems you
+can explore. Each of the sixty-nine systems can have several
+planets with bases that you can visit.
+
+There are four different ships you can own, plenty of different
+equipment to create your own customized ship, over a dozen
+different commodities you can trade between systems, special
+missions that will pay you even MORE than standard fees, and
+more.
+
+You will encounter friendly, neutral, and hostile traffic in your
+travel. Perhaps you will even have some truly interesting
+adventure... Like encounter ancient civilizations...
+
+You can choose to be a merchant, a bounty hunter, a smuggler, or
+even a pirate.
+
+
+1.3   OTHER WING COMMANDER GAMES
+
+Don't forget Wing Commander (two special mission packs), Wing
+Commander 2 (two special operations packs), Wing Commander III,
+Wing Commander IV, Wing Commander Prophecy (and Secret Ops), Wing
+Commander: Armada, and Wing Commander Academy.
+
+
+1.4   AND AFTER THIS.
+
+There is a semi-sequel called Privateer II: The Darkening.
+
+
+1.5   OTHER RELATED GAMES
+
+If you like this kind of flexibility, check out the following
+games:
+
+X: Beyond the Frontier (Southpeak Interactive) and its expansion
+pack, called X-Tension.
+
+Tachyon: The Fringe (Novalogic)
+
+Hardwar (Interplay)
+
+Freelancer (Microsoft, coming soon)
+
+
+1.6   MODERN MACHINE COMPATIBILITY
+
+WC:P is a DOS-era game, and thus it has severe problems working
+on modern Windows machines.
+
+However, http://www.angelfire.com/yt/privater/ seems to have
+found some ways to get WC:P to run on 95/98/ME.
+
+
+
+2    Introducing the factions...
+
+There are SEVEN different major factions in the Gemini Sector.
+You can choose to align with most of them.
+
+To get a particular side to HATE you, just do the opposite of
+whatever you need to do to make that side like you.
+
+
+2.1   CONFEDERATION
+
+You are in Confed territory, so in general, you should be nice to
+Confed forces. You can find them just about everywhere, but esp.
+around Perry Naval Base.
+
+Confed hates Pirates, Kilrathis, and Retros (see factions)
+
+Confed flies Stiletto (fighter), Broadsword (bomber), Paradigm
+(corvette), and Gladius (fighter) (see crafts)
+
+Confed pilots are usually confident pros and aces (see morale and
+experience)
+
+Their initial attitude toward you is neutral.
+
+To make Confed like you, you should:
+
+*    not attack Confed, Militia, Bounty Hunters, or Merchants
+
+*    not smuggle (carry contraband)
+
+*    kill Pirates, Retros, and Kilrathis (i.e. everybody they
+hate)
+
+
+2.2   MILITIA
+
+The Confed forces can't be everywhere, so local systems have
+their own militias. In general, they act just like the Confed,
+but with worse equipment. Militia can be found in all four
+quadrants.
+
+Militia hates Pirates, Kilrathis, and Retros (see factions)
+
+Militia flies Gladius (fighter) and Talon (fighter) (see crafts)
+
+Militia pilots are usually confident pros, with an ace every once
+in a long while (see morale and experience)
+
+Their initial attitude toward you is neutral.
+
+To make Militia like you, you should:
+
+*    not attack Confed, Militia, bounty hunters, or merchants
+
+*    not smuggle (carry contraband)
+
+*    kill Pirate, Retro, and Kilrathi ships
+
+
+2.3   BOUNTY HUNTERS
+
+Bounty hunters are paid a bounty for each pirate, Kilrathi, or
+Retro they kill. Bounty hunters can be found all over.
+
+Bounty hunters hate Pirates, Kilrathis, and Retros (see factions)
+
+Bounty hunters fly Orion (transport/fighter), Centurion
+(fighter), or Demon (fighter) (see crafts)
+
+Bounty hunter pilots are confident rookies, pros or aces (see
+morale and experience)
+
+Their initial attitude toward you is neutral.
+
+To make Bounty Hunters like you, you should:
+
+*    not attack bounty hunters
+
+*    not attack merchants (and thus have a bounty placed on your
+head)
+
+*    not align yourself with Pirates, Retros, or Kilrathi
+
+
+2.4   MERCHANTS
+
+Merchants are the ones moving freight everywhere. You would see
+them more in the quieter quadrants, like Potter and Humboldt, but
+they do show up everywhere.
+
+Merchants hate any one who shoot them [Pirates, Kilrathis, and
+Retros] (see factions)
+
+Merchants fly Drayman (transport), Galaxy (transport), Tarsus
+(scout/transport) (see crafts)
+
+Merchant pilots are usually timid, maybe confident rookie or pro
+(see morale and experience)
+
+Their initial attitude toward you is neutral.
+
+To make Merchants like you, you should:
+
+*    not attack merchants
+
+Technically merchants won't really "like" you. However, you just
+need them to NOT hate you... Unless you want to play pirate.
+
+
+2.5   KILRATHI
+
+Kilrathi are the sworn enemies of the Confederation... You mainly
+find Kilrathi in Clarke Quadrant, and mostly around the border
+area, but they do occasionally raid a bit further in.
+
+Kilrathi hate everybody, but especially Confederation (see
+factions). They will kill ANY humans they find.
+
+Kilrathi fly Dralthi (fighter), Gothri (heavy fighter/bomber),
+and Kamekh (corvette) (see crafts)
+
+Kilrathi pilots are usually confident or fanatical pros or aces.
+Gothri are usually piloted by aces. (see morale and experience)
+
+Their initial attitude toward you is hostile.
+
+To make Kilrathi like you, you should:
+
+*    attack/destroy Confederation and/or Militia ships
+
+Of course, why would you want to do so is the great mystery...
+
+
+2.6   RETROS
+
+Retros refers to a fanatical offshoot group from Church of Man.
+While Church of Man advocates a quiet agrarian lifestyle away
+from technology, Retros are willing to use technology to destroy
+all technology. Retros can be found all over, though mainly in
+Clarke and Fariss quadrants.
+
+Retros hate everybody (see factions)
+
+Retros fly Talon (fighter) (see crafts)
+
+Retro pilots are fanatical rookies or pros. They WILL kamikaze if
+they think they can kill you doing it. (see morale and
+experience)
+
+Their initial attitude toward you is hostile (like everybody
+else).
+
+You cannot align yourself with the Retros.
+
+
+2.7   PIRATES
+
+Pirates make their living by trade in contraband goods and
+robbing Merchants. Pirates can be found all over, and have their
+own systems and bases. They primarily appear in Fariss and
+Humboldt quadrants.
+
+Pirates hate Confed, Militia, and Bounty Hunters (see factions)
+
+Pirates fly Talon (fighters) (see crafts)
+
+Pirate pilots are usually confident or fanatical pros or aces
+(see morale and experience)
+
+Their initial attitude toward you is hostile.
+
+To make pirates like you, you should:
+
+*    shoot down Confed, Militia, or Bounty Hunters
+
+*    not kill pirates
+
+*    be a pirate, shoot down merchants and retrieve/sell their
+cargo
+
+
+
+3    Your Career Choices
+
+While by necessity you will not be locked into one career path,
+it's necessary to understand the different paths available.
+
+You can switch among them or be a mix of all of them as you see
+fit.
+
+
+3.1   MERCHANT
+
+You can make money by moving cargo around, buy low and sell high.
+
+To be a good merchant, you need to move significant amount of
+cargo, and know the good trade routes.
+
+A Galaxy is recommended, though Orion and Tarsus are possible.
+Centurion's cargo hold is too small to be an effective trading
+ship.
+
+See [6] for commodity trading considerations.
+
+
+3.2   COURIER
+
+You can make significant amount of money by being a courier,
+delivering special "marked" commodities from the contract origin
+to the specified destination, and pocket the contract fee.
+
+Speed is essential so you cannot stop at ANY other planet before
+you arrive at the contract destination (which also means you
+cannot accept multiple delivery contracts going to different
+destinations at the same time). However, if you happen to find
+more delivery missions that go to the same planet, feel free to
+take them.
+
+Delivery mission amounts are usually quite small (a few tons) and
+can be handled by any ship.
+
+Expect to fight through some opposition like Pirates and Retros
+on the delivery missions.
+
+Usually, the further the contract needs to go, the better the
+contract pays.
+
+You can find delivery missions from fixers, Merchant's Guild, or
+mission computer (see mission sources).
+
+
+3.3   MERCENARY
+
+You can make money by taking contracts to hunt, patrol, escort,
+defend, or whatever the employer needs.
+
+This is obviously a dangerous job but the rewards are great as
+well.
+
+You can find mercenary missions from Mercenary Guild, Merchant's
+Guild, Mission Computer, or one of the fixers in a bar (see
+mission sources).
+
+The further out the mission, the more the mission pays.
+
+Mercenary missions usually require heavy combat and should only
+be handled by a hefty ship like Centurion or maybe Orion. You may
+get by with a Tarsus in a really quiet sector.
+
+
+3.4   PIRATE
+
+Being a pirate is simple... Install a tractor beam, then shoot a
+merchant (until he ejects his cargo or until he blows up), take
+his ejected cargo (tractor it into your hold), and find a place
+to sell the cargo.
+
+After a while, plenty of people come after you... Confeds,
+Militia, Bounty Hunters... Even those merchants with their
+popguns will come after you.  Dangerous life, but some say it's
+worth it.
+
+Just go do it... No mission is needed.
+
+Interesting note: If you managed to tractor in someone's escape
+pod, you can sell it as 1 ton of slave.
+
+Piracy usually require heavy combat and should only be handled by
+a hefty ship like Centurion or maybe Orion. Remember, you'll need
+a tractor beam to salvage ejected cargo, and enough cargo space.
+If you recover contraband, you become a smuggler.
+
+To salvage cargo, scan and locate the cargo pods. Fly up next to
+it (don't bump it!), turn ship around so your rear turret is
+facing the cargo. Switch to tractor beam, aim at the cargo, and
+hit the trigger. The beam will reach out and drag it in. If you
+don't get a beam, you're not close enough.
+
+
+3.5   SMUGGLER
+
+Smuggler smuggles contraband goods from pirate bases to where
+they can be sold for significant profit... But the Confed and the
+Militia will come after you as long as you have contraband
+onboard. If you have a very fast ship or you're willing to anger
+the militia/Confed you can give this a try.
+
+Sometimes a fixer will ask you to smuggle something. You have to
+accept to go on.
+
+Smuggled goods are usually quite small in amount and thus can be
+handled by any ship. On the other hand, to make REALLY
+significant money in smuggling you need to move LARGE amounts of
+contraband.
+
+Tip: try not to kill any Confed or Militia while smuggling. If
+you have a fast ship, just keep your shields up and afterburner
+past them.
+
+Tip: If you can't outrun them... Eject the contraband and stop.
+They will eventually go away. Then tractor in the ejected cargo
+and continue. This doesn't work for mission cargo. This is known
+as the eject/retrieve trick.
+
+
+
+4    Your ship and equipment
+
+There are four player own-able ships in Privateer: Tarsus, Orion,
+Galaxy, and Centurion
+
+TIP: All ships can use all guns, but recommended guns are meson
+blaster for early work, then when you can afford them, tachyon
+cannon or ion cannon.
+
+TIP: In general, Image Recognition (IR) missiles are the most
+cost-effective. They are easier to use than heat-seeking (HS)
+missiles as they are faster to lock-on. They cost less than
+friend-or-foe (FF) missiles.
+
+TIP: Upgrade engines BEFORE you upgrade shields. Engines are
+needed to power everything else. If you have big enough engine
+you can use afterburner continuously (as long as you don't use
+any other energy, like firing guns).
+
+Note: the config below is based on "Privateer". In "Righteous
+Fire" you'll get access to better equipment and further
+engine/shield upgrades.
+
+
+4.1   TARSUS
+
+Technically a scout, it has a cargo bay big enough to be used as
+a small freighter, and maneuverable enough to fight (not that
+well though). With dual missile launchers it may even get quick
+kills.
+
+Max engine: 1       Max shields: 2
+
+A fully upgraded ship would have
+
+*    level 2 shields
+*    tungsten armor
+*    max ECM available
+*    dual missile launchers with IR missiles
+*    mid/high-level scanner
+*    repair droid
+*    cargo expansion
+*    all quadrant maps
+*    jump drive (of course!)
+
+4.2   ORION
+
+Orion is an odd ship... Extremely large shield and engine
+possible, but not that maneuverable, and only one missile
+launcher possible makes it not that effective in heavy combat.
+
+Max engine: 5       Max shields: 5
+
+A fully upgraded ship would have
+
+*    level 5 shields and level 5 engines
+*    tungsten armor
+*    max ECM available
+*    1 missile launcher with IR or FF missiles
+*    high-level scanner
+*    repair droid
+*    cargo expansion
+*    all quadrant maps
+*    rear turret
+*    tractor beam in turret
+*    GOOD energy guns (tachyon cannons would be good)
+*    jump drive (of course!)
+
+4.3   GALAXY
+
+Galaxy is the multi-function ship that has the largest cargo bay
+(esp. with expansion).
+
+Max engine: 3       Max shields: 3
+
+A fully upgraded ship would have
+
+*    level 3 shields and level 3 engines
+*    tungsten armor
+*    max ECM available
+*    2 missile launchers with IR/FF missiles
+*    high-level scanner
+*    repair droid
+*    cargo expansion
+*    all quadrant maps
+*    top and bottom turrets
+*    tractor beam in turret
+*    GOOD energy guns (tachyon cannons would be good)
+*    jump drive (of course!)
+
+4.4   CENTURION
+
+Centurion is technically a heavy fighter that was relegated to
+civilian duty and fitted with a small cargo bay.
+
+Max engine: 3       Max shields: 3
+
+A fully upgraded ship would have
+
+*    level 3 shields and level 3 engines
+*    tungsten armor
+*    max ECM available
+*    2 missile launchers with IR/FF missiles
+*    high-level (3) scanner
+*    repair droid
+*    cargo expansion
+*    all quadrant maps
+*    rear turret
+*    tractor beam in turret
+*    afterburner
+*    GOOD energy guns (tachyon cannons and/or ion cannons would
+be good)
+*    jump drive (of course!)
+
+4.5   WEAPONS
+
+
+4.5.1     Missiles and Torpedoes
+
+The standard WC missiles are here: Dumb Fire, Heatseeker, Image
+Recognition, and Friend-or-Foe.
+
+You also get proton torpedoes, which are basically shorter-range
+but faster-firing Dumb Fire missiles.
+
+
+4.5.1.1   Missile Launcher
+Holds ten missiles (any type), costs 10000 credits.
+
+
+4.5.1.2   Dumbfire Missile (DF)
+Lock: None, Speed 1000, Damage 13cm, Price 20
+
+Torpedo is easier to use and does more damage, but requires a
+different launcher.
+
+
+4.5.1.3   Heatseeker Missile (HS)
+Lock: Engine heat, Speed 800, Damage 16cm, Price 35
+
+Heatseekers can be a bit hard to use in dogfights as you can't
+get on the tail of enemies long enough for this to lock.
+
+
+4.5.1.4   Image Recognition Missile (IR)
+Lock: Enemy craft type/shape, Speed 850, Damage 17 cm, Price 75
+
+IR missiles goes after the general 'shape' of the enemy. So if
+you have friendlies and enemies flying the same type of craft
+(Talons, for example), better hold off the IRs.
+
+
+4.5.1.5   Friend-or-Foe Missile (FF)
+Lock: nearest enemy, Speed 900, Damage 17 cm, Price 100
+
+Expensive, but no need to lock. Just fire and run, great in
+dogfights.
+
+
+4.5.1.6   Torpedo Launcher
+Needed to launch proton torpedoes, holds 10 torpedoes.
+
+
+4.5.1.7   Proton Torpedo
+Lock: none, Speed 1200, Damage 20 cm, price 15
+
+Easier to use than dumbfire and does more damage, but requires a
+separate launcher. Useful throughout the game until you can
+afford missile launchers.
+
+
+4.5.2     Energy Guns
+
+There are quite a few energy guns, which differ in firing rate,
+energy use, shot velocity, and damage. The listing below are:
+Shot velocity, refire delay (the delay before you can fire next
+shot, assuming you have energy available), energy needed to
+shoot, damage (rated in damage to armor equivalent), and of
+course, purchase price.
+
+
+4.5.2.1   Laser
+Shot V: 1400   Refire: 0.3 sec     Energy: 4 GJ   Damage: 1.8 cm
+ae   Price: 1000
+
+Weakest weapon of them all
+
+
+4.5.2.2   Mass Driver
+Shot V: 1100   Refire: 0.6 sec     Energy: 6 GJ   Damage: 2.6 cm
+ae   Price: 1500
+
+Decent medium weapon, though Meson Blaster is better.
+
+
+4.5.2.3   Meson Blaster
+Shot V: 1300   Refire: 0.4 sec     Energy: 8 GJ   Damage: 3.2 cm
+ae   Price: 2500
+
+The is probably the best gun for beginners, decent damage, NOT
+too draining in energy, and lots of shots.
+
+
+4.5.2.4   Neutron Gun
+Shot V: 900    Refire: 0.65 sec    Energy: 18 GJ  Damage: 6.2 cm
+ae   Price: 5000
+
+The shots are slow, so you have to get pretty close to hit
+
+
+4.5.2.5   Particle Cannon
+Shot V: 1000   Refire: 0.6 sec     Energy: 11 GJ  Damage: 4.3 cm
+ae   Price: 10000
+
+Decent gun for the price
+
+
+4.5.2.6   Tachyon Cannon
+Shot V: 1250   Refire: 0.4 sec     Energy: 8 GJ   Damage: 5.0 cm
+ae   Price: 20000
+
+Energy mizer, excellent damage, fast firing... A bit expensive!
+
+
+4.5.2.7   Ion Pulse Cannon
+Shot V: 1200   Refire: 0.7 sec     Energy: 15 GJ  Damage: 5.4 cm
+ae   Price: 40000
+
+While does a bit more damage, this one sucks up a LOT more energy
+and has slower firing rate than tachyon cannon, not really
+recommended.
+
+
+4.5.2.8   Plasma Gun
+Shot V: 840    Refire: 0.8 sec     Energy: 22 GJ  Damage: 7.2 cm
+ae   Price: 80000
+
+One hit from this will severely damage any ship... The problem is
+getting it to hit, as the shots are very slow (i.e. low range)
+and refire delay is extreme. It also sucks up tremendous amount
+of energy. May be good as a rear turret gun.
+
+
+4.6   EQUIPMENT
+
+I am not really going to list all the equipment, since they are
+in the manual and most are pretty obvious. However, here's a list
+of the more important items
+
+
+4.6.1     Shields
+
+Shields vary from level 1 (worst) to level 5 (best). Eats power.
+In general, get the same level of shields as you have engines,
+and you should be all right. It's best to have MORE power
+available though.
+
+
+4.6.2     Engines
+
+There are five levels of engines, from 1 (worst) to 5 (best). Not
+all ships can use all levels. See limits above. Higher levels of
+engine also produce more power for other use, such as
+afterburner, weapons, shields, and so on.
+
+Is it recommended that you have the highest engine level
+available.
+
+
+4.6.3     Armor
+
+You get plasteel (10 cm ae) costing 1000, or tungsten (20 cm ae)
+costing 1500. The latter is better.
+
+In Righteous Fire, you can also get "Isometal", which is 40 cm
+ae, and cost 2000.
+
+
+4.6.4     ECM Package
+
+ECM, or electronic counter-measures, is basically signal jamming
+that makes enemy missiles miss you. Three levels available, each
+level adds approximately 25% effectiveness of making enemy
+missiles lose lock. Costs 5000 / 10000 / 15000.
+
+
+4.6.5     Missile Launcher
+
+Missile launcher launches missiles. Ships have a limit on maximum
+launchers that can be mounted. See above for missile list.
+
+
+4.6.6     Scanner
+
+Different levels of scanners provide different amount of details
+about your targets. Three companies make scanners, each of 3
+levels, for nine different models
+
+Hunter AW 6i is probably the best radar for the money, until you
+can afford top-of-the-line model like B&S Omni.
+
+NOTE: You need color-coded radar to do "patrol" or "scout"
+missions, as you need to identify friend or foe when you
+encounter new ships.
+
+NOTE: You need Target Lock feature to guide missiles (except
+dumbfire, which does not need lock)
+
+NOTE: ITTS gives you a predictive cursor so you have better
+chance of hitting targets with your guns.
+
+
+4.6.6.1   Iris
+Basic radar, no color
+
+MK I: 5% chance per second of identifying target. Price : 10,000
+
+MK II: Target Lock. 15% chance per second of identifying target.
+Price : 30,000
+
+MK III: Target Lock. ITTS. 25% chance per second of identifying
+target. Price: 60,000
+
+
+4.6.6.2   Hunter AW
+Friend-or-Foe color-coded
+
+6: 5% chance per second of identifying target. PRICE: 30,000
+
+6i: Target Lock. 15% chance per second of identifying target.
+PRICE: 50,000
+
+Infinity: Target Lock. ITTS. 25% chance per second of identifying
+target. PRICE: 80,000
+
+
+4.6.6.3   B & S
+Fully Color-Coded Radar
+
+Tripwire: 15% chance per second of identifying target. PRICE:
+40,000
+
+E.Y.E.: Target Lock. 25% chance per second of identifying target.
+PRICE: 70,000
+
+Omni: Target Lock. ITTS. 35% chance per second of identifying
+target. PRICE: 100,000
+
+
+4.6.7     Repair droid
+
+Repairs your damage except to armor and weapons. Cannot repair
+destroyed items. Costs 30000
+
+In Righteous Fire, you get access to "Advanced Repair Droid",
+which costs twice as much and repairs 50% faster.
+
+
+4.6.8     Cargo expansion
+
+Makes your cargo bay slightly larger. The actual size depends on
+the particular craft being fitted.
+
+
+4.6.9     Quadrant maps
+
+Maps of all quadrants, you can buy these separately, or get all
+four for a bundle discount.
+
+
+4.6.10    Turret
+
+Needed for tractor beam and rear guns.
+
+Some ships may allow more than one turret (Galaxy also has side
+turrets).
+
+
+4.6.11    Tractor beam
+
+Requires turret to mount one, needed to salvage things.
+
+
+4.6.12     Jump drive
+
+Required to travel to other star systems.  Just set nav to the
+jump point and set autopilot... When you're there, jump. Beware
+that you have limited jump fuel, and the only way to refuel is to
+land somewhere. So don't dawdle...
+
+
+
+5    Other Crafts and Pilots
+
+
+5.1   MORALE AND EXPERIENCE
+
+The AI pilots in Privateer are rated in two areas: experience and
+morale.
+
+Experience can range from rookie, pro, to ace.
+
+Pilots with more experience evade more attacks, and have better
+accuracy.
+
+Morale can range from timid, confident, to fanatical.
+
+Pilots with higher morale are less likely to retreat. They will
+also attack more. Fanatical pilots may even contemplate kamikaze
+in addition to head-on attacks.
+
+
+5.2   FIGHTERS
+
+
+5.2.1     Talon
+
+Talon is a very wimpy fighter but extremely maneuverable. It is
+lightly armed and lightly shielded. It has a recognizable compact
+design.
+
+Talons are mainly used by Retros and Pirates, though occasionally
+used by the Militia.
+
+
+5.2.2     Gladius
+
+Gladius has a very "wide" design, and is somewhat better armed
+than the Talon.
+
+Gladius is only flown by the Militia.
+
+
+5.2.3     Stiletto
+
+Stiletto is an extremely fast fighter and very good at catching
+smugglers. It is lightly armed though and not that dangerous.
+
+Stiletto is only flown by Confed.
+
+
+5.2.4     Demon
+
+Demon is a fighter that is nicely armed and decent shielding. It
+is usually equipped with torpedo launchers, making them quite
+dangerous.
+
+Only Bounty Hunters fly Demons.
+
+
+5.2.5     Dralthi
+
+Dralthi is the Kilrathi medium fighter that escorts Gothris. They
+are often called "flying pancake" due to their shape, but don't
+laugh too hard... They can sting pretty bad.
+
+Only Kilrathi fly Dralthi
+
+
+5.3   HEAVY FIGHTERS AND BOMBERS
+
+
+5.3.1     Broadsword
+
+Broadsword is a very slow "bomber" but heavily armed. It has
+multiple turrets and has quite a bit of firepower.
+
+Only Confed fly Broadsword
+
+
+5.3.2     Gothri
+
+Gothri is a fast and quite maneuverable heavy fighter. It has a
+decent rear turret.
+
+Only Kilrathi fly Gothri.
+
+
+5.4   MULTIPURPOSE
+
+
+5.4.1     Tarsus
+
+Tarsus is usually classified as a scout, but it has some amount
+of cargo room that allows it to act as a small transport in low-
+threat areas.
+
+
+5.4.2     Orion
+
+Orion's claim to fame is its heavy shields (up to level 5) and
+large engines (up to level 5).
+
+
+5.4.3     Galaxy
+
+Galaxy is the largest "transport" the player has access to, and
+can move significant amount of cargo, but at a sedate pace. It
+has two turrets, but don't expect them to keep you safe.
+
+
+5.4.4     Centurion
+
+Centurion is primarily a fighter, but it can fit SMALL amount of
+cargo. If you want firepower, this is the ship you want. This is
+great for smuggling, esp. when you upgrade to afterburners.
+
+
+5.5   CAPITAL SHIPS
+
+
+5.5.1     Paradigm
+
+Paradigm is a Confed corvette that can dish out quite a bit of
+firepower. Usually you see them around Perry Naval Base.
+
+
+5.5.2     Kamekh
+
+Kamekh is Kilrathi corvette, equivalent of Confed Paradigm, and
+has very good armor and shields. If you shoot one down, Confeds
+will love you.
+
+
+5.5.3     Drayman
+
+Drayman is the standard capital-ship transport, larger than even
+Galaxy, but very lightly armed.
+
+
+
+6    Commodity trading
+
+One of the most often asked question in Privateer is "how do I
+make money"? There are two ways to make money in Privateer: "Buy
+low, sell high", and "take on missions". Let us analyze the
+markets, and see what kind of stuff is available to buy low and
+sell high.
+
+There are FIVE kinds of bases: agricultural, mining, pleasure,
+pirate, and refinery. There are also four "special" bases: New
+Constantinople, New Detroit, Oxford, and Perry Naval Base, for a
+total of NINE different bases.
+
+Look at the list below and figure out what makes money... And
+create your own "trade route".
+
+See section [7] on the other way to make money: take on missions.
+
+
+6.1   AGRICULTURAL BASE
+
+Produces wood, generic food, luxury food, grain, and so on.
+
+Buys contraband, plastics, home appliances, and so on.
+
+
+6.2   MINING BASE
+
+Produces iron, uranium, and other metals
+
+Buys contraband, plastics, mining equipment, food dispenser, home
+appliance, and so on.
+
+If you can find a good route between mining and refinery, you can
+make a bit of money, but usually these routes go by pirate
+systems and such.
+
+
+6.3   PIRATE BASE
+
+Produces contraband (Brilliance, slaves, Ultimate, tobacco, and
+so on)
+
+Buys just about everything, but likes food dispensers and
+holographic equipment
+
+If you want to be a smuggler, you must find a pirate base you can
+get to, as it's your only access to contraband stuff.
+
+
+6.4   PLEASURE BASE
+
+Don't produce anything
+
+Buys anything that makes life easier, including home appliances,
+robot servants, food, and esp. contraband.
+
+
+6.5   REFINERY BASE
+
+Takes all those ores and such, makes them into finished products,
+like plastics, home appliances, construction equipment, and so
+on.
+
+Buys ores, wood, (whatever raw material) and of course,
+contraband.
+
+If you can find a good route between mining and refinery, you can
+make a bit of money, but usually these routes go by pirate
+systems and such.
+
+
+6.6   NEW CONSTANTINOPLE
+
+The only thing NC produces that sells well is art (and only on
+pleasure planets)
+
+NC is one of the few places that will NOT buy contraband, though
+you may get special fixer missions that need you to deliver
+contraband here.
+
+
+6.7   NEW DETROIT
+
+New Detroit is essentially a huge refinery. They make finished
+products and buy raw materials like ores and food.
+
+ND buys contraband.
+
+If you can find a good route between mining and ND/refinery, you
+can make a bit of money, but usually these routes go by pirate
+systems and such.
+
+
+6.8   OXFORD
+
+Oxford is mainly an agricultural planet but also export books.
+
+They buy the same agriculture related stuff, like Plastics, Food
+dispensers, and so on.
+
+Oxford does NOT buy contraband.
+
+
+6.9   PERRY NAVAL BASE
+
+PNB makes weapons, and only weapons.
+
+PNB buys wood, food, grain, plastics, food dispenser, and so on.
+
+PNB does NOT buy contraband.
+
+
+
+7    Mission Sources
+
+The other way to make money besides trading in commodities is by
+taking on missions. The actual missions are discussed in the next
+section. This section talks about how you get missions and what
+type of missions each source would give.
+
+TIP: If you don't like ANY of the missions being offered from
+Mercenaries' Guild, Merchants' Guild, OR the Mission Computer,
+take off, then land again. You'll get a new set of each.
+
+You can get missions from several sources: mission computer,
+Mercenaries' Guild, Merchants' Guild, or the fixers in the bars.
+
+In general, the fixers pay best, then Merchants' Guild, then
+Mercenaries' Guild, then mission computer pays the least. In
+fact, if you real the manual, mission computer missions are NOT
+guaranteed payment, while the guilds do.
+
+Therefore, you should search for missions that pays best, then
+look for other missions you can do while on your way.
+
+
+7.1   MISSION COMPUTER
+
+You can get missions from the mission computer. In general, these
+are pretty easy missions, because they don't pay much. Sometimes,
+you may get NOTHING.
+
+Think of this as the classified ads... You may get something, or
+perhaps nothing at all. Check other mission sources first.
+
+Offered: attack, bounty hunt, defense, patrol, scout (see 8 for
+mission types)
+
+Typical mission pays a few hundred.
+
+
+7.2   MERCENARIES' GUILD
+
+Mercenaries' Guild costs 5000 credits to join, but they guarantee
+payment, so you'll never be gibbed. They offer higher-paying
+(read: tougher) missions.
+
+Offered: attack, bounty hunt, defend, patrol, scout  (see [8] for
+mission types)
+
+Typical mission pays about two to five thousand.
+
+
+7.3   MERCHANTS' GUILD
+
+Merchants' Guild costs 1000 credits to join, but they guarantee
+payment as well.
+
+Almost all Merchants' Guild missions require jumping to another
+system. They pay less than the Merc Guild, but they are also
+easier.
+
+Offered: bounty hunt, delivery (see [8] for mission types)
+
+Typical mission pays one to three thousand
+
+
+7.4   FIXERS
+
+In some bars, there are fixers ready to give you missions. They
+need someone to help them but they can't advertise... They offer
+the really challenging missions, and they pay quite well. Fixer
+missions are always plot missions. (see [11] for the plot mission
+walkthru)
+
+Offered: everything  (see [8] for mission types)
+
+Fixers can pay from nothing (yes, a rip-off) to 30000 per
+mission.
+
+If you fail a fixer mission, head back to the bar and meet the
+fixer again. You'll get another chance.
+
+
+
+8    Missions
+
+Here we discuss the types of missions you may encounter, and how
+best to approach them, what type of enemies you can expect, and
+so on.
+
+TIP: It should be obvious that you should NOT accept mission that
+you cannot get to... for example, if you don't have a jump drive,
+you should NOT accept missions outside your own system!
+
+
+8.1   DELIVERY MISSION
+
+Transport cargo from one base to another... Simple enough.
+
+The tricky part is you cannot stop at ANY OTHER base, or the
+cargo's forfeit. Look at the map, pick the route, then just go do
+it.
+
+You can get delivery missions from Merchant's Guild, Mission
+Computer, and fixers. (See [7] for mission sources)
+
+
+8.2   ESCORT MISSION
+
+Meet a ship jumping in from one nav point, escort it to another
+nav point (probably base)
+
+Some of these ships (usually Drayman) can be quite fragile... Be
+careful!
+
+You can only get escort missions from fixers. (See [7] for
+mission sources)
+
+If you are escorting, make sure the ship being escorted has waved
+you off (i.e. sent you the "thank you" message) before you land,
+or you won't get credit for it.
+
+
+8.3   ATTACK MISSION
+
+Destroy certain number of targets at a certain nav point. Simple
+enough, right? Use any questions you wish.
+
+You can get attack missions through Mercenaries' Guild and
+Mission Computer. (See [7] for mission sources)
+
+
+8.4   BOUNTY HUNTING MISSION
+
+Hunt down pirate, Retro, or even a Kilrathi... pays better than
+Attack.
+
+You can get bounty hunting missions through Mercenaries' Guild,
+Merchants' Guild, and Mission Computer. (See [7] for mission
+sources)
+
+
+8.5   DEFEND BASE
+
+Take out the attackers, simple enough, right?
+
+You can get base defense missions through Mercenaries' Guild and
+Mission Computer. (See [7] for mission sources)
+
+
+8.6   SCOUT
+
+Go to a nav point, destroy enemies if found. Enemies may or may
+not show up, but you'll get paid nonetheless. (See [7] for
+mission sources)
+
+You can get scout missions through Mercenaries' Guild and Mission
+Computer.
+
+
+8.7   PATROL
+
+Patrol is basically Scout mission that involves multiple nav
+points. This one pays a lot better due to multiple nav points.
+
+You can get patrol missions through Mercenaries' Guild and
+Mission Computer. (See [7] for mission sources)
+
+
+
+9    More Tips
+
+*    [Repeat] If you can't leave the system (no jump drive),
+don't accept missions that occur outside the system!
+
+*    [Repeat] You cannot stop at ANY other base while a delivery
+mission is in progress! This means you can accept only ONE
+delivery destination at once!
+
+*    You can accept multiple delivery missions IF they are all
+going to the SAME BASE. NOT same system, same PLANET BASE.
+
+*    In general, the further away the mission calls for you to
+go, the better the payment
+
+*    Try to locate multiple missions that you can fly in one
+trip. For example, if you took a guild mission to deliver
+something to Rygannon, look for other delivery missions, or
+patrol missions in the same system, or such that you can play.
+
+*    Scout is the easiest mission, as you only need to hit the
+waypoints specified.
+
+*    If you need to go somewhere, locate missions that are going
+your way
+
+*    Try to communicate with the hostile contact. If you're
+looking for a specific contact and you don't see him, but you
+found something else hostile instead, consider turn and run. For
+example, if you are on a mission to locate a Retro, but
+conversation shows you found a Pirate, you can run away.
+
+*    [Repeat] Don't like the missions being offered? Take off and
+land again to get a new set. However, if you accepted one or more
+missions, you need to finish those first.
+
+*    In general, Fixers pay the best, then Mercenaries' Guild,
+then Merchants' Guild, then the Mission Computer.
+
+*    If the fixer asks you to come back for the payment after a
+delivery mission, you can take your time coming back and do some
+side jobs on the way
+
+*    If you cannot make your way back for the payment, turn on
+invulnerability then fly back. Once the mission is complete
+there's no reason not to turn on the cheat.
+
+*    If you got room in the cargo bay, buy some commodities that
+you know will make profit at the destination, and sell it when
+you get there to make even more money.
+
+
+
+10   Gemini Sector
+
+Gemini sector is made up of sixty-nine different star systems,
+each of them has from one to nine nav points.
+
+There is really no point for me to write which jump point links
+to which system when you can buy the quadrant maps for your
+navcomp.
+
+In each system, you can have several nav points that ships can
+align to. There can also be several "hidden" points between the
+nav points.
+
+For example, in ND-57 (Potter Quadrant, SE), the system has 3 nav
+points: jump point, a nav point to go around the hidden point,
+and the planet new Reno. It also has a "hidden" point between the
+jump point and the planet.
+
+When you arrive at a nav point or a hidden point, an encounter
+happens. If the point is related to a mission, that mission's
+enemy is used. If not, a "random" encounter is generated.
+
+The "random" enemies are randomly chosen based on a series of
+probability tables. The tables are populated based on where the
+system is, what systems are connected, and so on.
+
+For example, let's say you are at Troy.
+
+You got a contract to deliver some stuff to New Iberia, in
+Pyrenees system in a mission from Merchants' Guild.
+
+You also found a contract to patrol Pyrenees system, all nav
+points from Mercenaries' Guild.
+
+You also found a contract that had you hunt down a pirate at nav
+5 of Pyrenees system from the Mission Computer.
+
+So you jump in from Troy and arrive at nav 2 of Pyrenees.
+Pyrenees is in Humboldt Quadrant, which is Retro and Pirate
+territory. So nav 2 you would expect Militia, Retro, or Pirates,
+with maybe some merchants. You move on to nav 1, more random.
+Keep moving to nav 6, and there is the patrol enemy (yes, that's
+randomly generated also). At nav 5, you found your target, take
+him out. You move on to nav 4, more random, then finally you
+reach nav 3, New Iberia and another random encounter. You land
+and finish the contract. You got three missions (and three
+payments) in one trip.
+
+
+
+11   Starting Tips
+
+
+11.1  GETTING STARTED
+
+You start in the wimpy Tarsus, so your first objective is to
+improve your survivability. You need to upgrade your armor,
+shields, and scanners ASAP.
+
+You start with a missile launcher, but you don't really need it
+yet. Sell it for 7500 credits, and replace it with a torpedo
+launcher and full reloads instead. The torpedo launchers are
+basically high-damage direct-fire rockets, which is what you need
+early on.
+
+Next, dump the lasers and replace with meson blasters.
+
+Now you're respectably armed, but now you need money. Use any
+remaining credits to join Merchants' Guild so you get higher-
+paying missions.
+
+Remember NOT to accept missions that require you to go outside
+the Troy system (and that would be MOST of them, esp. the
+Merchants' Guild missions)!
+
+Don't accept any combat mission (yet). Your low-level scanner
+can't even tell friend from foe yet. You need color-coded scanner
+before you take on combat missions.
+
+Now just go through Merchant's Guild computer and the Mission
+Computer for more missions and do them. Fly delivery missions to
+make enough money so you can get level 2 shields, ECM, and Hunter
+AW 6i scanner (it's the most value for your money in the scanner
+category). You need ECM to counter enemy missiles.
+
+You can probably run away from any early enemies that you
+encounter, or you can test your combat prowess with your meson
+blasters and torpedoes. Retros and Pirates in the Troy system
+usually come at you head-on, making perfect targets for your
+torpedoes.
+
+When you get those upgrades, you can think about accepting scout
+and patrol missions (in general, those missions are easy and pay
+decent money). Remember, NOTHING OUTSIDE THE SYSTEM!
+
+Look for multiple missions you can do in one trip once you can do
+scout or patrol missions.
+
+Keep upgrading your ship. You need a FULLY upgraded Tarsus to
+even think about leaving the Troy system. (See [4] for
+recommended loadout for your ship.)
+
+If you talk to the bartenders, they'll tell you to head for New
+Detroit when you're ready. However, that's for the fixer
+missions, and those are generally tougher. So remember, no fixer
+missions until you're completely ready, and that means a fully-
+
+equipped Centurion.
+
+
+11.2  OUT OF HOME, INTO THE WORLD
+
+When you're ready to leave Troy, you should head for Potter
+Quadrant, as that's a relatively quiet sector, esp. in the heart
+of the Potter quadrant, around New Constantinople, New Detroit,
+and Oxford (NC/ND/OX). Try to get missions that need you to
+deliver to NC or ND.
+
+The enemies outside Troy are significantly smarter and deadlier.
+You should NOT perform a patrol or scout mission in a Tarsus
+outside the Troy system until you reach NC/ND/OX.
+
+Once you made it to NC/ND/OX area, accept delivery missions until
+you can upgrade to an Orion. When you have the Orion nicely
+equipped (think level 5 shields), you can start accepting just
+about any mission. Join Mercenaries Guild to get more
+assignments. Remember to look for missions that you can do within
+a single trip, hopefully within the same system.
+
+When you have Orion fully decked out, it's time to move into
+Clarke Quadrant and start taking on some tougher missions, like
+hunting down Kilrathi.
+
+Remember though, no fixer missions until you're completely ready.
+
+
+11.3  NOW IT GETS INTERESTING
+
+Eventually you'll want to switch to a Centurion. You can upgrade
+to Centurion from a fully decked out Orion without adding much
+money.
+
+One of the most lucrative trade routes is between New Caledonia
+and Prasepe, but there are a few pirate bases in the way. With a
+Centurion, you can beat back any pirates that gets in your way,
+and make a ton of money on this route.
+
+When you're ready, head for New Detroit, go into the bar, and
+locate Ernesto Sandoval in the bar to start the plot missions.
+
+
+11.4  SOME NOTES ON SPACE COMBAT
+
+Check back to section [4] the ships for more advice on
+outfitting.
+
+Some of these hints are obvious, but worth repeating
+
+*    Shoot other ships in the rear, where armor/shields are the
+weakest
+
+*    Concentrate on the strongest ship, kill it before continuing
+to the next one.
+
+*    Keep moving. You need to move to dodge the enemy shots.
+
+*    If you have enough engine power, your afterburner fuel is
+virtually infinite, so use those afterburners!
+
+*    If you have level 3 shields or higher, consider ramming
+light fighters like Talon.
+
+*    Approach wide/flat ships (like Dralthi, Gothri, etc.) from
+the top or bottom rear to get more area to shoot at
+
+*    If you want to kill corvettes (like Kamekh), bring torpedo
+launchers. Approach it from the rear, slow down, pump HALF the
+torpedoes into it (you can shoot fast enough if you slow down),
+then full guns. Afterburner away, do a loop, repeat.
+
+*    Watch out for rear turrets on a lot of crafts. AI Orion and
+Gothri both have nicely armed rear turrets, and Kamekh have
+multiple turrets.
+
+*    Never approach a Demon head-on. Demons are often equipped
+with torpedo launchers and your shields cannot stand multiple
+torpedo hits.
+
+*    Retros like to ram. Make sure you destroy them when they
+come head-on, unless you have level 3 shields or higher
+
+*    Double missile launchers are better than single missile
+launcher. If you shoot TWO missiles at the same target, and both
+hit, the target is toast. Double-tap also halves their ECM's
+effectiveness against your missiles. Of course, you use up your
+missiles twice as fast.
+
+*    [Repeat] If you have problems surviving your way to another
+base (except the plot missions), consider turning on
+invulnerability. However, don't do this on plot missions. If you
+turn on the cheats during the plot missions you will fail.
+
+
+
+12   Privateer Plot Missions
+
+The plot missions are always offered by fixers, and they pay VERY
+WELL compared to the other mission sources.
+
+TIP: For every mission that involves delivery, try to locate
+additional delivery missions going to the same base. Failing
+that, locate commodities that you can sell for a profit at that
+base.
+
+TIP: You will probably need a fully-decked Centurion to do the
+plot missions.
+
+
+12.1  SANDOVAL 1
+
+Objective: Take iron from ND to Liverpool (Refinery system,
+Newcastle system), 15000 credits promised. Return to ND for
+payment. Sandoval say he doesn't have the money upfront, and he
+gives you an alien artifact as collateral. He promised you the
+money when you come back.
+
+You should get some commodity that Liverpool would want and sell
+them there.
+
+Enemies are randomly generated based on local distribution.
+
+When you return, you found Sandoval is nowhere to be found...
+Tayla was in the bar instead. Tayla informed you that Sandoval is
+dead... Probably due to that artifact now in your possession.
+She'll get you some info on it if you do some jobs for her...
+
+
+12.2  TAYLA 1
+
+Objective: Take plastics to Oakham (Pirate base, Pentonville
+system). Tayla will give you 10000 credits when you get there.
+
+Oakham is a pirate base with an asteroid field. On the other
+hand, Pentonville's pirates will be neutral to you as long as you
+work for Tayla, so it's not that bad.
+
+Don't fly too fast in an asteroid field or you can't dodge the
+asteroids.
+
+Enemies are randomly generated based on local distribution.
+
+
+12.3  TAYLA 2
+
+Objective: Take Brilliance (contraband!) to Hector (Mining base,
+Troy system). Tayla will pay you 15000 credits upon delivery.
+Then make it back to Oakham (Pirate base, Pentonville system).
+
+Expect to see many Militia Talons in the Troy system and random
+Confed/Militia patrols that will want your head for smuggling.
+The eject/retrieve trick won't work here. You should afterburner
+past them, ignoring their fire. You should have enough shields to
+ignore their fire. They usually can't keep up.
+
+This one is a tough mission. Try not to kill any Militia or
+Confed ships while you're at it. Stay on the afterburners and
+just fly right past them.
+
+
+12.4  TAYLA 3
+
+Objective: Take more Brilliance to New Constantinople (yes, that
+one). Tayla will pay you 20000 Credits upon delivery. Then make
+it back to Oakham (yes, again).
+
+Expect to see Confed patrols all over the place, no matter which
+route you take. Stilettos and Broadswords try to block you at
+critical points, despite Tayla's promise that she bribed the
+Confed patrols. Again, you should afterburner past them, ignoring
+their fire. You'll get a bonus later and don't worry about them
+any more.
+
+When you return, you complain to Tayla about how hot her missions
+have become. Tayla will give you a secret compartment, which
+cannot be scanned. This compartment can fit 20 cargo units and is
+only good for smuggling contraband. Nothing else will go in
+there.
+
+
+12.5  TAYLA 4
+
+Objective: Take more Brilliance to New Constantinople (yep,
+again), 10000 credits as compensation, and the secret
+compartment.
+
+When you leave Oakham, William Riodian (ace?, flying Centurion)
+shows up. Apparently, he's a bit jealous of the attention you're
+getting from Tayla, and he wants you out of the way. He'll ramble
+on for a while. Feel free to shoot him while he talks. Three
+Pirate Talons (pros?) will join him in attack. Take them out
+(preferred) or run away.
+
+If you make it to the jump point without taking out Riodian,
+he'll be there again with 5 Pirate Talons (pros?).
+
+Then just make it over to NC.
+
+When you return to Oakham, Tayla said she had no information
+herself, but she had found someone who does. Head for NC and look
+up Roman Lynch, who's a "made man" in the mob.
+
+
+12.6  LYNCH 1
+
+You arrive in NC, and Roman Lynch, with his bodyguard Miggs, need
+some work done. He'll investigate the artifact's hologram while
+you do the jobs for him.
+
+Objective: Deliver a message to Seelig, who will be at Nav 2 in
+Pentonville (Pirate) System. When the message is delivered,
+return to NC. You will be paid 10000 credits.
+
+When you get there, Seelig (pro? ace?) is flying a Talon. When he
+gets the message, he gets mad and wants to shoot you. If you feel
+like it, take him out, else run for it.
+
+
+12.7  LYNCH 2
+
+You're not happy at Lynch who tried to use you as a freebie
+bounty hunter, and he's not happy at investigating your artifact,
+as he's running into... problems investigating the artifact.
+
+Objective: Deliver weapons from NC to Siva (agricultural base,
+Rikel system). You'll be paid 15000 credits. Expect to see a
+rival gang, Salman Kroiz.
+
+When you reach Rikel's jump point, you'll encounter Kroiz (? ace)
+flying a Demon, and 2 more Demons (? pro?).
+
+If you don't kill Kroiz in the first encounter, he'll show up
+again with FIVE Demons as escort when you almost reach your
+destination.
+
+
+12.8  LYNCH 3
+
+Lynch confirmed that the artifact is alien... But he needs
+another mission done. His cousin needs to "get out of town",
+"away from the heat"...
+
+Objective: Land at Romulus (mining base, Castor system). You'll
+be paid 30000 credits.
+
+As you can imagine, Confeds want Lynch's cousin bad... Expect
+Stillettos and Broadswords to come after you, esp. inside the
+Castor system. Stilettos are FAST and you may have problems
+dodging them. Run really, really fast...
+
+
+12.9  LYNCH 4
+
+When you come back to NC, Miggs is not there... Lynch wants you
+to pickup Mr. Smythe from Liverpool (Refinery base, Newcastle
+system). Apparently Smythe found some info in the Oxford library.
+
+Objective: fly to Liverpool (Newcastle system) to pick up Smythe,
+30000 credits were promised.
+
+As you can guess, Miggs is out there, ready to do you harm. He's
+in a Talon (ace?) escorted by 3 other Talons in the Newcastle
+system waiting for you. After you take care of them, you can head
+for Oxford.
+
+You can actually go directly to Oxford and ignore Miggs
+altogether. You aren't going to get paid any way. Why take a
+chance?
+
+
+12.10      MASTERSON 1
+
+You arrive on Oxford, but Masterson refuses you entry. On the
+other hand, the university does need some work done... And you
+need to access the library. It's a deal.
+
+Objective: Escort Hunter Toth (Drayman) to Oxford. This guy wrote
+some nasty things about the Retros, so Retros are out to kill
+him. You'll be paid 10000 credits, and if you do all four
+missions you'll be allowed access to the library.
+
+Toth will be at Nav 3 at Oxford. You'll find 2 Retro Talons
+attacking him immediately, followed by 3 more Retro Talons.
+
+Make sure the Drayman reaches the planet and radios you "thanks"
+before you land, or you'll fail the mission. Stay BEHIND the
+Drayman!
+
+This is the third-hardest mission in the whole game. Don't be
+surprised if you failed this a few times.
+
+
+12.11      MASTERSON 2
+
+Here's the second mission for Masterson.
+
+Objective: Some data pirates are hacking Oxford's mainframe. Take
+out their base ship, the Black Rhombus. You'll be paid 10000
+credits and soon access to the library.
+
+Patrol the nav points and you'll find the Black Rhombus (Pirate
+Galaxy) escorted by 3+4 Pirate Talons. Once you've killed the
+Black Rhombus, you can go home.
+
+
+12.12      MASTERSON 3
+
+Masterson need some books shipped in, but someone else want the
+books, and they contracted bounty hunters to divert the shipment.
+
+Objective: Escort Vulcan's Forge (Drayman) to Oxford. Again,
+10000 credits and soon access to library.
+
+You'll find the Drayman at nav 3, with 4+2 Demons. The Demons are
+after you, not the Drayman, so you can be thankful.
+
+
+12.13      MASTERSON 4
+
+Now comes the series finale... And in my opinion, this is the
+second hardest mission in the game. Masterson needs this Drayman
+through the pirates really bad.
+
+Objective: Escort this final Drayman back to Oxford. Again, 10000
+credits and access to library (really, after this mission).
+
+You'll find the Drayman at nav 1, along with 5 Pirate Talons
+(pros?). The Drayman is REALLY weak, so you have to let the
+missiles fly as soon as you get in range. The Pirates want the
+cargo bad and Drayman won't last very long under their attack.
+
+When you've won and returned to Oxford, you can access the
+library. Inside, you'll locate a scanner, and then you'll get a
+link to Dr. Monkhouse. The artifact is apparently Steltek, who
+haven't been seen for millennia. He was last seen on Palan.
+
+So to Palan you go...
+
+
+12.14      LYNN MURPHY 1
+
+When you get there, you find Palan is currently under a blockade
+by bounty hunters. You land on Basra instead, and found Lynn
+Murphy in the bar. She organizes the resistance, trying to break
+the blockade.
+
+Objective: Prevent reinforcements from reaching the blockade.
+You'll be paid 15000 credits.
+
+When you get to Palan's nav 1, you'll find 4+3+3 Demons (aces?).
+Kill them all.
+
+
+12.15      LYNN MURPHY 2
+
+Destroy more enemy patrols.
+
+Objective: Kill all hostiles. You'll be paid 10000 credits.
+
+Go to Palan's nav 1 and you'll find 3 Demons followed by 4
+Centurions (all aces?). Take them all out.
+
+Centurions will be your biggest threat, so you may want to keep
+your missiles until they show up.
+
+
+12.16      LYNN MURPHY 3
+
+Bust the blockade and land on Palan.
+
+Objective: kill all opposition and land on Palan. You will get 2
+friendly Talons as wingmen. Get 15000 credits also.
+
+When you get near Palan, you'll encounter 3+2+2+2 Demons (all
+aces?). Take them all out and land.
+
+As you've killed a lot of Bounty Hunters, don't be surprised if
+Militia, Confed, or Bounty Hunters are after your hide.
+
+Upon landing, you found Dr. Monkhouse in the bar. He has a
+proposal for you...
+
+
+12.17      MONKHOUSE 1
+
+Dr. Monkhouse want to get over to Basra. He'll take a look at
+your artifact, and pay a little money too.
+
+Objective: land on Basra, get 5000 credits.
+
+When you get near Basra, the Kilrathi shows up! They want
+Monkhouse somehow... You'll see a Gothri, 2 Dralthi, then 2
+Gothris at nav 4.
+
+You can bypass the Kilrathi if you do NOT take the direct route
+to Basra.
+
+As you've killed a lot of Bounty Hunters, don't be surprised if
+Militia, Confed, or Bounty Hunters are after your hide.
+
+Monkhouse shows you the artifact fits together with the other
+piece he has. The result is both a map and a translation aid...
+The map seems to point to the frontiers out beyond Rygannon. To
+get more information, you'll have to join the Exploratory
+Services at Rygannon. If you join ES, and let Monkhouse publish
+anything you find, Monkhouse will give you his piece and the
+translated map.
+
+
+12.18      CROSS 1
+
+You got to Rygannon, and you found Taryn Cross of Exploratory
+Services. She wants you to explore those systems on the Steltek
+map... How lucky for you, huh?
+
+Objective: Explore Delta (4 nav points), get 10000 credits.
+
+You'll see some Pirate Talons in Delta system, and they don't
+like trespassers...
+
+As you've killed a lot of Bounty Hunters recently, don't be
+surprised if Militia, Confed, or Bounty Hunters are after your
+hide. Run really fast. The random pirates will probably consider
+you to be friendly, and that's good for you.
+
+Only the scripted pirates (nav 2 and nav 3) will be hostile.
+Expect 4 Talons at nav 2 and 4+4 Talons at nav 3.
+
+
+12.19      CROSS 2
+
+More exploration for Cross...
+
+Objective: explore the nav points of Beta, and find Captain
+Garrovick while you're at it. You'll get 10000 credits.
+
+When you get to Beta's nav 3, you'll find Captain Garrovick in a
+Centurion, and he's completely wacko. He then attacks you and
+you'll probably have to destroy him.
+
+Everybody else you encounter will be random.
+
+
+12.20      CROSS 3
+
+Taryn Cross want to know what drove Garrovick mad...
+
+Objective: explore the nav points of Gamma, return to Rygannon
+
+When you get there, you found a LOT of Kilrathi. You find 3
+Dralthi at nav 1. At nav 2, you'll find 3 Dralthis, 2 Gothris,
+and 3 Dralthis. Nav 3 is clear. Nav 4 has 3 Gothris, then Kamekh
+and Gothri. Gothris are all aces, and Dralthis are all pros.
+
+You'll also see a lot of random Pirates and maybe Kilrathis on
+the way to Gamma. Try to avoid a fight if it's possible. Don't
+waste any missiles as you will need them against the enemies in
+Gamma. Take out the Gothris first.
+
+
+12.21      CROSS 4
+
+One last mission for the Exploratory Services... But this one is
+a deucy.
+
+Objective: explore nav points at Delta Prime, another 10000
+credits.
+
+There are a lot of random Kilrathi in Gamma... When you make it
+into Delta, you'll find a Steltek derelict... Inside is a
+derelict fighter, which seem to have a weapon you can remove...
+So you grab it!
+
+When you leave, you'll encounter random enemies... A green thing
+is following you around... And kill you if it can. You can't hurt
+it though, even with that Steltek gun. Keep running... You'll
+have to get back to Rygannon. In the meanwhile, you're chased
+everywhere by that green thing...
+
+When you get to Rygannon to claim the final 10000, Taryn Cross
+will thank you for your services.
+
+
+12.22      GOODIN 1
+
+If you go to ANY mining base other than Rygannon, you'll find
+Sandra Goodin, attach‚ to Admiral Terrell, in the bar.
+
+[If you can't make it to any mining base, turn on
+invulnerability. Remember to turn it off when you get there.]
+
+Admiral Terrell is in charge of the whole sector from his HQ at
+Perry Naval Base. Confed have noticed the green thing. You should
+make your way to Perry Naval Base... Maybe the admiral knows
+what's going on...
+
+Objective: get to Perry Naval Base safely (no, you don't get paid
+for this)
+
+Doesn't matter which way you go, you'll run into a lot of Retros
+(figure 5+3+3 Talons). Everybody else is random. Keep running
+away from that green blob and everybody else.
+
+
+12.23      TERRELL 1
+
+You made it to Perry Naval Base and found Admiral Terrell's
+office. The admiral believe that green blob is a Kilrathi secret
+weapon that somehow thought you're its guide. Commodore Reissman
+has assembled a fleet at "Blockade Point Tango". You'll lead the
+drone there and let the Confeds kill it.
+
+Objective: Make it over to Blockade Point Tango. You'll get 30000
+credits if you succeed.
+
+On your way... You encounter some random travelers... And Steltek
+showed up! The drone is actually Steltek and the last remaining
+Steltek weapon. It's following that gun you found. While the
+Steltek want to take the gun back, you made a deal. You will
+destroy the drone for them if you can keep the gun. They
+reluctantly agreed. The Steltek boosted your Steltek gun so you
+can take out that drone, and they took the derelict ship.
+
+When you got to Blockade Point Tango, you found the Confed fleet,
+with 2 Paradigms and 2 Broadswords. Reissman informed you of his
+plans before the drone showed up. Confeds quickly found to their
+dismay that they can't destroy the drone either. The only thing
+that can hurt the drone is your Steltek gun... And it's all up to
+you.
+
+Here are some combat tips against the drone:
+
+-- Don't get between the Confed fleet and the drone! While the
+Confeds can't hurt the drone, the Confeds can hurt you!
+
+-- Dodge the drone's shots. Think of the drone as a huge Demon
+with tremendous frontal firepower. When it turns toward you, turn
+away.
+
+-- The drone will accelerate away from you, then turn back at you
+to shoot you, go PAST you, then turn back to repeat.
+
+--To beat it, you have to hit it while it's heading away, then
+dodge its shots as it heads back past you, and hit it again while
+it's heading away. Repeat until you kill it.
+
+Return to Terrell's office at Perry Naval Base for the thanks of
+the Confederation... Stay in his office to watch some funny
+dialog.
+
+
+
+13   Righteous Fire Changes
+   
+Righteous Fire introduced many changes, most of them are listed
+as below.
+
+
+13.1  NEW EQUIPMENT
+
+Isometal Armor is now the best armor, twice as good as tungsten,
+twice as expensive.
+
+Advanced Repair Droid is now available, twice as expensive, twice
+as fast.
+
+Gun cooler is now available, decreases refire delay by 25%.
+Basically allows a gun to fire 1/3 again as fast. So instead of 3
+shots, you'll shoot 4 times during the same period. This can make
+those slow-firing guns worth buying, if you have the energy to
+power them all.
+
+Shield Regen devices: regenerate shields 25% faster
+
+Thruster Enhancer: improved turn rate by about 20%.
+
+
+13.2  NEW SHIP UPGRADES
+
+Orion can now go up to level 7 engine and level 7 shields.
+
+Tarsus can go up to level 4 engines and level 3 shields.
+
+
+13.3  NEW WEAPONS
+
+A new weapon also becomes available: The Fusion Cannon
+
+Shot V: ????   Refire: 0.5 sec     Energy: 12 GJ  Damage: 6.6 cm
+ae   Price: 100000
+
+
+13.4  OTHER CHANGES
+
+Retros are noticeably nastier.
+
+You'll encounter some new ships.
+
+
+
+14   Righteous Fire Plot Missions
+   
+Righteous Fire starts quite simple... Apparently someone broke
+into your hangar and stole your Steltek gun. How do you get it
+back?
+
+NOTE: Steltek Cannon may be extremely weak, as Origin changed the
+code a bit to prevent people from using the PREDIT editor to play
+with the game too much.
+
+When you are ready to start, head to Oxford, and see if your old
+pal "Masterson" is still around... Also note the news items:
+Retros have gotten a new leader and they are making their
+presence known...
+
+
+14.1  MASTERSON 1
+
+Transport Research Material to Edom, in New Constantinople, then
+return to Oxford to get paid. Pays 10K.
+
+No scripted enemies, just random stuff.
+
+
+14.2  MASTERSON 2
+
+Patrol Oxford's nav points for enemies. Pays 10K.
+
+You'll likely meet quite a few pirate or Retro Talons (at least 6
+total). Just kill them.
+
+
+14.3  MASTERSON 3
+
+Transport "books" to Burton, in Junction system. Pays 10K.
+
+Random encounters only, nothing to it.
+
+
+14.4  MASTERSON 4
+
+Transport requests an escort to the jump point. Pays 10K
+
+When you launch, you'll likely see Retros closing in the
+transport. Take them out (probably 3+3 Talons). Follow the
+transport (it is quite slow) and make sure it jumps out before
+you head back to Oxford and land.
+
+
+14.5  MASTERSON 5
+
+Transport "artwork" to Perry Naval Base. Pays 10K.
+
+Random encounters until you get to Perry system. Some unknown
+ships will attack, but they should pose no challenge to you.
+
+Now you need to seek out another employer... You have three
+choices: Lynn Murphy, Goodin (Confed), or Tayla. You need to
+finish at least two out of three before Masterson will give you
+the lead you need.
+
+NOTE: Lynn Murphy is at Edom, in New Constantinople System.
+
+NOTE: Goodin, who's Admiral Terrell's attache, is at Perry Naval
+Base.
+
+NOTE: Tayla is at Oakham, Pentonville system...
+
+
+14.6  LYNN MURPHY 1
+
+Go to 44-P-1M and patrol the nav points. Pays 10k.
+
+Random encounters only.  Just patrolt he points.
+
+
+14.7  LYNN MURPHY 2
+
+Run the blockade to Liverpool at New Castle. Pays 20K.
+
+2+3 Bounty Hunter Demons at the navpoints in Liverpool. You can
+just blow past them.
+
+
+14.8  LYNN MURPHY 3
+
+Retros have blockaded New Detroit. Run in some food to New
+Detroit for 30k.
+
+You'll see 4 Retros then 4 Retros on either side of the jump. At
+New Detroit, two waves of Retros. Feel free to fly past them.
+
+
+14.9  LYNN MURPHY 4
+
+Go to Metsor, clear Nav Points, for 50K. (Hmmm... there's a
+catch, right?) Return.
+
+"Unknowns" ambush you at the Metsor jumppoint in Newcastle
+System! Then Retro Talons at one Nav point, waves of Pirates at
+the other wait for you.
+
+Upon return, Lynn Murphy offers you 30K bounty on Governor
+Menesch. If you ever take out the governor, come back and collect
+more credits.
+
+From here on, you either head to Tayla or go see Sandra Goodin
+(Confed)...
+
+NOTE: Sandra Goodin is at Perry Naval Base.
+
+NOTE: Tayla is at Oakham, Pentonville system...
+
+
+14.10      GOODIN 1
+
+Confed needs you to fly to Nitir (Nitir System) and defend it
+from Kilrathi raiders. Pays 10K.
+
+The place is full of Gothris. Good luck!
+
+
+14.11      GOODIN 2
+
+Confed needs you to fly to Charon, in Hyades system, and defend
+it from Kilrathi raiders. Pays 10K.
+
+You're almost at the border, so expect LOTS of Kilrathi presence,
+up to even Kamekh corvettes. Otherwise, it's just random
+Kilrathi.
+
+
+14.12      GOODIN 3
+
+Patrol New Caledonia System, destroy all intruders. Pays 10K
+
+Just more random stuff, expect Kilrathi presence.
+
+NOTE: You'll need to land after completing the mission to refuel.
+
+
+14.13      GOODIN 4
+
+Patrol Regallis System, destroy all intruders. Pays 10K.
+
+Random enemies in Regallis (Kilrathi, Retro, Pirate), except for
+some unknowns at nav 2.
+
+NOTE: You'll need to land after completing the mission to refuel.
+
+When you return to Perry, Goodin also gives you a bounty on
+Governor Menesch.
+
+NOTE: Now that you've completed two series (Murphy and Goodin),
+you can go directly back to Masterson for his contacts, OR you
+can head for Oakham (Pentonville System) to see if Tayla has a
+job for you. If you haven't, choose between Murphy and Tayla.
+
+
+14.14       TAYLA 1
+
+Move her personal effects from Oakham (Pentonville) to Tuck's
+(Sherwood).  Pays 10K. She'll meet you there.
+
+Just random enemies.
+
+
+14.15      TAYLA  2
+
+Run Brilliance from Tuck's in Sherwood to Saratov in Prasepe.
+Pays 20K.
+
+You thought this is simple because you got that hidden
+compartment, right? Militia have somehow gotten past it... They
+can see THROUGH that compartment now. Just RUN really fast.
+
+
+14.16      TAYLA 3
+
+Run Brilliance from Tuck's in Sherwood to Speke in Junction. Pays
+30K.
+
+Again, militia doesn't like you smuggling. I'd suggest you just
+fly right past them and save your missiles. You can't restock
+those missiles until a LOT later.
+
+
+14.17      TAYLA 4
+
+Run Brilliance from Tuck's in Sherwood to Basque in Pyrennes.
+Pays 40K.
+
+Just do the same thing: keep running past them. Don't make the
+militia mad at you by killing any of them.
+
+
+
+Now that you're done, and presumably you've finished Lynn
+Murphy's missions and Sandra Goodin's confed missions, it's time
+to head back to Oxford...
+
+Masterson is finally impressed, and he tells you that his friend
+Monte, who is in hiding, is on Palan. He'll meet you at the bar
+there, so go there.
+
+
+14.18      MONTE 1
+
+You found Monte in the bar at Palan. He wants to go to New
+Detroit, and he's not paying a penny. Guess you'll have to do
+this "gratis".
+
+A couple unknowns block you at the jumpoint to ND, otherwise just
+random stuff.
+
+
+14.19      MONTE 2
+
+The Retros seem to be under this new leader called Modecai Jones.
+No one knows about him, but Monte's contact may know something
+more. Fly to Drake in Capello System and meet the contact there
+for more info.
+
+Just random stuff, nothing too special.
+
+
+14.20      INFORMANT 1
+
+You found the informant in the bar. Take the document back to
+Monte at New Detroit.
+
+SIDENOTE: care to guess who is this informant and what does he
+do?
+
+Some more of those unknown fighters block your way. Just blow
+past them or kill them. There's nothing else to it.
+
+
+14.21      MONTE 3
+
+Monte explained that Modecai Jones is at a secret base somewhere,
+and somehow they learned that Monte's looking for them. You need
+to take off and destroy the Retro ambush at Nexus system, nav 4.
+
+Fly there. When you jump into Nexus system, you'll see some more
+of those Unknowns, and when you get to nav 4, you'll face A LOT
+of Retro Talons. Save your missiles for that. Take them all out,
+and return to ND.
+
+
+14.22      MONTE 4
+
+Monte doesn't know where the secret retro base is, but he does
+have a lead on where this Governor Menesch is... And you can
+collect those bounties...Menesch is believed to be at Troy
+system, or one of the neighboring systems. Patrol the place...
+
+Head to Troy, and explore the nearby nav points. Then follow the
+jump to the next system (Regallis?) that you haven't checked.
+You'll eventually come across Governor Menesch with escorts.
+Menesch will tell you a story about how he sold your gun to the
+Retros, and those unknown ships are Retros also. He'll jump out,
+so jump after him. Take out the escorts. Now you can kill him.
+
+Don't forget to head back to Lynn Murphy (Edom in New
+Constantinople) and Sandra Goodin (Perry Naval Base) for your
+bounties.
+
+
+14.23      GOODIN 5 OR TERRELL 1 (DEPENDING ON HOW YOU COUNT)
+
+This only occurs after you've taken out Governor Menesch and
+gotten the bounty from Goodin.
+
+Fly to Blockade Point Alpha, Nav 1, and follow Commodore Uhler's
+instructions. When you get there, Commodore Uhler request that
+you patrol the system.
+
+Only one problem... The place is FULL of Kilrathi ships. You'll
+see at least 3 at every navpoint, except the last, which has NINE
+ships (and a small Confed force).
+
+NOTE: One of the Kilrathi will boast that they have been selling
+ships to the Retros so they can kill more humans. That explains
+those "unknown" ships flying about...
+
+When you return, visit the Admiral in his office at Perry Naval
+Base.
+
+
+14.24      TERRELL 1 OR TERRELL 2 (DEPENDING ON HOW YOU COUNT)
+
+Admiral Terrell needs privateers to search the various systems
+for signs of Modecai Jones. Head to Macabee in Nexus, then
+proceed to patrol Death, Pestilence, and War systems. Pays 20K.
+
+Retros are ALL OVER the area, kill them all, and try to keep your
+ship intact.
+
+When you head back, a Pirate ship tell you that his "employer"
+wants to meet you at Drake, Capello system. You have a good idea
+who this "employer" is...
+
+
+14.25      INFORMANT 2
+
+You guessed right, the "employer" was Monte's "informant", and he
+is actually a high-level Retro priest. He knows where the Retro
+secret base is... And he has reasons to want Jones gone. The
+secret base is in Valhalla system. Jones is there or nearby. Find
+him and destroy him. No pay.
+
+It's a long flight to Valhalla, and big battle is ahead, so save
+your missiles. There are just random enemies (mostly Retros) on
+the way.
+
+When you get to Valhalla, fight your way through, and land at the
+Retro base called Gaea. Enter the temple. Do what comes natural
+undercover, and you'll get your clue about where Jones is.
+
+Take off, and follow the clue. You'll find Jones and his escort.
+[If you still don't get it, look below]
+
+Take out all the Salthi (yes, Salthi) escorts piloted by Retros.
+There would be more than 10. Then take on Jones himself in a
+decked-out Centurion. He has your Steltek gun. Fry him.
+
+Return to Perry Naval base to claim your fee from the admiral,
+and congratulations, you've won!
+
+[Still don't know where Jones would be? Look for the moon, and
+fly toward it... You'll see... A jump point! Jump through, and
+Jones will be there...]
+
+
+14.26      BONUS?
+
+UNCONFIRMED: If you find Roman Lynch at New Constantinople, he
+asks you to kill Governor Menesch also (a lot of people wants
+that guy dead!). In return, he'll "reset" your reputation to
+"neutral" (toward everybody except perhaps Kilrathi and Retros)
+by hacking Confed and Pirate databases. Once Governor Menesch is
+dead (as plenty of other people wants his head), you can have
+Lynch reset the first time for free. Second time or later will
+cost you some credits.
+
+
+
+15   Misc. Stuff
+   
+There are some editors and enhancements for Privateer out there,
+look around the web for them.
+
+--THE END--
+
+

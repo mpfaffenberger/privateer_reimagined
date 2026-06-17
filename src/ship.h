@@ -168,9 +168,10 @@ struct Ship {
 
     // ---- weapons ------------------------------------------------------
     // Per-instance copy of the fitted gun mounts. Initialised from
-    // klass->default_guns at spawn for NPCs; for the player ship
-    // (klass=nullptr) we hardcode a default loadout in main.cpp until
-    // the upgrade-economy commit lets the player pick one. Per-mount
+    // klass->default_guns at spawn for NPCs; the player ship is also
+    // seeded from its ShipClass (tarsus) default_guns in main.cpp, with
+    // cockpit-tuned mount offsets, until the upgrade-economy commit lets
+    // the player pick one. Per-mount
     // because future code will swap weapons at-rest, and that's where
     // GunMount::type changes — keeping it on Ship rather than ShipClass.
     std::vector<GunMount> mounts;

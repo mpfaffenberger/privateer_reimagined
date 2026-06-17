@@ -81,14 +81,55 @@ struct ShipClass {
     // ---- sensing / engagement -----------------------------------------
     // Privateer-canonical radar reach. weapons_range is a soft AI hint —
     // "engage within this distance". Each gun has its own true range_m.
-    float radar_range   = 25000.0f;   // m
+    //
+    // radar_range is the SENSOR / DETECTION / AWARENESS sphere — this is
+    // what actually wakes the AI and starts an engage (gated by faction
+    // stance in perception.cpp). Live-corrected to the Privateer-canonical
+    // 15000 world units (docs/ai_model.md §11 / sensor cull 0x3a98). It is
+    // NOT CNST f1 — f1 is the cosmetic comm/taunt range (see comms_f1).
+    float radar_range   = 15000.0f;   // m  (sensor/detection, §11)
     float weapons_range =  3000.0f;   // m
+
+    // ---- AI tuning: Privateer CNST skill vector (raw 1:1 world units) --
+    // Decoded from PRCD.EXE + live-tested on vanilla; see docs/ai_model.md
+    // §2.2 / §9.4 / §9.8 / §11. Stored raw (Privateer scale); consumers
+    // multiply by ship_ai's single `kPvtScale` so the whole stack can be
+    // rescaled in one place later. Per-faction defaults are applied in
+    // ship_class.cpp when ship.json doesn't override them.
+    //
+    //   engage_f0          gun / break-off radius: the AI breaks off when
+    //                      dist < (f0 + selfR + targetR). [C]+[L] (§11.3)
+    //   comms_f1           COMMS / TAUNT chatter range — when the NPC
+    //                      barks at a hostile. NOT detection. [L] (§11.1)
+    //   maneuver_jitter_f3 evade/jink jitter gain: pirates/aces 75 (jerky),
+    //                      merchants 30 (smooth), Kilrathi/drone 40. [C]
+    //   skill_f2           experience/accuracy skill tier (FAQ §5.1 experience
+    //                      axis, pairs with f3): elites 60, Kilrathi 40,
+    //                      baseline 45. [I] no traceable consumer (§7.13.6).
+    //   morale_f6          MORALE / CAUTION (FAQ §5.1 morale axis): LOW =
+    //                      fanatical (Kilrathi 64, fight-to-death), HIGH =
+    //                      timid (merchant 128, flees early). Mapped to a flee
+    //                      HP threshold in ship_ai. [I tuning] — no resident
+    //                      consumer found (§7.13.5); role from FAQ + faction
+    //                      values, NOT a debugger poke (the old "aggression"
+    //                      reading was noise, superseded by docs §0).
+    float engage_f0          = 600.0f;
+    float comms_f1           = 1500.0f;
+    float maneuver_jitter_f3 = 75.0f;
+    float skill_f2           = 45.0f;
+    float morale_f6          = 76.0f;
 
     // ---- AI personality -----------------------------------------------
     // Gates the state machine's response to perceived hostiles.
     // Standard ships fight; Cowards (merchants, civilians) flee on
     // sight. See the enum at the bottom of this header.
     AIPersonality personality = AIPersonality::Standard;
+
+    // Optional AI logic-table override (assets/ai/<name>.ai.json). When set,
+    // ai_brain resolves this ship's brain to the named table FIRST (before the
+    // per-faction / default tables). Lets heavy gunships (Orion/Galaxy) run a
+    // "heavy" standoff profile while light fighters use the default dogfight.
+    std::string ai_table;
 
     // ---- slot caps for the upgrade economy (informational v1) ---------
     uint8_t max_engine_level = 1;

@@ -56,6 +56,7 @@
 #include "repair.h"
 #include "savegame.h"
 #include "ship.h"
+#include "ai_brain.h"
 #include "ship_class.h"
 #include "ship_registry.h"
 #include "ship_sprite.h"
@@ -229,6 +230,7 @@ int main() {
     shield::load_table("docs/privateer_ship_data.json");
     armor::load_table("docs/privateer_ship_data.json");
     ship_class::load_all("assets/ships");
+    ai_brain::load_all("assets/ai");   // validate the AI logic tables parse
     outfitting::load("assets/data/ship_prices.json", "assets/data/equipment_prices.json");
 
     galaxy::Galaxy gal;

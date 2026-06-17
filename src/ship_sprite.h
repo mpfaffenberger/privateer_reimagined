@@ -43,6 +43,12 @@ struct ShipSpriteObject {
     HMM_Vec4 tint{1, 1, 1, 1};
     bool lights_enabled = true;
 
+    // Mirrors Ship.controller.afterburner each frame (synced from ship.cpp's
+    // flight_controller_step). The sprite renderer uses it to double every
+    // animated light's size while afterburners are active -- a punchy
+    // visual cue that the AI just spooled up. Colors stay as authored.
+    bool afterburner = false;
+
     // Kinematics. Identity orientation = nose along world +Z, top along
     // world +Y — matches the atlas-authoring convention where az=0 / el=0
     // places the camera in front of the ship's nose. Cell selection uses

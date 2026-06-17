@@ -14,6 +14,10 @@
 // — Privateer-style "my guns are always audible", immune to the
 // degenerate 3D case where the source IS the listener. NPC shots are
 // positional so a Talon opening up behind you is heard behind you.
+// The SAMPLE also differs: the user's F7 labels expose a loud clip and a
+// quieter twin per gun (sfx_00..08 / sfx_09..17). Player guns play the
+// loud clip, NPC guns the quiet twin — authentic, and it keeps the
+// player's own guns front-and-center over a furball's distant chatter.
 //
 // Impact rate limit: a global ~8 sounds/sec gate (token timestamps in
 // sfx.cpp). Sustained multi-mount beam-spam otherwise stacks dozens of
@@ -25,7 +29,16 @@
 // by this module. main.cpp calls update_engine_hum once per frame with
 // throttle inputs; the mapping (documented at the impl) lerps gain
 // toward the target to avoid zipper artifacts and force-zeroes in
-// non-Flight modes. Cruise engage rising edge fires the windup one-shot.
+// non-Flight modes. The idle bed is deliberately quiet + smooth (np-4dr
+// de-buzzed it).
+//
+// Afterburner (np-4dr): the cruise/afterburner sound (sfx_22) is a HELD
+// LOOP, not a one-shot. update_engine_hum manages its lifecycle off the
+// same cruise_level it already gets: the cruise rising edge starts a
+// dedicated looping voice (after a brief windup stab), held TAB sustains
+// it (gain lerped to a roar), and the falling edge — or any Flight-mode
+// exit — stops it. Like the hum it's a protected (uncullable) loop, and
+// it layers OVER the quiet idle bed.
 // -----------------------------------------------------------------------------
 
 #include <HandmadeMath.h>
@@ -46,10 +59,15 @@ void load_all();
 // ---- combat -----------------------------------------------------------------
 // Per-gun firing sound: `type` selects the sample (each GunType binds to
 // its own original Privateer SFX in load_all, falling back to the generic
-// laser_fire when no per-gun sample is present). Player shots play 2D
+// laser_fire when no per-gun sample is present). is_player picks the loud
+// (player) vs quiet (NPC) twin AND the playback path: player shots play 2D
 // (always audible); NPC shots are positional + coalesced (see impl).
 void gun_fired(GunType type, HMM_Vec3 world_pos, bool is_player);
-void impact(HMM_Vec3 world_pos, bool shield);      // shield=true: absorbed thunk
+// Impact thunk. shield=true: absorbed (soft) thunk; false: armor crack.
+// victim_is_player selects the clip variant — the user's labels give
+// distinct player-vs-NPC damage sounds (armor: sfx_23/sfx_24,
+// shield: sfx_25/sfx_26). The damage pass knows who took the hit.
+void impact(HMM_Vec3 world_pos, bool shield, bool victim_is_player);
 void ship_exploded(HMM_Vec3 world_pos, bool big);  // big: cargo/capital hulls
 
 // ---- missiles + lock (np-zte.2) ---------------------------------------------
@@ -69,7 +87,8 @@ void lock_acquired();
 // Per-frame hum control. `speed_frac` = |player velocity| / max speed
 // (0..1-ish, clamped); `cruise_level` = camera.cruise_level (0..1).
 // `flight_mode` false (Landed/Dying/Loading) ramps the hum to silence.
-// Fires cruise_windup automatically on the cruise rising edge.
+// Also owns the afterburner held-loop lifecycle (start on cruise rising
+// edge, stop on falling edge / mode exit) — see the header note above.
 void update_engine_hum(float speed_frac, float cruise_level,
                        bool flight_mode, float dt);
 
@@ -77,11 +96,12 @@ void update_engine_hum(float speed_frac, float cruise_level,
 void ui_click();
 
 // ---- jump (np-6al.3) ---------------------------------------------------------
-// Hyperspace sting played when a jump engages. Reuses the cruise-windup
-// sample (a rising engine swell) at full gain — close enough to a "jump
-// whoosh" that authoring a bespoke sample wasn't worth a new asset; swap
-// the file in load_all() if a dedicated jump sound ever lands. 2D: it's
-// the player's own drive spooling into hyperspace, not a world event.
+// Hyperspace sting played when a jump engages. The user's F7 labels show
+// the real jump is TWO clips in sequence: sfx_41 then sfx_42 ("plays
+// immediately followed by 42 when you press j inside a jump gate"). We
+// play sfx_41 (jump) immediately and queue sfx_42 (jump2) to follow.
+// Distinct from the cruise-windup sample now (they were wrongly shared).
+// 2D: it's the player's own drive spooling into hyperspace.
 void jump();
 
 } // namespace sfx

@@ -1,0 +1,91 @@
+{
+  "name": "default",
+
+  "//": "Data-driven condition->maneuver AI logic table. Clean-room: the format",
+  "//1": "mirrors the architecture of vanilla Privateer's decoded 3-tier MNVR tree",
+  "//2": "and PGG/Vega Strike's condition->script agg.xml, reimplemented for our",
+  "//3": "Apache-2.0 engine. Numbers are the vanilla decode (docs/ai_model.md s0).",
+  "//4": "Window edges may be literals OR per-pilot CNST tokens: f0, f0_radii, f1,",
+  "//5": "f2, f3, f6, pursue_switch (1000), gun_range, flee_threshold, sensor(15000).",
+  "//6": "Three morale tiers selected from CNST f6 (low=fanatical, high=timid).",
+
+  "tiers": {
+
+    "steady": {
+      "//": "baseline pirate / hunter / militia: pursue, attack-run, break, flee at f6 HP",
+      "logic": [
+        { "maneuver": "lead_pursuit", "priority": 4, "duration": 2.0,
+          "when": [ { "metric": "distance", "min": "pursue_switch", "max": "sensor" } ] },
+        { "maneuver": "attack_run", "priority": 5, "duration": 2.5,
+          "when": [ { "metric": "distance", "min": "f0_radii", "max": "pursue_switch" } ] },
+        { "maneuver": "break_off", "priority": 6, "duration": 4.0,
+          "when": [ { "metric": "distance", "min": 0, "max": "f0_radii" } ] },
+        { "maneuver": "flee_home", "priority": 8, "duration": 3.0,
+          "when": [ { "metric": "hull", "min": 0, "max": "flee_threshold" } ] },
+        { "maneuver": "lead_pursuit", "priority": 0, "duration": 2.0, "when": [] }
+      ],
+      "interrupt": [
+        { "maneuver": "flee_home", "priority": 8, "duration": 3.0,
+          "when": [ { "metric": "hull", "min": 0, "max": "flee_threshold" } ] },
+        { "//": "THREAT-GATED jink: only when the target is lined up on me AND close enough to hit.",
+          "//2": "pri 6 > attack_run(5)/pursuit(4) so a tracked ship shakes aim; break_off(7)/flee(8) still win.",
+          "maneuver": "evade_jink", "priority": 6, "duration": 0.6,
+          "when": [ { "metric": "target_facing_me", "min": 0.5, "max": 1.01 },
+                     { "metric": "distance", "min": 0, "max": "gun_range" } ] },
+        { "maneuver": "break_off", "priority": 7, "duration": 4.0,
+          "when": [ { "metric": "distance", "min": 0, "max": "f0_radii" } ] }
+      ]
+    },
+
+    "fanatical": {
+      "//": "Kilrathi / drone (f6<=70): presses the attack, barrel-rolls, basically never flees",
+      "logic": [
+        { "maneuver": "lead_pursuit", "priority": 4, "duration": 2.0,
+          "when": [ { "metric": "distance", "min": "pursue_switch", "max": "sensor" } ] },
+        { "maneuver": "attack_run", "priority": 5, "duration": 2.5,
+          "when": [ { "metric": "distance", "min": "f0_radii", "max": "pursue_switch" } ] },
+        { "maneuver": "break_off", "priority": 6, "duration": 2.5,
+          "when": [ { "metric": "distance", "min": 0, "max": "f0_radii" } ] },
+        { "maneuver": "flee_home", "priority": 8, "duration": 2.0,
+          "when": [ { "metric": "hull", "min": 0, "max": 0.05 } ] },
+        { "maneuver": "lead_pursuit", "priority": 0, "duration": 2.0, "when": [] }
+      ],
+      "interrupt": [
+        { "maneuver": "flee_home", "priority": 8, "duration": 2.0,
+          "when": [ { "metric": "hull", "min": 0, "max": 0.05 } ] },
+        { "//": "THREAT-GATED: fanatical only jinks when the target is nearly dead-on (high threshold), else presses.",
+          "maneuver": "barrel_roll", "priority": 6, "duration": 0.6,
+          "when": [ { "metric": "target_facing_me", "min": 0.7, "max": 1.01 },
+                     { "metric": "distance", "min": 0, "max": "gun_range" } ] },
+        { "maneuver": "break_off", "priority": 7, "duration": 2.5,
+          "when": [ { "metric": "distance", "min": 0, "max": "f0_radii" } ] }
+      ]
+    },
+
+    "timid": {
+      "//": "merchant / civilian (f6>=110): flees early at the f6 HP threshold, weaves more",
+      "logic": [
+        { "maneuver": "flee_home", "priority": 8, "duration": 3.0,
+          "when": [ { "metric": "hull", "min": 0, "max": "flee_threshold" } ] },
+        { "maneuver": "lead_pursuit", "priority": 4, "duration": 2.0,
+          "when": [ { "metric": "distance", "min": "pursue_switch", "max": "sensor" } ] },
+        { "maneuver": "attack_run", "priority": 5, "duration": 2.5,
+          "when": [ { "metric": "distance", "min": "f0_radii", "max": "pursue_switch" } ] },
+        { "maneuver": "break_off", "priority": 6, "duration": 5.0,
+          "when": [ { "metric": "distance", "min": 0, "max": "f0_radii" } ] },
+        { "maneuver": "lead_pursuit", "priority": 0, "duration": 2.0, "when": [] }
+      ],
+      "interrupt": [
+        { "maneuver": "flee_home", "priority": 8, "duration": 3.0,
+          "when": [ { "metric": "hull", "min": 0, "max": "flee_threshold" } ] },
+        { "//": "THREAT-GATED: timid weaves the moment the target points near it (low threshold).",
+          "maneuver": "evade_left_right", "priority": 6, "duration": 0.8,
+          "when": [ { "metric": "target_facing_me", "min": 0.3, "max": 1.01 },
+                     { "metric": "distance", "min": 0, "max": "gun_range" } ] },
+        { "maneuver": "break_off", "priority": 7, "duration": 5.0,
+          "when": [ { "metric": "distance", "min": 0, "max": "f0_radii" } ] }
+      ]
+    }
+
+  }
+}

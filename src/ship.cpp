@@ -128,6 +128,11 @@ void flight_controller_step(Ship& s, float dt) {
     const float ds       = s.controller.desired_speed - s.sprite->forward_speed;
     const float max_step = mobility::accel_mps2(s.klass->acceleration) * dt;
     s.sprite->forward_speed += std::clamp(ds, -max_step, +max_step);
+
+    // Push the afterburner flag through to the sprite snapshot so the
+    // renderer can react (recolor + grow BLUE nav lights). The visual
+    // doesn't drive any kinematics -- that's all desired_speed above.
+    s.sprite->afterburner = s.controller.afterburner;
 }
 
 } // namespace

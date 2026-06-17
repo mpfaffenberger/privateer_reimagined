@@ -132,9 +132,10 @@ struct PlayerState {
 namespace player {
 
 // The canonical Privateer start: a Tarsus, a modest bankroll, the Troy
-// system, an empty hold. Gun loadout mirrors the hardcoded player
-// mounts in main.cpp (2x meson blaster) so the data and the spawned
-// Ship agree from day one. `start_system` lets the --system CLI
+// system, an empty hold. Gun loadout is the canonical 2x mass driver,
+// matching the Tarsus ShipClass default_guns that main.cpp sources the
+// player mounts from, so the data and the spawned Ship agree from day
+// one (np-e3x). `start_system` lets the --system CLI
 // override flow through.
 PlayerState new_game(const std::string& start_system);
 

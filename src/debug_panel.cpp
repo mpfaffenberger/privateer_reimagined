@@ -9,6 +9,7 @@
 
 #include "debug_panel.h"
 #include "audio.h"
+#include "music.h"
 #include "commodity.h"
 #include "faction.h"
 #include "game_state.h"
@@ -237,6 +238,19 @@ static void build_audio_section(AudioDebugRequests& req) {
     if (ImGui::Button("play test blip (2D)"))                req.play_blip_2d  = true;
     ImGui::SameLine();
     if (ImGui::Button("play test blip at nav target (3D)"))  req.play_blip_nav = true;
+
+    // Music layer (np-m96): its own master "bus" volume + mute, separate
+    // from the SFX mix. Reads/writes the music module directly (main-thread
+    // ImGui build) — no deferred-request plumbing needed for a dev widget.
+    ImGui::Separator();
+    ImGui::Text("music: %s%s", music::to_name(music::current()),
+                music::any_loaded() ? "" : "  (none loaded)");
+    float mvol = music::master_volume();
+    if (ImGui::SliderFloat("music volume", &mvol, 0.0f, 1.0f, "%.2f"))
+        music::set_master_volume(mvol);
+    bool mmute = music::muted();
+    if (ImGui::Checkbox("mute music", &mmute))
+        music::set_muted(mmute);
 }
 
 // Read-only player summary — proves the PlayerState wiring (np-eag.3)

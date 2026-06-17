@@ -30,10 +30,18 @@
   "default_shield":   "Light Shields",
   "default_armor":    "Plasteel Armor",
 
+  // Muzzle offsets are WORLD METERS (firing.cpp applies body_to_world
+  // rotation but NO size scaling). The original sub-2 m offsets put all
+  // three muzzles within 3 m of each other -- at 1-3 km combat range, three
+  // parallel tracers from 3 m-apart muzzles visually merge into a single
+  // stream. Widened to ~12 m chin separation + a clearly-elevated nose gun
+  // so the player can SEE all three streams firing from an NPC Talon.
+  // (Aim accuracy is unaffected; tracers still fly parallel along the
+  // ship's forward axis -- no convergence.)
   "default_guns": [
-    { "offset_body": [-1.5, 0.0, 2.0], "type": "mass_driver" },
-    { "offset_body": [ 1.5, 0.0, 2.0], "type": "mass_driver" },
-    { "offset_body": [ 0.0, 0.4, 2.5], "type": "particle_cannon" }
+    { "offset_body": [-6.0, 0.0, 4.0], "type": "mass_driver"     },
+    { "offset_body": [ 6.0, 0.0, 4.0], "type": "mass_driver"     },
+    { "offset_body": [ 0.0, 2.0, 5.0], "type": "particle_cannon" }
   ],
 
   "energy_max":      150,

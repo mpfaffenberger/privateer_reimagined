@@ -374,6 +374,15 @@ void append_ship_sprites_for_camera(std::deque<ShipSpriteObject>& ships,
         // sprites don't hide the hull silhouette we're trying to inspect.
         if (ship.lights_enabled) {
             sprite.lights = frame->art->light_spots;
+
+            // Afterburner cue: every animated light doubles in size while
+            // the ship is burning -- colors stay as authored. Mutating only
+            // this frame's per-instance copy keeps the ART's spots intact,
+            // so non-burning ships and the sprite light editor still see
+            // the original sizes. Cheap O(n_lights); ~4-8 spots per ship.
+            if (ship.afterburner) {
+                for (LightSpot& ls : sprite.lights) ls.size *= 2.0f;
+            }
         }
         out_sprites.push_back(sprite);
     }

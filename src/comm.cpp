@@ -183,6 +183,15 @@ void report_player_kill(PlayerState& player, Faction victim) {
     }
 }
 
+void npc_engage_bark(Faction speaker, bool target_is_player) {
+    // Only the player's HUD gets the line; NPC-on-NPC chatter is
+    // cosmetic and would just spam the feed with fights we're not in.
+    if (!target_is_player) return;
+    std::string line = pick_line(speaker, Event::KilledByPlayerCrime);
+    if (line.empty()) return;
+    push(line, /*taunt=*/true);
+}
+
 #ifndef COMM_HEADLESS
 void draw() {
     if (g_feed.empty()) return;

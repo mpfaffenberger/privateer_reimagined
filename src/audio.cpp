@@ -582,6 +582,8 @@ VoiceId play_world(SampleId s, HMM_Vec3 world_pos,
                    world_pos, ref_dist, max_dist, 1.0f);
 }
 
+HMM_Vec3 listener_position() { return g_listener_pos; }
+
 void set_listener(HMM_Vec3 pos, HMM_Vec3 right) {
     if (!g_ready) return;
     g_listener_pos   = pos;

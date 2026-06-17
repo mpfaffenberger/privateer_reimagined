@@ -58,6 +58,7 @@ bool parse_one(const fs::path& path) {
     c.name           = opt_str(root, "name");
     c.display_name   = opt_str(root, "display_name", c.name);
     c.class_label    = opt_str(root, "class_label");
+    c.ai_table       = opt_str(root, "ai_table");   // optional AI profile override
     c.atlas_manifest = opt_str(root, "atlas_manifest");
 
     if (c.name.empty()) {
@@ -102,6 +103,48 @@ bool parse_one(const fs::path& path) {
     // Sensing.
     c.radar_range   = opt_num(root, "radar_range",   c.radar_range);
     c.weapons_range = opt_num(root, "weapons_range", c.weapons_range);
+
+    // AI tuning (Privateer CNST f0/f1/f2/f3/f6, raw 1:1 world units). See
+    // docs/ai_model.md §0 (source of truth) / §2.2 / §9.8. Per-pilot CNST
+    // from the AIDS importer isn't wired yet, so we seed PER-FACTION
+    // baselines here (the clean monotone tiers from the decoded table) and
+    // let ship.json override. f0 is constant 600 across all vanilla pilots;
+    // f1/f3 vary by role; f6 is the morale/caution axis (FAQ §5.1: LOW =
+    // fanatical, HIGH = timid) and f2 the experience/accuracy tier.
+    switch (c.default_faction) {
+        case Faction::Merchant:                                        // tame + timid (flees early)
+            c.maneuver_jitter_f3 = 30.0f;
+            c.morale_f6          = 128.0f;
+            break;
+        case Faction::Kilrathi:                                        // skilled + fanatical (never flees)
+            c.maneuver_jitter_f3 = 40.0f;
+            c.skill_f2           = 40.0f;
+            c.morale_f6          = 64.0f;
+            break;
+        case Faction::Confed:                                          // long-range escort, steady
+            c.comms_f1           = 2100.0f;
+            c.skill_f2           = 60.0f;
+            c.morale_f6          = 102.0f;
+            break;
+        case Faction::Pirate:                                          // aggressive, stands and fights
+            c.morale_f6          = 102.0f;
+            break;
+        default: break;                                                // hunter/militia keep 75 / 1500 / 45 / 76
+    }
+    // The scout drone is a special pilot (long sensor-flavoured bark, low
+    // jitter, fight-to-death); keyed by registry name since it isn't its
+    // own faction.
+    if (c.name == "drone" || c.name == "sdrone") {
+        c.comms_f1           = 1800.0f;
+        c.maneuver_jitter_f3 = 40.0f;
+        c.morale_f6          = 64.0f;   // fanatical: no flee tier (§9.6.1)
+    }
+    // ship.json explicit overrides win over the faction baseline.
+    c.engage_f0          = opt_num(root, "cnst_f0", c.engage_f0);
+    c.comms_f1           = opt_num(root, "cnst_f1", c.comms_f1);
+    c.skill_f2           = opt_num(root, "cnst_f2", c.skill_f2);
+    c.maneuver_jitter_f3 = opt_num(root, "cnst_f3", c.maneuver_jitter_f3);
+    c.morale_f6          = opt_num(root, "cnst_f6", c.morale_f6);
 
     // AI personality. "standard" / "coward" — small enum today, room
     // for berserker/cautious/etc. as we add subtler behaviours.

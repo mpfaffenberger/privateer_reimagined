@@ -28,6 +28,8 @@
 #include "asteroid.h"
 #include "atlas_grid_viewer.h"
 #include "audio.h"
+#include "sound_labeler.h"
+#include "music_labeler.h"
 #include "camera.h"
 #include "cockpit_hud.h"
 #include "comm.h"
@@ -62,7 +64,9 @@ HMM_Mat4 model_matrix(HMM_Vec3 pos, HMM_Vec3 euler_deg, float s);
 #include "projectile.h"
 #include "missile.h"
 #include "sfx.h"
+#include "music.h"
 #include "ship.h"
+#include "ai_brain.h"
 #include "ship_ai.h"
 #include "ship_registry.h"
 #include "ship_class.h"
@@ -96,6 +100,14 @@ HMM_Mat4 model_matrix(HMM_Vec3 pos, HMM_Vec3 euler_deg, float s);
 #include <vector>
 
 namespace {
+
+// --ship <name> CLI override for the player's starting ShipClass. Empty ->
+// default (tarsus). Looked up via ship_class::find(); unknown names fall back
+// to tarsus with a warning. Lets us fly a Talon to verify multi-gun fire,
+// stress-test heavy handling, etc., without editing the spawn code. Declared
+// up here (not next to sokol_main) because the player spawn block ~line 955
+// also needs to see it.
+std::string g_player_ship_override;
 
 struct AppState {
     sg_pass_action scene_pass_action{};
@@ -583,6 +595,10 @@ void build_system_scene(bool first_time) {
         armor::load_table(ship_data);
     }
     ship_class::load_all("assets/ships");
+    // Data-driven combat AI logic tables (condition->maneuver). Same JSON
+    // pattern as ship.json; see docs/ai_maneuver_system.md. Ships resolve
+    // their table lazily by faction (fallback "default") on first combat tick.
+    ai_brain::load_all("assets/ai");
     // Commodity catalog — pure data, same family as the tables above.
     // Trading screens (np-9cu.2) consume it; today it just proves the
     // canonical 1995 cargo list round-trips into the engine.
@@ -739,6 +755,8 @@ void build_system_scene(bool first_time) {
         debug_panel::init();
         sprite_light_editor::init();
         atlas_grid_viewer::init();
+        sound_labeler::init();
+        music_labeler::init();
         sprite_generation_tool::init();
         mesh_orient_editor::init();
     }
@@ -763,6 +781,10 @@ void build_system_scene(bool first_time) {
         g.sfx_hum   = audio::load("assets/sfx/hum.wav");
         // Gameplay SFX table + the (silent until throttled) engine-hum loop.
         sfx::load_all();
+        // Dynamic music layer (np-m96): loads the rendered AdLib tracks
+        // (gitignored, clean clones run silent). update() below drives the
+        // state->track selection every frame.
+        music::load_all();
     }
     for (const auto& pm_def : g.system.placed_meshes) {
         PlacedMesh pm;
@@ -936,28 +958,52 @@ void build_system_scene(bool first_time) {
     // accel / max_ypr are not consulted for player kinematics.
     {
         Ship& player = *g.ships.player();
-        if (const ShipClass* tarsus = ship_class::find("tarsus")) {
-            player.klass = tarsus;
+        // --ship CLI override (default tarsus). Unknown name -> warn + tarsus.
+        const char* requested =
+            g_player_ship_override.empty() ? "tarsus" : g_player_ship_override.c_str();
+        const ShipClass* picked = ship_class::find(requested);
+        if (!picked && !g_player_ship_override.empty()) {
+            std::fprintf(stderr,
+                "[player] --ship '%s' not found, falling back to 'tarsus'\n",
+                requested);
+            picked = ship_class::find("tarsus");
+        }
+        if (picked) {
+            player.klass = picked;
             // Health from class via the shared helper (np-ma2.2) so the
             // spawn path and the respawn path can't drift apart.
             ship::heal_to_full(player);
+
+            // Loadout sourced from the Tarsus ShipClass default_guns — the
+            // canonical 2x Mass Driver from assets/ships/tarsus/ship.json —
+            // so the player's fitted weapons can't drift from the ship
+            // class / equipment shop view (np-e3x). We take the gun TYPE
+            // from the class but keep the cockpit-tuned mount geometry
+            // below: the class offsets are authored for the external
+            // sprite, whereas the player cockpit wants the muzzles dropped
+            // ~5° under the crosshair. Y offset (engine quirk: world +Y
+            // projects to screen +Y = downward direction, so positive Y
+            // appears BELOW center) is sized so the muzzle reads as a
+            // chin/wing gun under the cockpit eye line at typical FOV.
+            // Tracers still fire ALONG aim, not toward a convergence
+            // point; the ITTS gimbal block above lets aim track the locked
+            // target within a small cone, so the muzzles appear visibly
+            // below while the bullets land where the reticle says.
+            player.mounts = picked->default_guns;   // TYPE from class (mass_driver etc.)
+            if (player.mounts.size() >= 2) {
+                player.mounts[0].offset_body = HMM_V3(-10.0f, 5.0f, 0.0f);
+                player.mounts[1].offset_body = HMM_V3( 10.0f, 5.0f, 0.0f);
+            }
+            // Three-mount loadout (Talon: 2x mass driver + 1x particle
+            // cannon centered): place the centerline gun visibly ABOVE the
+            // two chin guns so the three tracer streams fan from three
+            // distinct screen-space origins. Y is +down per the engine
+            // quirk noted above, so -8 = 8 units up.
+            if (player.mounts.size() >= 3) {
+                player.mounts[2].offset_body = HMM_V3(0.0f, -8.0f, 0.0f);
+            }
+            player.gun_cooldowns.assign(player.mounts.size(), 0.0f);
         }
-        // Custom loadout: 2x Meson Blaster, mounts on left and right and
-        // dropped ~5° below the crosshair. Y offset (engine quirk: world
-        // +Y projects to screen +Y = downward direction, so positive Y
-        // appears BELOW center) is sized so the muzzle reads as a
-        // chin/wing gun under the cockpit eye line at typical FOV.
-        // Tracers still fire ALONG aim, not toward a convergence point;
-        // the ITTS gimbal block above lets aim track the locked target
-        // within a small cone, so the muzzles appear visibly below
-        // while the bullets land where the reticle says.
-        GunMount meson_l, meson_r;
-        meson_l.type        = GunType::MesonBlaster;
-        meson_r.type        = GunType::MesonBlaster;
-        meson_l.offset_body = HMM_V3(-10.0f, 5.0f, 0.0f);
-        meson_r.offset_body = HMM_V3( 10.0f, 5.0f, 0.0f);
-        player.mounts        = { meson_l, meson_r };
-        player.gun_cooldowns = { 0.0f, 0.0f };
     }
     }  // end if (first_time) — one-time player Ship spawn + loadout
 
@@ -1703,6 +1749,16 @@ void frame_stub() {
     sfx::update_engine_hum(0.0f, 0.0f, /*flight_mode=*/false,
                            (float)sapp_frame_duration());
 
+    // Dynamic music director (np-ida) keeps running across modes: Landed
+    // plays the per-base tune (picked by g.player.last_docked_base's
+    // archetype), Dying fires the death sting + fades out, Loading fires the
+    // jump sting + holds the current bed across the jump beat. Uses the
+    // display refresh as dt (the stub skips the sim timestep) — the gain lerp
+    // only needs "roughly seconds".
+    music::update(g.game.mode, g.camera.position,
+                  g.player.last_docked_base.c_str(),
+                  (float)sapp_frame_duration());
+
     // Landed mode draws the data-driven base screens (np-9cu.4) over the
     // whole framebuffer; Dying/Loading still show a one-line debugtext
     // label. ASCII-only labels (the debugtext fonts have no glyphs past
@@ -1772,11 +1828,19 @@ void frame_stub() {
     dev_remote::maybe_capture_screenshot();
 }
 
+// Debug fast-forward multiplier for the sim dt. ']' cycles 1x -> 2x -> 4x ->
+// 8x -> 1x. Scales EVERYTHING (AI, physics, projectiles, camera turn rate),
+// which is the point -- watch the AI brawl unfold in 1/8th the wall time.
+static float g_time_scale = 1.0f;
+
+
+
 void frame_cb() {
     // --- timestep -----------------------------------------------------------
-    const uint64_t now = stm_now();
-    const float    dt  = (float)stm_sec(stm_diff(now, g.last_frame_ticks));
-    g.last_frame_ticks = now;
+    const uint64_t now    = stm_now();
+    const float    raw_dt = (float)stm_sec(stm_diff(now, g.last_frame_ticks));
+    const float    dt     = raw_dt * g_time_scale;
+    g.last_frame_ticks    = now;
 
     // --- deferred system switch (np-6al.1, frame boundary only) -------------
     // Dev timers (--goto / --goto-soak) and the debug dropdown queue a switch
@@ -1984,6 +2048,15 @@ void frame_cb() {
         sfx::update_engine_hum(speed_frac, g.camera.cruise_level,
                                /*flight_mode=*/true, dt);
     }
+
+    // Dynamic music director (np-ida): Flight runs the in-flight combat-tier
+    // state machine (FlightMain vs Combat Far/Near by nearest-hostile
+    // distance, with hysteresis + a resolve outro) and lerps the crossfade.
+    // Same threat oracle the autopilot/jump gates use, so the music switches
+    // exactly when the danger does. In flight there's no docked base, so the
+    // base_id is empty; dt drives the gain lerps + combat hysteresis.
+    music::update(g.game.mode, g.camera.position,
+                  g.player.last_docked_base.c_str(), dt);
 
     // Audio smoke-test buttons (debug panel). 2D = centered blip; 3D =
     // blip at the selected nav point (or 2km ahead when none selected,
@@ -2402,7 +2475,7 @@ void frame_cb() {
             // sound still plays — 2D-ish by virtue of being at the
             // listener (full ref-dist gain, centered pan).
             g.player_hit_intensity = 1.0f;
-            sfx::impact(s.position, /*shield=*/sh_hit);
+            sfx::impact(s.position, /*shield=*/sh_hit, /*victim_is_player=*/true);
             continue;
         }
 
@@ -2412,7 +2485,7 @@ void frame_cb() {
         // damage (shields already down) gets the harsh crack. When both
         // dropped in one frame the shield sound wins — the shield ate
         // first, physically. Rate-limited globally in sfx.cpp.
-        sfx::impact(pos, /*shield=*/sh_hit);
+        sfx::impact(pos, /*shield=*/sh_hit, /*victim_is_player=*/false);
         const float r = ship::hit_radius_m(s);
 
         if (sh_hit) {
@@ -2997,6 +3070,14 @@ void frame_cb() {
     // F4 — atlas grid viewer. Mutates ShipSpriteFrame fields directly,
     // so changes flow into the next render frame with no apply step.
     atlas_grid_viewer::build(g.ship_sprite_atlases);
+    // F7 — sound labeler. Auditions + names the extracted SOUNDFX.PAK clips,
+    // saving ground-truth labels to docs/sound_labels.json. Self-contained;
+    // no game state to pass in.
+    sound_labeler::build();
+    // F8 — music labeler. Auditions + names the rendered AdLib music tracks,
+    // saving ground-truth labels to docs/music_labels.json. Ducks the live
+    // music layer while previewing; restores it on Stop/close. Self-contained.
+    music_labeler::build();
     // F6 — sprite-generation workbench. Front-end only; launches Python jobs.
     sprite_generation_tool::build();
     if (!g.capture_clean) {
@@ -3388,6 +3469,12 @@ void event_cb(const sapp_event* ev) {
     // putting the F4 atlas grid viewer ahead of debug_panel.
     if (sprite_light_editor::handle_event(ev)) return;
     if (atlas_grid_viewer::handle_event(ev)) return;
+    // F7 — sound labeler. Ahead of debug_panel so the toggle beats ImGui
+    // focus, same as the F2/F4 tools.
+    if (sound_labeler::handle_event(ev)) return;
+    // F8 — music labeler. Ahead of debug_panel so the toggle beats ImGui
+    // focus, same as the F4/F7 tools.
+    if (music_labeler::handle_event(ev)) return;
     if (sprite_generation_tool::handle_event(ev)) return;
     // F5 — live PlacedMesh orientation slider. Sits ahead of debug_panel
     // so the F5 toggle works even when an ImGui window has focus.
@@ -3552,7 +3639,17 @@ void event_cb(const sapp_event* ev) {
         }
         // M — cycle the selected missile type (DF -> HS -> IR -> DF). Pure
         // UI state; resets the lock so switching to a lock type re-acquires.
-        if (ev->key_code == SAPP_KEYCODE_M && !ev->key_repeat) {
+        if (ev->key_code == SAPP_KEYCODE_RIGHT_BRACKET && !ev->key_repeat) {
+        // ']' cycles the sim time scale: 1x -> 2x -> 4x -> 8x -> 1x.
+        g_time_scale = (g_time_scale >= 8.0f) ? 1.0f : g_time_scale * 2.0f;
+        std::printf("[time_scale] sim now %.0fx wall time\n", g_time_scale);
+    }
+    if (ev->key_code == SAPP_KEYCODE_LEFT_BRACKET && !ev->key_repeat) {
+        // '[' resets to 1x immediately.
+        g_time_scale = 1.0f;
+        std::printf("[time_scale] sim reset to 1x\n");
+    }
+    if (ev->key_code == SAPP_KEYCODE_M && !ev->key_repeat) {
             g.selected_missile = (g.selected_missile + 1) % kMissileTypeCount;
             g.missile_lock = AppState::MissileLock{};   // fresh lock for the new type
             sfx::ui_click();
@@ -3606,6 +3703,9 @@ sapp_desc sokol_main(int argc, char** argv) {
         if (std::strcmp(argv[i], "--system") == 0 && i + 1 < argc) {
             g.system_name     = argv[i + 1];
             g.system_explicit = true;   // explicit --system wins over a saved system
+            ++i;
+        } else if (std::strcmp(argv[i], "--ship") == 0 && i + 1 < argc) {
+            g_player_ship_override = argv[i + 1];
             ++i;
         } else if (std::strcmp(argv[i], "--capture-clean") == 0) {
             g.capture_clean = true;

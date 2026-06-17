@@ -191,8 +191,9 @@
   "guns": [
     {
       "Name": "Laser",
-      "Damage (cm)": 2.0,
-      "Damage Rate": 6.67,
+      "_reconcile": "gamefaq s4.5.2: Damage 1.8 (was 2.0). DR recomputed 1.8/0.3=6.0.",
+      "Damage (cm)": 1.8,
+      "Damage Rate": 6.0,
       "Damage Eff.": 5.0,
       "Speed (kps)": 1400,
       "Range (m)": 4760,
@@ -201,12 +202,13 @@
     },
     {
       "Name": "Mass Driver",
+      "_reconcile": "gamefaq s4.5.2: Refire 0.6 (was 0.35). DR recomputed 2.6/0.6=4.33.",
       "Damage (cm)": 2.6,
-      "Damage Rate": 7.43,
+      "Damage Rate": 4.33,
       "Damage Eff.": 5.2,
       "Speed (kps)": 1100,
       "Range (m)": 3740,
-      "Refire Delay (s)": 0.35,
+      "Refire Delay (s)": 0.6,
       "Energy Use (GJ)": 6
     },
     {
@@ -221,22 +223,24 @@
     },
     {
       "Name": "Neutron Gun",
+      "_reconcile": "gamefaq s4.5.2: Speed 900 (was 960). Other stats unchanged.",
       "Damage (cm)": 6.2,
       "Damage Rate": 9.54,
       "Damage Eff.": 3.88,
-      "Speed (kps)": 960,
+      "Speed (kps)": 900,
       "Range (m)": 3264,
       "Refire Delay (s)": 0.65,
       "Energy Use (GJ)": 18
     },
     {
       "Name": "Particle Cannon",
+      "_reconcile": "gamefaq s4.5.2: Refire 0.6 (was 0.5). DR recomputed 4.3/0.6=7.17.",
       "Damage (cm)": 4.3,
-      "Damage Rate": 8.6,
+      "Damage Rate": 7.17,
       "Damage Eff.": 3.91,
       "Speed (kps)": 1000,
       "Range (m)": 3400,
-      "Refire Delay (s)": 0.5,
+      "Refire Delay (s)": 0.6,
       "Energy Use (GJ)": 11
     },
     {
@@ -251,22 +255,24 @@
     },
     {
       "Name": "Ionic Pulse Cannon",
+      "_reconcile": "gamefaq s4.5.2: Refire 0.7 (was 0.6). DR recomputed 5.4/0.7=7.71.",
       "Damage (cm)": 5.4,
-      "Damage Rate": 9.0,
+      "Damage Rate": 7.71,
       "Damage Eff.": 3.6,
       "Speed (kps)": 1200,
       "Range (m)": 4080,
-      "Refire Delay (s)": 0.6,
+      "Refire Delay (s)": 0.7,
       "Energy Use (GJ)": 15
     },
     {
       "Name": "Plasma Gun",
+      "_reconcile": "gamefaq s4.5.2: Speed 840 (was 940), Refire 0.8 (was 0.72). DR recomputed 7.2/0.8=9.0.",
       "Damage (cm)": 7.2,
-      "Damage Rate": 10.0,
+      "Damage Rate": 9.0,
       "Damage Eff.": 3.79,
-      "Speed (kps)": 940,
+      "Speed (kps)": 840,
       "Range (m)": 3196,
-      "Refire Delay (s)": 0.72,
+      "Refire Delay (s)": 0.8,
       "Energy Use (GJ)": 22
     },
     {
@@ -364,8 +370,9 @@
     {
       "Name": "Image Recognition",
       "Abbreviation": "IR",
-      "Damage (cm)": 17.5,
-      "Damage Rate": 7.0,
+      "_reconcile": "gamefaq s4.5.1.4: Damage 17 (was 17.5). DR recomputed 17/2.5=6.8.",
+      "Damage (cm)": 17.0,
+      "Damage Rate": 6.8,
       "Damage Eff.": 0,
       "Speed (kps)": 850,
       "Range (m)": 7650,
@@ -374,8 +381,9 @@
     {
       "Name": "Friend or Foe",
       "Abbreviation": "FF",
-      "Damage (cm)": 17.5,
-      "Damage Rate": 7.0,
+      "_reconcile": "gamefaq s4.5.1.5: Damage 17 (was 17.5). DR recomputed 17/2.5=6.8.",
+      "Damage (cm)": 17.0,
+      "Damage Rate": 6.8,
       "Damage Eff.": 0,
       "Speed (kps)": 900,
       "Range (m)": 7200,
@@ -398,7 +406,7 @@
     "Damage Eff.": "Damage per GJ of energy (Damage / Energy Use). Higher = more efficient.",
     "Speed (kps)": "Projectile velocity in kilometers per second",
     "Range (m)": "Maximum range in meters",
-    "Refire Delay (s)": "Seconds between shots. For complete guns this is derived as Damage(cm)/DamageRate so the file is internally consistent with the canonical Damage Rate (DPS) column. PENDING wcnews/wcpedia cross-check when web search is back online.",
+    "Refire Delay (s)": "Seconds between shots. Reconciled against gamefaq s4.5.2 (Player Guide, PrivateerFAQ); seven gun stats were corrected to gamefaq values on np-d2w (see per-gun '_reconcile' notes). The original 'Damage Rate' (DPS) column came from a different/derived source and disagreed on Mass Driver/Particle/Ion/Plasma/Laser; gamefaq's directly-stated refires now take precedence and DPS columns were recomputed as Damage(cm)/Refire(s). Damage Eff. is display-only metadata and was NOT recomputed (the legacy column is internally inconsistent across guns).",
     "RF": "Rapid Fire variant"
   },
   "shields": [

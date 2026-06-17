@@ -124,21 +124,30 @@ def explosion(seed: int, dur_s: float, alpha: float, gain: float) -> list[float]
 
 
 def engine_hum() -> list[float]:
-    """2-osc hum (55Hz + a 5th at 82.5... use 83Hz? No — keep integer
-    cycles for a clean loop: 55 and 110 like hum(), plus a 165Hz (3rd
-    harmonic) whisper and a 2Hz amplitude shimmer; every component
-    completes integer cycles over exactly 1s, so the loop stays
-    click-free by construction."""
+    """Smooth low idle rumble (np-4dr). The OLD hum stacked 55/110/165Hz
+    at 0.55/0.28/0.12 — that reedy 3rd-harmonic content read as a constant
+    background BUZZ (user feedback), not an engine bed. This is the
+    de-buzzed replacement: a dominant 60Hz fundamental + only a GENTLE 2nd
+    harmonic (120Hz, low level) for warmth, plus a slow 1Hz amplitude
+    breath, at a lower master level. No reedy upper harmonic => smooth, not
+    buzzy.
+
+    Loop seam is click-free BY CONSTRUCTION: 60, 120 and 1 all complete
+    INTEGER cycles over the exactly-1s loop, so the wrap from the last
+    sample back to sample[0] is just the next natural step of every
+    component — no discontinuity, no DC offset. (Do NOT add a seam
+    crossfade: blending the tail toward sample[~5ms] would MOVE the last
+    sample away from sample[0] and CREATE the very seam step it was
+    meant to remove. The periodicity already guarantees seamlessness.)"""
     n = RATE
     out = []
     for t in range(n):
         base = (
-            0.55 * math.sin(2 * math.pi * 55 * t / RATE)
-            + 0.28 * math.sin(2 * math.pi * 110 * t / RATE)
-            + 0.12 * math.sin(2 * math.pi * 165 * t / RATE)
+            0.80 * math.sin(2 * math.pi * 60 * t / RATE)
+            + 0.12 * math.sin(2 * math.pi * 120 * t / RATE)
         )
-        shimmer = 1.0 + 0.06 * math.sin(2 * math.pi * 2 * t / RATE)
-        out.append(base * shimmer * 0.5)
+        breath = 1.0 + 0.05 * math.sin(2 * math.pi * 1 * t / RATE)
+        out.append(base * breath * 0.35)
     return out
 
 

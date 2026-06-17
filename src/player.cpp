@@ -20,9 +20,13 @@ PlayerState new_game(const std::string& start_system) {
     PlayerState p;
     p.credits         = k_new_game_credits;
     p.ship_class_name = "tarsus";
-    // Mirrors the hardcoded loadout in main.cpp's player-spawn block —
-    // when the equipment dealer lands, both read from here instead.
-    p.gun_mounts      = { "meson_blaster", "meson_blaster" };
+    // Canonical Tarsus loadout: 2x Mass Driver, matching
+    // assets/ships/tarsus/ship.json default_guns and the player-spawn
+    // block in main.cpp (which sources the same types from the Tarsus
+    // ShipClass). This pure-data layer keeps no catalog dependency (see
+    // file header), so the literal pair is intentional — it just has to
+    // agree with the class default_guns, which it does (np-e3x).
+    p.gun_mounts      = { "mass_driver", "mass_driver" };
     p.current_system  = start_system;
     // Start with a topped-off tank + a starter missile loadout (np-zte.2)
     // so the new feature is exercisable from the first launch.

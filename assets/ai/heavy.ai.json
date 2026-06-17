@@ -1,0 +1,67 @@
+{
+  "name": "heavy",
+
+  "//":  "HEAVY / GUNSHIP profile for slow, poor-turning hulls (Orion, Galaxy).",
+  "//1": "These ships boost fast (afterburner 800) but turn ~30 deg/s, so the",
+  "//2": "fighter loop (afterburn break-off + jink-extend) makes them rocket off",
+  "//3": "and fly huge uncatchable arcs. This profile NEVER afterburns away and",
+  "//4": "NEVER jinks: close to gun range, then sit on the firing line at ~50%",
+  "//5": "throttle pouring fire across the WHOLE gun range; only flee at low HP.",
+  "//6": "attack_run band is [0, gun_range] (not [f0,1000]) so there is no",
+  "//7": "break-off at 600 -- the gunship just holds and hoses. Assigned via",
+  "//8": "ship.json \"ai_table\": \"heavy\". Numbers per docs/ai_model.md s0.",
+
+  "tiers": {
+
+    "steady": {
+      "logic": [
+        { "maneuver": "lead_pursuit", "priority": 4, "duration": 2.0,
+          "when": [ { "metric": "distance", "min": "gun_range", "max": "sensor" } ] },
+        { "maneuver": "attack_run", "priority": 5, "duration": 2.5,
+          "when": [ { "metric": "distance", "min": 0, "max": "gun_range" } ] },
+        { "maneuver": "flee_home", "priority": 8, "duration": 3.0,
+          "when": [ { "metric": "hull", "min": 0, "max": "flee_threshold" } ] },
+        { "maneuver": "lead_pursuit", "priority": 0, "duration": 2.0, "when": [] }
+      ],
+      "interrupt": [
+        { "maneuver": "flee_home", "priority": 8, "duration": 3.0,
+          "when": [ { "metric": "hull", "min": 0, "max": "flee_threshold" } ] }
+      ]
+    },
+
+    "fanatical": {
+      "//": "tanky and stubborn: same standoff gunnery, basically never flees.",
+      "logic": [
+        { "maneuver": "lead_pursuit", "priority": 4, "duration": 2.0,
+          "when": [ { "metric": "distance", "min": "gun_range", "max": "sensor" } ] },
+        { "maneuver": "attack_run", "priority": 5, "duration": 2.5,
+          "when": [ { "metric": "distance", "min": 0, "max": "gun_range" } ] },
+        { "maneuver": "flee_home", "priority": 8, "duration": 2.0,
+          "when": [ { "metric": "hull", "min": 0, "max": 0.05 } ] },
+        { "maneuver": "lead_pursuit", "priority": 0, "duration": 2.0, "when": [] }
+      ],
+      "interrupt": [
+        { "maneuver": "flee_home", "priority": 8, "duration": 2.0,
+          "when": [ { "metric": "hull", "min": 0, "max": 0.05 } ] }
+      ]
+    },
+
+    "timid": {
+      "//": "civilian hauler: holds the firing line but bolts earlier when hurt.",
+      "logic": [
+        { "maneuver": "flee_home", "priority": 8, "duration": 3.0,
+          "when": [ { "metric": "hull", "min": 0, "max": "flee_threshold" } ] },
+        { "maneuver": "lead_pursuit", "priority": 4, "duration": 2.0,
+          "when": [ { "metric": "distance", "min": "gun_range", "max": "sensor" } ] },
+        { "maneuver": "attack_run", "priority": 5, "duration": 2.5,
+          "when": [ { "metric": "distance", "min": 0, "max": "gun_range" } ] },
+        { "maneuver": "lead_pursuit", "priority": 0, "duration": 2.0, "when": [] }
+      ],
+      "interrupt": [
+        { "maneuver": "flee_home", "priority": 8, "duration": 3.0,
+          "when": [ { "metric": "hull", "min": 0, "max": "flee_threshold" } ] }
+      ]
+    }
+
+  }
+}

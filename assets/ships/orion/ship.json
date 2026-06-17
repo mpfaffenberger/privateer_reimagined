@@ -19,6 +19,7 @@
   "max_ypr":           "poor",
 
   "personality":       "standard",
+  "ai_table":          "heavy",
 
   "radar_range":   25000,
   "weapons_range": 5000,
@@ -28,9 +29,15 @@
   "default_shield":   "Shield Generator 3",
   "default_armor":    "Tungsten Armor",
 
+  // Plasma Guns x2: heavy-hitter loadout fitting the gunship role. Each
+  // gun = 7.2 cm dmg, 0.8s refire, 22 GJ/shot, range 3196 m, speed 840 m/s
+  // (gamefaq s4.5.2). At energy 220 / recharge 30 GJ/s the Orion sustains
+  // ~13.6 GJ/s deficit per gun while firing both, so it bursts ~5 seconds
+  // then has to ease off -- exactly the hit-and-pull-back rhythm the heavy
+  // AI profile already imposes (no afterburner break-off; hold standoff).
   "default_guns": [
-    { "offset_body": [-3.0, 0.0, 3.0], "type": "mass_driver" },
-    { "offset_body": [ 3.0, 0.0, 3.0], "type": "mass_driver" }
+    { "offset_body": [-3.0, 0.0, 3.0], "type": "plasma_gun" },
+    { "offset_body": [ 3.0, 0.0, 3.0], "type": "plasma_gun" }
   ],
 
   "energy_max":      220,

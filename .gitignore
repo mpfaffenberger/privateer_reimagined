@@ -108,6 +108,21 @@ assets/ships/*/sprites_wcnews/
 assets/sfx/original/
 *.voc
 
+# Privateer's original music (np-m96 AdLib OPL / np-gln General MIDI+MT-32):
+# rendered from the GOG .ADL/.GEN XMIDI via tools/render_music.py. Same legal
+# model as the SFX — the rendered/original WAVs are LOCAL-ONLY, never commit
+# them. The renderers (tools/ail2wopl.py, tools/xmidi2smf.py,
+# tools/render_music.py) + docs ARE tracked.
+assets/music/original/
+
+# User-supplied synth data for the HQ render (np-gln): GM SoundFonts and
+# Roland MT-32 ROMs are copyrighted third-party assets — never commit them.
+*.sf2
+*.dls
+*.sf3
+MT32_*.ROM
+CM32L_*.ROM
+
 # ────────────────────────────────────────────────────────────────────
 # Privateer GOG-derived data — copyrighted Origin/EA, never commit.
 # Re-create with: tools/extract_privateer.sh
@@ -122,3 +137,14 @@ assets/sfx/original/
 # ────────────────────────────────────────────────────────────────────
 /third_party/wctools/wctre/wctre
 /third_party/wctools/unpak/unpak
+
+# RE scratch area is gitignored wholesale (binaries, dumps, the patched CD,
+# the PRIV.TRE master + the DOSBox conf/launcher are all derived from the
+# user's OWN game data -- never commit). The ONE exception is the Plan B
+# patch tool: it's pure code (no game data), so it IS committable. The
+# step-down !-rules below re-include just that file (git can't un-ignore a
+# file whose parent dir is ignored, hence the explicit dir un-ignores).
+/re/*
+!/re/dosbox/
+/re/dosbox/*
+!/re/dosbox/patch_cnst.py

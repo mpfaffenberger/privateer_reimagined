@@ -103,6 +103,7 @@ add_executable(new_privateer
     src/main.cpp
     src/audio.cpp
     src/sfx.cpp
+    src/music.cpp
     src/camera.cpp
     src/skybox.cpp
     src/sun.cpp
@@ -144,6 +145,7 @@ add_executable(new_privateer
     src/ship.cpp
     src/ship_registry.cpp
     src/ship_ai.cpp
+    src/ai_brain.cpp
     src/perception.cpp
     src/firing.cpp
     src/projectile.cpp
@@ -160,6 +162,8 @@ add_executable(new_privateer
     src/planet_texture.cpp
     src/debug_panel.cpp
     src/atlas_grid_viewer.cpp
+    src/sound_labeler.cpp
+    src/music_labeler.cpp
     src/cockpit_hud.cpp
     src/dev_remote.cpp
     src/dev_remote_macos.mm
@@ -247,6 +251,7 @@ add_executable(test_full_loop EXCLUDE_FROM_ALL
     src/docking.cpp src/autopilot.cpp src/threat.cpp src/jump.cpp
     src/encounters.cpp src/repair.cpp src/missile.cpp src/ship.cpp
     src/ship_class.cpp src/ship_registry.cpp src/ship_ai.cpp
+    src/ai_brain.cpp
     src/perception.cpp src/gun.cpp src/shield.cpp src/armor.cpp
     src/mobility.cpp src/camera.cpp
 )
@@ -255,5 +260,27 @@ target_include_directories(test_full_loop PRIVATE
     ${CMAKE_SOURCE_DIR}/third_party
 )
 target_compile_definitions(test_full_loop PRIVATE
+    ECONOMY_HEADLESS OUTFITTING_HEADLESS MISSIONS_HEADLESS COMM_HEADLESS
+)
+
+# Headless proof harness for the data-driven combat brain (docs/ai_maneuver_system.md).
+#   cmake --build build --target test_ai_brain && ./build/test_ai_brain
+add_executable(test_ai_brain EXCLUDE_FROM_ALL
+    tools/test_ai_brain.cpp
+    src/game_state.cpp src/player.cpp src/faction.cpp src/comm.cpp
+    src/commodity.cpp src/economy.cpp src/outfitting.cpp src/missions.cpp
+    src/galaxy.cpp src/system_def.cpp src/json.cpp src/savegame.cpp
+    src/docking.cpp src/autopilot.cpp src/threat.cpp src/jump.cpp
+    src/encounters.cpp src/repair.cpp src/missile.cpp src/ship.cpp
+    src/ship_class.cpp src/ship_registry.cpp src/ship_ai.cpp
+    src/ai_brain.cpp
+    src/perception.cpp src/gun.cpp src/shield.cpp src/armor.cpp
+    src/mobility.cpp src/camera.cpp
+)
+target_include_directories(test_ai_brain PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/third_party
+)
+target_compile_definitions(test_ai_brain PRIVATE
     ECONOMY_HEADLESS OUTFITTING_HEADLESS MISSIONS_HEADLESS COMM_HEADLESS
 )

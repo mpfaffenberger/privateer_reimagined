@@ -50,9 +50,16 @@ void perception::tick(ShipRegistry& ships, const PlayerReputation& player_rep) {
         // the targeting cycle (T key) reaches well past most engagement
         // distances — chasing ships through their afterburner extensions
         // routinely opens the gap to 10+ km and you don't want to lose
-        // your target lock just because you can't see far enough. NPCs
-        // still use their class radar (Privateer-canonical 25 km), so
-        // the player has a small "my HUD is enhanced" advantage.
+        // your target lock just because you can't see far enough.
+        //
+        // NPCs use their class radar = the SENSOR / DETECTION / AWARENESS
+        // sphere, now the Privateer-canonical 15000 world units
+        // (docs/ai_model.md §11.2 — live-confirmed: NPCs detect & close
+        // from ~10 km, far beyond CNST f1=1500). THIS radius + faction
+        // stance (classify_pair below) is what actually wakes the AI and
+        // starts an engage. CNST f1 is NOT consulted here — it is the
+        // cosmetic comm/taunt range (wired in ship_ai/comm), not detection.
+        // The player keeps a small "enhanced HUD" advantage (35 vs 15 km).
         constexpr float k_player_radar_m = 35000.0f;
         const float radar_r = observer.is_player ? k_player_radar_m
                             : (observer.klass ? observer.klass->radar_range : 0.0f);
