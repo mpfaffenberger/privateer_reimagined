@@ -121,6 +121,15 @@ std::string g_player_ship_override;
 #include <crtdbg.h>
 #include <stdlib.h>
 #include <exception>
+#include <windows.h>
+static void _np_print_stack() {
+    void* frames[24] = {};
+    USHORT n = CaptureStackBackTrace(0, 24, frames, nullptr);
+    for (USHORT i = 0; i < n; ++i) {
+        std::fprintf(stderr, "  [%u] %p\n", i, frames[i]);
+    }
+    std::fflush(stderr);
+}
 static void _np_invalid_parameter(const wchar_t* expr, const wchar_t* func,
                                   const wchar_t* file, unsigned int line,
                                   uintptr_t /*reserved*/) {
@@ -128,12 +137,19 @@ static void _np_invalid_parameter(const wchar_t* expr, const wchar_t* func,
         "[trace] CRT invalid_parameter: expr=%ls func=%ls file=%ls:%u\n",
         expr ? expr : L"<null>", func ? func : L"<null>",
         file ? file : L"<null>", line);
-    std::fflush(stderr);
+    _np_print_stack();
 }
 static void _np_terminate() {
     std::fprintf(stderr, "[trace] std::terminate() called\n");
-    std::fflush(stderr);
+    _np_print_stack();
     std::abort();
+}
+static LONG WINAPI _np_unhandled_exception(EXCEPTION_POINTERS* info) {
+    std::fprintf(stderr, "[trace] unhandled SEH exception code=0x%08lx addr=%p\n",
+                 info->ExceptionRecord->ExceptionCode,
+                 info->ExceptionRecord->ExceptionAddress);
+    _np_print_stack();
+    return EXCEPTION_EXECUTE_HANDLER;
 }
 #endif
 struct _StaticInitTrace {
@@ -143,6 +159,7 @@ struct _StaticInitTrace {
         _set_invalid_parameter_handler(_np_invalid_parameter);
         _CrtSetReportMode(_CRT_ASSERT, 0);   // don't pop dialogs
         std::set_terminate(_np_terminate);
+        SetUnhandledExceptionFilter(_np_unhandled_exception);
 #endif
         std::fflush(stderr);
     }
