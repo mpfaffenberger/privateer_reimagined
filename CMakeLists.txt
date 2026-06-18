@@ -252,6 +252,15 @@ if(MSVC)
     # console the runtime can speak through. (Ship build can drop this
     # later with a CMake option, but the cost during dev is zero.)
     target_compile_definitions(new_privateer PRIVATE SOKOL_WIN32_FORCE_MAIN)
+    # Statically link the MSVC C runtime (/MT) so the shipped exe has NO
+    # dependency on the VC++ Redistributable (MSVCP140.dll / VCRUNTIME140*.dll).
+    # Without this a portable build fails to launch on a clean Windows install
+    # that never had a VC++ redist installed. CMP0091 (NEW since 3.15; we
+    # require 3.20) routes this through MSVC_RUNTIME_LIBRARY rather than manual
+    # /MD->/MT flag scrubbing. imgui + sokol are compiled INTO this target, so
+    # they inherit the same runtime — no mismatched-CRT link errors.
+    set_property(TARGET new_privateer PROPERTY
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
     # /Zi (C7-compatible PDB) + /DEBUG (linker) generates symbols even in
     # the Release config so our in-process stack walker (dbghelp) can
     # resolve names instead of bare addresses. Pairs with /OPT:REF + ICF
@@ -354,4 +363,26 @@ target_include_directories(test_ai_brain PRIVATE
 )
 target_compile_definitions(test_ai_brain PRIVATE
     ECONOMY_HEADLESS OUTFITTING_HEADLESS MISSIONS_HEADLESS COMM_HEADLESS
+)
+
+# ---------------------------------------------------------------------------
+# `dist` — portable, relocatable game folder (build/dist/).
+#
+# Copies the executable + a pruned real-file assets/ copy (drops sprite-gen
+# intermediates, Blender renders, and unused imported meshes). Combined with
+# the static-CRT link on MSVC, the result is a folder you can zip and run on
+# any Win10/11 box with zero prerequisites — no VC++ redist, no source tree,
+# no symlinks.
+#
+#   cmake --build build --target dist
+# ---------------------------------------------------------------------------
+add_custom_target(dist
+    COMMAND ${CMAKE_COMMAND}
+            -DNP_EXE=$<TARGET_FILE:new_privateer>
+            -DNP_SRC=${CMAKE_SOURCE_DIR}
+            -DNP_OUT=${CMAKE_BINARY_DIR}/dist
+            -P ${CMAKE_SOURCE_DIR}/cmake/make_dist.cmake
+    DEPENDS new_privateer
+    VERBATIM
+    COMMENT "Packaging portable dist/ (static-CRT exe + pruned real-file assets)"
 )
