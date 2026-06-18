@@ -3,6 +3,7 @@
 #include "ai_brain.h"
 #include "perception.h"
 #include "ship.h"
+#include "ship_sprite.h"   // full ShipSpriteObject def (zero residual omega on combat exit)
 #include "ship_class.h"
 #include "ship_registry.h"
 
@@ -81,6 +82,20 @@ void ship_ai::tick(Ship& s, const ShipRegistry& all_ships, float t_now) {
     // ---- non-combat fallthrough (unchanged behaviour) ----------------------
     reset_brain_runtime(s.ai);
     s.ai.target_id = 0;
+
+    // If we just dropped out of a combat state (no hostiles left), kill the
+    // residual body-frame turn rate the flight controller left in the
+    // sprite. ShipBehavior::None leaves sprite kinematics untouched, so
+    // without this the ship keeps integrating its last dogfight omega and
+    // flies in endless loops ("loopies") after the fight ends. Only zero it
+    // on the combat->idle transition so ships that were never fighting keep
+    // any JSON-authored demo motion.
+    const bool was_combat = (s.ai.state == AIState::Engage ||
+                             s.ai.state == AIState::BreakOff ||
+                             s.ai.state == AIState::Flee);
+    if (was_combat && s.sprite) {
+        s.sprite->angular_velocity = HMM_V3(0.0f, 0.0f, 0.0f);
+    }
 
     AIState next = s.ai.has_patrol_anchor ? AIState::Patrol : AIState::Idle;
     if (next != s.ai.state) { s.ai.state = next; s.ai.state_entered_at = t_now; }
