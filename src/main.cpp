@@ -1083,11 +1083,13 @@ void build_system_scene(bool first_time) {
             // target within a small cone, so the muzzles appear visibly
             // below while the bullets land where the reticle says.
             player.mounts = picked->default_guns;   // offsets from class
-            // Preserve the ship-class default gun types (Tarsus = 2x Mass
-            // Driver per assets/ships/tarsus/ship.json). The old forced-Laser
-            // override made every starter feel identical and broke the
-            // canonical loadout.
+            // Player Tarsus flies with 2x Laser (Mike's call) rather than the
+            // class-default Mass Drivers. Lasers are the canonical low-energy
+            // starter gun: fast refire (0.3s), light per-shot energy, and the
+            // bolt art reads as a clean red ray. NPC Tarsuses keep their
+            // ship.json Mass Drivers — this override is player-only.
             for (auto& m : player.mounts) {
+                m.type = GunType::Laser;
                 m.cone_half_angle_deg = 1.0f;
             }
             if (player.mounts.size() >= 2) {

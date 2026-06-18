@@ -92,19 +92,64 @@
   // assets/ships/tarsus/atlas_manifest.json and chooses the nearest frame
   // at render time based on camera position.
   //
-  // Quiet starting fleet: just two merchant Tarsuses parked next to the
-  // player. No pirates, no militia, no convoy — enough to verify sprite
-  // rendering, faction-stance reads, and the targeting cycle without the
-  // player getting jumped before they've learned the controls. Re-add the
-  // pirate/militia trio (or the bigger brawl) from git history when we
-  // want combat at spawn again.
+  // Starting fleet + a 20-ship Confed-vs-Pirate brawl staged ~13 km ahead
+  // of the player spawn (down the -Z look axis), in two clusters ~8 km
+  // apart so they perceive each other and engage on the first AI tick.
+  // Confed (lawful) flies Centurions + Orions; Pirates fly Talons. The
+  // player is Civilian: neutral to Confed, a target-of-opportunity for the
+  // Pirates — so diving in has stakes. The two parked merchant Tarsuses
+  // stay next to the player for the targeting/faction-read demo.
   "placed_ship_sprites": [
     { "atlas": "ships/tarsus/atlas_manifest", "length_meters": 100,
       "position": [49000, -100000, 33000],
       "ai": { "initial_state": "idle" } },
     { "atlas": "ships/tarsus/atlas_manifest", "length_meters": 100,
       "position": [51000, -100000, 33000],
-      "ai": { "initial_state": "idle" } }
+      "ai": { "initial_state": "idle" } },
+
+    // ----- Confed strike group (10): faction confed, hostile to pirates --
+    { "atlas": "ships/centurion/atlas_manifest", "length_meters": 90, "faction": "confed",
+      "position": [54000, -100000, 19000], "ai": { "initial_state": "idle" } },
+    { "atlas": "ships/centurion/atlas_manifest", "length_meters": 90, "faction": "confed",
+      "position": [55200, -100500, 20100], "ai": { "initial_state": "idle" } },
+    { "atlas": "ships/centurion/atlas_manifest", "length_meters": 90, "faction": "confed",
+      "position": [52800,  -99500, 18200], "ai": { "initial_state": "idle" } },
+    { "atlas": "ships/orion/atlas_manifest", "length_meters": 95, "faction": "confed",
+      "position": [55500, -100200, 17800], "ai": { "initial_state": "idle" } },
+    { "atlas": "ships/orion/atlas_manifest", "length_meters": 95, "faction": "confed",
+      "position": [53200, -100800, 20500], "ai": { "initial_state": "idle" } },
+    { "atlas": "ships/centurion/atlas_manifest", "length_meters": 90, "faction": "confed",
+      "position": [54800,  -99300, 19600], "ai": { "initial_state": "idle" } },
+    { "atlas": "ships/orion/atlas_manifest", "length_meters": 95, "faction": "confed",
+      "position": [52500, -100100, 18900], "ai": { "initial_state": "idle" } },
+    { "atlas": "ships/centurion/atlas_manifest", "length_meters": 90, "faction": "confed",
+      "position": [55800, -100600, 18500], "ai": { "initial_state": "idle" } },
+    { "atlas": "ships/orion/atlas_manifest", "length_meters": 95, "faction": "confed",
+      "position": [53600,  -99700, 20200], "ai": { "initial_state": "idle" } },
+    { "atlas": "ships/centurion/atlas_manifest", "length_meters": 90, "faction": "confed",
+      "position": [54300, -100400, 17500], "ai": { "initial_state": "idle" } },
+
+    // ----- Pirate raider pack (10): faction pirate, Talons ---------------
+    { "atlas": "ships/talon/atlas_manifest", "length_meters": 80, "faction": "pirate",
+      "position": [46000, -100000, 19000], "ai": { "initial_state": "idle" } },
+    { "atlas": "ships/talon/atlas_manifest", "length_meters": 80, "faction": "pirate",
+      "position": [44800, -100500, 20100], "ai": { "initial_state": "idle" } },
+    { "atlas": "ships/talon/atlas_manifest", "length_meters": 80, "faction": "pirate",
+      "position": [47200,  -99500, 18200], "ai": { "initial_state": "idle" } },
+    { "atlas": "ships/talon/atlas_manifest", "length_meters": 80, "faction": "pirate",
+      "position": [44500, -100200, 17800], "ai": { "initial_state": "idle" } },
+    { "atlas": "ships/talon/atlas_manifest", "length_meters": 80, "faction": "pirate",
+      "position": [46800, -100800, 20500], "ai": { "initial_state": "idle" } },
+    { "atlas": "ships/talon/atlas_manifest", "length_meters": 80, "faction": "pirate",
+      "position": [45200,  -99300, 19600], "ai": { "initial_state": "idle" } },
+    { "atlas": "ships/talon/atlas_manifest", "length_meters": 80, "faction": "pirate",
+      "position": [47500, -100100, 18900], "ai": { "initial_state": "idle" } },
+    { "atlas": "ships/talon/atlas_manifest", "length_meters": 80, "faction": "pirate",
+      "position": [44200, -100600, 18500], "ai": { "initial_state": "idle" } },
+    { "atlas": "ships/talon/atlas_manifest", "length_meters": 80, "faction": "pirate",
+      "position": [46400,  -99700, 20200], "ai": { "initial_state": "idle" } },
+    { "atlas": "ships/talon/atlas_manifest", "length_meters": 80, "faction": "pirate",
+      "position": [45700, -100400, 17500], "ai": { "initial_state": "idle" } }
   ],
 
   // Navigation waypoints — what the in-game targeting system (press N
