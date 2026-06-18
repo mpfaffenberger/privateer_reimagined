@@ -33,6 +33,11 @@ if(APPLE)
 elseif(WIN32)
     set(SOKOL_BACKEND SOKOL_D3D11)
     set(SHADER_SLANG hlsl5)
+    # HLSL has no gl_PointSize / gl_PointCoord builtin (SPIRV-Cross errors
+    # on them). Tell the shaders to compile out the point-size path. We use
+    # our own define instead of sokol-shdc's SOKOL_D3D11 because this shdc
+    # build doesn't reliably set the backend macros in the GLSL preprocessor.
+    set(SHADER_DEFINES NP_NO_POINT_SIZE)
 else()
     set(SOKOL_BACKEND SOKOL_GLCORE)
     set(SHADER_SLANG glsl430)
@@ -52,6 +57,12 @@ file(MAKE_DIRECTORY ${GEN_DIR})
 function(compile_shader SHADER_NAME)
     set(IN  ${CMAKE_SOURCE_DIR}/shaders/${SHADER_NAME}.glsl)
     set(OUT ${GEN_DIR}/${SHADER_NAME}.glsl.h)
+    # Pass optional per-backend preprocessor defines (e.g. NP_NO_POINT_SIZE
+    # on D3D11). Empty on platforms that don't set SHADER_DEFINES.
+    set(_shdc_defines "")
+    if(SHADER_DEFINES)
+        set(_shdc_defines --defines ${SHADER_DEFINES})
+    endif()
     add_custom_command(
         OUTPUT  ${OUT}
         # NOTE: each generated header contains `static const uint8_t
@@ -59,7 +70,7 @@ function(compile_shader SHADER_NAME)
         # program. That means two shader headers can't share a TU without
         # link conflicts. We handle this by including each shader header in
         # exactly one .cpp file — see src/sun.cpp vs src/sun_corona.cpp.
-        COMMAND ${SHDC} --input ${IN} --output ${OUT} --slang ${SHADER_SLANG} --format sokol
+        COMMAND ${SHDC} --input ${IN} --output ${OUT} --slang ${SHADER_SLANG} ${_shdc_defines} --format sokol
         DEPENDS ${IN} ${SHDC}
         COMMENT "sokol-shdc: ${SHADER_NAME}.glsl -> ${SHADER_NAME}.glsl.h"
         VERBATIM

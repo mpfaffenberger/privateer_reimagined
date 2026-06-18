@@ -38,14 +38,16 @@ void main() {
     v_alpha = clamp(1.0 - smoothstep(0.75, 1.0, edge), 0.0, 1.0);
 
     gl_Position  = view_proj * vec4(p, 1.0);
-    // Point size: GL needs it explicitly; Metal supports it via
-    // [[point_size]] (sokol-shdc/SPIRV-Cross translates gl_PointSize).
-    // Only D3D11/HLSL has no point-size output — there points are always
-    // 1px, so we skip it (and the fragment shader falls back to flat
-    // alpha below). Leaving it UNSET on Metal was the cause of the giant
-    // flickering white squares: an unwritten point size is undefined, not
-    // 1px, so 15k specks rasterised at garbage sizes every frame.
-#if !defined(SOKOL_D3D11)
+    // Point size: GL + Metal support a per-vertex point size (Metal via
+    // [[point_size]], which SPIRV-Cross emits from gl_PointSize). HLSL has
+    // NO point-size builtin — SPIRV-Cross throws 'Unsupported builtin in
+    // HLSL' — so the D3D11 build defines NP_NO_POINT_SIZE (see CMakeLists)
+    // to compile it out. We use our OWN define rather than sokol-shdc's
+    // SOKOL_D3D11/SOKOL_METAL because this shdc build doesn't reliably set
+    // those during the glslang preprocessor pass.
+    // Leaving point size UNSET on Metal was the cause of the giant
+    // flickering white squares: an unwritten point size is undefined.
+#if !defined(NP_NO_POINT_SIZE)
     gl_PointSize = field_params.y;
 #endif
 }
@@ -56,9 +58,11 @@ in  float v_alpha;
 out vec4  frag_color;
 
 void main() {
-#if !defined(SOKOL_D3D11)
+#if !defined(NP_NO_POINT_SIZE)
     // Soft round dot via distance to point-center in [-0.5, 0.5].
-    // gl_PointCoord works on GL and Metal (SPIRV-Cross -> [[point_coord]]).
+    // gl_PointCoord works on GL and Metal (SPIRV-Cross -> [[point_coord]]);
+    // HLSL has no point-coord builtin so the D3D11 build (NP_NO_POINT_SIZE)
+    // excludes it.
     vec2  d = gl_PointCoord - vec2(0.5);
     float r = length(d);
     if (r > 0.5) discard;
