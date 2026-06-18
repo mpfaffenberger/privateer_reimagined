@@ -38,10 +38,14 @@ void main() {
     v_alpha = clamp(1.0 - smoothstep(0.75, 1.0, edge), 0.0, 1.0);
 
     gl_Position  = view_proj * vec4(p, 1.0);
-    // gl_PointSize is GL-only; HLSL/Metal POINT primitives are always one
-    // pixel. On the GL backend we bump dust specks to ~5 px so MSAA doesn't
-    // eat them; on the others dust is intentionally a one-pixel sparkle.
-#if defined(SOKOL_GLCORE) || defined(SOKOL_GLES3)
+    // Point size: GL needs it explicitly; Metal supports it via
+    // [[point_size]] (sokol-shdc/SPIRV-Cross translates gl_PointSize).
+    // Only D3D11/HLSL has no point-size output — there points are always
+    // 1px, so we skip it (and the fragment shader falls back to flat
+    // alpha below). Leaving it UNSET on Metal was the cause of the giant
+    // flickering white squares: an unwritten point size is undefined, not
+    // 1px, so 15k specks rasterised at garbage sizes every frame.
+#if !defined(SOKOL_D3D11)
     gl_PointSize = field_params.y;
 #endif
 }
@@ -52,14 +56,15 @@ in  float v_alpha;
 out vec4  frag_color;
 
 void main() {
-#if defined(SOKOL_GLCORE) || defined(SOKOL_GLES3)
+#if !defined(SOKOL_D3D11)
     // Soft round dot via distance to point-center in [-0.5, 0.5].
+    // gl_PointCoord works on GL and Metal (SPIRV-Cross -> [[point_coord]]).
     vec2  d = gl_PointCoord - vec2(0.5);
     float r = length(d);
     if (r > 0.5) discard;
     float a = smoothstep(0.5, 0.1, r) * v_alpha;
 #else
-    // HLSL/Metal POINT primitives are 1 pixel and have no gl_PointCoord;
+    // D3D11 POINT primitives are 1 pixel and have no gl_PointCoord;
     // just emit a flat alpha at v_alpha for every speck.
     float a = v_alpha;
 #endif
