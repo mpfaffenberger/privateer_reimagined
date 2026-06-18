@@ -7,7 +7,7 @@
 // `GunType::MassDriver` and so the JSON loader has a fixed set to match.
 // The actual numbers (damage in cm, projectile speed, refire delay,
 // energy cost, range, tracer color) live in g_gun_stats[], populated at
-// startup from docs/privateer_ship_data.json — single source of truth for
+// startup from assets/data/privateer_ship_data.json — single source of truth for
 // the canonical balance numbers.
 //
 // Damage units are CM OF DURASTEEL — same unit as armor and shields. A
@@ -62,7 +62,7 @@ struct GunMount {
 
 namespace gun {
 
-// Parse the "guns" array from docs/privateer_ship_data.json (or any path).
+// Parse the "guns" array from assets/data/privateer_ship_data.json (or any path).
 // Logs `[gun] loaded N gun types (M complete)`. Entries with null
 // refire_delay or energy_cost (the Steltek/RF/Mega rows in the source
 // data) get loaded with `complete=false` so we know not to spawn them

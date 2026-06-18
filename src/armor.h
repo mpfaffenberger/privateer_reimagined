@@ -3,7 +3,7 @@
 // armor.h — installable hull armor types.
 //
 // Mirror of shield.h: a small open-ended catalogue of fitted equipment,
-// loaded from docs/privateer_ship_data.json at startup. Source data has
+// loaded from assets/data/privateer_ship_data.json at startup. Source data has
 // three (Plasteel, Tungsten, Isometal). A Ship instance holds a
 // const ArmorType* alongside its base hull cm; total cm = base + armor.
 //

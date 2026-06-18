@@ -82,9 +82,9 @@ int main() {
     // Data tables the ship/missile code reads. chdir so relative asset paths
     // resolve from the repo root regardless of CWD.
     if (::system("true")) { /* no-op, keep -Wunused happy on some libcs */ }
-    gun::load_table("docs/privateer_ship_data.json");
-    shield::load_table("docs/privateer_ship_data.json");
-    armor::load_table("docs/privateer_ship_data.json");
+    gun::load_table("assets/data/privateer_ship_data.json");
+    shield::load_table("assets/data/privateer_ship_data.json");
+    armor::load_table("assets/data/privateer_ship_data.json");
     const int n_classes = ship_class::load_all("assets/ships");
     std::printf("[setup] loaded %d ship classes\n\n", n_classes);
 

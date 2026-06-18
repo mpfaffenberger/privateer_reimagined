@@ -670,7 +670,7 @@ void build_system_scene(bool first_time) {
     if (first_time) {
     faction::init();
     {
-        const std::string ship_data = "docs/privateer_ship_data.json";
+        const std::string ship_data = "assets/data/privateer_ship_data.json";
         gun::load_table(ship_data);
         shield::load_table(ship_data);
         armor::load_table(ship_data);
@@ -683,7 +683,7 @@ void build_system_scene(bool first_time) {
     // Commodity catalog — pure data, same family as the tables above.
     // Trading screens (np-9cu.2) consume it; today it just proves the
     // canonical 1995 cargo list round-trips into the engine.
-    commodity::load("docs/privateer_db/cargo.toml");
+    commodity::load("assets/data/privateer_db/cargo.toml");
     // Per-base commodity pricing (np-9cu.2). Reads canonical category prices
     // + archetypes from assets/data, and each base's market archetype. Then
     // register the Commodity Exchange screen body via the np-9cu.4 hook seam.

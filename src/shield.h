@@ -30,7 +30,7 @@ struct ShieldType {
 
 namespace shield {
 
-// Parse the "shields" array from docs/privateer_ship_data.json. Logs
+// Parse the "shields" array from assets/data/privateer_ship_data.json. Logs
 // `[shield] loaded N types`. Returns true on success.
 bool load_table(const std::string& json_path);
 

@@ -35,9 +35,9 @@ static void check(bool ok, const char* what) {
 }
 
 int main() {
-    gun::load_table("docs/privateer_ship_data.json");
-    shield::load_table("docs/privateer_ship_data.json");
-    armor::load_table("docs/privateer_ship_data.json");
+    gun::load_table("assets/data/privateer_ship_data.json");
+    shield::load_table("assets/data/privateer_ship_data.json");
+    armor::load_table("assets/data/privateer_ship_data.json");
     ship_class::load_all("assets/ships");
     const int n = ai_brain::load_all("assets/ai");
     check(n > 0, "AI logic tables loaded");

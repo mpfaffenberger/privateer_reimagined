@@ -44,7 +44,7 @@ static void check(bool ok, const char* what) {
 int main() {
     faction::init();
     comm::load("assets/data/comm_lines.json");
-    commodity::load("docs/privateer_db/cargo.toml");
+    commodity::load("assets/data/privateer_db/cargo.toml");
 
     galaxy::Galaxy gal;
     if (!galaxy::load("assets/galaxy.json", gal)) {

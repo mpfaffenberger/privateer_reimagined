@@ -36,7 +36,7 @@ import wc_iff  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_IN = REPO_ROOT / "gog_extracted/extracted/priv/DATA/TYPES/CARGO.IFF"
-DEFAULT_OUT = REPO_ROOT / "docs/privateer_db/cargo.toml"
+DEFAULT_OUT = REPO_ROOT / "assets/data/privateer_db/cargo.toml"
 
 
 # ─────────────────────────────────────────────────────────────────────────────

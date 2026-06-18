@@ -224,11 +224,11 @@ int main() {
     // ---- load every catalog the real subsystems resolve against -----------
     faction::init();
     comm::load("assets/data/comm_lines.json");
-    commodity::load("docs/privateer_db/cargo.toml");
+    commodity::load("assets/data/privateer_db/cargo.toml");
     economy::load("assets/data/commodity_prices.json", "assets/bases");
-    gun::load_table("docs/privateer_ship_data.json");
-    shield::load_table("docs/privateer_ship_data.json");
-    armor::load_table("docs/privateer_ship_data.json");
+    gun::load_table("assets/data/privateer_ship_data.json");
+    shield::load_table("assets/data/privateer_ship_data.json");
+    armor::load_table("assets/data/privateer_ship_data.json");
     ship_class::load_all("assets/ships");
     ai_brain::load_all("assets/ai");   // validate the AI logic tables parse
     outfitting::load("assets/data/ship_prices.json", "assets/data/equipment_prices.json");

@@ -11,7 +11,7 @@ GunStats g_gun_stats[kGunTypeCount] = {};
 
 namespace {
 
-// Map the human-readable names in docs/privateer_ship_data.json to our
+// Map the human-readable names in assets/data/privateer_ship_data.json to our
 // enum values. The canonical name comes straight from the JSON so the
 // docs file remains source-of-truth; the lowercase_underscore alias is
 // what ship.json files use to reference the type.

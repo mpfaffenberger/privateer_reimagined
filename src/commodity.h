@@ -4,7 +4,7 @@
 //
 // Privateer's economy trades 50 commodities across 11 categories (FOOD,
 // RAWMAT, LUXURY, WEAPONS, ... — including the infamous SLAVES and MAGIC
-// buckets). The canonical list lives in docs/privateer_db/cargo.toml,
+// buckets). The canonical list lives in assets/data/privateer_db/cargo.toml,
 // clean-room extracted from the original game's CARGO.IFF. This module
 // loads it once at startup into a static catalog the trading layer
 // (np-9cu.2) can look up by id.
@@ -20,7 +20,7 @@
 // with zero dependencies; if the extractor ever grows fancier output,
 // the loader fails loudly (unparsed-line log) instead of silently.
 //
-// Per docs/privateer_db/README.md, keys with a leading underscore
+// Per assets/data/privateer_db/README.md, keys with a leading underscore
 // (_index, _file_offset, _form_size, _trailing_hex) are extraction
 // debug breadcrumbs — ignored here by rule, not by enumeration.
 //
@@ -44,7 +44,7 @@ struct Commodity {
 
 namespace commodity {
 
-// Parse docs/privateer_db/cargo.toml into the static catalog. Idempotent
+// Parse assets/data/privateer_db/cargo.toml into the static catalog. Idempotent
 // (reload replaces). Returns the number of commodities loaded; 0 means
 // the file was missing or unparseable — the game keeps running (trading
 // screens will just be empty) but the log line makes the failure clear.

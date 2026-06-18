@@ -45,9 +45,9 @@ static void show(const PlayerState& p, const char* tag) {
 int main() {
     // Load the catalogs the model resolves against.
     faction::init();
-    gun::load_table("docs/privateer_ship_data.json");
-    shield::load_table("docs/privateer_ship_data.json");
-    armor::load_table("docs/privateer_ship_data.json");
+    gun::load_table("assets/data/privateer_ship_data.json");
+    shield::load_table("assets/data/privateer_ship_data.json");
+    armor::load_table("assets/data/privateer_ship_data.json");
     ship_class::load_all("assets/ships");
     const int n = outfitting::load("assets/data/ship_prices.json",
                                    "assets/data/equipment_prices.json");

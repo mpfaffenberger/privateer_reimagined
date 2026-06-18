@@ -74,7 +74,7 @@ static void sell(PlayerState& p, const char* base, const Commodity& c,
 }
 
 int main() {
-    commodity::load("docs/privateer_db/cargo.toml");
+    commodity::load("assets/data/privateer_db/cargo.toml");
     economy::load("assets/data/commodity_prices.json", "assets/bases");
 
     const Commodity* iron = commodity::find("iron");

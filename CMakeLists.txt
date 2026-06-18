@@ -217,21 +217,6 @@ add_custom_command(TARGET new_privateer POST_BUILD
     COMMENT "symlinking assets/ next to binary"
 )
 
-# The runtime also reads a couple of canonical-data JSONs from docs/
-# (docs/privateer_ship_data.json -> gun/shield/armor tables). When the exe
-# is launched from its own dir (e.g. double-clicking build/new_privateer.exe
-# on Windows) the cwd is the binary dir, not the repo root, so a relative
-# "docs/..." path won't resolve unless docs/ is ALSO next to the binary.
-# Symlinking it here was the fix for 'Windows Tarsus has no guns/shields':
-# assets/ loaded (it was symlinked) but docs/ didn't, so every gun stat
-# stayed incomplete and default_shield resolved to null.
-add_custom_command(TARGET new_privateer POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E create_symlink
-            ${CMAKE_SOURCE_DIR}/docs
-            $<TARGET_FILE_DIR:new_privateer>/docs
-    COMMENT "symlinking docs/ next to binary"
-)
-
 target_include_directories(new_privateer PRIVATE
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/src/generated

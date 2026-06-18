@@ -9,7 +9,7 @@
 // program's lifetime; per-instance Ship structs (next commit) will hold
 // `const ShipClass*` rather than copying.
 //
-// Mobility numbers come straight from the docs/privateer_ship_data.json
+// Mobility numbers come straight from the assets/data/privateer_ship_data.json
 // canonical table: top speed in m/s (treating "kps" as flavour),
 // acceleration + YPR as descriptive tiers (mobility.h supplies the
 // multipliers). Armor in cm is per-facing (Fore/Aft/Side, sides
