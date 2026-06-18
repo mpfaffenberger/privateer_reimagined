@@ -447,6 +447,14 @@ struct AppState {
     // a nav selects it (matches the N-key cycle's effect).
     bool show_navmap = false;
 
+    // Welcome / alpha-intro overlay. Starts true so a fresh launch opens
+    // paused on the briefing; dismissed with SPACE/ENTER (handled at the
+    // very top of event_cb so it doesn't collide with fly-by-wire /
+    // missile-fire). While true, frame_cb forces dt=0 so the world is
+    // frozen behind the text and the player can read before the brawl
+    // unfreezes.
+    bool show_welcome = true;
+
     // Deferred ship spawn/despawn requests from the debug panel's
     // registry smoke-test buttons. Applied at the top of frame_cb —
     // never mid-frame — because half the frame's systems hold Ship&s
@@ -1934,14 +1942,109 @@ void frame_stub() {
 // which is the point -- watch the AI brawl unfold in 1/8th the wall time.
 static float g_time_scale = 1.0f;
 
+// Alpha-build welcome / briefing overlay. Drawn during the HUD pass (ImGui
+// frame already open) while g.show_welcome is true; the sim is frozen
+// (dt=0) behind it. Dismissed with SPACE/ENTER (see event_cb).
+void draw_welcome_overlay() {
+    const ImGuiViewport* vp = ImGui::GetMainViewport();
+    const ImVec2 center(vp->WorkPos.x + vp->WorkSize.x * 0.5f,
+                        vp->WorkPos.y + vp->WorkSize.y * 0.5f);
+    ImGui::SetNextWindowPos(center, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+    ImGui::SetNextWindowSize(ImVec2(720.0f, 0.0f), ImGuiCond_Always);
+    ImGui::SetNextWindowBgAlpha(0.92f);
+
+    const ImGuiWindowFlags flags =
+        ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+        ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings |
+        ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoTitleBar;
+
+    const ImU32 amber = IM_COL32(255, 200, 60, 255);
+    const ImU32 cyan  = IM_COL32(120, 220, 255, 255);
+
+    if (ImGui::Begin("##welcome", nullptr, flags)) {
+        ImGui::PushStyleColor(ImGuiCol_Text, amber);
+        ImGui::TextUnformatted("WELCOME TO THE ALPHA BUILD OF PRIVATEER: NEXT GEN");
+        ImGui::PopStyleColor();
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        ImGui::PushTextWrapPos(0.0f);
+
+        ImGui::TextUnformatted(
+            "You are flying a Tarsus - the space equivalent of a piece-of-shit "
+            "Chevy pickup from the 80s. It has two laser cannon: the worst guns "
+            "in the entire game, but in the hands of a skilled pilot, nothing to "
+            "scoff at. You also carry 4 dumbfire missiles. Use them wisely.");
+        ImGui::Spacing();
+
+        ImGui::TextUnformatted(
+            "In the distance there is a massive battle between Pirates (Talons) "
+            "and Confederation forces (Centurions and Orions). Go kill some Talons.");
+        ImGui::Spacing();
+
+        ImGui::PushStyleColor(ImGuiCol_Text, cyan);
+        ImGui::TextUnformatted("FLIGHT");
+        ImGui::PopStyleColor();
+        ImGui::TextUnformatted(
+            "Use +/- to control your speed. Your piece-of-shit Tarsus tops out at "
+            "300 kps. Afterburners can push you to 600 kps but rapidly drain your "
+            "energy. Energy returns gradually over time - and it's also what fires "
+            "your laser cannon.");
+        ImGui::Spacing();
+
+        ImGui::PushStyleColor(ImGuiCol_Text, cyan);
+        ImGui::TextUnformatted("COMBAT");
+        ImGui::PopStyleColor();
+        ImGui::TextUnformatted(
+            "Press T to cycle through nearby targets - find a Talon and blast him "
+            "(left-click / Ctrl to fire lasers, Enter to fire missiles). Your "
+            "shields are about as strong as office printer paper and your armor is "
+            "basically bamboo: if a Talon gets you in a 1-on-1 joust, you will not "
+            "survive it. But a skilled pilot can easily defeat a pirate Talon.");
+        ImGui::Spacing();
+
+        ImGui::PushStyleColor(ImGuiCol_Text, amber);
+        ImGui::TextUnformatted(
+            "PRO TIP: the Space bar toggles fly-by-wire on and off.");
+        ImGui::PopStyleColor();
+        ImGui::TextUnformatted(
+            "You will likely get killed - but this is the alpha, so you'll just "
+            "respawn and carry on.");
+        ImGui::Spacing();
+
+        ImGui::PushStyleColor(ImGuiCol_Text, cyan);
+        ImGui::TextUnformatted("AFTER THE FIGHT");
+        ImGui::PopStyleColor();
+        ImGui::TextUnformatted(
+            "Once all the Talons are dead, explore the Troy system. Press N to "
+            "select a jump point (e.g. the jump to Regallis), press A to autopilot "
+            "cruise there, approach the jump gate and press J to jump. Other "
+            "systems await. This is a very vanilla build - not much is complete yet.");
+
+        ImGui::PopTextWrapPos();
+
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::PushStyleColor(ImGuiCol_Text, amber);
+        ImGui::TextUnformatted("            >>>  Press  [ SPACE ]  or  [ ENTER ]  to begin  <<<");
+        ImGui::PopStyleColor();
+    }
+    ImGui::End();
+}
+
 
 
 void frame_cb() {
     // --- timestep -----------------------------------------------------------
     const uint64_t now    = stm_now();
     const float    raw_dt = (float)stm_sec(stm_diff(now, g.last_frame_ticks));
-    const float    dt     = raw_dt * g_time_scale;
+    float          dt     = raw_dt * g_time_scale;
     g.last_frame_ticks    = now;
+
+    // Welcome overlay freezes the whole sim (player, AI, projectiles) so the
+    // briefing reads against a still frame. Everything still RENDERS — only
+    // the integration step is zeroed. Dismissed in event_cb (SPACE/ENTER).
+    if (g.show_welcome) dt = 0.0f;
 
     // --- deferred system switch (np-6al.1, frame boundary only) -------------
     // Dev timers (--goto / --goto-soak) and the debug dropdown queue a switch
@@ -2332,6 +2435,7 @@ void frame_cb() {
             g.keys_down[SAPP_KEYCODE_LEFT_CONTROL] ||
             g.keys_down[SAPP_KEYCODE_RIGHT_CONTROL] ||
             g.mouse_left_held;
+        if (g.show_welcome) player.controller.fire_guns = false;   // frozen on briefing
 
         HMM_Vec3 aim = g.camera.forward();
         if (g.player_target_id != 0) {
@@ -3414,6 +3518,10 @@ void frame_cb() {
                                    g.ships, g.show_navmap);
         // Reputation + comm-taunt feed (np-ma2.1), drawn over the HUD.
         comm::draw();
+
+        // Alpha welcome/briefing overlay — drawn last so it sits on top of
+        // the whole HUD. The sim is frozen (dt=0) while this is up.
+        if (g.show_welcome) draw_welcome_overlay();
     }
 
     // ---- ship-target indicator ------------------------------------
@@ -3750,6 +3858,23 @@ void event_cb(const sapp_event* ev) {
     } else if (ev->type == SAPP_EVENTTYPE_MOUSE_UP) {
         if (ev->mouse_button == 0) g.mouse_left_held  = false;
         if (ev->mouse_button == 1) g.mouse_right_held = false;
+    }
+
+    // Welcome / alpha-briefing overlay: while it's up the sim is frozen.
+    // SPACE or ENTER dismisses it and unfreezes the world. Handled FIRST
+    // (before ImGui / dev-editor handlers and before the normal keymap) so
+    // the dismiss key can't also toggle fly-by-wire (SPACE) or fire a
+    // missile (ENTER) on the same press. Swallow all key-downs while up so
+    // nothing leaks into the paused world.
+    if (g.show_welcome) {
+        if (ev->type == SAPP_EVENTTYPE_KEY_DOWN &&
+            (ev->key_code == SAPP_KEYCODE_SPACE ||
+             ev->key_code == SAPP_KEYCODE_ENTER)) {
+            g.show_welcome = false;
+            g.last_frame_ticks = stm_now();   // drop the frozen interval so dt doesn't spike
+            std::printf("[welcome] dismissed — fight on\n");
+        }
+        if (ev->type == SAPP_EVENTTYPE_KEY_DOWN) return;   // eat keys while paused
     }
 
     // Give ImGui first crack at the event. If the panel is focused or the
