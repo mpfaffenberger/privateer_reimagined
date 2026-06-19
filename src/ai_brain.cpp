@@ -32,7 +32,6 @@
 #include <cmath>
 #include <cstdio>
 #include <filesystem>
-#include <random>
 
 namespace fs = std::filesystem;
 
@@ -417,13 +416,8 @@ Ctx make_ctx(Ship& s, const Ship& t, const ShipRegistry& all, float t_now) {
         const HMM_Vec4 tf = HMM_MulM4V4(HMM_QToM4(t.orientation), HMM_V4(0, 0, 1, 0));
         t_vel = HMM_MulV3F(HMM_V3(tf.X, tf.Y, tf.Z), t.sprite->forward_speed);
     }
-    // Lead on RELATIVE velocity (target - shooter): the bolt inherits the
-    // shooter's velocity (firing.cpp adds it), so the intercept must be
-    // solved in the shooter's frame or a moving attacker systematically
-    // leads wrong and misses.
-    const HMM_Vec3 rel_vel = HMM_SubV3(t_vel, s.world_velocity);
     const float t_int = (avg_proj_speed > 1.0f) ? c.dist / avg_proj_speed : 0.0f;
-    c.lead_pos = HMM_AddV3(t.position, HMM_MulV3F(rel_vel, t_int));
+    c.lead_pos = HMM_AddV3(t.position, HMM_MulV3F(t_vel, t_int));
     return c;
 }
 
@@ -512,14 +506,9 @@ const AILogicItem* select(const Ctx& c, const std::vector<AILogicItem>& items,
 
 // ---- firing decision (firing upgrade) ------------------------------------
 // Aggressivity/experience-scaled cone (f3) + skill-scaled reaction time (f2),
-// on the ITTS lead vector we already compute. The actual per-shot hit rate is
-// applied in firing.cpp via a skill-based to-hit roll (ballistic aiming can't
-// hit a jinking target often enough); here we just gate WHEN the AI is allowed
-// to fire (in arc + range + reaction time) and publish the clean lead aim so
-// fallback nose-fire still points at the target. [I] tuning, docs s0/FAQ s5.1.
+// on the ITTS lead vector we already compute. [I] tuning, docs s0/FAQ s5.1.
 bool should_fire(Ctx& c) {
     Ship& s = *c.self;
-    s.controller.fire_aim_world = HMM_V3(0.0f, 0.0f, 0.0f);   // default: nose
     const HMM_Vec3 to_lead = HMM_SubV3(c.lead_pos, s.position);
     const float    d2      = HMM_DotV3(to_lead, to_lead);
     const float    wr      = c.gun_range;
@@ -539,12 +528,7 @@ bool should_fire(Ctx& c) {
     const float f2  = s.klass ? s.klass->skill_f2 : 45.0f;
     const float rt  = 0.45f - std::clamp((f2 - 40.0f) / 20.0f, 0.0f, 1.0f) * (0.45f - 0.12f);
     if (s.ai.fire_solution_at < 0.0f) s.ai.fire_solution_at = c.t_now;
-    if ((c.t_now - s.ai.fire_solution_at) < rt) return false;
-
-    // Cleared to fire: publish the clean lead direction as the fallback aim
-    // (firing.cpp's to-hit roll picks the real per-shot direction + damage).
-    s.controller.fire_aim_world = lead_u;
-    return true;
+    return (c.t_now - s.ai.fire_solution_at) >= rt;
 }
 
 // ---- steering primitive ---------------------------------------------------

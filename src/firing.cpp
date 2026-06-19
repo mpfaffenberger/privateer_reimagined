@@ -1,7 +1,6 @@
 #include "firing.h"
 
 #include "gun.h"
-#include "gunnery_probe.h"
 #include "projectile.h"
 #include "sfx.h"
 #include "ship.h"
@@ -10,8 +9,6 @@
 #include "ship_sprite.h"   // for sprite->forward_speed read
 
 #include <algorithm>
-#include <cmath>
-#include <random>
 
 namespace {
 
@@ -40,15 +37,6 @@ HMM_Vec3 ship_forward_world(const Ship& s) {
     }
     const HMM_Mat4 R = HMM_QToM4(s.orientation);
     const HMM_Vec4 f = HMM_MulM4V4(R, HMM_V4(0, 0, 1, 0));
-    // NPC gunnery aim override: the combat AI writes a skill-scaled
-    // intercept solution into controller.fire_aim_world so bolts lead the
-    // target instead of flying off the imperfectly-tracking nose. Zero =
-    // fall through to the nose (idle/None-behaviour ships).
-    {
-        const HMM_Vec3& a = s.controller.fire_aim_world;
-        const float al2 = HMM_DotV3(a, a);
-        if (al2 > 1e-6f) return HMM_DivV3F(a, std::sqrt(al2));
-    }
     return HMM_V3(f.X, f.Y, f.Z);
 }
 
@@ -108,27 +96,7 @@ void firing::tick(ShipRegistry& ships,
         // matches real-world ballistics + every other space sim.
         const HMM_Vec3 ship_v = s.world_velocity;
 
-        // --- AI skill-based to-hit -------------------------------------
-        // Ballistic aiming alone can't hit a jinking target often enough
-        // (perfect first-order lead tops out ~15% over the ~1.5s bolt
-        // flight). So NPC gunnery uses a per-shot to-hit ROLL gated by the
-        // AI already deciding to fire (in arc + range, via should_fire):
-        // evasion still works by staying out of the gun arc, but a target
-        // caught in front is hit at the pilot's skill rate. On a hit we
-        // apply damage directly and the bolt is cosmetic (damage_cm=0);
-        // on a miss the cosmetic bolt sprays wide. Player bolts are
-        // unchanged real ballistics (damage on collision).
-        Ship* npc_target = nullptr;
-        float npc_hit_rate = 0.0f;
-        if (!s.is_player && s.ai.target_id != 0) {
-            npc_target = ships.find_by_id(s.ai.target_id);
-            if (npc_target && !npc_target->alive) npc_target = nullptr;
-            const float f2 = s.klass ? s.klass->skill_f2 : 45.0f;
-            const float tt = std::clamp((f2 - 40.0f) / 20.0f, 0.0f, 1.0f);
-            npc_hit_rate = 0.17f + 0.20f * std::pow(tt, 1.6f);
-        }
-        static std::mt19937 s_hit_rng(0xB0117E5u);
-        std::uniform_real_distribution<float> s_hit_U(0.0f, 1.0f);
+
 
         for (size_t i = 0; i < s.mounts.size(); ++i) {
             if (s.gun_cooldowns[i] > 0.0f)            continue;
@@ -141,59 +109,18 @@ void firing::tick(ShipRegistry& ships,
             Projectile p;
             // Muzzle position: ship pos + rotated mount offset.
             p.position = HMM_AddV3(s.position, body_to_world(s.orientation, m.offset_body));
-
-            HMM_Vec3 shot_dir = fwd_world;
-            float    shot_damage = gs.damage_cm;
-
-            if (npc_target) {
-                // Roll this shot against the pilot's skill hit rate.
-                const bool will_hit = (s_hit_U(s_hit_rng) < npc_hit_rate);
-                const HMM_Vec3 tpos = npc_target->sprite ? npc_target->sprite->position
-                                                         : npc_target->position;
-                const HMM_Vec3 muzzle_to_t = HMM_SubV3(tpos, p.position);
-                const float    mt_l2 = HMM_DotV3(muzzle_to_t, muzzle_to_t);
-                const HMM_Vec3 to_t_u = (mt_l2 > 1e-6f)
-                    ? HMM_DivV3F(muzzle_to_t, std::sqrt(mt_l2)) : fwd_world;
-                if (will_hit) {
-                    // Apply damage directly (instant, reliable) and send a
-                    // cosmetic tracer straight at the target so it reads as
-                    // a hit. facing = the side facing the shooter.
-                    const HMM_Vec3 hit_pos = HMM_SubV3(tpos,
-                        HMM_MulV3F(to_t_u, ship::hit_radius_m(*npc_target)));
-                    const HitFacing facing = ship::facing_of_hit(*npc_target, hit_pos);
-                    ship::take_damage(*npc_target, gs.damage_cm, facing);
-                    if (!npc_target->alive) npc_target->killed_by_id = s.id;
-                    gunnery_probe::hit(s.klass ? s.klass->skill_f2 : 45.0f);
-                    shot_dir = to_t_u;          // tracer converges on target
-                } else {
-                    // Deliberate miss: spray a few degrees off the target.
-                    const HMM_Vec3 ref = (std::fabs(to_t_u.Y) < 0.99f)
-                        ? HMM_V3(0,1,0) : HMM_V3(1,0,0);
-                    const HMM_Vec3 ux = HMM_NormV3(HMM_Cross(ref, to_t_u));
-                    const HMM_Vec3 vx = HMM_Cross(to_t_u, ux);
-                    const float ph = s_hit_U(s_hit_rng) * 6.2831853f;
-                    const float mag = 0.06f + 0.05f * s_hit_U(s_hit_rng);   // ~3-6 deg
-                    shot_dir = HMM_NormV3(HMM_AddV3(to_t_u,
-                        HMM_MulV3F(HMM_AddV3(HMM_MulV3F(ux, std::cos(ph)),
-                                             HMM_MulV3F(vx, std::sin(ph))), mag)));
-                }
-                shot_damage = 0.0f;             // NPC bolts are cosmetic; damage via roll
-            }
-
             // Velocity: shooter's full 3D world velocity + muzzle
-            // speed along the aim direction.
-            p.velocity = HMM_AddV3(ship_v, HMM_MulV3F(shot_dir, gs.speed_mps));
-            p.damage_cm        = shot_damage;
+            // speed along the aim direction. Inheritance lets the
+            // tracer fly with the player's frame so coasting / strafing
+            // doesn't make bullets visually drift sideways from the
+            // crosshair.
+            p.velocity = HMM_AddV3(ship_v, HMM_MulV3F(fwd_world, gs.speed_mps));
+            p.damage_cm        = gs.damage_cm;
             p.range_remaining  = gs.range_m;
             p.type             = m.type;
             p.owner_id         = s.id;
             p.alive            = true;
             projectiles.push_back(p);
-
-            // Gunnery hit-rate probe: count NPC shots by shooter skill.
-            if (!s.is_player) {
-                gunnery_probe::shot(s.klass ? s.klass->skill_f2 : 45.0f);
-            }
 
             s.energy_gj         -= gs.energy_cost_gj;
             s.gun_cooldowns[i]   = gs.refire_delay_s;

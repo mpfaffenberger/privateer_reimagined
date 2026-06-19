@@ -63,15 +63,6 @@ struct ShipFlightController {
     // uses 1.0 with afterburner=true for clean separation. Other states
     // default to 1.0. Read by ChaseTarget when picking desired_speed.
     float    speed_scale     = 1.0f;
-
-    // AI gunnery aim override (world unit vec). When non-zero, firing.cpp
-    // spawns this ship's bolts along THIS direction instead of the nose.
-    // The combat AI sets it to the intercept solution plus a skill-scaled
-    // random scatter cone, so bolts actually lead an evading target and
-    // connect at a pilot-skill-dependent rate (novice ~17%, vet ~24%,
-    // ace ~37%) instead of flying off the imperfectly-tracking nose.
-    // Zero (the default) = fire along the nose (player + idle ships).
-    HMM_Vec3 fire_aim_world  = { 0.0f, 0.0f, 0.0f };
 };
 
 enum class ShipBehavior : uint8_t {

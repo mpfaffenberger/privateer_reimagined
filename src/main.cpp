@@ -53,7 +53,6 @@
 #include "mesh_render.h"
 #include "explosion.h"
 #include "firing.h"
-#include "gunnery_probe.h"
 
 // Defined in mesh_render.cpp (external linkage). Forward-declared at global
 // scope so the dev_remote /project publish in frame() resolves to the
@@ -2140,7 +2139,6 @@ void frame_cb() {
     const float    raw_dt = (float)stm_sec(stm_diff(now, g.last_frame_ticks));
     float          dt     = raw_dt * g_time_scale;
     g.last_frame_ticks    = now;
-    gunnery_probe::report_if_due((double)stm_sec(now));
 
     // Welcome overlay freezes the whole sim (player, AI, projectiles) so the
     // briefing reads against a still frame. Everything still RENDERS — only
@@ -4304,13 +4302,6 @@ sapp_desc sokol_main(int argc, char** argv) {
             ++i;
         } else if (std::strcmp(argv[i], "--capture-clean") == 0) {
             g.capture_clean = true;
-        } else if (std::strcmp(argv[i], "--no-welcome") == 0) {
-            g.show_welcome = false;   // skip the paused briefing (testing / soak)
-        } else if (std::strcmp(argv[i], "--gun-stats") == 0) {
-            gunnery_probe::enabled = true;   // periodic AI hit-rate report
-        } else if (std::strcmp(argv[i], "--time-scale") == 0 && i + 1 < argc) {
-            g_time_scale = (float)std::atof(argv[i + 1]);   // run the sim faster
-            ++i;
         } else if (std::strcmp(argv[i], "--dev-land") == 0 && i + 1 < argc) {
             g.dev_land_base = argv[i + 1];
             ++i;
