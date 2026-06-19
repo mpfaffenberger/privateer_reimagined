@@ -25,10 +25,10 @@
 struct WarpStreaks {
     // ---- sizing -----------------------------------------------------------
     // Lower density than dust (15k specks) — line geometry costs 2 verts
-    // each AND fills more pixels, so 3k streaks already feels like a
-    // saturated warp field at cruise. Wrap extent matches dust's so the
-    // two systems share a parallax bubble.
-    int   count         = 3000;
+    // each AND fills more pixels. 1500 streaks reads as a comfortable warp
+    // field at cruise (halved from the original 3k, which felt too busy).
+    // Wrap extent matches dust's so the two systems share a parallax bubble.
+    int   count         = 1500;
     float wrap_extent   = 600.0f;   // half-extent of the cube around the camera
 
     // ---- runtime knobs ----------------------------------------------------
