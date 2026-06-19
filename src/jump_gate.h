@@ -40,7 +40,7 @@ struct JumpGate {
     // skybox at close range. Tint .rgb is the deep-blue core colour
     // (silhouette rim hue is shader-side, hotter white-blue); .a multiplies
     // shell intensity (0 = invisible, 1 = full-brightness pulse cycle).
-    float    radius_m   = 1500.0f;
+    float    radius_m   = 7500.0f;
     HMM_Vec4 tint       = { 0.15f, 0.35f, 0.85f, 1.10f };
     float    pulse_slow_hz = 0.25f;   // ~4 s period breath
     float    pulse_fast_hz = 1.30f;   // shimmer overlay

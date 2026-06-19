@@ -455,6 +455,23 @@ struct AppState {
     // unfreezes.
     bool show_welcome = true;
 
+    // 3rd-person orbit/freelook camera, active while the nav autopilot is
+    // engaged (the ship flies itself, so the player is free to look around).
+    // The ship keeps flying via g.camera; orbit_cam is a SEPARATE render
+    // camera that orbits the ship at orbit_dist, aimed by the mouse
+    // (offset-from-centre drives yaw/pitch rate; scroll changes distance).
+    // player_ship_sprite renders the player's hull (no sprite in 1st person)
+    // so there's actually something to look at.
+    bool      orbit_active   = false;
+    bool      orbit_was_active = false;   // edge detect to seed angles on engage
+    float     orbit_yaw      = 0.0f;      // world-frame, radians
+    float     orbit_pitch    = 0.20f;     // world-frame, radians (+ = above)
+    float     orbit_dist     = 600.0f;    // camera distance from the ship
+    Camera    orbit_cam{};
+    ShipSpriteAtlas*               player_atlas = nullptr;   // resolved player hull atlas
+    ShipSpriteObject               player_ship_sprite{};
+    std::deque<ShipSpriteObject>   player_sprite_scratch;    // 1-elem feed for frame select
+
     // Deferred ship spawn/despawn requests from the debug panel's
     // registry smoke-test buttons. Applied at the top of frame_cb —
     // never mid-frame — because half the frame's systems hold Ship&s
@@ -1031,6 +1048,27 @@ void build_system_scene(bool first_time) {
         s.forward_speed    = sd.forward_speed;
 
         g.placed_ship_sprites.push_back(s);
+    }
+
+    // Resolve (loading if necessary) the player's own hull atlas so the
+    // 3rd-person autopilot camera has a sprite to render. Keyed the same way
+    // as NPC atlases (resolve_ship_atlas_stem -> sprites_3d variant). Done
+    // every system build because g.ship_sprite_atlases is per-system; the
+    // player persists but its atlas pointer must be re-resolved each time.
+    {
+        const std::string pc = g_player_ship_override.empty()
+                             ? std::string("tarsus") : g_player_ship_override;
+        const std::string pstem = resolve_ship_atlas_stem("ships/" + pc + "/atlas_manifest");
+        auto [it, inserted] = g.ship_sprite_atlases.try_emplace(pstem, ShipSpriteAtlas{});
+        if (inserted && !load_ship_sprite_atlas(pstem, it->second, g.sprite_art)) {
+            std::fprintf(stderr, "[orbit] player atlas '%s' failed to load - 3rd-person hull hidden\n",
+                         pstem.c_str());
+            g.ship_sprite_atlases.erase(it);
+            g.player_atlas = nullptr;
+        } else {
+            g.player_atlas = &it->second;
+            std::printf("[orbit] player hull atlas ready: %s\n", pstem.c_str());
+        }
     }
 
     // ---- build the Ship array (one per placed sprite) -------------------
@@ -1942,6 +1980,67 @@ void frame_stub() {
 // which is the point -- watch the AI brawl unfold in 1/8th the wall time.
 static float g_time_scale = 1.0f;
 
+// Update the 3rd-person orbit/freelook camera. Active only while the nav
+// autopilot is engaged (the ship flies itself). The mouse pans the camera
+// (offset-from-centre = yaw/pitch rate, virtual-joystick style, matching
+// fly-by-wire); scroll changes distance. The ship continues to fly via
+// g.camera — orbit_cam is a separate RENDER camera only.
+void update_orbit_camera(float dt) {
+    g.orbit_active = autopilot::engaged(g.autopilot);
+    if (!g.orbit_active) { g.orbit_was_active = false; return; }
+
+    // Engage edge: start LOCKED directly behind the ship (engines in view,
+    // roll matched). Drop fly-by-wire so the camera is fixed and the cursor
+    // is free — same semantics as manual flight. Press SPACE to toggle
+    // fly-by-wire ON and freelook-orbit around the ship.
+    if (!g.orbit_was_active) {
+        g.orbit_yaw   = 0.0f;
+        g.orbit_pitch = 0.0f;
+        g.orbit_dist  = 600.0f;
+        g.orbit_was_active = true;
+        g.fly_by_wire = false;
+        sapp_show_mouse(true);
+    }
+
+    // Freelook only while fly-by-wire is ON (SPACE toggles it, exactly as in
+    // manual flight). Otherwise the camera is hard-locked behind the ship.
+    // Signs are negated to cancel the 180-degree view roll below, so the
+    // on-screen orbit direction stays intuitive (mouse right -> pan right).
+    if (g.fly_by_wire) {
+        const float dpi = sapp_dpi_scale();
+        const float vw = (float)sapp_width()  / dpi;
+        const float vh = (float)sapp_height() / dpi;
+        const float off_x = std::clamp((g.mouse_x - vw * 0.5f) / (vw * 0.5f), -1.0f, 1.0f);
+        const float off_y = std::clamp((g.mouse_y - vh * 0.5f) / (vh * 0.5f), -1.0f, 1.0f);
+        auto dz = [](float x) { return (std::fabs(x) < 0.08f) ? 0.0f : x; };
+        constexpr float k_orbit_rate = 2.2f;   // rad/s at full deflection
+        g.orbit_yaw   += -dz(off_x) * k_orbit_rate * dt;
+        g.orbit_pitch += -dz(off_y) * k_orbit_rate * dt;
+        g.orbit_pitch  = std::clamp(g.orbit_pitch, -1.45f, 1.45f);   // ~ +-83 deg
+    }
+    // When fly-by-wire is OFF the camera HOLDS its current pan (locked
+    // wherever you left it) rather than snapping back to the rear view —
+    // the mouse simply stops affecting it.
+    g.orbit_dist = std::clamp(g.orbit_dist, 80.0f, 1500.0f);
+
+    // cam orientation = ship * yaw(body+Y) * pitch(body+X) * roll(180 about
+    // forward). The roll flips the view upright (the ship was rendering
+    // upside-down without it). Roll is a fixed constant -> never changes
+    // with mouse, so the camera stays roll-locked to the ship. Position
+    // keeps the ship centred: cam = ship - forward*dist.
+    const HMM_Quat cam_o = HMM_NormQ(HMM_MulQ(HMM_MulQ(HMM_MulQ(
+        g.camera.orientation,
+        HMM_QFromAxisAngle_RH(HMM_V3(0.0f, 1.0f, 0.0f), g.orbit_yaw)),
+        HMM_QFromAxisAngle_RH(HMM_V3(1.0f, 0.0f, 0.0f), g.orbit_pitch)),
+        HMM_QFromAxisAngle_RH(HMM_V3(0.0f, 0.0f, 1.0f), 3.14159265358979f)));
+
+    Camera& oc = g.orbit_cam;
+    oc = g.camera;   // inherit fov / near / far / cruise fov etc.
+    oc.orientation = cam_o;
+    const HMM_Vec3 cam_fwd = oc.forward();
+    oc.position = HMM_SubV3(g.camera.position, HMM_MulV3F(cam_fwd, g.orbit_dist));
+}
+
 // Alpha-build welcome / briefing overlay. Drawn during the HUD pass (ImGui
 // frame already open) while g.show_welcome is true; the sim is frozen
 // (dt=0) behind it. Dismissed with SPACE/ENTER (see event_cb).
@@ -2166,6 +2265,7 @@ void frame_cb() {
             g.keys_down[SAPP_KEYCODE_X] || g.keys_down[SAPP_KEYCODE_TAB];
         const bool mouse_steer =
             g.fly_by_wire && !ImGui::GetIO().WantCaptureMouse &&
+            !autopilot::engaged(g.autopilot) &&   // during autopilot the mouse orbits the camera, never cancels
             (std::fabs(off_x) > 0.35f || std::fabs(off_y) > 0.35f);
         if (key_input || mouse_steer) {
             autopilot::disengage(g.autopilot, g.camera,
@@ -2254,6 +2354,11 @@ void frame_cb() {
     // eases to a stop on arrival (or drops out if threat:: trips). No-op
     // in free flight. Runs after manual physics for the same reason.
     autopilot::tick(g.autopilot, g.camera, dt);
+
+    // 3rd-person orbit/freelook camera, driven off autopilot state. Runs
+    // after autopilot::tick so engaged-state + ship pose are current; the
+    // built orbit_cam is consumed by the scene render pass below.
+    update_orbit_camera(dt);
 
     // ---- warp streaks driver (np-streaks) -------------------------------
     // Spool the cruise streaks in/out based on autopilot state + speed.
@@ -3168,6 +3273,13 @@ void frame_cb() {
         pass.attachments.colors[0]  = g.rt.scene_color_att;
         pass.attachments.depth_stencil = g.rt.scene_depth_att;
         sg_begin_pass(&pass);
+        // 3rd-person orbit camera swap: while the nav autopilot is engaged
+        // the whole 3D scene renders from g.orbit_cam (a camera orbiting the
+        // ship), not the ship's-eye g.camera. The HUD below still uses
+        // g.camera (real ship pose) for nav distance / FLIGHT readout. The
+        // ship itself is rendered as a sprite further down so there's
+        // something to look at.
+        const Camera& scene_cam = g.orbit_active ? g.orbit_cam : g.camera;
         // Draw order rationale:
         //   1. skybox   — no depth write, paints the background
         //   2. dust     — additive particulate in "empty space"; drawn BEFORE
@@ -3179,13 +3291,13 @@ void frame_cb() {
         //   4. sun sphere— opaque, writes depth.
         //   5. sun gas + corona — additive halos, depth test but no write.
         if (!g.capture_clean) {
-            g.skybox.draw(g.camera, aspect);
-            g.dust.draw(g.camera, aspect);
+            g.skybox.draw(scene_cam, aspect);
+            g.dust.draw(scene_cam, aspect);
             // Warp streaks layer over dust (additive). Self-gates on
             // intensity > 0 so this is cheap when autopilot is off.
-            g.warp_streaks.draw(g.camera, aspect);
+            g.warp_streaks.draw(scene_cam, aspect);
             for (const auto& f : g.asteroid_fields) {
-                f.draw(g.camera, aspect, time_sec, g.sun.position, g.sun.core_color);
+                f.draw(scene_cam, aspect, time_sec, g.sun.position, g.sun.core_color);
             }
         }
         // Publish the render matrices for the dev_remote /project endpoint
@@ -3196,21 +3308,39 @@ void frame_cb() {
         // renderer uses, so the projection matches the render exactly.
         if (!g.placed_meshes.empty()) {
             const PlacedMesh& pm0 = g.placed_meshes[0];
-            const HMM_Mat4 vp    = HMM_MulM4(g.camera.projection(aspect),
-                                             g.camera.view());
+            const HMM_Mat4 vp    = HMM_MulM4(scene_cam.projection(aspect),
+                                             scene_cam.view());
             const HMM_Mat4 model = model_matrix(pm0.position, pm0.euler_deg,
                                                 pm0.scale);
-            dev_remote::publish_render_matrices(vp, model, g.camera.position);
+            dev_remote::publish_render_matrices(vp, model, scene_cam.position);
         }
-        g.mesh_render.draw(g.placed_meshes, g.camera, aspect,
+        g.mesh_render.draw(g.placed_meshes, scene_cam, aspect,
                            g.sun.position, g.sun.core_color);
         // Sprites go AFTER opaque meshes and BEFORE the sun so the sun's
         // additive corona still paints on top of everything. Sprites use
         // alpha blending, which needs opaque depth already in the buffer
         // so translucent edges composite correctly.
         g.frame_sprites = g.placed_sprites;
-        append_ship_sprites_for_camera(g.placed_ship_sprites, g.camera, g.frame_sprites);
-        g.sprite_render.draw(g.frame_sprites, g.camera, aspect, time_sec);
+        append_ship_sprites_for_camera(g.placed_ship_sprites, scene_cam, g.frame_sprites);
+        // Player hull in 3rd-person: feed a one-shot ShipSpriteObject at the
+        // ship's pose through the same frame-selection path. The camera uses
+        // -Z forward while the sprite atlas uses +Z nose, so rotate the
+        // orientation 180 deg around Y to match conventions.
+        if (g.orbit_active && g.player_atlas) {
+            ShipSpriteObject& ps = g.player_ship_sprite;
+            ps.atlas       = g.player_atlas;
+            ps.position    = g.camera.position;
+            ps.world_size  = 100.0f * world_scale::k_ship_size_scale;
+            ps.orientation = HMM_NormQ(HMM_MulQ(
+                g.camera.orientation,
+                HMM_QFromAxisAngle_RH(HMM_V3(0.0f, 1.0f, 0.0f), 3.14159265358979f)));
+            ps.angular_velocity = HMM_V3(0, 0, 0);
+            ps.forward_speed    = 0.0f;
+            g.player_sprite_scratch.clear();
+            g.player_sprite_scratch.push_back(ps);
+            append_ship_sprites_for_camera(g.player_sprite_scratch, scene_cam, g.frame_sprites);
+        }
+        g.sprite_render.draw(g.frame_sprites, scene_cam, aspect, time_sec);
 
         // Jump-gate spheres: translucent additive shells at every
         // kind=="jump" nav point. Drawn AFTER opaque ships/stations/rocks
@@ -3224,7 +3354,7 @@ void frame_cb() {
             for (const NavPointDef& n : g.system.nav_points) {
                 if (n.kind == "jump") gate_positions.push_back(n.position);
             }
-            g.jump_gate.draw(g.camera, aspect, time_sec, gate_positions);
+            g.jump_gate.draw(scene_cam, aspect, time_sec, gate_positions);
         }
 
         // Additive glow billboards via the sprite spot pipeline.
@@ -3379,15 +3509,15 @@ void frame_cb() {
                 tracers.push_back(t);
             }
 
-            g.sprite_render.draw_tracers(tracers, g.camera, aspect);
+            g.sprite_render.draw_tracers(tracers, scene_cam, aspect);
             if (!bolts.empty()) {
                 g.sprite_render.draw_bolts(bolts, g.bolt_textures,
-                                           g.camera, aspect, time_sec);
+                                           scene_cam, aspect, time_sec);
             }
         }
 
         if (!g.capture_clean) {
-            g.sun.draw(g.camera, aspect, time_sec);
+            g.sun.draw(scene_cam, aspect, time_sec);
         }
         sg_end_pass();
     }
@@ -3858,6 +3988,13 @@ void event_cb(const sapp_event* ev) {
     } else if (ev->type == SAPP_EVENTTYPE_MOUSE_UP) {
         if (ev->mouse_button == 0) g.mouse_left_held  = false;
         if (ev->mouse_button == 1) g.mouse_right_held = false;
+    }
+
+    // 3rd-person orbit zoom: scroll wheel changes camera distance while the
+    // autopilot freelook camera is active. Handled up top so ImGui/editor
+    // handlers can't swallow it; clamped in update_orbit_camera.
+    if (g.orbit_active && ev->type == SAPP_EVENTTYPE_MOUSE_SCROLL) {
+        g.orbit_dist *= (ev->scroll_y > 0.0f) ? 0.90f : 1.111f;
     }
 
     // Welcome / alpha-briefing overlay: while it's up the sim is frozen.

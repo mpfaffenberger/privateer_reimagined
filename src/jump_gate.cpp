@@ -14,49 +14,24 @@
 
 namespace {
 
-// Same UV-sphere builder as sun.cpp's; duplicated here to keep this module's
-// TU self-contained (sun's helper is in an anonymous namespace). Unit radius
-// centered at origin so the vertex shader can scale + translate per-gate.
-void build_uv_sphere(int lat, int lon,
-                     std::vector<float>& verts,
-                     std::vector<uint16_t>& idx) {
-    verts.clear();
-    idx.clear();
-    verts.reserve((size_t)(lat + 1) * (lon + 1) * 3);
-    idx.reserve((size_t)lat * lon * 6);
-
-    for (int i = 0; i <= lat; ++i) {
-        const float v     = (float)i / (float)lat;
-        const float theta = v * (float)M_PI;
-        const float sinT  = std::sin(theta);
-        const float cosT  = std::cos(theta);
-        for (int j = 0; j <= lon; ++j) {
-            const float u    = (float)j / (float)lon;
-            const float phi  = u * 2.0f * (float)M_PI;
-            verts.push_back(sinT * std::cos(phi));
-            verts.push_back(cosT);
-            verts.push_back(sinT * std::sin(phi));
-        }
-    }
-    const int stride = lon + 1;
-    for (int i = 0; i < lat; ++i) {
-        for (int j = 0; j < lon; ++j) {
-            const uint16_t a = (uint16_t)(i * stride + j);
-            const uint16_t b = (uint16_t)(a + 1);
-            const uint16_t c = (uint16_t)((i + 1) * stride + j);
-            const uint16_t d = (uint16_t)(c + 1);
-            idx.push_back(a); idx.push_back(c); idx.push_back(b);
-            idx.push_back(b); idx.push_back(c); idx.push_back(d);
-        }
-    }
+// Billboard quad in [-1,1]^2 (z handled in the VS by camera right/up). The
+// black-hole shader maps this to a circular cutout. Two triangles.
+void build_billboard(std::vector<float>& verts, std::vector<uint16_t>& idx) {
+    verts = {
+        -1.0f, -1.0f,
+         1.0f, -1.0f,
+         1.0f,  1.0f,
+        -1.0f,  1.0f,
+    };
+    idx = { 0, 1, 2, 0, 2, 3 };
 }
 
 } // namespace
 
-bool JumpGate::init(int lat_segments, int lon_segments) {
+bool JumpGate::init(int /*lat_segments*/, int /*lon_segments*/) {
     std::vector<float>    verts;
     std::vector<uint16_t> idx;
-    build_uv_sphere(lat_segments, lon_segments, verts, idx);
+    build_billboard(verts, idx);
     index_count = (int)idx.size();
 
     sg_buffer_desc vbd{};
@@ -72,14 +47,12 @@ bool JumpGate::init(int lat_segments, int lon_segments) {
 
     sg_pipeline_desc pd{};
     pd.shader = shader;
-    pd.layout.attrs[ATTR_jump_gate_a_pos].format = SG_VERTEXFORMAT_FLOAT3;
+    pd.layout.attrs[ATTR_jump_gate_a_quad].format = SG_VERTEXFORMAT_FLOAT2;
     pd.index_type = SG_INDEXTYPE_UINT16;
 
-    // CULL_NONE so we see both hemispheres additively — the back side
-    // contributes a subtle inner glow, giving the shell its translucent
-    // depth read. Depth-test on so a station/rock in front occludes the
-    // shell; depth-write off so other transparent layers (dust, streaks,
-    // tracers) composite cleanly on top.
+    // CULL_NONE (billboard winding can flip as the camera orbits). Depth-
+    // test on so a station/rock in front occludes the disk; depth-write off
+    // so other transparent layers composite cleanly on top.
     pd.cull_mode = SG_CULLMODE_NONE;
     pd.depth.compare       = SG_COMPAREFUNC_LESS_EQUAL;
     pd.depth.write_enabled = false;
@@ -128,11 +101,17 @@ void JumpGate::draw(const Camera& cam, float aspect, float time_sec,
     fsp.anim[3] = rim_exponent;
     sg_apply_uniforms(UB_jg_fs_params, SG_RANGE(fsp));
 
+    // Camera basis for the billboard (shared across all gates this frame).
+    const HMM_Vec3 cr = cam.right();
+    const HMM_Vec3 cu = cam.up();
+
     for (const HMM_Vec3& p : positions) {
         jg_vs_params_t vsp{};
         std::memcpy(vsp.view_proj, &vp, sizeof(float) * 16);
         vsp.world_pos[0] = p.X; vsp.world_pos[1] = p.Y;
         vsp.world_pos[2] = p.Z; vsp.world_pos[3] = radius_m;
+        vsp.cam_right[0] = cr.X; vsp.cam_right[1] = cr.Y; vsp.cam_right[2] = cr.Z; vsp.cam_right[3] = 0.0f;
+        vsp.cam_up[0]    = cu.X; vsp.cam_up[1]    = cu.Y; vsp.cam_up[2]    = cu.Z; vsp.cam_up[3]    = 0.0f;
         sg_apply_uniforms(UB_jg_vs_params, SG_RANGE(vsp));
         sg_draw(0, index_count, 1);
     }

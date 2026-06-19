@@ -1,90 +1,112 @@
 // -----------------------------------------------------------------------------
-// jump_gate.glsl — pulsing translucent sphere wrapping a jump nav point.
+// jump_gate.glsl — black-hole jump portal (clean circle + subtle horizon warp).
 //
-// Drawn as an additive shell with CULL_NONE so both hemispheres contribute,
-// giving a "you can see through to the back side" depth read without any
-// real volumetric work. The fragment shader compresses three cheap cues
-// into the silhouette:
+// A camera-facing billboard quad renders a fake black hole at each jump nav
+// point:
+//   * a pure-black, opaque event-horizon disk in the centre (premultiplied
+//     alpha = 1 -> the background is fully replaced, so it reads as a hole
+//     punched in space). Its edge gets a TINY animated noise wobble so it
+//     shimmers slightly instead of being a perfect circle;
+//   * a bright HDR-blue photon ring hugging the horizon that bloom catches;
+//   * a soft outer blue glow halo.
+//   (No swirling ring pattern.)
 //
-//   1. Fresnel rim       — pow(1 - N·V, k); brighter at the silhouette,
-//                          softer at the center, which makes a flat blue
-//                          ball read as a 3D translucent shell.
-//   2. Slow brightness   — sin(time * f_slow); the breathing pulse, 0.4..1.0
-//      pulse                with period ~4 s. The "alive" cue.
-//   3. Fast shimmer      — sin(time * f_fast); a small secondary modulation
-//                          so the shell doesn't read as a single mechanical
-//                          sine wave.
-//
-// Colour stays in the cool electric-blue family — matches the cyan nav-
-// reticle so the player groks "the cyan dot in the HUD is THIS sphere" at
-// a glance.
+// Blend is premultiplied "over" (SRC + DST*(1-SRC.a), set in jump_gate.cpp):
+//   - horizon: emission 0, alpha 1            -> solid black
+//   - ring/glow: emission = HDR colour, alpha = coverage -> blue light over bg
+//   - outside: emission 0, alpha 0            -> background untouched
 // -----------------------------------------------------------------------------
 
 @vs vs
 layout(binding=0) uniform jg_vs_params {
     mat4 view_proj;
-    vec4 world_pos;     // .xyz = gate centre, .w = radius
+    vec4 world_pos;     // .xyz = gate centre, .w = radius (half-extent)
+    vec4 cam_right;     // .xyz = camera right  (world)
+    vec4 cam_up;        // .xyz = camera up     (world)
 };
 
-in vec3 a_pos;          // unit-sphere position (also serves as world normal
-                        // after scaling, since the mesh is unit-radius)
+in vec2 a_quad;         // billboard corner in [-1,1]^2
 
-out vec3 v_world_pos;
-out vec3 v_normal;
+out vec2 v_uv;
 
 void main() {
-    vec3 world = world_pos.xyz + a_pos * world_pos.w;
-    v_world_pos = world;
-    v_normal    = normalize(a_pos);
+    v_uv = a_quad;
+    vec3 world = world_pos.xyz
+               + cam_right.xyz * (a_quad.x * world_pos.w)
+               + cam_up.xyz    * (a_quad.y * world_pos.w);
     gl_Position = view_proj * vec4(world, 1.0);
 }
 @end
 
 @fs fs
 layout(binding=1) uniform jg_fs_params {
-    vec4 camera_pos;    // .xyz = camera world pos
-    vec4 tint;          // .rgb = base shell colour, .a = intensity envelope
-    vec4 anim;          // .x = time_sec, .y = pulse_freq_slow,
-                        // .z = pulse_freq_fast, .w = rim_exponent
+    vec4 camera_pos;    // unused (kept for struct stability)
+    vec4 tint;          // .rgb = glow colour, .a = intensity envelope
+    vec4 anim;          // .x = time_sec, .y = pulse_slow rad/s,
+                        // .z = pulse_fast rad/s, .w = unused
 };
 
-in  vec3 v_world_pos;
-in  vec3 v_normal;
+in  vec2 v_uv;
 out vec4 frag_color;
 
+// --- cheap value noise (only used for the subtle horizon-edge wobble) -------
+float hash21(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+float vnoise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(mix(hash21(i),                hash21(i + vec2(1.0, 0.0)), u.x),
+               mix(hash21(i + vec2(0.0, 1.0)), hash21(i + vec2(1.0, 1.0)), u.x), u.y);
+}
+
 void main() {
-    // CULL_NONE means we see both sides. The front side has N facing the
-    // camera (N·V > 0); the back side has N facing away (N·V < 0). For the
-    // shell to look symmetric (additive contributions from both halves)
-    // we take abs(N·V) so the rim term reads the same on either face.
-    vec3 N = normalize(v_normal);
-    vec3 V = normalize(camera_pos.xyz - v_world_pos);
-    float NdotV  = abs(dot(N, V));
-    float rim    = pow(1.0 - NdotV, anim.w);   // bright at silhouette
-    // Soft core glow so the centre isn't fully transparent; reads as "the
-    // shell is filled with energy" rather than "hollow soap bubble".
-    float core   = 0.18 * (1.0 - rim);
+    float t   = anim.x;
+    vec2  p   = v_uv;
+    float r   = length(p);
+    if (r > 1.0) discard;                 // circular cutout
+    float ang = atan(p.y, p.x);
 
-    // Two-frequency pulse: slow breath + fast shimmer.
-    float t      = anim.x;
-    float slow   = 0.5 + 0.5 * sin(t * anim.y);            // 0..1
-    float fast   = 0.5 + 0.5 * sin(t * anim.z + 1.7);      // 0..1
-    float pulse  = mix(0.55, 1.00, slow) * mix(0.85, 1.15, fast);
+    // ---- event horizon: clean circle + a TINY animated edge wobble -------
+    float wobble  = vnoise(vec2(ang * 3.0 + t * 0.6, t * 0.4)) - 0.5;
+    float horizon = 0.0136 + 0.0006 * wobble;   // tiny black core (~1/5 prior again)
 
-    float shell  = (rim + core) * pulse * tint.a;
+    // ---- bright photon ring just outside the horizon ---------------------
+    float photon = exp(-pow((r - (horizon + 0.05)) / 0.055, 2.0));
 
-    // Premultiplied-alpha additive composition: emission = colour * shell,
-    // alpha follows shell so SRC + DST*(1-SRC.a) layers cleanly with the
-    // scene behind. Slight bias on rim hue so the silhouette pulls toward
-    // a hotter white-blue (like an arc-welder rim), centre stays deep
-    // electric blue.
-    vec3 rim_col  = vec3(0.65, 0.85, 1.00);    // hot blue-white
-    vec3 core_col = tint.rgb;                  // base deep blue
-    vec3 col      = mix(core_col, rim_col, rim);
+    // ---- outer glow halo --------------------------------------------------
+    // ANNULAR glow: brightest in a ring at mid-radius and DIMMER toward the
+    // centre, so the middle reads as deep blue instead of a blown-out white
+    // core. Falls off to the rim too.
+    float glow = exp(-pow((r - 0.42) / 0.30, 2.0)) * 0.55;
+    glow *= smoothstep(horizon - 0.02, horizon + 0.10, r);   // outside horizon only
+    // Extra centre knock-down so the very middle stays blue, not white.
+    float center_dim = mix(0.30, 1.0, smoothstep(0.0, 0.40, r));
+    glow *= center_dim;
 
-    vec3 emission = col * shell;
-    float alpha   = clamp(shell * 0.85, 0.0, 1.0);
-    frag_color    = vec4(emission, alpha);
+    // ---- pulse ------------------------------------------------------------
+    float pulse = mix(0.82, 1.18, 0.5 + 0.5 * sin(t * anim.y))
+                * mix(0.92, 1.10, 0.5 + 0.5 * sin(t * anim.z + 1.7));
+
+    // ---- compose (HDR blue so bloom blazes, but not enough to clip white) -
+    // Saturated blue (low R/G, high B) so even when bright it reads blue
+    // instead of white. Photon ring kept modest so the centre doesn't blow.
+    vec3 ring_col = vec3(0.20, 0.45, 1.00) * 1.25;  // deep electric blue
+    vec3 glow_col = tint.rgb * 1.4;
+
+    vec3 emission = (ring_col * photon + glow_col * glow) * pulse * tint.a;
+
+    // Inside the horizon: pure black + fully opaque so the disk reads as a
+    // hole. smoothstep gives a thin feather on the rim (scaled to the now-
+    // tiny core).
+    float in_horizon = 1.0 - smoothstep(horizon - 0.0015, horizon + 0.0015, r);
+    emission *= (1.0 - in_horizon);                 // no emission inside -> black
+
+    float light = clamp((photon * 1.4 + glow) * pulse * tint.a, 0.0, 1.0);
+    float alpha = max(in_horizon, light);
+
+    frag_color = vec4(emission, alpha);
 }
 @end
 
