@@ -37,8 +37,10 @@ void projectile::tick(std::vector<Projectile>& projectiles, float dt) {
 }
 
 #include "ship.h"
+#include "ship_class.h"      // ShipClass::skill_f2 for the gunnery probe
 #include "ship_registry.h"
 #include "ship_sprite.h"   // for sprite->position read
+#include "gunnery_probe.h"
 
 #include <algorithm>
 
