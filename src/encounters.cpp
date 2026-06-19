@@ -22,6 +22,9 @@
 #include <cmath>
 #include <cstdio>
 #include <random>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace encounters {
 
@@ -301,12 +304,61 @@ void populate_on_entry(const StarSystem& system, HMM_Vec3 player_pos,
     std::mt19937 rng(0x9E3779B9u ^ (++s_entry * 2654435761u));
     std::uniform_real_distribution<float> U(0.0f, 1.0f);
 
-    int spawned = 0, nav_tables = 0;
+    int spawned = 0, nav_tables = 0, convoys = 0;
+
+    // Spawn a formed-up group at `center`: the FIRST ship becomes the lead
+    // (a Traveler that cruises the lanes, or a Loiterer that circles when
+    // `prefer_loiter`), and every other ship becomes an Escort holding a
+    // formation offset off that lead -- which is what makes wings + convoys
+    // move together. `mem` is a flat (faction,class) list. Members landing
+    // inside the player's min-spawn shell get pushed out so nothing pops in
+    // point-blank. Returns the lead's id (0 if the lead failed to spawn).
+    auto spawn_group = [&](const std::vector<std::pair<Faction, std::string>>& mem,
+                           HMM_Vec3 center, bool prefer_loiter) -> uint32_t {
+        uint32_t lead_id = 0;
+        for (size_t k = 0; k < mem.size(); ++k) {
+            if (spawned >= k_entry_population_max) break;
+            HMM_Vec3 off = HMM_V3(U(rng) * 2 - 1, U(rng) * 2 - 1, U(rng) * 2 - 1);
+            const float ol = len(off);
+            off = (ol > 1e-3f) ? HMM_MulV3F(off, (600.0f + U(rng) * 1400.0f) / ol)
+                               : HMM_V3(1000.0f, 0, 0);
+            HMM_Vec3 pos = HMM_AddV3(center, off);
+            const HMM_Vec3 to_player = HMM_SubV3(pos, player_pos);
+            const float dp = len(to_player);
+            if (dp < k_spawn_dist_min) {
+                const HMM_Vec3 dir = (dp > 1e-3f) ? HMM_MulV3F(to_player, 1.0f / dp)
+                                                  : HMM_V3(0, 0, 1);
+                pos = HMM_AddV3(player_pos, HMM_MulV3F(dir, k_spawn_dist_min + 1500.0f));
+            }
+            SpawnRequest req;
+            req.class_name       = mem[k].second;
+            req.faction          = mem[k].first;
+            req.position         = pos;
+            req.initial_ai_state = AIState::Patrol;
+            req.patrol_anchor    = center;
+            if (k == 0) {
+                req.civ_role = (prefer_loiter && U(rng) < 0.5f) ? CivRole::Loiter
+                                                                : CivRole::Traveler;
+            } else {
+                req.civ_role          = CivRole::Escort;
+                req.formation_lead_id = lead_id;   // 0 -> escort falls back to Traveler
+                const float a = (float)k * 2.39996323f;          // golden-angle scatter
+                const float R = 1300.0f + 450.0f * (float)(k / 2);
+                req.formation_offset = HMM_V3(std::cos(a) * R,
+                                              (k % 2) ? 350.0f : -350.0f,
+                                              std::sin(a) * R);
+            }
+            const uint32_t id = spawn(req);
+            if (id != 0) { ++spawned; if (k == 0) lead_id = id; }
+        }
+        return lead_id;
+    };
+
+    // 1. Per-nav wcnews tables: roll ONE group per nav, spawn it formed-up.
     for (const NavPointDef& nav : system.nav_points) {
         if (nav.encounters.empty()) continue;
         ++nav_tables;
 
-        // Roll ONE group from this nav's table, weighted by `chance`.
         float total = 0.0f;
         for (const auto& g : nav.encounters) total += std::max(0.0f, g.chance);
         if (total <= 0.0f) continue;
@@ -317,38 +369,40 @@ void populate_on_entry(const StarSystem& system, HMM_Vec3 player_pos,
             if (r <= 0.0f) { chosen = &g; break; }
         }
 
-        // Spawn the group's members in a loose cluster near the nav. If that
-        // lands within the min spawn shell of the player (e.g. the nav the
-        // player launched from), push it out so nothing appears point-blank.
+        std::vector<std::pair<Faction, std::string>> mem;
         for (const EncounterMemberDef& m : chosen->members) {
             const Faction fac = faction::from_name(m.faction);
             if (fac == Faction::Count) continue;
-            for (int k = 0; k < m.count; ++k) {
-                if (spawned >= k_entry_population_max) break;
-                HMM_Vec3 off = HMM_V3(U(rng) * 2 - 1, U(rng) * 2 - 1, U(rng) * 2 - 1);
-                const float ol = len(off);
-                off = (ol > 1e-3f) ? HMM_MulV3F(off, (800.0f + U(rng) * 1800.0f) / ol)
-                                   : HMM_V3(1000.0f, 0, 0);
-                HMM_Vec3 pos = HMM_AddV3(nav.position, off);
-                HMM_Vec3 to_player = HMM_SubV3(pos, player_pos);
-                const float dp = len(to_player);
-                if (dp < k_spawn_dist_min) {   // too close -> push to the shell
-                    const HMM_Vec3 dir = (dp > 1e-3f) ? HMM_MulV3F(to_player, 1.0f / dp)
-                                                      : HMM_V3(0, 0, 1);
-                    pos = HMM_AddV3(player_pos, HMM_MulV3F(dir, k_spawn_dist_min + 1500.0f));
-                }
-                SpawnRequest req;
-                req.class_name       = m.ship_class;
-                req.faction          = fac;
-                req.position         = pos;
-                req.initial_ai_state = AIState::Patrol;
-                req.patrol_anchor    = nav.position;
-                if (spawn(req) != 0) ++spawned;
-            }
+            for (int c = 0; c < m.count; ++c) mem.emplace_back(fac, m.ship_class);
         }
+        // Groups parked at a base/planet tend to loiter; lane/gate groups travel.
+        const bool loiter = (nav.kind == "station" || nav.kind == "planet");
+        spawn_group(mem, nav.position, loiter);
     }
-    std::printf("[encounter] system entry roll: %d nav table(s), spawned %d ship(s) "
-                "(no refill until next entry/launch)\n", nav_tables, spawned);
+
+    // 2. Occasional BIG merchant convoy crossing the system -- a fat, mostly
+    //    unescorted target a pirate-aligned player can hunt (future loot
+    //    tables make this a payday). Drayman/Galaxy/Tarsus -> our merchant
+    //    hulls; 3-5 haulers + 1-2 militia escorts, spawned at a jump gate
+    //    ("just jumped in") and traveling the lanes via the lead Traveler.
+    if (U(rng) < 0.45f && !system.nav_points.empty() &&
+        spawned + 4 <= k_entry_population_max) {
+        HMM_Vec3 origin = system.nav_points.front().position;
+        for (const NavPointDef& n : system.nav_points)
+            if (n.kind == "jump") { origin = n.position; break; }
+        std::vector<std::pair<Faction, std::string>> conv;
+        const char* hulls[] = { "galaxy", "tarsus", "galaxy" };
+        const int nmerch = 3 + (int)(U(rng) * 3.0f);   // 3-5 haulers
+        for (int i = 0; i < nmerch; ++i) conv.emplace_back(Faction::Merchant, hulls[i % 3]);
+        const int nesc = 1 + (int)(U(rng) * 2.0f);     // 1-2 escorts
+        for (int i = 0; i < nesc; ++i) conv.emplace_back(Faction::Militia, "talon");
+        spawn_group(conv, origin, /*prefer_loiter*/false);
+        ++convoys;
+    }
+
+    std::printf("[encounter] system entry roll: %d nav table(s), %d convoy(s), "
+                "spawned %d ship(s) (no refill until next entry/launch)\n",
+                nav_tables, convoys, spawned);
 }
 
 void tick(const ShipRegistry& ships, HMM_Vec3 player_pos, float dt,

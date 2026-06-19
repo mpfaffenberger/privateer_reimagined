@@ -70,7 +70,9 @@ void behavior_pursue_target(Ship& s) {
     // got a 11 m/s target and looked stationary. The kinematic version
     // gives ~308 m/s at the same distance and a clean smooth approach.
     constexpr float k_arrival_tol_m = 25.0f;
-    const float v_max         = s.klass->cruise_speed;
+    // speed_scale lets callers ask for a gentler cruise (civilian loiter /
+    // lane traffic ambles at <1.0); defaults to 1.0 for combat/JSON users.
+    const float v_max         = s.klass->cruise_speed * s.controller.speed_scale;
     const float accel         = mobility::accel_mps2(s.klass->acceleration);
     const float dist_braking  = std::max(0.0f, d - k_arrival_tol_m);
     const float v_brake       = std::sqrt(2.0f * accel * dist_braking);

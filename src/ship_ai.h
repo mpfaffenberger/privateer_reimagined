@@ -46,6 +46,7 @@
 #include <HandmadeMath.h>
 #include <cstdint>
 #include <string_view>
+#include <vector>
 
 struct Ship;
 class ShipRegistry;
@@ -60,6 +61,14 @@ enum class AIState : uint8_t {
     Flee,
     Count
 };
+
+// Non-combat "what is this ship doing when nobody's shooting" role, driving
+// the Patrol-state behaviour (ship_ai.cpp). Without this a Patrol ship just
+// sits at 0 kps. Set at spawn by the encounter director.
+//   Traveler — cruise the nav-point lanes (pick a nav, fly there, repeat).
+//   Loiter   — laze in a slow orbit of the spawn anchor (stationed guard).
+//   Escort   — hold a formation offset off a lead ship (convoys / wings).
+enum class CivRole : uint8_t { None = 0, Traveler, Loiter, Escort };
 
 struct ShipAIState {
     // True when this ship's behaviour should be driven by the AI state
@@ -77,6 +86,19 @@ struct ShipAIState {
     // to Idle). When OrbitAnchor behaviour lands, Patrol will read these.
     HMM_Vec3  patrol_anchor = { 0.0f, 0.0f, 0.0f };
     bool      has_patrol_anchor = false;
+
+    // ---- non-combat civilian behaviour (ship_ai.cpp Patrol handler) ----
+    CivRole   civ_role          = CivRole::None;
+    HMM_Vec3  travel_dest       = { 0.0f, 0.0f, 0.0f };  // Traveler: current waypoint
+    bool      has_travel_dest   = false;
+    uint32_t  formation_lead_id = 0;                     // Escort: ship to hold off of
+    HMM_Vec3  formation_offset  = { 0.0f, 0.0f, 0.0f };  // Escort: world offset from lead
+    // Flee destination (gate/base) cached when a non-combatant runs for it,
+    // so the panic vector stays stable instead of re-picking every tick.
+    HMM_Vec3  flee_dest         = { 0.0f, 0.0f, 0.0f };
+    bool      has_flee_dest     = false;
+    // Last wall-clock time this ship hailed the player (comm rate-limit).
+    float     hail_last_at      = -1000.0f;
 
     // BreakOff parameters. Cached at state entry so the break direction
     // stays stable for the duration of the maneuver — picking a fresh
@@ -200,5 +222,13 @@ void tick(Ship& s, const ShipRegistry& all_ships, float t_now);
 // Convert AIState to / from JSON-friendly lowercase strings.
 const char* to_name(AIState st);
 AIState     from_name(std::string_view s);
+
+// Nav waypoints the civilian (non-combat) AI uses for lane traffic and as
+// flee destinations. `dock_or_gate` marks bases + jump points (where a
+// fleeing/arriving ship can actually exit the system). Set once per system
+// load (build_system_scene); kept module-global so the per-ship tick stays
+// free of any system_def coupling, exactly like threat::set_world.
+struct NavWaypoint { HMM_Vec3 pos; bool dock_or_gate; };
+void set_nav_waypoints(const std::vector<NavWaypoint>& wps);
 
 } // namespace ship_ai

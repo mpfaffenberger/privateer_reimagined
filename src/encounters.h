@@ -88,6 +88,14 @@ struct SpawnRequest {
     Faction     faction     = Faction::Civilian;
     AIState     initial_ai_state = AIState::Patrol;
     HMM_Vec3    patrol_anchor    = { 0, 0, 0 };  // loiter / flee-home tether (= spawn pos)
+
+    // Non-combat behaviour (ship_ai CivRole). The host copies these onto the
+    // spawned ship's ai so it does something when no one's shooting:
+    // Travelers cruise the lanes, Loiterers circle the anchor, Escorts hold
+    // formation on formation_lead_id (returned from the lead's own spawn).
+    CivRole     civ_role          = CivRole::None;
+    uint32_t    formation_lead_id = 0;
+    HMM_Vec3    formation_offset  = { 0, 0, 0 };
 };
 
 // Host hooks (the np-eag.1 recipe). spawn returns the new ship's

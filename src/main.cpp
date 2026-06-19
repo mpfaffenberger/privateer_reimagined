@@ -1336,6 +1336,20 @@ void build_system_scene(bool first_time) {
     encounters::init(g.system);   // legacy rule director (inert for nav-table systems)
     threat::set_world(&g.ships, &g.player.rep);
 
+    // Hand the civilian AI the nav-point lattice it travels between (lane
+    // traffic) and flees toward (gates/bases). Bases + jump points are
+    // marked dock_or_gate so a fleeing/departing ship can actually exit.
+    {
+        std::vector<ship_ai::NavWaypoint> wps;
+        wps.reserve(g.system.nav_points.size());
+        for (const NavPointDef& n : g.system.nav_points) {
+            const bool exit = (n.kind == "jump" || n.kind == "station" ||
+                               n.kind == "planet" || n.dockable);
+            wps.push_back({ n.position, exit });
+        }
+        ship_ai::set_nav_waypoints(wps);
+    }
+
     // wcnews encounter model: roll each nav's table ONCE and spawn its wave
     // now (system entry). No continuous refill — see encounters.h. The
     // player camera is already at player_start by this point.
@@ -1896,6 +1910,10 @@ static uint32_t encounter_spawn(const encounters::SpawnRequest& req) {
     inst.ai.state   = req.initial_ai_state;
     inst.ai.patrol_anchor     = req.patrol_anchor;
     inst.ai.has_patrol_anchor = true;   // loiter / flee-home tether at spawn
+    // Non-combat civilian behaviour (lane traffic / loiter / convoy escort).
+    inst.ai.civ_role          = req.civ_role;
+    inst.ai.formation_lead_id = req.formation_lead_id;
+    inst.ai.formation_offset  = req.formation_offset;
 
     const uint32_t id = inst.id;        // ship::spawn already minted it
     g.ships.spawn(std::move(inst));

@@ -8,6 +8,10 @@
 #include "ship_registry.h"
 
 #include <string_view>
+#include <algorithm>
+#include <cmath>
+#include <random>
+#include <vector>
 
 // -----------------------------------------------------------------------------
 // ship_ai.cpp -- top-level AI tick.
@@ -29,6 +33,85 @@
 // -----------------------------------------------------------------------------
 
 namespace {
+
+// ---- civilian (non-combat) traffic --------------------------------------
+// Nav waypoints for lane traffic / flee exits, set once per system load.
+std::vector<ship_ai::NavWaypoint> g_waypoints;
+std::mt19937 g_civ_rng{ 0xC1711A7Eu };
+
+constexpr float k_travel_arrive_m = 6000.0f;  // "reached" a waypoint -> re-pick
+constexpr float k_travel_min_hop  = 12000.0f; // don't pick a waypoint nearer than this
+
+// Pick a random nav waypoint a decent hop away from `from`. Returns false
+// only when no waypoints are loaded at all.
+bool pick_travel_waypoint(HMM_Vec3 from, HMM_Vec3& out) {
+    if (g_waypoints.empty()) return false;
+    for (int tries = 0; tries < 6; ++tries) {
+        const HMM_Vec3 p = g_waypoints[g_civ_rng() % g_waypoints.size()].pos;
+        if (HMM_LenV3(HMM_SubV3(p, from)) > k_travel_min_hop) { out = p; return true; }
+    }
+    out = g_waypoints[g_civ_rng() % g_waypoints.size()].pos;   // give up: any
+    return true;
+}
+
+// Drive a non-combat ship's controller for its civilian role. Runs on the
+// Patrol fallthrough (no hostiles). Leaves guns/afterburner off throughout.
+void civilian_behavior(Ship& s, const ShipRegistry& all, float t_now) {
+    s.controller.fire_guns   = false;
+    s.controller.afterburner = false;
+
+    switch (s.ai.civ_role) {
+    case CivRole::Traveler: {
+        if (!s.ai.has_travel_dest ||
+            HMM_LenV3(HMM_SubV3(s.ai.travel_dest, s.position)) < k_travel_arrive_m) {
+            HMM_Vec3 dest;
+            if (pick_travel_waypoint(s.position, dest)) {
+                s.ai.travel_dest = dest;
+                s.ai.has_travel_dest = true;
+            }
+        }
+        if (s.ai.has_travel_dest) {
+            s.behavior.kind       = ShipBehavior::PursueTarget;
+            s.behavior.target_pos = s.ai.travel_dest;
+            s.controller.speed_scale = 0.55f;   // unhurried merchant cruise
+        } else {
+            s.behavior.kind = ShipBehavior::None;
+        }
+        break;
+    }
+    case CivRole::Loiter: {
+        // Lazy circle around the spawn anchor. Slow angular rate so the
+        // capped throttle can actually keep up with the orbit point.
+        const float r   = 2500.0f;
+        const float ang = t_now * 0.05f + (float)(s.id % 16);
+        const HMM_Vec3 c = s.ai.patrol_anchor;
+        s.behavior.kind       = ShipBehavior::PursueTarget;
+        s.behavior.target_pos = HMM_V3(c.X + std::cos(ang) * r, c.Y, c.Z + std::sin(ang) * r);
+        s.controller.speed_scale = 0.5f;
+        break;
+    }
+    case CivRole::Escort: {
+        const ShipHandle h = all.find_handle_by_id(s.ai.formation_lead_id);
+        const Ship* lead = all.get(h);
+        if (!lead || !lead->alive) {
+            // Lead's gone (killed / despawned) -> become a free traveler.
+            s.ai.civ_role = CivRole::Traveler;
+            s.ai.has_travel_dest = false;
+            s.behavior.kind = ShipBehavior::None;
+            break;
+        }
+        s.behavior.kind       = ShipBehavior::PursueTarget;
+        s.behavior.target_pos = HMM_AddV3(lead->position, s.ai.formation_offset);
+        s.controller.speed_scale = 0.7f;   // a touch faster so they can catch up
+        break;
+    }
+    default:
+        // No civilian role assigned: keep the legacy idle (None) so any
+        // JSON-authored demo motion still runs untouched.
+        s.behavior.kind = ShipBehavior::None;
+        break;
+    }
+}
 
 // Reset the data-driven brain's per-ship runtime when leaving combat so a
 // fresh engagement re-selects from scratch (no stale priority / timer).
@@ -102,16 +185,31 @@ void ship_ai::tick(Ship& s, const ShipRegistry& all_ships, float t_now) {
         s.sprite->angular_velocity = HMM_V3(0.0f, 0.0f, 0.0f);
     }
 
-    AIState next = s.ai.has_patrol_anchor ? AIState::Patrol : AIState::Idle;
-    if (next != s.ai.state) { s.ai.state = next; s.ai.state_entered_at = t_now; }
+    const bool has_role = (s.ai.civ_role != CivRole::None);
+    AIState next = (s.ai.has_patrol_anchor || has_role) ? AIState::Patrol : AIState::Idle;
+    if (next != s.ai.state) {
+        s.ai.state = next;
+        s.ai.state_entered_at = t_now;
+        // Re-pick a travel goal fresh on (re-)entering Patrol, e.g. after a
+        // fight ends, so the ship gets back on the lanes instead of idling.
+        s.ai.has_travel_dest = false;
+    }
 
-    // Both Idle and Patrol are "controller idle" today (Patrol's OrbitAnchor
-    // behaviour is still a placeholder). None keeps any externally-set
-    // kinematics (e.g. JSON-authored demo motion) running untouched.
-    s.behavior.kind          = ShipBehavior::None;
-    s.controller.fire_guns   = false;
-    s.controller.afterburner = false;
+    // Patrol now drives real civilian traffic (Traveler/Loiter/Escort);
+    // Idle (and an unassigned role) stays None so JSON-authored demo motion
+    // keeps running untouched.
     s.controller.speed_scale = 1.0f;
+    if (s.ai.state == AIState::Patrol && has_role) {
+        civilian_behavior(s, all_ships, t_now);
+    } else {
+        s.behavior.kind          = ShipBehavior::None;
+        s.controller.fire_guns   = false;
+        s.controller.afterburner = false;
+    }
+}
+
+void ship_ai::set_nav_waypoints(const std::vector<NavWaypoint>& wps) {
+    g_waypoints = wps;
 }
 
 const char* ship_ai::to_name(AIState st) {
