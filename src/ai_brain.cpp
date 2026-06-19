@@ -511,7 +511,14 @@ bool should_fire(Ctx& c) {
     Ship& s = *c.self;
     const HMM_Vec3 to_lead = HMM_SubV3(c.lead_pos, s.position);
     const float    d2      = HMM_DotV3(to_lead, to_lead);
-    const float    wr      = c.gun_range;
+    // Skill-scaled HOLD-FIRE range: pilots don't open up at full gun reach
+    // (~8 km felt absurdly aggressive); they close to knife range first.
+    // Novice (f2=40) opens at 3500 u, ace (f2=60) at 4500 u, clamped to the
+    // actual gun reach. Approach/maneuver logic still uses the real
+    // gun_range, so they close in normally and only START shooting here.
+    const float f2  = s.klass ? s.klass->skill_f2 : 45.0f;
+    const float fire_range = 3500.0f + std::clamp((f2 - 40.0f) / 20.0f, 0.0f, 1.0f) * 1000.0f;
+    const float    wr      = std::min(c.gun_range, fire_range);
     if (d2 < 1e-6f || d2 >= wr * wr) { s.ai.fire_solution_at = -1.0f; return false; }
 
     const float f3  = s.klass ? s.klass->maneuver_jitter_f3 : k_evade_f3_default;
@@ -525,7 +532,6 @@ bool should_fire(Ctx& c) {
 
     // Reaction-time gate: hold first shot until the solution has stood for the
     // per-pilot reaction time (skill f2: 40 -> 0.45 s, 60 -> 0.12 s).
-    const float f2  = s.klass ? s.klass->skill_f2 : 45.0f;
     const float rt  = 0.45f - std::clamp((f2 - 40.0f) / 20.0f, 0.0f, 1.0f) * (0.45f - 0.12f);
     if (s.ai.fire_solution_at < 0.0f) s.ai.fire_solution_at = c.t_now;
     return (c.t_now - s.ai.fire_solution_at) >= rt;
