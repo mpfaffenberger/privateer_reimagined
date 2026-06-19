@@ -4194,6 +4194,16 @@ void event_cb(const sapp_event* ev) {
                 sfx::jump();
                 game_state::request_mode(g.game, GameMode::Loading);
             } else if (e.status != jump::Status::NotJumpNav) {
+                if (e.status == jump::Status::NoRoute) {
+                    const std::string& nm = g.system.nav_points[g.selected_nav].name;
+                    std::fprintf(stderr, "[jump-dbg] REFUSE NOROUTE: current_system='%s' "
+                                 "g.system.name='%s' selected_nav=%d nav='%s' "
+                                 "galaxy(sys=%zu,jumps=%zu) direct_lookup=%d\n",
+                                 g.player.current_system.c_str(), g.system.name.c_str(),
+                                 g.selected_nav, nm.c_str(),
+                                 g.galaxy.systems.size(), g.galaxy.jumps.size(),
+                                 (int)g.galaxy.jump_target(g.player.current_system, nm).ok);
+                }
                 std::printf("[jump] refused at %s: %s\n",
                             g.system.nav_points[g.selected_nav].name.c_str(),
                             jump::status_str(e.status));
@@ -4389,6 +4399,7 @@ sapp_desc sokol_main(int argc, char** argv) {
             // — headlessly, so the round-trip + leak/stability soak can run
             // without a human at the J key. Ping-pongs Troy<->Pyrenees.
             g.dev_jump_remaining = std::atoi(argv[i + 1]);
+            g.show_welcome = false;   // soak is headless; don't freeze on the briefing
             ++i;
         } else if (std::strcmp(argv[i], "--dev-jump-interval") == 0 && i + 1 < argc) {
             g.dev_jump_interval = (float)std::atof(argv[i + 1]);
