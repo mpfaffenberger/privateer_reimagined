@@ -164,6 +164,21 @@ struct ShipAIState {
     // held until t_now >= solution_at + per-pilot reaction time, so pilots
     // don't snap-fire the instant the cone lines up. -1 = no current solution.
     float               fire_solution_at    = -1.0f;
+
+    // ---- jink stamina (dogfight evasion budget) ------------------------
+    // A pilot can only juke/break for so long before tiring and having to
+    // fly predictably for a recovery window — which is what lets the
+    // attacker actually land shots instead of chasing an endlessly-jinking
+    // target. Skill (CNST f2) sets the budget: novices gas out fast, aces
+    // sustain. While an evasive maneuver runs, `jink_spent_s` accrues; once
+    // it passes `jink_budget_s` the pilot enters a ~5 s (+/- 3 s) cooldown
+    // (`jink_cooldown_until`) during which evasive maneuvers are suppressed
+    // (it lead-pursues instead), then stamina refreshes with a fresh roll.
+    // All times are the same wall-clock t_now the maneuver timers use.
+    float               jink_spent_s        = 0.0f;
+    float               jink_budget_s       = -1.0f;   // <0 = roll a fresh budget
+    float               jink_cooldown_until = -1.0f;   // >=0 && t_now< it = suppressed
+    float               last_combat_t       = -1.0f;   // for dt inside run_combat
 };
 
 namespace ship_ai {

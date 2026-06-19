@@ -770,6 +770,26 @@ void start_maneuver(Ship& s, const Ctx& c, const AILogicItem& it, float t_now) {
     on_enter(s, c, it.maneuver);
 }
 
+// Which maneuvers count as "active dogfight evasion" for the jink-stamina
+// budget. FleeHome is deliberately excluded - that's a hull-critical run for
+// the door, not a tireable dodge, and we don't want a wounded ship's escape
+// gated by stamina. Pure positioning (LeadPursuit / AttackRun / MatchSpeed /
+// FacePerpendicular) is not evasion.
+bool is_evasive(AIManeuver m) {
+    switch (m) {
+        case AIManeuver::BreakOff:
+        case AIManeuver::EvadeJink:
+        case AIManeuver::BarrelRoll:
+        case AIManeuver::LoopAround:
+        case AIManeuver::EvadeLeftRight:
+        case AIManeuver::EvadeUpDown:
+        case AIManeuver::TurnAway:
+            return true;
+        default:
+            return false;
+    }
+}
+
 int pick_tier(const Ship& s) {
     const float f6 = s.klass ? s.klass->morale_f6 : 76.0f;
     if (f6 <= 70.0f)  return 2;   // fanatical
@@ -808,6 +828,41 @@ void ai_brain::run_combat(Ship& s, const ShipRegistry& all, float t_now) {
     s.ai.morale_tier = pick_tier(s);
     const AIMoraleTier& tier = tbl->tiers[std::clamp(s.ai.morale_tier, 0, 2)];
 
+    // --- Jink stamina ---------------------------------------------------
+    // Tire the pilot out of evasion on a skill-scaled budget so the attacker
+    // gets predictable windows to land shots. Accrues against the maneuver
+    // that ran since last tick; when the budget is spent we open a recovery
+    // cooldown during which evasive maneuvers are suppressed (see below).
+    {
+        const float dt = (s.ai.last_combat_t >= 0.0f)
+                       ? std::clamp(t_now - s.ai.last_combat_t, 0.0f, 0.5f) : 0.0f;
+        s.ai.last_combat_t = t_now;
+
+        // Recovery finished -> refresh stamina with a fresh rolled budget.
+        if (s.ai.jink_cooldown_until >= 0.0f && t_now >= s.ai.jink_cooldown_until) {
+            s.ai.jink_cooldown_until = -1.0f;
+            s.ai.jink_spent_s        = 0.0f;
+            s.ai.jink_budget_s       = -1.0f;
+        }
+        if (s.ai.jink_budget_s < 0.0f) {
+            // budget = f2/8 +/- up to 3 s. f2=45 -> ~5.6 s (2.6..8.6).
+            const float f2     = s.klass ? s.klass->skill_f2 : 45.0f;
+            const float jitter = (seed01(s.ai.personality_seed, t_now) * 2.0f - 1.0f) * 3.0f;
+            s.ai.jink_budget_s = std::max(1.0f, f2 / 8.0f + jitter);
+        }
+        // Burn stamina while actually evading (and not already recovering).
+        if (s.ai.jink_cooldown_until < 0.0f && is_evasive(s.ai.cur_maneuver)) {
+            s.ai.jink_spent_s += dt;
+            if (s.ai.jink_spent_s >= s.ai.jink_budget_s) {
+                // Tapped out: open a 5 +/- up to 3 s recovery (>=1 s floor).
+                const float cd = std::max(1.0f,
+                    5.0f + (seed01(s.ai.personality_seed, t_now * 1.7f) * 2.0f - 1.0f) * 3.0f);
+                s.ai.jink_cooldown_until = t_now + cd;
+            }
+        }
+    }
+    const bool suppress_evasion = (s.ai.jink_cooldown_until >= 0.0f);
+
     // --- Sticky break-off extension ------------------------------------
     // Once a ship peels off (break-off selected within ~680 m), HOLD the
     // extension until it has actually opened break_extend_dist (3-5 km) of
@@ -824,7 +879,10 @@ void ai_brain::run_combat(Ship& s, const ShipRegistry& all, float t_now) {
         const AILogicItem* preempt =
             select(c, tier.interrupt, /*interrupt*/true, s.ai.cur_priority);
         const bool flee_now = preempt && preempt->maneuver == AIManeuver::FleeHome;
-        if (!reached && !timeout && !flee_now) {
+        // Out of stamina? Abandon the extension and fall through to a normal
+        // (gated) reselection so the tired pilot turns back in and flies
+        // predictably instead of afterburning away.
+        if (!reached && !timeout && !flee_now && !suppress_evasion) {
             run_maneuver(c, AIManeuver::BreakOff);
             const AIState mapped = ship_ai::from_name(
                 ai_maneuver::maneuver_state_label(AIManeuver::BreakOff));
@@ -854,6 +912,12 @@ void ai_brain::run_combat(Ship& s, const ShipRegistry& all, float t_now) {
         // Nothing matched -> default to a close. priority 0 so any interrupt wins.
         s.ai.cur_maneuver = AIManeuver::LeadPursuit;
         s.ai.cur_priority = 0.0f; s.ai.cur_duration = 2.0f; s.ai.maneuver_started_at = t_now;
+    }
+
+    // Stamina gate: a tapped-out pilot can't evade — force a close-in lead
+    // pursuit (flies a predictable line) until the recovery cooldown ends.
+    if (suppress_evasion && is_evasive(s.ai.cur_maneuver)) {
+        s.ai.cur_maneuver = AIManeuver::LeadPursuit;
     }
 
     run_maneuver(c, s.ai.cur_maneuver);

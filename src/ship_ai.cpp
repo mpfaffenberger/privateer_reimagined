@@ -36,6 +36,11 @@ void reset_brain_runtime(ShipAIState& ai) {
     ai.cur_priority        = 0.0f;
     ai.maneuver_started_at = -1.0f;
     ai.fire_solution_at    = -1.0f;
+    // Fresh engagement starts with full jink stamina.
+    ai.jink_spent_s        = 0.0f;
+    ai.jink_budget_s       = -1.0f;
+    ai.jink_cooldown_until = -1.0f;
+    ai.last_combat_t       = -1.0f;
 }
 
 } // namespace
