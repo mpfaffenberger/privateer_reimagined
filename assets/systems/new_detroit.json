@@ -34,7 +34,7 @@
           "members": [
             {
               "faction": "merchant",
-              "ship": "galaxy",
+              "ship": "drayman",
               "count": 4
             }
           ]
@@ -120,12 +120,12 @@
           "members": [
             {
               "faction": "merchant",
-              "ship": "galaxy",
+              "ship": "drayman",
               "count": 1
             },
             {
               "faction": "militia",
-              "ship": "galaxy",
+              "ship": "drayman",
               "count": 3
             }
           ]
@@ -140,7 +140,7 @@
             },
             {
               "faction": "merchant",
-              "ship": "galaxy",
+              "ship": "drayman",
               "count": 1
             }
           ]
@@ -274,7 +274,7 @@
           "members": [
             {
               "faction": "merchant",
-              "ship": "galaxy",
+              "ship": "drayman",
               "count": 1
             },
             {
@@ -370,7 +370,7 @@
           "members": [
             {
               "faction": "merchant",
-              "ship": "galaxy",
+              "ship": "drayman",
               "count": 2
             }
           ]
@@ -418,7 +418,7 @@
           "members": [
             {
               "faction": "merchant",
-              "ship": "galaxy",
+              "ship": "drayman",
               "count": 1
             }
           ]

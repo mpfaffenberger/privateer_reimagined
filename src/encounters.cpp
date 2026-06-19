@@ -391,7 +391,7 @@ void populate_on_entry(const StarSystem& system, HMM_Vec3 player_pos,
         for (const NavPointDef& n : system.nav_points)
             if (n.kind == "jump") { origin = n.position; break; }
         std::vector<std::pair<Faction, std::string>> conv;
-        const char* hulls[] = { "galaxy", "tarsus", "galaxy" };
+        const char* hulls[] = { "drayman", "galaxy", "tarsus" };
         const int nmerch = 3 + (int)(U(rng) * 3.0f);   // 3-5 haulers
         for (int i = 0; i < nmerch; ++i) conv.emplace_back(Faction::Merchant, hulls[i % 3]);
         const int nesc = 1 + (int)(U(rng) * 2.0f);     // 1-2 escorts

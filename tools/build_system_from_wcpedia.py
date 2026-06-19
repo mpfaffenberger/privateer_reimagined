@@ -39,7 +39,7 @@ SHIP = {
     "talon": "talon", "tarsus": "tarsus", "galaxy": "galaxy",
     "centurion": "centurion", "orion": "orion", "broadsword": "broadsword",
     "paradigm": "paradigm", "stiletto": "stiletto",
-    "drayman": "galaxy",      # heavy merchant transport -> our merchant hull
+    "drayman": "drayman",     # heavy merchant transport (now a real class)
     "demon":   "centurion",   # bounty-hunter fighter -> centurion (also hunter)
     "dralthi": "talon",       # Kilrathi light fighter -> Talon stand-in
     "gothri":  "orion",       # Kilrathi heavy -> gunship stand-in

@@ -29,7 +29,7 @@
             },
             {
               "faction": "merchant",
-              "ship": "galaxy",
+              "ship": "drayman",
               "count": 1
             }
           ]
@@ -110,7 +110,7 @@
             },
             {
               "faction": "merchant",
-              "ship": "galaxy",
+              "ship": "drayman",
               "count": 1
             }
           ]

@@ -1873,6 +1873,7 @@ static void respawn_player() {
 // the same scale as their hand-placed kin. Unknown classes fall back to a
 // fighter-ish 80 m.
 static float encounter_class_length(const std::string& cls) {
+    if (cls == "drayman") return 175.0f;  // big heavy hauler
     if (cls == "galaxy") return 120.0f;
     if (cls == "orion")  return 60.0f;
     if (cls == "tarsus") return 100.0f;

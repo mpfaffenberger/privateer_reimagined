@@ -58,7 +58,7 @@
             },
             {
               "faction": "merchant",
-              "ship": "galaxy",
+              "ship": "drayman",
               "count": 1
             }
           ]
@@ -116,7 +116,7 @@
           "members": [
             {
               "faction": "merchant",
-              "ship": "galaxy",
+              "ship": "drayman",
               "count": 2
             },
             {
@@ -285,7 +285,7 @@
             },
             {
               "faction": "merchant",
-              "ship": "galaxy",
+              "ship": "drayman",
               "count": 2
             }
           ]
@@ -348,7 +348,7 @@
             },
             {
               "faction": "merchant",
-              "ship": "galaxy",
+              "ship": "drayman",
               "count": 2
             }
           ]

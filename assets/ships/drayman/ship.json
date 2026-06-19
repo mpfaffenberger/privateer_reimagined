@@ -1,0 +1,37 @@
+{
+  "name":           "drayman",
+  "display_name":   "Drayman",
+  "class_label":    "Merchant Ship",
+  "atlas_manifest": "ships/drayman/atlas_manifest_3d.json",
+  "default_faction": "merchant",
+
+  "armor_fore_cm":  35,
+  "armor_aft_cm":   30,
+  "armor_side_cm":  28,
+
+  "cruise_speed":      150,
+  "afterburner_speed": 0,
+  "acceleration":      "poor",
+  "max_ypr":           "poor",
+
+  "personality":       "coward",
+
+  "radar_range":   25000,
+  "weapons_range": 4000,
+
+  "max_engine_level": 2,
+  "max_shield_level": 3,
+  "default_shield":   "Shield Generator 2",
+  "default_armor":    "Tungsten Armor",
+
+  "default_guns": [
+    { "offset_body": [-4.0, 0.0, 6.0], "type": "meson_blaster" },
+    { "offset_body": [ 4.0, 0.0, 6.0], "type": "meson_blaster" }
+  ],
+
+  "energy_max":      220,
+  "energy_recharge": 28,
+
+  "cargo_units":     300,
+  "cargo_units_max": 450
+}
