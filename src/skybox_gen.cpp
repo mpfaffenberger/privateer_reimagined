@@ -95,11 +95,39 @@ void build_point_star(float size, HMM_Vec3 dir, float dist, Rng& r,
 struct Nebula { HMM_Vec3 color, offset; float scale, intensity, falloff; };
 struct Star   { HMM_Vec3 dir; float size, falloff; };
 
-sg_pipeline make_pipe(sg_shader sh, bool with_color_attr) {
+// Per-cube-face basis (forward, s-axis, t-axis) in sokol slice order
+// (0=+X 1=-X 2=+Y 3=-Y 4=+Z 5=-Z), exactly the OpenGL cube-map face
+// coordinate convention. The fullscreen nebula shader reconstructs each
+// texel's sample direction as fwd + (2u-1)*sax + (2v-1)*tax, which is the
+// inverse of the hardware's dir->face-uv mapping -> seamless across faces.
+struct FaceBasis { HMM_Vec3 fwd, sax, tax; };
+const FaceBasis kFaceBasis[6] = {
+    {{ 1, 0, 0}, { 0, 0,-1}, { 0,-1, 0}},   // +X
+    {{-1, 0, 0}, { 0, 0, 1}, { 0,-1, 0}},   // -X
+    {{ 0, 1, 0}, { 1, 0, 0}, { 0, 0, 1}},   // +Y
+    {{ 0,-1, 0}, { 1, 0, 0}, { 0, 0,-1}},   // -Y
+    {{ 0, 0, 1}, { 1, 0, 0}, { 0,-1, 0}},   // +Z
+    {{ 0, 0,-1}, {-1, 0, 0}, { 0,-1, 0}},   // -Z
+};
+
+// Fullscreen quad: clip-space xy + face texel uv (top-left origin).
+const float kFsQuad[24] = {
+    -1.0f,  1.0f, 0.0f, 0.0f,   1.0f,  1.0f, 1.0f, 0.0f,   1.0f, -1.0f, 1.0f, 1.0f,
+    -1.0f,  1.0f, 0.0f, 0.0f,   1.0f, -1.0f, 1.0f, 1.0f,  -1.0f, -1.0f, 0.0f, 1.0f,
+};
+
+// kind: 0 = box (FLOAT3 pos), 1 = pstar (FLOAT3 pos + FLOAT3 col),
+//       2 = fullscreen nebula (FLOAT2 pos + FLOAT2 uv).
+sg_pipeline make_pipe(sg_shader sh, int kind) {
     sg_pipeline_desc pd{};
     pd.shader = sh;
-    pd.layout.attrs[0].format = SG_VERTEXFORMAT_FLOAT3;   // a_pos
-    if (with_color_attr) pd.layout.attrs[1].format = SG_VERTEXFORMAT_FLOAT3; // a_col
+    if (kind == 2) {
+        pd.layout.attrs[0].format = SG_VERTEXFORMAT_FLOAT2;   // a_pos (clip xy)
+        pd.layout.attrs[1].format = SG_VERTEXFORMAT_FLOAT2;   // a_uv
+    } else {
+        pd.layout.attrs[0].format = SG_VERTEXFORMAT_FLOAT3;   // a_pos
+        if (kind == 1) pd.layout.attrs[1].format = SG_VERTEXFORMAT_FLOAT3; // a_col
+    }
     pd.cull_mode = SG_CULLMODE_NONE;
     pd.depth.write_enabled = false;
     pd.depth.pixel_format  = SG_PIXELFORMAT_NONE;   // color-only offscreen pass
@@ -191,13 +219,17 @@ sg_image generate(const std::string& seed, int face_res) {
     sg_shader sh_neb   = sg_make_shader(neb_shader_desc(sg_query_backend()));
     sg_shader sh_star  = sg_make_shader(star_shader_desc(sg_query_backend()));
     sg_shader sh_pstar = sg_make_shader(pstar_shader_desc(sg_query_backend()));
-    sg_pipeline pipe_neb   = make_pipe(sh_neb,   false);
-    sg_pipeline pipe_star  = make_pipe(sh_star,  false);
-    sg_pipeline pipe_pstar = make_pipe(sh_pstar, true);
+    sg_pipeline pipe_neb   = make_pipe(sh_neb,   2);   // fullscreen quad
+    sg_pipeline pipe_star  = make_pipe(sh_star,  0);   // box geometry
+    sg_pipeline pipe_pstar = make_pipe(sh_pstar, 1);   // pos+col geometry
 
     sg_buffer_desc bvd{};
     bvd.data = SG_RANGE(kBox);
     sg_buffer box_vbuf = sg_make_buffer(&bvd);
+
+    sg_buffer_desc qvd{};
+    qvd.data = SG_RANGE(kFsQuad);
+    sg_buffer fsquad_vbuf = sg_make_buffer(&qvd);
 
     // Interleave pstar pos+col into one buffer (pos xyz, col rgb per vert).
     std::vector<float> ps_interleaved;
@@ -256,21 +288,23 @@ sg_image generate(const std::string& seed, int face_res) {
             }
         }
 
-        // -- nebulae (box geometry, fractal noise) --
+        // -- nebulae (fullscreen per-direction pass, seamless) --
         sg_apply_pipeline(pipe_neb);
-        { sg_bindings b{}; b.vertex_buffers[0] = box_vbuf; sg_apply_bindings(&b); }
+        { sg_bindings b{}; b.vertex_buffers[0] = fsquad_vbuf; sg_apply_bindings(&b); }
         {
-            box_vs_params_t vu{}; std::memcpy(vu.mvp, &vp, 64);
-            sg_apply_uniforms(UB_box_vs_params, SG_RANGE(vu));
+            const FaceBasis& fb = kFaceBasis[f];
             for (const Nebula& n : nebulae) {
                 nebula_params_t fu{};
+                fu.u_fwd[0] = fb.fwd.X; fu.u_fwd[1] = fb.fwd.Y; fu.u_fwd[2] = fb.fwd.Z;
+                fu.u_sax[0] = fb.sax.X; fu.u_sax[1] = fb.sax.Y; fu.u_sax[2] = fb.sax.Z;
+                fu.u_tax[0] = fb.tax.X; fu.u_tax[1] = fb.tax.Y; fu.u_tax[2] = fb.tax.Z;
                 fu.u_color_scale[0] = n.color.X; fu.u_color_scale[1] = n.color.Y;
                 fu.u_color_scale[2] = n.color.Z; fu.u_color_scale[3] = n.scale;
                 fu.u_offset_intensity[0] = n.offset.X; fu.u_offset_intensity[1] = n.offset.Y;
                 fu.u_offset_intensity[2] = n.offset.Z; fu.u_offset_intensity[3] = n.intensity;
                 fu.u_misc[0] = n.falloff;
                 sg_apply_uniforms(UB_nebula_params, SG_RANGE(fu));
-                sg_draw(0, 36, 1);
+                sg_draw(0, 6, 1);
             }
         }
 
@@ -279,6 +313,7 @@ sg_image generate(const std::string& seed, int face_res) {
 
     // ---- tear down transient resources (keep the cube image) -------------
     sg_destroy_buffer(box_vbuf);
+    sg_destroy_buffer(fsquad_vbuf);
     sg_destroy_buffer(pstar_vbuf);
     sg_destroy_pipeline(pipe_neb);
     sg_destroy_pipeline(pipe_star);

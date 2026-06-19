@@ -25,12 +25,14 @@ struct Skybox {
     // from `seed_` at `face_res_` on the first frame after init (generate()
     // issues offscreen passes, so it can't run during init/system-load).
     std::string seed_;
-    int         face_res_  = 1024;
+    int         face_res_  = 4096;
     bool        generated_ = false;
 
     // Set up draw-side resources (sampler, cube geometry, draw shader +
     // pipeline) and arm procedural generation for `seed`. No cubemap yet.
-    bool init(const std::string& seed, int face_res = 1024);
+    // face_res 4096 = crisp; cube is 6 x face_res^2 x RGBA8 (~402 MB at
+    // 4096), generated once per system load on the GPU.
+    bool init(const std::string& seed, int face_res = 4096);
 
     // Render the procedural cubemap for `seed_` (idempotent — first call
     // only). MUST be called inside frame_cb, BEFORE the scene pass begins.

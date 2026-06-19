@@ -1,19 +1,15 @@
 //------------------------------------------------------------------------------
 // skybox_gen.glsl - procedural skybox cubemap generator (B1, on-the-fly).
 //
-// Clean-room port of the skyboxgen passes (itself a port of Tyro's space-3d.js)
-// into our sokol pipeline, so star systems generate their cubemap at load
-// instead of shipping 43 MB of pre-rendered PNGs. Three programs render into
-// each cube face (cleared black), alpha-blended in this order:
-//   * pstar  - many tiny billboard "point stars" (per-vertex colour)
-//   * star   - a few bright radial-glow stars (box-direction shaded)
-//   * neb    - fractal 4D-noise nebulae (box-direction shaded, layered)
-// The painted sun pass is intentionally omitted - new_privateer renders its
-// own 3D sun in world space (see main.cpp nav-centroid placement).
+// The NEBULA is rendered as a fullscreen per-face pass: each texel computes
+// its own sample direction via the exact OpenGL cube-map face formula, so the
+// six faces are seamless BY CONSTRUCTION (render-direction == sample-direction
+// for every texel), independent of backend cubemap-orientation quirks.
 //
-// Box passes (neb/star) draw an inside-out unit cube with model=identity, so
-// the interpolated vertex position IS the view direction; the fragment shader
-// normalises it. mvp = projection * faceView (90 deg FOV per face).
+// Stars (tiny billboard "point stars" + a few bright radial-glow stars) are
+// drawn as geometry through a per-face 90-deg camera; any slight per-face
+// orientation difference is invisible for points. The painted-sun pass is
+// omitted - the engine draws its own 3D sun in world space.
 //------------------------------------------------------------------------------
 
 @block noise
@@ -153,58 +149,65 @@ float cnoise(vec4 P)
 }
 @end
 
-// ---- shared box vertex stage (neb + star) -----------------------------------
+// ============================ NEBULA (fullscreen) ============================
+@vs fs_vs
+in vec2 a_pos;     // clip-space fullscreen quad (-1..1)
+in vec2 a_uv;      // face texel coord 0..1 (top-left origin)
+out vec2 v_uv;
+void main() {
+    gl_Position = vec4(a_pos, 0.0, 1.0);
+    v_uv = a_uv;
+}
+@end
+
+@fs neb_fs
+@include_block noise
+layout(binding=1) uniform nebula_params {
+    vec4 u_fwd;                // face forward axis
+    vec4 u_sax;                // face s (u) axis
+    vec4 u_tax;                // face t (v) axis
+    vec4 u_color_scale;        // rgb = colour, a = scale
+    vec4 u_offset_intensity;   // xyz = offset, w = intensity
+    vec4 u_misc;               // x = falloff
+};
+in vec2 v_uv;
+out vec4 frag_color;
+
+float nz(vec3 p) { return 0.5 * cnoise(vec4(p, 0.0)) + 0.5; }
+float nebula(vec3 p) {
+    const int steps = 6;
+    float scale = pow(2.0, float(steps));
+    vec3 displace = vec3(0.0);
+    for (int i = 0; i < steps; i++) {
+        displace = vec3(nz(p.xyz * scale + displace),
+                        nz(p.yzx * scale + displace),
+                        nz(p.zxy * scale + displace));
+        scale *= 0.5;
+    }
+    return nz(p * scale + displace);
+}
+void main() {
+    float uc = 2.0 * v_uv.x - 1.0;
+    float vc = 2.0 * v_uv.y - 1.0;
+    vec3 dir = normalize(u_fwd.xyz + uc * u_sax.xyz + vc * u_tax.xyz);
+    vec3 posn = dir * u_color_scale.a;
+    float c = min(1.0, nebula(posn + u_offset_intensity.xyz) * u_offset_intensity.w);
+    c = pow(c, u_misc.x);
+    frag_color = vec4(u_color_scale.rgb, c);
+}
+@end
+
+// ============================ STARS (geometry) ===============================
 @vs box_vs
 layout(binding=0) uniform box_vs_params { mat4 mvp; };
 in vec3 a_pos;
 out vec3 v_pos;
 void main() {
     gl_Position = mvp * vec4(a_pos, 1.0);
-    v_pos = a_pos;          // model is identity -> vertex pos == view dir
+    v_pos = a_pos;
 }
 @end
 
-// ---- nebula fragment --------------------------------------------------------
-@fs nebula_fs
-@include_block noise
-layout(binding=1) uniform nebula_params {
-    vec4 u_color_scale;        // rgb = colour, a = scale
-    vec4 u_offset_intensity;   // xyz = offset, w = intensity
-    vec4 u_misc;               // x = falloff
-};
-in vec3 v_pos;
-out vec4 frag_color;
-
-float nz(vec3 p) { return 0.5 * cnoise(vec4(p, 0.0)) + 0.5; }
-
-float nebula(vec3 p) {
-    const int steps = 6;
-    float scale = pow(2.0, float(steps));
-    vec3 displace = vec3(0.0);
-    for (int i = 0; i < steps; i++) {
-        displace = vec3(
-            nz(p.xyz * scale + displace),
-            nz(p.yzx * scale + displace),
-            nz(p.zxy * scale + displace));
-        scale *= 0.5;
-    }
-    return nz(p * scale + displace);
-}
-
-void main() {
-    vec3  color     = u_color_scale.rgb;
-    float scale     = u_color_scale.a;
-    vec3  offset    = u_offset_intensity.xyz;
-    float intensity = u_offset_intensity.w;
-    float falloff   = u_misc.x;
-    vec3  posn = normalize(v_pos) * scale;
-    float c = min(1.0, nebula(posn + offset) * intensity);
-    c = pow(c, falloff);
-    frag_color = vec4(color, c);
-}
-@end
-
-// ---- bright-star fragment (radial glow) -------------------------------------
 @fs star_fs
 layout(binding=1) uniform star_params {
     vec4 u_pos_size;        // xyz = direction on sphere, w = size
@@ -221,7 +224,6 @@ void main() {
 }
 @end
 
-// ---- point-star billboards (per-vertex colour) ------------------------------
 @vs pstar_vs
 layout(binding=0) uniform pstar_vs_params { mat4 mvp; };
 in vec3 a_pos;
@@ -239,6 +241,6 @@ out vec4 frag_color;
 void main() { frag_color = vec4(v_col, 1.0); }
 @end
 
-@program neb   box_vs   nebula_fs
+@program neb   fs_vs    neb_fs
 @program star  box_vs   star_fs
 @program pstar pstar_vs pstar_fs
