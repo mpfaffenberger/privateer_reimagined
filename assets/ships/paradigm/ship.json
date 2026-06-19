@@ -1,0 +1,51 @@
+{
+  // Authored from assets/data/privateer_ship_data.json (np Troy Confed wing):
+  // the Paradigm is a Confederation CAPITAL ship — a corvette-scale gunboat
+  // that anchors a patrol. Crawls at 200 kps with poor handling but carries
+  // a brutal forward battery (Meson Blasters, Tachyon Cannon, Ionic Pulse)
+  // behind capital-grade armor and shields. Flies the "heavy" standoff AI.
+  // Sprites are the wcnews PARADIGM mesh capture; place it big (length ~250 m)
+  // in scenes so it reads as a capital ship next to the fighters.
+  "name":           "paradigm",
+  "display_name":   "Paradigm",
+  "class_label":    "Confederation Capital Ship",
+  "atlas_manifest": "ships/paradigm/atlas_manifest_3d.json",
+  "default_faction": "confed",
+
+  "armor_fore_cm": 80,
+  "armor_aft_cm":  50,
+  "armor_side_cm": 65,
+
+  "cruise_speed":      200,
+  "afterburner_speed": 200,
+  "acceleration":      "poor",
+  "max_ypr":           "poor",
+
+  "personality":       "standard",
+  "ai_table":          "heavy",
+
+  "radar_range":   30000,
+  "weapons_range": 5500,
+
+  "max_engine_level": 1,
+  "max_shield_level": 5,
+  "default_shield":   "Shield Generator 5",
+  "default_armor":    "Isometal Armor",
+
+  // Heavy forward battery: 2 Meson Blasters + 2 Tachyon Cannon + 1 Ionic
+  // Pulse Cannon (turreted lasers/mass drivers + missile farm omitted per
+  // the v1 no-turret scope note). Deep reactor sustains the volume.
+  "default_guns": [
+    { "offset_body": [-5.0,  1.5, 6.0], "type": "meson_blaster" },
+    { "offset_body": [ 5.0,  1.5, 6.0], "type": "meson_blaster" },
+    { "offset_body": [-3.0, -1.5, 6.5], "type": "tachyon_cannon" },
+    { "offset_body": [ 3.0, -1.5, 6.5], "type": "tachyon_cannon" },
+    { "offset_body": [ 0.0,  0.0, 7.0], "type": "ionic_pulse_cannon" }
+  ],
+
+  "energy_max":      450,
+  "energy_recharge": 70,
+
+  "cargo_units":     0,
+  "cargo_units_max": 0
+}

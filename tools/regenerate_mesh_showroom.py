@@ -116,6 +116,7 @@ KEEP_AND_RENAME: dict[str, str] = {
     "talmil":    "talon",
     "strakha":   "strakha",
     "drone":     "drone",
+    "stiletto":  "stiletto",   # Confed light fighter, flame geometry stripped (np: Troy Confed wing)
     # The Orion is the wcnews DD_TUG.zip mesh — a heavy mercenary
     # gunship with 4 cylindrical engines on outriggers. Confirmed by
     # eyeball against assets/ships/orion/canonical_reference.png.

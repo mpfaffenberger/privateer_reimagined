@@ -1,0 +1,46 @@
+{
+  // Authored from assets/data/privateer_ship_data.json (np Troy Confed wing):
+  // the Stiletto is the Confederation LIGHT fighter — blisteringly fast and
+  // nimble but eggshell-thin. It trades the Centurion's gun battery and the
+  // Broadsword's armor for raw speed (1400 kps afterburner, the highest in
+  // the set) and excellent handling. Sprites generated from the wcnews
+  // STILETVW mesh with the engine-flame geometry stripped (see
+  // tools/render_3d_sprite_atlases.py + the stiletto.obj clean mesh).
+  "name":           "stiletto",
+  "display_name":   "Stiletto",
+  "class_label":    "Confederation Light Fighter",
+  "atlas_manifest": "ships/stiletto/atlas_manifest_3d.json",
+  "default_faction": "confed",
+
+  "armor_fore_cm": 9,
+  "armor_aft_cm":  8,
+  "armor_side_cm": 7,
+
+  "cruise_speed":      500,
+  "afterburner_speed": 1400,
+  "acceleration":      "excellent",
+  "max_ypr":           "excellent",
+
+  "personality":       "standard",
+
+  "radar_range":   25000,
+  "weapons_range": 4000,
+
+  "max_engine_level": 2,
+  "max_shield_level": 2,
+  "default_shield":   "Shield Generator 2",
+  "default_armor":    "Plasteel Armor",
+
+  // Mass Drivers x2: the Stiletto's whole offensive kit (plus 2 HS missiles
+  // we don't model). Cheap on energy so the light reactor sustains them.
+  "default_guns": [
+    { "offset_body": [-2.0, 0.0, 3.0], "type": "mass_driver" },
+    { "offset_body": [ 2.0, 0.0, 3.0], "type": "mass_driver" }
+  ],
+
+  "energy_max":      150,
+  "energy_recharge": 30,
+
+  "cargo_units":     2,
+  "cargo_units_max": 5
+}

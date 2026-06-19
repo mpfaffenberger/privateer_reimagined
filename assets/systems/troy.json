@@ -107,27 +107,32 @@
       "position": [51000, -100000, 33000],
       "ai": { "initial_state": "idle" } },
 
-    // ----- Confed strike group (10): faction confed, hostile to pirates --
-    { "atlas": "ships/centurion/atlas_manifest", "length_meters": 90, "faction": "confed",
+    // ----- Confed strike group: faction confed, hostile to pirates -------
+    //   6 Stilettos (light fighters) + 4 Broadswords (heavy bombers),
+    //   anchored by 1 Paradigm capital ship. (Was Centurions + Orions --
+    //   those are bounty-hunter/mercenary hulls, not Confed navy.)
+    { "atlas": "ships/stiletto/atlas_manifest_3d", "length_meters": 70, "faction": "confed",
       "position": [54000, -100000, 19000], "ai": { "initial_state": "idle" } },
-    { "atlas": "ships/centurion/atlas_manifest", "length_meters": 90, "faction": "confed",
+    { "atlas": "ships/stiletto/atlas_manifest_3d", "length_meters": 70, "faction": "confed",
       "position": [55200, -100500, 20100], "ai": { "initial_state": "idle" } },
-    { "atlas": "ships/centurion/atlas_manifest", "length_meters": 90, "faction": "confed",
+    { "atlas": "ships/stiletto/atlas_manifest_3d", "length_meters": 70, "faction": "confed",
       "position": [52800,  -99500, 18200], "ai": { "initial_state": "idle" } },
-    { "atlas": "ships/orion/atlas_manifest", "length_meters": 95, "faction": "confed",
+    { "atlas": "ships/broadsword/atlas_manifest_3d", "length_meters": 90, "faction": "confed",
       "position": [55500, -100200, 17800], "ai": { "initial_state": "idle" } },
-    { "atlas": "ships/orion/atlas_manifest", "length_meters": 95, "faction": "confed",
+    { "atlas": "ships/broadsword/atlas_manifest_3d", "length_meters": 90, "faction": "confed",
       "position": [53200, -100800, 20500], "ai": { "initial_state": "idle" } },
-    { "atlas": "ships/centurion/atlas_manifest", "length_meters": 90, "faction": "confed",
+    { "atlas": "ships/stiletto/atlas_manifest_3d", "length_meters": 70, "faction": "confed",
       "position": [54800,  -99300, 19600], "ai": { "initial_state": "idle" } },
-    { "atlas": "ships/orion/atlas_manifest", "length_meters": 95, "faction": "confed",
+    { "atlas": "ships/broadsword/atlas_manifest_3d", "length_meters": 90, "faction": "confed",
       "position": [52500, -100100, 18900], "ai": { "initial_state": "idle" } },
-    { "atlas": "ships/centurion/atlas_manifest", "length_meters": 90, "faction": "confed",
+    { "atlas": "ships/stiletto/atlas_manifest_3d", "length_meters": 70, "faction": "confed",
       "position": [55800, -100600, 18500], "ai": { "initial_state": "idle" } },
-    { "atlas": "ships/orion/atlas_manifest", "length_meters": 95, "faction": "confed",
+    { "atlas": "ships/broadsword/atlas_manifest_3d", "length_meters": 90, "faction": "confed",
       "position": [53600,  -99700, 20200], "ai": { "initial_state": "idle" } },
-    { "atlas": "ships/centurion/atlas_manifest", "length_meters": 90, "faction": "confed",
+    { "atlas": "ships/stiletto/atlas_manifest_3d", "length_meters": 70, "faction": "confed",
       "position": [54300, -100400, 17500], "ai": { "initial_state": "idle" } },
+    { "atlas": "ships/paradigm/atlas_manifest_3d", "length_meters": 250, "faction": "confed",
+      "position": [58000, -100000, 19000], "ai": { "initial_state": "idle" } },
 
     // ----- Pirate raider pack (10): faction pirate, Talons ---------------
     { "atlas": "ships/talon/atlas_manifest", "length_meters": 80, "faction": "pirate",
