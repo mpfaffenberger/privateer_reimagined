@@ -5,6 +5,7 @@
 #include "stb_image.h"
 
 #include "generated/skybox.glsl.h"
+#include "skybox_gen.h"
 
 #include <array>
 #include <cstdio>
@@ -102,75 +103,14 @@ void mirror_vertical_rgba8(uint8_t* px, int w, int h) {
 
 } // namespace
 
-bool Skybox::init(const std::string& dir, const std::string& prefix) {
-    // ---------------------------------------------------------------------
-    // 1. Load six faces into one concatenated RGBA8 blob.
-    //    sokol's new API wants the six face payloads back-to-back in a
-    //    single sg_range inside mip_levels[0].
-    // ---------------------------------------------------------------------
-    std::array<uint8_t*, kNumFaces> face_px{};
-    int face_w = 0, face_h = 0;
-
-    for (int f = 0; f < kNumFaces; ++f) {
-        const std::string path = dir + "/" + prefix + "_" + kFaceSuffixes[f] + ".png";
-        int w = 0, h = 0;
-        face_px[f] = load_face(path, w, h);
-        if (!face_px[f]) {
-            for (int g = 0; g < f; ++g) stbi_image_free(face_px[g]);
-            return false;
-        }
-        if (f == 0) { face_w = w; face_h = h; }
-        if (w != face_w || h != face_h) {
-            std::fprintf(stderr, "[skybox] face size mismatch (%s=%dx%d vs %dx%d)\n",
-                         kFaceSuffixes[f], w, h, face_w, face_h);
-            for (int g = 0; g <= f; ++g) stbi_image_free(face_px[g]);
-            return false;
-        }
-    }
-
-    const size_t face_bytes = (size_t)face_w * face_h * 4;
-    std::vector<uint8_t> blob(face_bytes * kNumFaces);
-    for (int f = 0; f < kNumFaces; ++f) {
-        // Faces 0..3 are the lateral walls (+X, -X, +Y, -Y order is a bit of
-        // a trap — see the kFaceSuffixes table above). We explicitly switch
-        // on the *suffix name* rather than on the index to stay robust if
-        // someone reorders the table later.
-        const std::string name = kFaceSuffixes[f];
-        if (name == "top" || name == "bottom") {
-            mirror_vertical_rgba8(face_px[f], face_w, face_h);
-        } else {
-            mirror_horizontal_rgba8(face_px[f], face_w, face_h);
-        }
-        std::memcpy(blob.data() + face_bytes * f, face_px[f], face_bytes);
-        stbi_image_free(face_px[f]);
-    }
-
-    // ---------------------------------------------------------------------
-    // 2. Image object.
-    // ---------------------------------------------------------------------
-    sg_image_desc idesc{};
-    idesc.type          = SG_IMAGETYPE_CUBE;
-    idesc.width         = face_w;
-    idesc.height        = face_h;
-    idesc.num_slices    = kNumFaces;     // cube has 6 slices
-    idesc.num_mipmaps   = 1;
-    idesc.pixel_format  = SG_PIXELFORMAT_RGBA8;
-    idesc.data.mip_levels[0].ptr  = blob.data();
-    idesc.data.mip_levels[0].size = blob.size();
-    cubemap = sg_make_image(&idesc);
-
-    if (sg_query_image_state(cubemap) != SG_RESOURCESTATE_VALID) {
-        std::fprintf(stderr, "[skybox] sg_make_image failed\n");
-        return false;
-    }
-
-    // ---------------------------------------------------------------------
-    // 3. View onto the image — new sokol indirection between images and
-    //    shader binding slots.
-    // ---------------------------------------------------------------------
-    sg_view_desc vdesc{};
-    vdesc.texture.image = cubemap;
-    tex_view = sg_make_view(&vdesc);
+bool Skybox::init(const std::string& seed, int face_res) {
+    // Procedural path (B1): we no longer load PNG faces. Set up the draw-side
+    // resources here (sampler, cube geometry, draw shader + pipeline) and arm
+    // generation; the cubemap itself is rendered on the first frame via
+    // generate() (offscreen passes can't run during system load).
+    seed_      = seed;
+    face_res_  = face_res;
+    generated_ = false;
 
     // ---------------------------------------------------------------------
     // 4. Sampler — linear + clamp so face seams don't show.
@@ -216,7 +156,22 @@ bool Skybox::init(const std::string& dir, const std::string& prefix) {
     return true;
 }
 
+void Skybox::generate() {
+    if (generated_) return;
+    cubemap = skybox_gen::generate(seed_, face_res_);
+    if (sg_query_image_state(cubemap) != SG_RESOURCESTATE_VALID) {
+        std::fprintf(stderr, "[skybox] procedural generation failed for '%s'\n",
+                     seed_.c_str());
+        return;
+    }
+    sg_view_desc vdesc{};
+    vdesc.texture.image = cubemap;
+    tex_view = sg_make_view(&vdesc);
+    generated_ = true;
+}
+
 void Skybox::draw(const Camera& cam, float aspect) const {
+    if (!generated_) return;   // cubemap not rendered yet (first frame)
     const HMM_Mat4 view = cam.view_rotation_only();
     const HMM_Mat4 proj = cam.projection(aspect);
     const HMM_Mat4 vp   = HMM_MulM4(proj, view);

@@ -764,9 +764,11 @@ void build_system_scene(bool first_time) {
     }
     }  // end if (first_time) — one-time tables + player state
 
-    const std::string dir = "assets/skybox/" + g.system.skybox_seed;
-    if (!g.skybox.init(dir, g.system.skybox_seed)) {
-        std::fprintf(stderr, "[main] skybox init failed (run tools/gen_skybox.sh %s)\n",
+    // Procedural skybox (B1): no saved PNGs — the cubemap is rendered on the
+    // fly from the seed on the first frame (generate(), called in frame_cb
+    // before the scene pass). init() only sets up draw-side resources.
+    if (!g.skybox.init(g.system.skybox_seed)) {
+        std::fprintf(stderr, "[main] skybox init failed for seed '%s'\n",
                      g.system.skybox_seed.c_str());
         std::exit(1);
     }
@@ -3303,6 +3305,13 @@ void frame_cb() {
     // --- draw ---------------------------------------------------------------
     const float aspect   = fb_w / fb_h;
     const float time_sec = (float)stm_sec(stm_now());
+
+    // Procedural skybox generation (B1): render the seed's cubemap once, via
+    // its own offscreen passes, BEFORE the scene pass opens (can't nest a
+    // pass inside another). Idempotent after the first frame. Skipped under
+    // capture_clean (sprite-atlas mode wants a pure black background and
+    // doesn't draw the skybox anyway).
+    if (!g.capture_clean) g.skybox.generate();
 
     // Pass 1: scene → offscreen. Same draw order as before, just a
     // different attachment. HUD is NOT drawn here — it goes over the

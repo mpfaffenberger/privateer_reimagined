@@ -80,6 +80,7 @@ function(compile_shader SHADER_NAME)
 endfunction()
 
 compile_shader(skybox)
+compile_shader(skybox_gen)
 compile_shader(sun)
 compile_shader(sun_glow)
 compile_shader(sun_gas)
@@ -136,6 +137,7 @@ add_executable(new_privateer
     src/music.cpp
     src/camera.cpp
     src/skybox.cpp
+    src/skybox_gen.cpp
     src/sun.cpp
     src/sun_corona.cpp
     src/sun_gas.cpp
