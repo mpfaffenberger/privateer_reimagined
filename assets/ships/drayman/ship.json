@@ -22,7 +22,7 @@
   "max_engine_level": 2,
   "max_shield_level": 5,
   "default_shield":   "Shield Generator 5",
-  "default_armor":    "Isometal Armor",
+  "default_armor":    "Tungsten Armor",
 
   "default_guns": [
     { "offset_body": [-4.0, 0.0, 6.0], "type": "meson_blaster" },
