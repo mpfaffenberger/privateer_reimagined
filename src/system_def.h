@@ -101,6 +101,11 @@ struct PlacedShipSpriteDef {
     // different stance toward the player).
     std::string faction_override;
 
+    // Optional explicit per-ship gunnery skill (skill_f2). <= 0 means
+    // "unset": fall back to the faction baseline (or class default).
+    // ~40 novice, ~50 veteran, ~60 ace.
+    float skill_f2 = 0.0f;
+
     // Optional behavior. "" / "none" = no controller (legacy motion).
     // "pursue_target" = turn toward `behavior_target_pos` and throttle
     // to cruise. More behaviors land as the AI layer grows.

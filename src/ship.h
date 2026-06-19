@@ -92,6 +92,13 @@ struct Ship {
     Faction           faction   = Faction::Civilian;
     bool              is_player = false;    // toggled on by ship::spawn_player()
 
+    // Per-INSTANCE gunnery skill (experience/accuracy, FAQ s5.1). Seeded
+    // from the ship class at spawn, but overridable per ship so a Confed
+    // ace and a green pirate flying the same hull shoot differently. Drives
+    // the firing.cpp to-hit roll + the AI reaction-time gate. ~40 novice,
+    // ~50 veteran, ~60 ace.
+    float             skill_f2  = 45.0f;
+
     // Kill attribution (np-ma2.1): the owner_id of the projectile that
     // landed the lethal hit, stamped by projectile::collide_and_damage at
     // the moment alive flips false. 0 = died to a non-projectile cause

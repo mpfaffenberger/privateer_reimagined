@@ -123,7 +123,7 @@ void firing::tick(ShipRegistry& ships,
         if (!s.is_player && s.ai.target_id != 0) {
             npc_target = ships.find_by_id(s.ai.target_id);
             if (npc_target && !npc_target->alive) npc_target = nullptr;
-            const float f2 = s.klass ? s.klass->skill_f2 : 45.0f;
+            const float f2 = s.skill_f2;
             const float tt = std::clamp((f2 - 40.0f) / 20.0f, 0.0f, 1.0f);
             npc_hit_rate = 0.17f + 0.20f * std::pow(tt, 1.6f);
         }
@@ -163,7 +163,7 @@ void firing::tick(ShipRegistry& ships,
                     const HitFacing facing = ship::facing_of_hit(*npc_target, hit_pos);
                     ship::take_damage(*npc_target, gs.damage_cm, facing);
                     if (!npc_target->alive) npc_target->killed_by_id = s.id;
-                    gunnery_probe::hit(s.klass ? s.klass->skill_f2 : 45.0f);
+                    gunnery_probe::hit(s.skill_f2);
                     shot_dir = to_t_u;          // tracer converges on target
                 } else {
                     // Deliberate miss: spray a few degrees off the target.
@@ -192,7 +192,7 @@ void firing::tick(ShipRegistry& ships,
 
             // Gunnery hit-rate probe: count NPC shots by shooter skill.
             if (!s.is_player) {
-                gunnery_probe::shot(s.klass ? s.klass->skill_f2 : 45.0f);
+                gunnery_probe::shot(s.skill_f2);
             }
 
             s.energy_gj         -= gs.energy_cost_gj;

@@ -169,6 +169,7 @@ Ship ship::spawn(const ShipClass& klass) {
     s.id      = s_next_id++;
     s.klass   = &klass;
     s.faction = klass.default_faction;
+    s.skill_f2 = klass.skill_f2;   // per-instance default = class skill
 
     // Health = full max. Base hull armor from class; shields from the
     // fitted shield generator if one is configured.

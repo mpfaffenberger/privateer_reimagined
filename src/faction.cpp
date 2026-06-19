@@ -88,6 +88,20 @@ const char* faction::to_name(Faction f) {
     return k_names[(int)f];
 }
 
+float faction::default_skill_f2(Faction f) {
+    switch (f) {
+        case Faction::Confed:   return 60.0f;   // disciplined navy: aces
+        case Faction::Kilrathi: return 58.0f;   // elite warriors
+        case Faction::Hunter:   return 55.0f;   // seasoned bounty hunters
+        case Faction::Militia:  return 50.0f;   // competent veterans
+        case Faction::Pirate:   return 45.0f;   // scrappy, uneven
+        case Faction::Retro:    return 42.0f;   // fanatics, poorly trained
+        case Faction::Merchant: return 40.0f;   // green
+        case Faction::Civilian: return 40.0f;   // green
+        default:                return 45.0f;
+    }
+}
+
 Stance faction::stance_npc_vs_npc(Faction a, Faction b) {
     return g_faction_stance[(int)a][(int)b];
 }
