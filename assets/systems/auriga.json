@@ -1,0 +1,304 @@
+{
+  "name": "Auriga",
+  "description": "Potter Quadrant / Gemini Sector. Jump links: Newcastle. Random mission opponents: 2/3 Merchant, 1/3 Militia. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
+  "skybox_seed": "auriga",
+  "star": {
+    "preset": "yellow"
+  },
+  "asteroid_fields": [],
+  "placed_sprites": [
+    {
+      "sprite": "sprites/mining_base",
+      "position": [
+        133333,
+        -66667,
+        100000
+      ],
+      "length_meters": 3000
+    },
+    {
+      "sprite": "sprites/helen_planet",
+      "position": [
+        -133333,
+        66667,
+        0
+      ],
+      "length_meters": 2000
+    }
+  ],
+  "nav_points": [
+    {
+      "name": "Beaconsfield Refinery Base",
+      "kind": "station",
+      "position": [
+        133333,
+        -66667,
+        100000
+      ],
+      "dockable": true,
+      "base_id": "beaconsfield_refinery",
+      "encounters": [
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "hunter",
+              "ship": "orion",
+              "count": 2
+            },
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "hunter",
+              "ship": "orion",
+              "count": 1
+            },
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "chance": 20,
+          "members": [
+            {
+              "faction": "militia",
+              "ship": "talon",
+              "count": 3
+            },
+            {
+              "faction": "hunter",
+              "ship": "centurion",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "chance": 20,
+          "members": [
+            {
+              "faction": "militia",
+              "ship": "talon",
+              "count": 3
+            },
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Newcastle Jump",
+      "kind": "jump",
+      "position": [
+        133333,
+        66667,
+        -100000
+      ],
+      "links_to": "newcastle",
+      "links_to_nav": "Auriga Jump",
+      "encounters": [
+        {
+          "chance": 40,
+          "members": [
+            {
+              "faction": "militia",
+              "ship": "talon",
+              "count": 2
+            },
+            {
+              "faction": "militia",
+              "ship": "talon",
+              "count": 1
+            },
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "militia",
+              "ship": "talon",
+              "count": 3
+            },
+            {
+              "faction": "hunter",
+              "ship": "orion",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 1
+            },
+            {
+              "faction": "confed",
+              "ship": "broadsword",
+              "count": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Auriga Nav 3",
+      "kind": "nav",
+      "position": [
+        0,
+        0,
+        66667
+      ],
+      "encounters": [
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "militia",
+              "ship": "talon",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "militia",
+              "ship": "talon",
+              "count": 1
+            },
+            {
+              "faction": "militia",
+              "ship": "talon",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "militia",
+              "ship": "talon",
+              "count": 2
+            },
+            {
+              "faction": "retro",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 20,
+          "members": [
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Elysia Agricultural Planet",
+      "kind": "planet",
+      "position": [
+        -133333,
+        66667,
+        0
+      ],
+      "dockable": true,
+      "base_id": "elysia",
+      "encounters": [
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "hunter",
+              "ship": "centurion",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "confed",
+              "ship": "stiletto",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "hunter",
+              "ship": "orion",
+              "count": 1
+            },
+            {
+              "faction": "militia",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 1
+            },
+            {
+              "faction": "confed",
+              "ship": "broadsword",
+              "count": 2
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "encounters": [],
+  "player_start": {
+    "position": [
+      0,
+      0,
+      66667
+    ],
+    "look_at": [
+      33333,
+      16667,
+      16667
+    ]
+  }
+}

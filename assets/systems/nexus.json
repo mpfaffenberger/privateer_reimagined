@@ -1,26 +1,33 @@
 {
-  "name": "Pyrenees",
-  "description": "Humboldt Quadrant / Gemini Sector. Jump links: Callisto , CM-N1054 , Freyja , Troy. Random mission opponents: 2/3 Pirate, 1/3 Retro. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
-  "skybox_seed": "pyrenees",
+  "name": "Nexus",
+  "description": "Fariss Quadrant / Gemini Sector. Jump links: Capella , Junction , KM-252 , Tingerhoff. Random mission opponents: 2/3 Pirate, 1/3 Militia. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
+  "skybox_seed": "nexus",
   "star": {
     "preset": "yellow"
   },
-  "asteroid_fields": [],
-  "placed_sprites": [
+  "asteroid_fields": [
     {
-      "sprite": "sprites/helen_planet",
-      "position": [
-        116667,
-        -66667,
+      "center": [
+        183333,
+        0,
         0
       ],
-      "length_meters": 2000
-    },
+      "half_extent": [
+        40000,
+        12000,
+        40000
+      ],
+      "count": 320,
+      "base_radius": 120,
+      "seed": 173531139
+    }
+  ],
+  "placed_sprites": [
     {
       "sprite": "sprites/mining_base",
       "position": [
-        -133333,
-        60000,
+        183333,
+        0,
         0
       ],
       "length_meters": 3000
@@ -28,23 +35,53 @@
   ],
   "nav_points": [
     {
-      "name": "Freyja Jump",
+      "name": "Junction Jump",
       "kind": "jump",
       "position": [
-        -166667,
-        -33333,
-        166667
+        -200000,
+        -60000,
+        116667
       ],
-      "links_to": "freyja",
-      "links_to_nav": "Pyrenees Jump",
+      "links_to": "junction",
+      "links_to_nav": "Nexus Jump",
       "encounters": [
         {
           "chance": 25,
           "members": [
             {
-              "faction": "militia",
+              "faction": "pirate",
               "ship": "talon",
               "count": 4
+            }
+          ]
+        },
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "militia",
+              "ship": "centurion",
+              "count": 2
+            },
+            {
+              "faction": "militia",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "hunter",
+              "ship": "centurion",
+              "count": 1
+            },
+            {
+              "faction": "pirate",
+              "ship": "talon",
+              "count": 2
             }
           ]
         },
@@ -55,21 +92,107 @@
               "faction": "pirate",
               "ship": "talon",
               "count": 3
+            },
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Tingerhoff Jump",
+      "kind": "jump",
+      "position": [
+        0,
+        0,
+        70000
+      ],
+      "links_to": "tingerhoff",
+      "links_to_nav": "Nexus Jump",
+      "encounters": [
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "pirate",
+              "ship": "talon",
+              "count": 4
             }
           ]
         },
         {
-          "chance": 20,
+          "chance": 30,
           "members": [
             {
               "faction": "militia",
               "ship": "centurion",
               "count": 3
+            },
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 1
             }
           ]
         },
         {
-          "chance": 20,
+          "chance": 30,
+          "members": [
+            {
+              "faction": "pirate",
+              "ship": "talon",
+              "count": 3
+            },
+            {
+              "faction": "hunter",
+              "ship": "centurion",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "chance": 10,
+          "members": [
+            {
+              "faction": "retro",
+              "ship": "talon",
+              "count": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Macabee Mining Base",
+      "kind": "station",
+      "position": [
+        183333,
+        0,
+        0
+      ],
+      "dockable": true,
+      "base_id": "macabee",
+      "encounters": [
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "hunter",
+              "ship": "orion",
+              "count": 2
+            },
+            {
+              "faction": "militia",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 30,
           "members": [
             {
               "faction": "merchant",
@@ -77,8 +200,23 @@
               "count": 1
             },
             {
-              "faction": "militia",
-              "ship": "centurion",
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 1
+            },
+            {
+              "faction": "pirate",
+              "ship": "talon",
               "count": 3
             }
           ]
@@ -96,131 +234,73 @@
       ]
     },
     {
-      "name": "Troy Jump",
+      "name": "Capella Jump",
       "kind": "jump",
       "position": [
-        83333,
-        50000,
-        150000
+        100000,
+        43333,
+        -100000
       ],
-      "links_to": "troy",
-      "links_to_nav": "Pyrenees Jump",
+      "links_to": "capella",
+      "links_to_nav": "Nexus Jump",
       "encounters": [
         {
-          "chance": 30,
+          "chance": 25,
           "members": [
             {
               "faction": "pirate",
               "ship": "talon",
-              "count": 3
-            }
-          ]
-        },
-        {
-          "chance": 30,
-          "members": [
-            {
-              "faction": "militia",
-              "ship": "centurion",
               "count": 2
             }
           ]
         },
         {
-          "chance": 20,
+          "chance": 25,
           "members": [
             {
               "faction": "militia",
-              "ship": "centurion",
+              "ship": "talon",
               "count": 4
             }
           ]
         },
         {
-          "chance": 20,
+          "chance": 25,
           "members": [
+            {
+              "faction": "militia",
+              "ship": "talon",
+              "count": 1
+            },
             {
               "faction": "militia",
               "ship": "centurion",
-              "count": 2
-            },
-            {
-              "faction": "retro",
-              "ship": "talon",
-              "count": 2
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "New Iberia Agricultural Planet",
-      "kind": "planet",
-      "position": [
-        116667,
-        -66667,
-        0
-      ],
-      "dockable": true,
-      "base_id": "new",
-      "encounters": [
-        {
-          "chance": 30,
-          "members": [
-            {
-              "faction": "merchant",
-              "ship": "galaxy",
-              "count": 1
-            },
-            {
-              "faction": "militia",
-              "ship": "talon",
-              "count": 2
-            }
-          ]
-        },
-        {
-          "chance": 30,
-          "members": [
-            {
-              "faction": "merchant",
-              "ship": "galaxy",
-              "count": 1
-            },
-            {
-              "faction": "merchant",
-              "ship": "galaxy",
-              "count": 2
-            }
-          ]
-        },
-        {
-          "chance": 20,
-          "members": [
-            {
-              "faction": "militia",
-              "ship": "talon",
               "count": 3
-            },
+            }
+          ]
+        },
+        {
+          "chance": 25,
+          "members": [
             {
-              "faction": "retro",
+              "faction": "pirate",
               "ship": "talon",
-              "count": 2
+              "count": 4
             }
           ]
         }
       ]
     },
     {
-      "name": "CM-N1054 Jump",
+      "name": "KM-252 Jump",
       "kind": "jump",
       "position": [
+        -83333,
         33333,
-        -6667,
-        -116667
+        -33333
       ],
-      "links_to": "cm_n1054",
-      "links_to_nav": "Pyrenees Jump",
+      "links_to": "km_252",
+      "links_to_nav": "Nexus Jump",
       "encounters": [
         {
           "chance": 30,
@@ -228,16 +308,6 @@
             {
               "faction": "militia",
               "ship": "talon",
-              "count": 3
-            }
-          ]
-        },
-        {
-          "chance": 30,
-          "members": [
-            {
-              "faction": "militia",
-              "ship": "talon",
               "count": 4
             }
           ]
@@ -247,47 +317,6 @@
           "members": [
             {
               "faction": "militia",
-              "ship": "centurion",
-              "count": 4
-            }
-          ]
-        },
-        {
-          "chance": 20,
-          "members": [
-            {
-              "faction": "pirate",
-              "ship": "talon",
-              "count": 4
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Pyrenees Nav 5",
-      "kind": "nav",
-      "position": [
-        0,
-        0,
-        0
-      ],
-      "encounters": [
-        {
-          "chance": 30,
-          "members": [
-            {
-              "faction": "pirate",
-              "ship": "talon",
-              "count": 4
-            }
-          ]
-        },
-        {
-          "chance": 30,
-          "members": [
-            {
-              "faction": "pirate",
               "ship": "talon",
               "count": 3
             },
@@ -302,60 +331,12 @@
           "chance": 20,
           "members": [
             {
-              "faction": "militia",
+              "faction": "hunter",
               "ship": "centurion",
-              "count": 3
-            },
-            {
-              "faction": "merchant",
-              "ship": "galaxy",
-              "count": 1
-            }
-          ]
-        },
-        {
-          "chance": 20,
-          "members": [
-            {
-              "faction": "retro",
-              "ship": "talon",
-              "count": 3
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Basque Mining Base",
-      "kind": "station",
-      "position": [
-        -133333,
-        60000,
-        0
-      ],
-      "dockable": true,
-      "base_id": "basque",
-      "encounters": [
-        {
-          "chance": 30,
-          "members": [
-            {
-              "faction": "merchant",
-              "ship": "galaxy",
-              "count": 2
-            }
-          ]
-        },
-        {
-          "chance": 30,
-          "members": [
-            {
-              "faction": "merchant",
-              "ship": "galaxy",
               "count": 1
             },
             {
-              "faction": "militia",
+              "faction": "pirate",
               "ship": "talon",
               "count": 3
             }
@@ -364,30 +345,25 @@
         {
           "chance": 20,
           "members": [
-            {
-              "faction": "militia",
-              "ship": "centurion",
-              "count": 2
-            },
             {
               "faction": "pirate",
               "ship": "talon",
               "count": 2
-            }
-          ]
-        },
-        {
-          "chance": 20,
-          "members": [
-            {
-              "faction": "militia",
-              "ship": "centurion",
-              "count": 1
             },
             {
               "faction": "retro",
               "ship": "talon",
               "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 10,
+          "members": [
+            {
+              "faction": "retro",
+              "ship": "talon",
+              "count": 4
             }
           ]
         }
@@ -397,14 +373,14 @@
   "encounters": [],
   "player_start": {
     "position": [
-      0,
-      0,
-      0
+      -83333,
+      33333,
+      -33333
     ],
     "look_at": [
-      -11111,
-      556,
-      33333
+      0,
+      3333,
+      10667
     ]
   }
 }

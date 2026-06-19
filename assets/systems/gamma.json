@@ -1,0 +1,238 @@
+{
+  "name": "Gamma",
+  "description": "Potter Quadrant / Gemini Sector. Jump links: Beta , Delta Prime. Random mission opponents: All Kilrathi. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
+  "skybox_seed": "gamma",
+  "star": {
+    "preset": "yellow"
+  },
+  "asteroid_fields": [
+    {
+      "center": [
+        133333,
+        -66667,
+        100000
+      ],
+      "half_extent": [
+        40000,
+        12000,
+        40000
+      ],
+      "count": 320,
+      "base_radius": 120,
+      "seed": 173531137
+    },
+    {
+      "center": [
+        0,
+        -66667,
+        100000
+      ],
+      "half_extent": [
+        40000,
+        12000,
+        40000
+      ],
+      "count": 320,
+      "base_radius": 120,
+      "seed": 173531139
+    },
+    {
+      "center": [
+        166667,
+        -66667,
+        -33333
+      ],
+      "half_extent": [
+        40000,
+        12000,
+        40000
+      ],
+      "count": 320,
+      "base_radius": 120,
+      "seed": 173531140
+    },
+    {
+      "center": [
+        -100000,
+        66667,
+        -100000
+      ],
+      "half_extent": [
+        40000,
+        12000,
+        40000
+      ],
+      "count": 320,
+      "base_radius": 120,
+      "seed": 173531141
+    }
+  ],
+  "placed_sprites": [],
+  "nav_points": [
+    {
+      "name": "Beta Jump",
+      "kind": "jump",
+      "position": [
+        133333,
+        -66667,
+        100000
+      ],
+      "links_to": "beta",
+      "links_to_nav": "Gamma Jump",
+      "encounters": [
+        {
+          "chance": 40,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "orion",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "chance": 40,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "talon",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "chance": 20,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "orion",
+              "count": 3
+            },
+            {
+              "faction": "kilrathi",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Gamma Nav 2",
+      "kind": "nav",
+      "position": [
+        166667,
+        -66667,
+        200000
+      ]
+    },
+    {
+      "name": "Asteroid Field 3",
+      "kind": "nav",
+      "position": [
+        0,
+        -66667,
+        100000
+      ]
+    },
+    {
+      "name": "Asteroid Field 4",
+      "kind": "nav",
+      "position": [
+        166667,
+        -66667,
+        -33333
+      ]
+    },
+    {
+      "name": "Delta Prime Jump",
+      "kind": "jump",
+      "position": [
+        -100000,
+        66667,
+        -100000
+      ],
+      "links_to": "delta_prime",
+      "links_to_nav": "Gamma Jump",
+      "encounters": [
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "orion",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "talon",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "chance": 40,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "orion",
+              "count": 2
+            },
+            {
+              "faction": "kilrathi",
+              "ship": "orion",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 50,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "talon",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "chance": 50,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "orion",
+              "count": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Gamma Nav 6",
+      "kind": "nav",
+      "position": [
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "encounters": [],
+  "player_start": {
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "look_at": [
+      61111,
+      -33334,
+      44444
+    ]
+  }
+}

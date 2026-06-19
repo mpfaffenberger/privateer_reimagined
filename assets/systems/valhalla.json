@@ -1,16 +1,16 @@
 {
-  "name": "Pender's Star",
-  "description": "Humboldt Quadrant / Gemini Sector. Jump links: Junction , Troy. Random mission opponents: 2/3 Pirate, 1/3 Retro. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
-  "skybox_seed": "penders_star",
+  "name": "Valhalla",
+  "description": "Humboldt Quadrant / Gemini Sector. Jump links: Telar. Random mission opponents: 2/3 Militia, 1/3 Retro. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
+  "skybox_seed": "valhalla",
   "star": {
     "preset": "yellow"
   },
   "asteroid_fields": [
     {
       "center": [
-        -25000,
+        -166667,
         33333,
-        40000
+        -200000
       ],
       "half_extent": [
         40000,
@@ -19,78 +19,57 @@
       ],
       "count": 320,
       "base_radius": 120,
-      "seed": 173531138
+      "seed": 173531137
     }
   ],
-  "placed_sprites": [],
+  "placed_sprites": [
+    {
+      "sprite": "sprites/mining_base",
+      "position": [
+        -166667,
+        33333,
+        -200000
+      ],
+      "length_meters": 3000
+    }
+  ],
   "nav_points": [
     {
-      "name": "Junction Jump",
-      "kind": "jump",
+      "name": "Valkyrie Mining Base",
+      "kind": "station",
       "position": [
-        -133333,
-        -33333,
-        -166667
+        -166667,
+        33333,
+        -200000
       ],
-      "links_to": "junction",
-      "links_to_nav": "Pender's Star Jump",
+      "dockable": true,
+      "base_id": "valkyrie",
       "encounters": [
         {
-          "chance": 40,
+          "chance": 30,
           "members": [
             {
-              "faction": "militia",
-              "ship": "talon",
-              "count": 2
-            },
-            {
-              "faction": "pirate",
-              "ship": "talon",
+              "faction": "hunter",
+              "ship": "orion",
               "count": 2
             }
           ]
         },
         {
-          "chance": 35,
+          "chance": 30,
           "members": [
-            {
-              "faction": "pirate",
-              "ship": "talon",
-              "count": 3
-            },
             {
               "faction": "merchant",
               "ship": "galaxy",
-              "count": 1
-            }
-          ]
-        },
-        {
-          "chance": 25,
-          "members": [
-            {
-              "faction": "militia",
-              "ship": "talon",
               "count": 2
             },
             {
-              "faction": "retro",
+              "faction": "pirate",
               "ship": "talon",
               "count": 2
             }
           ]
-        }
-      ]
-    },
-    {
-      "name": "Asteroid Field 2",
-      "kind": "nav",
-      "position": [
-        -25000,
-        33333,
-        40000
-      ],
-      "encounters": [
+        },
         {
           "chance": 30,
           "members": [
@@ -102,42 +81,58 @@
           ]
         },
         {
-          "chance": 20,
+          "chance": 10,
           "members": [
             {
-              "faction": "pirate",
+              "faction": "retro",
               "ship": "talon",
-              "count": 2
-            },
+              "count": 4
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Valhalla Nav 2",
+      "kind": "nav",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "encounters": [
+        {
+          "chance": 30,
+          "members": [
             {
               "faction": "militia",
-              "ship": "talon",
-              "count": 1
+              "ship": "centurion",
+              "count": 4
             }
           ]
         },
         {
-          "chance": 20,
+          "chance": 30,
           "members": [
             {
-              "faction": "militia",
+              "faction": "pirate",
               "ship": "talon",
               "count": 3
-            },
-            {
-              "faction": "merchant",
-              "ship": "tarsus",
-              "count": 1
             }
           ]
         },
         {
-          "chance": 20,
+          "chance": 30,
           "members": [
+            {
+              "faction": "militia",
+              "ship": "centurion",
+              "count": 1
+            },
             {
               "faction": "pirate",
               "ship": "talon",
-              "count": 2
+              "count": 3
             }
           ]
         },
@@ -154,21 +149,36 @@
       ]
     },
     {
-      "name": "Troy Jump",
+      "name": "Telar Jump",
       "kind": "jump",
       "position": [
-        100000,
-        0,
-        -133333
+        166667,
+        -33333,
+        200000
       ],
-      "links_to": "troy",
-      "links_to_nav": "Pender's Star Jump",
+      "links_to": "telar",
+      "links_to_nav": "Valhalla Jump",
       "encounters": [
         {
           "chance": 30,
           "members": [
             {
               "faction": "militia",
+              "ship": "centurion",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "militia",
+              "ship": "centurion",
+              "count": 2
+            },
+            {
+              "faction": "pirate",
               "ship": "talon",
               "count": 2
             }
@@ -178,51 +188,52 @@
           "chance": 30,
           "members": [
             {
-              "faction": "hunter",
+              "faction": "militia",
+              "ship": "talon",
+              "count": 2
+            },
+            {
+              "faction": "militia",
               "ship": "centurion",
               "count": 2
             }
           ]
         },
         {
-          "chance": 30,
-          "members": [
-            {
-              "faction": "merchant",
-              "ship": "tarsus",
-              "count": 1
-            },
-            {
-              "faction": "pirate",
-              "ship": "talon",
-              "count": 2
-            }
-          ]
-        },
-        {
           "chance": 10,
           "members": [
             {
               "faction": "retro",
               "ship": "talon",
-              "count": 3
+              "count": 4
             }
           ]
         }
       ]
+    },
+    {
+      "name": "Eden Jump",
+      "kind": "jump",
+      "position": [
+        -110605,
+        0,
+        101324
+      ],
+      "links_to": "eden",
+      "links_to_nav": "Valhalla Jump"
     }
   ],
   "encounters": [],
   "player_start": {
     "position": [
-      100000,
       0,
-      -133333
+      0,
+      0
     ],
     "look_at": [
-      -19444,
       0,
-      -86667
+      0,
+      0
     ]
   }
 }

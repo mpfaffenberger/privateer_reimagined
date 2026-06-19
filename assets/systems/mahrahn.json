@@ -1,0 +1,104 @@
+{
+  "name": "Mah'Rahn",
+  "description": "Clarke Quadrant / Gemini Sector. Jump links: Blockade Point Tango , Sum'Tlor. Random mission opponents: All Kilrathi. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
+  "skybox_seed": "mahrahn",
+  "star": {
+    "preset": "yellow"
+  },
+  "asteroid_fields": [
+    {
+      "center": [
+        0,
+        0,
+        100000
+      ],
+      "half_extent": [
+        40000,
+        12000,
+        40000
+      ],
+      "count": 320,
+      "base_radius": 120,
+      "seed": 173531137
+    }
+  ],
+  "placed_sprites": [],
+  "nav_points": [
+    {
+      "name": "Blockade Point Tango Jump",
+      "kind": "jump",
+      "position": [
+        0,
+        0,
+        100000
+      ],
+      "links_to": "blockade_point_tango",
+      "links_to_nav": "Mah'Rahn Jump",
+      "encounters": [
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "orion",
+              "count": 3
+            },
+            {
+              "faction": "kilrathi",
+              "ship": "paradigm",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "talon",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "orion",
+              "count": 2
+            },
+            {
+              "faction": "kilrathi",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "orion",
+              "count": 4
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "encounters": [],
+  "player_start": {
+    "position": [
+      0,
+      0,
+      100000
+    ],
+    "look_at": [
+      0,
+      0,
+      100000
+    ]
+  }
+}

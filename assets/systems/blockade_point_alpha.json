@@ -1,0 +1,218 @@
+{
+  "name": "Blockade Point Alpha",
+  "description": "Clarke Quadrant / Gemini Sector. Jump links: Ragnarok , Tr'Pakh. Random mission opponents: 2/3 Kilrathi, 1/3 Confederation. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
+  "skybox_seed": "blockade_point_alpha",
+  "star": {
+    "preset": "yellow"
+  },
+  "asteroid_fields": [
+    {
+      "center": [
+        0,
+        0,
+        -33333
+      ],
+      "half_extent": [
+        40000,
+        12000,
+        40000
+      ],
+      "count": 320,
+      "base_radius": 120,
+      "seed": 173531138
+    }
+  ],
+  "placed_sprites": [],
+  "nav_points": [
+    {
+      "name": "Ragnarok Jump",
+      "kind": "jump",
+      "position": [
+        100000,
+        66667,
+        33333
+      ],
+      "links_to": "ragnarok",
+      "links_to_nav": "Blockade Point Alpha Jump",
+      "encounters": [
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "confed",
+              "ship": "broadsword",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "orion",
+              "count": 3
+            },
+            {
+              "faction": "kilrathi",
+              "ship": "paradigm",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "confed",
+              "ship": "stiletto",
+              "count": 1
+            },
+            {
+              "faction": "kilrathi",
+              "ship": "orion",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "confed",
+              "ship": "stiletto",
+              "count": 4
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Asteroid Field 2",
+      "kind": "nav",
+      "position": [
+        0,
+        0,
+        -33333
+      ],
+      "encounters": [
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "confed",
+              "ship": "stiletto",
+              "count": 2
+            },
+            {
+              "faction": "confed",
+              "ship": "paradigm",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "orion",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "talon",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "chance": 10,
+          "members": [
+            {
+              "faction": "retro",
+              "ship": "talon",
+              "count": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Tr'Pakh Jump",
+      "kind": "jump",
+      "position": [
+        -100000,
+        -66667,
+        -100000
+      ],
+      "links_to": "trpakh",
+      "links_to_nav": "Blockade Point Alpha Jump",
+      "encounters": [
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "confed",
+              "ship": "stiletto",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "talon",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "orion",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "chance": 10,
+          "members": [
+            {
+              "faction": "confed",
+              "ship": "stiletto",
+              "count": 2
+            },
+            {
+              "faction": "kilrathi",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "encounters": [],
+  "player_start": {
+    "position": [
+      -100000,
+      -66667,
+      -100000
+    ],
+    "look_at": [
+      0,
+      0,
+      -33333
+    ]
+  }
+}

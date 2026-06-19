@@ -1,0 +1,178 @@
+{
+  "name": "Rygannon",
+  "description": "Fariss Quadrant / Gemini Sector. Jump links: Delta , Xytani. Random mission opponents: 2/3 Retro, 1/3 Pirate. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
+  "skybox_seed": "rygannon",
+  "star": {
+    "preset": "yellow"
+  },
+  "asteroid_fields": [
+    {
+      "center": [
+        -166667,
+        66667,
+        100000
+      ],
+      "half_extent": [
+        40000,
+        12000,
+        40000
+      ],
+      "count": 320,
+      "base_radius": 120,
+      "seed": 173531139
+    }
+  ],
+  "placed_sprites": [
+    {
+      "sprite": "sprites/mining_base",
+      "position": [
+        33333,
+        -66667,
+        133333
+      ],
+      "length_meters": 3000
+    }
+  ],
+  "nav_points": [
+    {
+      "name": "Xytani Jump",
+      "kind": "jump",
+      "position": [
+        -200000,
+        66667,
+        -100000
+      ],
+      "links_to": "xytani",
+      "links_to_nav": "Rygannon Jump",
+      "encounters": [
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "hunter",
+              "ship": "centurion",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 2
+            },
+            {
+              "faction": "retro",
+              "ship": "talon",
+              "count": 2
+            },
+            {
+              "faction": "kilrathi",
+              "ship": "orion",
+              "count": 2
+            },
+            {
+              "faction": "retro",
+              "ship": "talon",
+              "count": 4
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Rygannon Mining Base",
+      "kind": "station",
+      "position": [
+        33333,
+        -66667,
+        133333
+      ],
+      "dockable": true,
+      "base_id": "rygannon",
+      "encounters": [
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 1
+            },
+            {
+              "faction": "militia",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "pirate",
+              "ship": "talon",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "retro",
+              "ship": "talon",
+              "count": 2
+            },
+            {
+              "faction": "militia",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "pirate",
+              "ship": "talon",
+              "count": 3
+            },
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Delta Jump",
+      "kind": "jump",
+      "position": [
+        -166667,
+        66667,
+        100000
+      ],
+      "links_to": "delta",
+      "links_to_nav": "Rygannon Jump"
+    }
+  ],
+  "encounters": [],
+  "player_start": {
+    "position": [
+      -166667,
+      66667,
+      100000
+    ],
+    "look_at": [
+      -111111,
+      22222,
+      44444
+    ]
+  }
+}

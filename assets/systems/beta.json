@@ -1,0 +1,216 @@
+{
+  "name": "Beta",
+  "description": "Fariss Quadrant / Gemini Sector. Jump links: Delta , Gamma. Random mission opponents: All Pirate. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
+  "skybox_seed": "beta",
+  "star": {
+    "preset": "yellow"
+  },
+  "asteroid_fields": [
+    {
+      "center": [
+        -150000,
+        0,
+        0
+      ],
+      "half_extent": [
+        40000,
+        12000,
+        40000
+      ],
+      "count": 320,
+      "base_radius": 120,
+      "seed": 173531138
+    },
+    {
+      "center": [
+        -33333,
+        66667,
+        -166667
+      ],
+      "half_extent": [
+        40000,
+        12000,
+        40000
+      ],
+      "count": 320,
+      "base_radius": 120,
+      "seed": 173531140
+    },
+    {
+      "center": [
+        -166667,
+        -66667,
+        166667
+      ],
+      "half_extent": [
+        40000,
+        12000,
+        40000
+      ],
+      "count": 320,
+      "base_radius": 120,
+      "seed": 173531141
+    }
+  ],
+  "placed_sprites": [],
+  "nav_points": [
+    {
+      "name": "Delta Jump",
+      "kind": "jump",
+      "position": [
+        -133333,
+        66667,
+        -100000
+      ],
+      "links_to": "delta",
+      "links_to_nav": "Beta Jump",
+      "encounters": [
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "pirate",
+              "ship": "talon",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "chance": 40,
+          "members": [
+            {
+              "faction": "pirate",
+              "ship": "talon",
+              "count": 2
+            },
+            {
+              "faction": "pirate",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "pirate",
+              "ship": "talon",
+              "count": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Asteroid Field 2",
+      "kind": "nav",
+      "position": [
+        -150000,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "Beta Nav 3",
+      "kind": "nav",
+      "position": [
+        66667,
+        66667,
+        66667
+      ]
+    },
+    {
+      "name": "Asteroid Field 4",
+      "kind": "nav",
+      "position": [
+        -33333,
+        66667,
+        -166667
+      ],
+      "encounters": [
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "pirate",
+              "ship": "talon",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "chance": 70,
+          "members": [
+            {
+              "faction": "pirate",
+              "ship": "talon",
+              "count": 4
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Gamma Jump",
+      "kind": "jump",
+      "position": [
+        -166667,
+        -66667,
+        166667
+      ],
+      "links_to": "gamma",
+      "links_to_nav": "Beta Jump",
+      "encounters": [
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "pirate",
+              "ship": "talon",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "chance": 40,
+          "members": [
+            {
+              "faction": "pirate",
+              "ship": "talon",
+              "count": 2
+            },
+            {
+              "faction": "pirate",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "pirate",
+              "ship": "talon",
+              "count": 4
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "encounters": [],
+  "player_start": {
+    "position": [
+      66667,
+      66667,
+      66667
+    ],
+    "look_at": [
+      -83333,
+      26667,
+      -6667
+    ]
+  }
+}

@@ -1,0 +1,431 @@
+{
+  "name": "Perry",
+  "description": "Clarke Quadrant / Gemini Sector. Jump links: Midgard , Newcastle , New Detroit , Nitir , Ragnarok , Surtur , Tingerhoff. Random mission opponents: All Confederation. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
+  "skybox_seed": "perry",
+  "star": {
+    "preset": "yellow"
+  },
+  "asteroid_fields": [],
+  "placed_sprites": [
+    {
+      "sprite": "sprites/mining_base",
+      "position": [
+        -166667,
+        66667,
+        -166667
+      ],
+      "length_meters": 3000
+    },
+    {
+      "sprite": "sprites/mining_base",
+      "position": [
+        166667,
+        100000,
+        166667
+      ],
+      "length_meters": 3000
+    }
+  ],
+  "nav_points": [
+    {
+      "name": "Ragnarok Jump",
+      "kind": "jump",
+      "position": [
+        -66667,
+        -66667,
+        166667
+      ],
+      "links_to": "ragnarok",
+      "links_to_nav": "Perry Jump",
+      "encounters": [
+        {
+          "chance": 50,
+          "members": [
+            {
+              "faction": "confed",
+              "ship": "stiletto",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "chance": 50,
+          "members": [
+            {
+              "faction": "confed",
+              "ship": "broadsword",
+              "count": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Nitir Jump",
+      "kind": "jump",
+      "position": [
+        -200000,
+        66667,
+        66667
+      ],
+      "links_to": "nitir",
+      "links_to_nav": "Perry Jump",
+      "encounters": [
+        {
+          "chance": 40,
+          "members": [
+            {
+              "faction": "confed",
+              "ship": "stiletto",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "hunter",
+              "ship": "centurion",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "confed",
+              "ship": "broadsword",
+              "count": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Midgard Jump",
+      "kind": "jump",
+      "position": [
+        -83333,
+        133333,
+        -66667
+      ],
+      "links_to": "midgard",
+      "links_to_nav": "Perry Jump",
+      "encounters": [
+        {
+          "chance": 45,
+          "members": [
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 1
+            },
+            {
+              "faction": "confed",
+              "ship": "stiletto",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "chance": 35,
+          "members": [
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "chance": 20,
+          "members": [
+            {
+              "faction": "confed",
+              "ship": "paradigm",
+              "count": 1
+            },
+            {
+              "faction": "confed",
+              "ship": "stiletto",
+              "count": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Anapolis Refinery Base",
+      "kind": "station",
+      "position": [
+        -166667,
+        66667,
+        -166667
+      ],
+      "dockable": true,
+      "base_id": "anapolis_refinery",
+      "encounters": [
+        {
+          "chance": 50,
+          "members": [
+            {
+              "faction": "confed",
+              "ship": "broadsword",
+              "count": 3
+            },
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "chance": 50,
+          "members": [
+            {
+              "faction": "confed",
+              "ship": "stiletto",
+              "count": 4
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "New Detroit Jump",
+      "kind": "jump",
+      "position": [
+        33333,
+        66667,
+        -133333
+      ],
+      "links_to": "new_detroit",
+      "links_to_nav": "Perry Jump",
+      "encounters": [
+        {
+          "chance": 50,
+          "members": [
+            {
+              "faction": "confed",
+              "ship": "stiletto",
+              "count": 3
+            },
+            {
+              "faction": "confed",
+              "ship": "paradigm",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "hunter",
+              "ship": "centurion",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Newcastle Jump",
+      "kind": "jump",
+      "position": [
+        133333,
+        0,
+        -166667
+      ],
+      "links_to": "newcastle",
+      "links_to_nav": "Perry Jump",
+      "encounters": [
+        {
+          "chance": 50,
+          "members": [
+            {
+              "faction": "hunter",
+              "ship": "orion",
+              "count": 1
+            },
+            {
+              "faction": "confed",
+              "ship": "stiletto",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "chance": 50,
+          "members": [
+            {
+              "faction": "confed",
+              "ship": "stiletto",
+              "count": 4
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Surtur Jump",
+      "kind": "jump",
+      "position": [
+        166667,
+        -33333,
+        0
+      ],
+      "links_to": "surtur",
+      "links_to_nav": "Perry Jump",
+      "encounters": [
+        {
+          "chance": 35,
+          "members": [
+            {
+              "faction": "confed",
+              "ship": "stiletto",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 35,
+          "members": [
+            {
+              "faction": "confed",
+              "ship": "broadsword",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "hunter",
+              "ship": "centurion",
+              "count": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Tingerhoff Jump",
+      "kind": "jump",
+      "position": [
+        66667,
+        0,
+        66667
+      ],
+      "links_to": "tingerhoff",
+      "links_to_nav": "Perry Jump",
+      "encounters": [
+        {
+          "chance": 40,
+          "members": [
+            {
+              "faction": "confed",
+              "ship": "stiletto",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "chance": 40,
+          "members": [
+            {
+              "faction": "confed",
+              "ship": "broadsword",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "chance": 20,
+          "members": [
+            {
+              "faction": "confed",
+              "ship": "stiletto",
+              "count": 3
+            },
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Perry Naval Base Military Starbase",
+      "kind": "station",
+      "position": [
+        166667,
+        100000,
+        166667
+      ],
+      "dockable": true,
+      "base_id": "perry_naval",
+      "encounters": [
+        {
+          "chance": 50,
+          "members": [
+            {
+              "faction": "confed",
+              "ship": "stiletto",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "chance": 50,
+          "members": [
+            {
+              "faction": "confed",
+              "ship": "paradigm",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "chance": 50,
+          "members": [
+            {
+              "faction": "confed",
+              "ship": "broadsword",
+              "count": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "encounters": [],
+  "player_start": {
+    "position": [
+      166667,
+      100000,
+      166667
+    ],
+    "look_at": [
+      5556,
+      37037,
+      -7407
+    ]
+  }
+}

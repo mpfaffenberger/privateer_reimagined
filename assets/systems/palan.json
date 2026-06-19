@@ -1,0 +1,328 @@
+{
+  "name": "Palan",
+  "description": "Fariss Quadrant / Gemini Sector. Jump links: Tingerhoff , Xytani. Random mission opponents: 2/3 Bounty Hunter, 1/3 Pirate. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
+  "skybox_seed": "palan",
+  "star": {
+    "preset": "yellow"
+  },
+  "asteroid_fields": [
+    {
+      "center": [
+        -25000,
+        33333,
+        40000
+      ],
+      "half_extent": [
+        40000,
+        12000,
+        40000
+      ],
+      "count": 320,
+      "base_radius": 120,
+      "seed": 173531138
+    }
+  ],
+  "placed_sprites": [
+    {
+      "sprite": "sprites/helen_planet",
+      "position": [
+        -166667,
+        0,
+        50000
+      ],
+      "length_meters": 2000
+    },
+    {
+      "sprite": "sprites/mining_base",
+      "position": [
+        166667,
+        66667,
+        33333
+      ],
+      "length_meters": 3000
+    }
+  ],
+  "nav_points": [
+    {
+      "name": "Tingerhoff Jump",
+      "kind": "jump",
+      "position": [
+        -133333,
+        -33333,
+        -166667
+      ],
+      "links_to": "tingerhoff",
+      "links_to_nav": "Palan Jump",
+      "encounters": [
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "militia",
+              "ship": "talon",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "chance": 20,
+          "members": [
+            {
+              "faction": "pirate",
+              "ship": "talon",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "chance": 15,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "orion",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "chance": 10,
+          "members": [
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 1
+            },
+            {
+              "faction": "retro",
+              "ship": "talon",
+              "count": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Asteroid Field 2",
+      "kind": "nav",
+      "position": [
+        -25000,
+        33333,
+        40000
+      ],
+      "encounters": [
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "pirate",
+              "ship": "talon",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "pirate",
+              "ship": "talon",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "militia",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 10,
+          "members": [
+            {
+              "faction": "retro",
+              "ship": "talon",
+              "count": 4
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Xytani Jump",
+      "kind": "jump",
+      "position": [
+        100000,
+        0,
+        -133333
+      ],
+      "links_to": "xytani",
+      "links_to_nav": "Palan Jump",
+      "encounters": [
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "pirate",
+              "ship": "talon",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "pirate",
+              "ship": "talon",
+              "count": 3
+            },
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "militia",
+              "ship": "talon",
+              "count": 3
+            },
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "hunter",
+              "ship": "centurion",
+              "count": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Palan Agricultural Planet",
+      "kind": "planet",
+      "position": [
+        -166667,
+        0,
+        50000
+      ],
+      "dockable": true,
+      "base_id": "palan",
+      "encounters": [
+        {
+          "chance": 100,
+          "members": [
+            {
+              "faction": "hunter",
+              "ship": "centurion",
+              "count": 3
+            },
+            {
+              "faction": "hunter",
+              "ship": "centurion",
+              "count": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Basra Refinery Base",
+      "kind": "station",
+      "position": [
+        166667,
+        66667,
+        33333
+      ],
+      "dockable": true,
+      "base_id": "basra_refinery",
+      "encounters": [
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "militia",
+              "ship": "talon",
+              "count": 3
+            },
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "confed",
+              "ship": "broadsword",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "pirate",
+              "ship": "talon",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "orion",
+              "count": 4
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "encounters": [],
+  "player_start": {
+    "position": [
+      166667,
+      66667,
+      33333
+    ],
+    "look_at": [
+      -11667,
+      13333,
+      -35333
+    ]
+  }
+}

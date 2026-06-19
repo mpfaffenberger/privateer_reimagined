@@ -1,74 +1,1716 @@
 {
-  // ---------------------------------------------------------------------------
-  // galaxy.json — the top-level universe descriptor (np-6al.1).
-  //
-  // This is the data layer the jump mechanic (np-6al.3) rides on. It does TWO
-  // things and nothing else:
-  //
-  //   1. `systems` — the catalog of every known star system. Each entry maps a
-  //      stable `id` (the key everything else references: player.current_system,
-  //      save files, jump links) to its display name, sector, a coarse 2D
-  //      `galaxy_position` for the future jump-map UI, and the `json_path` of
-  //      the per-system file the existing load_system() already knows how to
-  //      parse. The game still loads exactly ONE system's full JSON at a time —
-  //      this file just tells it which files exist and how they connect.
-  //
-  //   2. `jumps` — the jump topology. Each link is DIRECTED: from a (system,
-  //      nav-point) to a (system, arrival nav-point). We author them in
-  //      reciprocal pairs (Troy→Pyrenees AND Pyrenees→Troy) so a ship can jump
-  //      back the way it came and arrive at the matching gate. galaxy::jump_target
-  //      (system, nav) walks this list to answer "where does this jump point
-  //      lead, and which gate do I pop out of on the far side?".
-  //
-  // Authoring note: the `from_nav` / `to_nav` strings MUST match a NavPointDef
-  // `name` of kind "jump" in the respective system JSON, or the link resolves
-  // to nothing. The starter cluster below is Troy + three neighbours named for
-  // Troy's existing jump-point stubs (Pyrenees, Pender's Star, Regallis). The
-  // fourth Troy stub ("War Jump") is intentionally left dangling — an unsurveyed
-  // frontier gate, here so the "jump leads nowhere yet" path has test coverage.
-  // ---------------------------------------------------------------------------
   "systems": [
     {
-      "id":              "troy",
-      "display_name":    "Troy",
-      "sector":          "Troy Sector",
-      "galaxy_position": [0, 0],
-      "json_path":       "assets/systems/troy.json"
+      "id": "penders_star",
+      "display_name": "Pender's Star",
+      "sector": "Humboldt Quadrant",
+      "galaxy_position": [
+        -8,
+        -8
+      ],
+      "json_path": "assets/systems/penders_star.json"
     },
     {
-      "id":              "pyrenees",
-      "display_name":    "Pyrenees",
-      "sector":          "Troy Sector",
-      "galaxy_position": [-3, 1],
-      "json_path":       "assets/systems/pyrenees.json"
+      "id": "17_ar",
+      "display_name": "17-AR",
+      "sector": "Fariss Quadrant",
+      "galaxy_position": [
+        -8,
+        4
+      ],
+      "json_path": "assets/systems/17_ar.json"
     },
     {
-      "id":              "penders_star",
-      "display_name":    "Pender's Star",
-      "sector":          "Clarke Sector",
-      "galaxy_position": [2, 3],
-      "json_path":       "assets/systems/penders_star.json"
+      "id": "beta",
+      "display_name": "Beta",
+      "sector": "Fariss Quadrant",
+      "galaxy_position": [
+        -7,
+        4
+      ],
+      "json_path": "assets/systems/beta.json"
     },
     {
-      "id":              "regallis",
-      "display_name":    "Regallis",
-      "sector":          "Clarke Sector",
-      "galaxy_position": [3, -2],
-      "json_path":       "assets/systems/regallis.json"
+      "id": "capella",
+      "display_name": "Capella",
+      "sector": "Fariss Quadrant",
+      "galaxy_position": [
+        -6,
+        4
+      ],
+      "json_path": "assets/systems/capella.json"
+    },
+    {
+      "id": "castor",
+      "display_name": "Castor",
+      "sector": "Fariss Quadrant",
+      "galaxy_position": [
+        -5,
+        4
+      ],
+      "json_path": "assets/systems/castor.json"
+    },
+    {
+      "id": "crab_12",
+      "display_name": "Crab-12",
+      "sector": "Fariss Quadrant",
+      "galaxy_position": [
+        -4,
+        4
+      ],
+      "json_path": "assets/systems/crab_12.json"
+    },
+    {
+      "id": "death",
+      "display_name": "Death",
+      "sector": "Fariss Quadrant",
+      "galaxy_position": [
+        -8,
+        5
+      ],
+      "json_path": "assets/systems/death.json"
+    },
+    {
+      "id": "delta",
+      "display_name": "Delta",
+      "sector": "Fariss Quadrant",
+      "galaxy_position": [
+        -7,
+        5
+      ],
+      "json_path": "assets/systems/delta.json"
+    },
+    {
+      "id": "delta_prime",
+      "display_name": "Delta Prime",
+      "sector": "Fariss Quadrant",
+      "galaxy_position": [
+        -6,
+        5
+      ],
+      "json_path": "assets/systems/delta_prime.json"
+    },
+    {
+      "id": "eden",
+      "display_name": "Eden",
+      "sector": "Fariss Quadrant",
+      "galaxy_position": [
+        -5,
+        5
+      ],
+      "json_path": "assets/systems/eden.json"
+    },
+    {
+      "id": "famine",
+      "display_name": "Famine",
+      "sector": "Fariss Quadrant",
+      "galaxy_position": [
+        -4,
+        5
+      ],
+      "json_path": "assets/systems/famine.json"
+    },
+    {
+      "id": "gamma",
+      "display_name": "Gamma",
+      "sector": "Potter Quadrant",
+      "galaxy_position": [
+        4,
+        -8
+      ],
+      "json_path": "assets/systems/gamma.json"
+    },
+    {
+      "id": "j900",
+      "display_name": "J900",
+      "sector": "Fariss Quadrant",
+      "galaxy_position": [
+        -8,
+        6
+      ],
+      "json_path": "assets/systems/j900.json"
+    },
+    {
+      "id": "km_252",
+      "display_name": "KM-252",
+      "sector": "Fariss Quadrant",
+      "galaxy_position": [
+        -7,
+        6
+      ],
+      "json_path": "assets/systems/km_252.json"
+    },
+    {
+      "id": "new_caledonia",
+      "display_name": "New Caledonia",
+      "sector": "Fariss Quadrant",
+      "galaxy_position": [
+        -6,
+        6
+      ],
+      "json_path": "assets/systems/new_caledonia.json"
+    },
+    {
+      "id": "nexus",
+      "display_name": "Nexus",
+      "sector": "Fariss Quadrant",
+      "galaxy_position": [
+        -5,
+        6
+      ],
+      "json_path": "assets/systems/nexus.json"
+    },
+    {
+      "id": "palan",
+      "display_name": "Palan",
+      "sector": "Fariss Quadrant",
+      "galaxy_position": [
+        -4,
+        6
+      ],
+      "json_path": "assets/systems/palan.json"
+    },
+    {
+      "id": "pestilence",
+      "display_name": "Pestilence",
+      "sector": "Fariss Quadrant",
+      "galaxy_position": [
+        -8,
+        7
+      ],
+      "json_path": "assets/systems/pestilence.json"
+    },
+    {
+      "id": "regallis",
+      "display_name": "Regallis",
+      "sector": "Fariss Quadrant",
+      "galaxy_position": [
+        -7,
+        7
+      ],
+      "json_path": "assets/systems/regallis.json"
+    },
+    {
+      "id": "rygannon",
+      "display_name": "Rygannon",
+      "sector": "Fariss Quadrant",
+      "galaxy_position": [
+        -6,
+        7
+      ],
+      "json_path": "assets/systems/rygannon.json"
+    },
+    {
+      "id": "sherwood",
+      "display_name": "Sherwood",
+      "sector": "Fariss Quadrant",
+      "galaxy_position": [
+        -5,
+        7
+      ],
+      "json_path": "assets/systems/sherwood.json"
+    },
+    {
+      "id": "telar",
+      "display_name": "Telar",
+      "sector": "Fariss Quadrant",
+      "galaxy_position": [
+        -4,
+        7
+      ],
+      "json_path": "assets/systems/telar.json"
+    },
+    {
+      "id": "valhalla",
+      "display_name": "Valhalla",
+      "sector": "Humboldt Quadrant",
+      "galaxy_position": [
+        -7,
+        -8
+      ],
+      "json_path": "assets/systems/valhalla.json"
+    },
+    {
+      "id": "war",
+      "display_name": "War",
+      "sector": "Fariss Quadrant",
+      "galaxy_position": [
+        -8,
+        8
+      ],
+      "json_path": "assets/systems/war.json"
+    },
+    {
+      "id": "xytani",
+      "display_name": "Xytani",
+      "sector": "Fariss Quadrant",
+      "galaxy_position": [
+        -7,
+        8
+      ],
+      "json_path": "assets/systems/xytani.json"
+    },
+    {
+      "id": "blockade_point_alpha",
+      "display_name": "Blockade Point Alpha",
+      "sector": "Clarke Quadrant",
+      "galaxy_position": [
+        4,
+        4
+      ],
+      "json_path": "assets/systems/blockade_point_alpha.json"
+    },
+    {
+      "id": "blockade_point_charlie",
+      "display_name": "Blockade Point Charlie",
+      "sector": "Clarke Quadrant",
+      "galaxy_position": [
+        5,
+        4
+      ],
+      "json_path": "assets/systems/blockade_point_charlie.json"
+    },
+    {
+      "id": "blockade_point_tango",
+      "display_name": "Blockade Point Tango",
+      "sector": "Clarke Quadrant",
+      "galaxy_position": [
+        6,
+        4
+      ],
+      "json_path": "assets/systems/blockade_point_tango.json"
+    },
+    {
+      "id": "cmf_a",
+      "display_name": "CMF-A",
+      "sector": "Clarke Quadrant",
+      "galaxy_position": [
+        7,
+        4
+      ],
+      "json_path": "assets/systems/cmf_a.json"
+    },
+    {
+      "id": "hyades",
+      "display_name": "Hyades",
+      "sector": "Clarke Quadrant",
+      "galaxy_position": [
+        8,
+        4
+      ],
+      "json_path": "assets/systems/hyades.json"
+    },
+    {
+      "id": "lisacc",
+      "display_name": "Lisacc",
+      "sector": "Clarke Quadrant",
+      "galaxy_position": [
+        4,
+        5
+      ],
+      "json_path": "assets/systems/lisacc.json"
+    },
+    {
+      "id": "mahrahn",
+      "display_name": "Mah'Rahn",
+      "sector": "Clarke Quadrant",
+      "galaxy_position": [
+        5,
+        5
+      ],
+      "json_path": "assets/systems/mahrahn.json"
+    },
+    {
+      "id": "midgard",
+      "display_name": "Midgard",
+      "sector": "Clarke Quadrant",
+      "galaxy_position": [
+        6,
+        5
+      ],
+      "json_path": "assets/systems/midgard.json"
+    },
+    {
+      "id": "nitir",
+      "display_name": "Nitir",
+      "sector": "Clarke Quadrant",
+      "galaxy_position": [
+        7,
+        5
+      ],
+      "json_path": "assets/systems/nitir.json"
+    },
+    {
+      "id": "perry",
+      "display_name": "Perry",
+      "sector": "Clarke Quadrant",
+      "galaxy_position": [
+        8,
+        5
+      ],
+      "json_path": "assets/systems/perry.json"
+    },
+    {
+      "id": "ragnarok",
+      "display_name": "Ragnarok",
+      "sector": "Clarke Quadrant",
+      "galaxy_position": [
+        4,
+        6
+      ],
+      "json_path": "assets/systems/ragnarok.json"
+    },
+    {
+      "id": "rikel",
+      "display_name": "Rikel",
+      "sector": "Clarke Quadrant",
+      "galaxy_position": [
+        5,
+        6
+      ],
+      "json_path": "assets/systems/rikel.json"
+    },
+    {
+      "id": "sumn_kpta",
+      "display_name": "Sumn-Kp'ta",
+      "sector": "Clarke Quadrant",
+      "galaxy_position": [
+        6,
+        6
+      ],
+      "json_path": "assets/systems/sumn_kpta.json"
+    },
+    {
+      "id": "surtur",
+      "display_name": "Surtur",
+      "sector": "Clarke Quadrant",
+      "galaxy_position": [
+        7,
+        6
+      ],
+      "json_path": "assets/systems/surtur.json"
+    },
+    {
+      "id": "tingerhoff",
+      "display_name": "Tingerhoff",
+      "sector": "Clarke Quadrant",
+      "galaxy_position": [
+        8,
+        6
+      ],
+      "json_path": "assets/systems/tingerhoff.json"
+    },
+    {
+      "id": "trpakh",
+      "display_name": "Tr'Pakh",
+      "sector": "Clarke Quadrant",
+      "galaxy_position": [
+        4,
+        7
+      ],
+      "json_path": "assets/systems/trpakh.json"
+    },
+    {
+      "id": "119ce",
+      "display_name": "119CE",
+      "sector": "Humboldt Quadrant",
+      "galaxy_position": [
+        -6,
+        -8
+      ],
+      "json_path": "assets/systems/119ce.json"
+    },
+    {
+      "id": "cm_n1054",
+      "display_name": "CM-N1054",
+      "sector": "Humboldt Quadrant",
+      "galaxy_position": [
+        -5,
+        -8
+      ],
+      "json_path": "assets/systems/cm_n1054.json"
+    },
+    {
+      "id": "freyja",
+      "display_name": "Freyja",
+      "sector": "Humboldt Quadrant",
+      "galaxy_position": [
+        -4,
+        -8
+      ],
+      "json_path": "assets/systems/freyja.json"
+    },
+    {
+      "id": "junction",
+      "display_name": "Junction",
+      "sector": "Humboldt Quadrant",
+      "galaxy_position": [
+        -8,
+        -7
+      ],
+      "json_path": "assets/systems/junction.json"
+    },
+    {
+      "id": "padre",
+      "display_name": "Padre",
+      "sector": "Humboldt Quadrant",
+      "galaxy_position": [
+        -7,
+        -7
+      ],
+      "json_path": "assets/systems/padre.json"
+    },
+    {
+      "id": "pentonville",
+      "display_name": "Pentonville",
+      "sector": "Humboldt Quadrant",
+      "galaxy_position": [
+        -6,
+        -7
+      ],
+      "json_path": "assets/systems/pentonville.json"
+    },
+    {
+      "id": "pollux",
+      "display_name": "Pollux",
+      "sector": "Humboldt Quadrant",
+      "galaxy_position": [
+        -5,
+        -7
+      ],
+      "json_path": "assets/systems/pollux.json"
+    },
+    {
+      "id": "prasepe",
+      "display_name": "Prasepe",
+      "sector": "Humboldt Quadrant",
+      "galaxy_position": [
+        -4,
+        -7
+      ],
+      "json_path": "assets/systems/prasepe.json"
+    },
+    {
+      "id": "pyrenees",
+      "display_name": "Pyrenees",
+      "sector": "Humboldt Quadrant",
+      "galaxy_position": [
+        -8,
+        -6
+      ],
+      "json_path": "assets/systems/pyrenees.json"
+    },
+    {
+      "id": "troy",
+      "display_name": "Troy",
+      "sector": "Humboldt Quadrant",
+      "galaxy_position": [
+        -7,
+        -6
+      ],
+      "json_path": "assets/systems/troy.json"
+    },
+    {
+      "id": "varnus",
+      "display_name": "Varnus",
+      "sector": "Humboldt Quadrant",
+      "galaxy_position": [
+        -6,
+        -6
+      ],
+      "json_path": "assets/systems/varnus.json"
+    },
+    {
+      "id": "41_gs",
+      "display_name": "41-GS",
+      "sector": "Potter Quadrant",
+      "galaxy_position": [
+        5,
+        -8
+      ],
+      "json_path": "assets/systems/41_gs.json"
+    },
+    {
+      "id": "44_p_1m",
+      "display_name": "44-P-1M",
+      "sector": "Potter Quadrant",
+      "galaxy_position": [
+        6,
+        -8
+      ],
+      "json_path": "assets/systems/44_p_1m.json"
+    },
+    {
+      "id": "aldebran",
+      "display_name": "Aldebran",
+      "sector": "Potter Quadrant",
+      "galaxy_position": [
+        7,
+        -8
+      ],
+      "json_path": "assets/systems/aldebran.json"
+    },
+    {
+      "id": "auriga",
+      "display_name": "Auriga",
+      "sector": "Potter Quadrant",
+      "galaxy_position": [
+        8,
+        -8
+      ],
+      "json_path": "assets/systems/auriga.json"
+    },
+    {
+      "id": "dn_n1912",
+      "display_name": "DN-N1912",
+      "sector": "Potter Quadrant",
+      "galaxy_position": [
+        4,
+        -7
+      ],
+      "json_path": "assets/systems/dn_n1912.json"
+    },
+    {
+      "id": "hinds_variable_north",
+      "display_name": "Hind's Variable North",
+      "sector": "Potter Quadrant",
+      "galaxy_position": [
+        5,
+        -7
+      ],
+      "json_path": "assets/systems/hinds_variable_north.json"
+    },
+    {
+      "id": "manchester",
+      "display_name": "Manchester",
+      "sector": "Potter Quadrant",
+      "galaxy_position": [
+        6,
+        -7
+      ],
+      "json_path": "assets/systems/manchester.json"
+    },
+    {
+      "id": "metsor",
+      "display_name": "Metsor",
+      "sector": "Potter Quadrant",
+      "galaxy_position": [
+        7,
+        -7
+      ],
+      "json_path": "assets/systems/metsor.json"
+    },
+    {
+      "id": "nd_57",
+      "display_name": "ND-57",
+      "sector": "Potter Quadrant",
+      "galaxy_position": [
+        8,
+        -7
+      ],
+      "json_path": "assets/systems/nd_57.json"
+    },
+    {
+      "id": "newcastle",
+      "display_name": "Newcastle",
+      "sector": "Potter Quadrant",
+      "galaxy_position": [
+        4,
+        -6
+      ],
+      "json_path": "assets/systems/newcastle.json"
+    },
+    {
+      "id": "new_constantinople",
+      "display_name": "New Constantinople",
+      "sector": "Potter Quadrant",
+      "galaxy_position": [
+        5,
+        -6
+      ],
+      "json_path": "assets/systems/new_constantinople.json"
+    },
+    {
+      "id": "new_detroit",
+      "display_name": "New Detroit",
+      "sector": "Potter Quadrant",
+      "galaxy_position": [
+        6,
+        -6
+      ],
+      "json_path": "assets/systems/new_detroit.json"
+    },
+    {
+      "id": "oxford",
+      "display_name": "Oxford",
+      "sector": "Potter Quadrant",
+      "galaxy_position": [
+        7,
+        -6
+      ],
+      "json_path": "assets/systems/oxford.json"
+    },
+    {
+      "id": "raxis",
+      "display_name": "Raxis",
+      "sector": "Potter Quadrant",
+      "galaxy_position": [
+        8,
+        -6
+      ],
+      "json_path": "assets/systems/raxis.json"
+    },
+    {
+      "id": "saxtogue",
+      "display_name": "Saxtogue",
+      "sector": "Potter Quadrant",
+      "galaxy_position": [
+        4,
+        -5
+      ],
+      "json_path": "assets/systems/saxtogue.json"
+    },
+    {
+      "id": "shangri_la",
+      "display_name": "Shangri La",
+      "sector": "Potter Quadrant",
+      "galaxy_position": [
+        5,
+        -5
+      ],
+      "json_path": "assets/systems/shangri_la.json"
+    },
+    {
+      "id": "xxn_1927",
+      "display_name": "XXN-1927",
+      "sector": "Potter Quadrant",
+      "galaxy_position": [
+        6,
+        -5
+      ],
+      "json_path": "assets/systems/xxn_1927.json"
     }
   ],
-
   "jumps": [
-    // Troy <-> Pyrenees
-    { "from": "troy",         "from_nav": "Pyrenees Jump",      "to": "pyrenees",     "to_nav": "Troy Jump" },
-    { "from": "pyrenees",     "from_nav": "Troy Jump",          "to": "troy",         "to_nav": "Pyrenees Jump" },
-
-    // Troy <-> Pender's Star
-    { "from": "troy",         "from_nav": "Pender's Star Jump", "to": "penders_star", "to_nav": "Troy Jump" },
-    { "from": "penders_star", "from_nav": "Troy Jump",          "to": "troy",         "to_nav": "Pender's Star Jump" },
-
-    // Troy <-> Regallis
-    { "from": "troy",         "from_nav": "Regallis Jump",      "to": "regallis",     "to_nav": "Troy Jump" },
-    { "from": "regallis",     "from_nav": "Troy Jump",          "to": "troy",         "to_nav": "Regallis Jump" }
+    {
+      "from": "penders_star",
+      "from_nav": "Junction Jump",
+      "to": "junction",
+      "to_nav": "Pender's Star Jump"
+    },
+    {
+      "from": "penders_star",
+      "from_nav": "Troy Jump",
+      "to": "troy",
+      "to_nav": "Pender's Star Jump"
+    },
+    {
+      "from": "17_ar",
+      "from_nav": "New Caledonia Jump",
+      "to": "new_caledonia",
+      "to_nav": "17-AR Jump"
+    },
+    {
+      "from": "17_ar",
+      "from_nav": "Telar Jump",
+      "to": "telar",
+      "to_nav": "17-AR Jump"
+    },
+    {
+      "from": "beta",
+      "from_nav": "Delta Jump",
+      "to": "delta",
+      "to_nav": "Beta Jump"
+    },
+    {
+      "from": "beta",
+      "from_nav": "Gamma Jump",
+      "to": "gamma",
+      "to_nav": "Beta Jump"
+    },
+    {
+      "from": "capella",
+      "from_nav": "Crab-12 Jump",
+      "to": "crab_12",
+      "to_nav": "Capella Jump"
+    },
+    {
+      "from": "capella",
+      "from_nav": "Sherwood Jump",
+      "to": "sherwood",
+      "to_nav": "Capella Jump"
+    },
+    {
+      "from": "capella",
+      "from_nav": "Famine Jump",
+      "to": "famine",
+      "to_nav": "Capella Jump"
+    },
+    {
+      "from": "capella",
+      "from_nav": "Nexus Jump",
+      "to": "nexus",
+      "to_nav": "Capella Jump"
+    },
+    {
+      "from": "castor",
+      "from_nav": "Junction Jump",
+      "to": "junction",
+      "to_nav": "Castor Jump"
+    },
+    {
+      "from": "crab_12",
+      "from_nav": "New Caledonia Jump",
+      "to": "new_caledonia",
+      "to_nav": "Crab-12 Jump"
+    },
+    {
+      "from": "crab_12",
+      "from_nav": "Capella Jump",
+      "to": "capella",
+      "to_nav": "Crab-12 Jump"
+    },
+    {
+      "from": "death",
+      "from_nav": "Pestilence Jump",
+      "to": "pestilence",
+      "to_nav": "Death Jump"
+    },
+    {
+      "from": "death",
+      "from_nav": "Famine Jump",
+      "to": "famine",
+      "to_nav": "Death Jump"
+    },
+    {
+      "from": "delta",
+      "from_nav": "Rygannon Jump",
+      "to": "rygannon",
+      "to_nav": "Delta Jump"
+    },
+    {
+      "from": "delta",
+      "from_nav": "Beta Jump",
+      "to": "beta",
+      "to_nav": "Delta Jump"
+    },
+    {
+      "from": "delta_prime",
+      "from_nav": "Gamma Jump",
+      "to": "gamma",
+      "to_nav": "Delta Prime Jump"
+    },
+    {
+      "from": "eden",
+      "from_nav": "Valhalla Jump",
+      "to": "valhalla",
+      "to_nav": "Eden Jump"
+    },
+    {
+      "from": "eden",
+      "from_nav": "Rikel Jump",
+      "to": "rikel",
+      "to_nav": "Eden Jump"
+    },
+    {
+      "from": "famine",
+      "from_nav": "Death Jump",
+      "to": "death",
+      "to_nav": "Famine Jump"
+    },
+    {
+      "from": "famine",
+      "from_nav": "Sherwood Jump",
+      "to": "sherwood",
+      "to_nav": "Famine Jump"
+    },
+    {
+      "from": "famine",
+      "from_nav": "Capella Jump",
+      "to": "capella",
+      "to_nav": "Famine Jump"
+    },
+    {
+      "from": "gamma",
+      "from_nav": "Beta Jump",
+      "to": "beta",
+      "to_nav": "Gamma Jump"
+    },
+    {
+      "from": "gamma",
+      "from_nav": "Delta Prime Jump",
+      "to": "delta_prime",
+      "to_nav": "Gamma Jump"
+    },
+    {
+      "from": "j900",
+      "from_nav": "Junction Jump",
+      "to": "junction",
+      "to_nav": "J900 Jump"
+    },
+    {
+      "from": "j900",
+      "from_nav": "Telar Jump",
+      "to": "telar",
+      "to_nav": "J900 Jump"
+    },
+    {
+      "from": "km_252",
+      "from_nav": "Nexus Jump",
+      "to": "nexus",
+      "to_nav": "KM-252 Jump"
+    },
+    {
+      "from": "new_caledonia",
+      "from_nav": "Prasepe Jump",
+      "to": "prasepe",
+      "to_nav": "New Caledonia Jump"
+    },
+    {
+      "from": "new_caledonia",
+      "from_nav": "17-AR Jump",
+      "to": "17_ar",
+      "to_nav": "New Caledonia Jump"
+    },
+    {
+      "from": "new_caledonia",
+      "from_nav": "Crab-12 Jump",
+      "to": "crab_12",
+      "to_nav": "New Caledonia Jump"
+    },
+    {
+      "from": "new_caledonia",
+      "from_nav": "Sherwood Jump",
+      "to": "sherwood",
+      "to_nav": "New Caledonia Jump"
+    },
+    {
+      "from": "nexus",
+      "from_nav": "Junction Jump",
+      "to": "junction",
+      "to_nav": "Nexus Jump"
+    },
+    {
+      "from": "nexus",
+      "from_nav": "Tingerhoff Jump",
+      "to": "tingerhoff",
+      "to_nav": "Nexus Jump"
+    },
+    {
+      "from": "nexus",
+      "from_nav": "Capella Jump",
+      "to": "capella",
+      "to_nav": "Nexus Jump"
+    },
+    {
+      "from": "nexus",
+      "from_nav": "KM-252 Jump",
+      "to": "km_252",
+      "to_nav": "Nexus Jump"
+    },
+    {
+      "from": "palan",
+      "from_nav": "Tingerhoff Jump",
+      "to": "tingerhoff",
+      "to_nav": "Palan Jump"
+    },
+    {
+      "from": "palan",
+      "from_nav": "Xytani Jump",
+      "to": "xytani",
+      "to_nav": "Palan Jump"
+    },
+    {
+      "from": "pestilence",
+      "from_nav": "Death Jump",
+      "to": "death",
+      "to_nav": "Pestilence Jump"
+    },
+    {
+      "from": "pestilence",
+      "from_nav": "War Jump",
+      "to": "war",
+      "to_nav": "Pestilence Jump"
+    },
+    {
+      "from": "regallis",
+      "from_nav": "Freyja Jump",
+      "to": "freyja",
+      "to_nav": "Regallis Jump"
+    },
+    {
+      "from": "regallis",
+      "from_nav": "Troy Jump",
+      "to": "troy",
+      "to_nav": "Regallis Jump"
+    },
+    {
+      "from": "regallis",
+      "from_nav": "Sherwood Jump",
+      "to": "sherwood",
+      "to_nav": "Regallis Jump"
+    },
+    {
+      "from": "rygannon",
+      "from_nav": "Xytani Jump",
+      "to": "xytani",
+      "to_nav": "Rygannon Jump"
+    },
+    {
+      "from": "rygannon",
+      "from_nav": "Delta Jump",
+      "to": "delta",
+      "to_nav": "Rygannon Jump"
+    },
+    {
+      "from": "sherwood",
+      "from_nav": "New Caledonia Jump",
+      "to": "new_caledonia",
+      "to_nav": "Sherwood Jump"
+    },
+    {
+      "from": "sherwood",
+      "from_nav": "Regallis Jump",
+      "to": "regallis",
+      "to_nav": "Sherwood Jump"
+    },
+    {
+      "from": "sherwood",
+      "from_nav": "Pollux Jump",
+      "to": "pollux",
+      "to_nav": "Sherwood Jump"
+    },
+    {
+      "from": "sherwood",
+      "from_nav": "Famine Jump",
+      "to": "famine",
+      "to_nav": "Sherwood Jump"
+    },
+    {
+      "from": "sherwood",
+      "from_nav": "Capella Jump",
+      "to": "capella",
+      "to_nav": "Sherwood Jump"
+    },
+    {
+      "from": "telar",
+      "from_nav": "17-AR Jump",
+      "to": "17_ar",
+      "to_nav": "Telar Jump"
+    },
+    {
+      "from": "telar",
+      "from_nav": "Valhalla Jump",
+      "to": "valhalla",
+      "to_nav": "Telar Jump"
+    },
+    {
+      "from": "telar",
+      "from_nav": "J900 Jump",
+      "to": "j900",
+      "to_nav": "Telar Jump"
+    },
+    {
+      "from": "valhalla",
+      "from_nav": "Telar Jump",
+      "to": "telar",
+      "to_nav": "Valhalla Jump"
+    },
+    {
+      "from": "valhalla",
+      "from_nav": "Eden Jump",
+      "to": "eden",
+      "to_nav": "Valhalla Jump"
+    },
+    {
+      "from": "war",
+      "from_nav": "Pestilence Jump",
+      "to": "pestilence",
+      "to_nav": "War Jump"
+    },
+    {
+      "from": "war",
+      "from_nav": "Troy Jump",
+      "to": "troy",
+      "to_nav": "War Jump"
+    },
+    {
+      "from": "xytani",
+      "from_nav": "Rygannon Jump",
+      "to": "rygannon",
+      "to_nav": "Xytani Jump"
+    },
+    {
+      "from": "xytani",
+      "from_nav": "Palan Jump",
+      "to": "palan",
+      "to_nav": "Xytani Jump"
+    },
+    {
+      "from": "blockade_point_alpha",
+      "from_nav": "Ragnarok Jump",
+      "to": "ragnarok",
+      "to_nav": "Blockade Point Alpha Jump"
+    },
+    {
+      "from": "blockade_point_alpha",
+      "from_nav": "Tr'Pakh Jump",
+      "to": "trpakh",
+      "to_nav": "Blockade Point Alpha Jump"
+    },
+    {
+      "from": "blockade_point_charlie",
+      "from_nav": "Surtur Jump",
+      "to": "surtur",
+      "to_nav": "Blockade Point Charlie Jump"
+    },
+    {
+      "from": "blockade_point_charlie",
+      "from_nav": "Hyades Jump",
+      "to": "hyades",
+      "to_nav": "Blockade Point Charlie Jump"
+    },
+    {
+      "from": "blockade_point_tango",
+      "from_nav": "Lisacc Jump",
+      "to": "lisacc",
+      "to_nav": "Blockade Point Tango Jump"
+    },
+    {
+      "from": "blockade_point_tango",
+      "from_nav": "Nitir Jump",
+      "to": "nitir",
+      "to_nav": "Blockade Point Tango Jump"
+    },
+    {
+      "from": "blockade_point_tango",
+      "from_nav": "Mah'Rahn Jump",
+      "to": "mahrahn",
+      "to_nav": "Blockade Point Tango Jump"
+    },
+    {
+      "from": "cmf_a",
+      "from_nav": "Tingerhoff Jump",
+      "to": "tingerhoff",
+      "to_nav": "CMF-A Jump"
+    },
+    {
+      "from": "cmf_a",
+      "from_nav": "Nitir Jump",
+      "to": "nitir",
+      "to_nav": "CMF-A Jump"
+    },
+    {
+      "from": "hyades",
+      "from_nav": "Blockade Point Charlie Jump",
+      "to": "blockade_point_charlie",
+      "to_nav": "Hyades Jump"
+    },
+    {
+      "from": "hyades",
+      "from_nav": "Sumn-Kp'ta Jump",
+      "to": "sumn_kpta",
+      "to_nav": "Hyades Jump"
+    },
+    {
+      "from": "lisacc",
+      "from_nav": "Blockade Point Tango Jump",
+      "to": "blockade_point_tango",
+      "to_nav": "Lisacc Jump"
+    },
+    {
+      "from": "mahrahn",
+      "from_nav": "Blockade Point Tango Jump",
+      "to": "blockade_point_tango",
+      "to_nav": "Mah'Rahn Jump"
+    },
+    {
+      "from": "midgard",
+      "from_nav": "Perry Jump",
+      "to": "perry",
+      "to_nav": "Midgard Jump"
+    },
+    {
+      "from": "midgard",
+      "from_nav": "Rikel Jump",
+      "to": "rikel",
+      "to_nav": "Midgard Jump"
+    },
+    {
+      "from": "nitir",
+      "from_nav": "Perry Jump",
+      "to": "perry",
+      "to_nav": "Nitir Jump"
+    },
+    {
+      "from": "nitir",
+      "from_nav": "Blockade Point Tango Jump",
+      "to": "blockade_point_tango",
+      "to_nav": "Nitir Jump"
+    },
+    {
+      "from": "nitir",
+      "from_nav": "CMF-A Jump",
+      "to": "cmf_a",
+      "to_nav": "Nitir Jump"
+    },
+    {
+      "from": "perry",
+      "from_nav": "Ragnarok Jump",
+      "to": "ragnarok",
+      "to_nav": "Perry Jump"
+    },
+    {
+      "from": "perry",
+      "from_nav": "Nitir Jump",
+      "to": "nitir",
+      "to_nav": "Perry Jump"
+    },
+    {
+      "from": "perry",
+      "from_nav": "Midgard Jump",
+      "to": "midgard",
+      "to_nav": "Perry Jump"
+    },
+    {
+      "from": "perry",
+      "from_nav": "New Detroit Jump",
+      "to": "new_detroit",
+      "to_nav": "Perry Jump"
+    },
+    {
+      "from": "perry",
+      "from_nav": "Newcastle Jump",
+      "to": "newcastle",
+      "to_nav": "Perry Jump"
+    },
+    {
+      "from": "perry",
+      "from_nav": "Surtur Jump",
+      "to": "surtur",
+      "to_nav": "Perry Jump"
+    },
+    {
+      "from": "perry",
+      "from_nav": "Tingerhoff Jump",
+      "to": "tingerhoff",
+      "to_nav": "Perry Jump"
+    },
+    {
+      "from": "ragnarok",
+      "from_nav": "Blockade Point Alpha Jump",
+      "to": "blockade_point_alpha",
+      "to_nav": "Ragnarok Jump"
+    },
+    {
+      "from": "ragnarok",
+      "from_nav": "Perry Jump",
+      "to": "perry",
+      "to_nav": "Ragnarok Jump"
+    },
+    {
+      "from": "rikel",
+      "from_nav": "New Detroit Jump",
+      "to": "new_detroit",
+      "to_nav": "Rikel Jump"
+    },
+    {
+      "from": "rikel",
+      "from_nav": "Midgard Jump",
+      "to": "midgard",
+      "to_nav": "Rikel Jump"
+    },
+    {
+      "from": "rikel",
+      "from_nav": "44-P-1M Jump",
+      "to": "44_p_1m",
+      "to_nav": "Rikel Jump"
+    },
+    {
+      "from": "rikel",
+      "from_nav": "Eden Jump",
+      "to": "eden",
+      "to_nav": "Rikel Jump"
+    },
+    {
+      "from": "sumn_kpta",
+      "from_nav": "Tr'Pakh Jump",
+      "to": "trpakh",
+      "to_nav": "Sumn-Kp'ta Jump"
+    },
+    {
+      "from": "sumn_kpta",
+      "from_nav": "Hyades Jump",
+      "to": "hyades",
+      "to_nav": "Sumn-Kp'ta Jump"
+    },
+    {
+      "from": "surtur",
+      "from_nav": "Blockade Point Charlie Jump",
+      "to": "blockade_point_charlie",
+      "to_nav": "Surtur Jump"
+    },
+    {
+      "from": "surtur",
+      "from_nav": "Perry Jump",
+      "to": "perry",
+      "to_nav": "Surtur Jump"
+    },
+    {
+      "from": "surtur",
+      "from_nav": "41-GS Jump",
+      "to": "41_gs",
+      "to_nav": "Surtur Jump"
+    },
+    {
+      "from": "tingerhoff",
+      "from_nav": "CMF-A Jump",
+      "to": "cmf_a",
+      "to_nav": "Tingerhoff Jump"
+    },
+    {
+      "from": "tingerhoff",
+      "from_nav": "Palan Jump",
+      "to": "palan",
+      "to_nav": "Tingerhoff Jump"
+    },
+    {
+      "from": "tingerhoff",
+      "from_nav": "Perry Jump",
+      "to": "perry",
+      "to_nav": "Tingerhoff Jump"
+    },
+    {
+      "from": "tingerhoff",
+      "from_nav": "Nexus Jump",
+      "to": "nexus",
+      "to_nav": "Tingerhoff Jump"
+    },
+    {
+      "from": "trpakh",
+      "from_nav": "Sumn-Kp'ta Jump",
+      "to": "sumn_kpta",
+      "to_nav": "Tr'Pakh Jump"
+    },
+    {
+      "from": "trpakh",
+      "from_nav": "Blockade Point Alpha Jump",
+      "to": "blockade_point_alpha",
+      "to_nav": "Tr'Pakh Jump"
+    },
+    {
+      "from": "119ce",
+      "from_nav": "Junction Jump",
+      "to": "junction",
+      "to_nav": "119CE Jump"
+    },
+    {
+      "from": "119ce",
+      "from_nav": "Padre Jump",
+      "to": "padre",
+      "to_nav": "119CE Jump"
+    },
+    {
+      "from": "119ce",
+      "from_nav": "XXN-1927 Jump",
+      "to": "xxn_1927",
+      "to_nav": "119CE Jump"
+    },
+    {
+      "from": "119ce",
+      "from_nav": "Pentonville Jump",
+      "to": "pentonville",
+      "to_nav": "119CE Jump"
+    },
+    {
+      "from": "cm_n1054",
+      "from_nav": "Pyrenees Jump",
+      "to": "pyrenees",
+      "to_nav": "CM-N1054 Jump"
+    },
+    {
+      "from": "freyja",
+      "from_nav": "Pyrenees Jump",
+      "to": "pyrenees",
+      "to_nav": "Freyja Jump"
+    },
+    {
+      "from": "freyja",
+      "from_nav": "Regallis Jump",
+      "to": "regallis",
+      "to_nav": "Freyja Jump"
+    },
+    {
+      "from": "junction",
+      "from_nav": "J900 Jump",
+      "to": "j900",
+      "to_nav": "Junction Jump"
+    },
+    {
+      "from": "junction",
+      "from_nav": "Nexus Jump",
+      "to": "nexus",
+      "to_nav": "Junction Jump"
+    },
+    {
+      "from": "junction",
+      "from_nav": "Castor Jump",
+      "to": "castor",
+      "to_nav": "Junction Jump"
+    },
+    {
+      "from": "junction",
+      "from_nav": "New Constantinople Jump",
+      "to": "new_constantinople",
+      "to_nav": "Junction Jump"
+    },
+    {
+      "from": "junction",
+      "from_nav": "119CE Jump",
+      "to": "119ce",
+      "to_nav": "Junction Jump"
+    },
+    {
+      "from": "junction",
+      "from_nav": "Pender's Star Jump",
+      "to": "penders_star",
+      "to_nav": "Junction Jump"
+    },
+    {
+      "from": "padre",
+      "from_nav": "119CE Jump",
+      "to": "119ce",
+      "to_nav": "Padre Jump"
+    },
+    {
+      "from": "pentonville",
+      "from_nav": "119CE Jump",
+      "to": "119ce",
+      "to_nav": "Pentonville Jump"
+    },
+    {
+      "from": "pollux",
+      "from_nav": "Sherwood Jump",
+      "to": "sherwood",
+      "to_nav": "Pollux Jump"
+    },
+    {
+      "from": "prasepe",
+      "from_nav": "New Caledonia Jump",
+      "to": "new_caledonia",
+      "to_nav": "Prasepe Jump"
+    },
+    {
+      "from": "pyrenees",
+      "from_nav": "Freyja Jump",
+      "to": "freyja",
+      "to_nav": "Pyrenees Jump"
+    },
+    {
+      "from": "pyrenees",
+      "from_nav": "Troy Jump",
+      "to": "troy",
+      "to_nav": "Pyrenees Jump"
+    },
+    {
+      "from": "pyrenees",
+      "from_nav": "CM-N1054 Jump",
+      "to": "cm_n1054",
+      "to_nav": "Pyrenees Jump"
+    },
+    {
+      "from": "troy",
+      "from_nav": "Pyrenees Jump",
+      "to": "pyrenees",
+      "to_nav": "Troy Jump"
+    },
+    {
+      "from": "troy",
+      "from_nav": "Pender's Star Jump",
+      "to": "penders_star",
+      "to_nav": "Troy Jump"
+    },
+    {
+      "from": "troy",
+      "from_nav": "Regallis Jump",
+      "to": "regallis",
+      "to_nav": "Troy Jump"
+    },
+    {
+      "from": "troy",
+      "from_nav": "War Jump",
+      "to": "war",
+      "to_nav": "Troy Jump"
+    },
+    {
+      "from": "varnus",
+      "from_nav": "New Constantinople Jump",
+      "to": "new_constantinople",
+      "to_nav": "Varnus Jump"
+    },
+    {
+      "from": "41_gs",
+      "from_nav": "Surtur Jump",
+      "to": "surtur",
+      "to_nav": "41-GS Jump"
+    },
+    {
+      "from": "44_p_1m",
+      "from_nav": "Rikel Jump",
+      "to": "rikel",
+      "to_nav": "44-P-1M Jump"
+    },
+    {
+      "from": "44_p_1m",
+      "from_nav": "New Constantinople Jump",
+      "to": "new_constantinople",
+      "to_nav": "44-P-1M Jump"
+    },
+    {
+      "from": "aldebran",
+      "from_nav": "New Constantinople Jump",
+      "to": "new_constantinople",
+      "to_nav": "Aldebran Jump"
+    },
+    {
+      "from": "aldebran",
+      "from_nav": "Hind's Variable North Jump",
+      "to": "hinds_variable_north",
+      "to_nav": "Aldebran Jump"
+    },
+    {
+      "from": "auriga",
+      "from_nav": "Newcastle Jump",
+      "to": "newcastle",
+      "to_nav": "Auriga Jump"
+    },
+    {
+      "from": "dn_n1912",
+      "from_nav": "Hind's Variable North Jump",
+      "to": "hinds_variable_north",
+      "to_nav": "DN-N1912 Jump"
+    },
+    {
+      "from": "hinds_variable_north",
+      "from_nav": "DN-N1912 Jump",
+      "to": "dn_n1912",
+      "to_nav": "Hind's Variable North Jump"
+    },
+    {
+      "from": "hinds_variable_north",
+      "from_nav": "Aldebran Jump",
+      "to": "aldebran",
+      "to_nav": "Hind's Variable North Jump"
+    },
+    {
+      "from": "manchester",
+      "from_nav": "New Detroit Jump",
+      "to": "new_detroit",
+      "to_nav": "Manchester Jump"
+    },
+    {
+      "from": "metsor",
+      "from_nav": "XXN-1927 Jump",
+      "to": "xxn_1927",
+      "to_nav": "Metsor Jump"
+    },
+    {
+      "from": "metsor",
+      "from_nav": "Newcastle Jump",
+      "to": "newcastle",
+      "to_nav": "Metsor Jump"
+    },
+    {
+      "from": "nd_57",
+      "from_nav": "New Detroit Jump",
+      "to": "new_detroit",
+      "to_nav": "ND-57 Jump"
+    },
+    {
+      "from": "newcastle",
+      "from_nav": "Metsor Jump",
+      "to": "metsor",
+      "to_nav": "Newcastle Jump"
+    },
+    {
+      "from": "newcastle",
+      "from_nav": "Auriga Jump",
+      "to": "auriga",
+      "to_nav": "Newcastle Jump"
+    },
+    {
+      "from": "newcastle",
+      "from_nav": "New Constantinople Jump",
+      "to": "new_constantinople",
+      "to_nav": "Newcastle Jump"
+    },
+    {
+      "from": "newcastle",
+      "from_nav": "Perry Jump",
+      "to": "perry",
+      "to_nav": "Newcastle Jump"
+    },
+    {
+      "from": "new_constantinople",
+      "from_nav": "Varnus Jump",
+      "to": "varnus",
+      "to_nav": "New Constantinople Jump"
+    },
+    {
+      "from": "new_constantinople",
+      "from_nav": "New Detroit Jump",
+      "to": "new_detroit",
+      "to_nav": "New Constantinople Jump"
+    },
+    {
+      "from": "new_constantinople",
+      "from_nav": "44-P-1M Jump",
+      "to": "44_p_1m",
+      "to_nav": "New Constantinople Jump"
+    },
+    {
+      "from": "new_constantinople",
+      "from_nav": "Junction Jump",
+      "to": "junction",
+      "to_nav": "New Constantinople Jump"
+    },
+    {
+      "from": "new_constantinople",
+      "from_nav": "Newcastle Jump",
+      "to": "newcastle",
+      "to_nav": "New Constantinople Jump"
+    },
+    {
+      "from": "new_constantinople",
+      "from_nav": "Aldebran Jump",
+      "to": "aldebran",
+      "to_nav": "New Constantinople Jump"
+    },
+    {
+      "from": "new_constantinople",
+      "from_nav": "XXN-1927 Jump",
+      "to": "xxn_1927",
+      "to_nav": "New Constantinople Jump"
+    },
+    {
+      "from": "new_detroit",
+      "from_nav": "Saxtogue Jump",
+      "to": "saxtogue",
+      "to_nav": "New Detroit Jump"
+    },
+    {
+      "from": "new_detroit",
+      "from_nav": "Raxis Jump",
+      "to": "raxis",
+      "to_nav": "New Detroit Jump"
+    },
+    {
+      "from": "new_detroit",
+      "from_nav": "XXN-1927 Jump",
+      "to": "xxn_1927",
+      "to_nav": "New Detroit Jump"
+    },
+    {
+      "from": "new_detroit",
+      "from_nav": "Manchester Jump",
+      "to": "manchester",
+      "to_nav": "New Detroit Jump"
+    },
+    {
+      "from": "new_detroit",
+      "from_nav": "Rikel Jump",
+      "to": "rikel",
+      "to_nav": "New Detroit Jump"
+    },
+    {
+      "from": "new_detroit",
+      "from_nav": "ND-57 Jump",
+      "to": "nd_57",
+      "to_nav": "New Detroit Jump"
+    },
+    {
+      "from": "new_detroit",
+      "from_nav": "Perry Jump",
+      "to": "perry",
+      "to_nav": "New Detroit Jump"
+    },
+    {
+      "from": "new_detroit",
+      "from_nav": "New Constantinople Jump",
+      "to": "new_constantinople",
+      "to_nav": "New Detroit Jump"
+    },
+    {
+      "from": "oxford",
+      "from_nav": "Saxtogue Jump",
+      "to": "saxtogue",
+      "to_nav": "Oxford Jump"
+    },
+    {
+      "from": "oxford",
+      "from_nav": "Shangri La Jump",
+      "to": "shangri_la",
+      "to_nav": "Oxford Jump"
+    },
+    {
+      "from": "oxford",
+      "from_nav": "XXN-1927 Jump",
+      "to": "xxn_1927",
+      "to_nav": "Oxford Jump"
+    },
+    {
+      "from": "raxis",
+      "from_nav": "New Detroit Jump",
+      "to": "new_detroit",
+      "to_nav": "Raxis Jump"
+    },
+    {
+      "from": "saxtogue",
+      "from_nav": "New Detroit Jump",
+      "to": "new_detroit",
+      "to_nav": "Saxtogue Jump"
+    },
+    {
+      "from": "saxtogue",
+      "from_nav": "Oxford Jump",
+      "to": "oxford",
+      "to_nav": "Saxtogue Jump"
+    },
+    {
+      "from": "shangri_la",
+      "from_nav": "Oxford Jump",
+      "to": "oxford",
+      "to_nav": "Shangri La Jump"
+    },
+    {
+      "from": "xxn_1927",
+      "from_nav": "Oxford Jump",
+      "to": "oxford",
+      "to_nav": "XXN-1927 Jump"
+    },
+    {
+      "from": "xxn_1927",
+      "from_nav": "New Detroit Jump",
+      "to": "new_detroit",
+      "to_nav": "XXN-1927 Jump"
+    },
+    {
+      "from": "xxn_1927",
+      "from_nav": "New Constantinople Jump",
+      "to": "new_constantinople",
+      "to_nav": "XXN-1927 Jump"
+    },
+    {
+      "from": "xxn_1927",
+      "from_nav": "Metsor Jump",
+      "to": "metsor",
+      "to_nav": "XXN-1927 Jump"
+    },
+    {
+      "from": "xxn_1927",
+      "from_nav": "119CE Jump",
+      "to": "119ce",
+      "to_nav": "XXN-1927 Jump"
+    }
   ]
 }

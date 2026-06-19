@@ -1,0 +1,127 @@
+{
+  "name": "Eden",
+  "description": "Fariss Quadrant / Gemini Sector. Jump links: Rikel , Valhalla. Random mission opponents: . (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
+  "skybox_seed": "eden",
+  "star": {
+    "preset": "yellow"
+  },
+  "asteroid_fields": [
+    {
+      "center": [
+        123333,
+        26667,
+        -35000
+      ],
+      "half_extent": [
+        40000,
+        12000,
+        40000
+      ],
+      "count": 320,
+      "base_radius": 120,
+      "seed": 173531139
+    }
+  ],
+  "placed_sprites": [
+    {
+      "sprite": "sprites/helen_planet",
+      "position": [
+        -116667,
+        0,
+        -116667
+      ],
+      "length_meters": 2000
+    }
+  ],
+  "nav_points": [
+    {
+      "name": "Valhalla Jump",
+      "kind": "jump",
+      "position": [
+        -33333,
+        0,
+        166667
+      ],
+      "links_to": "valhalla",
+      "links_to_nav": "Eden Jump",
+      "encounters": [
+        {
+          "chance": 100,
+          "members": [
+            {
+              "faction": "retro",
+              "ship": "talon",
+              "count": 4
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Gaea Agricultural Planet",
+      "kind": "planet",
+      "position": [
+        -116667,
+        0,
+        -116667
+      ],
+      "dockable": true,
+      "base_id": "gaea",
+      "encounters": [
+        {
+          "chance": 70,
+          "members": [
+            {
+              "faction": "retro",
+              "ship": "talon",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "retro",
+              "ship": "talon",
+              "count": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Asteroid Field 3",
+      "kind": "nav",
+      "position": [
+        123333,
+        26667,
+        -35000
+      ]
+    },
+    {
+      "name": "Rikel Jump",
+      "kind": "jump",
+      "position": [
+        70000,
+        25000,
+        -6667
+      ],
+      "links_to": "rikel",
+      "links_to_nav": "Eden Jump"
+    }
+  ],
+  "encounters": [],
+  "player_start": {
+    "position": [
+      70000,
+      25000,
+      -6667
+    ],
+    "look_at": [
+      10833,
+      12917,
+      2083
+    ]
+  }
+}

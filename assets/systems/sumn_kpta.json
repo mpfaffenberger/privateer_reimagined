@@ -1,0 +1,180 @@
+{
+  "name": "Sumn-Kp'ta",
+  "description": "Clarke Quadrant / Gemini Sector. Jump links: Hyades , Sum'nH'hra , Tr'Pakh. Random mission opponents: All Kilrathi. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
+  "skybox_seed": "sumn_kpta",
+  "star": {
+    "preset": "yellow"
+  },
+  "asteroid_fields": [],
+  "placed_sprites": [],
+  "nav_points": [
+    {
+      "name": "Tr'Pakh Jump",
+      "kind": "jump",
+      "position": [
+        -200000,
+        0,
+        0
+      ],
+      "links_to": "trpakh",
+      "links_to_nav": "Sumn-Kp'ta Jump",
+      "encounters": [
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "orion",
+              "count": 3
+            },
+            {
+              "faction": "kilrathi",
+              "ship": "paradigm",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "talon",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "orion",
+              "count": 2
+            },
+            {
+              "faction": "kilrathi",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "orion",
+              "count": 4
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Hyades Jump",
+      "kind": "jump",
+      "position": [
+        200000,
+        0,
+        0
+      ],
+      "links_to": "hyades",
+      "links_to_nav": "Sumn-Kp'ta Jump",
+      "encounters": [
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "orion",
+              "count": 3
+            },
+            {
+              "faction": "kilrathi",
+              "ship": "paradigm",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "talon",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "orion",
+              "count": 2
+            },
+            {
+              "faction": "kilrathi",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "orion",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "chance": 70,
+          "members": [
+            {
+              "faction": "pirate",
+              "ship": "talon",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "retro",
+              "ship": "talon",
+              "count": 4
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Sumn-Kp'ta Nav 3",
+      "kind": "nav",
+      "position": [
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "encounters": [],
+  "player_start": {
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "look_at": [
+      0,
+      0,
+      0
+    ]
+  }
+}

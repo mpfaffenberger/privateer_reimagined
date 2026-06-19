@@ -1,0 +1,196 @@
+{
+  "name": "Tr'Pakh",
+  "description": "Clarke Quadrant / Gemini Sector. Jump links: Blockade Point Alpha , Sumn-Kp'ta , Sum'Tlor. Random mission opponents: All Kilrathi. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
+  "skybox_seed": "trpakh",
+  "star": {
+    "preset": "yellow"
+  },
+  "asteroid_fields": [
+    {
+      "center": [
+        -33333,
+        16667,
+        -16667
+      ],
+      "half_extent": [
+        40000,
+        12000,
+        40000
+      ],
+      "count": 320,
+      "base_radius": 120,
+      "seed": 173531139
+    }
+  ],
+  "placed_sprites": [],
+  "nav_points": [
+    {
+      "name": "Sumn-Kp'ta Jump",
+      "kind": "jump",
+      "position": [
+        -133333,
+        66667,
+        100000
+      ],
+      "links_to": "sumn_kpta",
+      "links_to_nav": "Tr'Pakh Jump",
+      "encounters": [
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "orion",
+              "count": 3
+            },
+            {
+              "faction": "kilrathi",
+              "ship": "paradigm",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "talon",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "orion",
+              "count": 2
+            },
+            {
+              "faction": "kilrathi",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "orion",
+              "count": 4
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Blockade Point Alpha Jump",
+      "kind": "jump",
+      "position": [
+        66667,
+        33333,
+        -133333
+      ],
+      "links_to": "blockade_point_alpha",
+      "links_to_nav": "Tr'Pakh Jump",
+      "encounters": [
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "orion",
+              "count": 3
+            },
+            {
+              "faction": "kilrathi",
+              "ship": "paradigm",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "talon",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "orion",
+              "count": 2
+            },
+            {
+              "faction": "kilrathi",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "orion",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "chance": 50,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "orion",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 50,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Asteroid Field 3",
+      "kind": "nav",
+      "position": [
+        -33333,
+        16667,
+        -16667
+      ]
+    }
+  ],
+  "encounters": [],
+  "player_start": {
+    "position": [
+      -33333,
+      16667,
+      -16667
+    ],
+    "look_at": [
+      -33333,
+      38889,
+      -16667
+    ]
+  }
+}

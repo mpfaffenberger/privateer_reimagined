@@ -1,0 +1,78 @@
+{
+  "name": "41-GS",
+  "description": "Potter Quadrant / Gemini Sector. Jump links: Surtur. Random mission opponents: 2/3 Confederation, 1/3 Bounty Hunter. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
+  "skybox_seed": "41_gs",
+  "star": {
+    "preset": "yellow"
+  },
+  "asteroid_fields": [],
+  "placed_sprites": [],
+  "nav_points": [
+    {
+      "name": "Surtur Jump",
+      "kind": "jump",
+      "position": [
+        100000,
+        0,
+        33333
+      ],
+      "links_to": "surtur",
+      "links_to_nav": "41-GS Jump",
+      "encounters": [
+        {
+          "chance": 40,
+          "members": [
+            {
+              "faction": "confed",
+              "ship": "stiletto",
+              "count": 2
+            },
+            {
+              "faction": "confed",
+              "ship": "paradigm",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "chance": 40,
+          "members": [
+            {
+              "faction": "confed",
+              "ship": "broadsword",
+              "count": 3
+            },
+            {
+              "faction": "confed",
+              "ship": "paradigm",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "chance": 20,
+          "members": [
+            {
+              "faction": "hunter",
+              "ship": "centurion",
+              "count": 2
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "encounters": [],
+  "player_start": {
+    "position": [
+      100000,
+      0,
+      33333
+    ],
+    "look_at": [
+      100000,
+      0,
+      33333
+    ]
+  }
+}

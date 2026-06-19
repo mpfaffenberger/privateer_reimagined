@@ -1,175 +1,45 @@
 {
-  "name": "Pender's Star",
-  "description": "Humboldt Quadrant / Gemini Sector. Jump links: Junction , Troy. Random mission opponents: 2/3 Pirate, 1/3 Retro. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
-  "skybox_seed": "penders_star",
+  "name": "DN-N1912",
+  "description": "Potter Quadrant / Gemini Sector. Jump links: Hind's Variable North. Random mission opponents: 2/3 Militia, 1/3 Confederation. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
+  "skybox_seed": "dn_n1912",
   "star": {
     "preset": "yellow"
   },
-  "asteroid_fields": [
+  "asteroid_fields": [],
+  "placed_sprites": [
     {
-      "center": [
-        -25000,
-        33333,
-        40000
+      "sprite": "sprites/helen_planet",
+      "position": [
+        -33333,
+        100000,
+        0
       ],
-      "half_extent": [
-        40000,
-        12000,
-        40000
-      ],
-      "count": 320,
-      "base_radius": 120,
-      "seed": 173531138
+      "length_meters": 2000
     }
   ],
-  "placed_sprites": [],
   "nav_points": [
     {
-      "name": "Junction Jump",
-      "kind": "jump",
+      "name": "N1912-1 Pleasure Planet",
+      "kind": "planet",
       "position": [
-        -133333,
         -33333,
-        -166667
+        100000,
+        0
       ],
-      "links_to": "junction",
-      "links_to_nav": "Pender's Star Jump",
+      "dockable": true,
+      "base_id": "n1912_1",
       "encounters": [
         {
-          "chance": 40,
+          "chance": 30,
           "members": [
-            {
-              "faction": "militia",
-              "ship": "talon",
-              "count": 2
-            },
-            {
-              "faction": "pirate",
-              "ship": "talon",
-              "count": 2
-            }
-          ]
-        },
-        {
-          "chance": 35,
-          "members": [
-            {
-              "faction": "pirate",
-              "ship": "talon",
-              "count": 3
-            },
             {
               "faction": "merchant",
               "ship": "galaxy",
-              "count": 1
-            }
-          ]
-        },
-        {
-          "chance": 25,
-          "members": [
-            {
-              "faction": "militia",
-              "ship": "talon",
               "count": 2
             },
             {
-              "faction": "retro",
-              "ship": "talon",
-              "count": 2
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Asteroid Field 2",
-      "kind": "nav",
-      "position": [
-        -25000,
-        33333,
-        40000
-      ],
-      "encounters": [
-        {
-          "chance": 30,
-          "members": [
-            {
-              "faction": "pirate",
-              "ship": "talon",
-              "count": 3
-            }
-          ]
-        },
-        {
-          "chance": 20,
-          "members": [
-            {
-              "faction": "pirate",
-              "ship": "talon",
-              "count": 2
-            },
-            {
-              "faction": "militia",
-              "ship": "talon",
-              "count": 1
-            }
-          ]
-        },
-        {
-          "chance": 20,
-          "members": [
-            {
-              "faction": "militia",
-              "ship": "talon",
-              "count": 3
-            },
-            {
-              "faction": "merchant",
-              "ship": "tarsus",
-              "count": 1
-            }
-          ]
-        },
-        {
-          "chance": 20,
-          "members": [
-            {
-              "faction": "pirate",
-              "ship": "talon",
-              "count": 2
-            }
-          ]
-        },
-        {
-          "chance": 10,
-          "members": [
-            {
-              "faction": "retro",
-              "ship": "talon",
-              "count": 2
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Troy Jump",
-      "kind": "jump",
-      "position": [
-        100000,
-        0,
-        -133333
-      ],
-      "links_to": "troy",
-      "links_to_nav": "Pender's Star Jump",
-      "encounters": [
-        {
-          "chance": 30,
-          "members": [
-            {
-              "faction": "militia",
-              "ship": "talon",
+              "faction": "confed",
+              "ship": "stiletto",
               "count": 2
             }
           ]
@@ -179,8 +49,13 @@
           "members": [
             {
               "faction": "hunter",
-              "ship": "centurion",
-              "count": 2
+              "ship": "orion",
+              "count": 1
+            },
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 1
             }
           ]
         },
@@ -188,14 +63,9 @@
           "chance": 30,
           "members": [
             {
-              "faction": "merchant",
-              "ship": "tarsus",
-              "count": 1
-            },
-            {
-              "faction": "pirate",
-              "ship": "talon",
-              "count": 2
+              "faction": "militia",
+              "ship": "centurion",
+              "count": 3
             }
           ]
         },
@@ -205,24 +75,157 @@
             {
               "faction": "retro",
               "ship": "talon",
+              "count": 4
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "DN-N1912 Nav 2",
+      "kind": "nav",
+      "position": [
+        100000,
+        0,
+        100000
+      ],
+      "encounters": [
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "militia",
+              "ship": "centurion",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "militia",
+              "ship": "centurion",
+              "count": 2
+            },
+            {
+              "faction": "pirate",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 20,
+          "members": [
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 20,
+          "members": [
+            {
+              "faction": "retro",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Hind's Variable North Jump",
+      "kind": "jump",
+      "position": [
+        166667,
+        -133333,
+        -133333
+      ],
+      "links_to": "hinds_variable_north",
+      "links_to_nav": "DN-N1912 Jump",
+      "encounters": [
+        {
+          "chance": 40,
+          "members": [
+            {
+              "faction": "militia",
+              "ship": "centurion",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "militia",
+              "ship": "centurion",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "militia",
+              "ship": "centurion",
+              "count": 2
+            },
+            {
+              "faction": "confed",
+              "ship": "stiletto",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 50,
+          "members": [
+            {
+              "faction": "pirate",
+              "ship": "talon",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "chance": 50,
+          "members": [
+            {
+              "faction": "retro",
+              "ship": "talon",
               "count": 3
             }
           ]
         }
+      ]
+    },
+    {
+      "name": "DN-N1912 Nav 4",
+      "kind": "nav",
+      "position": [
+        66667,
+        -33333,
+        -66667
       ]
     }
   ],
   "encounters": [],
   "player_start": {
     "position": [
-      100000,
-      0,
-      -133333
+      66667,
+      -33333,
+      -66667
     ],
     "look_at": [
-      -19444,
-      0,
-      -86667
+      75000,
+      -16666,
+      -25000
     ]
   }
 }

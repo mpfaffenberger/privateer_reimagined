@@ -71,30 +71,41 @@ def load_system(name: str) -> dict:
 
 
 def nav_from(desc: str, pos: list[int], idx: int, sysname: str):
-    """Return (navpoint dict, optional sprite dict, optional asteroid dict)."""
+    """Return (navpoint dict, optional sprite dict, optional asteroid dict).
+
+    Some scraped descriptions concatenate an 'Asteroid Field' modifier with
+    the real nav type ('Asteroid Field Jump Point - War', 'Asteroid Field
+    Lisacc Mining Base'). We strip that leading modifier to expose the core
+    type AND still spawn the asteroid field, so a jump point / base that sits
+    inside a belt is recognised as such (this is what was silently dropping
+    the jump navs for War, Rikel, Gamma, etc.)."""
     d = desc.strip()
-    low = d.lower()
     back = f"{sysname} Jump"   # convention: arrival nav on the far side
-    if low.startswith("jump point"):
-        dest = re.sub(r"(?i)^jump point\s*[-–]\s*", "", d).strip()
+    has_ast = "asteroid" in d.lower()
+    core = re.sub(r"(?i)^asteroid field\s*", "", d).strip()
+    clow = core.lower()
+    ast = ({"center": pos, "half_extent": [40000, 12000, 40000],
+            "count": 320, "base_radius": 120, "seed": 0xA57E000 + idx}
+           if has_ast else None)
+
+    if clow.startswith("jump point"):
+        dest = re.sub(r"(?i)^jump point\s*[-–]\s*", "", core).strip()
         return ({"name": f"{dest} Jump", "kind": "jump", "position": pos,
-                 "links_to": snake(dest), "links_to_nav": back}, None, None)
-    if "mining base" in low or low.endswith("base") or "station" in low:
-        bid = snake(d.split(" Mining")[0].split(" Base")[0])
-        nav = {"name": d, "kind": "station", "position": pos,
+                 "links_to": snake(dest), "links_to_nav": back}, None, ast)
+    if "mining base" in clow or clow.endswith("base") or "station" in clow:
+        bid = snake(core.split(" Mining")[0].split(" Base")[0])
+        nav = {"name": core, "kind": "station", "position": pos,
                "dockable": True, "base_id": bid}
         spr = {"sprite": "sprites/mining_base", "position": pos, "length_meters": 3000}
-        return (nav, spr, None)
-    if "planet" in low:
-        bid = snake(d.split(" ")[0])
-        nav = {"name": d, "kind": "planet", "position": pos,
+        return (nav, spr, ast)
+    if "planet" in clow:
+        bid = snake(core.split(" ")[0])
+        nav = {"name": core, "kind": "planet", "position": pos,
                "dockable": True, "base_id": bid}
         spr = {"sprite": "sprites/helen_planet", "position": pos, "length_meters": 2000}
-        return (nav, spr, None)
-    if "asteroid" in low:
-        nav = {"name": d or f"Asteroid Field {idx}", "kind": "nav", "position": pos}
-        ast = {"center": pos, "half_extent": [40000, 12000, 40000],
-               "count": 320, "base_radius": 120, "seed": 0xA57E000 + idx}
+        return (nav, spr, ast)
+    if has_ast:
+        nav = {"name": core or f"Asteroid Field {idx}", "kind": "nav", "position": pos}
         return (nav, None, ast)
     # plain / empty nav (arrival beacon, deep-space waypoint)
     return ({"name": d or f"{sysname} Nav {idx}", "kind": "nav", "position": pos},
@@ -121,35 +132,29 @@ def canon_groups(groups: list) -> list[dict]:
     return out
 
 
-def main() -> int:
-    global SCALE
-    ap = argparse.ArgumentParser()
-    ap.add_argument("system")
-    ap.add_argument("--out", default=None, help="output stem (default: snake(name))")
-    ap.add_argument("--scale", type=float, default=10.0 / 3.0)
-    ap.add_argument("--skybox", default="troy",
-                    help="skybox_seed to reference (must have saved images "
-                         "under assets/skybox/<seed>/ until on-the-fly gen lands)")
-    args = ap.parse_args()
-    SCALE = args.scale
+def clean_name(name: str) -> str:
+    """Strip wcpedia disambiguation suffixes so the id/display are clean:
+    'Palan (star system)' -> 'Palan', 'Midgard (Gemini Sector)' -> 'Midgard'."""
+    return re.sub(r"\s*\(.*?\)\s*", "", name).strip()
 
-    src = load_system(args.system)
-    sysname = src["name"]
-    out_stem = args.out or snake(sysname)
+
+def build(src: dict, out_stem: str, skybox: str, scale: float) -> dict:
+    """Build one engine StarSystem JSON from a scraped system, write it to
+    assets/systems/<out_stem>.json, and return the dict (the caller uses its
+    nav_points to build the galaxy jump graph)."""
+    global SCALE
+    SCALE = scale
+    display = clean_name(src["name"])
 
     navs, sprites, fields = [], [], []
     centroid = [0, 0, 0]
     spawn_nav = None
-    enc_groups_total = 0
     for i, n in enumerate(src["nav_points"], 1):
         pos = emap(n["x"], n["y"], n["z"])
-        nav, spr, ast = nav_from(n["description"], pos, i, sysname)
-        # Attach this nav's canonical wcnews encounter table (rolled once on
-        # system entry by the engine; no continuous refill).
+        nav, spr, ast = nav_from(n["description"], pos, i, display)
         groups = canon_groups(src["encounters"].get(f"Nav {i}", []))
         if groups:
             nav["encounters"] = groups
-            enc_groups_total += len(groups)
         navs.append(nav)
         if spr:
             sprites.append(spr)
@@ -158,20 +163,20 @@ def main() -> int:
         for k in range(3):
             centroid[k] += pos[k]
         if not n["description"].strip():
-            spawn_nav = pos     # the canonical empty 'you arrive here' nav
-    n = max(1, len(navs))
-    centroid = [round(c / n) for c in centroid]
+            spawn_nav = pos
+    nn = max(1, len(navs))
+    centroid = [round(c / nn) for c in centroid]
     if spawn_nav is None:
-        spawn_nav = navs[-1]["position"]
+        spawn_nav = navs[-1]["position"] if navs else [0, 0, 0]
 
     info = src.get("info", {})
     out = {
-        "name": sysname,
+        "name": display,
         "description": (f"{info.get('Quadrant','Gemini')} / {info.get('Sector','Gemini Sector')}. "
                         f"Jump links: {info.get('Jump Links','')}. "
                         f"Random mission opponents: {info.get('Random Mission Opponents','')}. "
                         f"(Generated from wcpedia by tools/build_system_from_wcpedia.py.)"),
-        "skybox_seed": args.skybox,
+        "skybox_seed": skybox,
         "star": {"preset": "yellow"},
         "asteroid_fields": fields,
         "placed_sprites": sprites,
@@ -179,10 +184,27 @@ def main() -> int:
         "encounters": [],   # no continuous director; per-nav tables drive spawns
         "player_start": {"position": spawn_nav, "look_at": centroid},
     }
-    path = SYS / f"{out_stem}.json"
-    path.write_text(json.dumps(out, indent=2) + "\n")
-    print(f"wrote {path.relative_to(REPO)}: {len(navs)} nav, {len(sprites)} sprite, "
-          f"{len(fields)} field, {enc_groups_total} per-nav encounter group(s)")
+    (SYS / f"{out_stem}.json").write_text(json.dumps(out, indent=2) + "\n")
+    return out
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("system")
+    ap.add_argument("--out", default=None, help="output stem (default: snake(name))")
+    ap.add_argument("--scale", type=float, default=10.0 / 3.0)
+    ap.add_argument("--skybox", default=None,
+                    help="skybox_seed (default: the system's own id, generated on the fly)")
+    args = ap.parse_args()
+
+    src = load_system(args.system)
+    out_stem = args.out or snake(clean_name(src["name"]))
+    out = build(src, out_stem, args.skybox or out_stem, args.scale)
+    navs = out["nav_points"]
+    enc = sum(len(n.get("encounters", [])) for n in navs)
+    print(f"wrote assets/systems/{out_stem}.json: {len(navs)} nav, "
+          f"{len(out['placed_sprites'])} sprite, {len(out['asteroid_fields'])} field, "
+          f"{enc} per-nav encounter group(s)")
     print(f"  jump links -> {[n['links_to'] for n in navs if n['kind']=='jump']}")
     print(f"  bases      -> {[n['base_id'] for n in navs if n.get('dockable')]}")
     return 0

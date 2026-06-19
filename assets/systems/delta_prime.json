@@ -1,0 +1,45 @@
+{
+  "name": "Delta Prime",
+  "description": "Fariss Quadrant / Gemini Sector. Jump links: Gamma. Random mission opponents: All Kilrathi. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
+  "skybox_seed": "delta_prime",
+  "star": {
+    "preset": "yellow"
+  },
+  "asteroid_fields": [],
+  "placed_sprites": [],
+  "nav_points": [
+    {
+      "name": "Gamma Jump",
+      "kind": "jump",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "links_to": "gamma",
+      "links_to_nav": "Delta Prime Jump"
+    },
+    {
+      "name": "Derelict",
+      "kind": "nav",
+      "position": [
+        -33333,
+        0,
+        -36667
+      ]
+    }
+  ],
+  "encounters": [],
+  "player_start": {
+    "position": [
+      -33333,
+      0,
+      -36667
+    ],
+    "look_at": [
+      -16666,
+      0,
+      -18334
+    ]
+  }
+}

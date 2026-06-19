@@ -1,0 +1,250 @@
+{
+  "name": "Test Bed",
+  "description": "Fariss Quadrant / Gemini Sector. Jump links: . Random mission opponents: . (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
+  "skybox_seed": "test_bed",
+  "star": {
+    "preset": "yellow"
+  },
+  "asteroid_fields": [],
+  "placed_sprites": [],
+  "nav_points": [
+    {
+      "name": "Test Bed Nav 1",
+      "kind": "nav",
+      "position": [
+        -166667,
+        50000,
+        66667
+      ],
+      "encounters": [
+        {
+          "chance": 97,
+          "members": [
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "chance": 1,
+          "members": [
+            {
+              "faction": "merchant",
+              "ship": "tarsus",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "chance": 1,
+          "members": [
+            {
+              "faction": "merchant",
+              "ship": "orion",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "chance": 1,
+          "members": [
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Test Bed Nav 2",
+      "kind": "nav",
+      "position": [
+        -200000,
+        166667,
+        -66667
+      ],
+      "encounters": [
+        {
+          "chance": 98,
+          "members": [
+            {
+              "faction": "confed",
+              "ship": "stiletto",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "chance": 1,
+          "members": [
+            {
+              "faction": "confed",
+              "ship": "paradigm",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "chance": 1,
+          "members": [
+            {
+              "faction": "confed",
+              "ship": "broadsword",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Test Bed Nav 3",
+      "kind": "nav",
+      "position": [
+        -133333,
+        133333,
+        -200000
+      ],
+      "encounters": [
+        {
+          "chance": 99,
+          "members": [
+            {
+              "faction": "hunter",
+              "ship": "centurion",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "chance": 1,
+          "members": [
+            {
+              "faction": "hunter",
+              "ship": "centurion",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Test Bed Nav 4",
+      "kind": "nav",
+      "position": [
+        0,
+        0,
+        -133333
+      ],
+      "encounters": [
+        {
+          "chance": 98,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "orion",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "chance": 1,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "talon",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "chance": 1,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "paradigm",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Test Bed Nav 5",
+      "kind": "nav",
+      "position": [
+        133333,
+        -133333,
+        -100000
+      ],
+      "encounters": [
+        {
+          "chance": 99,
+          "members": [
+            {
+              "faction": "militia",
+              "ship": "centurion",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "chance": 1,
+          "members": [
+            {
+              "faction": "militia",
+              "ship": "talon",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Test Bed Nav 6",
+      "kind": "nav",
+      "position": [
+        200000,
+        -33333,
+        66667
+      ]
+    },
+    {
+      "name": "Test Bed Nav 7",
+      "kind": "nav",
+      "position": [
+        166667,
+        200000,
+        200000
+      ],
+      "encounters": [
+        {
+          "chance": 99,
+          "members": [
+            {
+              "faction": "retro",
+              "ship": "talon",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "encounters": [],
+  "player_start": {
+    "position": [
+      166667,
+      200000,
+      200000
+    ],
+    "look_at": [
+      0,
+      54762,
+      -23809
+    ]
+  }
+}

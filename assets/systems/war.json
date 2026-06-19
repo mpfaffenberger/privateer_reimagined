@@ -1,16 +1,16 @@
 {
-  "name": "Pender's Star",
-  "description": "Humboldt Quadrant / Gemini Sector. Jump links: Junction , Troy. Random mission opponents: 2/3 Pirate, 1/3 Retro. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
-  "skybox_seed": "penders_star",
+  "name": "War",
+  "description": "Fariss Quadrant / Gemini Sector. Jump links: Pestilence , Troy. Random mission opponents: 2/3 Pirate, 1/3 Retro. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
+  "skybox_seed": "war",
   "star": {
     "preset": "yellow"
   },
   "asteroid_fields": [
     {
       "center": [
-        -25000,
-        33333,
-        40000
+        0,
+        66667,
+        -166667
       ],
       "half_extent": [
         40000,
@@ -19,125 +19,69 @@
       ],
       "count": 320,
       "base_radius": 120,
-      "seed": 173531138
+      "seed": 173531137
+    },
+    {
+      "center": [
+        0,
+        -66667,
+        166667
+      ],
+      "half_extent": [
+        40000,
+        12000,
+        40000
+      ],
+      "count": 320,
+      "base_radius": 120,
+      "seed": 173531139
     }
   ],
   "placed_sprites": [],
   "nav_points": [
     {
-      "name": "Junction Jump",
+      "name": "Pestilence Jump",
       "kind": "jump",
       "position": [
-        -133333,
-        -33333,
+        0,
+        66667,
         -166667
       ],
-      "links_to": "junction",
-      "links_to_nav": "Pender's Star Jump",
+      "links_to": "pestilence",
+      "links_to_nav": "War Jump",
       "encounters": [
         {
-          "chance": 40,
+          "chance": 30,
           "members": [
             {
               "faction": "militia",
-              "ship": "talon",
-              "count": 2
-            },
-            {
-              "faction": "pirate",
-              "ship": "talon",
-              "count": 2
-            }
-          ]
-        },
-        {
-          "chance": 35,
-          "members": [
-            {
-              "faction": "pirate",
-              "ship": "talon",
-              "count": 3
-            },
-            {
-              "faction": "merchant",
-              "ship": "galaxy",
+              "ship": "centurion",
               "count": 1
             }
           ]
         },
-        {
-          "chance": 25,
-          "members": [
-            {
-              "faction": "militia",
-              "ship": "talon",
-              "count": 2
-            },
-            {
-              "faction": "retro",
-              "ship": "talon",
-              "count": 2
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Asteroid Field 2",
-      "kind": "nav",
-      "position": [
-        -25000,
-        33333,
-        40000
-      ],
-      "encounters": [
         {
           "chance": 30,
           "members": [
             {
               "faction": "pirate",
               "ship": "talon",
-              "count": 3
-            }
-          ]
-        },
-        {
-          "chance": 20,
-          "members": [
-            {
-              "faction": "pirate",
-              "ship": "talon",
-              "count": 2
-            },
-            {
-              "faction": "militia",
-              "ship": "talon",
               "count": 1
             }
           ]
         },
         {
-          "chance": 20,
+          "chance": 30,
           "members": [
             {
               "faction": "militia",
-              "ship": "talon",
-              "count": 3
+              "ship": "centurion",
+              "count": 2
             },
-            {
-              "faction": "merchant",
-              "ship": "tarsus",
-              "count": 1
-            }
-          ]
-        },
-        {
-          "chance": 20,
-          "members": [
             {
               "faction": "pirate",
               "ship": "talon",
-              "count": 2
+              "count": 3
             }
           ]
         },
@@ -147,7 +91,63 @@
             {
               "faction": "retro",
               "ship": "talon",
-              "count": 2
+              "count": 4
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "War Nav 2",
+      "kind": "nav",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "encounters": [
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "militia",
+              "ship": "centurion",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "pirate",
+              "ship": "talon",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "pirate",
+              "ship": "talon",
+              "count": 3
+            },
+            {
+              "faction": "militia",
+              "ship": "centurion",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "chance": 10,
+          "members": [
+            {
+              "faction": "retro",
+              "ship": "talon",
+              "count": 4
             }
           ]
         }
@@ -157,18 +157,23 @@
       "name": "Troy Jump",
       "kind": "jump",
       "position": [
-        100000,
         0,
-        -133333
+        -66667,
+        166667
       ],
       "links_to": "troy",
-      "links_to_nav": "Pender's Star Jump",
+      "links_to_nav": "War Jump",
       "encounters": [
         {
           "chance": 30,
           "members": [
             {
-              "faction": "militia",
+              "faction": "confed",
+              "ship": "centurion",
+              "count": 2
+            },
+            {
+              "faction": "pirate",
               "ship": "talon",
               "count": 2
             }
@@ -178,18 +183,8 @@
           "chance": 30,
           "members": [
             {
-              "faction": "hunter",
-              "ship": "centurion",
-              "count": 2
-            }
-          ]
-        },
-        {
-          "chance": 30,
-          "members": [
-            {
               "faction": "merchant",
-              "ship": "tarsus",
+              "ship": "galaxy",
               "count": 1
             },
             {
@@ -200,12 +195,27 @@
           ]
         },
         {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 1
+            },
+            {
+              "faction": "militia",
+              "ship": "centurion",
+              "count": 3
+            }
+          ]
+        },
+        {
           "chance": 10,
           "members": [
             {
               "faction": "retro",
               "ship": "talon",
-              "count": 3
+              "count": 4
             }
           ]
         }
@@ -215,14 +225,14 @@
   "encounters": [],
   "player_start": {
     "position": [
-      100000,
       0,
-      -133333
+      0,
+      0
     ],
     "look_at": [
-      -19444,
       0,
-      -86667
+      0,
+      0
     ]
   }
 }

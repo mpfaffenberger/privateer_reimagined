@@ -1,0 +1,157 @@
+{
+  "name": "Death",
+  "description": "Fariss Quadrant / Gemini Sector. Jump links: Famine , Pestilence. Random mission opponents: 2/3 Pirate, 1/3 Retro. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
+  "skybox_seed": "death",
+  "star": {
+    "preset": "yellow"
+  },
+  "asteroid_fields": [],
+  "placed_sprites": [],
+  "nav_points": [
+    {
+      "name": "Pestilence Jump",
+      "kind": "jump",
+      "position": [
+        -150000,
+        -31667,
+        133333
+      ],
+      "links_to": "pestilence",
+      "links_to_nav": "Death Jump",
+      "encounters": [
+        {
+          "chance": 40,
+          "members": [
+            {
+              "faction": "militia",
+              "ship": "talon",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "chance": 40,
+          "members": [
+            {
+              "faction": "militia",
+              "ship": "centurion",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "chance": 20,
+          "members": [
+            {
+              "faction": "retro",
+              "ship": "talon",
+              "count": 4
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Death Nav 2",
+      "kind": "nav",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "encounters": [
+        {
+          "chance": 75,
+          "members": [
+            {
+              "faction": "militia",
+              "ship": "centurion",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "chance": 25,
+          "members": [
+            {
+              "faction": "pirate",
+              "ship": "talon",
+              "count": 2
+            },
+            {
+              "faction": "retro",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Famine Jump",
+      "kind": "jump",
+      "position": [
+        -160000,
+        33333,
+        -133333
+      ],
+      "links_to": "famine",
+      "links_to_nav": "Death Jump",
+      "encounters": [
+        {
+          "chance": 50,
+          "members": [
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 2
+            },
+            {
+              "faction": "pirate",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 1
+            },
+            {
+              "faction": "retro",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 20,
+          "members": [
+            {
+              "faction": "militia",
+              "ship": "centurion",
+              "count": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "encounters": [],
+  "player_start": {
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "look_at": [
+      -103333,
+      555,
+      0
+    ]
+  }
+}
