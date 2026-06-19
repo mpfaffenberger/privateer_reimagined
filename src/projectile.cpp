@@ -47,8 +47,12 @@ void projectile::collide_and_damage(std::vector<Projectile>& projectiles,
                                     float                     dt) {
     // Provoke threshold: this many player hits on an otherwise non-hostile
     // ship makes it bear a grudge and turn on the player (perception honors
-    // Ship::provoked_by_player). "More than ~3 hits" -> 3 trips it.
-    constexpr uint8_t k_provoke_hits = 3;
+    // Ship::provoked_by_player). "More than ~3 hits" -> 3 trips it. When a
+    // ship is provoked, every ship of the SAME faction within k_provoke_
+    // radius joins the grudge -- shoot up a militia patrol and the whole
+    // wing turns on you (Privateer faction reaction).
+    constexpr uint8_t k_provoke_hits  = 3;
+    constexpr float   k_provoke_radius = 15000.0f;
     const Ship* plr = ships.player();
     const uint32_t player_id = plr ? plr->id : 0;
 
@@ -107,8 +111,22 @@ void projectile::collide_and_damage(std::vector<Projectile>& projectiles,
                     !s.is_player && !s.provoked_by_player) {
                     if (++s.player_hit_count >= k_provoke_hits) {
                         s.provoked_by_player = true;
-                        std::printf("[grudge] ship %u provoked by player fire -> hostile\n",
-                                    s.id);
+                        // Faction reaction: everyone of the same faction
+                        // within k_provoke_radius joins the grudge.
+                        const HMM_Vec3 vp = s.sprite ? s.sprite->position : s.position;
+                        int allies = 0;
+                        for (Ship& o : ships) {
+                            if (!o.alive || o.is_player || o.provoked_by_player) continue;
+                            if (o.faction != s.faction) continue;
+                            const HMM_Vec3 op = o.sprite ? o.sprite->position : o.position;
+                            if (HMM_LenV3(HMM_SubV3(op, vp)) <= k_provoke_radius) {
+                                o.provoked_by_player = true;
+                                ++allies;
+                            }
+                        }
+                        std::printf("[grudge] ship %u provoked by player fire -> hostile "
+                                    "(+%d same-faction within %.0fkm)\n",
+                                    s.id, allies, k_provoke_radius / 1000.0f);
                     }
                 }
                 p.alive = false;

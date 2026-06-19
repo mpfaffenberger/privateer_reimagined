@@ -64,8 +64,10 @@ void perception::tick(ShipRegistry& ships, const PlayerReputation& player_rep) {
         // stance (classify_pair below) is what actually wakes the AI and
         // starts an engage. CNST f1 is NOT consulted here — it is the
         // cosmetic comm/taunt range (wired in ship_ai/comm), not detection.
-        // The player keeps a small "enhanced HUD" advantage (35 vs 15 km).
-        constexpr float k_player_radar_m = 35000.0f;
+        // Player radar matches the NPC/Privateer-canonical 15 km sphere
+        // (no enhanced-HUD advantage) — contacts appear at the same range
+        // the AI sees you.
+        constexpr float k_player_radar_m = 15000.0f;
         const float radar_r = observer.is_player ? k_player_radar_m
                             : (observer.klass ? observer.klass->radar_range : 0.0f);
         if (radar_r <= 0.0f) continue;
