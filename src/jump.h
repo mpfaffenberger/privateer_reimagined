@@ -44,8 +44,8 @@ namespace galaxy { struct Galaxy; }
 namespace jump {
 
 // ---- tuning knobs -----------------------------------------------------------
-// Just past autopilot's k_arrival_radius_m (5000u) so the A->J flow composes.
-constexpr float k_trigger_range_m = 6000.0f;
+// Tight: you must be basically on top of the gate to jump (Privateer feel).
+constexpr float k_trigger_range_m = 3000.0f;
 // Hostile bubble for the gate — matches autopilot::k_threat_radius_m so a
 // furball that blocks the autopilot also blocks the jump (Privateer rule).
 constexpr float k_threat_radius_m = 8000.0f;
