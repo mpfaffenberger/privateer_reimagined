@@ -1733,45 +1733,41 @@ void update_dev_jump_soak(float dt) {
         return;
     }
 
-    // First surveyed gate in this system.
+    // Try each surveyed gate: teleport just clear of it (toward system
+    // center, inside trigger range) and take the FIRST that's Ready. Trying
+    // them all (not just the first surveyed gate) means a gate with encounter
+    // hostiles camped on it doesn't stall the soak.
     int idx = -1;
+    jump::Eligibility e;
     for (int i = 0; i < (int)g.system.nav_points.size(); ++i) {
         const NavPointDef& n = g.system.nav_points[i];
         if (n.kind != "jump") continue;
         if (!g.galaxy.jump_target(g.player.current_system, n.name).ok) continue;
-        idx = i;
-        break;
+        HMM_Vec3    into = HMM_MulV3F(n.position, -1.0f);
+        const float len  = HMM_LenV3(into);
+        into = (len > 1e-3f) ? HMM_DivV3F(into, len) : HMM_V3(0.0f, 0.0f, -1.0f);
+        g.camera.position = HMM_AddV3(n.position, HMM_MulV3F(into, 1000.0f));
+        g.camera.velocity = HMM_V3(0.0f, 0.0f, 0.0f);
+        e = jump::evaluate(g.camera, g.system, g.galaxy, g.player.current_system, i);
+        if (e.status == jump::Status::Ready) { idx = i; break; }
+        std::printf("[dev] --dev-jump-soak: gate '%s' not ready (%s); trying next\n",
+                    n.name.c_str(), jump::status_str(e.status));
     }
     if (idx < 0) {
-        std::printf("[dev] --dev-jump-soak: no surveyed gate in %s; quitting\n",
+        std::printf("[dev] --dev-jump-soak: no READY gate in %s this tick; waiting\n",
                     g.system.name.c_str());
-        sapp_request_quit();
-        return;
+        return;   // don't burn a jump credit; retry next interval
     }
 
-    // Teleport just clear of the gate (toward system center), inside range.
     g.selected_nav = idx;
     const NavPointDef& gate = g.system.nav_points[idx];
-    HMM_Vec3    into = HMM_MulV3F(gate.position, -1.0f);
-    const float len  = HMM_LenV3(into);
-    into = (len > 1e-3f) ? HMM_DivV3F(into, len) : HMM_V3(0.0f, 0.0f, -1.0f);
-    g.camera.position = HMM_AddV3(gate.position, HMM_MulV3F(into, 1000.0f));
-    g.camera.velocity = HMM_V3(0.0f, 0.0f, 0.0f);
-
-    const jump::Eligibility e = jump::evaluate(
-        g.camera, g.system, g.galaxy, g.player.current_system, idx);
-    if (e.status == jump::Status::Ready) {
-        std::printf("[dev] --dev-jump-soak: auto-J %s -> %s via %s (%d remaining)\n",
-                    g.player.current_system.c_str(), e.dest_id.c_str(),
-                    gate.name.c_str(), g.dev_jump_remaining - 1);
-        g.pending_jump_system = e.dest_id;
-        g.pending_jump_nav    = e.arrival_nav;
-        sfx::jump();
-        game_state::request_mode(g.game, GameMode::Loading);
-    } else {
-        std::printf("[dev] --dev-jump-soak: gate '%s' not ready (%s); skipping\n",
-                    gate.name.c_str(), jump::status_str(e.status));
-    }
+    std::printf("[dev] --dev-jump-soak: auto-J %s -> %s via %s (%d remaining)\n",
+                g.player.current_system.c_str(), e.dest_id.c_str(),
+                gate.name.c_str(), g.dev_jump_remaining - 1);
+    g.pending_jump_system = e.dest_id;
+    g.pending_jump_nav    = e.arrival_nav;
+    sfx::jump();
+    game_state::request_mode(g.game, GameMode::Loading);
 
     --g.dev_jump_remaining;
     if (g.dev_jump_remaining <= 0) g.dev_jump_quit = true;
