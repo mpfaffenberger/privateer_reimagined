@@ -327,9 +327,16 @@ void tick(const ShipRegistry& ships, HMM_Vec3 player_pos, float dt,
         // --- spawn pass ---------------------------------------------------
         r.timer += dt;
         if (r.timer < r.spawn_interval)                       continue;
-        if ((int)r.managed_ids.size() >= r.max_concurrent)    { r.timer = r.spawn_interval; continue; }
-        if (total_managed() >= k_director_max)                { r.timer = r.spawn_interval; continue; }
-        if ((int)ships.size() >= k_registry_hard_cap)         { r.timer = r.spawn_interval; continue; }
+        // Budget/cap gates RESET the timer to 0 (not hold it at the
+        // threshold): otherwise the moment a ship dies and frees a slot the
+        // very next tick spawns a replacement — encounters appeared to
+        // respawn instantly. Resetting forces a full spawn_interval delay
+        // after a death before the replacement shows up. The region gate
+        // still HOLDS at the threshold so arriving in a region spawns
+        // promptly rather than after a dead wait.
+        if ((int)r.managed_ids.size() >= r.max_concurrent)    { r.timer = 0.0f; continue; }
+        if (total_managed() >= k_director_max)                { r.timer = 0.0f; continue; }
+        if ((int)ships.size() >= k_registry_hard_cap)         { r.timer = 0.0f; continue; }
         if (!region_armed(r, player_pos))                     { r.timer = r.spawn_interval; continue; }
 
         r.timer = 0.0f;   // attempt consumed regardless of success
