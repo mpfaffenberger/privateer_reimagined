@@ -1220,18 +1220,11 @@ void build_system_scene(bool first_time) {
             const Faction f = faction::from_name(sd.faction_override);
             if (f != Faction::Count) {
                 inst.faction = f;
-                // Per-instance gunnery skill follows the spawned faction
-                // (Confed aces shoot ~37%, pirates ~19%, etc.) so the same
-                // hull fights differently depending on who's flying it.
-                inst.skill_f2 = faction::default_skill_f2(f);
             } else {
                 std::fprintf(stderr, "[main] unknown faction '%s' on '%s' — using class default\n",
                              sd.faction_override.c_str(), class_name.c_str());
             }
         }
-        // Explicit per-ship skill override (JSON "skill": <f2>) wins over
-        // the faction baseline.
-        if (sd.skill_f2 > 0.0f) inst.skill_f2 = sd.skill_f2;
 
         // Translate the JSON behaviour string into the Ship enum.
         if (sd.behavior_kind == "pursue_target") {

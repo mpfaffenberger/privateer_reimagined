@@ -96,13 +96,6 @@ void init();
 Faction     from_name(std::string_view s);
 const char* to_name(Faction f);
 
-// Baseline pilot gunnery skill (skill_f2) for a faction's rank-and-file:
-// disciplined navies shoot better than scrappy outlaws. ~40 novice / ~50
-// veteran / ~60 ace. Used to give per-instance skill to ships spawned with
-// an explicit faction (e.g. the placed-ship faction override) so a Confed
-// ace and a green pirate in the same hull shoot differently.
-float       default_skill_f2(Faction f);
-
 // The two queries the AI layer cares about. NPC-vs-NPC consults the static
 // matrix; NPC-vs-PLAYER folds rep + baseline into thresholds.
 //   eff = clamp(baseline + rep, -100, +100)

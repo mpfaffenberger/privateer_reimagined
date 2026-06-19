@@ -536,7 +536,7 @@ bool should_fire(Ctx& c) {
 
     // Reaction-time gate: hold first shot until the solution has stood for the
     // per-pilot reaction time (skill f2: 40 -> 0.45 s, 60 -> 0.12 s).
-    const float f2  = s.skill_f2;
+    const float f2  = s.klass ? s.klass->skill_f2 : 45.0f;
     const float rt  = 0.45f - std::clamp((f2 - 40.0f) / 20.0f, 0.0f, 1.0f) * (0.45f - 0.12f);
     if (s.ai.fire_solution_at < 0.0f) s.ai.fire_solution_at = c.t_now;
     if ((c.t_now - s.ai.fire_solution_at) < rt) return false;
