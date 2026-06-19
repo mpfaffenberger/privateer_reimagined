@@ -1,7 +1,7 @@
 {
   "name": "Troy",
   "description": "Humboldt Quadrant / Gemini Sector. Jump links: Gemini , Pender's Star , Pyrenees , Regallis , War. Random mission opponents: 2/3 Confederation, 1/3 Merchant. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
-  "skybox_seed": "troy_canonical",
+  "skybox_seed": "troy",
   "star": {
     "preset": "yellow"
   },

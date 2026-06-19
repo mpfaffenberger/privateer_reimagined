@@ -147,6 +147,9 @@ def main() -> int:
     ap.add_argument("system")
     ap.add_argument("--out", default=None, help="output stem (default: snake(name))")
     ap.add_argument("--scale", type=float, default=10.0 / 3.0)
+    ap.add_argument("--skybox", default="troy",
+                    help="skybox_seed to reference (must have saved images "
+                         "under assets/skybox/<seed>/ until on-the-fly gen lands)")
     args = ap.parse_args()
     SCALE = args.scale
 
@@ -181,7 +184,7 @@ def main() -> int:
                         f"Jump links: {info.get('Jump Links','')}. "
                         f"Random mission opponents: {info.get('Random Mission Opponents','')}. "
                         f"(Generated from wcpedia by tools/build_system_from_wcpedia.py.)"),
-        "skybox_seed": out_stem,
+        "skybox_seed": args.skybox,
         "star": {"preset": "yellow"},
         "asteroid_fields": fields,
         "placed_sprites": sprites,

@@ -820,9 +820,41 @@ void build_system_scene(bool first_time) {
             sum = HMM_AddV3(sum, nav.position);
         }
         const float n = (float)g.system.nav_points.size();
-        g.sun.position = HMM_V3(sum.X / n, sum.Y / n, sum.Z / n);
-        std::printf("[main] sun parked at nav-centroid (%.0f, %.0f, %.0f) from %d nav points\n",
+        const HMM_Vec3 centroid = HMM_V3(sum.X / n, sum.Y / n, sum.Z / n);
+
+        // Don't let the star swallow a nav point. If the centroid lands
+        // within the sun's visible extent (core sphere + gas shell) of any
+        // nav, shove it ~30 km in a stable pseudo-random direction and
+        // re-check (a few tries). Seeded off the system name so a given
+        // system always jitters the same way (no per-run flicker).
+        const float clear_r = g.sun.radius * g.sun.gas_radius_mult + 8000.0f;
+        auto overlaps_nav = [&](HMM_Vec3 p) {
+            for (const auto& nav : g.system.nav_points)
+                if (HMM_LenV3(HMM_SubV3(p, nav.position)) < clear_r) return true;
+            return false;
+        };
+        HMM_Vec3 pos = centroid;
+        if (overlaps_nav(pos)) {
+            uint32_t st = 2166136261u;
+            for (char c : g.system.name) st = (st ^ (uint8_t)c) * 16777619u;
+            auto rnd01 = [&]() {
+                st = st * 1664525u + 1013904223u;
+                return (float)((st >> 8) & 0xFFFF) / 65535.0f;
+            };
+            for (int attempt = 0; attempt < 12 && overlaps_nav(pos); ++attempt) {
+                const float az = rnd01() * 6.2831853f;
+                const float el = (rnd01() - 0.5f) * 3.1415926f;
+                const HMM_Vec3 dir = HMM_V3(std::cos(el) * std::cos(az),
+                                            std::sin(el),
+                                            std::cos(el) * std::sin(az));
+                pos = HMM_AddV3(centroid, HMM_MulV3F(dir, 30000.0f));
+            }
+        }
+        g.sun.position = pos;
+        std::printf("[main] sun parked at nav-centroid (%.0f, %.0f, %.0f)%s from %d nav points\n",
                     g.sun.position.X, g.sun.position.Y, g.sun.position.Z,
+                    (pos.X == centroid.X && pos.Y == centroid.Y && pos.Z == centroid.Z)
+                        ? "" : " [jittered clear of a nav]",
                     (int)g.system.nav_points.size());
     }
 
