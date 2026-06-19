@@ -838,6 +838,19 @@ void ai_brain::run_combat(Ship& s, const ShipRegistry& all, float t_now) {
                        ? std::clamp(t_now - s.ai.last_combat_t, 0.0f, 0.5f) : 0.0f;
         s.ai.last_combat_t = t_now;
 
+        // Knife-range override: inside the break-off radius (f0 + hull radii)
+        // a pilot ALWAYS has the juice to peel off. Hold stamina full so a
+        // tired NPC breaks instead of jousting straight through the target
+        // and ramming it (the player especially). Stamina only starts
+        // draining again once it has opened back outside f0.
+        const float f0_radius = (s.klass ? s.klass->engage_f0 : 600.0f) * kPvtScale
+                              + ship::hit_radius_m(s)
+                              + ship::hit_radius_m(*target);
+        if (c.dist <= f0_radius) {
+            s.ai.jink_cooldown_until = -1.0f;
+            s.ai.jink_spent_s        = 0.0f;
+        }
+
         // Recovery finished -> refresh stamina with a fresh rolled budget.
         if (s.ai.jink_cooldown_until >= 0.0f && t_now >= s.ai.jink_cooldown_until) {
             s.ai.jink_cooldown_until = -1.0f;

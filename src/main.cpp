@@ -2757,13 +2757,21 @@ void frame_cb() {
     missile::collide_and_damage(g.missiles, g.ships, dt);
     for (Ship& s : g.ships) ship::regen_shields(s, dt);
 
-    // Death detection: any ship that flipped alive: true -> false this
-    // frame just got killed; spawn an explosion at its last visible
-    // position. Use sprite->position (the post-integration latest)
-    // when available so the FX lines up with the rendered death pose.
+    // Death detection. For NPCs we trigger on ANY occupied dead ship
+    // (not just the alive:true->false edge), because some damage sources
+    // run AFTER this loop in frame order — notably ship-ship collision /
+    // ramming damage further below. An edge-only check missed those
+    // (their alive flips false after the snapshot for the NEXT frame too),
+    // leaving un-reaped "ghost" hulls whose animated lights kept drawing.
+    // Since a dead NPC is reaped (despawned) the moment it's seen here, the
+    // !alive test still fires exactly once per ship; a ram-kill is just
+    // caught one frame later. The PLAYER is never reaped, so it keeps the
+    // was_alive edge to enter the Dying cinematic exactly once.
     for (size_t i = 0; i < g.ships.slot_count() && i < was_alive.size(); ++i) {
         const Ship* s = g.ships.ship_at(i);
-        if (s && was_alive[i] && !s->alive) {
+        const bool died = s && !s->alive &&
+                          (s->is_player ? was_alive[i] : true);
+        if (died) {
             const HMM_Vec3 pos = s->sprite
                 ? s->sprite->position
                 : s->position;
