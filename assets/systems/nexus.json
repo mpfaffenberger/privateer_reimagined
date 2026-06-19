@@ -60,7 +60,7 @@
           "members": [
             {
               "faction": "militia",
-              "ship": "centurion",
+              "ship": "gladius",
               "count": 2
             },
             {
@@ -75,7 +75,7 @@
           "members": [
             {
               "faction": "hunter",
-              "ship": "centurion",
+              "ship": "demon",
               "count": 1
             },
             {
@@ -128,7 +128,7 @@
           "members": [
             {
               "faction": "militia",
-              "ship": "centurion",
+              "ship": "gladius",
               "count": 3
             },
             {
@@ -148,7 +148,7 @@
             },
             {
               "faction": "hunter",
-              "ship": "centurion",
+              "ship": "demon",
               "count": 1
             }
           ]
@@ -274,7 +274,7 @@
             },
             {
               "faction": "militia",
-              "ship": "centurion",
+              "ship": "gladius",
               "count": 3
             }
           ]
@@ -332,7 +332,7 @@
           "members": [
             {
               "faction": "hunter",
-              "ship": "centurion",
+              "ship": "demon",
               "count": 1
             },
             {

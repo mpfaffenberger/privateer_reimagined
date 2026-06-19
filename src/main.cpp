@@ -1873,11 +1873,14 @@ static void respawn_player() {
 // the same scale as their hand-placed kin. Unknown classes fall back to a
 // fighter-ish 80 m.
 static float encounter_class_length(const std::string& cls) {
-    if (cls == "drayman") return 175.0f;  // big heavy hauler
-    if (cls == "galaxy") return 120.0f;
-    if (cls == "orion")  return 60.0f;
-    if (cls == "tarsus") return 100.0f;
-    return 80.0f;   // talon + anything unrecognised
+    if (cls == "drayman")  return 525.0f;  // big heavy hauler (a true freighter hull)
+    if (cls == "kamekh")   return 400.0f;  // Kilrathi capital
+    if (cls == "paradigm") return 450.0f;  // Confed capital
+    if (cls == "galaxy")   return 120.0f;
+    if (cls == "broadsword") return 110.0f;
+    if (cls == "tarsus")   return 100.0f;
+    if (cls == "orion")    return 60.0f;
+    return 80.0f;   // talon + the light fighters + anything unrecognised
 }
 
 // Spawn recipe: claim a sprite slot (reuse freed, else append — deque

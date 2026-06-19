@@ -39,12 +39,9 @@ SHIP = {
     "talon": "talon", "tarsus": "tarsus", "galaxy": "galaxy",
     "centurion": "centurion", "orion": "orion", "broadsword": "broadsword",
     "paradigm": "paradigm", "stiletto": "stiletto",
-    "drayman": "drayman",     # heavy merchant transport (now a real class)
-    "demon":   "centurion",   # bounty-hunter fighter -> centurion (also hunter)
-    "dralthi": "talon",       # Kilrathi light fighter -> Talon stand-in
-    "gothri":  "orion",       # Kilrathi heavy -> gunship stand-in
-    "kamekh":  "paradigm",    # Kilrathi corvette -> capital stand-in
-    "gladius": "centurion",   # Confed light fighter -> centurion stand-in
+    "drayman": "drayman", "demon": "demon", "dralthi": "dralthi",
+    "gothri":  "gothri",  "kamekh": "kamekh", "gladius": "gladius",
+    "scout":   "scout",   "strakha": "strakha",
     "merchant": "tarsus",     # column-shift artifact -> harmless small hull
 }
 

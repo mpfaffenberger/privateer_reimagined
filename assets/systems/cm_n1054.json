@@ -50,7 +50,7 @@
           "members": [
             {
               "faction": "militia",
-              "ship": "centurion",
+              "ship": "gladius",
               "count": 3
             }
           ]
@@ -60,7 +60,7 @@
           "members": [
             {
               "faction": "hunter",
-              "ship": "centurion",
+              "ship": "demon",
               "count": 2
             },
             {

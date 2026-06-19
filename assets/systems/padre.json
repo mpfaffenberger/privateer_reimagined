@@ -34,7 +34,7 @@
           "members": [
             {
               "faction": "militia",
-              "ship": "centurion",
+              "ship": "gladius",
               "count": 3
             }
           ]
@@ -44,7 +44,7 @@
           "members": [
             {
               "faction": "militia",
-              "ship": "centurion",
+              "ship": "gladius",
               "count": 2
             },
             {
@@ -64,7 +64,7 @@
             },
             {
               "faction": "militia",
-              "ship": "centurion",
+              "ship": "gladius",
               "count": 2
             }
           ]
@@ -97,7 +97,7 @@
           "members": [
             {
               "faction": "militia",
-              "ship": "centurion",
+              "ship": "gladius",
               "count": 3
             },
             {
@@ -112,7 +112,7 @@
           "members": [
             {
               "faction": "militia",
-              "ship": "centurion",
+              "ship": "gladius",
               "count": 2
             },
             {

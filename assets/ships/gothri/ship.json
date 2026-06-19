@@ -1,0 +1,39 @@
+{
+  "name":           "gothri",
+  "display_name":   "Gothri",
+  "class_label":    "Kilrathi Fighter",
+  "atlas_manifest": "ships/gothri/atlas_manifest_3d.json",
+  "default_faction": "kilrathi",
+
+  "armor_fore_cm": 17.5,
+  "armor_aft_cm":  17.5,
+  "armor_side_cm": 15,
+
+  "cruise_speed":      450,
+  "afterburner_speed": 1200,
+  "acceleration":      "very good",
+  "max_ypr":           "good",
+
+  "personality":       "standard",
+
+  "radar_range":   25000,
+  "weapons_range": 5000,
+
+  "max_engine_level": 2,
+  "max_shield_level": 3,
+  "default_shield":   "Shield Generator 2",
+  "default_armor":    "Tungsten Armor",
+
+  "default_guns": [
+    { "offset_body": [-3.0, 0.0, 3.0], "type": "mass_driver" },
+    { "offset_body": [ 3.0, 0.0, 3.0], "type": "mass_driver" },
+    { "offset_body": [-1.5, 0.0, 3.5], "type": "particle_cannon" },
+    { "offset_body": [ 1.5, 0.0, 3.5], "type": "particle_cannon" }
+  ],
+
+  "energy_max":      220,
+  "energy_recharge": 34,
+
+  "cargo_units":     15,
+  "cargo_units_max": 25
+}

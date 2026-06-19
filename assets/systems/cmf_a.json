@@ -24,7 +24,7 @@
           "members": [
             {
               "faction": "hunter",
-              "ship": "centurion",
+              "ship": "demon",
               "count": 3
             }
           ]
@@ -34,7 +34,7 @@
           "members": [
             {
               "faction": "kilrathi",
-              "ship": "orion",
+              "ship": "gothri",
               "count": 3
             }
           ]
@@ -80,7 +80,7 @@
           "members": [
             {
               "faction": "kilrathi",
-              "ship": "talon",
+              "ship": "dralthi",
               "count": 4
             }
           ]

@@ -1,0 +1,38 @@
+{
+  "name":           "dralthi",
+  "display_name":   "Dralthi",
+  "class_label":    "Kilrathi Light Fighter",
+  "atlas_manifest": "ships/dralthi/atlas_manifest_3d.json",
+  "default_faction": "kilrathi",
+
+  "armor_fore_cm": 15,
+  "armor_aft_cm":  13.5,
+  "armor_side_cm": 12,
+
+  "cruise_speed":      400,
+  "afterburner_speed": 1000,
+  "acceleration":      "excellent",
+  "max_ypr":           "excellent",
+
+  "personality":       "standard",
+
+  "radar_range":   25000,
+  "weapons_range": 4500,
+
+  "max_engine_level": 2,
+  "max_shield_level": 3,
+  "default_shield":   "Shield Generator 2",
+  "default_armor":    "Tungsten Armor",
+
+  "default_guns": [
+    { "offset_body": [-2.5, 0.0, 3.0], "type": "laser" },
+    { "offset_body": [ 2.5, 0.0, 3.0], "type": "laser" },
+    { "offset_body": [ 0.0, 0.0, 3.5], "type": "laser" }
+  ],
+
+  "energy_max":      180,
+  "energy_recharge": 30,
+
+  "cargo_units":     10,
+  "cargo_units_max": 15
+}

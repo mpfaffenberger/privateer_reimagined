@@ -1,0 +1,36 @@
+{
+  "name":           "drone",
+  "display_name":   "Drone",
+  "class_label":    "Target Drone",
+  "atlas_manifest": "ships/drone/atlas_manifest_3d.json",
+  "default_faction": "civilian",
+
+  "armor_fore_cm": 8,
+  "armor_aft_cm":  8,
+  "armor_side_cm": 8,
+
+  "cruise_speed":      120,
+  "afterburner_speed": 0,
+  "acceleration":      "poor",
+  "max_ypr":           "average",
+
+  "personality":       "standard",
+
+  "radar_range":   12000,
+  "weapons_range": 3000,
+
+  "max_engine_level": 1,
+  "max_shield_level": 1,
+  "default_shield":   "Light Shields",
+  "default_armor":    "Plasteel Armor",
+
+  "default_guns": [
+    { "offset_body": [0.0, 0.0, 2.0], "type": "mass_driver" }
+  ],
+
+  "energy_max":      80,
+  "energy_recharge": 15,
+
+  "cargo_units":     0,
+  "cargo_units_max": 0
+}

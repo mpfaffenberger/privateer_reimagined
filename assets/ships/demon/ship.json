@@ -1,0 +1,39 @@
+{
+  "name":           "demon",
+  "display_name":   "Demon",
+  "class_label":    "Bounty Hunter Light Fighter",
+  "atlas_manifest": "ships/demon/atlas_manifest_3d.json",
+  "default_faction": "hunter",
+
+  "armor_fore_cm": 14,
+  "armor_aft_cm":  12,
+  "armor_side_cm": 9,
+
+  "cruise_speed":      450,
+  "afterburner_speed": 1200,
+  "acceleration":      "very good",
+  "max_ypr":           "good",
+
+  "personality":       "standard",
+
+  "radar_range":   25000,
+  "weapons_range": 4500,
+
+  "max_engine_level": 2,
+  "max_shield_level": 3,
+  "default_shield":   "Shield Generator 2",
+  "default_armor":    "Tungsten Armor",
+
+  "default_guns": [
+    { "offset_body": [-2.5, 0.0, 3.0], "type": "laser" },
+    { "offset_body": [ 2.5, 0.0, 3.0], "type": "laser" },
+    { "offset_body": [-1.5, 0.0, 3.5], "type": "meson_blaster" },
+    { "offset_body": [ 1.5, 0.0, 3.5], "type": "meson_blaster" }
+  ],
+
+  "energy_max":      200,
+  "energy_recharge": 32,
+
+  "cargo_units":     20,
+  "cargo_units_max": 30
+}

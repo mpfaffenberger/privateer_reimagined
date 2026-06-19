@@ -34,7 +34,7 @@
           "members": [
             {
               "faction": "militia",
-              "ship": "centurion",
+              "ship": "gladius",
               "count": 2
             },
             {
@@ -115,7 +115,7 @@
           "members": [
             {
               "faction": "militia",
-              "ship": "centurion",
+              "ship": "gladius",
               "count": 4
             }
           ]
@@ -193,7 +193,7 @@
           "members": [
             {
               "faction": "kilrathi",
-              "ship": "orion",
+              "ship": "gothri",
               "count": 4
             }
           ]

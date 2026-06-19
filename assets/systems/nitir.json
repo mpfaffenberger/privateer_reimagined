@@ -50,7 +50,7 @@
           "members": [
             {
               "faction": "kilrathi",
-              "ship": "orion",
+              "ship": "gothri",
               "count": 4
             }
           ]
@@ -60,7 +60,7 @@
           "members": [
             {
               "faction": "kilrathi",
-              "ship": "orion",
+              "ship": "gothri",
               "count": 3
             },
             {
@@ -75,7 +75,7 @@
           "members": [
             {
               "faction": "hunter",
-              "ship": "centurion",
+              "ship": "demon",
               "count": 1
             },
             {
@@ -128,7 +128,7 @@
           "members": [
             {
               "faction": "kilrathi",
-              "ship": "orion",
+              "ship": "gothri",
               "count": 2
             },
             {
@@ -148,7 +148,7 @@
             },
             {
               "faction": "hunter",
-              "ship": "centurion",
+              "ship": "demon",
               "count": 1
             }
           ]
@@ -179,7 +179,7 @@
           "members": [
             {
               "faction": "kilrathi",
-              "ship": "orion",
+              "ship": "gothri",
               "count": 2
             },
             {
@@ -199,7 +199,7 @@
             },
             {
               "faction": "kilrathi",
-              "ship": "talon",
+              "ship": "dralthi",
               "count": 2
             }
           ]
@@ -214,7 +214,7 @@
             },
             {
               "faction": "kilrathi",
-              "ship": "orion",
+              "ship": "gothri",
               "count": 3
             }
           ]
@@ -262,7 +262,7 @@
             },
             {
               "faction": "kilrathi",
-              "ship": "talon",
+              "ship": "dralthi",
               "count": 2
             }
           ]
@@ -272,7 +272,7 @@
           "members": [
             {
               "faction": "kilrathi",
-              "ship": "talon",
+              "ship": "dralthi",
               "count": 2
             }
           ]
@@ -330,7 +330,7 @@
             },
             {
               "faction": "kilrathi",
-              "ship": "orion",
+              "ship": "gothri",
               "count": 2
             }
           ]
@@ -345,7 +345,7 @@
             },
             {
               "faction": "kilrathi",
-              "ship": "orion",
+              "ship": "gothri",
               "count": 2
             }
           ]

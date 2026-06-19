@@ -1,0 +1,37 @@
+{
+  "name":           "scout",
+  "display_name":   "Scout",
+  "class_label":    "Recon Scout",
+  "atlas_manifest": "ships/scout/atlas_manifest_3d.json",
+  "default_faction": "militia",
+
+  "armor_fore_cm": 10,
+  "armor_aft_cm":  8,
+  "armor_side_cm": 7,
+
+  "cruise_speed":      480,
+  "afterburner_speed": 1100,
+  "acceleration":      "very good",
+  "max_ypr":           "good",
+
+  "personality":       "standard",
+
+  "radar_range":   30000,
+  "weapons_range": 4000,
+
+  "max_engine_level": 2,
+  "max_shield_level": 2,
+  "default_shield":   "Light Shields",
+  "default_armor":    "Plasteel Armor",
+
+  "default_guns": [
+    { "offset_body": [-2.0, 0.0, 3.0], "type": "mass_driver" },
+    { "offset_body": [ 2.0, 0.0, 3.0], "type": "mass_driver" }
+  ],
+
+  "energy_max":      150,
+  "energy_recharge": 28,
+
+  "cargo_units":     20,
+  "cargo_units_max": 30
+}

@@ -24,12 +24,12 @@
           "members": [
             {
               "faction": "kilrathi",
-              "ship": "orion",
+              "ship": "gothri",
               "count": 3
             },
             {
               "faction": "kilrathi",
-              "ship": "paradigm",
+              "ship": "kamekh",
               "count": 1
             }
           ]
@@ -39,7 +39,7 @@
           "members": [
             {
               "faction": "kilrathi",
-              "ship": "talon",
+              "ship": "dralthi",
               "count": 4
             }
           ]
@@ -49,12 +49,12 @@
           "members": [
             {
               "faction": "kilrathi",
-              "ship": "orion",
+              "ship": "gothri",
               "count": 2
             },
             {
               "faction": "kilrathi",
-              "ship": "talon",
+              "ship": "dralthi",
               "count": 2
             }
           ]
@@ -64,7 +64,7 @@
           "members": [
             {
               "faction": "kilrathi",
-              "ship": "orion",
+              "ship": "gothri",
               "count": 4
             }
           ]
@@ -87,12 +87,12 @@
           "members": [
             {
               "faction": "kilrathi",
-              "ship": "orion",
+              "ship": "gothri",
               "count": 3
             },
             {
               "faction": "kilrathi",
-              "ship": "paradigm",
+              "ship": "kamekh",
               "count": 1
             }
           ]
@@ -102,7 +102,7 @@
           "members": [
             {
               "faction": "kilrathi",
-              "ship": "talon",
+              "ship": "dralthi",
               "count": 4
             }
           ]
@@ -112,12 +112,12 @@
           "members": [
             {
               "faction": "kilrathi",
-              "ship": "orion",
+              "ship": "gothri",
               "count": 2
             },
             {
               "faction": "kilrathi",
-              "ship": "talon",
+              "ship": "dralthi",
               "count": 2
             }
           ]
@@ -127,7 +127,7 @@
           "members": [
             {
               "faction": "kilrathi",
-              "ship": "orion",
+              "ship": "gothri",
               "count": 4
             }
           ]

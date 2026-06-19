@@ -1,0 +1,32 @@
+{
+  "name":           "derelict",
+  "display_name":   "Derelict",
+  "class_label":    "Derelict Hulk",
+  "atlas_manifest": "ships/derelict/atlas_manifest_3d.json",
+  "default_faction": "civilian",
+
+  "armor_fore_cm": 20,
+  "armor_aft_cm":  20,
+  "armor_side_cm": 20,
+
+  "cruise_speed":      0,
+  "afterburner_speed": 0,
+  "acceleration":      "poor",
+  "max_ypr":           "poor",
+
+  "personality":       "coward",
+
+  "radar_range":   0,
+  "weapons_range": 0,
+
+  "max_engine_level": 0,
+  "max_shield_level": 0,
+
+  "default_guns": [],
+
+  "energy_max":      0,
+  "energy_recharge": 0,
+
+  "cargo_units":     0,
+  "cargo_units_max": 0
+}

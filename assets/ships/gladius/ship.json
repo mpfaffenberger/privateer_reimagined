@@ -1,0 +1,38 @@
+{
+  "name":           "gladius",
+  "display_name":   "Gladius",
+  "class_label":    "Militia Light Fighter",
+  "atlas_manifest": "ships/gladius/atlas_manifest_3d.json",
+  "default_faction": "militia",
+
+  "armor_fore_cm": 14,
+  "armor_aft_cm":  10,
+  "armor_side_cm": 8,
+
+  "cruise_speed":      400,
+  "afterburner_speed": 1000,
+  "acceleration":      "very good",
+  "max_ypr":           "good",
+
+  "personality":       "standard",
+
+  "radar_range":   25000,
+  "weapons_range": 4500,
+
+  "max_engine_level": 2,
+  "max_shield_level": 3,
+  "default_shield":   "Shield Generator 2",
+  "default_armor":    "Tungsten Armor",
+
+  "default_guns": [
+    { "offset_body": [-2.5, 0.0, 3.0], "type": "laser" },
+    { "offset_body": [ 2.5, 0.0, 3.0], "type": "laser" },
+    { "offset_body": [ 0.0, 0.0, 3.5], "type": "particle_cannon" }
+  ],
+
+  "energy_max":      180,
+  "energy_recharge": 30,
+
+  "cargo_units":     15,
+  "cargo_units_max": 20
+}
