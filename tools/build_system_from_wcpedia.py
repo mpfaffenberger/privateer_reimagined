@@ -101,44 +101,24 @@ def nav_from(desc: str, pos: list[int], idx: int, sysname: str):
             None, None)
 
 
-def build_encounters(src: dict) -> list[dict]:
-    """Aggregate the per-nav spawn groups into ONE weighted 'anywhere' rule
-    (faction mix + class mix), weighted by chance% x ship count. Per-nav
-    region fidelity waits on the engine 'nav' region (future work)."""
-    fac_w: dict[str, float] = {}
-    cls_w: dict[str, float] = {}
-    maxgrp = 2
-    for groups in src["encounters"].values():
-        for g in groups:
-            ch = g["chance_pct"] if isinstance(g["chance_pct"], (int, float)) else 0
-            grp_ships = 0
-            for m in g["members"]:
-                cnt = m["count"] if isinstance(m["count"], int) else 1
-                grp_ships += cnt
-                fk = FACTION.get(m["faction"].strip().lower())
-                sk = SHIP.get(m["ship"].strip().lower())
-                if fk:
-                    fac_w[fk] = fac_w.get(fk, 0.0) + ch * cnt
-                if sk:
-                    cls_w[sk] = cls_w.get(sk, 0.0) + ch * cnt
-            maxgrp = max(maxgrp, grp_ships)
-    if not fac_w or not cls_w:
-        return []
-    norm = max(fac_w.values())
-    factions = [{"name": k, "weight": round(v / norm, 3)}
-                for k, v in sorted(fac_w.items(), key=lambda kv: -kv[1])]
-    normc = max(cls_w.values())
-    classes = [{"name": k, "weight": round(v / normc, 3)}
-               for k, v in sorted(cls_w.items(), key=lambda kv: -kv[1])]
-    return [{
-        "name": "gemini_traffic",
-        "region": "anywhere",
-        "factions": factions,
-        "classes": classes,
-        "max_concurrent": min(6, maxgrp),
-        "spawn_interval": 12.0,
-        "initial_ai_state": "patrol",
-    }]
+def canon_groups(groups: list) -> list[dict]:
+    """Canonicalize one nav point's wcnews encounter table into engine form:
+    [{chance, members:[{faction, ship, count}]}], mapping faction/ship names
+    to our keys (ships without a ship.json fall back via SHIP). Drops members
+    whose faction/ship don't resolve and groups left empty."""
+    out = []
+    for g in groups:
+        ch = g["chance_pct"] if isinstance(g["chance_pct"], (int, float)) else 0
+        members = []
+        for m in g["members"]:
+            fk = FACTION.get(m["faction"].strip().lower())
+            sk = SHIP.get(m["ship"].strip().lower())
+            cnt = m["count"] if isinstance(m["count"], int) else 1
+            if fk and sk and cnt > 0:
+                members.append({"faction": fk, "ship": sk, "count": cnt})
+        if ch > 0 and members:
+            out.append({"chance": ch, "members": members})
+    return out
 
 
 def main() -> int:
@@ -160,9 +140,16 @@ def main() -> int:
     navs, sprites, fields = [], [], []
     centroid = [0, 0, 0]
     spawn_nav = None
+    enc_groups_total = 0
     for i, n in enumerate(src["nav_points"], 1):
         pos = emap(n["x"], n["y"], n["z"])
         nav, spr, ast = nav_from(n["description"], pos, i, sysname)
+        # Attach this nav's canonical wcnews encounter table (rolled once on
+        # system entry by the engine; no continuous refill).
+        groups = canon_groups(src["encounters"].get(f"Nav {i}", []))
+        if groups:
+            nav["encounters"] = groups
+            enc_groups_total += len(groups)
         navs.append(nav)
         if spr:
             sprites.append(spr)
@@ -189,13 +176,13 @@ def main() -> int:
         "asteroid_fields": fields,
         "placed_sprites": sprites,
         "nav_points": navs,
-        "encounters": build_encounters(src),
+        "encounters": [],   # no continuous director; per-nav tables drive spawns
         "player_start": {"position": spawn_nav, "look_at": centroid},
     }
     path = SYS / f"{out_stem}.json"
     path.write_text(json.dumps(out, indent=2) + "\n")
     print(f"wrote {path.relative_to(REPO)}: {len(navs)} nav, {len(sprites)} sprite, "
-          f"{len(fields)} field, {len(out['encounters'])} encounter rule(s)")
+          f"{len(fields)} field, {enc_groups_total} per-nav encounter group(s)")
     print(f"  jump links -> {[n['links_to'] for n in navs if n['kind']=='jump']}")
     print(f"  bases      -> {[n['base_id'] for n in navs if n.get('dockable')]}")
     return 0

@@ -545,6 +545,7 @@ static float g_speed_input_ref = 0.0f;
 void unload_current_system();
 void build_system_scene(bool first_time);
 bool load_and_build_system(const std::string& id, bool first_time);
+static uint32_t encounter_spawn(const encounters::SpawnRequest& req);   // defined below
 
 // ---- sokol callbacks --------------------------------------------------------
 
@@ -1310,27 +1311,35 @@ void build_system_scene(bool first_time) {
     // scene (a roaming Orion in an otherwise Talon-only system). Without
     // this, encounter_spawn would hit "atlas not loaded" and skip. Same
     // try_emplace + load pattern as the placed-sprite loop.
-    for (const EncounterRuleDef& rule : g.system.encounters) {
-        for (const EncounterWeight& cw : rule.classes) {
-            if (cw.name.empty()) continue;
-            // np-wdk: resolve to the _3d atlas before load AND use it as the
-            // cache key, so encounter_spawn's later find() hits the same slot.
-            const std::string atlas_stem =
-                resolve_ship_atlas_stem("ships/" + cw.name + "/atlas_manifest");
-            auto [it, inserted] = g.ship_sprite_atlases.try_emplace(atlas_stem, ShipSpriteAtlas{});
-            if (inserted && !load_ship_sprite_atlas(atlas_stem, it->second, g.sprite_art)) {
-                std::fprintf(stderr, "[encounter] could not preload atlas '%s' "
-                             "(class '%s' rules will spawn nothing)\n",
-                             atlas_stem.c_str(), cw.name.c_str());
-                g.ship_sprite_atlases.erase(it);
-            }
+    // Collect every ship class referenced by any nav's wcnews encounter
+    // table (the canonical per-nav spawn model) plus any legacy rule mixes,
+    // and preload its atlas so populate_on_entry's spawns resolve.
+    auto preload_class = [&](const std::string& cls) {
+        if (cls.empty()) return;
+        const std::string atlas_stem =
+            resolve_ship_atlas_stem("ships/" + cls + "/atlas_manifest");
+        auto [it, inserted] = g.ship_sprite_atlases.try_emplace(atlas_stem, ShipSpriteAtlas{});
+        if (inserted && !load_ship_sprite_atlas(atlas_stem, it->second, g.sprite_art)) {
+            std::fprintf(stderr, "[encounter] could not preload atlas '%s' "
+                         "(class '%s' will spawn nothing)\n", atlas_stem.c_str(), cls.c_str());
+            g.ship_sprite_atlases.erase(it);
         }
-    }
-    // Parse the spawn tables into runtime rule state, and hand the live
-    // ship registry + player reputation to the threat oracle so
+    };
+    for (const NavPointDef& nav : g.system.nav_points)
+        for (const EncounterGroupDef& grp : nav.encounters)
+            for (const EncounterMemberDef& m : grp.members) preload_class(m.ship_class);
+    for (const EncounterRuleDef& rule : g.system.encounters)
+        for (const EncounterWeight& cw : rule.classes) preload_class(cw.name);
+
+    // Hand the live ship registry + player reputation to the threat oracle so
     // threat::hostiles_near() (autopilot gate) queries the real world.
-    encounters::init(g.system);
+    encounters::init(g.system);   // legacy rule director (inert for nav-table systems)
     threat::set_world(&g.ships, &g.player.rep);
+
+    // wcnews encounter model: roll each nav's table ONCE and spawn its wave
+    // now (system entry). No continuous refill — see encounters.h. The
+    // player camera is already at player_start by this point.
+    encounters::populate_on_entry(g.system, g.camera.position, encounter_spawn);
 
     // Fly-by-wire defaults OFF. Player toggles it with SPACE. This is much
     // friendlier for tools/capture scripts and prevents the camera from
@@ -2525,16 +2534,14 @@ void frame_cb() {
         for (Ship& s : g.ships) ship_ai::tick(s, g.ships, t_now);
     }
 
-    // Encounter director (np-ma2.3): maintain the live NPC population
-    // around the player — spawn fresh contacts 8-15 km out when a rule is
-    // armed + under budget, retire ones that drift past 40 km without a
-    // fight. Runs here (after AI, as a standalone call — NOT nested in a
-    // registry iteration) so a spawn/despawn never mutates storage while
-    // something holds a Ship&; a ship spawned this frame is simply picked
-    // up by perception/AI next frame. Flight-only by virtue of the
-    // mode-gate return far above.
-    encounters::tick(g.ships, g.camera.position, dt,
-                     encounter_spawn, encounter_despawn);
+    // Encounters are no longer maintained continuously: the wcnews model
+    // rolls each nav's table ONCE on system entry (populate_on_entry in
+    // build_system_scene) and never refills until the next entry / base
+    // launch. So there is no per-frame director tick — dead NPCs are reaped
+    // by the death pass and stay gone. encounter_despawn is retained for the
+    // future base-launch "clear old wave" path; reference it so it doesn't
+    // warn as unused.
+    (void)&encounter_despawn;
 
     // Player firing input. Hold LEFT_CTRL to fire — clear, modifier-style
     // key that doesn't conflict with the existing W/A/S/D thrust + Q/E

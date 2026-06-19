@@ -189,10 +189,30 @@ struct PlacedMeshDef {
 // `kind` is a free-form string used for HUD prefixing ("STATION", "JUMP",
 // "PLANET") — kept as a string rather than an enum so adding a new kind
 // ("WRECK", "ANOMALY") doesn't require code changes.
+// A wcnews per-nav-point random-encounter table (canonical Gemini spawns).
+// Each nav carries probability-weighted GROUPS; the dice are rolled ONCE per
+// nav when the system is entered (or the player launches from a base) — one
+// group is chosen per its `chance` weight and its members spawn near that nav.
+// There is NO continuous refill: a system is populated at entry and stays
+// finite until you leave / re-enter / relaunch.
+struct EncounterMemberDef {
+    std::string faction;        // faction key, e.g. "pirate"
+    std::string ship_class;     // ship_class::find key, e.g. "talon"
+    int         count = 1;
+};
+struct EncounterGroupDef {
+    float chance = 0.0f;        // relative % weight within this nav's table
+    std::vector<EncounterMemberDef> members;
+};
+
 struct NavPointDef {
     std::string name;                       // human-readable, shown on HUD
     std::string kind     = "nav";           // "station" | "jump" | "planet" | ...
     HMM_Vec3    position = { 0.0f, 0.0f, 0.0f };
+
+    // wcnews random-encounter table for this nav (may be empty). Rolled
+    // once on system entry / base launch; see EncounterGroupDef above.
+    std::vector<EncounterGroupDef> encounters;
 
     // Docking metadata (np-9cu.1). `dockable` gates whether the player
     // can request a landing here; `base_id` (empty = not a base) is the

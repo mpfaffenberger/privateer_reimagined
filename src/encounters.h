@@ -76,8 +76,9 @@ constexpr float k_spawn_dist_min    =  8000.0f;  // nearest a fresh NPC appears
 constexpr float k_spawn_dist_max    = 15000.0f;  // farthest — still a distant speck
 constexpr float k_despawn_radius    = 40000.0f;  // beyond this, retire (if idle)
 constexpr float k_region_activate_m = 25000.0f;  // player-to-region range to arm a rule
-constexpr int   k_director_max      = 8;         // total director-owned ships
+constexpr int   k_director_max      = 8;         // total director-owned ships (legacy rule director)
 constexpr int   k_registry_hard_cap = 64;        // absolute backstop on registry size
+constexpr int   k_entry_population_max = 24;     // cap for a one-shot system-entry roll
 
 // What the director asks the host to bring into the world. The host
 // resolves class_name -> atlas + display size and runs the spawn recipe.
@@ -113,6 +114,16 @@ void shutdown();
 // rules were authored.
 void tick(const ShipRegistry& ships, HMM_Vec3 player_pos, float dt,
           const SpawnFn& spawn, const DespawnFn& despawn);
+
+// wcnews encounter model (np): roll each nav point's per-nav probability
+// table ONCE and spawn the chosen group near that nav. This is the ONLY
+// thing that introduces NPC traffic now — there is no continuous refill.
+// Call it when the dice should be re-rolled: on system entry (system load /
+// jump-in) and on base launch. `player_pos` is used only to nudge a group
+// off the player's own spawn point so nothing pops in point-blank. Spawns
+// go through the same host SpawnFn recipe the director used.
+void populate_on_entry(const StarSystem& system, HMM_Vec3 player_pos,
+                       const SpawnFn& spawn);
 
 // Live count of director-owned ships (for HUD / debug). Cheap.
 int population();

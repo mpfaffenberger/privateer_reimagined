@@ -116,6 +116,26 @@ NavPointDef parse_nav(const json::Value& v) {
     // dangling frontier gate simply omits them.
     if (auto* p = v.find("links_to"))     n.links_to     = p->as_string();
     if (auto* p = v.find("links_to_nav")) n.links_to_nav = p->as_string();
+    // wcnews per-nav encounter table: [{chance, members:[{faction,ship,count}]}]
+    if (auto* enc = v.find("encounters"); enc && enc->is_array()) {
+        for (const json::Value& g : enc->as_array()) {
+            if (!g.is_object()) continue;
+            EncounterGroupDef grp;
+            if (auto* c = g.find("chance")) grp.chance = (float)c->as_float();
+            if (auto* ms = g.find("members"); ms && ms->is_array()) {
+                for (const json::Value& m : ms->as_array()) {
+                    if (!m.is_object()) continue;
+                    EncounterMemberDef mem;
+                    if (auto* p = m.find("faction")) mem.faction    = p->as_string();
+                    if (auto* p = m.find("ship"))    mem.ship_class = p->as_string();
+                    if (auto* p = m.find("count"))   mem.count      = (int)p->as_float();
+                    if (!mem.ship_class.empty() && !mem.faction.empty())
+                        grp.members.push_back(mem);
+                }
+            }
+            if (!grp.members.empty()) n.encounters.push_back(grp);
+        }
+    }
     return n;
 }
 

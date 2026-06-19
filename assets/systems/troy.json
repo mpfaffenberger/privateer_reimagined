@@ -45,7 +45,39 @@
         133333
       ],
       "links_to": "pyrenees",
-      "links_to_nav": "Troy Jump"
+      "links_to_nav": "Troy Jump",
+      "encounters": [
+        {
+          "chance": 60,
+          "members": [
+            {
+              "faction": "pirate",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "militia",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 10,
+          "members": [
+            {
+              "faction": "retro",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        }
+      ]
     },
     {
       "name": "Achilles Mining Base",
@@ -56,7 +88,69 @@
         0
       ],
       "dockable": true,
-      "base_id": "achilles"
+      "base_id": "achilles",
+      "encounters": [
+        {
+          "chance": 40,
+          "members": [
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 2
+            },
+            {
+              "faction": "militia",
+              "ship": "talon",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "chance": 50,
+          "members": [
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 1
+            },
+            {
+              "faction": "militia",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 5,
+          "members": [
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 1
+            },
+            {
+              "faction": "pirate",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 5,
+          "members": [
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 1
+            },
+            {
+              "faction": "pirate",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        }
+      ]
     },
     {
       "name": "Pender's Star Jump",
@@ -67,7 +161,54 @@
         -133333
       ],
       "links_to": "penders_star",
-      "links_to_nav": "Troy Jump"
+      "links_to_nav": "Troy Jump",
+      "encounters": [
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "merchant",
+              "ship": "tarsus",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "hunter",
+              "ship": "centurion",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "pirate",
+              "ship": "talon",
+              "count": 2
+            },
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "chance": 10,
+          "members": [
+            {
+              "faction": "retro",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        }
+      ]
     },
     {
       "name": "Hector Mining Base",
@@ -78,7 +219,54 @@
         -200000
       ],
       "dockable": true,
-      "base_id": "hector"
+      "base_id": "hector",
+      "encounters": [
+        {
+          "chance": 20,
+          "members": [
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 60,
+          "members": [
+            {
+              "faction": "militia",
+              "ship": "talon",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "chance": 10,
+          "members": [
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 1
+            },
+            {
+              "faction": "pirate",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 10,
+          "members": [
+            {
+              "faction": "retro",
+              "ship": "talon",
+              "count": 4
+            }
+          ]
+        }
+      ]
     },
     {
       "name": "Regallis Jump",
@@ -89,7 +277,44 @@
         -66667
       ],
       "links_to": "regallis",
-      "links_to_nav": "Troy Jump"
+      "links_to_nav": "Troy Jump",
+      "encounters": [
+        {
+          "chance": 40,
+          "members": [
+            {
+              "faction": "militia",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 40,
+          "members": [
+            {
+              "faction": "pirate",
+              "ship": "talon",
+              "count": 2
+            },
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "chance": 20,
+          "members": [
+            {
+              "faction": "retro",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        }
+      ]
     },
     {
       "name": "Helen Agricultural Planet",
@@ -100,7 +325,59 @@
         100000
       ],
       "dockable": true,
-      "base_id": "helen"
+      "base_id": "helen",
+      "encounters": [
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "chance": 35,
+          "members": [
+            {
+              "faction": "hunter",
+              "ship": "orion",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 10,
+          "members": [
+            {
+              "faction": "pirate",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 15,
+          "members": [
+            {
+              "faction": "merchant",
+              "ship": "galaxy",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 10,
+          "members": [
+            {
+              "faction": "retro",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        }
+      ]
     },
     {
       "name": "War Jump",
@@ -111,7 +388,54 @@
         150000
       ],
       "links_to": "war",
-      "links_to_nav": "Troy Jump"
+      "links_to_nav": "Troy Jump",
+      "encounters": [
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "militia",
+              "ship": "talon",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "pirate",
+              "ship": "talon",
+              "count": 2
+            },
+            {
+              "faction": "militia",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "pirate",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 10,
+          "members": [
+            {
+              "faction": "retro",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        }
+      ]
     },
     {
       "name": "Troy Nav 8",
@@ -120,64 +444,44 @@
         50000,
         -100000,
         33333
+      ],
+      "encounters": [
+        {
+          "chance": 60,
+          "members": [
+            {
+              "faction": "militia",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 20,
+          "members": [
+            {
+              "faction": "pirate",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 20,
+          "members": [
+            {
+              "faction": "retro",
+              "ship": "talon",
+              "count": 2
+            }
+          ]
+        }
       ]
     }
   ],
-  "encounters": [
-    {
-      "name": "gemini_traffic",
-      "region": "anywhere",
-      "factions": [
-        {
-          "name": "militia",
-          "weight": 1.0
-        },
-        {
-          "name": "pirate",
-          "weight": 0.658
-        },
-        {
-          "name": "merchant",
-          "weight": 0.521
-        },
-        {
-          "name": "retro",
-          "weight": 0.274
-        },
-        {
-          "name": "hunter",
-          "weight": 0.178
-        }
-      ],
-      "classes": [
-        {
-          "name": "talon",
-          "weight": 1.0
-        },
-        {
-          "name": "galaxy",
-          "weight": 0.227
-        },
-        {
-          "name": "orion",
-          "weight": 0.05
-        },
-        {
-          "name": "tarsus",
-          "weight": 0.043
-        },
-        {
-          "name": "centurion",
-          "weight": 0.043
-        }
-      ],
-      "max_concurrent": 4,
-      "spawn_interval": 12.0,
-      "initial_ai_state": "patrol"
-    }
-  ],
+  "encounters": [],
   "player_start": {
-    "comment": "Spawn ~6 km off Achilles Mining Base (Nav 2 @ 200000,-133333,0), looking right at it.",
+    "comment": "Spawn ~6 km off Achilles Mining Base (Nav 2), looking at it.",
     "position": [
       200000,
       -133333,

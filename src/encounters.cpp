@@ -292,6 +292,65 @@ void shutdown() {
 
 int population() { return total_managed(); }
 
+// ---- wcnews per-nav encounter model (roll once on entry, no refill) --------
+void populate_on_entry(const StarSystem& system, HMM_Vec3 player_pos,
+                       const SpawnFn& spawn) {
+    // Re-roll differently each entry/launch: seed off a call counter so two
+    // visits to the same system aren't identical, but stay self-contained.
+    static uint32_t s_entry = 0;
+    std::mt19937 rng(0x9E3779B9u ^ (++s_entry * 2654435761u));
+    std::uniform_real_distribution<float> U(0.0f, 1.0f);
+
+    int spawned = 0, nav_tables = 0;
+    for (const NavPointDef& nav : system.nav_points) {
+        if (nav.encounters.empty()) continue;
+        ++nav_tables;
+
+        // Roll ONE group from this nav's table, weighted by `chance`.
+        float total = 0.0f;
+        for (const auto& g : nav.encounters) total += std::max(0.0f, g.chance);
+        if (total <= 0.0f) continue;
+        float r = U(rng) * total;
+        const EncounterGroupDef* chosen = &nav.encounters.front();
+        for (const auto& g : nav.encounters) {
+            r -= std::max(0.0f, g.chance);
+            if (r <= 0.0f) { chosen = &g; break; }
+        }
+
+        // Spawn the group's members in a loose cluster near the nav. If that
+        // lands within the min spawn shell of the player (e.g. the nav the
+        // player launched from), push it out so nothing appears point-blank.
+        for (const EncounterMemberDef& m : chosen->members) {
+            const Faction fac = faction::from_name(m.faction);
+            if (fac == Faction::Count) continue;
+            for (int k = 0; k < m.count; ++k) {
+                if (spawned >= k_entry_population_max) break;
+                HMM_Vec3 off = HMM_V3(U(rng) * 2 - 1, U(rng) * 2 - 1, U(rng) * 2 - 1);
+                const float ol = len(off);
+                off = (ol > 1e-3f) ? HMM_MulV3F(off, (800.0f + U(rng) * 1800.0f) / ol)
+                                   : HMM_V3(1000.0f, 0, 0);
+                HMM_Vec3 pos = HMM_AddV3(nav.position, off);
+                HMM_Vec3 to_player = HMM_SubV3(pos, player_pos);
+                const float dp = len(to_player);
+                if (dp < k_spawn_dist_min) {   // too close -> push to the shell
+                    const HMM_Vec3 dir = (dp > 1e-3f) ? HMM_MulV3F(to_player, 1.0f / dp)
+                                                      : HMM_V3(0, 0, 1);
+                    pos = HMM_AddV3(player_pos, HMM_MulV3F(dir, k_spawn_dist_min + 1500.0f));
+                }
+                SpawnRequest req;
+                req.class_name       = m.ship_class;
+                req.faction          = fac;
+                req.position         = pos;
+                req.initial_ai_state = AIState::Patrol;
+                req.patrol_anchor    = nav.position;
+                if (spawn(req) != 0) ++spawned;
+            }
+        }
+    }
+    std::printf("[encounter] system entry roll: %d nav table(s), spawned %d ship(s) "
+                "(no refill until next entry/launch)\n", nav_tables, spawned);
+}
+
 void tick(const ShipRegistry& ships, HMM_Vec3 player_pos, float dt,
           const SpawnFn& spawn, const DespawnFn& despawn) {
     if (!g_dir.active) return;
