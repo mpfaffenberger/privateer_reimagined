@@ -177,15 +177,16 @@
     }
   ],
   "player_start": {
+    "comment": "Spawn ~6 km off Achilles Mining Base (Nav 2 @ 200000,-133333,0), looking right at it.",
     "position": [
-      50000,
-      -100000,
-      33333
+      200000,
+      -133333,
+      6000
     ],
     "look_at": [
-      116667,
-      -41667,
-      2083
+      200000,
+      -133333,
+      0
     ]
   }
 }
