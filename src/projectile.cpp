@@ -45,6 +45,13 @@ void projectile::tick(std::vector<Projectile>& projectiles, float dt) {
 void projectile::collide_and_damage(std::vector<Projectile>& projectiles,
                                     ShipRegistry&             ships,
                                     float                     dt) {
+    // Provoke threshold: this many player hits on an otherwise non-hostile
+    // ship makes it bear a grudge and turn on the player (perception honors
+    // Ship::provoked_by_player). "More than ~3 hits" -> 3 trips it.
+    constexpr uint8_t k_provoke_hits = 3;
+    const Ship* plr = ships.player();
+    const uint32_t player_id = plr ? plr->id : 0;
+
     for (Projectile& p : projectiles) {
         if (!p.alive) continue;
 
@@ -93,6 +100,17 @@ void projectile::collide_and_damage(std::vector<Projectile>& projectiles,
                 // remember who fired it. The death pass in main.cpp uses
                 // this to bill reputation when the killer is the player.
                 if (!s.alive) s.killed_by_id = p.owner_id;
+
+                // Player friendly-fire grudge: a live ship the player keeps
+                // hitting gets provoked and turns hostile + fights back.
+                if (s.alive && player_id != 0 && p.owner_id == player_id &&
+                    !s.is_player && !s.provoked_by_player) {
+                    if (++s.player_hit_count >= k_provoke_hits) {
+                        s.provoked_by_player = true;
+                        std::printf("[grudge] ship %u provoked by player fire -> hostile\n",
+                                    s.id);
+                    }
+                }
                 p.alive = false;
                 break;
             }

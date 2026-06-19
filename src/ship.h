@@ -91,6 +91,14 @@ struct Ship {
     // and owes a reputation consequence.
     uint32_t          killed_by_id = 0;
 
+    // Player grievance (np): repeated player hits on an otherwise non-hostile
+    // ship provoke it. Once player_hit_count reaches k_provoke_hits the ship
+    // bears a grudge (provoked_by_player) and perception::classify_pair treats
+    // the player as Hostile for it -- so a friendly you keep shooting turns
+    // on you and fights back. Sticky until death/despawn.
+    uint8_t           player_hit_count   = 0;
+    bool              provoked_by_player = false;
+
     // ---- canonical pose ------------------------------------------------
     // Authoritative for perception + AI logic. Synced once per frame from
     // the source of truth, which differs by ship kind:
