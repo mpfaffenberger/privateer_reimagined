@@ -3037,12 +3037,14 @@ void frame_cb() {
     // directly instead of the (nonexistent) player sprite.
     {
         // Damage per impact: linear in closing speed plus a base. Was
-        // 50/0.5/250; scaled to 1/5 (10/0.1/50) so ramming no longer
-        // shreds armor in one bump. Pairs with the random tumble below
-        // — ramming is now mostly a control-loss event, not a damage one.
-        constexpr float k_base_dmg          = 10.0f;
-        constexpr float k_dmg_per_mps       = 0.1f;
-        constexpr float k_dmg_max           = 50.0f;
+        // 50/0.5/250 then 10/0.1/50; crushed another 10x -> 1/0.01/5 so
+        // a glancing nudge is ~0cm and even a 400 kps ram is only ~5cm.
+        // Collisions are now visual/control events (the bounce + tumble
+        // below), not damage events. Pairs with the spawn separation
+        // guard so we very rarely reach a real crunch in the first place.
+        constexpr float k_base_dmg          = 1.0f;
+        constexpr float k_dmg_per_mps       = 0.01f;
+        constexpr float k_dmg_max           = 5.0f;
         constexpr float k_elasticity        = 0.6f;   // 0=plastic, 1=fully elastic
         constexpr float k_player_hit_radius = 30.0f * 1.4f;  // matches ship::hit_radius_m
 
