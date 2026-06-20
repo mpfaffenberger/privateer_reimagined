@@ -316,12 +316,23 @@ void populate_on_entry(const StarSystem& system, HMM_Vec3 player_pos,
     auto spawn_group = [&](const std::vector<std::pair<Faction, std::string>>& mem,
                            HMM_Vec3 center, bool prefer_loiter) -> uint32_t {
         uint32_t lead_id = 0;
+        // Track positions of prior members so we can keep new spawns a
+        // safe distance away -- otherwise a wide wing spawns its members
+        // in random 600-2000 unit offsets and a 525m Drayman + an 80m Talon
+        // overlap, ram and instantly explode (np-3dp). Min separation is
+        // generous -- spaced convoys read better visually too.
+        std::vector<HMM_Vec3> placed;
+        placed.reserve(mem.size());
+        constexpr float k_min_sep_m   = 350.0f;     // min sep between group members
+        constexpr float k_min_sep_pad = 120.0f;    // extra clearance beyond ship size
         for (size_t k = 0; k < mem.size(); ++k) {
             if (spawned >= k_entry_population_max) break;
+            // Pick a candidate: random scatter in a wider shell, then nudge
+            // outward so the lead sits in clear space.
             HMM_Vec3 off = HMM_V3(U(rng) * 2 - 1, U(rng) * 2 - 1, U(rng) * 2 - 1);
             const float ol = len(off);
-            off = (ol > 1e-3f) ? HMM_MulV3F(off, (600.0f + U(rng) * 1400.0f) / ol)
-                               : HMM_V3(1000.0f, 0, 0);
+            off = (ol > 1e-3f) ? HMM_MulV3F(off, (1400.0f + U(rng) * 1600.0f) / ol)
+                               : HMM_V3(1500.0f, 0, 0);
             HMM_Vec3 pos = HMM_AddV3(center, off);
             const HMM_Vec3 to_player = HMM_SubV3(pos, player_pos);
             const float dp = len(to_player);
@@ -329,6 +340,27 @@ void populate_on_entry(const StarSystem& system, HMM_Vec3 player_pos,
                 const HMM_Vec3 dir = (dp > 1e-3f) ? HMM_MulV3F(to_player, 1.0f / dp)
                                                   : HMM_V3(0, 0, 1);
                 pos = HMM_AddV3(player_pos, HMM_MulV3F(dir, k_spawn_dist_min + 1500.0f));
+            }
+            // Enforce min separation from previously-placed members. Up to
+            // 8 jitter attempts before giving up -- if we can't fit, accept
+            // the best candidate we found so the spawn doesn't stall.
+            const float need = k_min_sep_m + k_min_sep_pad * (float)placed.size();
+            HMM_Vec3 best = pos;
+            float best_d = -1.0f;
+            for (int tries = 0; tries < 8; ++tries) {
+                float nearest = 1e30f;
+                for (const auto& pp : placed) {
+                    nearest = std::min(nearest, len(HMM_SubV3(pos, pp)));
+                    if (nearest < need) break;
+                }
+                if (nearest >= need) break;             // good enough
+                if (nearest > best_d) { best_d = nearest; best = pos; }
+                // jitter outward away from the nearest blocker
+                HMM_Vec3 nudge = HMM_V3(U(rng) - 0.5f, U(rng) - 0.5f, U(rng) - 0.5f);
+                const float nl = len(nudge);
+                nudge = (nl > 1e-3f) ? HMM_MulV3F(nudge, need / nl)
+                                      : HMM_V3(need, 0, 0);
+                pos = HMM_AddV3(pos, nudge);
             }
             SpawnRequest req;
             req.class_name       = mem[k].second;
@@ -349,7 +381,11 @@ void populate_on_entry(const StarSystem& system, HMM_Vec3 player_pos,
                                               std::sin(a) * R);
             }
             const uint32_t id = spawn(req);
-            if (id != 0) { ++spawned; if (k == 0) lead_id = id; }
+            if (id != 0) {
+                ++spawned;
+                if (k == 0) lead_id = id;
+                placed.push_back(req.position);   // remember for sep check on later members
+            }
         }
         return lead_id;
     };
