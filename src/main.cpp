@@ -3136,17 +3136,35 @@ void frame_cb() {
                 // collision feedback doesn't insta-kill the squishy
                 // Tarsus the player flies. NPCs eat full damage.
                 constexpr float k_player_dmg_multiplier = 0.25f;
+                // Collision-damage cooldown (np-2kx): a Talon that wedges
+                // inside a Drayman for ~0.6s eats a damage tick every frame
+                // at 60fps. Cap how often ONE ship can eat a crunch so
+                // multi-frame overlap = one damage event, like a hit shield.
+                constexpr double k_collide_dmg_cooldown_s = 0.5;
+                const bool can_a = (a.is_player) ||
+                    (t_now - a.last_collide_dmg_t) >= k_collide_dmg_cooldown_s;
+                const bool can_b = (b.is_player) ||
+                    (t_now - b.last_collide_dmg_t) >= k_collide_dmg_cooldown_s;
                 const float dmg = std::clamp(
                     k_base_dmg + k_dmg_per_mps * std::fabs(v_rel_n),
                     k_base_dmg, k_dmg_max);
-                const float dmg_a = a.is_player ? dmg * k_player_dmg_multiplier : dmg;
-                const float dmg_b = b.is_player ? dmg * k_player_dmg_multiplier : dmg;
+                const float dmg_a = (a.is_player ? dmg * k_player_dmg_multiplier : dmg)
+                                    * (can_a ? 1.0f : 0.0f);
+                const float dmg_b = (b.is_player ? dmg * k_player_dmg_multiplier : dmg)
+                                    * (can_b ? 1.0f : 0.0f);
                 // Compute facings: hit point is approximately at the
                 // midpoint between ship centers (where they touched).
                 const HMM_Vec3 hit_point = HMM_AddV3(a_pos,
                     HMM_MulV3F(n, a_r));
-                ship::take_damage(a, dmg_a, ship::facing_of_hit(a, hit_point));
-                ship::take_damage(b, dmg_b, ship::facing_of_hit(b, hit_point));
+                if (dmg_a > 0.0f || dmg_b > 0.0f) {
+                    if (dmg_a > 0.0f) { a.last_collide_dmg_t = t_now; ship::take_damage(a, dmg_a, ship::facing_of_hit(a, hit_point)); }
+                    if (dmg_b > 0.0f) { b.last_collide_dmg_t = t_now; ship::take_damage(b, dmg_b, ship::facing_of_hit(b, hit_point)); }
+                } else {
+                    // Both sides throttled by their cooldown -- still bump
+                    // the timestamps so they don't all stack up next frame.
+                    a.last_collide_dmg_t = t_now;
+                    b.last_collide_dmg_t = t_now;
+                }
 
                 // Ram tumble. Pick a random axis-angle for each ship so
                 // they lurch independently. Magnitude scales with closing

@@ -99,6 +99,15 @@ struct Ship {
     uint8_t           player_hit_count   = 0;
     bool              provoked_by_player = false;
 
+    // Collision-damage cooldown (np-2kx): timestamp the last time this
+    // ship ate ramming damage. Without this, a Talon that wedges inside
+    // a Drayman for ~0.6s eats a damage tick every frame at 60fps and
+    // pops from a multi-frame overlap even with tiny per-tick numbers.
+    // NPC collision-damage loop skips the hit if (t_now - this) is below
+    // k_collide_dmg_cooldown_s. Player doesn't need it (camera position
+    // is owned externally and never gets stuck on a target).
+    double            last_collide_dmg_t = -1.0;
+
     // ---- canonical pose ------------------------------------------------
     // Authoritative for perception + AI logic. Synced once per frame from
     // the source of truth, which differs by ship kind:
