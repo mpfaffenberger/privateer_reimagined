@@ -3092,6 +3092,11 @@ void frame_cb() {
                                                   a_vel);
                 const float v_rel_n = HMM_DotV3(v_rel, n);
 
+                // Seeded once per pair for all the random-direction logic
+                // (kick + tumble below). Both blocks want the same seed so
+                // they stay consistent per-frame for a given contact.
+                const float t_seed = (float)stm_sec(stm_now());
+
                 // Position separation — split overlap evenly. Player
                 // moves the camera; NPCs nudge their sprite position.
                 const float overlap = r_sum - dist;
@@ -3280,7 +3285,6 @@ void frame_cb() {
                 // at ~200 m/s relative). 0.5 s lifetime. Hitting a capital
                 // (Drayman/Kamekh/Paradigm) also spikes the spin -- the
                 // OTHER-ship size ratio kicks the player much harder.
-                const float t_seed = (float)stm_sec(stm_now());
                 const float w_mag_base = 4.0f + std::min(closing * 0.02f, 4.0f);
                 constexpr float k_tumble_size_boost = 0.6f;  // 1.0 = scale w/ size; tuned down so it's visceral but not nauseating
                 const float w_mag_a = w_mag_base + (scale_a - 1.0f) * k_tumble_size_boost * 8.0f;  // up to +~3 rad/s extra at scale=5
