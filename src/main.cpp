@@ -3156,12 +3156,18 @@ void frame_cb() {
                 // midpoint between ship centers (where they touched).
                 const HMM_Vec3 hit_point = HMM_AddV3(a_pos,
                     HMM_MulV3F(n, a_r));
-                if (dmg_a > 0.0f || dmg_b > 0.0f) {
-                    if (dmg_a > 0.0f) { a.last_collide_dmg_t = t_now; ship::take_damage(a, dmg_a, ship::facing_of_hit(a, hit_point)); }
-                    if (dmg_b > 0.0f) { b.last_collide_dmg_t = t_now; ship::take_damage(b, dmg_b, ship::facing_of_hit(b, hit_point)); }
-                } else {
-                    // Both sides throttled by their cooldown -- still bump
-                    // the timestamps so they don't all stack up next frame.
+                const bool any_hit = (dmg_a > 0.0f) || (dmg_b > 0.0f);
+                if (dmg_a > 0.0f) {
+                    a.last_collide_dmg_t = t_now;
+                    ship::take_damage(a, dmg_a, ship::facing_of_hit(a, hit_point));
+                }
+                if (dmg_b > 0.0f) {
+                    b.last_collide_dmg_t = t_now;
+                    ship::take_damage(b, dmg_b, ship::facing_of_hit(b, hit_point));
+                }
+                if (!any_hit) {
+                    // Both sides throttled by cooldown -- still bump the
+                    // timestamps so they don't all stack up next frame.
                     a.last_collide_dmg_t = t_now;
                     b.last_collide_dmg_t = t_now;
                 }
