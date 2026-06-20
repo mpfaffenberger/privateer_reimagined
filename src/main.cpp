@@ -3111,10 +3111,21 @@ void frame_cb() {
                 // the impulse magnitude per ship is
                 // (1+e) * v_rel_n / 2; opposite signs so a gets pushed
                 // back along -n, b along +n.
+                // Size scaling (np-3dp): each ship scales its own bounce by
+                // the OTHER ship's size ratio (other_r / player_hit_r). A Talon
+                // hitting another Talon gets the baseline; ramming a Drayman
+                // (or Kamekh/Paradigm) launches the player ~5x further. NPC-NPC
+                // pairs scale symmetrically, so the larger ship barely budges.
+                const float size_ratio_a = b_r / k_player_hit_radius;
+                const float size_ratio_b = a_r / k_player_hit_radius;
+                constexpr float k_min_size_ratio = 1.0f;   // baseline
+                constexpr float k_max_size_ratio = 5.0f;   // cap (capitals)
+                const float scale_a = std::clamp(size_ratio_a, k_min_size_ratio, k_max_size_ratio);
+                const float scale_b = std::clamp(size_ratio_b, k_min_size_ratio, k_max_size_ratio);
                 if (v_rel_n > 0.0f) {
                     const float impulse_mag = (1.0f + k_elasticity) * v_rel_n * 0.5f * k_bounce_boost;
-                    const HMM_Vec3 impulse_a = HMM_MulV3F(n, -impulse_mag);
-                    const HMM_Vec3 impulse_b = HMM_MulV3F(n,  impulse_mag);
+                    const HMM_Vec3 impulse_a = HMM_MulV3F(n, -(impulse_mag * scale_a));
+                    const HMM_Vec3 impulse_b = HMM_MulV3F(n,  (impulse_mag * scale_b));
                     if (a.is_player) {
                         g.camera.velocity = HMM_AddV3(g.camera.velocity, impulse_a);
                     } else if (a.sprite) {
@@ -3196,15 +3207,20 @@ void frame_cb() {
                 };
                 const float closing = std::fabs(v_rel_n);
                 // 4 rad/s baseline + up to 4 more from closing speed (cap
-                // at ~200 m/s relative). 0.5 s lifetime.
-                const float w_mag = 4.0f + std::min(closing * 0.02f, 4.0f);
+                // at ~200 m/s relative). 0.5 s lifetime. Hitting a capital
+                // (Drayman/Kamekh/Paradigm) also spikes the spin -- the
+                // OTHER-ship size ratio kicks the player much harder.
+                const float w_mag_base = 4.0f + std::min(closing * 0.02f, 4.0f);
+                constexpr float k_tumble_size_boost = 0.6f;  // 1.0 = scale w/ size; tuned down so it's visceral but not nauseating
+                const float w_mag_a = w_mag_base + (scale_a - 1.0f) * k_tumble_size_boost * 8.0f;  // up to +~3 rad/s extra at scale=5
+                const float w_mag_b = w_mag_base + (scale_b - 1.0f) * k_tumble_size_boost * 8.0f;
                 const float t_seed = (float)stm_sec(stm_now());
                 const uint32_t seed_a = (uint32_t)a.id * 2654435761u
                                       ^ (uint32_t)(t_seed * 1000.0f);
                 const uint32_t seed_b = (uint32_t)b.id * 2654435761u
                                       ^ (uint32_t)(t_seed * 1000.0f) ^ 0xDEADBEEFu;
-                const HMM_Vec3 axis_a = HMM_MulV3F(rand_unit(seed_a), w_mag);
-                const HMM_Vec3 axis_b = HMM_MulV3F(rand_unit(seed_b), w_mag);
+                const HMM_Vec3 axis_a = HMM_MulV3F(rand_unit(seed_a), w_mag_a);
+                const HMM_Vec3 axis_b = HMM_MulV3F(rand_unit(seed_b), w_mag_b);
                 if (a.is_player) {
                     g.camera.ram_tumble_w_world      = axis_a;
                     g.camera.ram_tumble_t_remaining  = 0.5f;
