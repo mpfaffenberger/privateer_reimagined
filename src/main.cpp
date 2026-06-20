@@ -3175,7 +3175,7 @@ void frame_cb() {
                         const float sx = std::sin((float)seed_salt * 0.013f);
                         const float sy = std::sin((float)seed_salt * 0.027f + 1.7f);
                         const float sz = std::sin((float)seed_salt * 0.041f + 3.14f);
-                        HMM_Vec3 rnd(sx, sy, sz);
+                        HMM_Vec3 rnd = HMM_V3(sx, sy, sz);
                         const float rl = HMM_LenV3(rnd);
                         if (rl > 1e-3f) rnd = HMM_DivV3F(rnd, rl);
                         else rnd = HMM_V3(0, 1, 0);
