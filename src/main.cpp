@@ -3045,7 +3045,8 @@ void frame_cb() {
         constexpr float k_base_dmg          = 1.0f;
         constexpr float k_dmg_per_mps       = 0.01f;
         constexpr float k_dmg_max           = 5.0f;
-        constexpr float k_elasticity        = 0.6f;   // 0=plastic, 1=fully elastic
+        constexpr float k_elasticity        = 0.85f;  // 0=plastic, 1=fully elastic (np-3dp: snappier bounce)
+        constexpr float k_bounce_boost      = 1.5f;   // extra impulse so a fast ram really separates ships
         constexpr float k_player_hit_radius = 30.0f * 1.4f;  // matches ship::hit_radius_m
 
         // Slot-indexed double loop (j starts at i+1 so each pair tests
@@ -3111,7 +3112,7 @@ void frame_cb() {
                 // (1+e) * v_rel_n / 2; opposite signs so a gets pushed
                 // back along -n, b along +n.
                 if (v_rel_n > 0.0f) {
-                    const float impulse_mag = (1.0f + k_elasticity) * v_rel_n * 0.5f;
+                    const float impulse_mag = (1.0f + k_elasticity) * v_rel_n * 0.5f * k_bounce_boost;
                     const HMM_Vec3 impulse_a = HMM_MulV3F(n, -impulse_mag);
                     const HMM_Vec3 impulse_b = HMM_MulV3F(n,  impulse_mag);
                     if (a.is_player) {
