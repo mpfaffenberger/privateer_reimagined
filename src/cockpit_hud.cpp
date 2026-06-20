@@ -612,7 +612,12 @@ void draw_radar_mfd(const Camera& cam, const StarSystem& system, int selected_na
 
         const ImVec2 ctr  = ImVec2(p0.x + w * 0.5f, p0.y + h * 0.5f);
         const float  rad  = std::min(w, h) * 0.5f - 6.0f;
-        constexpr float max_range = 250000.0f;       // u — beyond this, clamp to rim
+        // np-3dp: 15 km radar radius so local ships read clearly (matches
+        // the player's detection sphere set in perception.cpp). Anything
+        // past 15k clamps to the rim, so nav points 100+ km away overlap
+        // at the edge — that's the intended trade: the MFD is a "where's
+        // the contact NEAR me" display, not a system overview.
+        constexpr float max_range = 15000.0f;       // u — beyond 15km, clamp to rim
 
         // Concentric range rings + crosshair. Drawn before sweep so the
         // sweep line passes over them.
