@@ -3140,11 +3140,15 @@ void frame_cb() {
                 // inside a Drayman for ~0.6s eats a damage tick every frame
                 // at 60fps. Cap how often ONE ship can eat a crunch so
                 // multi-frame overlap = one damage event, like a hit shield.
-                constexpr double k_collide_dmg_cooldown_s = 0.5;
+                // Stamped in seconds via a frame-time accumulator since
+                // there's no wall-clock in scope here.
+                constexpr float k_collide_dmg_cooldown_s = 0.5f;
+                static float s_collide_t = 0.0f;
+                s_collide_t += dt;
                 const bool can_a = (a.is_player) ||
-                    (t_now - a.last_collide_dmg_t) >= k_collide_dmg_cooldown_s;
+                    (s_collide_t - (float)a.last_collide_dmg_t) >= k_collide_dmg_cooldown_s;
                 const bool can_b = (b.is_player) ||
-                    (t_now - b.last_collide_dmg_t) >= k_collide_dmg_cooldown_s;
+                    (s_collide_t - (float)b.last_collide_dmg_t) >= k_collide_dmg_cooldown_s;
                 const float dmg = std::clamp(
                     k_base_dmg + k_dmg_per_mps * std::fabs(v_rel_n),
                     k_base_dmg, k_dmg_max);
@@ -3158,18 +3162,18 @@ void frame_cb() {
                     HMM_MulV3F(n, a_r));
                 const bool any_hit = (dmg_a > 0.0f) || (dmg_b > 0.0f);
                 if (dmg_a > 0.0f) {
-                    a.last_collide_dmg_t = t_now;
+                    a.last_collide_dmg_t = s_collide_t;
                     ship::take_damage(a, dmg_a, ship::facing_of_hit(a, hit_point));
                 }
                 if (dmg_b > 0.0f) {
-                    b.last_collide_dmg_t = t_now;
+                    b.last_collide_dmg_t = s_collide_t;
                     ship::take_damage(b, dmg_b, ship::facing_of_hit(b, hit_point));
                 }
                 if (!any_hit) {
                     // Both sides throttled by cooldown -- still bump the
                     // timestamps so they don't all stack up next frame.
-                    a.last_collide_dmg_t = t_now;
-                    b.last_collide_dmg_t = t_now;
+                    a.last_collide_dmg_t = s_collide_t;
+                    b.last_collide_dmg_t = s_collide_t;
                 }
 
                 // Ram tumble. Pick a random axis-angle for each ship so
