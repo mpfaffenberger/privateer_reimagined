@@ -3138,6 +3138,76 @@ void frame_cb() {
                         b.sprite->collision_velocity =
                             HMM_AddV3(b.sprite->collision_velocity, impulse_b);
                     }
+
+                    // Random-direction "kick" (np-3dp): a capital-ram launch
+                    // adds an extra impulse along a partly-random direction
+                    // -- 50% along "away", 30% random sideways, 20% upward
+                    // -- so the player tumbles off in a believable arc
+                    // instead of being shoved straight back along the
+                    // contact normal. Strength scales with the OTHER ship's
+                    // size ratio so Talon-vs-Talon is unchanged but ramming
+                    // a Drayman/Kamekh/Paradigm flings the player across
+                    // the sector. Decay is automatic: NPC kick rides on
+                    // collision_velocity (0.5/s half-life ~1.4s); player
+                    // kick rides on camera.velocity which the flight model
+                    // damps naturally. Tuning is a quick knob.
+                    constexpr float k_kick_base_mps   = 35.0f;  // base kick for closing ~50 m/s; scaled by |v_rel_n|
+                    constexpr float k_kick_cap_boost  = 2.5f;   // ramp vs size_ratio past the Talon baseline
+                    constexpr float k_kick_min_boost  = 0.15f;  // floor so even Talon-vs-Talon gets a small kick
+                    const float kick_a_str = k_kick_base_mps *
+                        std::max(k_kick_min_boost, (scale_a - 1.0f) * k_kick_cap_boost + k_kick_min_boost)
+                        * (1.0f + std::fabs(v_rel_n) * 0.05f);
+                    const float kick_b_str = k_kick_base_mps *
+                        std::max(k_kick_min_boost, (scale_b - 1.0f) * k_kick_cap_boost + k_kick_min_boost)
+                        * (1.0f + std::fabs(v_rel_n) * 0.05f);
+                    auto build_kick_dir = [&](float seed_salt) {
+                        // Direction for "ship a" (kicked away from b): start
+                        // along -n, then mix in a random sideways vector
+                        // (projected perpendicular to n) and a slight up.
+                        // Returns a UNIT vector pointing generally away.
+                        const uint32_t ks = (uint32_t)(seed_salt * 1000.0f) * 2654435761u;
+                        HMM_Vec3 rnd = rand_unit(ks ^ 0x12345678u);
+                        // Project random onto plane perpendicular to n
+                        const float proj_r = HMM_DotV3(rnd, n);
+                        HMM_Vec3 side = HMM_SubV3(rnd, HMM_MulV3F(n, proj_r));
+                        const float sl = HMM_LenV3(side);
+                        if (sl > 1e-3f) side = HMM_DivV3F(side, sl);
+                        else side = HMM_V3(0, 1, 0);   // fallback
+                        // World up, made perpendicular to n too
+                        const HMM_Vec3 up_w = HMM_V3(0, 1, 0);
+                        const float proj_u = HMM_DotV3(up_w, n);
+                        HMM_Vec3 up = HMM_SubV3(up_w, HMM_MulV3F(n, proj_u));
+                        const float ul = HMM_LenV3(up);
+                        if (ul > 1e-3f) up = HMM_DivV3F(up, ul);
+                        else up = HMM_V3(0, 0, 1);
+                        // Compose: 50% away (-n), 30% side, 20% up_perp
+                        HMM_Vec3 dir = HMM_AddV3(
+                            HMM_AddV3(HMM_MulV3F(n, -0.5f),
+                                      HMM_MulV3F(side, 0.3f)),
+                            HMM_MulV3F(up,  0.2f));
+                        const float dl = HMM_LenV3(dir);
+                        return (dl > 1e-3f) ? HMM_DivV3F(dir, dl) : HMM_MulV3F(n, -1.0f);
+                    };
+                    // Randomness tied to ship id so the kick direction is
+                    // stable for THIS contact but varies by ship (the
+                    // contacts are spread over multiple frames, so a
+                    // stable-per-frame direction is fine).
+                    const HMM_Vec3 kick_dir_a = build_kick_dir((float)a.id + t_seed * 7.0f);
+                    const HMM_Vec3 kick_dir_b = build_kick_dir((float)b.id + t_seed * 13.0f);
+                    const HMM_Vec3 kick_imp_a = HMM_MulV3F(kick_dir_a, kick_a_str);
+                    const HMM_Vec3 kick_imp_b = HMM_MulV3F(kick_dir_b, kick_b_str);
+                    if (a.is_player) {
+                        g.camera.velocity = HMM_AddV3(g.camera.velocity, kick_imp_a);
+                    } else if (a.sprite) {
+                        a.sprite->collision_velocity =
+                            HMM_AddV3(a.sprite->collision_velocity, kick_imp_a);
+                    }
+                    if (b.is_player) {
+                        g.camera.velocity = HMM_AddV3(g.camera.velocity, kick_imp_b);
+                    } else if (b.sprite) {
+                        b.sprite->collision_velocity =
+                            HMM_AddV3(b.sprite->collision_velocity, kick_imp_b);
+                    }
                 }
 
                 // Damage: scale with closing speed, with a base so
