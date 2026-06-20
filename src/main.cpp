@@ -3165,19 +3165,26 @@ void frame_cb() {
                     const float kick_b_str = k_kick_base_mps *
                         std::max(k_kick_min_boost, (scale_b - 1.0f) * k_kick_cap_boost + k_kick_min_boost)
                         * (1.0f + std::fabs(v_rel_n) * 0.05f);
-                    auto build_kick_dir = [&](float seed_salt) {
-                        // Direction for "ship a" (kicked away from b): start
-                        // along -n, then mix in a random sideways vector
-                        // (projected perpendicular to n) and a slight up.
-                        // Returns a UNIT vector pointing generally away.
-                        const uint32_t ks = (uint32_t)(seed_salt * 1000.0f) * 2654435761u;
-                        HMM_Vec3 rnd = rand_unit(ks ^ 0x12345678u);
+                    auto build_kick_dir = [&](uint32_t seed_salt) {
+                        // Direction: 50% along -n ("away"), 30% random
+                        // sideways (in the plane perpendicular to n), and
+                        // 20% world-up (also projected perpendicular to n).
+                        // Inline random unit vector via three phase-shifted
+                        // sines so we don't depend on rand_unit (which is
+                        // defined later in this block).
+                        const float sx = std::sin((float)seed_salt * 0.013f);
+                        const float sy = std::sin((float)seed_salt * 0.027f + 1.7f);
+                        const float sz = std::sin((float)seed_salt * 0.041f + 3.14f);
+                        HMM_Vec3 rnd(sx, sy, sz);
+                        const float rl = HMM_LenV3(rnd);
+                        if (rl > 1e-3f) rnd = HMM_DivV3F(rnd, rl);
+                        else rnd = HMM_V3(0, 1, 0);
                         // Project random onto plane perpendicular to n
                         const float proj_r = HMM_DotV3(rnd, n);
                         HMM_Vec3 side = HMM_SubV3(rnd, HMM_MulV3F(n, proj_r));
                         const float sl = HMM_LenV3(side);
                         if (sl > 1e-3f) side = HMM_DivV3F(side, sl);
-                        else side = HMM_V3(0, 1, 0);   // fallback
+                        else side = HMM_V3(0, 1, 0);
                         // World up, made perpendicular to n too
                         const HMM_Vec3 up_w = HMM_V3(0, 1, 0);
                         const float proj_u = HMM_DotV3(up_w, n);
@@ -3185,7 +3192,6 @@ void frame_cb() {
                         const float ul = HMM_LenV3(up);
                         if (ul > 1e-3f) up = HMM_DivV3F(up, ul);
                         else up = HMM_V3(0, 0, 1);
-                        // Compose: 50% away (-n), 30% side, 20% up_perp
                         HMM_Vec3 dir = HMM_AddV3(
                             HMM_AddV3(HMM_MulV3F(n, -0.5f),
                                       HMM_MulV3F(side, 0.3f)),
@@ -3197,8 +3203,8 @@ void frame_cb() {
                     // stable for THIS contact but varies by ship (the
                     // contacts are spread over multiple frames, so a
                     // stable-per-frame direction is fine).
-                    const HMM_Vec3 kick_dir_a = build_kick_dir((float)a.id + t_seed * 7.0f);
-                    const HMM_Vec3 kick_dir_b = build_kick_dir((float)b.id + t_seed * 13.0f);
+                    const HMM_Vec3 kick_dir_a = build_kick_dir((uint32_t)a.id ^ (uint32_t)(t_seed * 7.0f));
+                    const HMM_Vec3 kick_dir_b = build_kick_dir((uint32_t)b.id ^ (uint32_t)(t_seed * 13.0f) ^ 0xDEADBEEFu);
                     const HMM_Vec3 kick_imp_a = HMM_MulV3F(kick_dir_a, kick_a_str);
                     const HMM_Vec3 kick_imp_b = HMM_MulV3F(kick_dir_b, kick_b_str);
                     if (a.is_player) {
