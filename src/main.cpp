@@ -2317,15 +2317,11 @@ void frame_cb() {
                                               HMM_MulV3F(up,     12000.0f))));
             g.sun.position = sun_pos;
         }
-        // Roll the camera 180 deg around its forward axis while the title
-        // is up. The ships in title_scene are 'upside down' in world
-        // space (their +Z nose rotates the long way), so flipping the
-        // view by pi around fwd makes them read right-side-up (np-3dp).
-        // The roll is composed post-update so camera.position + forward
-        // are unchanged; only the orientation tilts.
-        g.camera.orientation = HMM_NormQ(HMM_MulQ(
-            g.camera.orientation,
-            HMM_QFromAxisAngle_RH(g.camera.forward(), 3.14159265358979f)));
+        // NOTE: the 180-deg view roll for the title is applied to a COPY
+        // of the camera at render time (see scene_cam construction below),
+        // NOT here. Mutating g.camera.orientation each frame accumulated
+        // the roll (dt=0 never resets it) and flipped the view every
+        // frame -> bad flicker. (np-3dp)
         title_scene::tick(raw_dt);   // animate with the real dt so ships drift
     } else if (title_scene::inited()) {
         // Title dismissed — drop our cached state so the next title visit
@@ -3647,7 +3643,21 @@ void frame_cb() {
         // g.camera (real ship pose) for nav distance / FLIGHT readout. The
         // ship itself is rendered as a sprite further down so there's
         // something to look at.
-        const Camera& scene_cam = g.orbit_active ? g.orbit_cam : g.camera;
+        // Title screen rolls the view 180 deg around the forward axis so
+        // the upside-down patrol sprites read right-side-up. Done on a
+        // LOCAL COPY so g.camera (used by the sim + HUD) is never mutated
+        // — the previous in-place version accumulated the roll each
+        // frame and flickered (np-3dp).
+        Camera title_cam;
+        const Camera* scene_cam_ptr = g.orbit_active ? &g.orbit_cam : &g.camera;
+        if (g.show_title) {
+            title_cam = g.camera;
+            title_cam.orientation = HMM_NormQ(HMM_MulQ(
+                g.camera.orientation,
+                HMM_QFromAxisAngle_RH(g.camera.forward(), 3.14159265358979f)));
+            scene_cam_ptr = &title_cam;
+        }
+        const Camera& scene_cam = *scene_cam_ptr;
         // Draw order rationale:
         //   1. skybox   — no depth write, paints the background
         //   2. dust     — additive particulate in "empty space"; drawn BEFORE
