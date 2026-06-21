@@ -99,6 +99,10 @@ void firing::tick(ShipRegistry& ships,
 
 
         for (size_t i = 0; i < s.mounts.size(); ++i) {
+            // gun_armed (np-3dp): G-key cycle gates which mounts the
+            // player can actually fire. Skipping means the mount goes
+            // cold even if its own cooldown is ready.
+            if (i < s.gun_armed.size() && !s.gun_armed[i]) continue;
             if (s.gun_cooldowns[i] > 0.0f)            continue;
             const GunMount& m  = s.mounts[i];
             if ((int)m.type < 0 || (int)m.type >= kGunTypeCount) continue;

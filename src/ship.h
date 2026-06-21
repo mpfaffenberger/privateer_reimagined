@@ -198,6 +198,17 @@ struct Ship {
     // capships have up to 8 mounts plus turrets.
     std::vector<float>    gun_cooldowns;
 
+    // Per-mount "armed" gate (np-3dp). Parallel to mounts/gun_cooldowns.
+    // Default-on so the existing fire_guns flow keeps working; the G
+    // key cycles through {unarmed, mesons, ionics, all} and flips
+    // these bits per the mode. firing::tick consults gun_armed[i] and
+    // skips mounts the player has disarmed.
+    std::vector<bool>    gun_armed;
+    // Current arm-mode index 0..3: 0=unarmed, 1=mesons, 2=ionics, 3=all.
+    // Stored on the ship so a non-player ship can also be inspected
+    // (even if v1 only the player cycles it).
+    uint8_t              gun_mode_idx = 3;
+
     bool  alive = true;
 };
 

@@ -1179,6 +1179,10 @@ void build_system_scene(bool first_time) {
                 player.mounts[1].offset_body = HMM_V3( 10.0f, 5.0f, 0.0f);
             }
             player.gun_cooldowns.assign(player.mounts.size(), 0.0f);
+            // All guns armed by default (mode 3) so the stock Tarsus
+            // shoots both mass drivers as before; the G-key cycle
+            // re-arms subsets per the spec.
+            player.gun_armed.assign(player.mounts.size(), true);
         }
         std::printf("[player] equipped: klass=%s mounts=%zu shield F/A/S=%.0f/%.0f/%.0f "
                     "armor F/A/S=%.0f/%.0f/%.0f energy=%.0f\n",
@@ -4345,6 +4349,41 @@ void event_cb(const sapp_event* ev) {
                 autopilot::try_engage(g.autopilot, g.camera, g.system,
                                       g.selected_nav);
             }
+        }
+        // G — cycle gun arm-mode (np-3dp). Modes: 0=unarmed, 1=mesons
+        // only, 2=ionics only, 3=all. Each press advances one step and
+        // wraps. The mode is stored on Ship::gun_mode_idx; firing.cpp
+        // consults Ship::gun_armed[i] to gate which mounts can fire.
+        // If a mode would target zero mounts (e.g. mode 1 when no
+        // mesons are fitted) it still flips the bits and just lets the
+        // player see nothing happen — better than skipping and
+        // desyncing the cycle.
+        if (ev->key_code == SAPP_KEYCODE_G && g.ships.player()) {
+            Ship& p = *g.ships.player();
+            p.gun_mode_idx = (p.gun_mode_idx + 1) & 3;
+            const uint8_t m = p.gun_mode_idx;
+            for (size_t i = 0; i < p.mounts.size(); ++i) {
+                if (i >= p.gun_armed.size()) break;   // safety
+                const bool is_meson = (p.mounts[i].type == GunType::MesonBlaster);
+                const bool is_ionic = (p.mounts[i].type == GunType::IonicPulseCannon);
+                bool arm = false;
+                switch (m) {
+                    case 0: arm = false; break;                          // unarmed
+                    case 1: arm = is_meson; break;                       // mesons
+                    case 2: arm = is_ionic; break;                       // ionics
+                    case 3: arm = true; break;                            // all
+                }
+                p.gun_armed[i] = arm;
+            }
+            // Match on-fire HUD: if the player isn't holding the trigger,
+            // force fire_guns off so the cycle is unambiguous.
+            if (!g.keys_down[SAPP_KEYCODE_X] && !g.keys_down[SAPP_KEYCODE_TAB]) {
+                p.controller.fire_guns = false;
+            }
+            static const char* k_labels[] = {"UNARMED", "MESONS", "IONICS", "ALL"};
+            std::printf("[guns] mode=%u (%s) -- %zu mount(s)\n",
+                        m, k_labels[m], p.mounts.size());
+            sfx::ui_click();
         }
         // D — request docking at the selected nav point (np-9cu.1).
         // Strafe moved off D to Q/E (np-opa.3), so D is now a clean
