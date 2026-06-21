@@ -2303,17 +2303,19 @@ void frame_cb() {
             if (const StarPreset* sp = find_star_preset(title_scene::star_preset(chosen))) {
                 apply_star_preset(g.sun, *sp);
             }
-            // ChaseCam first traversal (np-3dp.13): park the sun at a
-            // FIXED world point off to one side of the first jump hole so
-            // the opening shot has a star that drifts naturally with
-            // parallax (subsequent traversals re-place it on each jump).
+            // ChaseCam first traversal (np-3dp.16): park the sun at a
+            // FIXED world point clearly off to the LEFT or RIGHT of the
+            // ship's projected path (the +Z line into the hole), not
+            // ahead/behind it. Lateral X dominates; Z sits somewhere
+            // WITHIN the 180k traversal so the star is beside the path
+            // and sweeps front->back with parallax as the ship cruises.
             if (title_scene::variant() == title_scene::Variant::ChaseCam) {
                 const float side = ((std::rand() & 1) ? 1.0f : -1.0f)
-                                 * (45000.0f + (float)(std::rand() % 35000));
-                const float high = 8000.0f + (float)(std::rand() % 20000);
-                const float fwd_o = 60000.0f + (float)(std::rand() % 60000);
+                                 * (70000.0f + (float)(std::rand() % 45000));
+                const float high = 4000.0f + (float)(std::rand() % 14000);
+                const float along = -(50000.0f + (float)(std::rand() % 100000));
                 g.sun.position = HMM_AddV3(title_scene::jump_hole_pos(),
-                                           HMM_V3(side, high, fwd_o));
+                                           HMM_V3(side, high, along));
             }
             s_title_inited = true;
             std::printf("[title_scene] init cat=%d preset='%s' ship_atlases=%zu\n",
@@ -2395,18 +2397,19 @@ void frame_cb() {
             g.skybox.destroy();
             g.skybox.init(seed, /*face_res=*/4096, cfg.warmth,
                           cfg.target_a, cfg.target_b);
-            // Park the new system's sun at a FIXED world point off to one
-            // side of the ship (np-3dp.13): no per-frame follow, so as the
-            // ship cruises the sun drifts naturally with parallax instead
-            // of feeling glued to the camera. Randomised side + height so
-            // each system frames differently.
+            // Park the new system's sun at a FIXED world point clearly off
+            // to the LEFT or RIGHT of the ship's projected path (np-3dp.16):
+            // lateral X dominates; Z sits WITHIN the 180k traversal so the
+            // star is beside the path, not ahead/behind it, and sweeps
+            // front->back with natural parallax as the ship cruises (no
+            // per-frame follow). Randomised side/height/depth per system.
             const float side = ((std::rand() & 1) ? 1.0f : -1.0f)
-                             * (45000.0f + (float)(std::rand() % 35000));
-            const float high = 8000.0f + (float)(std::rand() % 20000);
-            const float fwd  = 60000.0f + (float)(std::rand() % 60000);
+                             * (70000.0f + (float)(std::rand() % 45000));
+            const float high = 4000.0f + (float)(std::rand() % 14000);
+            const float along = -(50000.0f + (float)(std::rand() % 100000));
             g.sun.position = HMM_AddV3(
                 title_scene::jump_hole_pos(),
-                HMM_V3(side, high, fwd));
+                HMM_V3(side, high, along));
             sapp_set_window_title(("new_privateer — " + sys.display_name).c_str());
             std::printf("[title] jump -> '%s' (sky reskin + sun repos)\n",
                         sys.display_name.c_str());
