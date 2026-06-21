@@ -39,12 +39,15 @@ constexpr int k_cat_count = sizeof(k_cats) / sizeof(k_cats[0]);
 
 // Full roster for the 'random ships' title mode. Every flyable hull,
 // regardless of faction — the title just wants varied silhouettes
-// drifting by. (Derelict / drone / scout omitted: they're not really
-// 'patrol' ships and read oddly at title scale.)
+// Every flyable hull in assets/ships/ is eligible for the title screen,
+// modulo Mike's curated list (kamekh / orion / gladius removed because
+// they read oddly at title scale; derelict / drone / scout omitted
+// because they're not really 'patrol' ships and read oddly at title
+// scale).
 constexpr const char* k_all_ships[] = {
-    "broadsword", "stiletto", "paradigm", "gladius", "talon",
-    "centurion",  "orion",    "demon",    "kamekh",  "dralthi",
-    "gothri",     "drayman",  "galaxy",   "tarsus",
+    "broadsword", "stiletto", "paradigm",         "talon",     "demon",
+    "dralthi",    "gothri",   "drayman",          "galaxy",    "tarsus",
+    "strakha",    "centurion",
 };
 constexpr int k_all_ships_count = sizeof(k_all_ships) / sizeof(k_all_ships[0]);
 
