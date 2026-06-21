@@ -42,6 +42,11 @@ namespace {
 //                                  --convert-wav assets/speech/original`
 // to populate after a clean clone.
 constexpr const char* k_speech_dir = "assets/speech/original";
+// Bar/fixer conversations from CONV/*.VPK live in assets/speech/bar/
+// alongside original/. They share the same label namespace — index
+// numbers are disjoint so the two sets don't collide. Re-extract via
+// `python3 tools/extract_bar_speech.py <conv_dir> assets/speech/bar`.
+constexpr const char* k_speech_dir_bar = "assets/speech/bar";
 // Where the labels are written — TEXT, committable, sibling of the F7/F8
 // labels files. NOT under any gitignored tree.
 constexpr const char* k_labels_path = "docs/speech_labels.json";
@@ -53,14 +58,19 @@ constexpr int k_label_cap = 128;
 
 // ---- one auditionable clip --------------------------------------------------
 struct Clip {
-    int         index = -1;            // NNNN from speech_NNNN.wav
-    std::string filename;              // "speech_NNNN.wav"
+    int         index = -1;            // unique id (see k_speech_*_base below)
+    std::string filename;              // display filename
     std::string path;                  // full relative path
     SampleId    sample      = 0;       // 0 = failed to load
     float       duration_s  = 0.0f;    // from the WAV header (0 if unknown)
     char        label[k_label_cap] = {0};
     const char* current_use = "(unused)";  // reverse lookup, never null
+    bool        is_bar      = false;   // bar/fixer conv (true) vs in-flight (false)
 };
+
+// Index base for bar/fixer entries — keeps in-flight and bar audio disjoint
+// in the index space so the JSON can mix them under separate prefixes.
+constexpr int k_bar_index_base = 100000;
 
 // ---- module-static state ----------------------------------------------------
 //
@@ -148,8 +158,11 @@ void load_existing_labels() {
     if (!root.is_object()) return;
     int restored = 0;
     for (Clip& c : g_clips) {
-        char key[16];
-        std::snprintf(key, sizeof key, "speech_%04d", c.index);
+        char key[64];
+        if (c.is_bar)
+            std::snprintf(key, sizeof key, "bar/%s", c.filename.c_str());
+        else
+            std::snprintf(key, sizeof key, "speech_%04d", c.index);
         const json::Value* entry = root.find(key);
         if (!entry || !entry->is_object()) continue;
         if (const json::Value* lbl = entry->find("label"); lbl && lbl->is_string()) {
@@ -194,8 +207,11 @@ bool save_labels() {
            " — speech isn't wired into any event/gun yet).\",\n";
     for (size_t i = 0; i < g_clips.size(); ++i) {
         const Clip& c = g_clips[i];
-        char key[16];
-        std::snprintf(key, sizeof key, "speech_%04d", c.index);
+        char key[64];
+        if (c.is_bar)
+            std::snprintf(key, sizeof key, "bar/%s", c.filename.c_str());
+        else
+            std::snprintf(key, sizeof key, "speech_%04d", c.index);
         out += "  \"";
         out += key;
         out += "\": { \"label\": \"";
@@ -268,7 +284,31 @@ void ensure_loaded() {
         c.sample      = audio::load(c.path);
         c.duration_s  = wav_duration_seconds(c.path);
         c.current_use = lookup_use(idx);
+        c.is_bar      = false;
         g_clips.push_back(std::move(c));
+    }
+
+    // Bar/fixer conversations from assets/speech/bar/. Each entry's filename
+    // is its own key in the JSON (avoids collisions across PAK files); the
+    // int index is an in-loadtable sequence number for sorting/display.
+    int bar_seq = 0;
+    if (fs::is_directory(k_speech_dir_bar, ec)) {
+        for (const auto& entry : fs::directory_iterator(k_speech_dir_bar, ec)) {
+            if (!entry.is_regular_file()) continue;
+            const std::string name = entry.path().filename().string();
+            if (entry.path().extension() != ".wav") continue;
+            if (name.size() < 1) continue;
+
+            Clip c;
+            c.index       = k_bar_index_base + bar_seq++;
+            c.filename    = name;
+            c.path        = entry.path().string();
+            c.sample      = audio::load(c.path);
+            c.duration_s  = wav_duration_seconds(c.path);
+            c.current_use = "(unused)";
+            c.is_bar      = true;
+            g_clips.push_back(std::move(c));
+        }
     }
 
     std::sort(g_clips.begin(), g_clips.end(),
@@ -277,7 +317,7 @@ void ensure_loaded() {
     g_scan_ok = !g_clips.empty();
     int ok = 0;
     for (const Clip& c : g_clips) if (c.sample != 0) ++ok;
-    std::printf("[speech_labeler] loaded %d/%zu extracted clips from %s\n",
+    std::printf("[speech_labeler] loaded %d/%zu total clips (%s + bar/conv)\n",
                 ok, g_clips.size(), k_speech_dir);
 
     load_existing_labels();

@@ -4347,11 +4347,17 @@ void frame_cb() {
             }
             if (a != title_screen::Action::None) {
                 if (a == title_screen::Action::NewGame) {
-                    // Drop the title; the welcome overlay (if still up)
-                    // owns the dismiss-when-ready flow. We leave the sim
-                    // frozen so the briefing text still makes sense.
+                    // Reset to a pristine new game (np-3dp.19): wipe
+                    // credits / reputation / cargo / kills / missions back
+                    // to the new_game baseline so NEW never inherits a
+                    // prior session's (or a loaded save's) state, and heal
+                    // the player hull to full. Keep the currently-loaded
+                    // system as the start system.
+                    g.player = player::new_game(g.system_name);
+                    g.apply_health_pending = false;
+                    if (Ship* pl = g.ships.player()) ship::heal_to_full(*pl);
                     g.show_title = false;
-                    std::printf("[title] NEW clicked — entering flight\n");
+                    std::printf("[title] NEW clicked — fresh game, entering flight\n");
                 } else if (a == title_screen::Action::LoadGame) {
                     // Open the save picker (np-3dp.19): a scrollable list of
                     // every accumulated save, newest first. Selection loads
@@ -4392,7 +4398,13 @@ void frame_cb() {
                         ImGui::Text("%zu save(s):", saves.size());
                         ImGui::Separator();
                         ImGui::BeginChild("save_list", ImVec2(0, -40), true);
+                        int row_id = 0;
                         for (const savegame::SlotInfo& s : saves) {
+                            // Per-row PushID: two saves made the same minute
+                            // share a label, so the label alone is a
+                            // colliding ImGui ID. The unique row index fixes
+                            // it (np-3dp.19).
+                            ImGui::PushID(row_id++);
                             if (ImGui::Selectable(s.label.c_str())) {
                                 PlayerState restored;
                                 if (savegame::load(restored, s.path)) {
@@ -4412,6 +4424,7 @@ void frame_cb() {
                                     std::printf("[title] LOAD -> %s\n", s.path.c_str());
                                 }
                             }
+                            ImGui::PopID();
                         }
                         ImGui::EndChild();
                     }
