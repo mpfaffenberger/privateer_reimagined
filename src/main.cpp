@@ -2312,10 +2312,9 @@ void frame_cb() {
             if (title_scene::variant() == title_scene::Variant::ChaseCam) {
                 const float side = ((std::rand() & 1) ? 1.0f : -1.0f)
                                  * (70000.0f + (float)(std::rand() % 45000));
-                const float high = 4000.0f + (float)(std::rand() % 14000);
                 const float along = -(50000.0f + (float)(std::rand() % 100000));
                 g.sun.position = HMM_AddV3(title_scene::jump_hole_pos(),
-                                           HMM_V3(side, high, along));
+                                           HMM_V3(side, 0.0f, along));
             }
             s_title_inited = true;
             std::printf("[title_scene] init cat=%d preset='%s' ship_atlases=%zu\n",
@@ -2405,11 +2404,10 @@ void frame_cb() {
             // per-frame follow). Randomised side/height/depth per system.
             const float side = ((std::rand() & 1) ? 1.0f : -1.0f)
                              * (70000.0f + (float)(std::rand() % 45000));
-            const float high = 4000.0f + (float)(std::rand() % 14000);
             const float along = -(50000.0f + (float)(std::rand() % 100000));
             g.sun.position = HMM_AddV3(
                 title_scene::jump_hole_pos(),
-                HMM_V3(side, high, along));
+                HMM_V3(side, 0.0f, along));
             sapp_set_window_title(("new_privateer — " + sys.display_name).c_str());
             std::printf("[title] jump -> '%s' (sky reskin + sun repos)\n",
                         sys.display_name.c_str());
