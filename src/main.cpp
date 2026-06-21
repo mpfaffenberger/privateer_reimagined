@@ -769,18 +769,24 @@ void build_system_scene(bool first_time) {
     // Procedural skybox (B1): no saved PNGs — the cubemap is rendered on the
     // fly from the seed on the first frame (generate(), called in frame_cb
     // before the scene pass). init() only sets up draw-side resources.
-    if (!g.skybox.init(g.system.skybox_seed)) {
-        std::fprintf(stderr, "[main] skybox init failed for seed '%s'\n",
-                     g.system.skybox_seed.c_str());
-        std::exit(1);
-    }
-
     if (first_time && !g.sun.init())  { std::fprintf(stderr, "[main] sun init failed\n");  std::exit(1); }
     if (const StarPreset* sp = find_star_preset(g.system.star_preset)) {
         apply_star_preset(g.sun, *sp);
     } else {
         std::fprintf(stderr, "[main] unknown star preset '%s' — using defaults\n",
                      g.system.star_preset.c_str());
+    }
+    // Skybox nebula palette is biased by the sun's warmth (np-3dp). Yellow
+    // suns are slightly warm (R slightly > B) so the skybox picks up a
+    // mild orange tint; red/orange suns get a strong warm bias; blue and
+    // purple suns get a cool bias; green lands near neutral with a small
+    // teal nudge.
+    const HMM_Vec3& sc = g.sun.core_color;
+    const float warmth = std::clamp((sc.X - sc.Z) * 4.0f, -1.0f, 1.0f);
+    if (!g.skybox.init(g.system.skybox_seed, /*face_res=*/4096, warmth)) {
+        std::fprintf(stderr, "[main] skybox init failed for seed '%s'\n",
+                     g.system.skybox_seed.c_str());
+        std::exit(1);
     }
 
     // Park the sun at the *centroid* of all nav points. This makes the

@@ -27,12 +27,16 @@ struct Skybox {
     std::string seed_;
     int         face_res_  = 4096;
     bool        generated_ = false;
+    float       sun_warmth_ = 0.0f;    // nebula palette bias [-1, +1]
 
     // Set up draw-side resources (sampler, cube geometry, draw shader +
     // pipeline) and arm procedural generation for `seed`. No cubemap yet.
     // face_res 4096 = crisp; cube is 6 x face_res^2 x RGBA8 (~402 MB at
-    // 4096), generated once per system load on the GPU.
-    bool init(const std::string& seed, int face_res = 4096);
+    // 4096), generated once per system load on the GPU. `sun_warmth` in
+    // [-1, 1] biases nebula colours: +ve = warm (orange/red/rose),
+    // -ve = cool (blue/teal/green). 0 = pure random.
+    bool init(const std::string& seed, int face_res = 4096,
+              float sun_warmth = 0.0f);
 
     // Render the procedural cubemap for `seed_` (idempotent — first call
     // only). MUST be called inside frame_cb, BEFORE the scene pass begins.

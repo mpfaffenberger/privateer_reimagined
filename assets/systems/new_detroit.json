@@ -3,7 +3,7 @@
   "description": "Potter Quadrant / Gemini Sector. Jump links: Manchester , ND-57 , New Constantinople , Perry , Raxis , Rikel , Saxtogue , XXN-1927. Random mission opponents: 2/3 Militia, 1/3 Bounty Hunter. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
   "skybox_seed": "new_detroit",
   "star": {
-    "preset": "yellow"
+    "preset": "orange"
   },
   "asteroid_fields": [],
   "placed_sprites": [

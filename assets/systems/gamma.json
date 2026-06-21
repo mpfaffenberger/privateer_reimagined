@@ -3,7 +3,7 @@
   "description": "Potter Quadrant / Gemini Sector. Jump links: Beta , Delta Prime. Random mission opponents: All Kilrathi. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
   "skybox_seed": "gamma",
   "star": {
-    "preset": "yellow"
+    "preset": "blue"
   },
   "asteroid_fields": [
     {

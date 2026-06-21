@@ -3,7 +3,7 @@
   "description": "Clarke Quadrant / Gemini Sector. Jump links: Blockade Point Tango , N'Der Pak , T'K'Tarak. Random mission opponents: 2/3 Kilrathi, 1/3 Retro. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
   "skybox_seed": "lisacc",
   "star": {
-    "preset": "yellow"
+    "preset": "green"
   },
   "asteroid_fields": [
     {

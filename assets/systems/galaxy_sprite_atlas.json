@@ -2,7 +2,7 @@
   "name": "Galaxy Sprite Atlas Capture",
   "description": "Inert Galaxy at origin with a backdrop of one yellow sun and three planet billboards. Mirrors centurion_sprite_atlas.json — the Galaxy is non-combat (alive=false skips perception/AI/firing) so the planets and sun are pure scenery for sprite-atlas review (F4) and screenshot work. Galaxy is canonically larger than the Centurion (240 m display vs 120 m), so player_start sits proportionally further out (175 m vs 88 m) to keep the ship comfortably framed.",
   "skybox_seed": "troy",
-  "star": { "preset": "yellow" },
+  "star": { "preset": "red" },
   "asteroid_fields": [],
   "placed_sprites": [
     {

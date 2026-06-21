@@ -3,7 +3,7 @@
   "description": "Clarke Quadrant / Gemini Sector. Jump links: Hyades , Sum'nH'hra , Tr'Pakh. Random mission opponents: All Kilrathi. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
   "skybox_seed": "sumn_kpta",
   "star": {
-    "preset": "yellow"
+    "preset": "red"
   },
   "asteroid_fields": [],
   "placed_sprites": [],

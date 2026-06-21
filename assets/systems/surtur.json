@@ -3,7 +3,7 @@
   "description": "Clarke Quadrant / Gemini Sector. Jump links: 41-GS , Blockade Point Charlie , Perry. Random mission opponents: 2/3 Confederation, 1/3 Kilrathi. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
   "skybox_seed": "surtur",
   "star": {
-    "preset": "yellow"
+    "preset": "blue"
   },
   "asteroid_fields": [],
   "placed_sprites": [

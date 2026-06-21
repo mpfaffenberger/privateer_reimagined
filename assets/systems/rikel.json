@@ -3,7 +3,7 @@
   "description": "Clarke Quadrant / Gemini Sector. Jump links: 44-P-1M , Midgard , New Detroit. Random mission opponents: 2/3 Confederation, 1/3 Militia. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
   "skybox_seed": "rikel",
   "star": {
-    "preset": "yellow"
+    "preset": "red"
   },
   "asteroid_fields": [
     {

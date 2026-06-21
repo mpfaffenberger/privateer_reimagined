@@ -3,7 +3,7 @@
   "description": "Humboldt Quadrant / Gemini Sector. Jump links: Pyrenees. Random mission opponents: 2/3 Pirate, 1/3 Retro. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
   "skybox_seed": "cm_n1054",
   "star": {
-    "preset": "yellow"
+    "preset": "blue"
   },
   "asteroid_fields": [
     {

@@ -3,7 +3,7 @@
   "description": "Humboldt Quadrant / Gemini Sector. Jump links: Aquila , Junction , Troy. Random mission opponents: . (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
   "skybox_seed": "gemini",
   "star": {
-    "preset": "yellow"
+    "preset": "green"
   },
   "asteroid_fields": [],
   "placed_sprites": [],

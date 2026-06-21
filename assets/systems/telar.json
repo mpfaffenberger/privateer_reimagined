@@ -3,7 +3,7 @@
   "description": "Fariss Quadrant / Gemini Sector. Jump links: 17-AR , J900 , Valhalla. Random mission opponents: All Pirate. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
   "skybox_seed": "telar",
   "star": {
-    "preset": "yellow"
+    "preset": "orange"
   },
   "asteroid_fields": [
     {

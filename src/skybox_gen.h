@@ -22,6 +22,11 @@ namespace skybox_gen {
 // procedural sky for `seed` into all six faces. Returns the cube image (also
 // usable as a sampled texture); SG_INVALID image id on failure. Transient
 // shaders/pipelines/buffers are created and destroyed internally.
-sg_image generate(const std::string& seed, int face_res);
+//
+// `sun_warmth` in [-1, 1] biases nebula colours toward warm (R > G > B
+// tones — orange/red/yellow) for +ve values, or cool (B > G > R tones —
+// blue/green/purple) for -ve values. 0.0 = pure random. Clamped to a
+// reasonable range so the bias is visible but doesn't flatten variety.
+sg_image generate(const std::string& seed, int face_res, float sun_warmth);
 
 }  // namespace skybox_gen

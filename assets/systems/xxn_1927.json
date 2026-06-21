@@ -3,7 +3,7 @@
   "description": "Potter Quadrant / Gemini Sector. Jump links: 119CE , Metsor , New Constantinople , New Detroit , Oxford. Random mission opponents: 2/3 Merchant, 1/3 Militia. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
   "skybox_seed": "xxn_1927",
   "star": {
-    "preset": "yellow"
+    "preset": "blue"
   },
   "asteroid_fields": [],
   "placed_sprites": [

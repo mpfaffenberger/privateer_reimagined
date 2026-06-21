@@ -3,7 +3,7 @@
   "description": "Humboldt Quadrant / Gemini Sector. Jump links: Sherwood. Random mission opponents: 2/3 Pirate, 1/3 Militia. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
   "skybox_seed": "pollux",
   "star": {
-    "preset": "yellow"
+    "preset": "red"
   },
   "asteroid_fields": [
     {

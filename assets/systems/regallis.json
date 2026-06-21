@@ -3,7 +3,7 @@
   "description": "Fariss Quadrant / Gemini Sector. Jump links: Freyja , Sherwood , Troy. Random mission opponents: 2/3 Retro, 1/3 Militia. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
   "skybox_seed": "regallis",
   "star": {
-    "preset": "yellow"
+    "preset": "orange"
   },
   "asteroid_fields": [
     {

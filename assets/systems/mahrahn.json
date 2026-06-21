@@ -3,7 +3,7 @@
   "description": "Clarke Quadrant / Gemini Sector. Jump links: Blockade Point Tango , Sum'Tlor. Random mission opponents: All Kilrathi. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
   "skybox_seed": "mahrahn",
   "star": {
-    "preset": "yellow"
+    "preset": "purple"
   },
   "asteroid_fields": [
     {

@@ -3,7 +3,7 @@
   "description": "Clarke Quadrant / Gemini Sector. Jump links: Ragnarok , Tr'Pakh. Random mission opponents: 2/3 Kilrathi, 1/3 Confederation. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
   "skybox_seed": "blockade_point_alpha",
   "star": {
-    "preset": "yellow"
+    "preset": "red"
   },
   "asteroid_fields": [
     {

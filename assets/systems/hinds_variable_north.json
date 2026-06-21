@@ -3,7 +3,7 @@
   "description": "Potter Quadrant / Gemini Sector. Jump links: Aldebran , DN-N1912. Random mission opponents: 2/3 Confederation, 1/3 Retro. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
   "skybox_seed": "hinds_variable_north",
   "star": {
-    "preset": "yellow"
+    "preset": "purple"
   },
   "asteroid_fields": [],
   "placed_sprites": [

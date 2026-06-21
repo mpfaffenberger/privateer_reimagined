@@ -2,7 +2,7 @@
   "name": "Centurion Atlas Capture",
   "description": "Atlas-capture scene for the Centurion (bounty-hunter heavy fighter). clay_mode strips per-mesh diffuse/spec/glow textures so the AI sprite generator sees pure shape + Lambertian shading instead of copying placeholder textures.",
   "skybox_seed": "troy",
-  "star": { "preset": "yellow" },
+  "star": { "preset": "orange" },
   "studio_lighting": true,
   "asteroid_fields": [],
   "placed_sprites": [],

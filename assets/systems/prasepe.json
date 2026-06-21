@@ -3,7 +3,7 @@
   "description": "Humboldt Quadrant / Gemini Sector. Jump links: New Caledonia. Random mission opponents: 2/3 Militia, 1/3 Retro. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
   "skybox_seed": "prasepe",
   "star": {
-    "preset": "yellow"
+    "preset": "blue"
   },
   "asteroid_fields": [
     {

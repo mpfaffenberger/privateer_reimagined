@@ -145,8 +145,14 @@ sg_pipeline make_pipe(sg_shader sh, int kind) {
 
 namespace skybox_gen {
 
-sg_image generate(const std::string& seed, int face_res) {
+sg_image generate(const std::string& seed, int face_res, float sun_warmth) {
     const uint64_t h = hash_seed(seed);
+    // Clamp to a sane band so a wildly-tuned sun can't flatten the skybox
+    // to a single hue. A warmth of 0.4 (mild warm) is enough to nudge
+    // most random colours into a warm palette; we cap the visible bias
+    // at ~0.85 so even an extreme sun keeps some variety.
+    const float w     = std::fmax(-1.0f, std::fmin(1.0f, sun_warmth));
+    const float w_abs = std::fabs(w);
 
     // ---- seeded parameter lists (counts/ranges from the skyboxgen "rich"
     //      preset that was the established sweet spot) ----------------------
@@ -170,10 +176,44 @@ sg_image generate(const std::string& seed, int face_res) {
     {
         Rng r(h + 2000);
         const int target = 2;                 // "rich" preset count
+        // Target palette for warmth biasing (np-3dp): warm skyboxes lean
+        // toward orange/red tones; cool ones toward blue/green. Keep some
+        // "randomness" in the second target row so variety survives.
+        const HMM_Vec3 warm_target_a = HMM_V3(1.00f, 0.55f, 0.20f);   // orange
+        const HMM_Vec3 warm_target_b = HMM_V3(1.00f, 0.30f, 0.40f);   // rose
+        const HMM_Vec3 cool_target_a = HMM_V3(0.20f, 0.45f, 1.00f);   // blue
+        const HMM_Vec3 cool_target_b = HMM_V3(0.35f, 0.90f, 0.50f);   // teal-green
+        const HMM_Vec3* warm_pick_a  = &warm_target_a;
+        const HMM_Vec3* warm_pick_b  = &warm_target_b;
+        const HMM_Vec3* cool_pick_a  = &cool_target_a;
+        const HMM_Vec3* cool_pick_b  = &cool_target_b;
+        // Pre-pick the per-nebula family so we don't go fully monochrome.
+        bool use_b_for_warm = (h & 1) != 0;
+        bool use_b_for_cool = (h & 2) != 0;
         for (int i = 0; i < target; ++i) {
             Nebula n;
             n.scale     = (r.next() * 0.5f + 0.25f) * 1.1f;
-            n.color     = HMM_V3(r.next(), r.next(), r.next());
+            // Random base color, then bias toward the warm/cool palette
+            // by w_abs. mix=0 keeps it pure random; mix=0.7 locks it in
+            // for strong suns while preserving some variety.
+            HMM_Vec3 base = HMM_V3(r.next(), r.next(), r.next());
+            HMM_Vec3 tgt  = base;
+            if (w_abs > 0.001f) {
+                if (w > 0.0f) {
+                    tgt = use_b_for_warm ? *warm_pick_b : *warm_pick_a;
+                } else {
+                    tgt = use_b_for_cool ? *cool_pick_b : *cool_pick_a;
+                }
+            }
+            const float mix = w_abs * 0.70f;     // up to 70% blend
+            n.color = HMM_V3(
+                base.X * (1.0f - mix) + tgt.X * mix,
+                base.Y * (1.0f - mix) + tgt.Y * mix,
+                base.Z * (1.0f - mix) + tgt.Z * mix);
+            // Dim the "unused" channel a touch for stronger suns so the
+            // warm/cool family dominates (extra cheap; no extra branch).
+            if      (w >  0.05f && n.color.Z > 0.05f) n.color.Z *= 1.0f - 0.30f * w_abs;
+            else if (w < -0.05f && n.color.X > 0.05f) n.color.X *= 1.0f - 0.30f * w_abs;
             n.intensity = (r.next() * 0.2f + 0.9f) * 1.15f;
             n.falloff   = (r.next() * 3.0f + 3.0f) * 0.95f;
             n.offset    = HMM_V3(r.next() * 2000.0f - 1000.0f,

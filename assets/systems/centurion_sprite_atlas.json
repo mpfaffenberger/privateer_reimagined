@@ -2,7 +2,7 @@
   "name": "Centurion Sprite Atlas Capture",
   "description": "Inert Centurion at origin with a backdrop of one yellow sun and three planet billboards. The ship is non-combat (perception/AI/firing all skip alive=false placeholders), so the planets and sun are pure scenery for atlas review and screenshot work. Sun position is anchored by a single nav point off-axis (the nav-centroid path in main.cpp); planets are billboard sprites at varied distances and sizes for parallax during fly-by-wire orbit.",
   "skybox_seed": "troy",
-  "star": { "preset": "yellow" },
+  "star": { "preset": "red" },
   "asteroid_fields": [],
   "placed_sprites": [
     {

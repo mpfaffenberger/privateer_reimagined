@@ -2,7 +2,7 @@
   "name": "Talon Atlas Capture",
   "description": "Minimal render scene for capturing clean Talon reference angles. Mirrors tarsus_atlas.json — same camera-facing solo-ship setup so render_ship_atlas.py can run identically against either ship.",
   "skybox_seed": "troy",
-  "star": { "preset": "yellow" },
+  "star": { "preset": "green" },
   "asteroid_fields": [],
   "placed_sprites": [],
   "placed_ship_sprites": [],

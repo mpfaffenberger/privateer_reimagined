@@ -3,7 +3,7 @@
   "description": "Fariss Quadrant / Gemini Sector. Jump links: Death , Capella , Sherwood. Random mission opponents: 2/3 Militia, 1/3 Pirate. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
   "skybox_seed": "famine",
   "star": {
-    "preset": "yellow"
+    "preset": "purple"
   },
   "asteroid_fields": [
     {

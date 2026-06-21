@@ -3,7 +3,7 @@
   "description": "Fariss Quadrant / Gemini Sector. Jump links: New Caledonia , Telar. Random mission opponents: 2/3 Pirate, 1/3 Retro. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
   "skybox_seed": "17_ar",
   "star": {
-    "preset": "yellow"
+    "preset": "red"
   },
   "asteroid_fields": [
     {

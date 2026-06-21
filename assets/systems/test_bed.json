@@ -3,7 +3,7 @@
   "description": "Fariss Quadrant / Gemini Sector. Jump links: . Random mission opponents: . (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
   "skybox_seed": "test_bed",
   "star": {
-    "preset": "yellow"
+    "preset": "red"
   },
   "asteroid_fields": [],
   "placed_sprites": [],

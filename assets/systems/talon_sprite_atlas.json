@@ -2,7 +2,7 @@
   "name": "Talon Sprite Atlas Capture",
   "description": "Mirror of talon_atlas.json but with the Talon placed as a sprite (atlas billboard) at world origin instead of a 3D mesh. Lets render_ship_atlas.py orbit the camera and screenshot what the sprite system actually picks at each (az, el) — apples-to-apples comparison against the ground-truth mesh renders, so we can spot orientation/cell-mapping bugs without flying around manually.",
   "skybox_seed": "troy",
-  "star": { "preset": "yellow" },
+  "star": { "preset": "purple" },
   "studio_lighting": true,
   "asteroid_fields": [],
   "placed_sprites": [],

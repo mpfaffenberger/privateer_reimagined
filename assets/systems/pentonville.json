@@ -3,7 +3,7 @@
   "description": "Humboldt Quadrant / Gemini Sector. Jump links: 119CE. Random mission opponents: 2/3 Pirate, 1/3 Militia. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
   "skybox_seed": "pentonville",
   "star": {
-    "preset": "yellow"
+    "preset": "purple"
   },
   "asteroid_fields": [
     {

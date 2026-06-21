@@ -3,7 +3,7 @@
   "description": "Potter Quadrant / Gemini Sector. Jump links: Mastif , Saxtogue , Shangri La , XXN-1927. Random mission opponents: 2/3 Kilrathi, 1/3 Militia. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
   "skybox_seed": "oxford",
   "star": {
-    "preset": "yellow"
+    "preset": "orange"
   },
   "asteroid_fields": [],
   "placed_sprites": [

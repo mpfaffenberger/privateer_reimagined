@@ -103,14 +103,15 @@ void mirror_vertical_rgba8(uint8_t* px, int w, int h) {
 
 } // namespace
 
-bool Skybox::init(const std::string& seed, int face_res) {
+bool Skybox::init(const std::string& seed, int face_res, float sun_warmth) {
     // Procedural path (B1): we no longer load PNG faces. Set up the draw-side
     // resources here (sampler, cube geometry, draw shader + pipeline) and arm
     // generation; the cubemap itself is rendered on the first frame via
     // generate() (offscreen passes can't run during system load).
-    seed_      = seed;
-    face_res_  = face_res;
-    generated_ = false;
+    seed_       = seed;
+    face_res_   = face_res;
+    generated_  = false;
+    sun_warmth_ = sun_warmth;
 
     // ---------------------------------------------------------------------
     // 4. Sampler — linear + clamp so face seams don't show.
@@ -158,7 +159,7 @@ bool Skybox::init(const std::string& seed, int face_res) {
 
 void Skybox::generate() {
     if (generated_) return;
-    cubemap = skybox_gen::generate(seed_, face_res_);
+    cubemap = skybox_gen::generate(seed_, face_res_, sun_warmth_);
     if (sg_query_image_state(cubemap) != SG_RESOURCESTATE_VALID) {
         std::fprintf(stderr, "[skybox] procedural generation failed for '%s'\n",
                      seed_.c_str());

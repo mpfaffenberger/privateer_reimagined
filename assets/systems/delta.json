@@ -3,7 +3,7 @@
   "description": "Fariss Quadrant / Gemini Sector. Jump links: Beta , Rygannon. Random mission opponents: 2/3 Pirate, 1/3 Kilrathi. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
   "skybox_seed": "delta",
   "star": {
-    "preset": "yellow"
+    "preset": "orange"
   },
   "asteroid_fields": [
     {

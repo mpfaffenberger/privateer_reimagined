@@ -3,7 +3,7 @@
   "description": "Fariss Quadrant / Gemini Sector. Jump links: Haven , Junction , Telar. Random mission opponents: 2/3 Militia, 1/3 Pirate. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
   "skybox_seed": "j900",
   "star": {
-    "preset": "yellow"
+    "preset": "orange"
   },
   "asteroid_fields": [],
   "placed_sprites": [],
