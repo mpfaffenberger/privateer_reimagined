@@ -2300,10 +2300,22 @@ void frame_cb() {
         // forward direction is the camera's +Z so the ships face the
         // player correctly.
         {
-            const HMM_Vec3 fwd = g.camera.forward();
+            const HMM_Vec3 fwd   = g.camera.forward();
+            const HMM_Vec3 right = g.camera.right();
+            const HMM_Vec3 up    = g.camera.up();
             const HMM_Vec3 anchor_pos = HMM_AddV3(g.camera.position,
                                                    HMM_MulV3F(fwd, 600.0f));
             title_scene::set_anchor(anchor_pos, HMM_V3(0, 0, 1));
+            // Park the sun far in front + up-left of the camera so it
+            // frames behind the patrol as a distant star (np-3dp). Without
+            // this the sun sat at the system centroid — usually off-screen
+            // behind the player at the title.
+            const HMM_Vec3 sun_pos =
+                HMM_AddV3(g.camera.position,
+                          HMM_AddV3(HMM_MulV3F(fwd,   90000.0f),
+                                    HMM_AddV3(HMM_MulV3F(right, -22000.0f),
+                                              HMM_MulV3F(up,     12000.0f))));
+            g.sun.position = sun_pos;
         }
         title_scene::tick(raw_dt);   // animate with the real dt so ships drift
     } else if (title_scene::inited()) {

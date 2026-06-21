@@ -144,7 +144,7 @@ void init(Category cat,
         g.patrol.push_back(s);
 
         const float base_angle = (float)i * (2.0f * 3.14159265f / k_n);
-        const float speed = 0.18f + 0.04f * (float)(i % 3);    // ~11-22 deg/sec
+        const float speed = 0.06f + 0.02f * (float)(i % 3);    // ~3-6 deg/sec (slow drift)
         const float radius = 320.0f + 80.0f * (float)(i % 4);  // 320..560 m
         const float height = (float)((i % 5) - 2) * 12.0f;     // -24..+24 m
         mt.push_back({base_angle, speed, radius, height});
@@ -161,7 +161,9 @@ void tick(float dt) {
     for (size_t i = 0; i < g.patrol.size(); ++i) {
         ShipSpriteObject& s = g.patrol[i];
         const Motion m = mt[i];
-        const float angle = m.base_angle + m.speed * s_t * 60.0f;
+        // speed is in rad/sec; s_t is accumulated seconds. No frame-rate
+        // multiplier (the old * 60 made it ~2 rotations/sec — way too fast).
+        const float angle = m.base_angle + m.speed * s_t;
         // Orbit around the anchor: a small forward offset places the
         // ships in front of the camera so the patrol is in view no
         // matter where the player is in the system.
