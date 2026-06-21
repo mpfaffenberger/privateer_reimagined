@@ -5,6 +5,7 @@
 #include "HandmadeMath.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -35,6 +36,17 @@ constexpr CatInfo k_cats[] = {
     /*Merchant     */{"Merchant",      "yellow", "drayman,galaxy,tarsus"},
 };
 constexpr int k_cat_count = sizeof(k_cats) / sizeof(k_cats[0]);
+
+// Full roster for the 'random ships' title mode. Every flyable hull,
+// regardless of faction — the title just wants varied silhouettes
+// drifting by. (Derelict / drone / scout omitted: they're not really
+// 'patrol' ships and read oddly at title scale.)
+constexpr const char* k_all_ships[] = {
+    "broadsword", "stiletto", "paradigm", "gladius", "talon",
+    "centurion",  "orion",    "demon",    "kamekh",  "dralthi",
+    "gothri",     "drayman",  "galaxy",   "tarsus",
+};
+constexpr int k_all_ships_count = sizeof(k_all_ships) / sizeof(k_all_ships[0]);
 
 // Module state.
 struct State {
@@ -114,23 +126,40 @@ void init(Category cat,
     g.atlas_storage.clear();
     g.atlas_keys.clear();
 
-    const CatInfo& ci = k_cats[(int)g.cat];
-    const auto ship_names = split_ships(ci.ships);
+    // Seed the RNG off the wall clock so the random ship pick differs
+    // every launch. One-time per process is enough; repeated init calls
+    // just keep advancing the same sequence.
+    {
+        static bool s_seeded = false;
+        if (!s_seeded) {
+            const auto t = std::chrono::steady_clock::now().time_since_epoch().count();
+            std::srand((unsigned)t);
+            s_seeded = true;
+        }
+    }
 
-    // Pre-load every distinct atlas; dedup so a category whose ships
-    // share a name (e.g. all use 'tarsus' in Merchant) only loads once.
-    for (const std::string& name : ship_names) {
-        bool dup = false;
-        for (const auto& k : g.atlas_keys) if (k == name) { dup = true; break; }
-        if (dup) continue;
+    // Random-ship title mode (np-3dp): pick a handful of DISTINCT hulls
+    // from the full roster, regardless of faction. Shuffle the roster
+    // and take the first few that load. The category is still tracked
+    // for the star preset, but ship selection is no longer tied to it.
+    constexpr int k_want = 5;
+    std::vector<int> idx(k_all_ships_count);
+    for (int i = 0; i < k_all_ships_count; ++i) idx[i] = i;
+    // Fisher-Yates shuffle seeded off rand() (seeded by the caller's
+    // wall-clock category pick, so each launch differs).
+    for (int i = k_all_ships_count - 1; i > 0; --i) {
+        const int j = std::rand() % (i + 1);
+        std::swap(idx[i], idx[j]);
+    }
+    for (int k = 0; k < k_all_ships_count && (int)g.atlas_storage.size() < k_want; ++k) {
+        const std::string name = k_all_ships[idx[k]];
         if (ShipSpriteAtlas* a = load_one(name, *g.sprite_art)) {
             g.atlas_storage.emplace_back(a);
             g.atlas_keys.push_back(name);
         }
     }
     if (g.atlas_storage.empty()) {
-        std::fprintf(stderr, "[title_scene] no atlases loaded for category %d\n",
-                     (int)g.cat);
+        std::fprintf(stderr, "[title_scene] no atlases loaded (random mode)\n");
         return;
     }
 
