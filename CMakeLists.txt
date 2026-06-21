@@ -203,6 +203,7 @@ src/bolt_art.cpp
     src/atlas_grid_viewer.cpp
     src/sound_labeler.cpp
     src/music_labeler.cpp
+    src/speech_labeler.cpp
     src/cockpit_hud.cpp
     ${DEV_REMOTE_SRC}
     ${IMGUI_SRC}

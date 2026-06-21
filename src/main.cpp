@@ -27,6 +27,7 @@
 #include "audio.h"
 #include "sound_labeler.h"
 #include "music_labeler.h"
+#include "speech_labeler.h"
 #include "camera.h"
 #include "cockpit_hud.h"
 #include "comm.h"
@@ -459,6 +460,18 @@ struct AppState {
     // unfreezes.
     bool show_welcome = false;   // welcome briefing REMOVED in np-3dp; the title screen owns the chrome
     bool show_title   = true;   // title/loading screen at app launch
+
+    // Title 'galaxy tour' (np-3dp.12): during the ChaseCam title variant we
+    // periodically jump the backdrop to a random system so the menu reads
+    // as a ship touring the galaxy. A white hyperspace flash ramps up, the
+    // system is rebuilt under it (load_and_build_system), then it fades
+    // out revealing the new system's skybox + sun. State machine:
+    //   phase 0 = idle (counting down to the next jump)
+    //   phase 1 = flash ramping IN (toward white); fires the switch at peak
+    //   phase 2 = flash fading OUT (revealing the new system)
+    int   title_jump_phase  = 0;
+    float title_jump_clock  = 0.0f;   // seconds since the last jump (phase 0)
+    float title_jump_flash  = 0.0f;   // 0..1 white overlay alpha
 
     // 3rd-person orbit/freelook camera, active while the nav autopilot is
     // engaged (the ship flies itself, so the player is free to look around).
@@ -924,6 +937,7 @@ void build_system_scene(bool first_time) {
         atlas_grid_viewer::init();
         sound_labeler::init();
         music_labeler::init();
+        speech_labeler::init();
         sprite_generation_tool::init();
         mesh_orient_editor::init();
     }
@@ -2318,7 +2332,24 @@ void frame_cb() {
             // up-left sun and leaves the streaks off.
             const title_scene::ChaseConfig cc =
                 title_scene::chase_config(g.camera.position, fwd, right, up);
-            if (cc.sun_override) {
+            if (cc.cam_override) {
+                // Chase cam: park the sun ahead-left of the ORBITING
+                // camera so each toured system's star is actually in frame
+                // (the system's native sun sits at its own centroid, often
+                // off-screen). Build the offset from the chase camera's own
+                // basis (forward = -Z of cam_orient).
+                const HMM_Vec3 cfwd =
+                    HMM_RotateV3Q(HMM_V3(0, 0, -1), cc.cam_orient);
+                const HMM_Vec3 cright =
+                    HMM_RotateV3Q(HMM_V3(1, 0, 0), cc.cam_orient);
+                const HMM_Vec3 cup =
+                    HMM_RotateV3Q(HMM_V3(0, 1, 0), cc.cam_orient);
+                g.sun.position =
+                    HMM_AddV3(cc.cam_pos,
+                              HMM_AddV3(HMM_MulV3F(cfwd,   90000.0f),
+                                        HMM_AddV3(HMM_MulV3F(cright, 26000.0f),
+                                                  HMM_MulV3F(cup,     14000.0f))));
+            } else if (cc.sun_override) {
                 g.sun.position = cc.sun_pos;
             } else {
                 // Park the sun far in front + up-left of the camera so it
@@ -2350,6 +2381,73 @@ void frame_cb() {
         // the whole 4s fly-in. 50ms cap = ~20fps floor; normal 60fps
         // frames (~16ms) pass through untouched.
         s_title_elapsed += std::min(raw_dt, 0.05f);
+
+        // --- Galaxy tour (np-3dp.12): jump the backdrop between systems ---
+        // Only the ChaseCam variant tours (the patrol is a static vignette).
+        // The white flash + the actual system switch are driven here; the
+        // switch itself goes through the normal g.pending_goto path below.
+        if (title_scene::variant() == title_scene::Variant::ChaseCam) {
+            constexpr float k_tour_interval = 20.0f;  // seconds between jumps
+            constexpr float k_flash_ramp    = 0.45f;  // flash in/out time (s)
+            const float fdt = std::min(raw_dt, 0.05f);
+            switch (g.title_jump_phase) {
+                case 0:  // idle: count down to the next jump
+                    g.title_jump_clock += fdt;
+                    if (g.title_jump_clock >= k_tour_interval) {
+                        g.title_jump_phase = 1;       // begin flashing in
+                        g.title_jump_clock = 0.0f;
+                    }
+                    break;
+                case 1:  // flash ramping toward white
+                    g.title_jump_flash += fdt / k_flash_ramp;
+                    if (g.title_jump_flash >= 1.0f) {
+                        g.title_jump_flash = 1.0f;
+                        g.title_jump_phase = 2;       // peak: do the reskin
+                    }
+                    break;
+                case 2: {
+                    // Re-skin the backdrop to a random galaxy system's sky
+                    // (np-3dp.12). We do NOT do a full system reload here
+                    // (that tears down + rebuilds the whole scene and
+                    // crashes mid-title with a Metal encoder fault); the
+                    // chase cam only ever shows skybox + sun + the title
+                    // ships, so swapping just the skybox cubemap + sun
+                    // preset is visually identical and dead safe. We're in
+                    // the sim section here, BEFORE any render pass opens,
+                    // so destroy()+init() of the skybox is legal. The cube
+                    // regenerates at the usual generate() call next frame,
+                    // hidden behind the white flash.
+                    if (!g.galaxy.systems.empty()) {
+                        const int n = (int)g.galaxy.systems.size();
+                        const galaxy::SystemEntry& sys =
+                            g.galaxy.systems[std::rand() % n];
+                        const std::string seed = sys.id;   // per-system sky
+                        const uint64_t   h   = sky_family_hash(seed);
+                        const SkyFamily  fam = sky_family_for_hash(h);
+                        const SkyFamilyConfig& cfg = k_sky_families[(int)fam];
+                        const std::string sun_name = sky_family_pick_sun(fam, h);
+                        if (const StarPreset* sp = find_star_preset(sun_name))
+                            apply_star_preset(g.sun, *sp);
+                        g.skybox.destroy();
+                        g.skybox.init(seed, /*face_res=*/4096, cfg.warmth,
+                                      cfg.target_a, cfg.target_b);
+                        sapp_set_window_title(
+                            ("new_privateer — " + sys.display_name).c_str());
+                        std::printf("[title] galaxy tour -> '%s' (sky reskin)\n",
+                                    sys.display_name.c_str());
+                    }
+                    g.title_jump_phase = 3;           // fade out next frame
+                    break;
+                }
+                case 3:  // flash fading out, revealing the new sky
+                    g.title_jump_flash -= fdt / k_flash_ramp;
+                    if (g.title_jump_flash <= 0.0f) {
+                        g.title_jump_flash = 0.0f;
+                        g.title_jump_phase = 0;       // back to idle countdown
+                    }
+                    break;
+            }
+        }
     } else if (title_scene::inited()) {
         // Title dismissed — drop our cached state so the next title visit
         // gets a fresh category + atlas load.
@@ -4058,6 +4156,9 @@ void frame_cb() {
     // saving ground-truth labels to docs/music_labels.json. Ducks the live
     // music layer while previewing; restores it on Stop/close. Self-contained.
     music_labeler::build();
+    // F9 — speech labeler. Auditions + names the converted SPEECH.PAK clips,
+    // saving ground-truth labels to docs/speech_labels.json. Self-contained.
+    speech_labeler::build();
     // F6 — sprite-generation workbench. Front-end only; launches Python jobs.
     sprite_generation_tool::build();
     if (!g.capture_clean) {
@@ -4158,6 +4259,21 @@ void frame_cb() {
 
         if (g.show_title) {
             const title_screen::Action a = title_screen::draw();
+            // Hyperspace flash overlay for the galaxy tour (np-3dp.12):
+            // a full-screen white wash that ramps to peak as we jump, then
+            // fades to reveal the new system. Drawn on the foreground list
+            // so it covers the chrome + scene. Squared for a snappier ease.
+            if (g.title_jump_flash > 0.0f) {
+                const ImGuiViewport* vpf = ImGui::GetMainViewport();
+                ImDrawList* fg = ImGui::GetForegroundDrawList();
+                const float a01 = g.title_jump_flash * g.title_jump_flash;
+                const ImU32 wash = IM_COL32(255, 255, 255,
+                                            (int)(a01 * 255.0f + 0.5f));
+                fg->AddRectFilled(vpf->WorkPos,
+                                  ImVec2(vpf->WorkPos.x + vpf->WorkSize.x,
+                                         vpf->WorkPos.y + vpf->WorkSize.y),
+                                  wash);
+            }
             if (a != title_screen::Action::None) {
                 if (a == title_screen::Action::NewGame) {
                     // Drop the title; the welcome overlay (if still up)
@@ -4556,6 +4672,8 @@ void event_cb(const sapp_event* ev) {
     // F8 — music labeler. Ahead of debug_panel so the toggle beats ImGui
     // focus, same as the F4/F7 tools.
     if (music_labeler::handle_event(ev)) return;
+    // F9 — speech labeler. Same as the F7/F8 tools.
+    if (speech_labeler::handle_event(ev)) return;
     if (sprite_generation_tool::handle_event(ev)) return;
     // F5 — live PlacedMesh orientation slider. Sits ahead of debug_panel
     // so the F5 toggle works even when an ImGui window has focus.
