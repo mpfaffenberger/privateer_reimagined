@@ -78,21 +78,23 @@ Action draw() {
                 ImVec2(bot1.x - 24.0f, bot0.y + 1.0f),
                 amber, 1.0f);
 
-    // 3) PRIVATEER wordmark + subtitle (centred in the top rail).
-    const char* word = "PRIVATEER";
-    const float word_sz = 56.0f;
-    ImVec2 word_sz_vec = ImGui::CalcTextSize(word);
-    word_sz_vec.x *= (word_sz / ImGui::GetTextLineHeight());
-    ImVec2 word_pos(vp->WorkPos.x + (W - word_sz_vec.x) * 0.5f,
-                    top0.y + 16.0f);
+    // 3) Full wordmark, single line, as large as fits the top rail.
+    //    Scales to fill ~92% of the viewport width, then clamps so it
+    //    still fits the rail height; centred both ways. (Subtitle line
+    //    'AN ASPECT OF WING COMMANDER' removed per np-3dp.11.)
+    (void)dim;
+    const char* word = "Wing Commander: Privateer (Reimagined)";
+    const float base_h = ImGui::GetTextLineHeight();
+    const ImVec2 base_sz = ImGui::CalcTextSize(word);
+    const float avail_w = W * 0.92f;
+    float word_sz = base_h * (avail_w / base_sz.x);   // width-fit size
+    const float h_cap = top_h - 18.0f;                // keep inside the rail
+    if (word_sz > h_cap) word_sz = h_cap;
+    const float scaled_w = base_sz.x * (word_sz / base_h);
+    ImVec2 word_pos(vp->WorkPos.x + (W - scaled_w) * 0.5f,
+                    top0.y + (top_h - word_sz) * 0.5f);
     (void)top_off;
     dl->AddText(ImGui::GetFont(), word_sz, word_pos, amber, word);
-    // Subtitle in dim grey below the wordmark.
-    const char* sub = "AN ASPECT OF WING COMMANDER";
-    ImVec2 sub_sz = ImGui::CalcTextSize(sub);
-    dl->AddText(ImVec2(vp->WorkPos.x + (W - sub_sz.x) * 0.5f,
-                       word_pos.y + word_sz + 6.0f),
-                dim, sub);
 
     // 4) Action buttons (NEW / LOAD / OPTIONS / QUIT) in the bottom rail.
     const float btn_w   = 168.0f;
