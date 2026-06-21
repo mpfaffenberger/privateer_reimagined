@@ -2329,7 +2329,11 @@ void frame_cb() {
         // the roll (dt=0 never resets it) and flipped the view every
         // frame -> bad flicker. (np-3dp)
         title_scene::tick(raw_dt);   // animate with the real dt so ships drift
-        s_title_elapsed += raw_dt;   // drive the camera fly-in
+        // Clamp the per-frame slice so a giant first-frame dt (skybox
+        // cubemap generation can stall a frame for 1-3s) doesn't skip
+        // the whole 4s fly-in. 50ms cap = ~20fps floor; normal 60fps
+        // frames (~16ms) pass through untouched.
+        s_title_elapsed += std::min(raw_dt, 0.05f);
     } else if (title_scene::inited()) {
         // Title dismissed — drop our cached state so the next title visit
         // gets a fresh category + atlas load.
