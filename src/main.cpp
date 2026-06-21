@@ -90,6 +90,7 @@ HMM_Mat4 model_matrix(HMM_Vec3 pos, HMM_Vec3 euler_deg, float s);
 #include "sun.h"
 #include "system_def.h"
 #include "galaxy.h"
+#include "title_screen.h"
 
 
 #include "imgui.h"   // ImGui::GetIO() for WantCaptureMouse handoff
@@ -456,6 +457,7 @@ struct AppState {
     // frozen behind the text and the player can read before the brawl
     // unfreezes.
     bool show_welcome = true;
+    bool show_title   = true;   // title/loading screen at app launch
 
     // 3rd-person orbit/freelook camera, active while the nav autopilot is
     // engaged (the ship flies itself, so the player is free to look around).
@@ -2257,6 +2259,9 @@ void frame_cb() {
     // briefing reads against a still frame. Everything still RENDERS — only
     // the integration step is zeroed. Dismissed in event_cb (SPACE/ENTER).
     if (g.show_welcome) dt = 0.0f;
+    // Title screen likewise freezes the sim so the chrome plate doesn't
+    // move behind the menu (and so LOAD can re-target the world safely).
+    if (g.show_title)   dt = 0.0f;
 
     // --- deferred system switch (np-6al.1, frame boundary only) -------------
     // Dev timers (--goto / --goto-soak) and the debug dropdown queue a switch
@@ -3948,6 +3953,41 @@ void frame_cb() {
         // Alpha welcome/briefing overlay — drawn last so it sits on top of
         // the whole HUD. The sim is frozen (dt=0) while this is up.
         if (g.show_welcome) draw_welcome_overlay();
+
+        // Title screen (np-3dp): drawn AFTER the welcome overlay so the
+        // briefing (if any) sits behind the chrome. The sim is also
+        // frozen while this is up: the title screen owns the input until
+        // the player clicks NEW / LOAD / OPTIONS / QUIT.
+        if (g.show_title) {
+            const title_screen::Action a = title_screen::draw();
+            if (a != title_screen::Action::None) {
+                if (a == title_screen::Action::NewGame) {
+                    // Drop the title; the welcome overlay (if still up)
+                    // owns the dismiss-when-ready flow. We leave the sim
+                    // frozen so the briefing text still makes sense.
+                    g.show_title = false;
+                    std::printf("[title] NEW clicked — entering flight\n");
+                } else if (a == title_screen::Action::LoadGame) {
+                    // Try to load the autosave and enter free flight.
+                    PlayerState restored;
+                    if (savegame::load(restored, savegame::k_autosave_slot)) {
+                        g.player = restored;
+                        g.player.docked = false;
+                        game_state::request_mode(g.game, GameMode::Flight);
+                        g.show_title = false;
+                        g.show_welcome = false;
+                        std::printf("[title] LOAD clicked — autosave loaded\n");
+                    } else {
+                        std::printf("[title] LOAD clicked — no autosave yet; stay on title\n");
+                    }
+                } else if (a == title_screen::Action::Options) {
+                    std::printf("[title] OPTIONS clicked — coming soon\n");
+                } else if (a == title_screen::Action::Quit) {
+                    std::printf("[title] QUIT clicked — request app quit\n");
+                    sapp_request_quit();
+                }
+            }
+        }
     }
 
     // ---- ship-target indicator ------------------------------------
@@ -4308,6 +4348,13 @@ void event_cb(const sapp_event* ev) {
             std::printf("[welcome] dismissed — fight on\n");
         }
         if (ev->type == SAPP_EVENTTYPE_KEY_DOWN) return;   // eat keys while paused
+    }
+
+    // Title screen owns input entirely. New press must come from one of
+    // the buttons — keyboard / window events are all swallowed so a
+    // stray tap can't accidentally start the game.
+    if (g.show_title) {
+        if (ev->type == SAPP_EVENTTYPE_KEY_DOWN) return;   // eat keys while up
     }
 
     // Give ImGui first crack at the event. If the panel is focused or the
