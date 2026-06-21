@@ -71,6 +71,7 @@ HMM_Mat4 model_matrix(HMM_Vec3 pos, HMM_Vec3 euler_deg, float s);
 #include "ship_registry.h"
 #include "ship_class.h"
 #include "shield.h"
+#include "hazards.h"
 #include "sprite.h"
 #include "ship_sprite.h"
 #include "sprite_light_editor.h"
@@ -2414,7 +2415,37 @@ void frame_cb() {
     // orients toward the selected nav, winds up the cruise engine, and
     // eases to a stop on arrival (or drops out if threat:: trips). No-op
     // in free flight. Runs after manual physics for the same reason.
-    autopilot::tick(g.autopilot, g.camera, dt);
+    autopilot::tick(g.autopilot, g.camera, dt, g.sun.position);
+
+    // ---- sun damage (np-3dp) ----------------------------------------------
+    // Inside the 15k bubble the player takes 5cm damage per second. We
+    // accumulate dt and apply once a full second has rolled over, so the
+    // damage reads as a discrete tick every second rather than a per-frame
+    // trickle. NPC ships would also benefit here but for v1 we keep it
+    // player-only so AI-vs-sun interactions stay out of the AI's way.
+    static float s_sun_damage_accum = 0.0f;
+    if (Ship* pl = g.ships.player(); pl && pl->alive) {
+        if (hazards::inside_sun_damage(g.sun.position, g.camera.position)) {
+            s_sun_damage_accum += dt;
+            while (s_sun_damage_accum >= hazards::k_sun_tick_s) {
+                s_sun_damage_accum -= hazards::k_sun_tick_s;
+                // Pick a facing at random so a sun-dweller doesn't have
+                // all damage channel to one shield facet. Any one will
+                // do for the player right now (just barely past a Heavy
+                // Shields block, say) — same code path the NPCs use.
+                static const HitFacing k_faces[] = {
+                    HitFacing::Fore, HitFacing::Aft, HitFacing::Side, HitFacing::Side};
+                const HitFacing face = k_faces[((int)(stm_sec(stm_now()) * 1000.0)) & 3];
+                ship::take_damage(*pl, hazards::k_sun_damage_per_s_cm, face);
+            }
+        } else {
+            // Drain the accumulator back to zero when outside so a brief
+            // edge graze doesn't queue up a flurry of hits afterwards.
+            s_sun_damage_accum = 0.0f;
+        }
+    } else {
+        s_sun_damage_accum = 0.0f;
+    }
 
     // 3rd-person orbit/freelook camera, driven off autopilot state. Runs
     // after autopilot::tick so engaged-state + ship pose are current; the
@@ -2549,7 +2580,7 @@ void frame_cb() {
     // came from JSON or stays at None for legacy motion.
     {
         const float t_now = (float)stm_sec(stm_now());   // process uptime
-        for (Ship& s : g.ships) ship_ai::tick(s, g.ships, t_now);
+        for (Ship& s : g.ships) ship_ai::tick(s, g.ships, t_now, g.system, g.sun.position);
     }
 
     // Encounters are no longer maintained continuously: the wcnews model

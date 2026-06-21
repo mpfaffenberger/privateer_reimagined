@@ -12,6 +12,7 @@
 #include "autopilot.h"
 
 #include "camera.h"
+#include "hazards.h"
 #include "sfx.h"
 #include "system_def.h"
 #include "threat.h"
@@ -110,7 +111,7 @@ void disengage(Autopilot& a, Camera& cam, const char* reason) {
     set_msg(a, reason);
 }
 
-void tick(Autopilot& a, Camera& cam, float dt) {
+void tick(Autopilot& a, Camera& cam, float dt, HMM_Vec3 sun_pos) {
     // Banner decay runs unconditionally so a refusal flash ("NO NAV
     // SELECTED") fades even though we never left Idle.
     if (a.msg_timer_s > 0.0f) {
@@ -131,7 +132,29 @@ void tick(Autopilot& a, Camera& cam, float dt) {
 
     const HMM_Vec3 to_t = HMM_SubV3(a.target, cam.position);
     const float    dist = HMM_LenV3(to_t);
-    const HMM_Vec3 dir  = dist > 1e-3f ? HMM_DivV3F(to_t, dist) : cam.forward();
+    HMM_Vec3       dir  = dist > 1e-3f ? HMM_DivV3F(to_t, dist) : cam.forward();
+
+    // Sun avoidance (np-3dp): bend the desired steering direction away
+    // from the sun when the autopilot would otherwise fly through it.
+    // Strength ramps linearly from 0 at the avoid radius (20k) to 1 at
+    // the damage boundary (15k) and inside. Within the avoid radius the
+    // autopilot never enters the 15k damage zone.
+    if (hazards::inside_sun_avoid(sun_pos, cam.position)) {
+        float sun_t = 0.0f;
+        const HMM_Vec3 sun_dir = hazards::sun_repulsion(sun_pos, cam.position, &sun_t);
+        if (sun_t > 1e-3f) {
+            // Bend `dir` AWAY from the sun: subtract the projection of
+            // sun_dir onto dir and renormalise. The bend angle scales
+            // with sun_t (0..1).
+            const float proj = HMM_DotV3(sun_dir, dir);
+            const HMM_Vec3 lateral = HMM_SubV3(sun_dir, HMM_MulV3F(dir, proj));
+            const float bend_strength = sun_t * 0.6f;  // cap so we still make progress
+            dir = HMM_AddV3(HMM_MulV3F(dir, 1.0f - bend_strength),
+                            HMM_MulV3F(lateral, bend_strength));
+            const float dl = HMM_LenV3(dir);
+            if (dl > 1e-3f) dir = HMM_DivV3F(dir, dl);
+        }
+    }
 
     // Swing the nose toward the nav (shortest-arc slerp, same feel as
     // the docking approach).

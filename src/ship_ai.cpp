@@ -1,11 +1,13 @@
 #include "ship_ai.h"
 
 #include "ai_brain.h"
+#include "hazards.h"
 #include "perception.h"
 #include "ship.h"
 #include "ship_sprite.h"   // full ShipSpriteObject def (zero residual omega on combat exit)
 #include "ship_class.h"
 #include "ship_registry.h"
+#include "system_def.h"
 
 #include <string_view>
 #include <algorithm>
@@ -128,7 +130,8 @@ void reset_brain_runtime(ShipAIState& ai) {
 
 } // namespace
 
-void ship_ai::tick(Ship& s, const ShipRegistry& all_ships, float t_now) {
+void ship_ai::tick(Ship& s, const ShipRegistry& all_ships, float t_now,
+                    const StarSystem& system, HMM_Vec3 sun_pos) {
     if (!s.alive || s.is_player) return;
     if (!s.ai.enabled)            return;
 
@@ -205,6 +208,34 @@ void ship_ai::tick(Ship& s, const ShipRegistry& all_ships, float t_now) {
         s.behavior.kind          = ShipBehavior::None;
         s.controller.fire_guns   = false;
         s.controller.afterburner = false;
+    }
+
+    // Hazard avoidance (np-3dp): bend the controller's heading away from
+    // bases (and the sun, if it has one) so NPC ships never fly inside
+    // the 7.5k base or 15k sun bubbles. Done as a post-pass so the AI's
+    // tactical decisions (combat / patrol / idle) aren't overridden.
+    const HMM_Vec3 base_avoid = hazards::base_repulsion(system.nav_points, s.position,
+        hazards::k_base_warn_radius_m, hazards::k_base_no_fly_radius_m);
+    HMM_Vec3 sun_avoid{0,0,0};
+    if (hazards::inside_sun_avoid(sun_pos, s.position)) {
+        float sun_t = 0.0f;
+        sun_avoid = hazards::sun_repulsion(sun_pos, s.position, &sun_t);
+        // Scale by sun_t so far away = no effect; close = strong push.
+        sun_avoid = HMM_MulV3F(sun_avoid, sun_t * 1.5f);
+    }
+    const HMM_Vec3 nudge = HMM_AddV3(base_avoid, sun_avoid);
+    if (HMM_LenV3(nudge) > 1e-3f) {
+        // Blend the nudge into desired_forward. Base repulsion strength
+        // is already 0..1 (linear ramp). Sun repulsion is amplified
+        // 1.5x so the 15k bubble feels like a wall to the AI.
+        HMM_Vec3 want = s.controller.desired_forward;
+        const float want_l = HMM_LenV3(want);
+        if (want_l < 1e-3f) want = HMM_V3(0,0,1); else want = HMM_DivV3F(want, want_l);
+        HMM_Vec3 blended = HMM_AddV3(want, HMM_MulV3F(nudge, 0.45f));
+        const float bl = HMM_LenV3(blended);
+        if (bl > 1e-3f) {
+            s.controller.desired_forward = HMM_DivV3F(blended, bl);
+        }
     }
 }
 

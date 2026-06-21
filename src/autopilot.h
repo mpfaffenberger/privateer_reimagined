@@ -119,11 +119,6 @@ EngageResult try_engage(Autopilot& a, Camera& cam,
 // the manual-input cancel, the hostile drop-out, and arrival.
 void disengage(Autopilot& a, Camera& cam, const char* reason);
 
-// Advance the autopilot. While Cruising: orient toward the nav, wind up
-// cruise, accelerate, integrate. While Arriving: ease to a stop. Also
-// re-checks the hostile gate every frame (drops out if it trips) and
-// decays the HUD banner timer. Safe to call every Flight frame; a no-op
-// (beyond banner decay) when phase == Idle.
-void tick(Autopilot& a, Camera& cam, float dt);
+void tick(Autopilot& a, Camera& cam, float dt, HMM_Vec3 sun_pos);
 
 } // namespace autopilot

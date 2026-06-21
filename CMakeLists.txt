@@ -167,6 +167,7 @@ add_executable(new_privateer
     src/autopilot.cpp
     src/threat.cpp
     src/jump.cpp
+    src/hazards.cpp
     src/encounters.cpp
     src/base_screens.cpp
     src/savegame.cpp

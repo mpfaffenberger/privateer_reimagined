@@ -49,6 +49,7 @@
 #include <vector>
 
 struct Ship;
+struct StarSystem;
 class ShipRegistry;
 
 enum class AIState : uint8_t {
@@ -217,7 +218,8 @@ namespace ship_ai {
 //
 // `t_now` is the engine's monotonic seconds counter; used to stamp
 // state_entered_at for future hysteresis logic.
-void tick(Ship& s, const ShipRegistry& all_ships, float t_now);
+void tick(Ship& s, const ShipRegistry& all_ships, float t_now,
+          const StarSystem& system, HMM_Vec3 sun_pos);
 
 // Convert AIState to / from JSON-friendly lowercase strings.
 const char* to_name(AIState st);
