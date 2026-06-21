@@ -14,6 +14,7 @@
 // -----------------------------------------------------------------------------
 
 #include "sokol_gfx.h"
+#include "HandmadeMath.h"
 #include <string>
 
 namespace skybox_gen {
@@ -27,6 +28,12 @@ namespace skybox_gen {
 // tones — orange/red/yellow) for +ve values, or cool (B > G > R tones —
 // blue/green/purple) for -ve values. 0.0 = pure random. Clamped to a
 // reasonable range so the bias is visible but doesn't flatten variety.
-sg_image generate(const std::string& seed, int face_res, float sun_warmth);
+//
+// `target_a` / `target_b` are the two palette anchors the random nebula
+// colour is lerped toward based on |warmth|. The caller (sky_family)
+// selects them so a Yellow family sends nebulae toward (1.0, 0.85, 0.30)
+// even though warmth is positive but small.
+sg_image generate(const std::string& seed, int face_res, float sun_warmth,
+                  HMM_Vec3 target_a, HMM_Vec3 target_b);
 
 }  // namespace skybox_gen

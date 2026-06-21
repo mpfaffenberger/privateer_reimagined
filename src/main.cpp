@@ -85,6 +85,7 @@ HMM_Mat4 model_matrix(HMM_Vec3 pos, HMM_Vec3 euler_deg, float s);
 #include "render_config.h"
 #include "rendertargets.h"
 #include "skybox.h"
+#include "sky_family.h"
 #include "star_presets.h"
 #include "sun.h"
 #include "system_def.h"
@@ -770,20 +771,29 @@ void build_system_scene(bool first_time) {
     // fly from the seed on the first frame (generate(), called in frame_cb
     // before the scene pass). init() only sets up draw-side resources.
     if (first_time && !g.sun.init())  { std::fprintf(stderr, "[main] sun init failed\n");  std::exit(1); }
-    if (const StarPreset* sp = find_star_preset(g.system.star_preset)) {
+    // Sky family is picked from a hash of the skybox seed (np-3dp). The
+    // family drives BOTH the sun preset (so a purple skybox gets a
+    // purple/blue/yellow sun, not a red one) AND the skybox tint targets
+    // (so the same family also leans purple instead of orange).
+    const uint64_t seed_hash = sky_family_hash(g.system.skybox_seed);
+    const SkyFamily family    = sky_family_for_hash(seed_hash);
+    const SkyFamilyConfig& cfg = k_sky_families[(int)family];
+    // The JSON's preset is overridden by the family pick so the pairing
+    // is canonical. The warn/fallback path still runs so unknown names
+    // surface in stderr (logs stay useful for debugging).
+    const std::string sun_name = sky_family_pick_sun(family, seed_hash);
+    if (const StarPreset* sp = find_star_preset(sun_name)) {
         apply_star_preset(g.sun, *sp);
+        g.system.star_preset = sun_name;
+        std::printf("[stars] family=%d sun='%s' warmth=%.2f seed='%s'\n",
+                    (int)family, sun_name.c_str(), cfg.warmth,
+                    g.system.skybox_seed.c_str());
     } else {
-        std::fprintf(stderr, "[main] unknown star preset '%s' — using defaults\n",
-                     g.system.star_preset.c_str());
+        std::fprintf(stderr, "[main] sky family picked unknown preset '%s'\n",
+                     sun_name.c_str());
     }
-    // Skybox nebula palette is biased by the sun's warmth (np-3dp). Yellow
-    // suns are slightly warm (R slightly > B) so the skybox picks up a
-    // mild orange tint; red/orange suns get a strong warm bias; blue and
-    // purple suns get a cool bias; green lands near neutral with a small
-    // teal nudge.
-    const HMM_Vec3& sc = g.sun.core_color;
-    const float warmth = std::clamp((sc.X - sc.Z) * 4.0f, -1.0f, 1.0f);
-    if (!g.skybox.init(g.system.skybox_seed, /*face_res=*/4096, warmth)) {
+    if (!g.skybox.init(g.system.skybox_seed, /*face_res=*/4096, cfg.warmth,
+                       cfg.target_a, cfg.target_b)) {
         std::fprintf(stderr, "[main] skybox init failed for seed '%s'\n",
                      g.system.skybox_seed.c_str());
         std::exit(1);

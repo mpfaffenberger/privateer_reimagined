@@ -138,6 +138,7 @@ add_executable(new_privateer
     src/camera.cpp
     src/skybox.cpp
     src/skybox_gen.cpp
+    src/sky_family.cpp
     src/sun.cpp
     src/sun_corona.cpp
     src/sun_gas.cpp
