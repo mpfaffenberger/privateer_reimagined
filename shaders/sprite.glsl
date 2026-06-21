@@ -69,39 +69,12 @@ layout(binding=1) uniform fs_params {
 in  vec2 v_uv;
 out vec4 frag;
 
-// ── Pixel-art post knobs ──────────────────────────────────────────────
-// Tuned for the ~512px 3D-rendered atlas cells. PIXEL_RES is the number
-// of "virtual pixels" across the sprite's longest edge — lower = chunkier.
-// COLOR_LEVELS is the per-channel palette depth (6 → 6³ = 216 colours,
-// close to the 256-colour VGA palette the original Privateer ran in).
-// ALPHA_CUTOFF is bumped well above zero so the chunked edge reads as a
-// hard 1-bit mask (crisp blocky silhouette) instead of soft AA fringe.
-const float PIXEL_RES    = 200.0;   // subtle pixel grid (96→160→200)
-const float COLOR_LEVELS = 16.0;    // mild posterize (6→12→16)
-const float ALPHA_CUTOFF = 0.35;
-
 void main() {
-    // Snap the UV to the centre of its virtual-pixel cell. Adjacent
-    // screen fragments inside the same cell now sample the same point,
-    // which is what produces the blocky "big pixel" look regardless of
-    // how close the camera gets to the billboard.
-    vec2 px_uv = (floor(v_uv * PIXEL_RES) + 0.5) / PIXEL_RES;
-
-    vec4 c = texture(sampler2D(u_tex, u_smp), px_uv);
-    // Hard alpha mask — see ALPHA_CUTOFF note. Also keeps the sprite's
-    // bounding quad from writing depth on (now-chunked) empty texels so
-    // additive atmospherics don't get punched out around the silhouette.
-    if (c.a < ALPHA_CUTOFF) discard;
-
-    // Palette quant(posterize) each channel to COLOR_LEVELS steps. This
-    // is what sells the retro look — smooth hull gradients collapse into
-    // a handful of flat shades like a hand-indexed 256-colour sprite.
-    vec3 q = floor(c.rgb * COLOR_LEVELS + 0.5) / COLOR_LEVELS;
-
+    vec4 c = texture(sampler2D(u_tex, u_smp), v_uv);
+    if (c.a < 0.001) discard;   // skip fully empty texels; keeps edge AA intact
     // Multiply RGB by tint.rgb (damage flash, distance-dim, etc). Alpha
-    // is forced to 1.0 post-cutoff so the kept pixels are fully opaque
-    // (no soft edge), then scaled by tint.a for global fade control.
-    frag = vec4(q * tint.rgb, tint.a);
+    // comes straight from the texture so soft edges composite correctly.
+    frag = vec4(c.rgb * tint.rgb, c.a * tint.a);
 }
 @end
 
