@@ -91,6 +91,7 @@ HMM_Mat4 model_matrix(HMM_Vec3 pos, HMM_Vec3 euler_deg, float s);
 #include "system_def.h"
 #include "galaxy.h"
 #include "title_screen.h"
+#include "title_scene.h"
 
 
 #include "imgui.h"   // ImGui::GetIO() for WantCaptureMouse handoff
@@ -2263,6 +2264,42 @@ void frame_cb() {
     // move behind the menu (and so LOAD can re-target the world safely).
     if (g.show_title)   dt = 0.0f;
 
+    // Title scene (np-3dp): advance the patrol ships even while the sim
+    // is frozen, otherwise the title would render static ships and the
+    // 'fly by' feel wouldn't read. Lazy-init on the first frame the
+    // title is up so we always have a fresh category + atlas load.
+    if (g.show_title) {
+        static bool s_title_inited = false;
+        if (!s_title_inited) {
+            // Pick a category deterministically per process. Mixes
+            // wall-clock nanoseconds + a monotonic show-count so two
+            // back-to-back title visits don't repeat.
+            const auto now_ns = std::chrono::steady_clock::now().time_since_epoch().count();
+            static int s_show_n = 0;
+            ++s_show_n;
+            const uint64_t h = (uint64_t)now_ns ^ (uint64_t)(s_show_n * 2654435761u);
+            constexpr int k_n = 5;   // Category count
+            const int cat = (int)(h % (uint64_t)k_n);
+            title_scene::Category chosen = (title_scene::Category)cat;
+            title_scene::init(chosen, g.sprite_art);
+            // Apply the category's star preset so the sun reads as canonical
+            // (e.g. red sun for Kilrathi, yellow for the rest). NPC + the
+            // system skybox are untouched; the player sees whatever's loaded.
+            if (const StarPreset* sp = find_star_preset(title_scene::star_preset(chosen))) {
+                apply_star_preset(g.sun, *sp);
+            }
+            s_title_inited = true;
+            std::printf("[title_scene] init cat=%d preset='%s' ship_atlases=%zu\n",
+                        cat, title_scene::star_preset(chosen),
+                        title_scene::category_label(chosen), /*placeholder*/(size_t)0);
+        }
+        title_scene::tick(raw_dt);   // animate with the real dt so ships drift
+    } else if (title_scene::inited()) {
+        // Title dismissed — drop our cached state so the next title visit
+        // gets a fresh category + atlas load.
+        title_scene::shutdown();
+    }
+
     // --- deferred system switch (np-6al.1, frame boundary only) -------------
     // Dev timers (--goto / --goto-soak) and the debug dropdown queue a switch
     // in g.pending_goto; we apply it HERE, at a clean frame boundary, never
@@ -3618,6 +3655,12 @@ void frame_cb() {
         // so translucent edges composite correctly.
         g.frame_sprites = g.placed_sprites;
         append_ship_sprites_for_camera(g.placed_ship_sprites, scene_cam, g.frame_sprites);
+        // Title scene patrol ships (np-3dp): feed canonical patrol ships
+        // into the same sprite queue when the title is up. Their poses
+        // are advanced by title_scene::tick(raw_dt) earlier in frame_cb.
+        if (g.show_title) {
+            title_scene::append_to_frame_sprites(scene_cam, g.frame_sprites);
+        }
         // Player hull in 3rd-person: feed a one-shot ShipSpriteObject at the
         // ship's pose through the same frame-selection path. The camera uses
         // -Z forward while the sprite atlas uses +Z nose, so rotate the

@@ -150,6 +150,7 @@ add_executable(new_privateer
     src/postprocess_composite.cpp
     src/star_presets.cpp
     src/title_screen.cpp
+    src/title_scene.cpp
     src/mesh.cpp
     src/mesh_cache.cpp
     src/material.cpp
