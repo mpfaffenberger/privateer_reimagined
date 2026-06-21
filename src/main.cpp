@@ -457,7 +457,7 @@ struct AppState {
     // missile-fire). While true, frame_cb forces dt=0 so the world is
     // frozen behind the text and the player can read before the brawl
     // unfreezes.
-    bool show_welcome = true;
+    bool show_welcome = false;   // welcome briefing REMOVED in np-3dp; the title screen owns the chrome
     bool show_title   = true;   // title/loading screen at app launch
 
     // 3rd-person orbit/freelook camera, active while the nav autopilot is
@@ -2259,9 +2259,10 @@ void frame_cb() {
     // Welcome overlay freezes the whole sim (player, AI, projectiles) so the
     // briefing reads against a still frame. Everything still RENDERS — only
     // the integration step is zeroed. Dismissed in event_cb (SPACE/ENTER).
-    if (g.show_welcome) dt = 0.0f;
-    // Title screen likewise freezes the sim so the chrome plate doesn't
-    // move behind the menu (and so LOAD can re-target the world safely).
+    // Title screen freezes the sim so the chrome plate doesn't move
+    // behind the menu (and so LOAD can re-target the world safely).
+    // (g.show_welcome was the prior welcome-overlay freeze — REMOVED in
+    // np-3dp.4 since the title screen owns the chrome now.)
     if (g.show_title)   dt = 0.0f;
 
     // Title scene (np-3dp): advance the patrol ships even while the sim
@@ -2723,7 +2724,7 @@ void frame_cb() {
             g.keys_down[SAPP_KEYCODE_LEFT_CONTROL] ||
             g.keys_down[SAPP_KEYCODE_RIGHT_CONTROL] ||
             g.mouse_left_held;
-        if (g.show_welcome) player.controller.fire_guns = false;   // frozen on briefing
+        if (g.show_title) player.controller.fire_guns = false;   // frozen on briefing
 
         HMM_Vec3 aim = g.camera.forward();
         if (g.player_target_id != 0) {
@@ -3647,14 +3648,24 @@ void frame_cb() {
                                                 pm0.scale);
             dev_remote::publish_render_matrices(vp, model, scene_cam.position);
         }
-        g.mesh_render.draw(g.placed_meshes, scene_cam, aspect,
-                           g.sun.position, g.sun.core_color);
+        // Skip placed meshes during title: the title scene owns the screen
+        // and we want only star + skybox + patrol ships visible (np-3dp).
+        if (!g.show_title) {
+            g.mesh_render.draw(g.placed_meshes, scene_cam, aspect,
+                               g.sun.position, g.sun.core_color);
+        }
         // Sprites go AFTER opaque meshes and BEFORE the sun so the sun's
         // additive corona still paints on top of everything. Sprites use
         // alpha blending, which needs opaque depth already in the buffer
         // so translucent edges composite correctly.
-        g.frame_sprites = g.placed_sprites;
-        append_ship_sprites_for_camera(g.placed_ship_sprites, scene_cam, g.frame_sprites);
+        if (g.show_title) {
+            // Title mode: skip placed sprites + NPC ships + player ship;
+            // only the patrol ships should be in the sprite queue.
+            g.frame_sprites.clear();
+        } else {
+            g.frame_sprites = g.placed_sprites;
+            append_ship_sprites_for_camera(g.placed_ship_sprites, scene_cam, g.frame_sprites);
+        }
         // Title scene patrol ships (np-3dp): feed canonical patrol ships
         // into the same sprite queue when the title is up. Their poses
         // are advanced by title_scene::tick(raw_dt) earlier in frame_cb.
@@ -3664,8 +3675,9 @@ void frame_cb() {
         // Player hull in 3rd-person: feed a one-shot ShipSpriteObject at the
         // ship's pose through the same frame-selection path. The camera uses
         // -Z forward while the sprite atlas uses +Z nose, so rotate the
-        // orientation 180 deg around Y to match conventions.
-        if (g.orbit_active && g.player_atlas) {
+        // orientation 180 deg around Y to match conventions. Skipped during
+        // title so the player ship doesn't show up in the title scene.
+        if (!g.show_title && g.orbit_active && g.player_atlas) {
             ShipSpriteObject& ps = g.player_ship_sprite;
             ps.atlas       = g.player_atlas;
             ps.position    = g.camera.position;
@@ -3942,19 +3954,21 @@ void frame_cb() {
                 }
             }
         }
-        cockpit_hud::build(g.camera, g.system, g.selected_nav,
-                           g.mouse_x, g.mouse_y, g.fly_by_wire,
-                           g.ships, g.player_target_id,
-                           dock_prompt, dock_ready);
+        // Skip the entire cockpit HUD while the title is up: the title
+        // owns the screen and we want a clean star+ships background. The
+        // sim is also frozen at this point (dt=0), so no overlay makes
+        // sense anyway (np-3dp).
+        if (!g.show_title) {
+            cockpit_hud::build(g.camera, g.system, g.selected_nav,
+                               g.mouse_x, g.mouse_y, g.fly_by_wire,
+                               g.ships, g.player_target_id,
+                               dock_prompt, dock_ready);
 
-        // Sun-proximity warning overlay (np-3dp). Centre-screen banner
-        // when inside the 20k avoid bubble; big red "DESTRUCTION
-        // IMMINENT" once inside the 15k damage zone.
-        cockpit_hud::draw_sun_warning(g.camera, g.sun.position);
-
-        // Top-centre boxed FLIGHT panel — matches the STATUS/TARGET style.
-        // Has to live HERE (after simgui_new_frame inside debug_panel::build)
-        // because ImGui::Begin requires an active frame; the old free-
+            // Sun-proximity warning overlay (np-3dp). Centre-screen banner
+            // when inside the 20k avoid bubble; big red "DESTRUCTION
+            // IMMINENT" once inside the 15k damage zone.
+            cockpit_hud::draw_sun_warning(g.camera, g.sun.position);
+        }
         // floating sdtx text up at the HUD-build step ran before that.
         if (!g.capture_clean) {
             const HMM_Vec3 pp = g.camera.position;
@@ -3995,12 +4009,13 @@ void frame_cb() {
 
         // Alpha welcome/briefing overlay — drawn last so it sits on top of
         // the whole HUD. The sim is frozen (dt=0) while this is up.
-        if (g.show_welcome) draw_welcome_overlay();
+        // Alpha welcome/briefing overlay — REMOVED in np-3dp. The title
+        // screen owns the chrome now; the briefing text was redundant
+        // and aged out of usefulness (np-3dp.4). Kept the helper for
+        // potential debugging hooks but no longer called from the render
+        // pass.
+        // if (g.show_welcome) draw_welcome_overlay();
 
-        // Title screen (np-3dp): drawn AFTER the welcome overlay so the
-        // briefing (if any) sits behind the chrome. The sim is also
-        // frozen while this is up: the title screen owns the input until
-        // the player clicks NEW / LOAD / OPTIONS / QUIT.
         if (g.show_title) {
             const title_screen::Action a = title_screen::draw();
             if (a != title_screen::Action::None) {
@@ -4376,22 +4391,9 @@ void event_cb(const sapp_event* ev) {
         g.orbit_dist *= (ev->scroll_y > 0.0f) ? 0.90f : 1.111f;
     }
 
-    // Welcome / alpha-briefing overlay: while it's up the sim is frozen.
-    // SPACE or ENTER dismisses it and unfreezes the world. Handled FIRST
-    // (before ImGui / dev-editor handlers and before the normal keymap) so
-    // the dismiss key can't also toggle fly-by-wire (SPACE) or fire a
-    // missile (ENTER) on the same press. Swallow all key-downs while up so
-    // nothing leaks into the paused world.
-    if (g.show_welcome) {
-        if (ev->type == SAPP_EVENTTYPE_KEY_DOWN &&
-            (ev->key_code == SAPP_KEYCODE_SPACE ||
-             ev->key_code == SAPP_KEYCODE_ENTER)) {
-            g.show_welcome = false;
-            g.last_frame_ticks = stm_now();   // drop the frozen interval so dt doesn't spike
-            std::printf("[welcome] dismissed — fight on\n");
-        }
-        if (ev->type == SAPP_EVENTTYPE_KEY_DOWN) return;   // eat keys while paused
-    }
+    // Welcome / alpha-briefing overlay: REMOVED in np-3dp. The title
+    // screen now owns the chrome and the briefing was redundant. We just
+    // swallow key-downs while title is up (below).
 
     // Title screen owns input entirely. New press must come from one of
     // the buttons — keyboard / window events are all swallowed so a
