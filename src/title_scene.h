@@ -41,6 +41,13 @@ struct ChaseConfig {
     HMM_Vec3 warp_dir       { 0, 0, 1 };
     bool     sun_override   = false;
     HMM_Vec3 sun_pos        { 0, 0, 0 };
+    // Full camera pose for the chase shot. When cam_override is true the
+    // caller renders the scene from (cam_pos, cam_orient) instead of the
+    // player camera — the chase cam orbits a ship cruising in a straight
+    // line, and the camera motion is what makes the warp streaks flow.
+    bool     cam_override   = false;
+    HMM_Vec3 cam_pos        { 0, 0, 0 };
+    HMM_Quat cam_orient     { 0, 0, 0, 1 };
 };
 
 // Lifecycle (np-3dp). All four are safe to call multiple times.

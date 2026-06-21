@@ -69,12 +69,13 @@ struct State {
     HMM_Vec3 anchor_right { 1, 0, 0 };
     HMM_Vec3 anchor_up    { 0, 1, 0 };
 
-    // ChaseCam state. cut_t advances 0..1 over one 'cruise pass'; at 1
-    // we swap to a different ship and reset (sun has drifted out of
-    // view by then). chase_idx is which atlas the lone ship uses.
-    float    chase_t      = 0.0f;
-    int      chase_idx    = 0;
-    float    chase_bob    = 0.0f;   // gentle vertical bob accumulator
+    // ChaseCam state. The hero ship cruises in a straight line along
+    // world +Z; the camera orbits it slowly. chase_t advances 0..1 over
+    // one pass, then we swap hull. chase_idx = which atlas is fitted.
+    float    chase_t        = 0.0f;
+    int      chase_idx      = 0;
+    HMM_Vec3 chase_ship_pos { 0, 0, 0 };   // advances forward each frame
+    float    chase_orbit    = 0.0f;        // camera orbit angle (radians)
 };
 State g;
 
@@ -177,11 +178,12 @@ void init(Category cat,
     g.variant = (std::rand() & 1) ? Variant::ChaseCam : Variant::PatrolFlyby;
     g.chase_t = 0.0f;
     g.chase_idx = std::rand() % (int)g.atlas_storage.size();
-    g.chase_bob = 0.0f;
+    g.chase_ship_pos = HMM_V3(0, 0, 0);
+    g.chase_orbit = 0.0f;
 
     if (g.variant == Variant::ChaseCam) {
-        // One ship, centered ahead, cruising away from the camera. Its
-        // pose is fully driven by tick(); we just create the slot here.
+        // One hero ship cruising in a straight line; camera orbits it.
+        // Pose is fully driven by tick() + chase_config().
         ShipSpriteObject s{};
         s.atlas          = g.atlas_storage[g.chase_idx].get();
         s.world_size     = 110.0f;   // a touch bigger — it's the hero ship
@@ -246,18 +248,27 @@ HMM_Quat look_rotation(HMM_Vec3 dir, HMM_Vec3 up) {
 }
 
 // Cut duration for the chase cam: how long we follow one ship before
-// swapping (the sun has drifted out of view by then). Seconds.
-constexpr float k_chase_cut_s = 11.0f;
+// swapping hull. Seconds.
+constexpr float k_chase_cut_s = 13.0f;
+// Ship cruise speed (m/s) — well past the warp-streak floor so the trails
+// read at full strength. The camera moves WITH the ship, so this is what
+// makes the streaks flow.
+constexpr float k_chase_cruise = 3000.0f;
+// Camera orbit rate (rad/s) — ~5.7 deg/s, a full lap around the ship in
+// ~63s. Slow enough to feel like a drifting establishing shot.
+constexpr float k_chase_orbit_rate = 0.10f;
 
 void tick(float dt) {
-    // --- ChaseCam variant: one ship centered, cruising away. -----------
+    // --- ChaseCam variant: hero ship cruising straight; camera orbits. -
     if (g.variant == Variant::ChaseCam) {
         if (g.patrol.empty()) return;
-        g.chase_t   += dt / k_chase_cut_s;   // 0..1 over one pass
-        g.chase_bob += dt;
+        g.chase_t     += dt / k_chase_cut_s;       // 0..1 over one pass
+        g.chase_orbit += k_chase_orbit_rate * dt;  // camera orbit angle
+        // Advance the ship along world +Z (flying straight).
+        g.chase_ship_pos = HMM_AddV3(g.chase_ship_pos,
+                                     HMM_V3(0, 0, k_chase_cruise * dt));
         if (g.chase_t >= 1.0f) {
-            // Swap to a different ship and reset the pass. Pick any other
-            // atlas so the hull visibly changes.
+            // Swap to a different hull and reset the pass.
             g.chase_t = 0.0f;
             if (g.atlas_storage.size() > 1) {
                 int next = g.chase_idx;
@@ -267,13 +278,11 @@ void tick(float dt) {
             }
             g.patrol[0].atlas = g.atlas_storage[g.chase_idx].get();
         }
-        // Centre the ship ahead of the camera, nose pointing AWAY (along
-        // the camera forward) so we view its engines like a real chase
-        // cam. A gentle bob + slow bank gives it life.
-        const float bob = std::sin(g.chase_bob * 0.6f) * 9.0f;
+        // Place the ship at its cruising position, nose along +Z (its
+        // travel direction).
         ShipSpriteObject& s = g.patrol[0];
-        s.position = HMM_AddV3(g.anchor_pos, HMM_MulV3F(g.anchor_up, bob));
-        s.orientation = look_rotation(g.anchor_fwd, g.anchor_up);
+        s.position    = g.chase_ship_pos;
+        s.orientation = look_rotation(HMM_V3(0, 0, 1), HMM_V3(0, 1, 0));
         return;
     }
 
@@ -332,31 +341,55 @@ Variant  variant()  { return g.variant; }
 // 180° view roll to read right-side-up, so both want it.
 bool wants_camera_roll() { return true; }
 
-ChaseConfig chase_config(HMM_Vec3 cam_pos, HMM_Vec3 cam_fwd,
-                         HMM_Vec3 cam_right, HMM_Vec3 cam_up) {
+// Build a CAMERA orientation (forward = -Z convention) that looks from
+// `eye` toward `target`, with `up` as the reference up.
+HMM_Quat camera_look_at(HMM_Vec3 eye, HMM_Vec3 target, HMM_Vec3 up) {
+    const HMM_Vec3 back = HMM_NormV3(HMM_SubV3(eye, target));   // camera +Z
+    HMM_Vec3 right = HMM_Cross(up, back);
+    const float rl = HMM_LenV3(right);
+    right = (rl < 1e-4f) ? HMM_V3(1, 0, 0) : HMM_DivV3F(right, rl);
+    const HMM_Vec3 u = HMM_Cross(back, right);
+    HMM_Mat4 m = HMM_M4D(1.0f);
+    m.Columns[0] = HMM_V4(right.X, right.Y, right.Z, 0.0f);
+    m.Columns[1] = HMM_V4(u.X,     u.Y,     u.Z,     0.0f);
+    m.Columns[2] = HMM_V4(back.X,  back.Y,  back.Z,  0.0f);
+    return HMM_M4ToQ_RH(m);
+}
+
+ChaseConfig chase_config(HMM_Vec3 /*cam_pos*/, HMM_Vec3 /*cam_fwd*/,
+                         HMM_Vec3 /*cam_right*/, HMM_Vec3 /*cam_up*/) {
     ChaseConfig c;
     if (g.variant != Variant::ChaseCam) return c;   // all-off for patrol
 
-    // Warp streaks flow forward (the ship is 'cruising'), so the trails
-    // stream toward the camera. dir is the camera forward; main.cpp's
-    // warp field draws relative to that.
-    c.warp_on        = true;
-    c.warp_intensity = 0.85f;
-    c.warp_len       = 300.0f;
-    c.warp_dir       = cam_fwd;
+    // Camera orbits the cruising ship. Base offset sits behind + above
+    // the ship; we spin it around world-up by chase_orbit so the camera
+    // slowly circles. The ship flies along +Z, so 'behind' is -Z.
+    const HMM_Vec3 ship = g.chase_ship_pos;
+    constexpr float k_dist   = 240.0f;   // camera distance from the ship
+    constexpr float k_height = 55.0f;    // camera height above the ship
+    const float ca = std::cos(g.chase_orbit);
+    const float sa = std::sin(g.chase_orbit);
+    // Base offset (behind + up), rotated around world Y by chase_orbit.
+    const HMM_Vec3 base_off = HMM_V3(0.0f, k_height, -k_dist);
+    const HMM_Vec3 off = HMM_V3(
+        base_off.X * ca + base_off.Z * sa,
+        base_off.Y,
+       -base_off.X * sa + base_off.Z * ca);
+    const HMM_Vec3 eye = HMM_AddV3(ship, off);
+    // Look slightly AHEAD of the ship so it sits a touch low in frame
+    // (classic chase framing) rather than dead-centre.
+    const HMM_Vec3 target = HMM_AddV3(ship, HMM_V3(0, 0, 120.0f));
+    c.cam_override = true;
+    c.cam_pos      = eye;
+    c.cam_orient   = camera_look_at(eye, target, HMM_V3(0, 1, 0));
 
-    // Sun drifts across the view over the cut: starts hard right, sweeps
-    // to hard left, exiting just as chase_t hits 1 and we cut to the
-    // next ship. 90km out so it reads as a distant star; a touch up so
-    // it sits above the centered hull.
-    const float side = (1.0f - g.chase_t) * 2.0f - 1.0f;   // +1 -> -1 over the pass
-    const HMM_Vec3 sun =
-        HMM_AddV3(cam_pos,
-                  HMM_AddV3(HMM_MulV3F(cam_fwd,   90000.0f),
-                            HMM_AddV3(HMM_MulV3F(cam_right, side * 42000.0f),
-                                      HMM_MulV3F(cam_up,     9000.0f))));
-    c.sun_override = true;
-    c.sun_pos      = sun;
+    // Warp streaks flow along the ship's travel direction (+Z). The
+    // camera moves with the ship (eye tracks ship_pos), so the field
+    // actually flows. Full intensity + max length for a strong cruise look.
+    c.warp_on        = true;
+    c.warp_intensity = 1.0f;
+    c.warp_len       = 350.0f;
+    c.warp_dir       = HMM_V3(0, 0, 1);
     return c;
 }
 

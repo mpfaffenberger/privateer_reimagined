@@ -3677,7 +3677,26 @@ void frame_cb() {
         // frame and flickered (np-3dp).
         Camera title_cam;
         const Camera* scene_cam_ptr = g.orbit_active ? &g.orbit_cam : &g.camera;
+        // Chase-cam variant supplies its own orbiting camera pose; use it
+        // verbatim (no roll/swoosh — the orbit IS the motion, and the
+        // camera moving through space is what makes the warp streaks flow).
+        title_scene::ChaseConfig title_cc;
         if (g.show_title) {
+            title_cc = title_scene::chase_config(
+                g.camera.position, g.camera.forward(),
+                g.camera.right(),  g.camera.up());
+        }
+        if (g.show_title && title_cc.cam_override) {
+            title_cam = g.camera;
+            title_cam.position    = title_cc.cam_pos;
+            // Apply a 180 roll about the camera's LOCAL Z so the cruising
+            // hull reads right-side-up, same convention as the patrol
+            // sprites. Composing on the right rotates in local space.
+            title_cam.orientation = HMM_NormQ(HMM_MulQ(
+                title_cc.cam_orient,
+                HMM_QFromAxisAngle_RH(HMM_V3(0, 0, 1), 3.14159265358979f)));
+            scene_cam_ptr = &title_cam;
+        } else if (g.show_title) {
             title_cam = g.camera;
             // Base settled orientation: the 180-deg forward-axis roll.
             const HMM_Quat settled = HMM_NormQ(HMM_MulQ(
