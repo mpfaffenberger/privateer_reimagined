@@ -24,6 +24,7 @@
 #pragma once
 
 #include <cstdint>
+#include "HandmadeMath.h"
 
 struct Camera;
 struct StarSystem;
@@ -55,6 +56,13 @@ void build(const Camera& cam, const StarSystem& system, int selected_nav,
            float mouse_x, float mouse_y, bool fly_by_wire,
            const ShipRegistry& ships, uint32_t target_ship_id,
            const char* dock_prompt = nullptr, bool dock_ready = false);
+
+// Sun-proximity warning overlay (np-3dp). Centre-screen banner that
+// fires whenever the camera is inside the 20k avoid bubble around the
+// sun. Between 15k and 20k: yellow "WARNING - APPROACHING SUN" with the
+// current distance. Inside 15k: BIG red "DESTRUCTION IMMINENT" with a
+// pulsing border + flash text. No-op when outside the bubble.
+void draw_sun_warning(const Camera& cam, HMM_Vec3 sun_pos);
 
 // Weapons + ordnance status block (np-zte.2). A small left-edge HUD
 // readout: selected missile type + remaining count and the target-lock

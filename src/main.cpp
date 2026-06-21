@@ -3840,6 +3840,11 @@ void frame_cb() {
                            g.ships, g.player_target_id,
                            dock_prompt, dock_ready);
 
+        // Sun-proximity warning overlay (np-3dp). Centre-screen banner
+        // when inside the 20k avoid bubble; big red "DESTRUCTION
+        // IMMINENT" once inside the 15k damage zone.
+        cockpit_hud::draw_sun_warning(g.camera, g.sun.position);
+
         // Top-centre boxed FLIGHT panel — matches the STATUS/TARGET style.
         // Has to live HERE (after simgui_new_frame inside debug_panel::build)
         // because ImGui::Begin requires an active frame; the old free-

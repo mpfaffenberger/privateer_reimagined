@@ -19,6 +19,7 @@
 
 #include "armor.h"
 #include "camera.h"
+#include "hazards.h"
 #include "perception.h"
 #include "shield.h"
 #include "ship.h"
@@ -1018,6 +1019,101 @@ void build_navmap(const Camera& cam, const StarSystem& system,
     if (!open || ImGui::IsKeyPressed(ImGuiKey_Escape)) {
         shown_in_out = false;
     }
+}
+
+// -----------------------------------------------------------------------------
+// draw_sun_warning -- centre-screen banner for the sun proximity rules.
+// No-op when outside the 20k avoid bubble; yellow "WARNING" between 15-20k,
+// big red "DESTRUCTION IMMINENT" inside the 15k damage zone with a pulsing
+// border + flashing text. Drawn LAST so it overlays everything else.
+// -----------------------------------------------------------------------------
+void draw_sun_warning(const Camera& cam, HMM_Vec3 sun_pos) {
+    // Cheap out when outside the avoid bubble entirely.
+    if (!hazards::inside_sun_avoid(sun_pos, cam.position)) return;
+    const float dist = HMM_LenV3(HMM_SubV3(sun_pos, cam.position));
+    const bool  danger = (dist < hazards::k_sun_damage_radius_m);
+    if (!danger && dist >= hazards::k_sun_avoid_radius_m) return;   // outside ring
+
+    ImGuiIO& io = ImGui::GetIO();
+    const float w = io.DisplaySize.x;
+    const float h = io.DisplaySize.y;
+
+    // Use the foreground draw list so we paint over EVERY ImGui panel.
+    ImDrawList* dl = ImGui::GetForegroundDrawList();
+
+    // Per-frame "pulse" so the red flash feels alive. Cheap sin on time.
+    const float pulse = 0.5f + 0.5f * std::sin((float)ImGui::GetTime() * 4.5f);
+
+    // Colour picks: big yellow "WARNING - APPROACHING SUN" between 15-20k,
+    // big red "DESTRUCTION IMMINENT" inside 15k.
+    ImU32 col_text, col_border, col_block;
+    const char* line1;
+    char        line2_buf[64];
+    const char* line2;
+
+    if (danger) {
+        // INSIDE 15k -- destructive. Pulsing red on red.
+        col_text   = IM_COL32(255,  60,  60, (int)(220 + 35 * pulse));   // pulsing bright red
+        col_border = IM_COL32(255,  40,  40, (int)(180 + 75 * pulse));   // pulsing red border
+        col_block  = IM_COL32( 90,   0,   0, (int)(140 +  80 * pulse));   // pulsing dark fill
+        line1     = "!!! DESTRUCTION IMMINENT !!!";
+        std::snprintf(line2_buf, sizeof(line2_buf),
+                      "%.1f km FROM STAR  --  EVACUATE", dist / 1000.0f);
+        line2 = line2_buf;
+    } else {
+        // 15k..20k -- caution. Yellow/orange.
+        col_text   = IM_COL32(255, 200,  40, 230);                         // amber text
+        col_border = IM_COL32(255, 160,  40, 200);                         // orange border
+        col_block  = IM_COL32( 80,  60,   0, 140);                         // dark orange fill
+        line1     = "WARNING  --  APPROACHING STAR";
+        std::snprintf(line2_buf, sizeof(line2_buf),
+                      "%.1f km  --  TURN AWAY", dist / 1000.0f);
+        line2 = line2_buf;
+    }
+
+    // Layout: centred around y = h * 0.18 so the banner sits above the
+    // cockpit centre reticle, not over it. Two lines of text.
+    const float cx = w * 0.5f;
+    const float cy = h * 0.18f;
+
+    // Use the default font, big-bold-ish for DESTRUCTION (larger draw,
+    // double-stroked by drawing at +1 and -1 in screen to fake weight).
+    constexpr float kBig = 38.0f;   // bigger for the danger line
+    constexpr float kSub = 18.0f;
+    const ImVec2  big_sz = ImGui::CalcTextSize(line1, nullptr, false, kBig);
+    const ImVec2  sub_sz = ImGui::CalcTextSize(line2, nullptr, false, kSub);
+
+    // Filled panel backing the text (size to the text with padding).
+    const float pad_x = 24.0f, pad_y = 14.0f;
+    const float block_w = std::max(big_sz.x, sub_sz.x) + pad_x * 2.0f;
+    const float block_h = kBig + kSub + pad_y * 2.0f + 8.0f;   // +8 for line gap
+    const float block_x0 = cx - block_w * 0.5f;
+    const float block_y0 = cy - block_h * 0.5f;
+    dl->AddRectFilled(ImVec2(block_x0, block_y0),
+                      ImVec2(block_x0 + block_w, block_y0 + block_h),
+                      col_block, 8.0f);
+    dl->AddRect(ImVec2(block_x0, block_y0),
+               ImVec2(block_x0 + block_w, block_y0 + block_h),
+               col_border, 8.0f, 0, 3.0f);
+
+    // Line 1 -- big. Draw at +1,0 / 0,+1 / -1,0 / 0,-1 offsets so the
+    // thick text reads as bold without us loading a separate font.
+    const float line1_x = cx - big_sz.x * 0.5f;
+    const float line1_y = block_y0 + pad_y;
+    auto draw_text = [&](ImVec2 p, ImU32 c, const char* s, float sz) {
+        const ImVec2 t = ImGui::CalcTextSize(s, nullptr, false, sz);
+        dl->AddText(ImVec2(p.x - t.x * 0.5f, p.y), c, s);
+    };
+    // Big line. Fake-bold by stacking an offset copy first.
+    draw_text(ImVec2(line1_x, line1_y), col_text, line1, kBig);
+    draw_text(ImVec2(line1_x, line1_y), col_text, line1, kBig);
+    draw_text(ImVec2(line1_x, line1_y), col_text, line1, kBig);
+
+    // Sub line.
+    const float sub_x = cx - sub_sz.x * 0.5f;
+    const float sub_y = line1_y + kBig + 8.0f;
+    draw_text(ImVec2(sub_x, sub_y), col_text, line2, kSub);
+    draw_text(ImVec2(sub_x, sub_y), col_text, line2, kSub);
 }
 
 } // namespace cockpit_hud
