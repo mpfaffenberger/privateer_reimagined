@@ -86,32 +86,6 @@ def lowpass(samples: list[float], alpha: float) -> list[float]:
     return out
 
 
-def seam_blend(buf: list[float], fade: int) -> list[float]:
-    """Make a click-free LOOP out of a buffer of length n+fade by
-    crossfading the trailing `fade` samples over the head. Returns n
-    samples. Pure periodic content (tones whose period divides n) is
-    unaffected (the blended pairs are identical); NON-periodic content
-    (filtered noise / air rush) is smoothed across the wrap so the loop
-    seam has no step. This is the right tool for noise beds — unlike a
-    tonal bed, you CAN'T get seamlessness from integer-cycle periodicity
-    when there's noise in the mix."""
-    n = len(buf) - fade
-    res = list(buf[:n])
-    for i in range(fade):
-        w = i / fade
-        res[i] = buf[i] * w + buf[n + i] * (1.0 - w)
-    return res
-
-
-def air_rush(n_plus_fade: int, seed: int, alpha: float) -> list[float]:
-    """Band-limited noise = the 'air' of a jet. One-pole lowpass of white
-    noise (alpha sets brightness: higher = hissier, lower = breathier).
-    Returned UNwrapped (length == n_plus_fade) so the caller can mix it
-    with tones and seam_blend the whole thing once."""
-    rng = random.Random(seed)
-    noise = [rng.random() * 2 - 1 for _ in range(n_plus_fade)]
-    return lowpass(noise, alpha)
-
 
 def laser_fire() -> list[float]:
     """80ms chirp descending 1800->600Hz, fast decay. Reads as 'pew'."""
@@ -185,30 +159,6 @@ def cruise_windup() -> list[float]:
     return out
 
 
-def afterburner_loop() -> list[float]:
-    """Exactly-1s held-loop afterburner roar (air-rush version rolled back
-    per Mike — the band-limited noise buzzed). Pure tonal turbine stack:
-    110Hz fundamental + 55Hz sub + 220Hz 2nd harmonic, a slow 0.7Hz
-    tremolo sway + a faint 2.3Hz flutter for life. Every component
-    completes integer cycles over the 1s loop, so the seam is click-free
-    by construction (no crossfade needed). Master 0.42 so it sits solidly
-    under the engine bed."""
-    n = RATE
-    out = []
-    for t in range(n):
-        fundamental = math.sin(2 * math.pi * 110 * t / RATE)
-        sub         = math.sin(2 * math.pi * 55 * t / RATE)
-        harmonic    = math.sin(2 * math.pi * 220 * t / RATE)
-        tremolo     = 1.0 + 0.07 * math.sin(2 * math.pi * 0.7 * t / RATE)
-        flutter     = math.sin(2 * math.pi * 2.3 * t / RATE) * 0.06
-        s = (0.85 * fundamental
-             + 0.40 * sub
-             + 0.15 * harmonic
-             + flutter) * tremolo * 0.42
-        out.append(s)
-    return out
-
-
 def ui_click() -> list[float]:
     """5ms 2kHz tick. Barely a sound; exactly a click."""
     n = int(RATE * 0.005)
@@ -275,7 +225,6 @@ def main() -> None:
     write_wav("explosion_big.wav",   explosion(seed=22, dur_s=1.2, alpha=0.12, gain=0.95))
     write_wav("engine_hum.wav", engine_hum())
     write_wav("cruise_windup.wav", cruise_windup())
-    write_wav("afterburner_loop.wav", afterburner_loop())
     write_wav("ui_click.wav", ui_click())
     write_wav("missile_fire.wav", missile_fire())
     write_wav("lock_seeking.wav", lock_seeking())
