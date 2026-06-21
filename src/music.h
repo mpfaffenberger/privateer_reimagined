@@ -90,8 +90,8 @@ enum class Track {
     // ---- landed per-base tunes (BASETUNE.ADL sub-songs) ----
     BaseAgricultural, // basetune_00 — agricultural base (Helen)
     BaseMining,       // basetune_04 — mining base (Achilles, Hector)
-    // ---- menu (OPENING.ADL) ----
-    Menu,             // opening_00 — title/menu (no menu state yet; unused)
+    // ---- menu (BASETUNE.ADL sub-song 01) ----
+    Menu,             // basetune_01 — title/menu loop (New Constantinople bed)
     Count
 };
 

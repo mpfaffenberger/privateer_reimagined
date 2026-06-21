@@ -44,7 +44,7 @@ const char* k_track_file[(int)music::Track::Count] = {
     "combat_10",    // StingDeath       — game over (one-shot)
     "basetune_00",  // BaseAgricultural — agricultural base tune
     "basetune_04",  // BaseMining       — mining base tune
-    "opening_00",   // Menu             — title/menu (loaded, unused for now)
+    "basetune_01",  // Menu             — title/menu: New Constantinople base loop
 };
 
 // Which tracks are LOOPING beds (the crossfade layer) vs short one-shot STINGS
