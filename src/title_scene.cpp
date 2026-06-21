@@ -422,8 +422,11 @@ ChaseConfig chase_config(HMM_Vec3 /*cam_pos*/, HMM_Vec3 /*cam_fwd*/,
     // the ship; we spin it around world-up by chase_orbit so the camera
     // slowly circles. The ship flies along +Z, so 'behind' is -Z.
     const HMM_Vec3 ship = g.chase_ship_pos;
-    constexpr float k_dist   = 240.0f;   // camera distance from the ship
-    constexpr float k_height = 55.0f;    // camera height above the ship
+    // Pulled back ~1.43x (np-3dp.15) so the hull reads ~30% smaller in
+    // frame: apparent size is 1/distance, so 240 -> 343, height scaled to
+    // match so the down-angle stays the same.
+    constexpr float k_dist   = 343.0f;   // camera distance from the ship
+    constexpr float k_height = 78.0f;    // camera height above the ship
     const float ca = std::cos(g.chase_orbit);
     const float sa = std::sin(g.chase_orbit);
     // Base offset (behind + up), rotated around world Y by chase_orbit.
