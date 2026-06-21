@@ -9,6 +9,8 @@
 #include "ship_sprite.h"   // for sprite->forward_speed read
 
 #include <algorithm>
+#include <cstdio>
+#include <vector>
 
 namespace {
 
@@ -136,4 +138,108 @@ void firing::tick(ShipRegistry& ships,
             sfx::gun_fired(m.type, p.position, s.is_player);
         }
     }
+}
+
+// =============================================================================
+// Gun arm-mode helpers (np-3dp). All inline so firing.cpp's I-cache stays
+// compact and the helpers stay cheap to call from main/HUD paths.
+// =============================================================================
+namespace {
+
+// Thread-local cache of "unique GunTypes in first-occurrence order" for
+// the most-recently-seen mounts pointer. Lets the G-press and HUD paths
+// share the result without recomputing each frame. Keyed by the
+// std::vector* address; matches the typical "1 player ship" reality so
+// misses on first call and re-fills after are fine.
+struct UniqueCache {
+    const std::vector<GunMount>* key = nullptr;
+    std::vector<int>             types;
+};
+UniqueCache& ucache() {
+    static UniqueCache c;
+    return c;
+}
+
+} // namespace
+
+int firing::gun_mode_count_for_mounts(const std::vector<GunMount>& mounts) {
+    UniqueCache& uc = ucache();
+    if (uc.key != &mounts || uc.types.empty()) {
+        uc.key = &mounts;
+        uc.types.clear();
+        for (const GunMount& m : mounts) {
+            const int t = (int)m.type;
+            if (std::find(uc.types.begin(), uc.types.end(), t) == uc.types.end()) {
+                uc.types.push_back(t);
+            }
+        }
+    }
+    return (int)uc.types.size() + 2;   // +2: mode 0 unarmed, last mode all
+}
+
+const std::vector<int>& firing::gun_unique_types_cache(
+    const std::vector<GunMount>&mounts) {
+    UniqueCache& uc = ucache();
+    if (uc.key != &mounts || uc.types.empty()) {
+        uc.key = &mounts;
+        uc.types.clear();
+        for (const GunMount& m : mounts) {
+            const int t = (int)m.type;
+            if (std::find(uc.types.begin(), uc.types.end(), t) == uc.types.end()) {
+                uc.types.push_back(t);
+            }
+        }
+    }
+    return uc.types;
+}
+
+void firing::apply_gun_mode(Ship& s, uint8_t mode_idx) {
+    const std::vector<int>& u = gun_unique_types_cache(s.mounts);
+    if (u.empty()) return;
+    // Mode 0 = unarmed, last = all, in-between = one type per mode.
+    const int N    = (int)u.size();
+    const int last = N + 1;
+    int m = (int)mode_idx;
+    if (N > 0) m = ((m % last) + last) % last;   // safe mod for any input
+    // Compute the "type filter" for this mode.
+    int target_type = -1;   // -1 = all, 0..N-1 = specific type, -2 = unarmed
+    if      (m == 0)   target_type = -2;
+    else if (m == last) target_type = -1;
+    else                target_type = u[m - 1];
+    for (size_t i = 0; i < s.mounts.size(); ++i) {
+        if (i >= s.gun_armed.size()) break;
+        const int type = (int)s.mounts[i].type;
+        bool arm;
+        if      (target_type == -2) arm = false;        // unarmed
+        else if (target_type == -1) arm = true;         // all
+        else                          arm = (type == target_type);
+        s.gun_armed[i] = arm;
+    }
+    s.gun_mode_idx = (uint8_t)m;
+}
+
+const char* firing::gun_mode_label(const std::vector<int>& unique_types,
+                                  uint8_t mode_idx) {
+    static const char* k_unarmed = "UNARMED";
+    static const char* k_all     = "ALL";
+    const int N    = (int)unique_types.size();
+    const int last = N + 1;
+    if (N == 0) return k_unarmed;
+    int m = (int)mode_idx;
+    m = ((m % last) + last) % last;
+    if (m == 0)   return k_unarmed;
+    if (m == last) return k_all;
+    // Single-type mode: use the gun's canonical name uppercased.
+    const int t = unique_types[m - 1];
+    const char* name = gun::to_name((GunType)t);
+    static thread_local char buf[40];
+    std::snprintf(buf, sizeof(buf), "%s", name);
+    for (char* c = buf; *c; ++c) *c = (char)std::toupper((unsigned char)*c);
+    return buf;
+}
+
+int firing::gun_mode_armed_count(const Ship& s) {
+    int n = 0;
+    for (bool a : s.gun_armed) if (a) ++n;
+    return n;
 }

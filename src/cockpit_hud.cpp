@@ -19,6 +19,7 @@
 
 #include "armor.h"
 #include "camera.h"
+#include "firing.h"
 #include "hazards.h"
 #include "perception.h"
 #include "shield.h"
@@ -587,6 +588,23 @@ void draw_player_status(const ShipRegistry& ships) {
                 if (i < 2) ImGui::SameLine();
             }
             ImGui::PopStyleColor(2);
+
+            // Gun arm-mode (np-3dp). Line under the armor bars so the
+            // player sees at a glance which mode G picked and how many
+            // mounts it actually enables. Empty mounts are suppressed so
+            // the line disappears for ships with zero guns (rare, but
+            // happens for tutorial / scout hulls).
+            const int n_mounts = (int)player.mounts.size();
+            if (n_mounts > 0 && !player.gun_armed.empty()) {
+                const std::vector<int>& u =
+                    firing::gun_unique_types_cache(player.mounts);
+                const char* label  = firing::gun_mode_label(u, player.gun_mode_idx);
+                const int    armed = firing::gun_mode_armed_count(player);
+                ImGui::PushStyleColor(ImGuiCol_Text, kHudWhite);
+                ImGui::Text("GUNS: %s  (%d of %d armed)",
+                            label, armed, n_mounts);
+                ImGui::PopStyleColor();
+            }
         }
     }
     ImGui::End();

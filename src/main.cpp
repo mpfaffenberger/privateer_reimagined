@@ -4360,29 +4360,23 @@ void event_cb(const sapp_event* ev) {
         // desyncing the cycle.
         if (ev->key_code == SAPP_KEYCODE_G && g.ships.player()) {
             Ship& p = *g.ships.player();
-            p.gun_mode_idx = (p.gun_mode_idx + 1) & 3;
-            const uint8_t m = p.gun_mode_idx;
-            for (size_t i = 0; i < p.mounts.size(); ++i) {
-                if (i >= p.gun_armed.size()) break;   // safety
-                const bool is_meson = (p.mounts[i].type == GunType::MesonBlaster);
-                const bool is_ionic = (p.mounts[i].type == GunType::IonicPulseCannon);
-                bool arm = false;
-                switch (m) {
-                    case 0: arm = false; break;                          // unarmed
-                    case 1: arm = is_meson; break;                       // mesons
-                    case 2: arm = is_ionic; break;                       // ionics
-                    case 3: arm = true; break;                            // all
-                }
-                p.gun_armed[i] = arm;
+            // Cycle through {UNARMED, [one mode per unique gun type], ALL}.
+            // Mode list is rebuilt from the ship's CURRENT mount list so it
+            // adapts as the player buys/sells guns in outfitting.
+            const int modes = firing::gun_mode_count_for_mounts(p.mounts);
+            if (modes > 0) {
+                p.gun_mode_idx = (uint8_t)((p.gun_mode_idx + 1) % modes);
+                firing::apply_gun_mode(p, p.gun_mode_idx);
             }
             // Match on-fire HUD: if the player isn't holding the trigger,
             // force fire_guns off so the cycle is unambiguous.
             if (!g.keys_down[SAPP_KEYCODE_X] && !g.keys_down[SAPP_KEYCODE_TAB]) {
                 p.controller.fire_guns = false;
             }
-            static const char* k_labels[] = {"UNARMED", "MESONS", "IONICS", "ALL"};
+            const auto& u  = firing::gun_unique_types_cache(p.mounts);
+            const char* lbl = firing::gun_mode_label(u, p.gun_mode_idx);
             std::printf("[guns] mode=%u (%s) -- %zu mount(s)\n",
-                        m, k_labels[m], p.mounts.size());
+                        p.gun_mode_idx, lbl, p.mounts.size());
             sfx::ui_click();
         }
         // D — request docking at the selected nav point (np-9cu.1).
