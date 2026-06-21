@@ -1868,7 +1868,30 @@ static void respawn_player() {
     g.camera.cruise_level = 0.0f;
     g.camera.cruise_target = 0.0f;
 
-    // 4) Destination. With a last docked base, drop the player Landed there
+    // 4) Re-resolve the player hull atlas (np-ma2.2). The death trigger
+    //    nulled it so the 3rd-person orbit cam wouldn't render the wreck
+    //    for the rest of the cinematic. Resolve against the (possibly
+    //    restored) ship class name so a future ship-swap save still
+    //    shows the right hull. Same logic as the system-load block, so
+    //    we re-share the helper at the top of the file by inlining the
+    //    resolve here (one-shot, cheap).
+    {
+        const std::string pc = g_player_ship_override.empty()
+                             ? std::string("centurion") : g_player_ship_override;
+        const std::string pstem = resolve_ship_atlas_stem("ships/" + pc + "/atlas_manifest");
+        auto [it, inserted] = g.ship_sprite_atlases.try_emplace(pstem, ShipSpriteAtlas{});
+        if (inserted && !load_ship_sprite_atlas(pstem, it->second, g.sprite_art)) {
+            std::fprintf(stderr, "[orbit] player atlas '%s' failed to load - 3rd-person hull hidden\n",
+                         pstem.c_str());
+            g.ship_sprite_atlases.erase(it);
+            g.player_atlas = nullptr;
+        } else {
+            g.player_atlas = &it->second;
+            std::printf("[orbit] player hull atlas ready: %s\n", pstem.c_str());
+        }
+    }
+
+    // 5) Destination. With a last docked base, drop the player Landed there
     //    (apply_pending's transition handler runs base_screens::enter for
     //    us). Otherwise free Flight at the current spot.
     if (!g.player.last_docked_base.empty()) {
@@ -2934,6 +2957,14 @@ void frame_cb() {
                 g.docking = Docking{};
                 g.camera.velocity      = HMM_V3(0.0f, 0.0f, 0.0f);
                 g.camera.cruise_target = 0.0f;
+                // Detach the player hull atlas so the 3rd-person orbit
+                // camera doesn't keep drawing the wreck for the rest of
+                // the cinematic (np-ma2.2). The render path gates on
+                // (orbit_active && g.player_atlas); nulling it here stops
+                // the sprite entirely. The atlas is re-resolved in
+                // respawn_player() once the cinematic completes.
+                g.player_atlas = nullptr;
+                g.player_ship_sprite.atlas = nullptr;
                 game_state::request_mode(g.game, GameMode::Dying);
                 std::printf("[death] player ship destroyed — entering Dying\n");
             }
