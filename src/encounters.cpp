@@ -19,6 +19,7 @@
 #include "system_def.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <cstdio>
 #include <random>
@@ -298,10 +299,17 @@ int population() { return total_managed(); }
 // ---- wcnews per-nav encounter model (roll once on entry, no refill) --------
 void populate_on_entry(const StarSystem& system, HMM_Vec3 player_pos,
                        const SpawnFn& spawn) {
-    // Re-roll differently each entry/launch: seed off a call counter so two
-    // visits to the same system aren't identical, but stay self-contained.
-    static uint32_t s_entry = 0;
-    std::mt19937 rng(0x9E3779B9u ^ (++s_entry * 2654435761u));
+    // Seed RNG from wall-clock time so each fresh process gets a different
+    // spawn at, say, Achilles — and from a per-process counter so visiting
+    // a different system on the same launch also varies the roll. The wall
+    // clock prevents the "every launch looks identical" bug; the counter
+    // keeps two back-to-back visits in the same process from re-rolling
+    // the same nav tables.
+    static uint32_t    s_entry = 0;
+    static const auto  s_t0 = std::chrono::steady_clock::now().time_since_epoch().count();
+    ++s_entry;
+    const uint32_t seed = (uint32_t)(s_t0 ^ (s_entry * 2654435761u) ^ 0x9E3779B9u);
+    std::mt19937 rng(seed);
     std::uniform_real_distribution<float> U(0.0f, 1.0f);
 
     int spawned = 0, nav_tables = 0, convoys = 0;
