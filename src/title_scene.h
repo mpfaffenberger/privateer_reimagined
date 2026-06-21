@@ -24,6 +24,25 @@ enum class Category {
     Merchant,          // drayman, galaxy, tarsus
 };
 
+// Title background variant (np-3dp). Picked randomly at init.
+enum class Variant {
+    PatrolFlyby,   // several ships cross the view in straight lines
+    ChaseCam,      // one ship centered, cruising w/ warp streaks; cycles
+};
+
+// Per-frame render hints the chase-cam variant needs main.cpp to apply:
+// warp streaks (the autopilot cruise trails) + the sun position. The
+// patrol variant returns warp_on=false / sun_override=false so the
+// caller can query unconditionally.
+struct ChaseConfig {
+    bool     warp_on        = false;
+    float    warp_intensity = 0.0f;
+    float    warp_len       = 0.0f;
+    HMM_Vec3 warp_dir       { 0, 0, 1 };
+    bool     sun_override   = false;
+    HMM_Vec3 sun_pos        { 0, 0, 0 };
+};
+
 // Lifecycle (np-3dp). All four are safe to call multiple times.
 void init(Category cat,
           std::unordered_map<std::string, SpriteArt>& art_cache);
@@ -31,7 +50,15 @@ void tick(float dt);            // advance ship positions
 void shutdown();                // release cached atlases
 bool inited();                  // true once init has been called
 Category category();            // current category after init
+Variant  variant();             // PatrolFlyby or ChaseCam (random per init)
+bool     wants_camera_roll();   // true if the variant needs the 180° view roll
 const char* category_label(Category c);  // "Confed Navy", "Kilrathi", etc.
+
+// Chase-cam render hints (warp streaks + sun position). Computed from the
+// camera basis; main.cpp applies them. Returns an all-off config for the
+// patrol variant.
+ChaseConfig chase_config(HMM_Vec3 cam_pos, HMM_Vec3 cam_fwd,
+                         HMM_Vec3 cam_right, HMM_Vec3 cam_up);
 
 // Anchor the patrol ships (np-3dp). Call each frame the title is up.
 // Ships fly in straight lines across the view (left<->right along the

@@ -2312,16 +2312,32 @@ void frame_cb() {
             const HMM_Vec3 anchor_pos = HMM_AddV3(g.camera.position,
                                                    HMM_MulV3F(fwd, 600.0f));
             title_scene::set_anchor(anchor_pos, fwd, right, up);
-            // Park the sun far in front + up-left of the camera so it
-            // frames behind the patrol as a distant star (np-3dp). Without
-            // this the sun sat at the system centroid — usually off-screen
-            // behind the player at the title.
-            const HMM_Vec3 sun_pos =
-                HMM_AddV3(g.camera.position,
-                          HMM_AddV3(HMM_MulV3F(fwd,   90000.0f),
-                                    HMM_AddV3(HMM_MulV3F(right, -22000.0f),
-                                              HMM_MulV3F(up,     12000.0f))));
-            g.sun.position = sun_pos;
+
+            // Chase-cam variant drives its own sun (drifting across the
+            // view) + warp streaks. Patrol variant parks a static
+            // up-left sun and leaves the streaks off.
+            const title_scene::ChaseConfig cc =
+                title_scene::chase_config(g.camera.position, fwd, right, up);
+            if (cc.sun_override) {
+                g.sun.position = cc.sun_pos;
+            } else {
+                // Park the sun far in front + up-left of the camera so it
+                // frames behind the patrol as a distant star (np-3dp).
+                g.sun.position =
+                    HMM_AddV3(g.camera.position,
+                              HMM_AddV3(HMM_MulV3F(fwd,   90000.0f),
+                                        HMM_AddV3(HMM_MulV3F(right, -22000.0f),
+                                                  HMM_MulV3F(up,     12000.0f))));
+            }
+            // Warp streaks (the autopilot cruise trails). The chase cam
+            // turns them on; patrol leaves them off (warp_on=false).
+            if (cc.warp_on) {
+                g.warp_streaks.intensity    = cc.warp_intensity;
+                g.warp_streaks.streak_len_m = cc.warp_len;
+                g.warp_streaks.vel_dir      = HMM_NormV3(cc.warp_dir);
+            } else {
+                g.warp_streaks.intensity = 0.0f;
+            }
         }
         // NOTE: the 180-deg view roll for the title is applied to a COPY
         // of the camera at render time (see scene_cam construction below),
