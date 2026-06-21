@@ -2662,8 +2662,13 @@ void frame_cb() {
         const float  speed_frac   = title_chase
             ? hum_sf_in
             : (hum_sf_in / std::fmax(g.camera.max_speed_cruise1, 1.0f));
+        // dt is 0 while the title freezes the sim, which would pin the hum
+        // + afterburner GAIN lerps at 0 (the held loop plays silently and
+        // only the one-shot windup stab is audible — reads as 'plays once
+        // then stops'). Feed raw_dt during the title so the gains spool up.
+        const float  hum_dt       = title_chase ? raw_dt : dt;
         sfx::update_engine_hum(speed_frac, hum_cruise,
-                               /*flight_mode=*/true, dt);
+                               /*flight_mode=*/true, hum_dt);
     }
 
     // Dynamic music director (np-ida): Flight runs the in-flight combat-tier
