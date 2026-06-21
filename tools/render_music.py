@@ -70,7 +70,6 @@ DIRECTOR_STEMS = {
     "combat_04", "combat_05", "combat_06", "combat_07",   # flight beds
     "combat_08", "combat_09", "combat_10",                 # event stings
     "basetune_00", "basetune_04",                          # landed per-base
-    "basetune_01",                                         # menu (New Constantinople)
     "opening_00",                                          # opening cue
 }
 

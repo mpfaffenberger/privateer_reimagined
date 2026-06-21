@@ -164,6 +164,34 @@ def cruise_windup() -> list[float]:
     return out
 
 
+def afterburner_loop() -> list[float]:
+    """Exactly 1s held-loop afterburner roar. Same periodicity trick as
+    engine_hum: every component completes an integer number of cycles
+    over the loop length, so the seam is click-free by construction.
+
+    Recipe: dominant 110Hz fundamental (the afterburner turbine)
+    + 55Hz subharmonic (deep rumble) at 0.4 weight
+    + 220Hz 2nd harmonic at 0.15 weight (turbine whine) for 'bite'
+    + 0.7Hz LFO tremolo (1 cycle/sec, sway) for life
+    + 2.3Hz harmonic for a subtle Doppler-style flutter, deeply attenuated
+    Master gain 0.42 so the held loop sits solidly under the engine bed.
+    """
+    n = RATE
+    out = []
+    for t in range(n):
+        fundamental = math.sin(2 * math.pi * 110 * t / RATE)
+        sub         = math.sin(2 * math.pi * 55 * t / RATE)
+        harmonic    = math.sin(2 * math.pi * 220 * t / RATE)
+        tremolo     = 1.0 + 0.07 * math.sin(2 * math.pi * 0.7 * t / RATE)
+        flutter     = math.sin(2 * math.pi * 2.3 * t / RATE) * 0.06
+        s = (0.85 * fundamental
+             + 0.40 * sub
+             + 0.15 * harmonic
+             + flutter) * tremolo * 0.42
+        out.append(s)
+    return out
+
+
 def ui_click() -> list[float]:
     """5ms 2kHz tick. Barely a sound; exactly a click."""
     n = int(RATE * 0.005)
@@ -230,6 +258,7 @@ def main() -> None:
     write_wav("explosion_big.wav",   explosion(seed=22, dur_s=1.2, alpha=0.12, gain=0.95))
     write_wav("engine_hum.wav", engine_hum())
     write_wav("cruise_windup.wav", cruise_windup())
+    write_wav("afterburner_loop.wav", afterburner_loop())
     write_wav("ui_click.wav", ui_click())
     write_wav("missile_fire.wav", missile_fire())
     write_wav("lock_seeking.wav", lock_seeking())

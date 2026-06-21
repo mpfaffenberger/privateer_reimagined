@@ -73,6 +73,10 @@ struct SfxTable {
     SampleId explosion_big     = 0;
     SampleId engine_hum        = 0;
     SampleId cruise_windup     = 0;
+    SampleId afterburner_loop  = 0;   // HELD loop, separate from the 1.5s
+                                       // spool-up stab. A click-free 1s
+                                       // procedural sample that can loop
+                                       // indefinitely without a seam tick.
     SampleId ui_click          = 0;
     SampleId missile_fire      = 0;
     SampleId lock_seeking      = 0;
@@ -206,6 +210,7 @@ void load_all() {
     g_sfx.explosion_big     = load_pref("explosion_big");
     g_sfx.engine_hum        = load_pref("engine_hum");
     g_sfx.cruise_windup     = load_pref("cruise_windup");
+    g_sfx.afterburner_loop  = load_pref("afterburner_loop");
     g_sfx.ui_click          = load_pref("ui_click");
     g_sfx.missile_fire      = load_pref("missile_fire");
     g_sfx.lock_seeking      = load_pref("lock_seeking");
@@ -409,16 +414,24 @@ void update_engine_hum(float speed_frac, float cruise_level,
     const bool want_loop = flight_mode && cruise_level > 0.10f;
     if (!g_cruise_armed && want_loop) {
         g_cruise_armed = true;
+        // Spool-up stab on the rising edge (the 'crack' as the turbines
+        // bite). Distinct from the held loop, which starts at 0 gain.
         if (g_sfx.cruise_windup != 0) {
-            audio::play(g_sfx.cruise_windup, 0.5f);   // short spool-up stab
-            // NOTE: the afterburner sample (sfx_22) is an original clip we
-            // can't re-cut; if its head/tail amplitudes differ it may tick
-            // once per loop period. The procedural placeholder fades in/out
-            // to ~0 at both ends, so IT loops clean. Acceptable either way.
-            g_afterburner_voice = audio::play_loop(g_sfx.cruise_windup, 0.0f);
+            audio::play(g_sfx.cruise_windup, 0.5f);
+        }
+        // Start the sustained HELD loop on the dedicated sample (a clean
+        // looping procedural rather than the 1.5s spool stab), if we have
+        // one in this build. Falls back to the windup voice if the
+        // dedicated loop is missing.
+        const SampleId loop_id = (g_sfx.afterburner_loop != 0)
+                                 ? g_sfx.afterburner_loop
+                                 : g_sfx.cruise_windup;
+        if (loop_id != 0) {
+            g_afterburner_voice = audio::play_loop(loop_id, 0.0f);
             g_afterburner_gain  = 0.0f;
-            std::printf("[sfx] afterburner ENGAGE -> windup + loop start (voice %u)\n",
-                        g_afterburner_voice);
+            std::printf("[sfx] afterburner ENGAGE -> loop start (voice %u, sample %s)\n",
+                        g_afterburner_voice,
+                        (loop_id == g_sfx.afterburner_loop) ? "afterburner_loop" : "cruise_windup(fallback)");
         }
     } else if (g_cruise_armed && (!flight_mode || cruise_level < 0.05f)) {
         g_cruise_armed = false;

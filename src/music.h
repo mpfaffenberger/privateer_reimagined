@@ -27,7 +27,7 @@
 //   LANDED (per base, by archetype):
 //     agricultural (Helen)   -> BaseAgricultural (basetune_00)
 //     mining (Achilles/Hect) -> BaseMining        (basetune_04)
-//   MENU (no menu state yet) -> Menu (opening_00) — loaded but unused for now.
+//   MENU (title/menu)        -> Menu           (menu — custom bed, see assets/music/original/menu.wav)
 //
 // ---- where the audio comes from ----
 // The tracks are the game's ORIGINAL OPL2/AdLib music (.ADL XMIDI + the
@@ -91,7 +91,7 @@ enum class Track {
     BaseAgricultural, // basetune_00 — agricultural base (Helen)
     BaseMining,       // basetune_04 — mining base (Achilles, Hector)
     // ---- menu (BASETUNE.ADL sub-song 01) ----
-    Menu,             // basetune_01 — title/menu loop (New Constantinople bed)
+    Menu,             // menu       — title/menu loop (custom bed, assets/music/original/menu.wav)
     Count
 };
 
