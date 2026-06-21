@@ -2305,7 +2305,7 @@ void frame_cb() {
             const HMM_Vec3 up    = g.camera.up();
             const HMM_Vec3 anchor_pos = HMM_AddV3(g.camera.position,
                                                    HMM_MulV3F(fwd, 600.0f));
-            title_scene::set_anchor(anchor_pos, HMM_V3(0, 0, 1));
+            title_scene::set_anchor(anchor_pos, fwd, right, up);
             // Park the sun far in front + up-left of the camera so it
             // frames behind the patrol as a distant star (np-3dp). Without
             // this the sun sat at the system centroid — usually off-screen
@@ -3511,11 +3511,13 @@ void frame_cb() {
         sdtx_color3f(0.7f, 1.0f, 0.9f);   // restore default for later blocks
     }
 
-    if (!g.capture_clean) {
+    if (!g.capture_clean && !g.show_title) {
         // Top-centre FLIGHT panel is now drawn alongside the other
         // cockpit_hud MFDs (see the cockpit_hud::build call site below),
         // where simgui_new_frame() has already opened an ImGui frame.
         // sdtx text below (controls reminder etc.) runs independently.
+        // Skipped entirely during the title screen (np-3dp.4) so the
+        // bottom-left keybind list + perception dump stay hidden.
 
         sdtx_font(0);
         sdtx_color3f(0.7f, 1.0f, 0.9f);
@@ -4010,8 +4012,9 @@ void frame_cb() {
         }
         // Weapons + ordnance status (np-zte.2). Afterburner fuel bar
         // removed — the energy bar in the STATUS panel already shows the
-        // shared bank that drives both guns and the burner.
-        {
+        // shared bank that drives both guns and the burner. Hidden during
+        // the title screen (np-3dp.4).
+        if (!g.show_title) {
             cockpit_hud::WeaponsHudState w;
             const MissileStats& sel = g_missile_stats[g.selected_missile];
             w.missile_name  = sel.short_name;

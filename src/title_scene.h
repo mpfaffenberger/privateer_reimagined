@@ -33,11 +33,12 @@ bool inited();                  // true once init has been called
 Category category();            // current category after init
 const char* category_label(Category c);  // "Confed Navy", "Kilrathi", etc.
 
-// Anchor the patrol ships (np-3dp). Call each frame the title is up;
-// ships orbit around the anchor at radius=320..560m. The anchor is
-// typically the player's camera position so the patrol stays in view
-// regardless of where the player is in the system.
-void set_anchor(HMM_Vec3 pos, HMM_Vec3 fwd);
+// Anchor the patrol ships (np-3dp). Call each frame the title is up.
+// Ships fly in straight lines across the view (left<->right along the
+// camera's right axis) at varying depth + height. Pass the camera's
+// position + full basis so ships are framed in front of the player and
+// face their direction of travel.
+void set_anchor(HMM_Vec3 pos, HMM_Vec3 fwd, HMM_Vec3 right, HMM_Vec3 up);
 
 // Per-category data lookups. main.cpp uses these to drive the sun +
 // skybox so the title background reads canonical.

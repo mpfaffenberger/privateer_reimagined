@@ -49,9 +49,12 @@ struct State {
 
     std::unordered_map<std::string, SpriteArt>* sprite_art = nullptr;
 
-    // Anchor for ship positioning. Ships orbit AROUND this point.
-    HMM_Vec3 anchor_pos { 0, 0, 0 };
-    HMM_Vec3 anchor_fwd { 0, 0, 1 };   // +Z convention (sprite nose)
+    // Anchor for ship positioning + camera basis. Ships fly along the
+    // right axis across the view, offset by depth (fwd) + height (up).
+    HMM_Vec3 anchor_pos   { 0, 0, 0 };
+    HMM_Vec3 anchor_fwd   { 0, 0, 1 };
+    HMM_Vec3 anchor_right { 1, 0, 0 };
+    HMM_Vec3 anchor_up    { 0, 1, 0 };
 };
 State g;
 
@@ -82,13 +85,17 @@ ShipSpriteAtlas* load_one(const std::string& ship_name,
     return a.release();
 }
 
-// Side table for the orbit animation: {base_angle, speed, radius, height}
-// per ship, indexed by position in g.patrol.
+// Side table for the linear flight animation. Each ship flies along the
+// camera's right axis (left<->right across the view). `phase` runs 0..1
+// and wraps; we map it to a position from -span to +span. `depth` is
+// the forward distance from the anchor (so ships sit at different ranges)
+// and `height` is the up offset. `dir` is +1 (left->right) or -1.
 struct Motion {
-    float base_angle;
-    float speed;
-    float radius;
-    float height;
+    float phase;     // 0..1 position along the track
+    float speed;     // tracks/sec (1.0 = one full crossing per second)
+    float depth;     // forward offset from anchor (m)
+    float height;    // up offset from anchor (m)
+    float dir;       // +1 or -1 (travel direction)
 };
 std::vector<Motion>& motion_table() {
     static std::vector<Motion> s;   // module-local; lifetime matches g
@@ -127,8 +134,10 @@ void init(Category cat,
         return;
     }
 
-    // Spawn N ships in a horizontal orbit. Speeds + radii are staggered
-    // so they don't all bunch up at the same angle.
+    // Spawn N ships flying in straight lines across the view. Each gets a
+    // different lane (depth + height), a staggered start phase so they
+    // don't bunch, and alternating direction so some cross L->R and
+    // others R->L.
     constexpr int k_n = 5;
     auto& mt = motion_table();
     mt.clear();
@@ -139,51 +148,76 @@ void init(Category cat,
         s.tint           = {1, 1, 1, 1};
         s.lights_enabled = true;
         s.position       = HMM_V3(0, 0, 0);
-        s.orientation    = HMM_QFromAxisAngle_RH(
-            HMM_V3(0, 1, 0), (float)i * (2.0f * 3.14159265f / k_n));
+        s.orientation    = HMM_Q(0, 0, 0, 1);
         g.patrol.push_back(s);
 
-        const float base_angle = (float)i * (2.0f * 3.14159265f / k_n);
-        const float speed = 0.06f + 0.02f * (float)(i % 3);    // ~3-6 deg/sec (slow drift)
-        const float radius = 320.0f + 80.0f * (float)(i % 4);  // 320..560 m
-        const float height = (float)((i % 5) - 2) * 12.0f;     // -24..+24 m
-        mt.push_back({base_angle, speed, radius, height});
+        // Phase staggered across the 5 ships so they're spread along the
+        // track. speed ~0.04-0.07 tracks/sec -> a full crossing takes
+        // ~14-25 seconds (slow, cinematic). depth varies the range;
+        // height stacks them vertically; dir alternates.
+        const float phase  = (float)i / (float)k_n;
+        const float speed  = 0.04f + 0.012f * (float)(i % 3);
+        const float depth  = -120.0f + 90.0f * (float)(i % 4);   // -120..+150 m
+        const float height = (float)((i % 5) - 2) * 55.0f;       // -110..+110 m
+        const float dir    = (i % 2 == 0) ? 1.0f : -1.0f;
+        mt.push_back({phase, speed, depth, height, dir});
     }
+}
+
+// Build a quaternion that points the sprite's +Z nose along `dir`
+// (world space), with `up` as the reference up. Used so each ship faces
+// the direction it's flying.
+HMM_Quat look_rotation(HMM_Vec3 dir, HMM_Vec3 up) {
+    const HMM_Vec3 f = HMM_NormV3(dir);
+    HMM_Vec3 r = HMM_Cross(up, f);
+    const float rlen = HMM_LenV3(r);
+    if (rlen < 1e-4f) r = HMM_V3(1, 0, 0);   // dir parallel to up: fallback
+    else              r = HMM_DivV3F(r, rlen);
+    const HMM_Vec3 u = HMM_Cross(f, r);
+    // Column-major basis [r u f] -> rotation matrix -> quaternion.
+    HMM_Mat4 m = HMM_M4D(1.0f);
+    m.Columns[0] = HMM_V4(r.X, r.Y, r.Z, 0.0f);
+    m.Columns[1] = HMM_V4(u.X, u.Y, u.Z, 0.0f);
+    m.Columns[2] = HMM_V4(f.X, f.Y, f.Z, 0.0f);
+    return HMM_M4ToQ_RH(m);
 }
 
 void tick(float dt) {
-    // Advance orbit positions. Each ship has its own base angle + speed;
-    // we add `speed * dt` to its angle so motion is fps-independent.
+    // Advance linear flight along the camera's right axis. Each ship
+    // moves at `speed` tracks/sec; phase wraps at 1.0 so ships loop
+    // back to the start of the lane.
     auto& mt = motion_table();
     if (mt.size() != g.patrol.size()) return;   // safety: not initialized
-    static thread_local float s_t = 0.0f;
-    s_t += dt;                                  // accumulator shared
+    // span = half-width of the track in meters. The ships travel from
+    // -span to +span along the camera right axis. 1100m comfortably
+    // covers + overshoots a 600m-anchored view so ships enter / exit
+    // off the screen edges.
+    constexpr float k_span = 1100.0f;
     for (size_t i = 0; i < g.patrol.size(); ++i) {
         ShipSpriteObject& s = g.patrol[i];
-        const Motion m = mt[i];
-        // speed is in rad/sec; s_t is accumulated seconds. No frame-rate
-        // multiplier (the old * 60 made it ~2 rotations/sec — way too fast).
-        const float angle = m.base_angle + m.speed * s_t;
-        // Orbit around the anchor: a small forward offset places the
-        // ships in front of the camera so the patrol is in view no
-        // matter where the player is in the system.
-        const float ox = std::cos(angle) * m.radius;
-        const float oz = std::sin(angle) * m.radius;
-        s.position = HMM_V3(g.anchor_pos.X + ox,
-                             g.anchor_pos.Y + m.height,
-                             g.anchor_pos.Z + oz);
-        // Face inward toward the anchor (camera). Yaw so the sprite's
-        // +Z nose points back toward the anchor.
-        const float dx = ox;   // vector from anchor to ship
-        const float dz = oz;
-        const float yaw = std::atan2(dx, -dz);
-        s.orientation = HMM_QFromAxisAngle_RH(HMM_V3(0, 1, 0), yaw);
+        Motion& m = mt[i];
+        m.phase += m.speed * dt;
+        if (m.phase > 1.0f) m.phase -= 1.0f;
+        if (m.phase < 0.0f) m.phase += 1.0f;
+        // Map phase [0,1] -> track position [-span, +span], flipped by dir.
+        const float along = (m.phase * 2.0f - 1.0f) * k_span * m.dir;
+        const HMM_Vec3 pos =
+            HMM_AddV3(g.anchor_pos,
+                      HMM_AddV3(HMM_MulV3F(g.anchor_right, along),
+                                HMM_AddV3(HMM_MulV3F(g.anchor_fwd, m.depth),
+                                          HMM_MulV3F(g.anchor_up,  m.height))));
+        s.position = pos;
+        // Face the direction of travel: +right * dir.
+        const HMM_Vec3 travel = HMM_MulV3F(g.anchor_right, m.dir);
+        s.orientation = look_rotation(travel, g.anchor_up);
     }
 }
 
-void set_anchor(HMM_Vec3 pos, HMM_Vec3 fwd) {
-    g.anchor_pos = pos;
-    g.anchor_fwd = fwd;
+void set_anchor(HMM_Vec3 pos, HMM_Vec3 fwd, HMM_Vec3 right, HMM_Vec3 up) {
+    g.anchor_pos   = pos;
+    g.anchor_fwd   = fwd;
+    g.anchor_right = right;
+    g.anchor_up    = up;
 }
 
 void shutdown() {

@@ -56,11 +56,10 @@ Action draw() {
     ImDrawList* dl = ImGui::GetWindowDrawList();
 
     // 1) Top chrome rail: holds the PRIVATEER wordmark + subtitle. ~110 px
-    //    tall: enough room for a 56pt wordmark and a dim subtitle.
-    //    Sit the rail ~20% down from the top of the viewport so it doesn't
-    //    fight the menu-bar / window-frame border at y=0.
+    //    tall: enough room for a 56pt wordmark and a dim subtitle. Sits
+    //    flush at the top of the viewport.
     const float top_h = 110.0f;
-    const float top_off = H * 0.20f;   // ~20% down from the top
+    const float top_off = 0.0f;
     ImVec2 top0(vp->WorkPos.x, vp->WorkPos.y + top_off);
     ImVec2 top1(vp->WorkPos.x + W, vp->WorkPos.y + top_off + top_h);
     draw_rail(dl, top0, top1, amber, dark);
