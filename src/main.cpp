@@ -1131,23 +1131,23 @@ void build_system_scene(bool first_time) {
     if (first_time) {
     g.ships.spawn(ship::spawn_player());
 
-    // Player ship — Tarsus class until the ship-picker flow lands.
-    // Class assignment gives the player real armor/shield/energy from
-    // the ShipClass data (matters once L4.2 damage lands; today it
-    // just feeds firing.cpp's energy budget). Player still moves via
-    // camera input, not the flight controller — class.cruise_speed /
-    // accel / max_ypr are not consulted for player kinematics.
+    // Player ship — Centurion with 4x Tachyon Cannon (Mike's call). Class
+    // assignment gives the player real armor/shield/energy from the
+    // ShipClass data (matters once L4.2 damage lands; today it just
+    // feeds firing.cpp's energy budget). Player still moves via camera
+    // input, not the flight controller — class.cruise_speed / accel /
+    // max_ypr are not consulted for player kinematics.
     {
         Ship& player = *g.ships.player();
-        // --ship CLI override (default tarsus). Unknown name -> warn + tarsus.
+        // --ship CLI override (default centurion). Unknown name -> warn + centurion.
         const char* requested =
-            g_player_ship_override.empty() ? "tarsus" : g_player_ship_override.c_str();
+            g_player_ship_override.empty() ? "centurion" : g_player_ship_override.c_str();
         const ShipClass* picked = ship_class::find(requested);
         if (!picked && !g_player_ship_override.empty()) {
             std::fprintf(stderr,
-                "[player] --ship '%s' not found, falling back to 'tarsus'\n",
+                "[player] --ship '%s' not found, falling back to 'centurion'\n",
                 requested);
-            picked = ship_class::find("tarsus");
+            picked = ship_class::find("centurion");
         }
         if (picked) {
             player.klass = picked;
@@ -1155,38 +1155,39 @@ void build_system_scene(bool first_time) {
             // spawn path and the respawn path can't drift apart.
             ship::heal_to_full(player);
 
-            // Loadout sourced from the Tarsus ShipClass default_guns — the
-            // canonical 2x Mass Driver from assets/ships/tarsus/ship.json —
-            // so the player's fitted weapons can't drift from the ship
-            // class / equipment shop view (np-e3x). We take the gun TYPE
-            // from the class but keep the cockpit-tuned mount geometry
-            // below: the class offsets are authored for the external
-            // sprite, whereas the player cockpit wants the muzzles dropped
-            // ~5° under the crosshair. Y offset (engine quirk: world +Y
-            // projects to screen +Y = downward direction, so positive Y
-            // appears BELOW center) is sized so the muzzle reads as a
-            // chin/wing gun under the cockpit eye line at typical FOV.
-            // Tracers still fire ALONG aim, not toward a convergence
-            // point; the ITTS gimbal block above lets aim track the locked
-            // target within a small cone, so the muzzles appear visibly
-            // below while the bullets land where the reticle says.
+            // Loadout sourced from the Centurion ShipClass default_guns —
+            // 4 mixed mounts from assets/ships/centurion/ship.json — so the
+            // player's fitted weapons can't drift from the ship class /
+            // equipment shop view (np-e3x). We take the gun OFFSETS from
+            // the class but override the TYPE below.
             player.mounts = picked->default_guns;   // offsets from class
-            // Player Tarsus flies with 2x Laser (Mike's call) rather than the
-            // class-default Mass Drivers. Lasers are the canonical low-energy
-            // starter gun: fast refire (0.3s), light per-shot energy, and the
-            // bolt art reads as a clean red ray. NPC Tarsuses keep their
-            // ship.json Mass Drivers — this override is player-only.
+            // Player Centurion flies with Nx Tachyon Cannon (Mike's call)
+            // rather than the class-default 2x Mass Driver + 1x Tachyon +
+            // 1x Particle. Tachyon is a fast hit: short refire, low per-
+            // shot energy, and the bolt art reads as a violet ray.
+            // NPC Centurions keep their ship.json mix — this override is
+            // player-only.
             for (auto& m : player.mounts) {
-                m.type = GunType::Laser;
+                m.type = GunType::TachyonCannon;
                 m.cone_half_angle_deg = 1.0f;
             }
-            if (player.mounts.size() >= 2) {
-                player.mounts[0].offset_body = HMM_V3(-10.0f, 5.0f, 0.0f);
-                player.mounts[1].offset_body = HMM_V3( 10.0f, 5.0f, 0.0f);
+            // 2x2 grid for 4 mounts. World +Y projects to screen +Y =
+            // downward direction, so positive Y appears BELOW center;
+            // the muzzles read as chin/wing guns under the cockpit eye
+            // line at typical FOV. Tracers still fire ALONG aim, not
+            // toward a convergence point; the ITTS gimbal block above
+            // lets aim track the locked target within a small cone, so
+            // the muzzles appear visibly below while the bullets land
+            // where the reticle says.
+            if (player.mounts.size() >= 4) {
+                player.mounts[0].offset_body = HMM_V3(-12.0f, 5.0f, 0.0f);
+                player.mounts[1].offset_body = HMM_V3(- 4.0f, 5.0f, 0.0f);
+                player.mounts[2].offset_body = HMM_V3(  4.0f, 5.0f, 0.0f);
+                player.mounts[3].offset_body = HMM_V3( 12.0f, 5.0f, 0.0f);
             }
             player.gun_cooldowns.assign(player.mounts.size(), 0.0f);
-            // All guns armed by default (mode 3) so the stock Tarsus
-            // shoots both mass drivers as before; the G-key cycle
+            // All guns armed by default (mode 3) so the stock Centurion
+            // shoots all 4 tachyon cannons as before; the G-key cycle
             // re-arms subsets per the spec.
             player.gun_armed.assign(player.mounts.size(), true);
         }
