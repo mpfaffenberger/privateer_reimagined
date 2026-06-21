@@ -2269,9 +2269,15 @@ void frame_cb() {
     // is frozen, otherwise the title would render static ships and the
     // 'fly by' feel wouldn't read. Lazy-init on the first frame the
     // title is up so we always have a fresh category + atlas load.
+    // Title intro fly-in timer (np-3dp). Accumulates real seconds since
+    // the title appeared; the render path eases the camera in over the
+    // first few seconds. File-static so the render section (later in this
+    // same frame_cb) can read it.
+    static float s_title_elapsed = 0.0f;
     if (g.show_title) {
         static bool s_title_inited = false;
         if (!s_title_inited) {
+            s_title_elapsed = 0.0f;   // restart the fly-in on a fresh title
             // Pick a category deterministically per process. Mixes
             // wall-clock nanoseconds + a monotonic show-count so two
             // back-to-back title visits don't repeat.
@@ -2323,6 +2329,7 @@ void frame_cb() {
         // the roll (dt=0 never resets it) and flipped the view every
         // frame -> bad flicker. (np-3dp)
         title_scene::tick(raw_dt);   // animate with the real dt so ships drift
+        s_title_elapsed += raw_dt;   // drive the camera fly-in
     } else if (title_scene::inited()) {
         // Title dismissed — drop our cached state so the next title visit
         // gets a fresh category + atlas load.
@@ -3652,9 +3659,39 @@ void frame_cb() {
         const Camera* scene_cam_ptr = g.orbit_active ? &g.orbit_cam : &g.camera;
         if (g.show_title) {
             title_cam = g.camera;
-            title_cam.orientation = HMM_NormQ(HMM_MulQ(
+            // Base settled orientation: the 180-deg forward-axis roll.
+            const HMM_Quat settled = HMM_NormQ(HMM_MulQ(
                 g.camera.orientation,
                 HMM_QFromAxisAngle_RH(g.camera.forward(), 3.14159265358979f)));
+
+            // Intro fly-in (np-3dp): over the first ~4s the camera swooshes
+            // in — starts pulled back + swung off to the side + extra
+            // banked, then eases to the settled pose. Ease-out cubic so it
+            // decelerates as it arrives. After the intro it's a no-op
+            // (t==1 -> zero offset, identity extra rotation).
+            constexpr float k_intro_s = 4.0f;
+            float t = s_title_elapsed / k_intro_s;
+            if (t > 1.0f) t = 1.0f;
+            const float ease = 1.0f - (1.0f - t) * (1.0f - t) * (1.0f - t);  // ease-out cubic
+            const float k = 1.0f - ease;   // 1 at start, 0 when settled
+
+            const HMM_Vec3 fwd   = g.camera.forward();
+            const HMM_Vec3 right = g.camera.right();
+            const HMM_Vec3 up    = g.camera.up();
+            // Start offset: 2500m back, 1800m to the right, 600m up.
+            const HMM_Vec3 start_off =
+                HMM_AddV3(HMM_MulV3F(fwd,   -2500.0f),
+                          HMM_AddV3(HMM_MulV3F(right, 1800.0f),
+                                    HMM_MulV3F(up,     600.0f)));
+            title_cam.position = HMM_AddV3(g.camera.position,
+                                           HMM_MulV3F(start_off, k));
+            // Extra swing: yaw + bank that unwinds as we settle. Compose
+            // BEFORE the settled roll so the unwinding reads as a turn
+            // into frame rather than a spin.
+            const HMM_Quat swing = HMM_NormQ(HMM_MulQ(
+                HMM_QFromAxisAngle_RH(up,  -0.45f * k),     // yaw in from the right
+                HMM_QFromAxisAngle_RH(fwd,  0.65f * k)));   // bank that levels out
+            title_cam.orientation = HMM_NormQ(HMM_MulQ(swing, settled));
             scene_cam_ptr = &title_cam;
         }
         const Camera& scene_cam = *scene_cam_ptr;
