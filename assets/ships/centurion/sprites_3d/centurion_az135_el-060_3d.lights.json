@@ -1,74 +1,8 @@
 [
-  {
-    "u": 0.78,
-    "v": 0.27,
-    "color": [255, 100, 0],
-    "size": 9,
-    "hz": 0,
-    "phase": 0,
-    "kind": "engine"
-  },
-  {
-    "u": 0.84,
-    "v": 0.33,
-    "color": [255, 100, 0],
-    "size": 9,
-    "hz": 0,
-    "phase": 0,
-    "kind": "engine"
-  },
-  {
-    "u": 0.81,
-    "v": 0.30,
-    "color": [255, 26, 26],
-    "size": 6,
-    "hz": 0,
-    "phase": 0,
-    "kind": "engine"
-  },
-  {
-    "u": 0.42,
-    "v": 0.53,
-    "color": [100, 200, 255],
-    "size": 4,
-    "hz": 0,
-    "phase": 0,
-    "kind": "steady"
-  },
-  {
-    "u": 0.45,
-    "v": 0.55,
-    "color": [100, 200, 255],
-    "size": 4,
-    "hz": 0,
-    "phase": 0,
-    "kind": "steady"
-  },
-  {
-    "u": 0.65,
-    "v": 0.50,
-    "color": [255, 200, 50],
-    "size": 4,
-    "hz": 0,
-    "phase": 0,
-    "kind": "steady"
-  },
-  {
-    "u": 0.80,
-    "v": 0.45,
-    "color": [255, 200, 50],
-    "size": 4,
-    "hz": 0,
-    "phase": 0,
-    "kind": "steady"
-  },
-  {
-    "u": 0.82,
-    "v": 0.18,
-    "color": [255, 200, 50],
-    "size": 3,
-    "hz": 0,
-    "phase": 0,
-    "kind": "steady"
-  }
+  { "u": 0.488406, "v": 0.437681, "color": [255, 26, 26], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.636232, "v": 0.568116, "color": [255, 26, 26], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.914493, "v": 0.301449, "color": [51, 140, 255], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.894203, "v": 0.250725, "color": [51, 140, 255], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.792754, "v": 0.168116, "color": [51, 140, 255], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.775362, "v": 0.126087, "color": [51, 140, 255], "size": 5, "hz": 0, "phase": 0, "kind": "steady" }
 ]

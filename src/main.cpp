@@ -1814,7 +1814,10 @@ void update_dev_jump_soak(float dt) {
 // How long the death cinematic holds before we respawn. The explosion FX
 // lifetime is ~1.2s; we linger a beat past that so the fireball fully
 // blooms-and-fades over the cockpit before the screen swaps to the base.
-static constexpr float k_death_cinematic_s = 3.0f;
+static constexpr float k_death_cinematic_s = 6.0f;   // ~3s to watch the
+                                                       // fireball fully bloom
+                                                       // and another beat to
+                                                       // register "I'm dead".
 
 // Drop the player back into the world after a death. POLICY (Privateer-
 // authentic): reload the autosave (slot 0, written on every dock by
@@ -2069,7 +2072,11 @@ static float g_time_scale = 1.0f;
 // fly-by-wire); scroll changes distance. The ship continues to fly via
 // g.camera — orbit_cam is a separate RENDER camera only.
 void update_orbit_camera(float dt) {
-    g.orbit_active = autopilot::engaged(g.autopilot);
+    // Orbit camera is forced ON while the death cinematic plays so the
+    // player can watch their ship bloom into a fireball (np-ma2.2).
+    // Otherwise follow autopilot engagement.
+    g.orbit_active = autopilot::engaged(g.autopilot) ||
+                     g.game.mode == GameMode::Dying;
     if (!g.orbit_active) { g.orbit_was_active = false; return; }
 
     // Engage edge: start LOCKED directly behind the ship (engines in view,
