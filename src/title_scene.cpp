@@ -433,9 +433,10 @@ ChaseConfig chase_config(HMM_Vec3 /*cam_pos*/, HMM_Vec3 /*cam_fwd*/,
         base_off.Y,
        -base_off.X * sa + base_off.Z * ca);
     const HMM_Vec3 eye = HMM_AddV3(ship, off);
-    // Look slightly AHEAD of the ship so it sits a touch low in frame
-    // (classic chase framing) rather than dead-centre.
-    const HMM_Vec3 target = HMM_AddV3(ship, HMM_V3(0, 0, 120.0f));
+    // Aim straight AT the ship so it sits dead-centre in frame (np-3dp.14).
+    // The earlier 'look 120 ahead' chase framing pushed bigger hulls low
+    // enough to clip the bottom of the view.
+    const HMM_Vec3 target = ship;
     c.cam_override = true;
     c.cam_pos      = eye;
     c.cam_orient   = camera_look_at(eye, target, HMM_V3(0, 1, 0));
