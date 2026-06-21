@@ -460,6 +460,12 @@ struct AppState {
     // unfreezes.
     bool show_welcome = false;   // welcome briefing REMOVED in np-3dp; the title screen owns the chrome
     bool show_title   = true;   // title/loading screen at app launch
+    // Lazy-init latch for the title SCENE (patrol/chase ships, sky, music).
+    // Reset to false whenever we (re)enter the title — at launch and again
+    // when the player dies and we bounce back to the menu (np-3dp.18) — so
+    // the scene re-rolls a fresh variant + ship set each visit.
+    bool title_scene_inited = false;
+    bool skip_title_at_boot = false;   // --skip-title dev flag
 
     // Title 'galaxy tour' (np-3dp.13): during the ChaseCam variant the hero
     // ship cruises toward a jump hole and 'jumps' (sky reskin + sun repos)
@@ -774,6 +780,11 @@ void build_system_scene(bool first_time) {
         const outfitting::SpeedCaps caps = outfitting::effective_speed_caps(g.player);
         g.camera.max_speed_cruise0 = caps.cruise0;
         g.camera.max_speed_cruise1 = caps.cruise1;
+    }
+    // --skip-title (dev): drop straight into flight, bypassing the menu.
+    if (g.skip_title_at_boot) {
+        g.show_title = false;
+        std::printf("[dev] --skip-title: starting in flight\n");
     }
     }  // end if (first_time) — one-time tables + player state
 
@@ -1839,20 +1850,32 @@ static constexpr float k_death_cinematic_s = 6.0f;   // ~3s to watch the
 // autosave-on-dock. If no autosave exists yet (died before ever docking)
 // we fall back to the new_game baseline in the current system and respawn
 // in free Flight where the wreck was, since there's no base to land at.
-static void respawn_player() {
-    // 1) Restore the persistent half of the player from the autosave.
-    PlayerState restored;
-    const bool from_save = savegame::load(restored, savegame::k_autosave_slot);
-    if (from_save) {
-        g.player = restored;
-        std::printf("[respawn] restored autosave: base=%s, system=%s, %lld cr\n",
-                    g.player.last_docked_base.c_str(),
-                    g.player.current_system.c_str(),
+// to_title (np-3dp.18): instead of dropping the player back into the world
+// at their last base, bounce all the way out to the TITLE screen on death.
+// The heal/clear/atlas-rebind cleanup is identical either way; only the
+// restore SOURCE and the final destination differ.
+static void respawn_player(bool to_title = false) {
+    // 1) Restore the persistent half of the player. Returning to the title
+    //    starts from a fresh new_game baseline (so the menu's NEW is
+    //    clean); a normal respawn reloads the autosave (last-docked base).
+    if (to_title) {
+        g.player = player::new_game(g.player.current_system);
+        std::printf("[respawn] death -> title: new_game baseline (%lld cr)\n",
                     (long long)g.player.credits);
     } else {
-        g.player = player::new_game(g.player.current_system);
-        std::printf("[respawn] no autosave found — new_game baseline (%lld cr)\n",
-                    (long long)g.player.credits);
+        PlayerState restored;
+        const bool from_save = savegame::load(restored, savegame::k_autosave_slot);
+        if (from_save) {
+            g.player = restored;
+            std::printf("[respawn] restored autosave: base=%s, system=%s, %lld cr\n",
+                        g.player.last_docked_base.c_str(),
+                        g.player.current_system.c_str(),
+                        (long long)g.player.credits);
+        } else {
+            g.player = player::new_game(g.player.current_system);
+            std::printf("[respawn] no autosave found — new_game baseline (%lld cr)\n",
+                        (long long)g.player.credits);
+        }
     }
 
     // 2) Heal the player ship to full from its (possibly restored) class.
@@ -1902,9 +1925,22 @@ static void respawn_player() {
         }
     }
 
-    // 5) Destination. With a last docked base, drop the player Landed there
-    //    (apply_pending's transition handler runs base_screens::enter for
-    //    us). Otherwise free Flight at the current spot.
+    // 5) Destination. Death -> TITLE (np-3dp.18): re-show the menu, frozen
+    //    in Flight render mode, and re-arm the title scene so it re-rolls
+    //    a fresh variant/ship set. The wreck isn't drawn under the title,
+    //    and NEW/LOAD take over from the chrome.
+    if (to_title) {
+        g.player.docked = false;
+        game_state::request_mode(g.game, GameMode::Flight);
+        g.show_title         = true;
+        g.title_scene_inited = false;
+        std::printf("[respawn] player destroyed -> returning to TITLE screen\n");
+        return;
+    }
+
+    // Otherwise: with a last docked base, drop the player Landed there
+    // (apply_pending's transition handler runs base_screens::enter for
+    // us). Otherwise free Flight at the current spot.
     if (!g.player.last_docked_base.empty()) {
         g.player.docked = true;
         game_state::request_mode(g.game, GameMode::Landed);
@@ -2283,8 +2319,7 @@ void frame_cb() {
     // same frame_cb) can read it.
     static float s_title_elapsed = 0.0f;
     if (g.show_title) {
-        static bool s_title_inited = false;
-        if (!s_title_inited) {
+        if (!g.title_scene_inited) {
             s_title_elapsed = 0.0f;   // restart the fly-in on a fresh title
             // Pick a category deterministically per process. Mixes
             // wall-clock nanoseconds + a monotonic show-count so two
@@ -2317,7 +2352,7 @@ void frame_cb() {
                 g.sun.position = HMM_AddV3(title_scene::jump_hole_pos(),
                                            HMM_V3(side, high, along));
             }
-            s_title_inited = true;
+            g.title_scene_inited = true;
             std::printf("[title_scene] init cat=%d preset='%s' ship_atlases=%zu\n",
                         cat, title_scene::star_preset(chosen),
                         title_scene::category_label(chosen), /*placeholder*/(size_t)0);
@@ -2416,8 +2451,10 @@ void frame_cb() {
         }
     } else if (title_scene::inited()) {
         // Title dismissed — drop our cached state so the next title visit
-        // gets a fresh category + atlas load.
+        // gets a fresh category + atlas load, and re-arm the lazy-init
+        // latch so re-entering the title (e.g. on death) re-rolls.
         title_scene::shutdown();
+        g.title_scene_inited = false;
     }
 
     // --- deferred system switch (np-6al.1, frame boundary only) -------------
@@ -2486,15 +2523,16 @@ void frame_cb() {
     }
 
     // Dying cinematic (np-ma2.2): hold for k_death_cinematic_s while the
-    // explosion plays out, then reload the autosave and drop the player
-    // back at their last base. We DON'T short-circuit to frame_stub here —
-    // Dying falls through to the full Flight sim+render below (gated to
-    // freeze player control) so the fireball is actually visible blooming
-    // over the dead cockpit. respawn_player() requests the next mode; the
-    // flip lands at the top of the following frame.
+    // explosion plays out, then bounce all the way back to the TITLE
+    // screen (np-3dp.18 — death returns you to the menu). We DON'T short-
+    // circuit to frame_stub here — Dying falls through to the full Flight
+    // sim+render below (gated to freeze player control) so the fireball is
+    // actually visible blooming over the dead cockpit. respawn_player
+    // (to_title) re-shows the title + re-arms the scene; the flip lands at
+    // the top of the following frame.
     if (g.game.mode == GameMode::Dying &&
         g.game.time_in_mode_s >= k_death_cinematic_s) {
-        respawn_player();
+        respawn_player(/*to_title=*/true);
     }
 
     // Landed / Loading render a stub screen and skip the entire sim +
@@ -4963,6 +5001,8 @@ sapp_desc sokol_main(int argc, char** argv) {
             ++i;
         } else if (std::strcmp(argv[i], "--capture-clean") == 0) {
             g.capture_clean = true;
+        } else if (std::strcmp(argv[i], "--skip-title") == 0) {
+            g.skip_title_at_boot = true;   // dev: drop straight into flight
         } else if (std::strcmp(argv[i], "--dev-land") == 0 && i + 1 < argc) {
             g.dev_land_base = argv[i + 1];
             ++i;
