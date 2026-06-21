@@ -59,6 +59,14 @@ bool inited();                  // true once init has been called
 Category category();            // current category after init
 Variant  variant();             // PatrolFlyby or ChaseCam (random per init)
 bool     wants_camera_roll();   // true if the variant needs the 180° view roll
+
+// Jump-hole approach (np-3dp.13, ChaseCam only). The hero ship begins each
+// 90s pass k_chase_hole_dist klicks short of a jump hole and arrives AT it
+// on the hull swap — that's the 'jump'. main.cpp renders the hole as a gate
+// sphere, draws the flash overlay, and reskins the sky on the jump event.
+HMM_Vec3 jump_hole_pos();       // world pos of the current target hole
+float    jump_flash();          // 0..1 hyperspace flash alpha
+bool     consume_jump_event();  // true once, the frame the ship reaches a hole
 const char* category_label(Category c);  // "Confed Navy", "Kilrathi", etc.
 
 // Chase-cam render hints (warp streaks + sun position). Computed from the

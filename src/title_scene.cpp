@@ -79,8 +79,32 @@ struct State {
     int      chase_idx      = 0;
     HMM_Vec3 chase_ship_pos { 0, 0, 0 };   // advances forward each frame
     float    chase_orbit    = 0.0f;        // camera orbit angle (radians)
+
+    // Jump-hole approach (np-3dp.13). Each pass begins exactly
+    // k_chase_cruise * k_chase_cut_s klicks short of a jump hole and ends
+    // AT it (the ship 'jumps through' the moment the hull swaps). The
+    // white flash ramps in over the last k_jump_flash_s of the approach,
+    // peaks at the hole, then fades after. jump_event latches one frame
+    // on arrival so main can reskin the sky + reposition the sun.
+    HMM_Vec3 chase_hole_pos { 0, 0, 0 };   // world pos of the target hole
+    float    chase_flash    = 0.0f;        // 0..1 hyperspace flash alpha
+    bool     post_jump      = false;       // true while fading out post-jump
+    float    post_jump_t    = 0.0f;        // seconds since the jump
+    bool     jump_event     = false;       // latched 1 frame on arrival
 };
 State g;
+
+// Chase-cam tuning. Cut duration = how long we follow one ship before
+// swapping hull (np-3dp.5: 90s). Cruise speed (world units/s) is well past
+// the warp-streak floor so the trails read; the camera moves WITH the ship,
+// which is what makes the streaks flow. Each pass starts exactly
+// cruise*cut klicks short of a jump hole and arrives AT it on the swap
+// (np-3dp.13): 2000 * 90 = 180,000. Orbit rate ~5.7 deg/s (full lap ~63s).
+constexpr float k_chase_cut_s      = 90.0f;
+constexpr float k_chase_cruise     = 2000.0f;
+constexpr float k_chase_orbit_rate = 0.10f;
+constexpr float k_chase_hole_dist  = k_chase_cruise * k_chase_cut_s;  // 180,000
+constexpr float k_jump_flash_s     = 0.6f;   // flash in/out duration (s)
 
 // Helpers ---------------------------------------------------------------
 
@@ -183,6 +207,13 @@ void init(Category cat,
     g.chase_idx = std::rand() % (int)g.atlas_storage.size();
     g.chase_ship_pos = HMM_V3(0, 0, 0);
     g.chase_orbit = 0.0f;
+    // First jump hole sits k_chase_hole_dist straight ahead (+Z); the ship
+    // arrives exactly on the 90s hull swap.
+    g.chase_hole_pos = HMM_V3(0, 0, k_chase_hole_dist);
+    g.chase_flash = 0.0f;
+    g.post_jump = false;
+    g.post_jump_t = 0.0f;
+    g.jump_event = false;
 
     if (g.variant == Variant::ChaseCam) {
         // One hero ship cruising in a straight line; camera orbits it.
@@ -250,28 +281,22 @@ HMM_Quat look_rotation(HMM_Vec3 dir, HMM_Vec3 up) {
     return HMM_M4ToQ_RH(m);
 }
 
-// Cut duration for the chase cam: how long we follow one ship before
-// swapping hull. Seconds. (np-3dp.5 — Mike asked for a 90s hold.)
-constexpr float k_chase_cut_s = 90.0f;
-// Ship cruise speed (m/s) — well past the warp-streak floor so the trails
-// read at full strength. The camera moves WITH the ship, so this is what
-// makes the streaks flow.
-constexpr float k_chase_cruise = 2000.0f;
-// Camera orbit rate (rad/s) — ~5.7 deg/s, a full lap around the ship in
-// ~63s. Slow enough to feel like a drifting establishing shot.
-constexpr float k_chase_orbit_rate = 0.10f;
-
 void tick(float dt) {
     // --- ChaseCam variant: hero ship cruising straight; camera orbits. -
     if (g.variant == Variant::ChaseCam) {
         if (g.patrol.empty()) return;
+        g.jump_event = false;                      // cleared unless we arrive
         g.chase_t     += dt / k_chase_cut_s;       // 0..1 over one pass
         g.chase_orbit += k_chase_orbit_rate * dt;  // camera orbit angle
-        // Advance the ship along world +Z (flying straight).
+        // Advance the ship along world +Z (flying straight toward the hole).
         g.chase_ship_pos = HMM_AddV3(g.chase_ship_pos,
                                      HMM_V3(0, 0, k_chase_cruise * dt));
         if (g.chase_t >= 1.0f) {
-            // Swap to a different hull and reset the pass.
+            // Arrived at the jump hole on the 90s mark: swap hull, fire the
+            // jump event (main reskins the sky + repositions the sun), and
+            // place the NEXT hole one full pass ahead. The ship keeps
+            // flying +Z — no teleport — so it threads through a chain of
+            // holes, one per system, the flash hiding each transition.
             g.chase_t = 0.0f;
             if (g.atlas_storage.size() > 1) {
                 int next = g.chase_idx;
@@ -280,6 +305,26 @@ void tick(float dt) {
                 g.chase_idx = next;
             }
             g.patrol[0].atlas = g.atlas_storage[g.chase_idx].get();
+            g.chase_hole_pos = HMM_AddV3(g.chase_ship_pos,
+                                         HMM_V3(0, 0, k_chase_hole_dist));
+            g.jump_event  = true;
+            g.post_jump   = true;
+            g.post_jump_t = 0.0f;
+            g.chase_flash = 1.0f;
+        }
+        // Drive the hyperspace flash: ramp IN over the last k_jump_flash_s
+        // of the approach, hold peak across the swap, then fade OUT.
+        if (g.post_jump) {
+            g.post_jump_t += dt;
+            g.chase_flash = 1.0f - std::min(g.post_jump_t / k_jump_flash_s, 1.0f);
+            if (g.post_jump_t >= k_jump_flash_s) {
+                g.post_jump   = false;
+                g.chase_flash = 0.0f;
+            }
+        } else {
+            const float remaining = (1.0f - g.chase_t) * k_chase_cut_s;  // s to hole
+            g.chase_flash = (remaining < k_jump_flash_s)
+                ? (1.0f - remaining / k_jump_flash_s) : 0.0f;
         }
         // Place the ship at its cruising position, nose along +Z (its
         // travel direction).
@@ -339,6 +384,15 @@ bool inited() { return g.sprite_art != nullptr; }
 
 Category category() { return g.cat; }
 Variant  variant()  { return g.variant; }
+
+// Jump-hole accessors (np-3dp.13). Valid only for the ChaseCam variant.
+HMM_Vec3 jump_hole_pos() { return g.chase_hole_pos; }
+float    jump_flash()    { return g.chase_flash; }
+bool consume_jump_event() {
+    const bool e = g.jump_event;
+    g.jump_event = false;   // one-shot: cleared on read
+    return e;
+}
 
 // Both variants render the sprites with the convention that needs the
 // 180° view roll to read right-side-up, so both want it.

@@ -461,17 +461,11 @@ struct AppState {
     bool show_welcome = false;   // welcome briefing REMOVED in np-3dp; the title screen owns the chrome
     bool show_title   = true;   // title/loading screen at app launch
 
-    // Title 'galaxy tour' (np-3dp.12): during the ChaseCam title variant we
-    // periodically jump the backdrop to a random system so the menu reads
-    // as a ship touring the galaxy. A white hyperspace flash ramps up, the
-    // system is rebuilt under it (load_and_build_system), then it fades
-    // out revealing the new system's skybox + sun. State machine:
-    //   phase 0 = idle (counting down to the next jump)
-    //   phase 1 = flash ramping IN (toward white); fires the switch at peak
-    //   phase 2 = flash fading OUT (revealing the new system)
-    int   title_jump_phase  = 0;
-    float title_jump_clock  = 0.0f;   // seconds since the last jump (phase 0)
-    float title_jump_flash  = 0.0f;   // 0..1 white overlay alpha
+    // Title 'galaxy tour' (np-3dp.13): during the ChaseCam variant the hero
+    // ship cruises toward a jump hole and 'jumps' (sky reskin + sun repos)
+    // on arrival, every 90s. All of the timing + the flash live in
+    // title_scene now (jump_flash() / consume_jump_event() / jump_hole_pos());
+    // main just applies them. No per-frame State needed here.
 
     // 3rd-person orbit/freelook camera, active while the nav autopilot is
     // engaged (the ship flies itself, so the player is free to look around).
@@ -2309,6 +2303,18 @@ void frame_cb() {
             if (const StarPreset* sp = find_star_preset(title_scene::star_preset(chosen))) {
                 apply_star_preset(g.sun, *sp);
             }
+            // ChaseCam first traversal (np-3dp.13): park the sun at a
+            // FIXED world point off to one side of the first jump hole so
+            // the opening shot has a star that drifts naturally with
+            // parallax (subsequent traversals re-place it on each jump).
+            if (title_scene::variant() == title_scene::Variant::ChaseCam) {
+                const float side = ((std::rand() & 1) ? 1.0f : -1.0f)
+                                 * (45000.0f + (float)(std::rand() % 35000));
+                const float high = 8000.0f + (float)(std::rand() % 20000);
+                const float fwd_o = 60000.0f + (float)(std::rand() % 60000);
+                g.sun.position = HMM_AddV3(title_scene::jump_hole_pos(),
+                                           HMM_V3(side, high, fwd_o));
+            }
             s_title_inited = true;
             std::printf("[title_scene] init cat=%d preset='%s' ship_atlases=%zu\n",
                         cat, title_scene::star_preset(chosen),
@@ -2327,33 +2333,16 @@ void frame_cb() {
                                                    HMM_MulV3F(fwd, 600.0f));
             title_scene::set_anchor(anchor_pos, fwd, right, up);
 
-            // Chase-cam variant drives its own sun (drifting across the
-            // view) + warp streaks. Patrol variant parks a static
-            // up-left sun and leaves the streaks off.
+            // Sun handling differs per variant:
+            //   * ChaseCam: the sun is a FIXED world point, set once per
+            //     traversal at the jump event (np-3dp.13) — NOT followed
+            //     per-frame, so it drifts with natural parallax as the
+            //     ship cruises (the old per-frame follow felt forced).
+            //     So we leave g.sun.position alone here.
+            //   * Patrol: park a static up-left sun as a distant star.
             const title_scene::ChaseConfig cc =
                 title_scene::chase_config(g.camera.position, fwd, right, up);
-            if (cc.cam_override) {
-                // Chase cam: park the sun ahead-left of the ORBITING
-                // camera so each toured system's star is actually in frame
-                // (the system's native sun sits at its own centroid, often
-                // off-screen). Build the offset from the chase camera's own
-                // basis (forward = -Z of cam_orient).
-                const HMM_Vec3 cfwd =
-                    HMM_RotateV3Q(HMM_V3(0, 0, -1), cc.cam_orient);
-                const HMM_Vec3 cright =
-                    HMM_RotateV3Q(HMM_V3(1, 0, 0), cc.cam_orient);
-                const HMM_Vec3 cup =
-                    HMM_RotateV3Q(HMM_V3(0, 1, 0), cc.cam_orient);
-                g.sun.position =
-                    HMM_AddV3(cc.cam_pos,
-                              HMM_AddV3(HMM_MulV3F(cfwd,   90000.0f),
-                                        HMM_AddV3(HMM_MulV3F(cright, 26000.0f),
-                                                  HMM_MulV3F(cup,     14000.0f))));
-            } else if (cc.sun_override) {
-                g.sun.position = cc.sun_pos;
-            } else {
-                // Park the sun far in front + up-left of the camera so it
-                // frames behind the patrol as a distant star (np-3dp).
+            if (!cc.cam_override) {
                 g.sun.position =
                     HMM_AddV3(g.camera.position,
                               HMM_AddV3(HMM_MulV3F(fwd,   90000.0f),
@@ -2382,71 +2371,45 @@ void frame_cb() {
         // frames (~16ms) pass through untouched.
         s_title_elapsed += std::min(raw_dt, 0.05f);
 
-        // --- Galaxy tour (np-3dp.12): jump the backdrop between systems ---
-        // Only the ChaseCam variant tours (the patrol is a static vignette).
-        // The white flash + the actual system switch are driven here; the
-        // switch itself goes through the normal g.pending_goto path below.
-        if (title_scene::variant() == title_scene::Variant::ChaseCam) {
-            constexpr float k_tour_interval = 20.0f;  // seconds between jumps
-            constexpr float k_flash_ramp    = 0.45f;  // flash in/out time (s)
-            const float fdt = std::min(raw_dt, 0.05f);
-            switch (g.title_jump_phase) {
-                case 0:  // idle: count down to the next jump
-                    g.title_jump_clock += fdt;
-                    if (g.title_jump_clock >= k_tour_interval) {
-                        g.title_jump_phase = 1;       // begin flashing in
-                        g.title_jump_clock = 0.0f;
-                    }
-                    break;
-                case 1:  // flash ramping toward white
-                    g.title_jump_flash += fdt / k_flash_ramp;
-                    if (g.title_jump_flash >= 1.0f) {
-                        g.title_jump_flash = 1.0f;
-                        g.title_jump_phase = 2;       // peak: do the reskin
-                    }
-                    break;
-                case 2: {
-                    // Re-skin the backdrop to a random galaxy system's sky
-                    // (np-3dp.12). We do NOT do a full system reload here
-                    // (that tears down + rebuilds the whole scene and
-                    // crashes mid-title with a Metal encoder fault); the
-                    // chase cam only ever shows skybox + sun + the title
-                    // ships, so swapping just the skybox cubemap + sun
-                    // preset is visually identical and dead safe. We're in
-                    // the sim section here, BEFORE any render pass opens,
-                    // so destroy()+init() of the skybox is legal. The cube
-                    // regenerates at the usual generate() call next frame,
-                    // hidden behind the white flash.
-                    if (!g.galaxy.systems.empty()) {
-                        const int n = (int)g.galaxy.systems.size();
-                        const galaxy::SystemEntry& sys =
-                            g.galaxy.systems[std::rand() % n];
-                        const std::string seed = sys.id;   // per-system sky
-                        const uint64_t   h   = sky_family_hash(seed);
-                        const SkyFamily  fam = sky_family_for_hash(h);
-                        const SkyFamilyConfig& cfg = k_sky_families[(int)fam];
-                        const std::string sun_name = sky_family_pick_sun(fam, h);
-                        if (const StarPreset* sp = find_star_preset(sun_name))
-                            apply_star_preset(g.sun, *sp);
-                        g.skybox.destroy();
-                        g.skybox.init(seed, /*face_res=*/4096, cfg.warmth,
-                                      cfg.target_a, cfg.target_b);
-                        sapp_set_window_title(
-                            ("new_privateer — " + sys.display_name).c_str());
-                        std::printf("[title] galaxy tour -> '%s' (sky reskin)\n",
-                                    sys.display_name.c_str());
-                    }
-                    g.title_jump_phase = 3;           // fade out next frame
-                    break;
-                }
-                case 3:  // flash fading out, revealing the new sky
-                    g.title_jump_flash -= fdt / k_flash_ramp;
-                    if (g.title_jump_flash <= 0.0f) {
-                        g.title_jump_flash = 0.0f;
-                        g.title_jump_phase = 0;       // back to idle countdown
-                    }
-                    break;
-            }
+        // --- Galaxy tour (np-3dp.13): jump through a hole each 90s pass ---
+        // The hero ship arrives at a jump hole exactly on the hull swap
+        // (title_scene owns the timing + flash). On the jump event we
+        // reskin the backdrop to a random system's sky + reposition the
+        // sun. A full system reload here crashes mid-title (Metal encoder
+        // fault), and the chase cam only ever shows skybox + sun + ships
+        // anyway, so we swap JUST the skybox cubemap + sun preset. We're
+        // in the sim section, BEFORE any render pass opens, so the
+        // skybox destroy()+init() is encoder-safe; the cube regenerates
+        // at the usual generate() next frame, hidden behind the flash.
+        if (title_scene::variant() == title_scene::Variant::ChaseCam &&
+            title_scene::consume_jump_event() && !g.galaxy.systems.empty()) {
+            const int n = (int)g.galaxy.systems.size();
+            const galaxy::SystemEntry& sys = g.galaxy.systems[std::rand() % n];
+            const std::string seed = sys.id;   // per-system sky
+            const uint64_t   h   = sky_family_hash(seed);
+            const SkyFamily  fam = sky_family_for_hash(h);
+            const SkyFamilyConfig& cfg = k_sky_families[(int)fam];
+            const std::string sun_name = sky_family_pick_sun(fam, h);
+            if (const StarPreset* sp = find_star_preset(sun_name))
+                apply_star_preset(g.sun, *sp);
+            g.skybox.destroy();
+            g.skybox.init(seed, /*face_res=*/4096, cfg.warmth,
+                          cfg.target_a, cfg.target_b);
+            // Park the new system's sun at a FIXED world point off to one
+            // side of the ship (np-3dp.13): no per-frame follow, so as the
+            // ship cruises the sun drifts naturally with parallax instead
+            // of feeling glued to the camera. Randomised side + height so
+            // each system frames differently.
+            const float side = ((std::rand() & 1) ? 1.0f : -1.0f)
+                             * (45000.0f + (float)(std::rand() % 35000));
+            const float high = 8000.0f + (float)(std::rand() % 20000);
+            const float fwd  = 60000.0f + (float)(std::rand() % 60000);
+            g.sun.position = HMM_AddV3(
+                title_scene::jump_hole_pos(),
+                HMM_V3(side, high, fwd));
+            sapp_set_window_title(("new_privateer — " + sys.display_name).c_str());
+            std::printf("[title] jump -> '%s' (sky reskin + sun repos)\n",
+                        sys.display_name.c_str());
         }
     } else if (title_scene::inited()) {
         // Title dismissed — drop our cached state so the next title visit
@@ -3938,9 +3901,17 @@ void frame_cb() {
         // Capture-clean skips it for the same reason it skips tracers/etc.
         if (!g.capture_clean) {
             std::vector<HMM_Vec3> gate_positions;
-            gate_positions.reserve(g.system.nav_points.size());
-            for (const NavPointDef& n : g.system.nav_points) {
-                if (n.kind == "jump") gate_positions.push_back(n.position);
+            gate_positions.reserve(g.system.nav_points.size() + 1);
+            if (g.show_title &&
+                title_scene::variant() == title_scene::Variant::ChaseCam) {
+                // Title galaxy tour (np-3dp.13): render ONLY the approaching
+                // jump hole the hero ship is cruising toward. The loaded
+                // system's own gates aren't relevant to the chase shot.
+                gate_positions.push_back(title_scene::jump_hole_pos());
+            } else {
+                for (const NavPointDef& n : g.system.nav_points) {
+                    if (n.kind == "jump") gate_positions.push_back(n.position);
+                }
             }
             g.jump_gate.draw(scene_cam, aspect, time_sec, gate_positions);
         }
@@ -4259,14 +4230,16 @@ void frame_cb() {
 
         if (g.show_title) {
             const title_screen::Action a = title_screen::draw();
-            // Hyperspace flash overlay for the galaxy tour (np-3dp.12):
-            // a full-screen white wash that ramps to peak as we jump, then
-            // fades to reveal the new system. Drawn on the foreground list
-            // so it covers the chrome + scene. Squared for a snappier ease.
-            if (g.title_jump_flash > 0.0f) {
+            // Hyperspace flash overlay (np-3dp.13): a full-screen white
+            // wash that ramps to peak as the ship reaches the jump hole,
+            // then fades to reveal the new system. Driven by title_scene's
+            // approach timing. Drawn on the foreground list so it covers
+            // the chrome + scene. Squared for a snappier ease.
+            const float jflash = title_scene::jump_flash();
+            if (jflash > 0.0f) {
                 const ImGuiViewport* vpf = ImGui::GetMainViewport();
                 ImDrawList* fg = ImGui::GetForegroundDrawList();
-                const float a01 = g.title_jump_flash * g.title_jump_flash;
+                const float a01 = jflash * jflash;
                 const ImU32 wash = IM_COL32(255, 255, 255,
                                             (int)(a01 * 255.0f + 0.5f));
                 fg->AddRectFilled(vpf->WorkPos,
