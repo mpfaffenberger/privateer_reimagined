@@ -44,6 +44,7 @@ const char* to_name(GameMode m) {
         case GameMode::Landed:  return "landed";
         case GameMode::Dying:   return "dying";
         case GameMode::Loading: return "loading";
+        case GameMode::Menu:    return "menu";
         default:                return "?";
     }
 }

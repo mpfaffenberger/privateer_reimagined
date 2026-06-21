@@ -40,6 +40,9 @@ enum class GameMode : uint8_t {
     Landed,
     Dying,
     Loading,
+    Menu,           // title / main menu (np-3dp.6). Music director plays
+                   // the menu bed; no sim ticks, no input other than the
+                   // chrome's own action handlers.
     Count
 };
 constexpr int kGameModeCount = (int)GameMode::Count;

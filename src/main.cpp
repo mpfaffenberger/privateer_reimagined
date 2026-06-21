@@ -2265,6 +2265,15 @@ void frame_cb() {
     // np-3dp.4 since the title screen owns the chrome now.)
     if (g.show_title)   dt = 0.0f;
 
+    // While the title is up the music director plays the menu bed
+    // (OPENING.ADL -> opening_00.wav). Force the GameMode so music::update
+    // selects it; the regular sim tick (Flight etc.) takes over the moment
+    // the title is dismissed (NewGame/LoadGame paths set show_title=false
+    // and call game_state::request_mode(Flight), see np-3dp.6).
+    if (g.show_title) {
+        g.game.mode = GameMode::Menu;
+    }
+
     // Title scene (np-3dp): advance the patrol ships even while the sim
     // is frozen, otherwise the title would render static ships and the
     // 'fly by' feel wouldn't read. Lazy-init on the first frame the

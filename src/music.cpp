@@ -335,6 +335,12 @@ void update(GameMode mode, HMM_Vec3 player_pos, const char* base_id, float dt) {
             reset_combat_state();
             desired = Track::None;          // the loop drops out under the sting
             break;
+        case GameMode::Menu:
+            // Title / main menu (np-3dp.6). Plays the OPENING bed (loaded
+            // but unused before this). dt=0 here so no lerps run; we just
+            // pin the target.
+            desired = Track::Menu;
+            break;
         case GameMode::Loading:
         default:
             // Hold whatever bed is playing across the jump/load beat (the jump

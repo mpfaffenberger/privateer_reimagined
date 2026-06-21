@@ -256,7 +256,7 @@ constexpr float k_chase_cut_s = 90.0f;
 // Ship cruise speed (m/s) — well past the warp-streak floor so the trails
 // read at full strength. The camera moves WITH the ship, so this is what
 // makes the streaks flow.
-constexpr float k_chase_cruise = 3000.0f;
+constexpr float k_chase_cruise = 2000.0f;
 // Camera orbit rate (rad/s) — ~5.7 deg/s, a full lap around the ship in
 // ~63s. Slow enough to feel like a drifting establishing shot.
 constexpr float k_chase_orbit_rate = 0.10f;
