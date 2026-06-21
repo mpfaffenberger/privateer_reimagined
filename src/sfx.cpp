@@ -450,8 +450,15 @@ void update_engine_hum(float speed_frac, float cruise_level,
     if (g_afterburner_voice != 0) {
         const float ab_target =
             0.55f * std::fmax(0.0f, std::fmin(1.0f, cruise_level));
+        const float prev = g_afterburner_gain;
         g_afterburner_gain += (ab_target - g_afterburner_gain) * k;
         audio::set_voice_gain(g_afterburner_voice, g_afterburner_gain);
+        // Log on 0.1 steps only (mirror the hum) so we can verify the
+        // held loop actually spools up rather than dropping out.
+        if ((int)(prev * 10.0f) != (int)(g_afterburner_gain * 10.0f)) {
+            std::printf("[sfx] afterburner gain %.2f (target %.2f, voice %u)\n",
+                        g_afterburner_gain, ab_target, g_afterburner_voice);
+        }
     }
 }
 

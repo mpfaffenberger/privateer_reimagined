@@ -86,6 +86,33 @@ def lowpass(samples: list[float], alpha: float) -> list[float]:
     return out
 
 
+def seam_blend(buf: list[float], fade: int) -> list[float]:
+    """Make a click-free LOOP out of a buffer of length n+fade by
+    crossfading the trailing `fade` samples over the head. Returns n
+    samples. Pure periodic content (tones whose period divides n) is
+    unaffected (the blended pairs are identical); NON-periodic content
+    (filtered noise / air rush) is smoothed across the wrap so the loop
+    seam has no step. This is the right tool for noise beds — unlike a
+    tonal bed, you CAN'T get seamlessness from integer-cycle periodicity
+    when there's noise in the mix."""
+    n = len(buf) - fade
+    res = list(buf[:n])
+    for i in range(fade):
+        w = i / fade
+        res[i] = buf[i] * w + buf[n + i] * (1.0 - w)
+    return res
+
+
+def air_rush(n_plus_fade: int, seed: int, alpha: float) -> list[float]:
+    """Band-limited noise = the 'air' of a jet. One-pole lowpass of white
+    noise (alpha sets brightness: higher = hissier, lower = breathier).
+    Returned UNwrapped (length == n_plus_fade) so the caller can mix it
+    with tones and seam_blend the whole thing once."""
+    rng = random.Random(seed)
+    noise = [rng.random() * 2 - 1 for _ in range(n_plus_fade)]
+    return lowpass(noise, alpha)
+
+
 def laser_fire() -> list[float]:
     """80ms chirp descending 1800->600Hz, fast decay. Reads as 'pew'."""
     n = int(RATE * 0.080)
@@ -124,31 +151,33 @@ def explosion(seed: int, dur_s: float, alpha: float, gain: float) -> list[float]
 
 
 def engine_hum() -> list[float]:
-    """Smooth low idle rumble (np-4dr). The OLD hum stacked 55/110/165Hz
-    at 0.55/0.28/0.12 — that reedy 3rd-harmonic content read as a constant
-    background BUZZ (user feedback), not an engine bed. This is the
-    de-buzzed replacement: a dominant 60Hz fundamental + only a GENTLE 2nd
-    harmonic (120Hz, low level) for warmth, plus a slow 1Hz amplitude
-    breath, at a lower master level. No reedy upper harmonic => smooth, not
-    buzzy.
+    """JET IDLE bed (np-3dp.9). Mike wanted the engine to read like a jet,
+    not a smooth generator hum. A real turbofan is THREE things layered:
+      1. a low spool RUMBLE (the fan),
+      2. a mid TURBINE WHINE (the compressor spinning), and
+      3. broadband AIR RUSH (intake/exhaust hiss).
+    The old bed was just (1) — pure 60/120Hz tones — which is why it read
+    as a hum. This adds (2) a gentle 760Hz whine and (3) band-limited
+    noise for the air, which is what sells 'jet'.
 
-    Loop seam is click-free BY CONSTRUCTION: 60, 120 and 1 all complete
-    INTEGER cycles over the exactly-1s loop, so the wrap from the last
-    sample back to sample[0] is just the next natural step of every
-    component — no discontinuity, no DC offset. (Do NOT add a seam
-    crossfade: blending the tail toward sample[~5ms] would MOVE the last
-    sample away from sample[0] and CREATE the very seam step it was
-    meant to remove. The periodicity already guarantees seamlessness.)"""
+    Loop seam: the TONES complete integer cycles over the exactly-1s loop
+    (50/100/760/1 all divide RATE), so they're periodic-seamless on their
+    own. The NOISE can't be, so we generate 1s + a 50ms tail and
+    seam_blend() crossfades the tail over the head — the tones are
+    unaffected (blended pairs identical) and the air rush wraps without a
+    click."""
     n = RATE
-    out = []
-    for t in range(n):
-        base = (
-            0.80 * math.sin(2 * math.pi * 60 * t / RATE)
-            + 0.12 * math.sin(2 * math.pi * 120 * t / RATE)
-        )
+    fade = int(RATE * 0.05)   # 50ms crossfade tail for the noise
+    air = air_rush(n + fade, seed=4242, alpha=0.30)   # breathy intake hiss
+    buf = []
+    for t in range(n + fade):
+        rumble = (0.70 * math.sin(2 * math.pi * 50  * t / RATE)
+                + 0.22 * math.sin(2 * math.pi * 100 * t / RATE))
+        whine  = 0.07 * math.sin(2 * math.pi * 760 * t / RATE)
         breath = 1.0 + 0.05 * math.sin(2 * math.pi * 1 * t / RATE)
-        out.append(base * breath * 0.35)
-    return out
+        s = (rumble + whine) * breath + air[t] * 0.45
+        buf.append(s * 0.34)
+    return seam_blend(buf, fade)
 
 
 def cruise_windup() -> list[float]:
@@ -165,31 +194,38 @@ def cruise_windup() -> list[float]:
 
 
 def afterburner_loop() -> list[float]:
-    """Exactly 1s held-loop afterburner roar. Same periodicity trick as
-    engine_hum: every component completes an integer number of cycles
-    over the loop length, so the seam is click-free by construction.
+    """Exactly-1s held-loop afterburner ROAR (np-3dp.9). Distinct from the
+    idle bed: where the idle is a breathy whine, the afterburner is a
+    LOUD, BRIGHT air roar — lots of band-limited noise (the reheat plume)
+    on top of a hard turbine stack. This is the layer the menu's
+    'jet engine' read comes from, so it leans on the air rush.
 
-    Recipe: dominant 110Hz fundamental (the afterburner turbine)
-    + 55Hz subharmonic (deep rumble) at 0.4 weight
-    + 220Hz 2nd harmonic at 0.15 weight (turbine whine) for 'bite'
-    + 0.7Hz LFO tremolo (1 cycle/sec, sway) for life
-    + 2.3Hz harmonic for a subtle Doppler-style flutter, deeply attenuated
-    Master gain 0.42 so the held loop sits solidly under the engine bed.
+    Layers:
+      * turbine stack: 110Hz fundamental + 55Hz sub + 220Hz 2nd harmonic
+        (tones, integer-cycle => periodic-seamless),
+      * REHEAT AIR: bright band-limited noise (alpha 0.55), the dominant
+        voice — this is what makes it a roar, not a tone,
+      * 0.7Hz tremolo sway + 2.3Hz flutter for life.
+    Loop seam: tones are periodic; the noise is made seamless via a 50ms
+    seam_blend() crossfade (same as the idle bed).
     """
     n = RATE
-    out = []
-    for t in range(n):
+    fade = int(RATE * 0.05)
+    air = air_rush(n + fade, seed=2718, alpha=0.55)   # bright reheat plume
+    buf = []
+    for t in range(n + fade):
         fundamental = math.sin(2 * math.pi * 110 * t / RATE)
-        sub         = math.sin(2 * math.pi * 55 * t / RATE)
+        sub         = math.sin(2 * math.pi * 55  * t / RATE)
         harmonic    = math.sin(2 * math.pi * 220 * t / RATE)
         tremolo     = 1.0 + 0.07 * math.sin(2 * math.pi * 0.7 * t / RATE)
-        flutter     = math.sin(2 * math.pi * 2.3 * t / RATE) * 0.06
-        s = (0.85 * fundamental
-             + 0.40 * sub
-             + 0.15 * harmonic
-             + flutter) * tremolo * 0.42
-        out.append(s)
-    return out
+        flutter     = math.sin(2 * math.pi * 2.3 * t / RATE) * 0.05
+        turbine = (0.55 * fundamental
+                 + 0.28 * sub
+                 + 0.14 * harmonic
+                 + flutter)
+        s = (turbine * 0.55 + air[t] * 0.85) * tremolo * 0.46
+        buf.append(s)
+    return seam_blend(buf, fade)
 
 
 def ui_click() -> list[float]:

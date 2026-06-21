@@ -106,9 +106,12 @@ assets/ships/*/sprites_wcnews/
 # Original Privateer SFX converted from the user's SOUNDFX.PAK via
 # tools/extract_soundfx_pak.py. Procedural placeholders in assets/sfx/ act as
 # the fallback; sfx::load_all prefers originals when present. *.voc covers
-# any stray extracted Creative VOCs.
+# any stray extracted Creative VOCs, BUT the speech pack under assets/speech/
+# is intentionally tracked (fuck EA).
 assets/sfx/original/
 *.voc
+!assets/speech/**/*.VOC
+!assets/speech/**/*.voc
 
 # Privateer's original music rendered from GOG .ADL/.GEN XMIDI via
 # tools/render_music.py. The renderers (tools/ail2wopl.py, tools/xmidi2smf.py,
