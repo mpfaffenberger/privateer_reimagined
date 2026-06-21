@@ -48,6 +48,10 @@ struct State {
     std::deque<ShipSpriteObject> patrol;
 
     std::unordered_map<std::string, SpriteArt>* sprite_art = nullptr;
+
+    // Anchor for ship positioning. Ships orbit AROUND this point.
+    HMM_Vec3 anchor_pos { 0, 0, 0 };
+    HMM_Vec3 anchor_fwd { 0, 0, 1 };   // +Z convention (sprite nose)
 };
 State g;
 
@@ -152,23 +156,32 @@ void tick(float dt) {
     // we add `speed * dt` to its angle so motion is fps-independent.
     auto& mt = motion_table();
     if (mt.size() != g.patrol.size()) return;   // safety: not initialized
+    static thread_local float s_t = 0.0f;
+    s_t += dt;                                  // accumulator shared
     for (size_t i = 0; i < g.patrol.size(); ++i) {
         ShipSpriteObject& s = g.patrol[i];
         const Motion m = mt[i];
-        // Compute angle from elapsed time (sum of dt) plus base_angle.
-        // We don't keep a separate accumulator; using sapp-style frame
-        // count isn't available, so multiply dt by the cumulative frame
-        // index instead. Cheap & good enough for a title screen.
-        static thread_local float s_t = 0.0f;
-        if (i == 0) s_t += dt;   // one accumulator shared by the loop
         const float angle = m.base_angle + m.speed * s_t * 60.0f;
-        const float x = std::cos(angle) * m.radius;
-        const float z = std::sin(angle) * m.radius;
-        s.position = HMM_V3(x, m.height, z);
-        // Face inward: yaw so the sprite's +Z nose points at the origin.
-        const float yaw = std::atan2(x, -z);
+        // Orbit around the anchor: a small forward offset places the
+        // ships in front of the camera so the patrol is in view no
+        // matter where the player is in the system.
+        const float ox = std::cos(angle) * m.radius;
+        const float oz = std::sin(angle) * m.radius;
+        s.position = HMM_V3(g.anchor_pos.X + ox,
+                             g.anchor_pos.Y + m.height,
+                             g.anchor_pos.Z + oz);
+        // Face inward toward the anchor (camera). Yaw so the sprite's
+        // +Z nose points back toward the anchor.
+        const float dx = ox;   // vector from anchor to ship
+        const float dz = oz;
+        const float yaw = std::atan2(dx, -dz);
         s.orientation = HMM_QFromAxisAngle_RH(HMM_V3(0, 1, 0), yaw);
     }
+}
+
+void set_anchor(HMM_Vec3 pos, HMM_Vec3 fwd) {
+    g.anchor_pos = pos;
+    g.anchor_fwd = fwd;
 }
 
 void shutdown() {

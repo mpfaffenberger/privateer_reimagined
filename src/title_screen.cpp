@@ -57,9 +57,12 @@ Action draw() {
 
     // 1) Top chrome rail: holds the PRIVATEER wordmark + subtitle. ~110 px
     //    tall: enough room for a 56pt wordmark and a dim subtitle.
+    //    Sit the rail ~20% down from the top of the viewport so it doesn't
+    //    fight the menu-bar / window-frame border at y=0.
     const float top_h = 110.0f;
-    ImVec2 top0(vp->WorkPos.x, vp->WorkPos.y);
-    ImVec2 top1(vp->WorkPos.x + W, vp->WorkPos.y + top_h);
+    const float top_off = H * 0.20f;   // ~20% down from the top
+    ImVec2 top0(vp->WorkPos.x, vp->WorkPos.y + top_off);
+    ImVec2 top1(vp->WorkPos.x + W, vp->WorkPos.y + top_off + top_h);
     draw_rail(dl, top0, top1, amber, dark);
     // Decorative inner seam along the bottom of the rail.
     dl->AddLine(ImVec2(top0.x + 24.0f, top1.y - 1.0f),
@@ -83,6 +86,7 @@ Action draw() {
     word_sz_vec.x *= (word_sz / ImGui::GetTextLineHeight());
     ImVec2 word_pos(vp->WorkPos.x + (W - word_sz_vec.x) * 0.5f,
                     top0.y + 16.0f);
+    (void)top_off;
     dl->AddText(ImGui::GetFont(), word_sz, word_pos, amber, word);
     // Subtitle in dim grey below the wordmark.
     const char* sub = "AN ASPECT OF WING COMMANDER";

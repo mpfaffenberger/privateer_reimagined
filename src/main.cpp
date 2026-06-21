@@ -2294,6 +2294,17 @@ void frame_cb() {
                         cat, title_scene::star_preset(chosen),
                         title_scene::category_label(chosen), /*placeholder*/(size_t)0);
         }
+        // Re-anchor the patrol so the ships stay in view regardless of
+        // the player's position in the system. We orbit around a point
+        // that's a few hundred meters in front of the camera; the
+        // forward direction is the camera's +Z so the ships face the
+        // player correctly.
+        {
+            const HMM_Vec3 fwd = g.camera.forward();
+            const HMM_Vec3 anchor_pos = HMM_AddV3(g.camera.position,
+                                                   HMM_MulV3F(fwd, 600.0f));
+            title_scene::set_anchor(anchor_pos, HMM_V3(0, 0, 1));
+        }
         title_scene::tick(raw_dt);   // animate with the real dt so ships drift
     } else if (title_scene::inited()) {
         // Title dismissed — drop our cached state so the next title visit
@@ -3970,7 +3981,7 @@ void frame_cb() {
             cockpit_hud::draw_sun_warning(g.camera, g.sun.position);
         }
         // floating sdtx text up at the HUD-build step ran before that.
-        if (!g.capture_clean) {
+        if (!g.show_title && !g.capture_clean) {
             const HMM_Vec3 pp = g.camera.position;
             cockpit_hud::FlightStatusHudState fs;
             fs.speed = HMM_LenV3(g.camera.velocity);
