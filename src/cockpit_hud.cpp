@@ -1071,22 +1071,32 @@ void draw_sun_warning(const Camera& cam, HMM_Vec3 sun_pos) {
         line2 = line2_buf;
     }
 
-    // Layout: centred around y = h * 0.18 so the banner sits above the
-    // cockpit centre reticle, not over it. Two lines of text.
+    // Layout: centred around y = h * 0.32 so the banner sits below the
+    // top edge and well clear of the FLIGHT panel + centre reticle.
     const float cx = w * 0.5f;
-    const float cy = h * 0.18f;
+    const float cy = h * 0.32f;
 
-    // Use the default font, big-bold-ish for DESTRUCTION (larger draw,
-    // double-stroked by drawing at +1 and -1 in screen to fake weight).
-    constexpr float kBig = 38.0f;   // bigger for the danger line
-    constexpr float kSub = 18.0f;
-    const ImVec2  big_sz = ImGui::CalcTextSize(line1, nullptr, false, kBig);
-    const ImVec2  sub_sz = ImGui::CalcTextSize(line2, nullptr, false, kSub);
+    // Big + sub font sizes. Both fed to the (font,size) AddText overload
+    // so the rendered pixels match the size we ask for. CalcTextSize uses
+    // the active font's size (default ~13 px), so we measure at default
+    // and scale to the target size proportionally.
+    constexpr float kBig = 38.0f;        // big line at this pixel size
+    constexpr float kSub = 20.0f;        // sub-line at this pixel size
+    constexpr float kDefFontPx = 13.0f;   // approx default ImGui font px
+    const float kBigScale = kBig / kDefFontPx;
+    const float kSubScale = kSub / kDefFontPx;
+    const ImVec2 big_at_default = ImGui::CalcTextSize(line1);
+    const ImVec2 sub_at_default = ImGui::CalcTextSize(line2);
+    const ImVec2 big_sz = ImVec2(big_at_default.x * kBigScale,
+                                  big_at_default.y * kBigScale);
+    const ImVec2 sub_sz = ImVec2(sub_at_default.x * kSubScale,
+                                  sub_at_default.y * kSubScale);
 
     // Filled panel backing the text (size to the text with padding).
-    const float pad_x = 24.0f, pad_y = 14.0f;
+    const float pad_x = 28.0f, pad_y = 16.0f;
     const float block_w = std::max(big_sz.x, sub_sz.x) + pad_x * 2.0f;
-    const float block_h = kBig + kSub + pad_y * 2.0f + 8.0f;   // +8 for line gap
+    // Block height: padded top + big line + gap + sub line + padded bottom.
+    const float block_h = pad_y + kBig + 10.0f + kSub + pad_y;
     const float block_x0 = cx - block_w * 0.5f;
     const float block_y0 = cy - block_h * 0.5f;
     dl->AddRectFilled(ImVec2(block_x0, block_y0),
@@ -1096,24 +1106,15 @@ void draw_sun_warning(const Camera& cam, HMM_Vec3 sun_pos) {
                ImVec2(block_x0 + block_w, block_y0 + block_h),
                col_border, 8.0f, 0, 3.0f);
 
-    // Line 1 -- big. Draw at +1,0 / 0,+1 / -1,0 / 0,-1 offsets so the
-    // thick text reads as bold without us loading a separate font.
+    // Line 1 -- big. Draw at the requested font size so layout matches.
     const float line1_x = cx - big_sz.x * 0.5f;
-    const float line1_y = block_y0 + pad_y;
-    auto draw_text = [&](ImVec2 p, ImU32 c, const char* s, float sz) {
-        const ImVec2 t = ImGui::CalcTextSize(s, nullptr, false, sz);
-        dl->AddText(ImVec2(p.x - t.x * 0.5f, p.y), c, s);
-    };
-    // Big line. Fake-bold by stacking an offset copy first.
-    draw_text(ImVec2(line1_x, line1_y), col_text, line1, kBig);
-    draw_text(ImVec2(line1_x, line1_y), col_text, line1, kBig);
-    draw_text(ImVec2(line1_x, line1_y), col_text, line1, kBig);
+    const float line1_y  = block_y0 + pad_y + kBig;   // baseline at bottom
+    dl->AddText(NULL, kBig, ImVec2(line1_x, line1_y), col_text, line1);
 
     // Sub line.
     const float sub_x = cx - sub_sz.x * 0.5f;
-    const float sub_y = line1_y + kBig + 8.0f;
-    draw_text(ImVec2(sub_x, sub_y), col_text, line2, kSub);
-    draw_text(ImVec2(sub_x, sub_y), col_text, line2, kSub);
+    const float sub_y  = line1_y + 10.0f + kSub;     // baseline at bottom
+    dl->AddText(NULL, kSub, ImVec2(sub_x, sub_y), col_text, line2);
 }
 
 } // namespace cockpit_hud
