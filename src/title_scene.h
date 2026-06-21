@@ -59,6 +59,15 @@ bool inited();                  // true once init has been called
 Category category();            // current category after init
 Variant  variant();             // PatrolFlyby or ChaseCam (random per init)
 bool     wants_camera_roll();   // true if the variant needs the 180° view roll
+
+// Engine-hum inputs for the title screen (np-3dp.7). Both fields are 0 /
+// false when the variant isn't the chase cam — the patrol ships just drift
+// and the hum bed fades out, same as landed mode.
+//   hum_speed_frac: 0..1 throttle fraction for the engine-hum bed gain
+//                   (idle 0.04 + 0.25 * sf, capped at 0.4).
+//   hum_cruise     : the afterburner spool flag (true while > 0.10).
+float    hum_speed_frac();
+bool     hum_cruise();
 const char* category_label(Category c);  // "Confed Navy", "Kilrathi", etc.
 
 // Chase-cam render hints (warp streaks + sun position). Computed from the

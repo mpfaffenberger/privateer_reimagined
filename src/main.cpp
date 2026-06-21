@@ -2647,9 +2647,22 @@ void frame_cb() {
     // flight_mode is unconditionally true; the non-Flight stub calls
     // this with false to fade the bed out (see frame_stub).
     {
-        const float speed_frac = HMM_LenV3(g.camera.velocity)
-                               / std::fmax(g.camera.max_speed_cruise1, 1.0f);
-        sfx::update_engine_hum(speed_frac, g.camera.cruise_level,
+        // Engine-hum inputs: while the title chase cam is up, drive the
+        // hum bed + afterburner loop from the title helper (a cruising
+        // ship reads as full-throttle here), so the menu has a jet
+        // engine under it. Everywhere else, the real player ship drives
+        // it.
+        const bool   title_chase   = g.show_title && title_scene::inited()
+                                    && title_scene::variant() ==
+                                       title_scene::Variant::ChaseCam;
+        const float  hum_sf_in    = title_chase ? title_scene::hum_speed_frac()
+                                                : HMM_LenV3(g.camera.velocity);
+        const float  hum_cruise   = title_chase ? title_scene::hum_cruise()
+                                                : g.camera.cruise_level;
+        const float  speed_frac   = title_chase
+            ? hum_sf_in
+            : (hum_sf_in / std::fmax(g.camera.max_speed_cruise1, 1.0f));
+        sfx::update_engine_hum(speed_frac, hum_cruise,
                                /*flight_mode=*/true, dt);
     }
 

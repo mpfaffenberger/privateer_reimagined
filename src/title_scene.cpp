@@ -340,6 +340,20 @@ bool inited() { return g.sprite_art != nullptr; }
 Category category() { return g.cat; }
 Variant  variant()  { return g.variant; }
 
+// Engine-hum inputs for the title screen (np-3dp.7). The chase cam is a
+// cruising ship, so feed the hum/afterburner drivers a full-throttle
+// reading every frame (same as a real autopilot player ship at
+// cruise-1). The patrol ships don't cruise — they just drift across
+// the view — so the hum bed fades to 0 and the afterburner stays off.
+float hum_speed_frac() {
+    if (g.variant != Variant::ChaseCam) return 0.0f;
+    return 1.0f;   // full throttle; the hum formula is 0.04 + 0.25 * sf
+}
+bool hum_cruise() {
+    if (g.variant != Variant::ChaseCam) return false;
+    return true;   // above the 0.10 afterburner spool threshold
+}
+
 // Both variants render the sprites with the convention that needs the
 // 180° view roll to read right-side-up, so both want it.
 bool wants_camera_roll() { return true; }
