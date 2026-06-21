@@ -2647,28 +2647,19 @@ void frame_cb() {
     // flight_mode is unconditionally true; the non-Flight stub calls
     // this with false to fade the bed out (see frame_stub).
     {
-        // Engine-hum inputs: while the title chase cam is up, drive the
-        // hum bed + afterburner loop from the title helper (a cruising
-        // ship reads as full-throttle here), so the menu has a jet
-        // engine under it. Everywhere else, the real player ship drives
-        // it.
-        const bool   title_chase   = g.show_title && title_scene::inited()
-                                    && title_scene::variant() ==
-                                       title_scene::Variant::ChaseCam;
-        const float  hum_sf_in    = title_chase ? title_scene::hum_speed_frac()
-                                                : HMM_LenV3(g.camera.velocity);
-        const float  hum_cruise   = title_chase ? title_scene::hum_cruise()
-                                                : g.camera.cruise_level;
-        const float  speed_frac   = title_chase
-            ? hum_sf_in
-            : (hum_sf_in / std::fmax(g.camera.max_speed_cruise1, 1.0f));
-        // dt is 0 while the title freezes the sim, which would pin the hum
-        // + afterburner GAIN lerps at 0 (the held loop plays silently and
-        // only the one-shot windup stab is audible — reads as 'plays once
-        // then stops'). Feed raw_dt during the title so the gains spool up.
-        const float  hum_dt       = title_chase ? raw_dt : dt;
-        sfx::update_engine_hum(speed_frac, hum_cruise,
-                               /*flight_mode=*/true, hum_dt);
+        // While the title is up there are no engine sounds (np-3dp.10 —
+        // Mike: removed the menu jet/hum/afterburner, revisit later).
+        // Drive the hum like the non-Flight stub does: flight_mode=false
+        // fades the hum bed to 0 and releases the afterburner loop. raw_dt
+        // (not the frozen dt=0) so that fade actually runs.
+        if (g.show_title) {
+            sfx::update_engine_hum(0.0f, 0.0f, /*flight_mode=*/false, raw_dt);
+        } else {
+            const float speed_frac = HMM_LenV3(g.camera.velocity)
+                                   / std::fmax(g.camera.max_speed_cruise1, 1.0f);
+            sfx::update_engine_hum(speed_frac, g.camera.cruise_level,
+                                   /*flight_mode=*/true, dt);
+        }
     }
 
     // Dynamic music director (np-ida): Flight runs the in-flight combat-tier
