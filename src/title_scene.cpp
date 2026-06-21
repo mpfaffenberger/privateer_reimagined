@@ -251,8 +251,8 @@ HMM_Quat look_rotation(HMM_Vec3 dir, HMM_Vec3 up) {
 }
 
 // Cut duration for the chase cam: how long we follow one ship before
-// swapping hull. Seconds.
-constexpr float k_chase_cut_s = 13.0f;
+// swapping hull. Seconds. (np-3dp.5 — Mike asked for a 90s hold.)
+constexpr float k_chase_cut_s = 90.0f;
 // Ship cruise speed (m/s) — well past the warp-streak floor so the trails
 // read at full strength. The camera moves WITH the ship, so this is what
 // makes the streaks flow.
