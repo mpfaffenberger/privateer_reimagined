@@ -73,6 +73,18 @@ PlayerState make_mutated() {
     // np-zte.2: distinctive missile counts. afterburner_fuel field removed
     // (merged into Ship::energy_gj), so nothing to round-trip there.
     p.missiles[0] = 3; p.missiles[1] = 1; p.missiles[2] = 5;
+    // np-3dp.19: career faction-kill tallies + a live ship-damage snapshot.
+    p.faction_kills[(int)Faction::Pirate]   = 17;
+    p.faction_kills[(int)Faction::Kilrathi] = 9;
+    p.faction_kills[(int)Faction::Retro]    = 4;
+    p.hp_valid       = true;
+    p.hp_armor_fore  = 12.5f;
+    p.hp_armor_aft   = 8.25f;
+    p.hp_armor_side  = 6.75f;
+    p.hp_shield_fore = 3.5f;
+    p.hp_shield_aft  = 1.25f;
+    p.hp_shield_side = 0.0f;
+    p.hp_energy      = 99.0f;
     p.current_system   = "pentonville";
     p.last_docked_base = "achilles";
     p.docked           = true;
@@ -158,6 +170,61 @@ int main() {
     CHECK_EQ("missiles[IR]", dst.missiles[2], src.missiles[2]);
     // afterburner_fuel round-trip removed: field merged into Ship::energy_gj
     // (np-zte.2), no longer persisted on PlayerState.
+
+    // np-3dp.19: career faction-kill tallies survive the round-trip.
+    std::printf("  kills[Pirate]:    %lld vs %lld\n",
+                (long long)src.faction_kills[(int)Faction::Pirate],
+                (long long)dst.faction_kills[(int)Faction::Pirate]);
+    CHECK_EQ("kills[Pirate]",   dst.faction_kills[(int)Faction::Pirate],   src.faction_kills[(int)Faction::Pirate]);
+    CHECK_EQ("kills[Kilrathi]", dst.faction_kills[(int)Faction::Kilrathi], src.faction_kills[(int)Faction::Kilrathi]);
+    CHECK_EQ("kills[Retro]",    dst.faction_kills[(int)Faction::Retro],    src.faction_kills[(int)Faction::Retro]);
+
+    // np-3dp.19: live ship-damage snapshot survives the round-trip.
+    CHECK_EQ("hp_valid",       dst.hp_valid,       src.hp_valid);
+    CHECK_EQ("hp_armor_fore",  dst.hp_armor_fore,  src.hp_armor_fore);
+    CHECK_EQ("hp_armor_aft",   dst.hp_armor_aft,   src.hp_armor_aft);
+    CHECK_EQ("hp_armor_side",  dst.hp_armor_side,  src.hp_armor_side);
+    CHECK_EQ("hp_shield_fore", dst.hp_shield_fore, src.hp_shield_fore);
+    CHECK_EQ("hp_shield_aft",  dst.hp_shield_aft,  src.hp_shield_aft);
+    CHECK_EQ("hp_shield_side", dst.hp_shield_side, src.hp_shield_side);
+    CHECK_EQ("hp_energy",      dst.hp_energy,      src.hp_energy);
+
+    // ---- 2b. unlimited timestamped saves (np-3dp.19) ----------------------
+    std::printf("\n--- timestamped save accumulation + list + load-by-path ---\n");
+    const std::string ts_path = savegame::save_timestamped(src);
+    { const bool ok = !ts_path.empty(); if (!ok) ++g_fail;
+      std::printf("  [%s] save_timestamped wrote a file\n", ok ? "OK  " : "FAIL"); }
+    const std::string ts_path2 = savegame::save_timestamped(src);
+    { const bool ok = !ts_path2.empty() && ts_path2 != ts_path; if (!ok) ++g_fail;
+      std::printf("  [%s] 2nd save is a DISTINCT file (no overwrite)\n", ok ? "OK  " : "FAIL"); }
+    {
+        const auto saves = savegame::list_saves();
+        bool found1 = false, found2 = false, label_ok = false;
+        for (const auto& s : saves) {
+            if (s.path == ts_path)  { found1 = true; label_ok =
+                s.label.find("pentonville") != std::string::npos &&
+                s.label.find("achilles")    != std::string::npos &&
+                s.label.find("centurion")   != std::string::npos &&
+                s.label.find("1234567 cr")  != std::string::npos; }
+            if (s.path == ts_path2) found2 = true;
+        }
+        if (!found1 || !found2) ++g_fail;
+        std::printf("  [%s] list_saves contains BOTH new files\n", (found1 && found2) ? "OK  " : "FAIL");
+        if (!label_ok) ++g_fail;
+        std::printf("  [%s] label = '<time> - pentonville - achilles - centurion - 1234567 cr'\n",
+                    label_ok ? "OK  " : "FAIL");
+    }
+    {
+        PlayerState by_path;
+        const bool ok = savegame::load(by_path, ts_path) &&
+                        by_path.credits == src.credits &&
+                        by_path.faction_kills[(int)Faction::Pirate] == 17 &&
+                        by_path.hp_valid;
+        if (!ok) ++g_fail;
+        std::printf("  [%s] load-by-path round-trips the new fields\n", ok ? "OK  " : "FAIL");
+    }
+    std::remove(ts_path.c_str());
+    std::remove(ts_path2.c_str());
 
     // ---- 3. failure paths -------------------------------------------------
     std::printf("\n--- failure-path tests (must return false, never crash) ---\n");

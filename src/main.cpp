@@ -466,6 +466,12 @@ struct AppState {
     // the scene re-rolls a fresh variant + ship set each visit.
     bool title_scene_inited = false;
     bool skip_title_at_boot = false;   // --skip-title dev flag
+    // Set when a save is loaded (np-3dp.19): the next Flight frame copies
+    // the loaded PlayerState hp_* snapshot onto the live player Ship
+    // BEFORE the per-frame ship->PlayerState mirror, so reloading a
+    // damaged save keeps you damaged. One-shot; cleared after apply.
+    bool apply_health_pending = false;
+    bool show_load_menu       = false;   // title LOAD picker open (np-3dp.19)
 
     // Title 'galaxy tour' (np-3dp.13): during the ChaseCam variant the hero
     // ship cruises toward a jump hole and 'jumps' (sky reskin + sun repos)
@@ -635,10 +641,18 @@ void init_cb() {
     // reads it without applying the whole save; the full PlayerState load
     // happens after new_game() below.
     if (g.load_slot >= 0 && !g.system_explicit) {
-        const savegame::SlotInfo info = savegame::peek(g.load_slot);
+        // --continue (slot 0) resumes the MOST RECENT timestamped save
+        // (np-3dp.19); an explicit --load N peeks that legacy slot.
+        savegame::SlotInfo info;
+        if (g.load_slot == savegame::k_autosave_slot) {
+            const auto saves = savegame::list_saves();
+            if (!saves.empty()) info = saves.front();
+        } else {
+            info = savegame::peek(g.load_slot);
+        }
         if (info.exists && !info.system.empty()) {
-            std::printf("[save] slot %d recorded system '%s' — loading it\n",
-                        g.load_slot, info.system.c_str());
+            std::printf("[save] resume recorded system '%s' — loading it\n",
+                        info.system.c_str());
             g.system_name = info.system;
         }
     }
@@ -758,13 +772,22 @@ void build_system_scene(bool first_time) {
     // never crash on a bad save. The speed-caps block below reads g.player
     // AFTER this, so a loaded ship/engine tier seeds the right caps.
     if (g.load_slot >= 0) {
-        if (savegame::load(g.player, g.load_slot)) {
+        bool ok = false;
+        if (g.load_slot == savegame::k_autosave_slot) {
+            // --continue: load the most recent timestamped save by path.
+            const auto saves = savegame::list_saves();
+            if (!saves.empty()) ok = savegame::load(g.player, saves.front().path);
+        } else {
+            ok = savegame::load(g.player, g.load_slot);   // explicit slot
+        }
+        if (ok) {
             // If an explicit --system overrode the world we loaded, keep the
             // player's recorded location consistent with that world (the
             // saved current_system would otherwise disagree with reality).
             if (g.system_explicit) g.player.current_system = g.system_name;
-            std::printf("[save] resumed slot %d — %lld cr, ship '%s', system '%s', base '%s'\n",
-                        g.load_slot, (long long)g.player.credits,
+            g.apply_health_pending = g.player.hp_valid;   // restore hull damage
+            std::printf("[save] resumed — %lld cr, ship '%s', system '%s', base '%s'\n",
+                        (long long)g.player.credits,
                         g.player.ship_class_name.c_str(),
                         g.player.current_system.c_str(),
                         g.player.last_docked_base.c_str());
@@ -2830,6 +2853,36 @@ void frame_cb() {
         // damping). Projectiles inherit this in firing.cpp so tracers
         // move with the player's reference frame instead of drifting.
         player->world_velocity = g.camera.velocity;
+        // On the frame after a save load, stamp the loaded damage snapshot
+        // onto the live hull (np-3dp.19), BEFORE the mirror below, so a
+        // reloaded damaged save stays damaged. One-shot.
+        if (g.apply_health_pending) {
+            g.apply_health_pending = false;
+            if (g.player.hp_valid) {
+                player->armor_fore_cm  = g.player.hp_armor_fore;
+                player->armor_aft_cm   = g.player.hp_armor_aft;
+                player->armor_side_cm  = g.player.hp_armor_side;
+                player->shield_fore_cm = g.player.hp_shield_fore;
+                player->shield_aft_cm  = g.player.hp_shield_aft;
+                player->shield_side_cm = g.player.hp_shield_side;
+                player->energy_gj      = g.player.hp_energy;
+                std::printf("[save] applied loaded ship damage to hull\n");
+            }
+        }
+        // Mirror the hull's CURRENT condition into PlayerState every
+        // frame (np-3dp.19) so any save (autosave-on-land, manual)
+        // captures live damage without needing the Ship at the save
+        // site. Applied back to the spawned ship on load/respawn.
+        if (player->alive && g.game.mode == GameMode::Flight) {
+            g.player.hp_valid       = true;
+            g.player.hp_armor_fore  = player->armor_fore_cm;
+            g.player.hp_armor_aft   = player->armor_aft_cm;
+            g.player.hp_armor_side  = player->armor_side_cm;
+            g.player.hp_shield_fore = player->shield_fore_cm;
+            g.player.hp_shield_aft  = player->shield_aft_cm;
+            g.player.hp_shield_side = player->shield_side_cm;
+            g.player.hp_energy      = player->energy_gj;
+        }
     }
     for (Ship& s : g.ships) {
         if (!s.is_player) ship::sync_from_sprite(s);
@@ -3152,6 +3205,10 @@ void frame_cb() {
                     // Bounty progress rides the SAME kill-attribution path
                     // (np-zte.1) — no second source of truth for kills.
                     missions::on_player_kill(g.player, s->faction);
+                    // Career scoreboard (np-3dp.19): tally the kill by the
+                    // victim's faction so the save records lifetime kills.
+                    if ((int)s->faction >= 0 && (int)s->faction < kFactionCount)
+                        g.player.faction_kills[(int)s->faction]++;
                 }
             }
             // Capture the camera basis at the moment of death so the
@@ -4296,24 +4353,76 @@ void frame_cb() {
                     g.show_title = false;
                     std::printf("[title] NEW clicked — entering flight\n");
                 } else if (a == title_screen::Action::LoadGame) {
-                    // Try to load the autosave and enter free flight.
-                    PlayerState restored;
-                    if (savegame::load(restored, savegame::k_autosave_slot)) {
-                        g.player = restored;
-                        g.player.docked = false;
-                        game_state::request_mode(g.game, GameMode::Flight);
-                        g.show_title = false;
-                        g.show_welcome = false;
-                        std::printf("[title] LOAD clicked — autosave loaded\n");
-                    } else {
-                        std::printf("[title] LOAD clicked — no autosave yet; stay on title\n");
-                    }
+                    // Open the save picker (np-3dp.19): a scrollable list of
+                    // every accumulated save, newest first. Selection loads
+                    // that file + enters flight (handled below).
+                    g.show_load_menu = true;
+                    std::printf("[title] LOAD clicked — opening save picker\n");
                 } else if (a == title_screen::Action::Options) {
                     std::printf("[title] OPTIONS clicked — coming soon\n");
                 } else if (a == title_screen::Action::Quit) {
                     std::printf("[title] QUIT clicked — request app quit\n");
                     sapp_request_quit();
                 }
+            }
+
+            // Save picker (np-3dp.19): a centered modal listing every
+            // accumulated save, newest first, each row the full timestamped
+            // title. Click a row to load it + enter flight; Close/Esc backs
+            // out to the menu. Rebuilt each frame from disk so a fresh
+            // autosave shows up without a restart.
+            if (g.show_load_menu) {
+                const ImGuiViewport* vp = ImGui::GetMainViewport();
+                ImGui::SetNextWindowPos(
+                    ImVec2(vp->WorkPos.x + vp->WorkSize.x * 0.5f,
+                           vp->WorkPos.y + vp->WorkSize.y * 0.5f),
+                    ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+                ImGui::SetNextWindowSize(
+                    ImVec2(vp->WorkSize.x * 0.7f, vp->WorkSize.y * 0.6f),
+                    ImGuiCond_Always);
+                ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.03f, 0.03f, 0.05f, 0.96f));
+                ImGui::PushStyleColor(ImGuiCol_Text,     ImVec4(1.0f, 0.78f, 0.24f, 1.0f));
+                if (ImGui::Begin("LOAD GAME", nullptr,
+                                 ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+                                 ImGuiWindowFlags_NoCollapse)) {
+                    const std::vector<savegame::SlotInfo> saves = savegame::list_saves();
+                    if (saves.empty()) {
+                        ImGui::TextUnformatted("No saves yet — land at a base to autosave.");
+                    } else {
+                        ImGui::Text("%zu save(s):", saves.size());
+                        ImGui::Separator();
+                        ImGui::BeginChild("save_list", ImVec2(0, -40), true);
+                        for (const savegame::SlotInfo& s : saves) {
+                            if (ImGui::Selectable(s.label.c_str())) {
+                                PlayerState restored;
+                                if (savegame::load(restored, s.path)) {
+                                    g.player = restored;
+                                    g.player.docked = false;
+                                    g.apply_health_pending = g.player.hp_valid;
+                                    // Re-target the world to the saved system
+                                    // so the scene matches the save.
+                                    if (!g.player.current_system.empty() &&
+                                        g.player.current_system != g.system_name) {
+                                        g.pending_goto = g.player.current_system;
+                                    }
+                                    game_state::request_mode(g.game, GameMode::Flight);
+                                    g.show_title     = false;
+                                    g.show_welcome   = false;
+                                    g.show_load_menu = false;
+                                    std::printf("[title] LOAD -> %s\n", s.path.c_str());
+                                }
+                            }
+                        }
+                        ImGui::EndChild();
+                    }
+                    ImGui::Separator();
+                    if (ImGui::Button("Close", ImVec2(120, 28)) ||
+                        ImGui::IsKeyPressed(ImGuiKey_Escape)) {
+                        g.show_load_menu = false;
+                    }
+                }
+                ImGui::End();
+                ImGui::PopStyleColor(2);
             }
         }
     }

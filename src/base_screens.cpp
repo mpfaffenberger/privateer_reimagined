@@ -167,37 +167,28 @@ void draw_context_strip(ImDrawList* dl, const PlayerState& player,
     dl->AddText(ImVec2(16 + pad, 16 + pad + s0.y + 4.0f), kWhite, line1);
 }
 
-// Minimal save affordance (np-ymp.1) drawn under the context strip: a
-// "Save game (slot 1)" button plus a one-line readout of the most recent
-// autosave (slot 0). The headless harness is the correctness proof; this is
-// purely convenience so you can save from the concourse without poking
-// dev_remote. Manual saves use slot 1 so they never clobber the autosave.
+// Minimal save affordance (np-ymp.1 / np-3dp.19) drawn under the context
+// strip: a "Save game" button that writes a NEW timestamped save (saves
+// accumulate; nothing overwritten) plus a one-line readout of the most
+// recent save on disk. Landing already autosaves; this is the manual
+// save-anytime-at-base convenience.
 void draw_save_widget(PlayerState& player) {
     ImGui::SetCursorScreenPos(ImVec2(16, 92));
-    if (ImGui::Button("Save game (slot 1)", ImVec2(180, 28))) {
+    if (ImGui::Button("Save game", ImVec2(180, 28))) {
         sfx::ui_click();
-        if (savegame::save(player, 1))
-            std::printf("[save] manual save -> slot 1 (%lld cr)\n",
+        if (!savegame::save_timestamped(player).empty())
+            std::printf("[save] manual save (%lld cr)\n",
                         (long long)player.credits);
     }
 
-    // Last-autosave readout from slot 0's metadata (no full load).
-    const savegame::SlotInfo auto0 = savegame::peek(savegame::k_autosave_slot);
-    char info[160];
-    if (auto0.exists) {
-        char when[32] = "?";
-        const std::time_t t = (std::time_t)auto0.timestamp;
-        std::tm tm{};
-#if defined(_WIN32)
-        localtime_s(&tm, &t);
-#else
-        localtime_r(&t, &tm);
-#endif
-        std::strftime(when, sizeof(when), "%Y-%m-%d %H:%M", &tm);
-        std::snprintf(info, sizeof(info), "Last autosave: %s  (%s)",
-                      auto0.label.c_str(), when);
+    // Most-recent save readout (newest by timestamp; no full load).
+    const std::vector<savegame::SlotInfo> saves = savegame::list_saves();
+    char info[256];
+    if (!saves.empty()) {
+        std::snprintf(info, sizeof(info), "Last save: %s",
+                      saves.front().label.c_str());
     } else {
-        std::snprintf(info, sizeof(info), "Last autosave: (none yet)");
+        std::snprintf(info, sizeof(info), "Last save: (none yet)");
     }
     ImGui::SetCursorScreenPos(ImVec2(16, 124));
     ImGui::TextColored(ImVec4(0.78f, 0.67f, 0.24f, 1.0f), "%s", info);

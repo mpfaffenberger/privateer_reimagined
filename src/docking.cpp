@@ -172,11 +172,12 @@ void tick(Docking& d, Camera& cam, GameState& gs, PlayerState& player, float dt)
             player.last_docked_base = d.base_id;
             game_state::request_mode(gs, GameMode::Landed);
             std::printf("[dock] docked at %s\n", d.base_id.c_str());
-            // Autosave the moment we commit to the pad (np-ymp.1). Slot 0 is
-            // the autosave; a manual Save in the concourse uses slot 1+. We
-            // fire here rather than on the Landed mode flip so the saved
+            // Autosave the moment we commit to the pad (np-ymp.1 / np-3dp.19):
+            // a NEW timestamped file every landing, so saves accumulate
+            // without bound and nothing is ever overwritten. Fired here
+            // (not on the Landed mode flip) so the saved
             // `docked`/`last_docked_base` already reflect this dock.
-            if (savegame::save(player, savegame::k_autosave_slot)) {
+            if (!savegame::save_timestamped(player).empty()) {
                 std::printf("[save] autosaved at %s (%lld cr)\n",
                             d.base_id.c_str(), (long long)player.credits);
             }

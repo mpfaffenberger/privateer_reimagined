@@ -25,6 +25,8 @@
 #include "json.h"
 #include "player.h"
 
+#include <algorithm>
+#include <chrono>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
@@ -33,6 +35,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <vector>
 
 namespace fs = std::filesystem;
 
@@ -149,18 +152,29 @@ std::string slot_path(int slot) {
 
 // ---- save -------------------------------------------------------------------
 
-bool save(const PlayerState& p, int slot) {
-    const std::string dir = saves_dir();   // ensures the tree exists
-    if (dir.empty()) return false;
-
-    const long long ts = (long long)std::time(nullptr);
-
-    // Human label for a future load menu: base + credits, e.g.
-    // "achilles - 2000 cr". last_docked_base may be empty pre-first-landing.
-    char label[160];
-    std::snprintf(label, sizeof(label), "%s - %lld cr",
+// Build the full timestamped title (np-3dp.19):
+//   "YYYY-MM-DD HH:MM - <system> - <base> - <ship> - <credits> cr"
+// Unset fields read as placeholders ("deep space" base, "?" system/ship).
+static std::string make_label(const PlayerState& p, long long ts) {
+    char when[32] = "0000-00-00 00:00";   // overwritten below; avoid ?\?- trigraphs
+    const std::time_t tt = (std::time_t)ts;
+    if (std::tm* lt = std::localtime(&tt))
+        std::strftime(when, sizeof(when), "%Y-%m-%d %H:%M", lt);
+    char label[256];
+    std::snprintf(label, sizeof(label), "%s - %s - %s - %s - %lld cr",
+                  when,
+                  p.current_system.empty()  ? "?"          : p.current_system.c_str(),
                   p.last_docked_base.empty() ? "deep space" : p.last_docked_base.c_str(),
+                  p.ship_class_name.empty()  ? "?"          : p.ship_class_name.c_str(),
                   (long long)p.credits);
+    return label;
+}
+
+// Serialize `p` into the full save JSON (version + ts + label + player blob).
+// Shared by the slot + timestamped save entrypoints.
+static std::string serialize_player(const PlayerState& p) {
+    const long long ts = (long long)std::time(nullptr);
+    const std::string label = make_label(p, ts);
 
     JsonWriter w;
     w.begin_object();
@@ -236,24 +250,49 @@ bool save(const PlayerState& p, int slot) {
         // afterburner_fuel removed (np-zte.2 merged pool). Old keys in v3
         // saves are ignored on load; new saves omit the key entirely.
 
+        // career kills per faction (np-3dp.19, v4). Object keyed by faction
+        // NAME (stable across enum reorder, like rep). Counts as STRINGS
+        // for int64 bit-exactness.
+        w.key("faction_kills"); w.member_object_begin();
+          for (int i = 0; i < kFactionCount; ++i) {
+              w.key(faction::to_name((Faction)i));
+              w.value_string(std::to_string((long long)p.faction_kills[i]));
+          }
+        w.end_object();
+
+        // live ship-damage snapshot (np-3dp.19, v4). Absent/hp_valid=false
+        // -> the loaded ship stays at full health.
+        w.key("ship_health"); w.member_object_begin();
+          w.key("valid");       w.value_bool(p.hp_valid);
+          w.key("armor_fore");  w.value_raw(std::to_string(p.hp_armor_fore));
+          w.key("armor_aft");   w.value_raw(std::to_string(p.hp_armor_aft));
+          w.key("armor_side");  w.value_raw(std::to_string(p.hp_armor_side));
+          w.key("shield_fore"); w.value_raw(std::to_string(p.hp_shield_fore));
+          w.key("shield_aft");  w.value_raw(std::to_string(p.hp_shield_aft));
+          w.key("shield_side"); w.value_raw(std::to_string(p.hp_shield_side));
+          w.key("energy");      w.value_raw(std::to_string(p.hp_energy));
+        w.end_object();
+
         w.key("current_system");   w.value_string(p.current_system);
         w.key("last_docked_base"); w.value_string(p.last_docked_base);
         w.key("docked");           w.value_bool(p.docked);
       w.end_object();   // player
     w.end_object();     // root
     w.out += "\n";
+    return w.out;
+}
 
-    // Write to a temp file then rename — a crash mid-write can't clobber an
-    // existing good save (POSIX rename is atomic within a filesystem).
-    const std::string path = slot_path(slot);
-    const std::string tmp  = path + ".tmp";
+// Atomic write: temp file then rename (POSIX rename is atomic within a
+// filesystem), so a crash mid-write can't clobber an existing good save.
+static bool write_atomic(const std::string& path, const std::string& content) {
+    const std::string tmp = path + ".tmp";
     {
         std::ofstream f(tmp, std::ios::binary | std::ios::trunc);
         if (!f) {
             std::fprintf(stderr, "[save] cannot open '%s' for write\n", tmp.c_str());
             return false;
         }
-        f << w.out;
+        f << content;
         if (!f.good()) {
             std::fprintf(stderr, "[save] write error on '%s'\n", tmp.c_str());
             return false;
@@ -267,10 +306,30 @@ bool save(const PlayerState& p, int slot) {
         fs::remove(tmp, ec);
         return false;
     }
+    return true;
+}
 
+bool save(const PlayerState& p, int slot) {
+    if (saves_dir().empty()) return false;   // ensures the tree exists
+    const std::string path = slot_path(slot);
+    if (!write_atomic(path, serialize_player(p))) return false;
     std::printf("[save] wrote slot %d -> %s (%lld cr)\n",
                 slot, path.c_str(), (long long)p.credits);
     return true;
+}
+
+std::string save_timestamped(const PlayerState& p) {
+    const std::string dir = saves_dir();   // ensures the tree exists
+    if (dir.empty()) return {};
+    // Unique filename from nanoseconds-since-epoch: saves never collide and
+    // never overwrite — unbounded accumulation by design (np-3dp.19).
+    const long long nanos = (long long)std::chrono::duration_cast<std::chrono::nanoseconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    const std::string path =
+        (fs::path(dir) / ("save_" + std::to_string(nanos) + ".json")).string();
+    if (!write_atomic(path, serialize_player(p))) return {};
+    std::printf("[save] wrote %s (%lld cr)\n", path.c_str(), (long long)p.credits);
+    return path;
 }
 
 // ---- load -------------------------------------------------------------------
@@ -278,10 +337,16 @@ bool save(const PlayerState& p, int slot) {
 bool load(PlayerState& p, int slot) {
     const std::string path = slot_path(slot);
     if (path.empty()) return false;
+    return load(p, path);
+}
+
+bool load(PlayerState& p, const std::string& path) {
+    if (path.empty()) return false;
+    const int slot = -1;   // path-based load; the slot # is only for logs
 
     // Missing file is the common, non-error case (no save yet) — quiet-ish.
     if (!fs::exists(fs::path(path))) {
-        std::printf("[save] slot %d: no file at %s\n", slot, path.c_str());
+        std::printf("[save] no file at %s\n", path.c_str());
         return false;
     }
 
@@ -404,6 +469,35 @@ bool load(PlayerState& p, int slot) {
         // same as rep is clamped above.
         for (int& m : out.missiles) { if (m < 0) m = 0; }
 
+        // career kills per faction (np-3dp.19, v4). Read by faction NAME;
+        // missing keys / older saves stay 0. STRING preferred (bit-exact),
+        // legacy number tolerated.
+        if (const json::Value* fk = pl.find("faction_kills"); fk && fk->is_object()) {
+            for (const auto& [name, val] : fk->as_object()) {
+                const Faction f = faction::from_name(name);
+                if (f == Faction::Count) continue;
+                int64_t v = 0;
+                if (val.is_string())      v = std::strtoll(val.as_string().c_str(), nullptr, 10);
+                else if (val.is_number()) v = (int64_t)val.as_number();
+                if (v < 0) v = 0;
+                out.faction_kills[(int)f] = v;
+            }
+        }
+
+        // live ship-damage snapshot (np-3dp.19, v4). hp_valid gates whether
+        // it's applied to the spawned ship; absent on older saves -> false.
+        if (const json::Value* sh = pl.find("ship_health"); sh && sh->is_object()) {
+            const json::Value& h = *sh;
+            out.hp_valid       = h.contains("valid")       ? h["valid"].bool_or(false)            : false;
+            out.hp_armor_fore  = h.contains("armor_fore")  ? (float)h["armor_fore"].number_or(0)  : 0.0f;
+            out.hp_armor_aft   = h.contains("armor_aft")   ? (float)h["armor_aft"].number_or(0)   : 0.0f;
+            out.hp_armor_side  = h.contains("armor_side")  ? (float)h["armor_side"].number_or(0)  : 0.0f;
+            out.hp_shield_fore = h.contains("shield_fore") ? (float)h["shield_fore"].number_or(0) : 0.0f;
+            out.hp_shield_aft  = h.contains("shield_aft")  ? (float)h["shield_aft"].number_or(0)  : 0.0f;
+            out.hp_shield_side = h.contains("shield_side") ? (float)h["shield_side"].number_or(0) : 0.0f;
+            out.hp_energy      = h.contains("energy")      ? (float)h["energy"].number_or(0)      : 0.0f;
+        }
+
         out.current_system   = pl.contains("current_system")   ? pl["current_system"].string_or("")   : "";
         out.last_docked_base = pl.contains("last_docked_base") ? pl["last_docked_base"].string_or("") : "";
         out.docked           = pl.contains("docked")           ? pl["docked"].bool_or(false)          : false;
@@ -414,18 +508,18 @@ bool load(PlayerState& p, int slot) {
         return false;
     }
 
-    std::printf("[save] loaded slot %d (%lld cr, system '%s', base '%s')\n",
-                slot, (long long)p.credits, p.current_system.c_str(),
+    std::printf("[save] loaded %s (%lld cr, system '%s', base '%s')\n",
+                path.c_str(), (long long)p.credits, p.current_system.c_str(),
                 p.last_docked_base.c_str());
     return true;
 }
 
 // ---- peek -------------------------------------------------------------------
 
-SlotInfo peek(int slot) {
+SlotInfo peek_path(const std::string& path) {
     SlotInfo info;
-    const std::string path = slot_path(slot);
     if (path.empty() || !fs::exists(fs::path(path))) return info;
+    info.path = path;
 
     const json::Value root = json::parse_file(path);
     if (!root.is_object()) return info;   // corrupt -> exists stays false
@@ -438,6 +532,7 @@ SlotInfo peek(int slot) {
             const json::Value& pl = *pv;
             info.base   = pl.contains("last_docked_base") ? pl["last_docked_base"].string_or("") : "";
             info.system = pl.contains("current_system")   ? pl["current_system"].string_or("")   : "";
+            info.ship   = pl.contains("ship_class_name")  ? pl["ship_class_name"].string_or("")  : "";
             if (const json::Value* c = pl.find("credits")) {
                 if (c->is_string())      info.credits = std::strtoll(c->as_string().c_str(), nullptr, 10);
                 else if (c->is_number()) info.credits = (int64_t)c->as_number();
@@ -448,6 +543,39 @@ SlotInfo peek(int slot) {
         info = SlotInfo{};   // anything unexpected -> treat as absent
     }
     return info;
+}
+
+SlotInfo peek(int slot) {
+    const std::string path = slot_path(slot);
+    if (path.empty()) return SlotInfo{};
+    return peek_path(path);
+}
+
+// ---- list -------------------------------------------------------------------
+
+std::vector<SlotInfo> list_saves() {
+    std::vector<SlotInfo> out;
+    const std::string dir = saves_dir();
+    if (dir.empty()) return out;
+
+    std::error_code ec;
+    for (const auto& ent : fs::directory_iterator(fs::path(dir), ec)) {
+        if (ec) break;
+        if (!ent.is_regular_file()) continue;
+        const std::string fname = ent.path().filename().string();
+        // Only our save files; skip the .tmp scratch + anything else.
+        if (fname.rfind("save_", 0) != 0) continue;
+        if (ent.path().extension() != ".json") continue;
+        SlotInfo info = peek_path(ent.path().string());
+        if (info.exists) out.push_back(std::move(info));
+    }
+    // Newest first (by embedded unix timestamp; ties broken by path so the
+    // order is stable).
+    std::sort(out.begin(), out.end(), [](const SlotInfo& a, const SlotInfo& b) {
+        if (a.timestamp != b.timestamp) return a.timestamp > b.timestamp;
+        return a.path > b.path;
+    });
+    return out;
 }
 
 } // namespace savegame

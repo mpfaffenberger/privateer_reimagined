@@ -124,6 +124,29 @@ struct PlayerState {
     // board you accepted survives a save/load.
     std::vector<ActiveMission> missions;
 
+    // ---- career stats: kills per faction (np-3dp.19) ----------------------
+    // Total ships the player has personally destroyed, bucketed by the
+    // victim's faction. Indexed by Faction; serialized by stable faction
+    // NAME (like rep) so an enum reorder never scrambles old saves.
+    // Purely a record/scoreboard today; missions track their own progress.
+    int64_t faction_kills[kFactionCount] = {};
+
+    // ---- live ship damage snapshot (np-3dp.19) ---------------------------
+    // The player Ship's per-facing armor/shield + energy reserve, mirrored
+    // here each frame so a save captures the hull's CURRENT condition (land
+    // damaged -> reload damaged). hp_valid=false means "no snapshot yet"
+    // (fresh new_game) -> the spawned ship stays at the full health
+    // heal_to_full gives it. Units: cm-of-durasteel (armor/shield), GJ
+    // (energy) — same as Ship.
+    bool  hp_valid       = false;
+    float hp_armor_fore  = 0.0f;
+    float hp_armor_aft   = 0.0f;
+    float hp_armor_side  = 0.0f;
+    float hp_shield_fore = 0.0f;
+    float hp_shield_aft  = 0.0f;
+    float hp_shield_side = 0.0f;
+    float hp_energy      = 0.0f;
+
     // ---- location ---------------------------------------------------------
     std::string current_system;      // "troy" (assets/systems/<name>.json)
     std::string last_docked_base;    // "" until first landing

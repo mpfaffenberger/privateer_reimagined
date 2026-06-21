@@ -372,6 +372,18 @@ target_compile_definitions(test_ai_brain PRIVATE
     ECONOMY_HEADLESS OUTFITTING_HEADLESS MISSIONS_HEADLESS COMM_HEADLESS
 )
 
+# Round-trip proof for the save system (np-ymp.1 + np-3dp.19 timestamped
+# unlimited saves + faction kills + ship-damage snapshot).
+#   cmake --build build --target test_savegame && ./build/test_savegame
+add_executable(test_savegame EXCLUDE_FROM_ALL
+    tools/test_savegame.cpp
+    src/savegame.cpp src/player.cpp src/json.cpp src/faction.cpp
+)
+target_include_directories(test_savegame PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/third_party
+)
+
 # ---------------------------------------------------------------------------
 # `dist` — portable, relocatable game folder (build/dist/).
 #

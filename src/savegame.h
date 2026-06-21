@@ -42,6 +42,7 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
 struct PlayerState;
 
@@ -52,7 +53,11 @@ namespace savegame {
 // v3 added missile inventory + afterburner fuel (np-zte.2). load() tolerates
 // older saves by defaulting the new keys (missiles -> 0, fuel -> full tank),
 // so a v1/v2 save keeps working — the version bump just records the addition.
-constexpr int k_format_version = 3;
+// v4 (np-3dp.19) added career faction-kill tallies + a live ship-damage
+// snapshot (per-facing armor/shield + energy), and switched the on-disk
+// label to the full timestamped title. Older saves default the new keys
+// (kills -> 0, hp_valid -> false => spawn at full health).
+constexpr int k_format_version = 4;
 
 // Slot 0 is the autosave; manual saves start at 1.
 constexpr int k_autosave_slot = 0;
@@ -67,13 +72,23 @@ std::string slot_path(int slot);
 // Serialize `p` to slot `slot` (atomic-ish: write a temp then rename so a
 // crash mid-write can't truncate an existing good save). Returns false on
 // any IO failure (logged). Embeds version + a unix timestamp + a human
-// `label` (base name / credits) for the future load menu.
+// `label` (the full timestamped title) for the load menu.
 bool save(const PlayerState& p, int slot);
+
+// Write `p` to a brand-new uniquely-named file (save_<unix_nanos>.json) so
+// saves ACCUMULATE without bound — nothing is ever overwritten (np-3dp.19).
+// This is the autosave-on-land + manual-save path. Returns the file path on
+// success ("" on failure, logged).
+std::string save_timestamped(const PlayerState& p);
 
 // Deserialize slot `slot` into `p` (overwriting it wholesale on success).
 // Returns false — leaving `p` untouched — if the file is missing, corrupt,
 // or from an unsupported format version. Never throws.
 bool load(PlayerState& p, int slot);
+
+// Deserialize an explicit save file PATH into `p` (the load-menu path).
+// Same guarantees as the slot overload.
+bool load(PlayerState& p, const std::string& path);
 
 // Lightweight slot metadata for a load menu / "last autosave" readout,
 // read without applying the save. `exists` is false when the slot file is
@@ -82,11 +97,21 @@ struct SlotInfo {
     bool        exists    = false;
     int         version   = 0;
     int64_t     timestamp = 0;          // unix seconds, 0 if absent
-    std::string label;                  // "Achilles - 2000 cr"
+    std::string label;                  // full timestamped title
     std::string base;                   // last_docked_base
     std::string system;                 // current_system
+    std::string ship;                   // ship_class_name
     int64_t     credits   = 0;
+    std::string path;                   // absolute file path (for load())
 };
 SlotInfo peek(int slot);
+
+// Read metadata for an explicit save file path (load-menu rows).
+SlotInfo peek_path(const std::string& path);
+
+// Every save file in the saves dir, newest-first (by embedded timestamp).
+// Scans save_*.json; corrupt/unreadable files are skipped. Each entry's
+// `path` feeds load(p, path). Unbounded — reflects the full accumulation.
+std::vector<SlotInfo> list_saves();
 
 } // namespace savegame
