@@ -2265,15 +2265,6 @@ void frame_cb() {
     // np-3dp.4 since the title screen owns the chrome now.)
     if (g.show_title)   dt = 0.0f;
 
-    // While the title is up the music director plays the menu bed
-    // (OPENING.ADL -> opening_00.wav). Force the GameMode so music::update
-    // selects it; the regular sim tick (Flight etc.) takes over the moment
-    // the title is dismissed (NewGame/LoadGame paths set show_title=false
-    // and call game_state::request_mode(Flight), see np-3dp.6).
-    if (g.show_title) {
-        g.game.mode = GameMode::Menu;
-    }
-
     // Title scene (np-3dp): advance the patrol ships even while the sim
     // is frozen, otherwise the title would render static ships and the
     // 'fly by' feel wouldn't read. Lazy-init on the first frame the
@@ -2668,8 +2659,18 @@ void frame_cb() {
     // Same threat oracle the autopilot/jump gates use, so the music switches
     // exactly when the danger does. In flight there's no docked base, so the
     // base_id is empty; dt drives the gain lerps + combat hysteresis.
-    music::update(g.game.mode, g.camera.position,
-                  g.player.last_docked_base.c_str(), dt);
+    //
+    // While the title is up we feed the director a Menu mode WITHOUT
+    // touching the real g.game.mode (np-3dp.6) — the render gate above
+    // routes any non-Flight mode to the stub screen + early return, which
+    // would black out the title scene. So the mode stays Flight for
+    // rendering; only the music sees Menu and plays the OPENING bed.
+    const GameMode music_mode = g.show_title ? GameMode::Menu : g.game.mode;
+    // dt is 0 while the title freezes the sim, but the music crossfade
+    // needs real seconds to lerp the OPENING bed in — feed it raw_dt then.
+    const float music_dt = g.show_title ? raw_dt : dt;
+    music::update(music_mode, g.camera.position,
+                  g.player.last_docked_base.c_str(), music_dt);
 
     // Audio smoke-test buttons (debug panel). 2D = centered blip; 3D =
     // blip at the selected nav point (or 2km ahead when none selected,
