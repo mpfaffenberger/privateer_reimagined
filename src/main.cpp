@@ -1109,7 +1109,7 @@ void build_system_scene(bool first_time) {
     // player persists but its atlas pointer must be re-resolved each time.
     {
         const std::string pc = g_player_ship_override.empty()
-                             ? std::string("tarsus") : g_player_ship_override;
+                             ? std::string("centurion") : g_player_ship_override;
         const std::string pstem = resolve_ship_atlas_stem("ships/" + pc + "/atlas_manifest");
         auto [it, inserted] = g.ship_sprite_atlases.try_emplace(pstem, ShipSpriteAtlas{});
         if (inserted && !load_ship_sprite_atlas(pstem, it->second, g.sprite_art)) {

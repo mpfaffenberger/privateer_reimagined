@@ -19,14 +19,15 @@ namespace player {
 PlayerState new_game(const std::string& start_system) {
     PlayerState p;
     p.credits         = k_new_game_credits;
-    p.ship_class_name = "tarsus";
-    // Canonical Tarsus loadout: 2x Mass Driver, matching
-    // assets/ships/tarsus/ship.json default_guns and the player-spawn
-    // block in main.cpp (which sources the same types from the Tarsus
-    // ShipClass). This pure-data layer keeps no catalog dependency (see
-    // file header), so the literal pair is intentional — it just has to
-    // agree with the class default_guns, which it does (np-e3x).
-    p.gun_mounts      = { "mass_driver", "mass_driver" };
+    p.ship_class_name = "centurion";
+    // Centurion loadout: 4x Tachyon Cannon, matching the player-spawn
+    // block in main.cpp (which sources the same types from the
+    // Centurion ShipClass). This pure-data layer keeps no catalog
+    // dependency (see file header), so the literal quadruple is
+    // intentional — it just has to agree with the class default_guns,
+    // which it does (np-e3x).
+    p.gun_mounts      = { "tachyon_cannon", "tachyon_cannon",
+                           "tachyon_cannon", "tachyon_cannon" };
     p.current_system  = start_system;
     // Starter missile loadout (np-zte.2). Afterburner now shares the
     // ship's energy bank (no separate fuel tank to initialize).
