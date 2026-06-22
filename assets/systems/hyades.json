@@ -10,7 +10,7 @@
     {
       "sprite": "sprites/mining_base",
       "position": [
-        133333,
+        -133333,
         66667,
         66667
       ],

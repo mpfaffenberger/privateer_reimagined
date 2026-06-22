@@ -67,8 +67,7 @@ constexpr float k_decision_hz = 5.0f;
 // right; 0.5 is the middle. Applied in LeadPursuit (when firing) + AttackRun.
 constexpr float k_fire_throttle = 0.5f;
 
-// EVADE/jink magnitude (s9.4.3): jitter = f3 + RNG*30/32768.
-constexpr float k_evade_jitter_max = 30.0f;
+// EVADE/jink magnitude (s9.4.3): jitter is keyed from f3.
 constexpr float k_evade_f3_default = 75.0f;
 
 // Comm/taunt bark cooldown (s11.1).

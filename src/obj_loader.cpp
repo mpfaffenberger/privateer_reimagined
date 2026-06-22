@@ -161,9 +161,7 @@ bool load_obj_text(const std::string& text, Mesh& out) {
     std::string line;
     bool had_normals = false;
 
-    int line_no = 0;
     while (std::getline(in, line)) {
-        line_no++;
         // strip comments + CR
         size_t hash = line.find('#');
         if (hash != std::string::npos) line.erase(hash);

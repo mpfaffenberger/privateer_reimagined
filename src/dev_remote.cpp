@@ -211,9 +211,10 @@ void handle_camera_set(int fd, const std::string& body) {
     c.kind = Command::Kind::SetCamera;
 
     float x, y, z;
-    if (extract_float(body, "x", &x) &
-        extract_float(body, "y", &y) &
-        extract_float(body, "z", &z)) {
+    const bool has_x = extract_float(body, "x", &x);
+    const bool has_y = extract_float(body, "y", &y);
+    const bool has_z = extract_float(body, "z", &z);
+    if (has_x && has_y && has_z) {
         c.has_pos = true;
         c.pos = { x, y, z };
     }

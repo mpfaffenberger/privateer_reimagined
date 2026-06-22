@@ -69,6 +69,7 @@ struct Autopilot {
     int            nav_index = -1;                 // index into system.nav_points
     std::string    nav_name;                       // cached for the HUD indicator
     HMM_Vec3       target    = { 0.0f, 0.0f, 0.0f };
+    HMM_Vec3       start_pos = { 0.0f, 0.0f, 0.0f }; // position when autopilot engaged
     float          log_accum = 0.0f;               // approach-log throttle
 
     // Transient HUD banner (engage/disengage/refusal flashes). Drawn by
@@ -91,12 +92,14 @@ namespace autopilot {
 // you in close. Pairs with the 15 km radar/target-lock ceiling — the
 // autopilot drops out at the same range past which contacts disappear.
 constexpr float k_arrival_radius_m = 15000.0f; // "we're here" — ease to a stop
-constexpr float k_threat_radius_m  = 8000.0f;  // hostile bubble for the gate
-constexpr float k_stop_speed       = 5.0f;     // u/s below which Arriving -> Idle
-constexpr float k_turn_rate        = 2.0f;     // facing-slerp time constant (1/s)
-constexpr float k_brake_rate       = 3.0f;     // arrival velocity-ease rate (1/s)
-constexpr float k_msg_secs         = 2.0f;     // HUD banner dwell time
-constexpr float k_cruise_speed     = 3000.0f;  // autopilot cruising speed (m/s)
+constexpr float k_navpoint_break_m  = 15000.0f; // non-target nav proximity cancels autopilot
+constexpr float k_navpoint_break_after_m = 30000.0f; // ignore nearby navs until we've moved this far
+constexpr float k_threat_radius_m   = 15000.0f; // hostile bubble for the gate
+constexpr float k_stop_speed        = 5.0f;     // u/s below which Arriving -> Idle
+constexpr float k_turn_rate         = 2.0f;     // facing-slerp time constant (1/s)
+constexpr float k_brake_rate        = 3.0f;     // arrival velocity-ease rate (1/s)
+constexpr float k_msg_secs          = 2.0f;     // HUD banner dwell time
+constexpr float k_cruise_speed      = 5000.0f;  // autopilot cruising speed (m/s)
 
 // True while the autopilot owns the ship — main.cpp uses this to mute
 // pilot thrust/aim/cruise so manual physics doesn't double-drive the
@@ -119,6 +122,7 @@ EngageResult try_engage(Autopilot& a, Camera& cam,
 // the manual-input cancel, the hostile drop-out, and arrival.
 void disengage(Autopilot& a, Camera& cam, const char* reason);
 
-void tick(Autopilot& a, Camera& cam, float dt, HMM_Vec3 sun_pos);
+void tick(Autopilot& a, Camera& cam, const StarSystem& system,
+          float dt, HMM_Vec3 sun_pos);
 
 } // namespace autopilot

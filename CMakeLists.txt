@@ -287,6 +287,10 @@ if(MSVC)
 else()
     target_compile_options(new_privateer PRIVATE
         -Wall -Wextra -Wno-unused-parameter -Wno-unused-function
+        # HandmadeMath vectors/quats are unions with nested scalar/array views;
+        # Clang's -Wmissing-braces complains about clean HMM_Vec3{...} syntax.
+        # Keep the useful warnings, drop the aggregate-layout noise.
+        -Wno-missing-braces
     )
 endif()
 

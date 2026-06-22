@@ -23,6 +23,7 @@
 #include "firing.h"
 #include "hazards.h"
 #include "perception.h"
+#include "sfx.h"
 #include "shield.h"
 #include "ship.h"
 #include "ship_class.h"
@@ -505,7 +506,6 @@ void draw_player_status(const ShipRegistry& ships) {
     if (!player_p) return;
     const Ship& player = *player_p;
 
-    const auto sz = screen_size();
     constexpr float w = 280.0f, h = 184.0f, margin = 16.0f;
     ImGui::SetNextWindowPos(ImVec2(margin, margin), ImGuiCond_Always);
     ImGui::SetNextWindowSize(ImVec2(w, h), ImGuiCond_Always);
@@ -851,7 +851,6 @@ void build(const Camera& cam, const StarSystem& system, int selected_nav,
     draw_crosshair(fly_by_wire);
     draw_aim_cursor(mouse_x, mouse_y, fly_by_wire);
     draw_nav_reticle(cam, system, selected_nav);
-    draw_nav_labels (cam, system);
     draw_player_status(ships);
     draw_nav_mfd   (cam, system, selected_nav, dock_prompt, dock_ready);
     draw_target_mfd(cam, ships, target_ship_id);
@@ -1147,6 +1146,21 @@ void build_navmap(const Camera& cam, const StarSystem& system,
     }
     ImGui::End();
     pop_hud_style();
+
+    // N cycles the selected nav while the map is up. Polled here (not in
+    // event_cb) so the cycle still works when ImGui has keyboard focus
+    // because the mouse is hovering the navmap — event_cb's branch on
+    // N lives after ImGui and an ImGui-focused window would otherwise
+    // eat the keypress. Same edge-triggered idiom as the Esc close below.
+    if (ImGui::IsKeyPressed(ImGuiKey_N)) {
+        if (!system.nav_points.empty()) {
+            const int n = (int)system.nav_points.size();
+            selected_nav_in_out = (selected_nav_in_out + 1) % n;
+            sfx::ui_click();
+            std::printf("[nav] target → %s\n",
+                        system.nav_points[selected_nav_in_out].name.c_str());
+        }
+    }
 
     // ESC closes too. Title-bar X also flips `open` to false.
     if (!open || ImGui::IsKeyPressed(ImGuiKey_Escape)) {

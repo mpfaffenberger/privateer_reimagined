@@ -454,7 +454,17 @@ void draw_missions(BaseContext& ctx) {
     ImGui::Text("ACTIVE  %zu", p.missions.size());
     ImGui::PopStyleColor();
 
-    const ImVec2 child_sz(sw - 56, (sh - 92 - 70) * 0.5f);
+    // Split the screen height between the two panes (Available + Active).
+    // The vertical accounting must clear:
+    //   * 92  top reservation   — totals strip (62..92) and the "AVAILABLE MISSIONS" label (at y=92).
+    //   * 24  inter-pane gap    — gap between the bottom of pane #1 and the "ACTIVE MISSIONS" label at y=92+child_sz.y+24.
+    //   * 18  label line        — ~18 px for "ACTIVE MISSIONS" itself.
+    //   * 70  bottom reservation — BACK button at ss.h - 56 spanning 32 px, so clear with slack.
+    // The old formula (sh - 92 - 70) forgot the 24+18 gap-and-label, so the
+    // active child overlapped the BACK button and only its bottom sliver
+    // was clickable (issue #1).
+    const ImVec2 child_sz(sw - 56, (sh - 92 - 24 - 18 - 70) * 0.5f);
+
 
     constexpr ImGuiTableFlags tflags =
         ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerH |
@@ -554,10 +564,20 @@ void draw_missions(BaseContext& ctx) {
 
             ImGui::TableNextColumn();
             if (am.type == (int)MissionType::CargoDelivery && am.dest_base == ctx.base_id) {
-                if (ImGui::SmallButton("Deliver")) deliver_id = am.id;
+                // `###mission_id` suffix tells Dear ImGui to use the suffix
+                // as the widget ID while still showing "Deliver" to the
+                // player — keeps the ID unique per row even when several
+                // rows share the same label, without extra PushID bookkeeping.
+                char label[80];
+                std::snprintf(label, sizeof(label), "Deliver###%s", am.id.c_str());
+                if (ImGui::SmallButton(label)) deliver_id = am.id;
                 ImGui::SameLine();
             }
-            if (ImGui::SmallButton("Abandon")) abandon_id = am.id;
+            {
+                char label[80];
+                std::snprintf(label, sizeof(label), "Abandon###%s", am.id.c_str());
+                if (ImGui::SmallButton(label)) abandon_id = am.id;
+            }
 
             ImGui::PopID();
         }

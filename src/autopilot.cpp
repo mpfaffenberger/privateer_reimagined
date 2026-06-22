@@ -13,6 +13,7 @@
 
 #include "camera.h"
 #include "hazards.h"
+#include "look_rotation.h"
 #include "sfx.h"
 #include "system_def.h"
 #include "threat.h"
@@ -24,24 +25,11 @@
 
 namespace {
 
-// Shortest-arc orientation that points the camera's default forward (-Z)
-// at `dir`, world +Y up. Twin of docking.cpp's facing_quat — kept local
-// because it's a 6-line one-off the slerp smooths anyway; promoting it to
-// shared camera API is a fine future refactor but not worth the coupling
-// for two callers today.
-HMM_Quat facing_quat(HMM_Vec3 dir) {
-    const HMM_Vec3 def_fwd = HMM_V3(0.0f, 0.0f, -1.0f);
-    const HMM_Vec3 axis    = HMM_Cross(def_fwd, dir);
-    const float    sin2    = HMM_DotV3(axis, axis);
-    if (sin2 <= 1e-10f) {
-        return HMM_Q(0.0f, 0.0f, 0.0f, 1.0f);
-    }
-    const float    sin_a = std::sqrt(sin2);
-    const float    cos_a = std::fmax(-1.0f, std::fmin(1.0f, HMM_DotV3(def_fwd, dir)));
-    const float    angle = std::atan2(sin_a, cos_a);
-    const HMM_Vec3 unit  = HMM_DivV3F(axis, sin_a);
-    return HMM_QFromAxisAngle_RH(unit, angle);
-}
+// World up used to build the autopilot's target orientation. Keeping it
+// world-aligned (not camera-relative) means a 180° yaw slews through
+// yaw, not a barrel roll — `look_rotation::make` builds the basis with
+// `up` as a reference, so the resulting pose stays right-side-up.
+constexpr HMM_Vec3 k_world_up = { 0.0f, 1.0f, 0.0f };
 
 // Frame-rate-independent asymptotic lerp factor (same shape as
 // Camera::integrate's cruise smoothing).
@@ -84,6 +72,7 @@ EngageResult try_engage(Autopilot& a, Camera& cam,
     a.nav_index = selected_nav;
     a.nav_name  = nav.name;
     a.target    = nav.position;
+    a.start_pos = cam.position;
     a.log_accum = 0.0f;
     // Stash the player's normal afterburn cap and bump it to the high
     // autopilot cruising speed. Restored in disengage so manual flight
@@ -111,7 +100,8 @@ void disengage(Autopilot& a, Camera& cam, const char* reason) {
     set_msg(a, reason);
 }
 
-void tick(Autopilot& a, Camera& cam, float dt, HMM_Vec3 sun_pos) {
+void tick(Autopilot& a, Camera& cam, const StarSystem& system,
+          float dt, HMM_Vec3 sun_pos) {
     // Banner decay runs unconditionally so a refusal flash ("NO NAV
     // SELECTED") fades even though we never left Idle.
     if (a.msg_timer_s > 0.0f) {
@@ -128,6 +118,21 @@ void tick(Autopilot& a, Camera& cam, float dt, HMM_Vec3 sun_pos) {
         std::printf("[autopilot] HOSTILES detected — dropping autopilot\n");
         disengage(a, cam, "AUTOPILOT DISENGAGED - HOSTILES");
         return;
+    }
+
+    const float traveled = HMM_LenV3(HMM_SubV3(cam.position, a.start_pos));
+    if (traveled >= k_navpoint_break_after_m) {
+        for (int i = 0; i < (int)system.nav_points.size(); ++i) {
+            if (i == a.nav_index) continue; // reaching the chosen target is handled below
+            const NavPointDef& nav = system.nav_points[i];
+            const float d = HMM_LenV3(HMM_SubV3(nav.position, cam.position));
+            if (d <= k_navpoint_break_m) {
+                std::printf("[autopilot] within %.0fu of %s after %.0fu traveled — dropping autopilot\n",
+                            k_navpoint_break_m, nav.name.c_str(), traveled);
+                disengage(a, cam, "AUTOPILOT DISENGAGED - NAVPOINT");
+                return;
+            }
+        }
     }
 
     const HMM_Vec3 to_t = HMM_SubV3(a.target, cam.position);
@@ -156,10 +161,15 @@ void tick(Autopilot& a, Camera& cam, float dt, HMM_Vec3 sun_pos) {
         }
     }
 
-    // Swing the nose toward the nav (shortest-arc slerp, same feel as
-    // the docking approach).
+    // Swing the nose toward the nav. Build the target pose from a
+    // (-dir, world_up) basis instead of a shortest-arc slerp so a 180°
+    // yaw slews through yaw rather than rolling the ship upside-down.
+    // `look_rotation::make` aligns +Z along its argument; the camera
+    // looks down -Z, so we feed it -dir so -Z (camera forward) ends
+    // up pointing at the target.
+    const HMM_Quat want = look_rotation::make(HMM_MulV3F(dir, -1.0f), k_world_up);
     cam.orientation = HMM_NormQ(HMM_SLerp(cam.orientation, ease_k(k_turn_rate, dt),
-                                          facing_quat(dir)));
+                                          want));
 
     if (a.phase == AutopilotPhase::Cruising) {
         // Reuse the camera's cruise engine: drive the throttle to full

@@ -19,7 +19,7 @@
     {
       "sprite": "sprites/mining_base",
       "position": [
-        166667,
+        -166667,
         -133333,
         -200000
       ],
@@ -28,7 +28,7 @@
     {
       "sprite": "sprites/helen_planet",
       "position": [
-        166667,
+        -166667,
         -66667,
         100000
       ],

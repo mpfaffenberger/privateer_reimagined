@@ -40,8 +40,7 @@ HMM_Vec3 base_repulsion(const std::vector<NavPointDef>& navs,
         if (!is_base_kind(n.kind)) continue;
         const HMM_Vec3 d   = HMM_SubV3(other_pos, n.position);
         const float    d2  = HMM_DotV3(d, d);
-        const float    wr2 = warn_radius   * warn_radius;
-        const float    nf2 = no_fly_radius * no_fly_radius;
+        const float    wr2 = warn_radius * warn_radius;
         if (d2 >= wr2 || d2 < 1e-6f) continue;        // out of warn zone, or coincident
         const float dist = std::sqrt(d2);
         // Linear ramp: 0 at warn_radius, 1.0 at no_fly_radius (and beyond).

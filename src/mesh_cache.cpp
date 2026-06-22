@@ -32,8 +32,7 @@
 
 namespace {
 
-constexpr char     kMagic[8]  = { 'N','P','M','E','S','H','0','1' };
-constexpr uint32_t kMagicSize = sizeof(kMagic);
+constexpr char kMagic[8] = { 'N','P','M','E','S','H','0','1' };
 
 std::string cache_path_for(const std::string& obj_path) {
     namespace fs = std::filesystem;

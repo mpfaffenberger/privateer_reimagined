@@ -3,6 +3,7 @@
 #include "ship_sprite.h"        // ShipSpriteObject, ShipSpriteAtlas, load helpers
 #include "sprite.h"             // SpriteArt, SpriteObject
 #include "HandmadeMath.h"
+#include "look_rotation.h"
 
 #include <algorithm>
 #include <chrono>
@@ -265,22 +266,7 @@ void init(Category cat,
 
 // Build a quaternion that points the sprite's +Z nose along `dir`
 // (world space), with `up` as the reference up. Used so each ship faces
-// the direction it's flying.
-HMM_Quat look_rotation(HMM_Vec3 dir, HMM_Vec3 up) {
-    const HMM_Vec3 f = HMM_NormV3(dir);
-    HMM_Vec3 r = HMM_Cross(up, f);
-    const float rlen = HMM_LenV3(r);
-    if (rlen < 1e-4f) r = HMM_V3(1, 0, 0);   // dir parallel to up: fallback
-    else              r = HMM_DivV3F(r, rlen);
-    const HMM_Vec3 u = HMM_Cross(f, r);
-    // Column-major basis [r u f] -> rotation matrix -> quaternion.
-    HMM_Mat4 m = HMM_M4D(1.0f);
-    m.Columns[0] = HMM_V4(r.X, r.Y, r.Z, 0.0f);
-    m.Columns[1] = HMM_V4(u.X, u.Y, u.Z, 0.0f);
-    m.Columns[2] = HMM_V4(f.X, f.Y, f.Z, 0.0f);
-    return HMM_M4ToQ_RH(m);
-}
-
+// the direction it's flying. Now provided by look_rotation.h.
 void tick(float dt) {
     // --- ChaseCam variant: hero ship cruising straight; camera orbits. -
     if (g.variant == Variant::ChaseCam) {
@@ -330,7 +316,7 @@ void tick(float dt) {
         // travel direction).
         ShipSpriteObject& s = g.patrol[0];
         s.position    = g.chase_ship_pos;
-        s.orientation = look_rotation(HMM_V3(0, 0, 1), HMM_V3(0, 1, 0));
+        s.orientation = look_rotation::make(HMM_V3(0, 0, 1), HMM_V3(0, 1, 0));
         return;
     }
 
@@ -361,7 +347,7 @@ void tick(float dt) {
         s.position = pos;
         // Face the direction of travel: +right * dir.
         const HMM_Vec3 travel = HMM_MulV3F(g.anchor_right, m.dir);
-        s.orientation = look_rotation(travel, g.anchor_up);
+        s.orientation = look_rotation::make(travel, g.anchor_up);
     }
 }
 

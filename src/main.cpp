@@ -2435,9 +2435,9 @@ void frame_cb() {
                                            HMM_V3(side, high, along));
             }
             g.title_scene_inited = true;
-            std::printf("[title_scene] init cat=%d preset='%s' ship_atlases=%zu\n",
+            std::printf("[title_scene] init cat=%d preset='%s' category='%s'\n",
                         cat, title_scene::star_preset(chosen),
-                        title_scene::category_label(chosen), /*placeholder*/(size_t)0);
+                        title_scene::category_label(chosen));
         }
         // Re-anchor the patrol so the ships stay in view regardless of
         // the player's position in the system. We orbit around a point
@@ -2840,7 +2840,7 @@ void frame_cb() {
     // orients toward the selected nav, winds up the cruise engine, and
     // eases to a stop on arrival (or drops out if threat:: trips). No-op
     // in free flight. Runs after manual physics for the same reason.
-    autopilot::tick(g.autopilot, g.camera, dt, g.sun.position);
+    autopilot::tick(g.autopilot, g.camera, g.system, dt, g.sun.position);
 
     // ---- sun damage (np-3dp) ----------------------------------------------
     // Inside the 15k bubble the player takes 5cm damage per second. We
@@ -3863,13 +3863,6 @@ void frame_cb() {
     const float fb_w = (float)sapp_width();
     const float fb_h = (float)sapp_height();
     sdtx_canvas(fb_w * 0.5f, fb_h * 0.5f);
-
-    const HMM_Vec3 p = g.camera.position;
-    const float speed = HMM_LenV3(g.camera.velocity);
-    const float dist  = HMM_LenV3(HMM_SubV3(g.sun.position, p));
-    const char* mode  = (g.camera.cruise_level > 0.5f)  ? "CRUISE"
-                      : (g.camera.cruise_level > 0.05f) ? "SPOOL "
-                      :                                   "NORMAL";
 
     // Death cinematic overlay (np-ma2.2): a big centered "SHIP DESTROYED"
     // and the impending respawn target while the explosion blooms. Drawn
@@ -5122,15 +5115,9 @@ void event_cb(const sapp_event* ev) {
         // the X button still closes.
         if (ev->key_code == SAPP_KEYCODE_N) {
             if (g.show_navmap) {
-                // Map already up — cycle to next nav. Same one-slot
-                // advance as outside the map.
-                if (!g.system.nav_points.empty()) {
-                    const int n = (int)g.system.nav_points.size();
-                    g.selected_nav = (g.selected_nav + 1) % n;
-                    sfx::ui_click();
-                    std::printf("[nav] target → %s\n",
-                                g.system.nav_points[g.selected_nav].name.c_str());
-                }
+                // Map already up — let the per-frame N-cycle inside
+                // cockpit_hud::build_navmap handle advancing. Doing it
+                // here too would double-cycle on every press.
             } else {
                 // Map closed — open it on this press (no cycle yet).
                 g.show_navmap = true;

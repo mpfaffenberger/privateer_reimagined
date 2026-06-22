@@ -7,16 +7,12 @@
 #include "generated/skybox.glsl.h"
 #include "skybox_gen.h"
 
-#include <array>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <vector>
 
 namespace {
-
-// Cubemap face count (sokol validates num_slices == 6 for SG_IMAGETYPE_CUBE).
-constexpr int kNumFaces = 6;
 
 // sokol's cubemap face layout in a mip-level blob, in order:
 //   slice 0: +X   slice 1: -X   slice 2: +Y
@@ -29,15 +25,6 @@ constexpr int kNumFaces = 6;
 //   -Y → down (bottom)
 //   +Z → behind the camera (camera looks -Z), so "back"
 //   -Z → in front of the camera, so "front"
-constexpr std::array<const char*, kNumFaces> kFaceSuffixes = {
-    "right",  // +X
-    "left",   // -X
-    "top",    // +Y
-    "bottom", // -Y
-    "back",   // +Z
-    "front"   // -Z
-};
-
 // Unit cube, inside-out draw. Since we set cull_mode=NONE and sample the
 // cubemap with the raw vertex position, orientation of the triangles
 // doesn't matter — we just need to cover the screen.
