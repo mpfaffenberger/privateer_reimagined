@@ -205,6 +205,11 @@ struct AppState {
     // Landed bridge; tick'd inside the Flight path, drives the camera
     // during the auto-approach and requests the Landed mode flip.
     Docking        docking{};
+    // Auto-land zone latch (np-3dp.22): true once we've announced the
+    // 'entering an automatic landing zone' comms for the current approach;
+    // re-armed when the player leaves the announce radius so re-entering
+    // re-announces.
+    bool           landing_zone_announced = false;
 
     // Nav-point cruise autopilot (np-opa.3). Press A to fly to the
     // selected nav. Like docking it owns the camera while engaged
@@ -1420,7 +1425,8 @@ void build_system_scene(bool first_time) {
     // wcnews encounter model: roll each nav's table ONCE and spawn its wave
     // now (system entry). No continuous refill — see encounters.h. The
     // player camera is already at player_start by this point.
-    encounters::populate_on_entry(g.system, g.camera.position, encounter_spawn);
+    encounters::populate_on_entry(g.system, g.camera.position, g.sun.position,
+                                  encounter_spawn);
 
     // Fly-by-wire defaults OFF. Player toggles it with SPACE. This is much
     // friendlier for tools/capture scripts and prevents the camera from
@@ -2583,7 +2589,7 @@ void frame_cb() {
             g.missile_lock = AppState::MissileLock{};
             encounters::init(g.system);
             encounters::populate_on_entry(g.system, g.camera.position,
-                                          encounter_spawn);
+                                          g.sun.position, encounter_spawn);
             std::printf("[encounter] base launch -> cleared old wave + re-rolled\n");
         }
     }
@@ -2735,6 +2741,38 @@ void frame_cb() {
                                         : g_speed_input_ref;
         g.camera.set_forward_input(desired);
         g.camera.integrate(dt);
+    }
+
+    // Automatic landing zone (np-3dp.22): the player no longer has to
+    // request a dock by hand near a base — fly close enough and it just
+    // happens. Inside k_zone_announce_m of the nearest dockable base we
+    // play the 'Now entering an automatic landing zone' comms + sting
+    // (once per approach); inside k_auto_land_m we force the auto-approach
+    // (begin_auto bypasses the speed gate — the approach autopilot eases
+    // the velocity onto the pad). Only while free-flying (not mid-dock,
+    // not in the post-launch cooldown).
+    if (g.game.mode == GameMode::Flight &&
+        g.docking.state == DockingState::None && g.docking.cooldown_s <= 0.0f) {
+        int   near_nav = -1;
+        float near_d   = 1e30f;
+        for (int i = 0; i < (int)g.system.nav_points.size(); ++i) {
+            const NavPointDef& n = g.system.nav_points[i];
+            if (!n.dockable || n.base_id.empty()) continue;
+            const float d = HMM_LenV3(HMM_SubV3(n.position, g.camera.position));
+            if (d < near_d) { near_d = d; near_nav = i; }
+        }
+        if (near_nav >= 0 && near_d < docking::k_zone_announce_m) {
+            if (!g.landing_zone_announced) {
+                g.landing_zone_announced = true;
+                comm::push("Now entering an automatic landing zone.", false);
+                music::landing_approach();
+            }
+            if (near_d < docking::k_auto_land_m) {
+                docking::begin_auto(g.docking, g.system.nav_points[near_nav]);
+            }
+        } else {
+            g.landing_zone_announced = false;   // re-arm on leaving the zone
+        }
     }
 
     // Autodock step (np-9cu.1). Drives the camera during the approach,

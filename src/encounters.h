@@ -130,8 +130,12 @@ void tick(const ShipRegistry& ships, HMM_Vec3 player_pos, float dt,
 // jump-in) and on base launch. `player_pos` is used only to nudge a group
 // off the player's own spawn point so nothing pops in point-blank. Spawns
 // go through the same host SpawnFn recipe the director used.
+// `sun_pos` is the system centre (np-3dp.22): traffic that would roll at a
+// dockable BASE is pushed ~7.5-10k toward it, so ships never clutter a
+// base's auto-land approach and you fly in toward the pad through clear
+// space.
 void populate_on_entry(const StarSystem& system, HMM_Vec3 player_pos,
-                       const SpawnFn& spawn);
+                       HMM_Vec3 sun_pos, const SpawnFn& spawn);
 
 // Live count of director-owned ships (for HUD / debug). Cheap.
 int population();

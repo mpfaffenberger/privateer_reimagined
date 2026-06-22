@@ -311,6 +311,8 @@ void play_track(Track t) {
 
 void stop() { play_track(Track::None); }
 
+void landing_approach() { play_sting(music::Track::StingLanding); }
+
 void update(GameMode mode, HMM_Vec3 player_pos, const char* base_id, float dt) {
     // ---- 0. mode-edge stings ------------------------------------------------
     // Fire on the frame we ENTER Loading (jump) / Dying (death), once per edge.

@@ -108,6 +108,11 @@ void load_all();
 // through update()'s mode edges, not this.)
 void play_track(Track t);
 
+// Fire the 'entering automatic landing zone' sting (combat_09) once
+// (np-3dp.22). One-shot over whatever bed is playing; no-op if the track
+// isn't available in this build. Called by the docking proximity check.
+void landing_approach();
+
 // Fade all music out (equivalent to play_track(Track::None)).
 void stop();
 

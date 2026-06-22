@@ -298,7 +298,7 @@ int population() { return total_managed(); }
 
 // ---- wcnews per-nav encounter model (roll once on entry, no refill) --------
 void populate_on_entry(const StarSystem& system, HMM_Vec3 player_pos,
-                       const SpawnFn& spawn) {
+                       HMM_Vec3 sun_pos, const SpawnFn& spawn) {
     // Seed RNG from wall-clock time so each fresh process gets a different
     // spawn at, say, Achilles — and from a per-process counter so visiting
     // a different system on the same launch also varies the roll. The wall
@@ -421,7 +421,23 @@ void populate_on_entry(const StarSystem& system, HMM_Vec3 player_pos,
         }
         // Groups parked at a base/planet tend to loiter; lane/gate groups travel.
         const bool loiter = (nav.kind == "station" || nav.kind == "planet");
-        spawn_group(mem, nav.position, loiter);
+        // Keep traffic OUT of the landing zone (np-3dp.22): a dockable
+        // base spawns its group 7.5-10k toward the system centre (sun)
+        // instead of right on the pad, so the auto-land approach stays
+        // clear and you fly IN toward the base through open space. The
+        // patrol anchor follows the offset centre, so they loiter out
+        // there too, not back at the base.
+        HMM_Vec3 spawn_center = nav.position;
+        if (nav.dockable && !nav.base_id.empty()) {
+            HMM_Vec3 to_sun = HMM_SubV3(sun_pos, nav.position);
+            const float d = len(to_sun);
+            if (d > 1.0f) {
+                to_sun = HMM_MulV3F(to_sun, 1.0f / d);
+                const float off = 7500.0f + U(rng) * 2500.0f;   // 7.5-10k
+                spawn_center = HMM_AddV3(nav.position, HMM_MulV3F(to_sun, off));
+            }
+        }
+        spawn_group(mem, spawn_center, loiter);
     }
 
     // 2. Occasional BIG merchant convoy crossing the system -- a fat, mostly

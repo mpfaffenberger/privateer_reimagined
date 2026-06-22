@@ -112,6 +112,18 @@ const char* result_str(DockResult r);
 DockResult request(Docking& d, HMM_Vec3 player_pos, HMM_Vec3 player_vel,
                    const NavPointDef& nav);
 
+// Force-begin the auto-approach (np-3dp.22): the proximity 'automatic
+// landing zone' captures the ship regardless of speed/range — the approach
+// autopilot eases the velocity onto the pad — so this SKIPS can_request's
+// gates. No-op if already docking or in the post-launch cooldown.
+void begin_auto(Docking& d, const NavPointDef& nav);
+
+// Distance band knobs for the automatic landing zone (np-3dp.22):
+// announce the zone (comms + sting) crossing inside k_zone_announce_m,
+// auto-capture the ship inside k_auto_land_m.
+constexpr float k_zone_announce_m = 900.0f;
+constexpr float k_auto_land_m     = 600.0f;
+
 // Advance the approach. Drives camera pose/velocity while Approaching,
 // holds the beat while Docking, then requests Landed + flips the player
 // flags on completion. Also bleeds the post-launch cooldown. Safe to

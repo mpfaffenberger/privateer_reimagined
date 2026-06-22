@@ -106,6 +106,20 @@ DockResult request(Docking& d, HMM_Vec3 player_pos, HMM_Vec3 player_vel,
     return r;
 }
 
+void begin_auto(Docking& d, const NavPointDef& nav) {
+    // Already docking or just launched? Leave it be.
+    if (d.state != DockingState::None || d.cooldown_s > 0.0f) return;
+    d.state     = DockingState::Requested;
+    d.base_id   = nav.base_id;
+    d.base_name = nav.name;
+    d.pad_pos   = nav.position;
+    d.timer_s   = 0.0f;
+    d.log_accum = 0.0f;
+    sfx::ui_click();
+    std::printf("[dock] AUTO-LAND zone -> approach to %s\n",
+                d.base_id.empty() ? nav.name.c_str() : d.base_id.c_str());
+}
+
 void tick(Docking& d, Camera& cam, GameState& gs, PlayerState& player, float dt) {
     // Bleed the post-launch lockout regardless of state.
     if (d.cooldown_s > 0.0f) {
