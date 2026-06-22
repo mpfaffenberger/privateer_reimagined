@@ -94,13 +94,14 @@ struct FlightStatusHudState {
 };
 void draw_flight_status_mfd(const FlightStatusHudState& s);
 
-// Big top-down navigation map. Open/close gated by the caller (Alt+N
-// in main.cpp toggles the bool); when shown_in_out is true this draws
-// a centered overlay with nav points and ship contacts on a system-
-// scale projection. Clicking a nav point selects it (mutates
-// `selected_nav_in_out`); the close button + ESC flip
-// `shown_in_out` to false. Called AFTER build() so it draws on top of
-// the regular HUD.
+// Big top-down navigation map. Caller (main.cpp, N key) toggles the
+// bool — first N opens, subsequent N presses cycle the selected nav
+// in place (same effect as outside-the-map N); Esc or the close
+// button flip `shown_in_out` to false. When shown_in_out is true
+// this draws a centered overlay with nav points and ship contacts
+// on a system-scale projection. Clicking a nav point selects it
+// (mutates `selected_nav_in_out`). Called AFTER build() so it draws
+// on top of the regular HUD.
 void build_navmap(const Camera& cam, const StarSystem& system,
                   int& selected_nav_in_out,
                   const ShipRegistry& ships,

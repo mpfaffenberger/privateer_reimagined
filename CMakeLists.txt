@@ -197,6 +197,7 @@ src/bolt_art.cpp
     src/ship_sprite.cpp
     src/sprite_light_editor.cpp
     src/mesh_orient_editor.cpp
+    src/navmap_auditor.cpp
     src/sprite_generation_tool.cpp
     src/planet_texture.cpp
     src/debug_panel.cpp

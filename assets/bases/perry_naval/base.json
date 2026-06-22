@@ -1,0 +1,27 @@
+{
+  // Perry Naval Base Military Starbase (Perry) — Confederation military hub.
+  // Uses the shared industrial concourse art until we have bespoke naval-base
+  // pixel art. Gameplay data lives here; art reuse should not fork a PNG pile.
+  "display_name":  "Perry Naval Base",
+  "faction":       "Confederation Navy",
+  "concourse_art": "bases/achilles/concourse.png",
+
+  // Temporary economy archetype: "mining" is our closest industrial/military
+  // stand-in until we add a dedicated naval/refinery archetype.
+  "market": { "archetype": "mining" },
+
+  "hotspots": [
+    { "target": "Bar",               "label": "OFFICERS' CLUB",
+      "rect": [0.04, 0.50, 0.26, 0.16], "tooltip": "Pilots, rumours, and military gossip" },
+    { "target": "CommodityExchange", "label": "SUPPLY DEPOT",
+      "rect": [0.37, 0.50, 0.26, 0.16], "tooltip": "Buy and sell cargo" },
+    { "target": "ShipDealer",        "label": "SHIPYARD",
+      "rect": [0.70, 0.50, 0.26, 0.16], "tooltip": "Trade up your hull" },
+    { "target": "Equipment",         "label": "ARMORY",
+      "rect": [0.04, 0.72, 0.26, 0.16], "tooltip": "Guns, shields, engines" },
+    { "target": "MissionComputer",   "label": "MISSION COMPUTER",
+      "rect": [0.37, 0.72, 0.26, 0.16], "tooltip": "Find work" },
+    { "target": "Launch",            "label": "LAUNCH",
+      "rect": [0.70, 0.72, 0.26, 0.16], "tooltip": "Return to flight" }
+  ]
+}

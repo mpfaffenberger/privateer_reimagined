@@ -214,7 +214,7 @@
       "name": "Hector Mining Base",
       "kind": "station",
       "position": [
-        166667,
+        -166667,
         -133333,
         -200000
       ],
@@ -272,7 +272,7 @@
       "name": "Regallis Jump",
       "kind": "jump",
       "position": [
-        150000,
+        -150000,
         -100000,
         -66667
       ],
@@ -320,7 +320,7 @@
       "name": "Helen Agricultural Planet",
       "kind": "planet",
       "position": [
-        166667,
+        -166667,
         -66667,
         100000
       ],

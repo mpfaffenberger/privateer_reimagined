@@ -87,8 +87,8 @@
       "kind": "nav",
       "position": [
         -25000,
-        33333,
-        40000
+        -33333,
+        -40000
       ],
       "encounters": [
         {
@@ -159,7 +159,7 @@
       "position": [
         100000,
         0,
-        -133333
+        133333
       ],
       "links_to": "troy",
       "links_to_nav": "Pender's Star Jump",

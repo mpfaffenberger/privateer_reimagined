@@ -94,7 +94,7 @@
       "name": "New Constantinople Jump",
       "kind": "jump",
       "position": [
-        66667,
+        -66667,
         -50000,
         100000
       ],

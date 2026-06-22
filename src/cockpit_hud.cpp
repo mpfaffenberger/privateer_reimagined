@@ -16,6 +16,7 @@
 //           (no NDC Y-flip), so target projection skips the
 //           textbook (1 - ndc_y) inversion.
 #include "cockpit_hud.h"
+#include "navmap_projection.h"
 
 #include "armor.h"
 #include "camera.h"
@@ -58,13 +59,22 @@ ScreenSize screen_size() {
 // Palette — a small, deliberate set of HUD colours so every panel sings
 // the same tune. Amber matches our nav-target reticle; cyan/green/blue
 // are radar dot colours per nav kind.
-static const ImU32 kAmber    = IM_COL32(255, 217,  77, 240);
-static const ImU32 kDimAmber = IM_COL32(180, 150,  60, 200);
-static const ImU32 kCyan     = IM_COL32(120, 220, 255, 240);
-static const ImU32 kGreen    = IM_COL32(120, 240, 140, 240);
-static const ImU32 kBlueP    = IM_COL32( 90, 160, 255, 240);
-static const ImU32 kHudWhite = IM_COL32(220, 230, 235, 220);
-static const ImU32 kPanelBg  = IM_COL32( 10,  14,  20, 220);
+static const ImU32 kAmber     = IM_COL32(255, 217,  77, 240);
+static const ImU32 kDimAmber  = IM_COL32(180, 150,  60, 200);
+static const ImU32 kCyan      = IM_COL32(120, 220, 255, 240);
+static const ImU32 kGreen     = IM_COL32(120, 240, 140, 240);
+static const ImU32 kBlueP     = IM_COL32( 90, 160, 255, 240);
+// navmap-only colours. Distinguish jump holes (bright blue circles) from
+// empty nav points (green circles) and from dockable bases (squares use
+// the kind colour from color_for_kind). Matches the classic Privateer
+// tactical map: square = base, blue = jump hole, green = nav point.
+static const ImU32 kJumpBlue  = IM_COL32( 80, 150, 255, 240);
+static const ImU32 kNavGreen  = IM_COL32(120, 240, 140, 240);
+// Grid + axis labels on the navmap. Faint enough that nav points still
+// pop, dark enough that the grid is legible against the panel background.
+static const ImU32 kGridLine  = IM_COL32( 80, 130, 180,  55);
+static const ImU32 kHudWhite  = IM_COL32(220, 230, 235, 220);
+static const ImU32 kPanelBg   = IM_COL32( 10,  14,  20, 220);
 
 // Map a nav kind to its radar/MFD dot colour. String compare is fine —
 // nav_points is small and this loop is dwarfed by ImGui call overhead.
@@ -895,14 +905,21 @@ void build_weapons_status(const WeaponsHudState& w) {
 // ---- big navmap overlay --------------------------------------------------
 //
 // Centered fullscreen-ish window with a top-down projection of the
-// system. World-space (X, Z) -> map (X, Y), auto-scaled so all nav
-// points fit with margin. Clickable nav-point dots; the player position
-// gets a triangle marker; ship contacts (player perception) are
-// stance-coloured pips overlaid. Closes on the X button or ESC.
+// system. Visual style follows classic Privateer (np-7gr):
 //
-// World-up (cam.up) ignored — this is a system-overhead map, not a
-// 3D viewport. Future enhancement: a second small panel showing
-// vertical (X, Y) projection so altitude is also legible.
+//   * 7x7 tactical grid   - drawn behind the markers, faint blue
+//   * Squares = BASES     - any dockable nav point (stations/planets)
+//   * Blue circles = JUMP - kind=="jump" nav points
+//   * Green circles = NAV - empty waypoints (kind=="nav")
+//   * Player marker       - small white triangle, nose-aligned
+//
+// World-space (X, Z) -> map (X, -Z). World X runs across the map;
+// world Z runs vertically but INVERTED so a larger Z moves a nav UP
+// (scientific axes, not image top-left origin). NB: the system JSON
+// has wcpedia columns 2 & 3 swapped, so the designer's intended
+// vertical coordinate lives in position.Z, which is why we plot Z
+// (not Y) on the vertical axis. World-up (cam.up) ignored — this is a
+// system-overhead map, not a 3D viewport.
 void build_navmap(const Camera& cam, const StarSystem& system,
                   int& selected_nav_in_out,
                   const ShipRegistry& ships,
@@ -910,11 +927,16 @@ void build_navmap(const Camera& cam, const StarSystem& system,
     if (!shown_in_out) return;
 
     const auto sz = screen_size();
-    const float w = std::min(sz.w * 0.85f, 1100.0f);
-    const float h = std::min(sz.h * 0.85f,  800.0f);
-    ImGui::SetNextWindowPos(ImVec2((sz.w - w) * 0.5f, (sz.h - h) * 0.5f),
+    // Square window (np-7gr.2): use min(sz.w, sz.h) so the navmap
+    // is always square. 92% of the min dimension so it fills more of
+    // the screen than the old 85%-of-each-axis sizing. Capped at 1100
+    // so it doesn't get unwieldy on huge monitors.
+    const float edge_raw = std::min(sz.w, sz.h) * 0.92f;
+    const float edge     = std::min(edge_raw, 1100.0f);
+    ImGui::SetNextWindowPos(ImVec2((sz.w - edge) * 0.5f,
+                                   (sz.h - edge) * 0.5f),
                             ImGuiCond_Always);
-    ImGui::SetNextWindowSize(ImVec2(w, h), ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(edge, edge), ImGuiCond_Always);
     ImGui::SetNextWindowBgAlpha(0.92f);
 
     push_hud_style();
@@ -922,45 +944,99 @@ void build_navmap(const Camera& cam, const StarSystem& system,
                            | ImGuiWindowFlags_NoResize
                            | ImGuiWindowFlags_NoSavedSettings;
     bool open = true;
-    if (ImGui::Begin("NAVIGATION MAP   (Alt+N to close)", &open, flags)) {
+    if (ImGui::Begin("NAVIGATION MAP   (N cycles, Esc to close)", &open, flags)) {
 
-        // Compute bounding box of all nav points + camera so the auto-
-        // scale frames everything visible. Adds the camera so the
-        // player marker is always inside the box.
-        float min_x = cam.position.X, max_x = cam.position.X;
-        float min_z = cam.position.Z, max_z = cam.position.Z;
+        // Optional authored 2D navmap layout. Real gameplay keeps using
+        // NavPointDef::position; this map can use NavPointDef::map_position
+        // when the legacy source image is a hand layout instead of a literal
+        // 3D projection (hello, Troy, you beautiful little fraud).
+        auto nav_map_pos = [](const NavPointDef& nv) -> HMM_Vec2 {
+            return navmap_project_nav(nv);
+        };
+        auto world_map_pos = [](const HMM_Vec3& p) -> HMM_Vec2 {
+            return navmap_project_world(p);
+        };
+
+        // Compute a square bbox around the MAP ORIGIN. Origin-centred
+        // framing avoids the old centroid-fit bug where x=0 drifted to an
+        // edge when all coordinates were positive. Map-Y is scientific:
+        // larger values render UP, handled by the minus in to_screen().
+        HMM_Vec2 cam_mp = world_map_pos(cam.position);
+        float min_x = cam_mp.X, max_x = cam_mp.X;
+        float min_y = cam_mp.Y, max_y = cam_mp.Y;
         for (const auto& nv : system.nav_points) {
-            if (nv.position.X < min_x) min_x = nv.position.X;
-            if (nv.position.X > max_x) max_x = nv.position.X;
-            if (nv.position.Z < min_z) min_z = nv.position.Z;
-            if (nv.position.Z > max_z) max_z = nv.position.Z;
+            const HMM_Vec2 mp = nav_map_pos(nv);
+            if (mp.X < min_x) min_x = mp.X;
+            if (mp.X > max_x) max_x = mp.X;
+            if (mp.Y < min_y) min_y = mp.Y;
+            if (mp.Y > max_y) max_y = mp.Y;
         }
-        const float span_x = std::max(1.0f, max_x - min_x);
-        const float span_z = std::max(1.0f, max_z - min_z);
-        // Equal-aspect scaling — pick the smaller of the two so both
-        // axes fit. 90% margin so dots don't sit on the panel edge.
+        float half = 1.0f;
+        half = std::max(half, std::fabs(min_x));
+        half = std::max(half, std::fabs(max_x));
+        half = std::max(half, std::fabs(min_y));
+        half = std::max(half, std::fabs(max_y));
+        half *= 1.05f;                                      // 5% edge buffer
+        min_x = -half; max_x = half;
+        min_y = -half; max_y = half;
+        const float span = half * 2.0f;                     // now square
+
+        // Square map area: take the smaller content-region dimension
+        // as the edge so the area is always square, then center it
+        // within whatever space remains.
         const ImVec2 area_p0 = ImGui::GetCursorScreenPos();
         const ImVec2 area_sz = ImGui::GetContentRegionAvail();
-        const float  scale = 0.92f * std::min(area_sz.x / span_x,
-                                              area_sz.y / span_z);
-        // Center of the data in world space; we'll project so it
-        // lands at the center of the map area.
+        const float  edge = std::min(area_sz.x, area_sz.y);
+        const float  sq_ox = (area_sz.x - edge) * 0.5f;
+        const float  sq_oy = (area_sz.y - edge) * 0.5f;
+        const ImVec2 sq_p0 { area_p0.x + sq_ox, area_p0.y + sq_oy };
+        const ImVec2 sq_sz { edge, edge };
+        // Uniform scale against the now-square map span.
+        const float scale = 0.92f * edge / span;
         const float cx_w = 0.5f * (min_x + max_x);
-        const float cz_w = 0.5f * (min_z + max_z);
-        const ImVec2 ctr = ImVec2(area_p0.x + area_sz.x * 0.5f,
-                                  area_p0.y + area_sz.y * 0.5f);
-        auto to_screen = [&](float wx, float wz) {
+        const float cy_w = 0.5f * (min_y + max_y);
+        const ImVec2 ctr { sq_p0.x + sq_sz.x * 0.5f,
+                           sq_p0.y + sq_sz.y * 0.5f };
+        // NOTE the MINUS on the vertical term: screen-Y grows downward,
+        // but map-Y is scientific and grows upward.
+        auto to_screen = [&](float wx, float wy) {
             return ImVec2(ctr.x + (wx - cx_w) * scale,
-                          ctr.y + (wz - cz_w) * scale);
+                          ctr.y - (wy - cy_w) * scale);
         };
 
         ImDrawList* dl = ImGui::GetWindowDrawList();
 
         // Background panel (the window bg already fills it; this is
-        // the actual map area outline).
-        dl->AddRect(area_p0,
-                    ImVec2(area_p0.x + area_sz.x, area_p0.y + area_sz.y),
+        // the actual map area outline). Square frame within the
+        // content region.
+        dl->AddRect(sq_p0,
+                    ImVec2(sq_p0.x + sq_sz.x, sq_p0.y + sq_sz.y),
                     IM_COL32(80, 100, 120, 200), 0.0f, 0, 1.0f);
+
+        // Privateer-style tactical grid (np-7gr). 7x7 cells mirrors
+        // the classic navmap; each axis is divided into 7 segments so
+        // there are 8 grid lines per axis. Drawn behind the markers
+        // and the ship-contact pips so it reads as a tactical overlay
+        // rather than competing with the dots. After squaring the bbox
+        // both axes share the SAME span (`span` = padded_longest), so
+        // cell_w == cell_h — the grid is square in both world and
+        // screen space, and the stretched axis naturally determines
+        // the cell size for both.
+        constexpr int kGridDivs = 7;
+        const float cell_w = span / float(kGridDivs);
+        const float cell_h = span / float(kGridDivs);
+        for (int i = 0; i <= kGridDivs; ++i) {
+            const float wx = min_x + i * cell_w;
+            const ImVec2 a = to_screen(wx, min_y);
+            const ImVec2 b = to_screen(wx, max_y);
+            dl->AddLine(a, b, kGridLine, 1.0f);
+        }
+        for (int j = 0; j <= kGridDivs; ++j) {
+            const float wy = min_y + j * cell_h;
+            const ImVec2 a = to_screen(min_x, wy);
+            const ImVec2 b = to_screen(max_x, wy);
+            dl->AddLine(a, b, kGridLine, 1.0f);
+        }
 
         // Ship contacts under nav points so navs don't get hidden by
         // densely packed ship dots.
@@ -969,7 +1045,8 @@ void build_navmap(const Camera& cam, const StarSystem& system,
             for (const PerceivedContact& c : player.perception.visible) {
                 const HMM_Vec3 p = HMM_AddV3(
                     player.position, HMM_MulV3F(c.to_unit, c.distance_m));
-                const ImVec2 sp = to_screen(p.X, p.Z);
+                const HMM_Vec2 mp = world_map_pos(p);
+                const ImVec2 sp = to_screen(mp.X, mp.Y);
                 const ImU32 col =
                     (c.stance == Stance::Hostile) ? IM_COL32(255,  90,  90, 230)
                   : (c.stance == Stance::Allied)  ? IM_COL32( 90, 255, 110, 230)
@@ -978,9 +1055,12 @@ void build_navmap(const Camera& cam, const StarSystem& system,
             }
         }
 
-        // Nav points — clickable. Hit-test in screen space against a
-        // generous radius so dots are easy to click. Selecting a nav
-        // mirrors the N-key cycle's effect (sets selected_nav).
+        // Nav points — clickable. dockable things render as filled
+        // SQUARES (bases); kind=="jump" renders as a blue CIRCLE (jump
+        // hole); anything else renders as a green CIRCLE (nav point).
+        // Squares use the kind colour for fill (so stations read green
+        // and planets read blue) and get a white outline that flips to
+        // amber when selected. Hit-test shape matches the marker.
         const ImVec2 mouse = ImGui::GetMousePos();
         const bool mouse_in_panel =
             mouse.x >= area_p0.x && mouse.x <= area_p0.x + area_sz.x &&
@@ -989,45 +1069,80 @@ void build_navmap(const Camera& cam, const StarSystem& system,
                           && mouse_in_panel;
         for (int i = 0; i < (int)system.nav_points.size(); ++i) {
             const auto& nv = system.nav_points[i];
-            const ImVec2 sp = to_screen(nv.position.X, nv.position.Z);
-            const ImU32  col = color_for_kind(nv.kind);
+            const HMM_Vec2 mp = nav_map_pos(nv);
+            const ImVec2 sp = to_screen(mp.X, mp.Y);
             const bool   sel = (i == selected_nav_in_out);
-            const float  r   = sel ? 8.0f : 5.0f;
-            dl->AddCircleFilled(sp, r, col, 16);
-            if (sel) dl->AddCircle(sp, r + 3.0f, kAmber, 0, 1.5f);
-            // Label.
+
+            const bool is_square = nv.dockable;
+            // Squares sit at ~7/9 px and circles at ~5/8 px so the
+            // selected/unselected pair reads at a glance.
+            const float r   = sel ? (is_square ? 9.0f : 8.0f)
+                                  : (is_square ? 7.0f : 5.0f);
+            ImU32       fill;
+            if      (is_square)            fill = color_for_kind(nv.kind);
+            else if (nv.kind == "jump")   fill = kJumpBlue;
+            else                            fill = kNavGreen;
+
+            if (is_square) {
+                const ImVec2 a { sp.x - r, sp.y - r };
+                const ImVec2 b { sp.x + r, sp.y + r };
+                dl->AddRectFilled(a, b, fill);
+                // Outline: amber when selected (thicker), white otherwise.
+                dl->AddRect(a, b, sel ? kAmber : kHudWhite, 0.0f, 0,
+                            sel ? 2.0f : 1.0f);
+            } else {
+                dl->AddCircleFilled(sp, r, fill, 16);
+                if (sel) dl->AddCircle(sp, r + 3.0f, kAmber, 0, 1.5f);
+            }
+
+            // Label — same offset regardless of marker shape; text
+            // hovers to the right of whatever the centre is.
             dl->AddText(ImVec2(sp.x + r + 4.0f, sp.y - 7.0f),
                         kHudWhite, nv.name.c_str());
-            // Click hit-test.
+
+            // Click hit-test. Square uses a bounding-box test against
+            // the marker; circle uses the existing radial test.
             if (clicked) {
                 const float dxs = mouse.x - sp.x;
                 const float dys = mouse.y - sp.y;
-                if (dxs * dxs + dys * dys < (r + 8.0f) * (r + 8.0f)) {
-                    selected_nav_in_out = i;
+                if (is_square) {
+                    if (std::abs(dxs) <= r + 4.0f && std::abs(dys) <= r + 4.0f) {
+                        selected_nav_in_out = i;
+                    }
+                } else {
+                    if (dxs * dxs + dys * dys < (r + 8.0f) * (r + 8.0f)) {
+                        selected_nav_in_out = i;
+                    }
                 }
             }
         }
 
-        // Player marker — small triangle at camera position, pointing
-        // along camera-forward projected onto the XZ plane.
-        const ImVec2 pp = to_screen(cam.position.X, cam.position.Z);
+        // Player marker — small triangle at camera position. Position and
+        // heading both pass through world_map_pos(), keeping the live marker
+        // on the same X/Z projection as navs and ship contacts.
+        const HMM_Vec2 player_mp = world_map_pos(cam.position);
+        const ImVec2 pp = to_screen(player_mp.X, player_mp.Y);
         const HMM_Vec3 cf = cam.forward();
-        const float fx = cf.X, fz = cf.Z;
-        const float fl = std::sqrt(fx * fx + fz * fz);
+        const HMM_Vec3 ahead_world = HMM_AddV3(cam.position, HMM_MulV3F(cf, 1000.0f));
+        const HMM_Vec2 ahead_mp = world_map_pos(ahead_world);
+        const ImVec2 ahead_sp = to_screen(ahead_mp.X, ahead_mp.Y);
+        const float fx = ahead_sp.x - pp.x;
+        const float fy = ahead_sp.y - pp.y;
+        const float fl = std::sqrt(fx * fx + fy * fy);
         const float ux = (fl > 1e-3f) ? (fx / fl) : 0.0f;
-        const float uz = (fl > 1e-3f) ? (fz / fl) : 1.0f;
+        const float uy = (fl > 1e-3f) ? (fy / fl) : 1.0f;
         constexpr float kSize = 9.0f;
-        const ImVec2 tip { pp.x + ux * kSize,           pp.y + uz * kSize };
-        const ImVec2 bl  { pp.x - ux * kSize * 0.4f - uz * kSize * 0.6f,
-                            pp.y - uz * kSize * 0.4f + ux * kSize * 0.6f };
-        const ImVec2 br  { pp.x - ux * kSize * 0.4f + uz * kSize * 0.6f,
-                            pp.y - uz * kSize * 0.4f - ux * kSize * 0.6f };
+        const ImVec2 tip { pp.x + ux * kSize,           pp.y + uy * kSize };
+        const ImVec2 bl  { pp.x - ux * kSize * 0.4f - uy * kSize * 0.6f,
+                            pp.y - uy * kSize * 0.4f + ux * kSize * 0.6f };
+        const ImVec2 br  { pp.x - ux * kSize * 0.4f + uy * kSize * 0.6f,
+                            pp.y - uy * kSize * 0.4f - ux * kSize * 0.6f };
         dl->AddTriangleFilled(tip, bl, br, kHudWhite);
 
         // Footer help.
         ImGui::SetCursorScreenPos(ImVec2(area_p0.x, area_p0.y + area_sz.y + 4.0f));
         ImGui::PushStyleColor(ImGuiCol_Text, kDimAmber);
-        ImGui::TextUnformatted("Click a nav point to select it.  Alt+N to close.");
+        ImGui::TextUnformatted("Click a nav point to select it.  N cycles; Esc / X to close.");
         ImGui::PopStyleColor();
     }
     ImGui::End();

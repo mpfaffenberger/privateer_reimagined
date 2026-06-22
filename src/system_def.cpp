@@ -19,6 +19,16 @@ HMM_Vec3 vec3_or(const json::Value* v, HMM_Vec3 def) {
     return { arr[0].as_float(), arr[1].as_float(), arr[2].as_float() };
 }
 
+// Read an optional [x, y] pair into a HMM_Vec2. Used for authored navmap
+// layout coordinates; gameplay remains on the 3D `position` above.
+bool vec2_into(const json::Value* v, HMM_Vec2& out) {
+    if (!v || !v->is_array() || v->as_array().size() != 2) return false;
+    const auto& arr = v->as_array();
+    if (!arr[0].is_number() || !arr[1].is_number()) return false;
+    out = { arr[0].as_float(), arr[1].as_float() };
+    return true;
+}
+
 PlacedMeshDef parse_mesh(const json::Value& v) {
     PlacedMeshDef m;
     if (auto* p = v.find("obj"))            m.obj_path      = p->as_string();
@@ -108,6 +118,7 @@ NavPointDef parse_nav(const json::Value& v) {
     if (auto* p = v.find("name")) n.name = p->as_string();
     if (auto* p = v.find("kind")) n.kind = p->as_string();
     n.position = vec3_or(v.find("position"), n.position);
+    n.has_map_position = vec2_into(v.find("map_position"), n.map_position);
     // Docking metadata (np-9cu.1). Both optional — a plain nav point
     // omits them and stays non-dockable with an empty base_id.
     if (auto* p = v.find("dockable")) n.dockable = p->as_bool();

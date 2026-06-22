@@ -78,6 +78,7 @@ HMM_Mat4 model_matrix(HMM_Vec3 pos, HMM_Vec3 euler_deg, float s);
 #include "sprite_light_editor.h"
 #include "sprite_generation_tool.h"
 #include "mesh_orient_editor.h"
+#include "navmap_auditor.h"
 
 #include <unordered_map>
 #include "obj_loader.h"
@@ -1048,6 +1049,7 @@ void build_system_scene(bool first_time) {
         speech_labeler::init();
         sprite_generation_tool::init();
         mesh_orient_editor::init();
+        navmap_auditor::init();
     }
 
     // Dev remote: HTTP control channel on 127.0.0.1. Lets external
@@ -4388,6 +4390,8 @@ void frame_cb() {
     sprite_light_editor::build(g.placed_sprites, ship_cell_targets);
     // F5 — mesh orientation editor. Mutates PlacedMesh.euler_deg in place.
     mesh_orient_editor::build(g.placed_meshes);
+    // F10 — navmap auditor. Map/coordinate inspection + wiki-coordinate edits across systems.
+    navmap_auditor::build();
     // F4 — atlas grid viewer. Mutates ShipSpriteFrame fields directly,
     // so changes flow into the next render frame with no apply step.
     atlas_grid_viewer::build(g.ship_sprite_atlases);
@@ -5026,6 +5030,8 @@ void event_cb(const sapp_event* ev) {
     // F5 — live PlacedMesh orientation slider. Sits ahead of debug_panel
     // so the F5 toggle works even when an ImGui window has focus.
     if (mesh_orient_editor::handle_event(ev))    return;
+    // F10 — navmap auditor. Same focus-beating toggle behavior.
+    if (navmap_auditor::handle_event(ev))        return;
     if (debug_panel::handle_event(ev)) return;
 
     // Non-Flight modes: the sim is paused, so game input is ignored.

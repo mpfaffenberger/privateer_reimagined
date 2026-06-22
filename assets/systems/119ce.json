@@ -16,6 +16,7 @@
         26667,
         133333
       ],
+      "map_position": [-133333, 133333],
       "links_to": "junction",
       "links_to_nav": "119CE Jump",
       "encounters": [
@@ -84,6 +85,7 @@
         23333,
         66667
       ],
+      "map_position": [133333, 66667],
       "links_to": "padre",
       "links_to_nav": "119CE Jump",
       "encounters": [
@@ -137,6 +139,7 @@
         20000,
         -66667
       ],
+      "map_position": [-66667, -66667],
       "links_to": "xxn_1927",
       "links_to_nav": "119CE Jump",
       "encounters": [
@@ -215,6 +218,7 @@
         -16667,
         -166667
       ],
+      "map_position": [100000, -166667],
       "links_to": "pentonville",
       "links_to_nav": "119CE Jump",
       "encounters": [

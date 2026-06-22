@@ -1,0 +1,27 @@
+{
+  // Victoria Agricultural Planet (Junction) — food-world stopover in the
+  // Junction system. Uses the shared agricultural concourse art for now;
+  // gameplay/economy data is separate from the art, because copying PNGs is
+  // how asset folders become landfill with JSON confetti.
+  "display_name":  "Victoria Agricultural Planet",
+  "faction":       "Merchant Guild",
+  "concourse_art": "bases/helen/concourse.png",
+
+  // Economy archetype (np-9cu.2): cheap food/organics, expensive ore/tech.
+  "market": { "archetype": "agricultural" },
+
+  "hotspots": [
+    { "target": "Bar",               "label": "BAR",
+      "rect": [0.04, 0.50, 0.26, 0.16], "tooltip": "Drinks, rumours, and fixers" },
+    { "target": "CommodityExchange", "label": "COMMODITY EXCHANGE",
+      "rect": [0.37, 0.50, 0.26, 0.16], "tooltip": "Buy and sell cargo" },
+    { "target": "ShipDealer",        "label": "SHIP DEALER",
+      "rect": [0.70, 0.50, 0.26, 0.16], "tooltip": "Trade up your hull" },
+    { "target": "Equipment",         "label": "EQUIPMENT",
+      "rect": [0.04, 0.72, 0.26, 0.16], "tooltip": "Guns, shields, engines" },
+    { "target": "MissionComputer",   "label": "MISSION COMPUTER",
+      "rect": [0.37, 0.72, 0.26, 0.16], "tooltip": "Find work" },
+    { "target": "Launch",            "label": "LAUNCH",
+      "rect": [0.70, 0.72, 0.26, 0.16], "tooltip": "Return to flight" }
+  ]
+}

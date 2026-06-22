@@ -210,6 +210,13 @@ struct NavPointDef {
     std::string kind     = "nav";           // "station" | "jump" | "planet" | ...
     HMM_Vec3    position = { 0.0f, 0.0f, 0.0f };
 
+    // Optional authored 2D navmap coordinate. Some legacy Privateer maps are
+    // hand-layouts rather than literal projections of 3D nav coordinates
+    // (Troy, you magnificent little liar). When present, the big navmap uses
+    // this [x, y] point for marker layout while gameplay keeps `position`.
+    bool        has_map_position = false;
+    HMM_Vec2    map_position = { 0.0f, 0.0f };
+
     // wcnews random-encounter table for this nav (may be empty). Rolled
     // once on system entry / base launch; see EncounterGroupDef above.
     std::vector<EncounterGroupDef> encounters;

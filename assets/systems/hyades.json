@@ -194,7 +194,7 @@
       "name": "Charon Mining Base",
       "kind": "station",
       "position": [
-        133333,
+        -133333,
         66667,
         66667
       ],
