@@ -2054,6 +2054,19 @@ static void encounter_despawn(uint32_t id) {
     g.ships.despawn(h);
 }
 
+// Despawn EVERY non-player NPC (np-3dp.20). Used on base launch to clear
+// the old wave so a fresh encounter rolls — otherwise the ships you left
+// behind (including any you provoked into hostility) persist across the
+// land/launch and an accidental shot reads 'red' forever. Player ship is
+// left untouched. Collect ids first, then despawn, so we don't mutate the
+// registry mid-iteration.
+static void despawn_all_npcs() {
+    std::vector<uint32_t> ids;
+    for (const Ship& s : g.ships)
+        if (!s.is_player && s.id != 0) ids.push_back(s.id);
+    for (uint32_t id : ids) encounter_despawn(id);
+}
+
 // ---- non-Flight stub screens ------------------------------------------------
 //
 // Landed / Dying / Loading don't have real screens yet (np-eag.2 only adds
@@ -2527,6 +2540,24 @@ void frame_cb() {
             g.camera.max_speed_cruise1 = caps.cruise1;
             std::printf("[outfit] launch speed caps -> %.0f / %.0f (engine L%d)\n",
                         caps.cruise0, caps.cruise1, g.player.engine_level);
+
+            // Fresh sky on launch (np-3dp.20): clear the old NPC wave +
+            // any in-flight ordnance/target, then re-roll the per-nav
+            // encounter tables. This is the 'base-launch clear old wave'
+            // path the wcnews model always intended (encounters.h) —
+            // without it the ships you left behind, including ones you
+            // PROVOKED, persist across the land/launch so an accidental
+            // shot stays hostile forever. Canonical Privateer gives you a
+            // clean encounter every time you undock.
+            despawn_all_npcs();
+            g.projectiles.clear();
+            g.missiles.clear();
+            g.player_target_id = 0;
+            g.missile_lock = AppState::MissileLock{};
+            encounters::init(g.system);
+            encounters::populate_on_entry(g.system, g.camera.position,
+                                          encounter_spawn);
+            std::printf("[encounter] base launch -> cleared old wave + re-rolled\n");
         }
     }
 
