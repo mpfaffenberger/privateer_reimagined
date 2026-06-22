@@ -4461,7 +4461,17 @@ void frame_cb() {
                     g.apply_health_pending = false;
                     if (Ship* pl = g.ships.player()) ship::heal_to_full(*pl);
                     g.show_title = false;
-                    std::printf("[title] NEW clicked — fresh game, entering flight\n");
+                    // Rebuild the start system from scratch (np-3dp.24):
+                    // the title galaxy tour reskins the skybox + repicks
+                    // the sun as it flies through random systems, so NEW
+                    // must restore the loaded system's CANONICAL sky/sun
+                    // (and re-roll a fresh NPC wave + reset the camera to
+                    // player_start) rather than inherit whatever the tour
+                    // last landed on. pending_goto re-runs the canonical
+                    // build_system_scene at the next frame boundary.
+                    g.pending_goto = g.system_name;
+                    std::printf("[title] NEW clicked — fresh game, rebuilding %s, entering flight\n",
+                                g.system_name.c_str());
                 } else if (a == title_screen::Action::LoadGame) {
                     // Open the save picker (np-3dp.19): a scrollable list of
                     // every accumulated save, newest first. Selection loads
@@ -4515,9 +4525,14 @@ void frame_cb() {
                                     g.player = restored;
                                     g.apply_health_pending = g.player.hp_valid;
                                     // Re-target the world to the saved system
-                                    // so the scene matches the save.
-                                    if (!g.player.current_system.empty() &&
-                                        g.player.current_system != g.system_name) {
+                                    // so the scene matches the save. ALWAYS
+                                    // rebuild — even when the saved system is
+                                    // the one already loaded — so the title
+                                    // galaxy tour's reskinned skybox/sun get
+                                    // reset to the system's canonical look
+                                    // (np-3dp.24), not just when the id
+                                    // differs.
+                                    if (!g.player.current_system.empty()) {
                                         g.pending_goto = g.player.current_system;
                                     }
                                     // Resume WHERE you saved (np-3dp.21):
