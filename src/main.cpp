@@ -2534,6 +2534,23 @@ void frame_cb() {
         // texture when we leave Landed (launch, or any other exit).
         if (g.game.mode == GameMode::Landed) {
             base_screens::enter(g.player.last_docked_base);
+            // Anchor the player to the base's nav point (np-3dp.21). When
+            // you LAND normally docking already set pad_pos + parked the
+            // camera on the pad; but when you LOAD a docked save (or
+            // --dev-land) you never flew there, so pad_pos/camera are
+            // stale (origin) and launch would fling you to a random spot.
+            // Look up the base's nav position and pin both pad_pos + the
+            // camera to it, so the subsequent launch puts you right beside
+            // the base.
+            for (const NavPointDef& n : g.system.nav_points) {
+                if (n.dockable && n.base_id == g.player.last_docked_base) {
+                    g.docking.pad_pos   = n.position;
+                    g.docking.base_id   = n.base_id;
+                    g.docking.base_name = n.name;
+                    g.camera.position   = n.position;
+                    break;
+                }
+            }
             // Mission board (np-zte.1): regenerate this base's offers on each
             // dock from a base-id + slow-clock seed, so the board feels alive
             // between visits but is stable within a sitting. Reads the galaxy
