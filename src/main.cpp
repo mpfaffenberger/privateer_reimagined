@@ -2570,6 +2570,14 @@ void frame_cb() {
         // texture when we leave Landed (launch, or any other exit).
         if (g.game.mode == GameMode::Landed) {
             base_screens::enter(g.player.last_docked_base);
+            // Base screens always need the cursor (np-3dp.29). If the player
+            // pressed SPACE during flight to drop fly-by-wire, the OS cursor
+            // would stay hidden through the base menu otherwise. Force the
+            // cursor on and clear fly_by_wire so the cockpit HUD stops
+            // drawing the aim cursor too — leaving fly_by_wire set on a
+            // docked ship means re-launching would inherit a stale aim pose.
+            sapp_show_mouse(true);
+            g.fly_by_wire = false;
             // Anchor the player to the base's nav point (np-3dp.21). When
             // you LAND normally docking already set pad_pos + parked the
             // camera on the pad; but when you LOAD a docked save (or
