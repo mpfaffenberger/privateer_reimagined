@@ -39,6 +39,8 @@
 // Back affordance. No hook registered => the clearly-labelled stub draws.
 // -----------------------------------------------------------------------------
 
+#include "HandmadeMath.h"
+
 #include <functional>
 #include <string>
 
@@ -96,7 +98,8 @@ void enter(const std::string& base_id);
 // sub-screens / popping Back / launching), and shows the player-context
 // strip on the concourse. Needs the docking trio so the Launch hotspot can
 // call docking::launch(d, cam, gs, player).
-void build(PlayerState& player, Ship* player_ship, Docking& d, Camera& cam, GameState& gs);
+void build(PlayerState& player, Ship* player_ship, Docking& d, Camera& cam, GameState& gs,
+           HMM_Vec3 sun_pos);
 
 // Called on the transition OUT of Landed. Releases the concourse texture.
 void exit();

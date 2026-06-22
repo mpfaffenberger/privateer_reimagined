@@ -206,17 +206,21 @@ void tick(Docking& d, Camera& cam, GameState& gs, PlayerState& player, float dt)
     }
 }
 
-void launch(Docking& d, Camera& cam, GameState& gs, PlayerState& player) {
-    // Place the ship a safe distance off the pad along the pad→ship
-    // vector (or a default if we somehow launch from dead-centre), facing
-    // outward, with a gentle nudge so it reads as "pulling away".
-    HMM_Vec3 out = HMM_SubV3(cam.position, d.pad_pos);
+void launch(Docking& d, Camera& cam, GameState& gs, PlayerState& player,
+            HMM_Vec3 sun_pos) {
+    // Launch INWARD: place the ship k_launch_offset_m off the pad toward
+    // the system centre (the sun), facing that way (np-3dp.22). You start
+    // ~3.5km out in open space pointed at where the traffic is, instead
+    // of nose-to-the-pad. Falls back to the pad->ship vector (then a
+    // default axis) if the sun direction is degenerate.
+    HMM_Vec3 out = HMM_SubV3(sun_pos, d.pad_pos);
+    if (HMM_LenV3(out) < 1.0f) out = HMM_SubV3(cam.position, d.pad_pos);
     if (HMM_LenV3(out) < 1.0f) out = HMM_V3(0.0f, 0.0f, 1.0f);
     out = HMM_NormV3(out);
 
     cam.position    = HMM_AddV3(d.pad_pos, HMM_MulV3F(out, k_launch_offset_m));
     cam.velocity    = HMM_MulV3F(out, k_launch_speed);
-    cam.orientation = facing_quat(out);   // look away from the pad
+    cam.orientation = facing_quat(out);   // look inward, toward the centre
     cam.cruise_target = 0.0f;
     cam.cruise_level  = 0.0f;
 

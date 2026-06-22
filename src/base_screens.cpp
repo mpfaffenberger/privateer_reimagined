@@ -351,7 +351,8 @@ void enter(const std::string& base_id) {
     }
 }
 
-void build(PlayerState& player, Ship* player_ship, Docking& d, Camera& cam, GameState& gs) {
+void build(PlayerState& player, Ship* player_ship, Docking& d, Camera& cam, GameState& gs,
+           HMM_Vec3 sun_pos) {
     g_player_ship = player_ship;   // forwarded to screen hooks via BaseContext
     const ScreenSize ss = screen_size();
 
@@ -400,7 +401,7 @@ void build(PlayerState& player, Ship* player_ship, Docking& d, Camera& cam, Game
         g_launch_pending = false;
         std::printf("[base] LAUNCH from %s — handing off to docking::launch\n",
                     g_def.id.c_str());
-        docking::launch(d, cam, gs, player);
+        docking::launch(d, cam, gs, player, sun_pos);
     }
 }
 

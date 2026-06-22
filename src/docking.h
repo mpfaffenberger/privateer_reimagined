@@ -90,7 +90,8 @@ constexpr float k_dock_speed_max      = 100.0f;  // m/s; faster = "TOO FAST"
 constexpr float k_approach_speed_max  = 250.0f;  // autopilot cruise toward the pad
 constexpr float k_arrive_dist_m       = 60.0f;   // "on the pad" threshold
 constexpr float k_docking_pause_s     = 1.5f;    // cinematic beat before Landed
-constexpr float k_launch_offset_m     = 800.0f;  // how far off the pad we respawn
+constexpr float k_launch_offset_m     = 3500.0f; // how far off the pad we respawn
+                                                 // (toward system centre, np-3dp.22)
 constexpr float k_launch_speed        = 40.0f;   // gentle outward push on launch
 constexpr float k_relaunch_cooldown_s = 2.0f;    // anti-instant-redock after launch
 
@@ -131,8 +132,11 @@ constexpr float k_auto_land_m     = 600.0f;
 void tick(Docking& d, Camera& cam, GameState& gs, PlayerState& player, float dt);
 
 // Leave Landed: request Flight, place the ship k_launch_offset_m off the
-// pad with a small outward velocity, clear the docked flag, and arm a
-// brief cooldown so we don't instantly re-dock on the way out.
-void launch(Docking& d, Camera& cam, GameState& gs, PlayerState& player);
+// pad TOWARD the system centre (`sun_pos`) with a small inward velocity,
+// clear the docked flag, and arm a brief cooldown so we don't instantly
+// re-dock on the way out. Launching inward (np-3dp.22) drops you in open
+// space pointed at the action rather than nose-to-the-pad.
+void launch(Docking& d, Camera& cam, GameState& gs, PlayerState& player,
+            HMM_Vec3 sun_pos);
 
 } // namespace docking

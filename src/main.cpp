@@ -2162,7 +2162,8 @@ void frame_stub() {
     debug_panel::build(g.placed_meshes, g.placed_ship_sprites, g.game,
                        g.ship_debug, g.audio_debug, g.player);
     if (landed) {
-        base_screens::build(g.player, g.ships.player(), g.docking, g.camera, g.game);
+        base_screens::build(g.player, g.ships.player(), g.docking, g.camera, g.game,
+                            g.sun.position);
     }
 
     sg_pass p{};
@@ -4943,7 +4944,7 @@ void event_cb(const sapp_event* ev) {
             // debug return-to-Flight.
             if (g.game.mode == GameMode::Landed) {
                 if (!base_screens::handle_escape()) {
-                    docking::launch(g.docking, g.camera, g.game, g.player);
+                    docking::launch(g.docking, g.camera, g.game, g.player, g.sun.position);
                 }
             } else if (g.game.mode == GameMode::Dying) {
                 // Death cinematic owns the transition (auto-respawn at
