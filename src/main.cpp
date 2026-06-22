@@ -729,10 +729,11 @@ static void apply_player_loadout(Ship& pl, const PlayerState& p, bool heal = tru
         } else if (k && !single_gun) {
             m.offset_body = HMM_V3(0.0f, 0.0f, 3.0f);
         } else {
-            // Single-gun: centered, slight downward screen offset (body +Y
-            // projects to screen DOWN per the cockpit convention, so a +Y
-            // here drops the muzzle below the crosshair as Mike asked).
-            m.offset_body = HMM_V3(0.0f, 0.5f, 2.0f);
+            // Single-gun: centered, slightly BELOW the crosshair. The
+            // engine maps world +Y to screen +Y (UP, see cockpit_hud.cpp),
+            // so a NEGATIVE body-Y drops the muzzle below the cockpit
+            // eye line. -0.5 felt right when tested.
+            m.offset_body = HMM_V3(0.0f, -0.5f, 2.0f);
         }
         if (i < p.gun_mounts.size() && !p.gun_mounts[i].empty()) {
             const GunType t = gun::from_name(p.gun_mounts[i]);
