@@ -2750,14 +2750,14 @@ void frame_cb() {
         g.camera.integrate(dt);
     }
 
-    // Automatic landing zone (np-3dp.22): the player no longer has to
-    // request a dock by hand near a base — fly close enough and it just
-    // happens. Inside k_zone_announce_m of the nearest dockable base we
-    // play the 'Now entering an automatic landing zone' comms + sting
-    // (once per approach); inside k_auto_land_m we force the auto-approach
-    // (begin_auto bypasses the speed gate — the approach autopilot eases
-    // the velocity onto the pad). Only while free-flying (not mid-dock,
-    // not in the post-launch cooldown).
+    // Automatic landing zone (np-3dp.22): the player no longer requests a
+    // dock by hand near a base — fly close enough and it just happens.
+    // Inside k_zone_announce_m of the nearest dockable base we play the
+    // 'Now entering an automatic landing zone' comms + sting (once per
+    // approach); inside k_auto_land_m we land INSTANTLY (land_now commits
+    // straight to Landed — no fly-to-pad approach, no cinematic beat).
+    // Only while free-flying (not mid-dock, not in the post-launch
+    // cooldown).
     if (g.game.mode == GameMode::Flight &&
         g.docking.state == DockingState::None && g.docking.cooldown_s <= 0.0f) {
         int   near_nav = -1;
@@ -2775,7 +2775,8 @@ void frame_cb() {
                 music::landing_approach();
             }
             if (near_d < docking::k_auto_land_m) {
-                docking::begin_auto(g.docking, g.system.nav_points[near_nav]);
+                docking::land_now(g.docking, g.game, g.player,
+                                  g.system.nav_points[near_nav]);
             }
         } else {
             g.landing_zone_announced = false;   // re-arm on leaving the zone

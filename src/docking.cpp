@@ -120,6 +120,30 @@ void begin_auto(Docking& d, const NavPointDef& nav) {
                 d.base_id.empty() ? nav.name.c_str() : d.base_id.c_str());
 }
 
+void land_now(Docking& d, GameState& gs, PlayerState& player,
+              const NavPointDef& nav) {
+    // Instant land (np-3dp.22): the auto-land zone doesn't fly an approach
+    // — it commits to Landed the moment you cross the threshold. Mirrors
+    // the Docking->Docked transition in tick(): set the docked flags,
+    // request Landed, and autosave (a new timestamped file every landing).
+    if (d.state != DockingState::None || d.cooldown_s > 0.0f) return;
+    d.state                 = DockingState::Docked;
+    d.base_id               = nav.base_id;
+    d.base_name             = nav.name;
+    d.pad_pos               = nav.position;
+    d.timer_s               = 0.0f;
+    player.docked           = true;
+    player.last_docked_base = nav.base_id;
+    game_state::request_mode(gs, GameMode::Landed);
+    sfx::ui_click();
+    if (!savegame::save_timestamped(player).empty()) {
+        std::printf("[save] autosaved at %s (%lld cr)\n",
+                    nav.base_id.c_str(), (long long)player.credits);
+    }
+    std::printf("[dock] AUTO-LAND zone -> instant land at %s\n",
+                d.base_id.empty() ? nav.name.c_str() : d.base_id.c_str());
+}
+
 void tick(Docking& d, Camera& cam, GameState& gs, PlayerState& player, float dt) {
     // Bleed the post-launch lockout regardless of state.
     if (d.cooldown_s > 0.0f) {

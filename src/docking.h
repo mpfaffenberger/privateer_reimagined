@@ -119,6 +119,14 @@ DockResult request(Docking& d, HMM_Vec3 player_pos, HMM_Vec3 player_vel,
 // gates. No-op if already docking or in the post-launch cooldown.
 void begin_auto(Docking& d, const NavPointDef& nav);
 
+// Instant land (np-3dp.22): the auto-land zone commits straight to Landed
+// — no fly-to-pad approach, no cinematic beat. Sets the docked flags,
+// requests GameMode::Landed, and autosaves. No-op if already docking or in
+// the post-launch cooldown. (GameState/PlayerState refs because it does
+// the whole commit, unlike begin_auto which only arms the approach.)
+void land_now(Docking& d, GameState& gs, PlayerState& player,
+              const NavPointDef& nav);
+
 // Distance band knobs for the automatic landing zone (np-3dp.22):
 // announce the zone (comms + sting) crossing inside k_zone_announce_m,
 // auto-capture the ship inside k_auto_land_m.
