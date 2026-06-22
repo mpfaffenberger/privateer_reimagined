@@ -23,6 +23,7 @@
 #include "material.h"   // TextureSlot, load_texture_png
 #include "player.h"
 #include "savegame.h"
+#include "sokol_time.h"   // stm_now for the "Saved!" banner deadline
 #include "sfx.h"
 
 #include "imgui.h"
@@ -172,13 +173,40 @@ void draw_context_strip(ImDrawList* dl, const PlayerState& player,
 // accumulate; nothing overwritten) plus a one-line readout of the most
 // recent save on disk. Landing already autosaves; this is the manual
 // save-anytime-at-base convenience.
+//
+// Wrapped in a kPanelBg panel (same idiom as draw_context_strip) so it
+// doesn't visually collide with the concourse art's baked-in base-name
+// title — issue #2. Also adds a transient "Saved!" banner so a manual
+// save produces unambiguous feedback even when the Last-save line is
+// obscured by the title.
 void draw_save_widget(PlayerState& player) {
-    ImGui::SetCursorScreenPos(ImVec2(16, 92));
-    if (ImGui::Button("Save game", ImVec2(180, 28))) {
+    // TU-local banner state. Wall-clock deadline (sapp's stm_now ns).
+    // Banner is shown while stm_now() < this deadline.
+    static uint64_t s_banner_until_ns = 0;
+    constexpr uint64_t k_banner_ns = (uint64_t)(2.0 * 1e9);   // ~2 s
+
+    constexpr float k_x = 16.0f;
+    constexpr float k_y = 92.0f;
+    constexpr float k_w = 220.0f;
+    constexpr float k_h = 80.0f;
+    constexpr float k_pad = 8.0f;
+
+    // Panel container (kPanelBg + kAmberDim border, same idiom as context_strip).
+    ImDrawList* dl = ImGui::GetForegroundDrawList();
+    dl->AddRectFilled(ImVec2(k_x, k_y), ImVec2(k_x + k_w, k_y + k_h),
+                      kPanelBg, 6.0f);
+    dl->AddRect(ImVec2(k_x, k_y), ImVec2(k_x + k_w, k_y + k_h),
+                kAmberDim, 6.0f);
+
+    // Save button (issue #2: now in its own panel + immediate "Saved!" feedback).
+    ImGui::SetCursorScreenPos(ImVec2(k_x + k_pad, k_y + k_pad));
+    if (ImGui::Button("Save game", ImVec2(k_w - k_pad * 2, 28))) {
         sfx::ui_click();
-        if (!savegame::save_timestamped(player).empty())
+        if (!savegame::save_timestamped(player).empty()) {
+            s_banner_until_ns = stm_now() + k_banner_ns;
             std::printf("[save] manual save (%lld cr)\n",
                         (long long)player.credits);
+        }
     }
 
     // Most-recent save readout (newest by timestamp; no full load).
@@ -190,8 +218,16 @@ void draw_save_widget(PlayerState& player) {
     } else {
         std::snprintf(info, sizeof(info), "Last save: (none yet)");
     }
-    ImGui::SetCursorScreenPos(ImVec2(16, 124));
+    ImGui::SetCursorScreenPos(ImVec2(k_x + k_pad, k_y + 44));
     ImGui::TextColored(ImVec4(0.78f, 0.67f, 0.24f, 1.0f), "%s", info);
+
+    // Transient "Saved!" banner (only while inside the deadline).
+    if (stm_now() < s_banner_until_ns) {
+        ImGui::SetCursorScreenPos(ImVec2(k_x + k_pad, k_y + 62));
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.9f, 0.5f, 1.0f));
+        ImGui::TextUnformatted("Saved!");
+        ImGui::PopStyleColor();
+    }
 }
 
 // Draw the concourse hub: hotspot regions over the art + the context strip.
