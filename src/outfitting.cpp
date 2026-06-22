@@ -560,7 +560,13 @@ void draw_equipment(BaseContext& ctx) {
         ImGui::TableSetupColumn("Dmg");
         ImGui::TableSetupColumn("Price");
         ImGui::TableSetupColumn("Fit");
+        // Wrap the header row in its own scope so it can't collide with the
+        // PushID(t) wrapping each data row below (np-3dp.28). Without this,
+        // mousing over the header cells trips 'two invisible items with
+        // conflicting ID!'.
+        ImGui::PushID("weapons_header");
         ImGui::TableHeadersRow();
+        ImGui::PopID();
         for (int t = 0; t < kGunTypeCount; ++t) {
             const char* name = gun::to_name((GunType)t);
             const int64_t price = gun_price(name);
