@@ -5,6 +5,10 @@
   "atlas_manifest": "ships/kamekh/atlas_manifest_3d.json",
   "default_faction": "kilrathi",
 
+  // Capital hull: huge + slow. Keeps ≥2000u from other capitals at spawn
+  // and ≥1000u in transit (see encounters.cpp / ship_ai.cpp).
+  "capital": true,
+
   "armor_fore_cm": 70,
   "armor_aft_cm":  40,
   "armor_side_cm": 55,

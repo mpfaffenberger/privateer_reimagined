@@ -12,6 +12,10 @@
   "atlas_manifest": "ships/paradigm/atlas_manifest_3d.json",
   "default_faction": "confed",
 
+  // Capital hull: huge + slow. Keeps ≥2000u from other capitals at spawn
+  // and ≥1000u in transit (see encounters.cpp / ship_ai.cpp).
+  "capital": true,
+
   "armor_fore_cm": 80,
   "armor_aft_cm":  50,
   "armor_side_cm": 65,

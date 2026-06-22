@@ -15,6 +15,7 @@
 #include "encounters.h"
 
 #include "ship.h"
+#include "ship_class.h"
 #include "ship_registry.h"
 #include "system_def.h"
 
@@ -330,11 +331,19 @@ void populate_on_entry(const StarSystem& system, HMM_Vec3 player_pos,
         // overlap, ram and instantly explode (np-3dp). Min separation is
         // generous -- spaced convoys read better visually too.
         std::vector<HMM_Vec3> placed;
+        std::vector<bool>     placed_capital;   // parallel: was placed[j] a capital hull?
         placed.reserve(mem.size());
+        placed_capital.reserve(mem.size());
         constexpr float k_min_sep_m   = 350.0f;     // min sep between group members
         constexpr float k_min_sep_pad = 120.0f;    // extra clearance beyond ship size
+        constexpr float k_cap_sep_m   = 2000.0f;    // min sep when EITHER member is a capital
         for (size_t k = 0; k < mem.size(); ++k) {
             if (spawned >= k_entry_population_max) break;
+            // Capital hulls (Drayman/Paradigm/Kamekh) need a much wider berth
+            // from each other -- a hull-to-hull capital ram is an instant
+            // double KO and reads terribly. Flag is data-driven (ship.json).
+            const ShipClass* mem_class = ship_class::find(mem[k].second);
+            const bool cur_capital = mem_class && mem_class->capital;
             // Pick a candidate: random scatter in a wider shell, then nudge
             // outward so the lead sits in clear space.
             HMM_Vec3 off = HMM_V3(U(rng) * 2 - 1, U(rng) * 2 - 1, U(rng) * 2 - 1);
@@ -349,26 +358,37 @@ void populate_on_entry(const StarSystem& system, HMM_Vec3 player_pos,
                                                   : HMM_V3(0, 0, 1);
                 pos = HMM_AddV3(player_pos, HMM_MulV3F(dir, k_spawn_dist_min + 1500.0f));
             }
-            // Enforce min separation from previously-placed members. Up to
-            // 8 jitter attempts before giving up -- if we can't fit, accept
-            // the best candidate we found so the spawn doesn't stall.
-            const float need = k_min_sep_m + k_min_sep_pad * (float)placed.size();
+            // Enforce min separation from previously-placed members. The
+            // required gap is PER PAIR: capitals demand k_cap_sep_m from any
+            // other capital, everyone else uses the crowd-scaled base gap.
+            // Up to 8 jitter attempts before giving up -- if we can't fit,
+            // accept the best candidate we found so the spawn doesn't stall.
+            const float base_need = k_min_sep_m + k_min_sep_pad * (float)placed.size();
+            auto pair_need = [&](size_t j) {
+                return (cur_capital || placed_capital[j]) ? k_cap_sep_m : base_need;
+            };
             HMM_Vec3 best = pos;
-            float best_d = -1.0f;
+            float best_slack = -1e30f;   // worst (dist - need) across placed; higher = better
             for (int tries = 0; tries < 8; ++tries) {
-                float nearest = 1e30f;
-                for (const auto& pp : placed) {
-                    nearest = std::min(nearest, len(HMM_SubV3(pos, pp)));
-                    if (nearest < need) break;
+                bool  ok    = true;
+                float worst = 1e30f;     // min slack vs. any placed member
+                for (size_t j = 0; j < placed.size(); ++j) {
+                    const float slack = len(HMM_SubV3(pos, placed[j])) - pair_need(j);
+                    worst = std::min(worst, slack);
+                    if (slack < 0.0f) ok = false;
                 }
-                if (nearest >= need) break;             // good enough
-                if (nearest > best_d) { best_d = nearest; best = pos; }
-                // jitter outward away from the nearest blocker
+                if (ok) break;                          // satisfies every pair
+                if (worst > best_slack) { best_slack = worst; best = pos; }
+                // jitter outward away from the nearest blocker. Scale the
+                // nudge by the largest gap we might need so capitals get
+                // shoved far enough in one hop.
+                const float step = cur_capital ? k_cap_sep_m : base_need;
                 HMM_Vec3 nudge = HMM_V3(U(rng) - 0.5f, U(rng) - 0.5f, U(rng) - 0.5f);
                 const float nl = len(nudge);
-                nudge = (nl > 1e-3f) ? HMM_MulV3F(nudge, need / nl)
-                                      : HMM_V3(need, 0, 0);
+                nudge = (nl > 1e-3f) ? HMM_MulV3F(nudge, step / nl)
+                                      : HMM_V3(step, 0, 0);
                 pos = HMM_AddV3(pos, nudge);
+                if (tries == 7) pos = best;             // exhausted: take the best found
             }
             SpawnRequest req;
             req.class_name       = mem[k].second;
@@ -393,6 +413,7 @@ void populate_on_entry(const StarSystem& system, HMM_Vec3 player_pos,
                 ++spawned;
                 if (k == 0) lead_id = id;
                 placed.push_back(req.position);   // remember for sep check on later members
+                placed_capital.push_back(cur_capital);
             }
         }
         return lead_id;

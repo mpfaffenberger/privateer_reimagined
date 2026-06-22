@@ -33,9 +33,18 @@
   "default_shield":   "Shield Generator 1",
   "default_armor":    "Plasteel Armor",
 
+  // Gun hardpoints (body frame, metres) — the single source of truth for
+  // muzzle geometry, used by BOTH the player cockpit and NPC Tarsuses.
+  // Convention: +X = right, +Y = DOWN on the cockpit crosshair (positive Y
+  // drops the muzzle below the eye line), and the camera looks down -Z, so
+  // a NEGATIVE Z puts the muzzle in FRONT of the eye. Z MUST be non-zero:
+  // at Z=0 the muzzle sits in the eye plane (view depth 0) and projects
+  // degenerately, which makes left/right drift apart on screen. Guns fill
+  // in list order (new Tarsus -> slot 0, bought 2nd gun -> slot 1). Tune
+  // here — no code change.
   "default_guns": [
-    { "offset_body": [-2.0, 0.0, 2.0], "type": "mass_driver" },
-    { "offset_body": [ 2.0, 0.0, 2.0], "type": "mass_driver" }
+    { "offset_body": [-5.00, 4.50, -20.00], "type": "mass_driver" },
+    { "offset_body": [ 4.00, 5.00, -20.00], "type": "mass_driver" }
   ],
 
   "energy_max":      150,

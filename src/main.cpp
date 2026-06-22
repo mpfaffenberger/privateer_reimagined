@@ -8,7 +8,9 @@
 //   + / - (hold)   — throttle: ramp cruising speed up / down
 //   Tab (hold)     — afterburner: snap to full afterburn speed; release
 //                    returns to the throttle setting
-//   N              — cycle selected nav point (Alt+N: navmap overlay)
+//   N              — cycle selected nav point; opens the navmap if
+//                      closed (Esc / X to close). N cycles inside an
+//                      already-open navmap.
 //   A              — autopilot to selected nav (hostile-gated; any input cancels)
 //   D              — dock at selected base when cleared
 //   Escape (×2)    — quit (double-tap within 1s so accidental taps are safe)
@@ -453,9 +455,11 @@ struct AppState {
     // when we need to display it.
     uint32_t player_target_id = 0;
 
-    // Navmap overlay (Alt+N to toggle, Alt+N or ESC to close). Big
-    // top-down view of the system's nav points + ship contacts; clicking
-    // a nav selects it (matches the N-key cycle's effect).
+    // Navmap overlay. N opens it when closed; while open, N cycles
+    // through nav points in place (no close). Esc or the X button
+    // closes. Big top-down view of the system's nav points + ship
+    // contacts; clicking a nav selects it (matches the N-key cycle's
+    // effect).
     bool show_navmap = false;
 
     // Welcome / alpha-intro overlay. Starts true so a fresh launch opens
@@ -523,6 +527,9 @@ struct AppState {
 struct _PreG { _PreG()  { std::fprintf(stderr, "[trace] pre-g\n");  std::fflush(stderr); } };
 static _PreG g_trace_pre_g;
 AppState g;
+// Dev gun-mount tuner overlay — hidden by default, F4 toggles it. Kept in
+// the build for future per-ship muzzle tuning; off so it doesn't clutter.
+static bool g_show_mount_tuner = false;
 struct _PostG { _PostG() { std::fprintf(stderr, "[trace] post-g\n"); std::fflush(stderr); } };
 static _PostG g_trace_post_g;
 
@@ -695,11 +702,13 @@ void init_cb() {
 // switch rather than be rebuilt.
 // Fit the player's persistent loadout (PlayerState) onto the live slot-0
 // Ship (np-3dp.25): bind the hull class, heal to full, and mount the guns
-// named in p.gun_mounts. Mount OFFSETS are borrowed from the class
-// default_guns; the mount COUNT follows gun_mounts, so a single-gun loadout
-// (the stock Tarsus's one laser) flies a single muzzle. Shared by the boot
-// spawn AND the title NEW handler so the ship can never drift from the
-// player state. Unknown / empty gun names fall back to a Laser.
+// named in p.gun_mounts. Mount POSITIONS + default types come straight from
+// the ship class default_guns (authored in assets/ships/<hull>/ship.json) --
+// the single source of truth for muzzle geometry. p.gun_mounts only decides
+// how many hardpoints are FILLED and with what gun, in list order: a brand-
+// new Tarsus fills slot 0 with its single laser, a bought second gun fills
+// slot 1. Tune muzzle placement in the JSON, never here. Shared by the boot
+// spawn AND the title NEW handler. Unknown / empty gun names fall back to a Laser.
 static void apply_player_loadout(Ship& pl, const PlayerState& p, bool heal = true) {
     if (const ShipClass* k = ship_class::find(p.ship_class_name)) pl.klass = k;
     // Shield generator upgrade (np-3dp.26, np-3dp.28): each dealer shield
@@ -714,32 +723,19 @@ static void apply_player_loadout(Ship& pl, const PlayerState& p, bool heal = tru
     if (heal) ship::heal_to_full(pl);
     const ShipClass* k = pl.klass;
     pl.mounts.clear();
+    // Fill hardpoints from the ship class in list order. Count follows the
+    // player's loadout (1 for a new Tarsus, 2 after buying a second), capped
+    // at the number of hardpoints the hull actually has; with no loadout set
+    // (--ship dev override) fill every hardpoint with its default gun.
+    const size_t slots = k ? k->default_guns.size() : size_t{0};
     const size_t n = p.gun_mounts.empty()
-                       ? (k ? k->default_guns.size() : size_t{0})
-                       : p.gun_mounts.size();
+                       ? slots
+                       : std::min(p.gun_mounts.size(), slots);
     for (size_t i = 0; i < n; ++i) {
-        GunMount m;
-        // Single-gun loadouts (the canonical Tarsus w/ one laser): center
-        // horizontally, sit slightly BELOW the cockpit eye line, and stay
-        // a touch forward of the hull origin. Multi-gun loadouts still
-        // borrow their offsets from the class default for the natural
-        // wing-tip spread.
-        const bool single_gun = (n == 1);
-        if (k && !single_gun && i < k->default_guns.size()) {
-            m = k->default_guns[i];   // borrow offset (NPC layout)
-        } else if (k && !single_gun) {
-            m.offset_body = HMM_V3(0.0f, 0.0f, 3.0f);
-        } else {
-            // Single-gun: centered horizontally, pushed WELL below the
-            // crosshair, and slightly forward of the hull. The engine
-            // maps world +Y to screen +Y (UP, see cockpit_hud.cpp note),
-            // so a LARGE negative body-Y drops the muzzle visibly below
-            // the cockpit eye line.
-            m.offset_body = HMM_V3(0.0f, -3.0f, 4.0f);
-        }
+        GunMount m = k->default_guns[i];   // position + default type from ship.json
         if (i < p.gun_mounts.size() && !p.gun_mounts[i].empty()) {
             const GunType t = gun::from_name(p.gun_mounts[i]);
-            m.type = (t == GunType::Count) ? GunType::Laser : t;
+            m.type = (t == GunType::Count) ? GunType::Laser : t;   // player gun overrides type only
         }
         m.cone_half_angle_deg = 1.0f;
         pl.mounts.push_back(m);
@@ -4368,6 +4364,47 @@ void frame_cb() {
     debug_panel::build(g.placed_meshes, g.placed_ship_sprites, g.game,
                        g.ship_debug, g.audio_debug, g.player);
 
+    // --- Live gun-mount tuner (dev tool) --------------------------------
+    // Drag the player's muzzle offset_body values in real time, then hit
+    // "copy JSON" to paste the tuned numbers straight into the hull's
+    // ship.json default_guns. Flight-only; ImGui draw cmds get flushed by
+    // the debug_panel::render() call later this frame.
+    if (!g.show_title && g_show_mount_tuner) {
+        if (Ship* pl = g.ships.player()) {
+            ImGui::SetNextWindowSize(ImVec2(340.0f, 0.0f), ImGuiCond_FirstUseEver);
+            if (ImGui::Begin("Gun Mount Tuner", &g_show_mount_tuner)) {
+                ImGui::TextDisabled("offset_body (m):  +X right   +Y down   -Z fwd");
+                ImGui::Separator();
+                for (size_t i = 0; i < pl->mounts.size(); ++i) {
+                    ImGui::PushID((int)i);
+                    ImGui::DragFloat3("", &pl->mounts[i].offset_body.X,
+                                      0.1f, -60.0f, 60.0f, "%.2f");
+                    ImGui::SameLine();
+                    ImGui::Text("mount %d", (int)i);
+                    ImGui::PopID();
+                }
+                ImGui::Separator();
+                if (ImGui::Button("copy JSON")) {
+                    std::string js = "\"default_guns\": [\n";
+                    for (size_t i = 0; i < pl->mounts.size(); ++i) {
+                        char line[160];
+                        std::snprintf(line, sizeof(line),
+                            "    { \"offset_body\": [%.2f, %.2f, %.2f], \"type\": \"mass_driver\" }%s\n",
+                            pl->mounts[i].offset_body.X,
+                            pl->mounts[i].offset_body.Y,
+                            pl->mounts[i].offset_body.Z,
+                            (i + 1 == pl->mounts.size()) ? "" : ",");
+                        js += line;
+                    }
+                    js += "  ],";
+                    ImGui::SetClipboardText(js.c_str());
+                }
+                ImGui::SameLine();
+                ImGui::TextDisabled("(paste into ship.json)");
+            }
+            ImGui::End();
+        }
+    }
 
     // Surface every ship-sprite atlas cell as an extra editable target so
     // F2 can author lights on individual frames (engine glow, nav strobes,
@@ -4390,7 +4427,7 @@ void frame_cb() {
     sprite_light_editor::build(g.placed_sprites, ship_cell_targets);
     // F5 — mesh orientation editor. Mutates PlacedMesh.euler_deg in place.
     mesh_orient_editor::build(g.placed_meshes);
-    // F10 — navmap auditor. Map/coordinate inspection + wiki-coordinate edits across systems.
+    // F10 — navmap auditor. Read-only map/coordinate inspection across systems.
     navmap_auditor::build();
     // F4 — atlas grid viewer. Mutates ShipSpriteFrame fields directly,
     // so changes flow into the next render frame with no apply step.
@@ -4487,7 +4524,7 @@ void frame_cb() {
             w.lock_progress = sel.lock_buildup ? (g.missile_lock.progress_s / 1.5f) : 1.0f;
             cockpit_hud::build_weapons_status(w);
         }
-        // Big system navmap (Alt+N to toggle). Drawn AFTER the regular
+        // Big system navmap (N to open/cycle). Drawn AFTER the regular
         // HUD so it overlays on top. Mutates selected_nav when the
         // player clicks a nav point — same effect as the N-cycle.
         cockpit_hud::build_navmap(g.camera, g.system, g.selected_nav,
@@ -5079,18 +5116,25 @@ void event_cb(const sapp_event* ev) {
         // N — cycle target through nav_points. KEY_DOWN (not keys_down
         // polled per frame) so a single press advances exactly one slot,
         // not however-many frames the key was physically held.
-        // Alt+N opens the big navigation map overlay instead.
+        // Pressing N with the navmap closed opens it; with it open the
+        // map stays up and N cycles inside (matching the outside-map
+        // behaviour, so the player can pick a target visually). Esc or
+        // the X button still closes.
         if (ev->key_code == SAPP_KEYCODE_N) {
-            const bool alt_held = (ev->modifiers & SAPP_MODIFIER_ALT) != 0;
-            if (alt_held) {
-                g.show_navmap = !g.show_navmap;
-                std::printf("[navmap] %s\n", g.show_navmap ? "OPEN" : "closed");
-            } else if (!g.system.nav_points.empty()) {
-                const int n = (int)g.system.nav_points.size();
-                g.selected_nav = (g.selected_nav + 1) % n;
-                sfx::ui_click();
-                std::printf("[nav] target → %s\n",
-                            g.system.nav_points[g.selected_nav].name.c_str());
+            if (g.show_navmap) {
+                // Map already up — cycle to next nav. Same one-slot
+                // advance as outside the map.
+                if (!g.system.nav_points.empty()) {
+                    const int n = (int)g.system.nav_points.size();
+                    g.selected_nav = (g.selected_nav + 1) % n;
+                    sfx::ui_click();
+                    std::printf("[nav] target → %s\n",
+                                g.system.nav_points[g.selected_nav].name.c_str());
+                }
+            } else {
+                // Map closed — open it on this press (no cycle yet).
+                g.show_navmap = true;
+                std::printf("[navmap] OPEN\n");
             }
         }
         // A — toggle the nav autopilot (np-opa.3). KEY_DOWN edge so one
@@ -5264,6 +5308,11 @@ void event_cb(const sapp_event* ev) {
             g.show_ship_frame_hud = !g.show_ship_frame_hud;
             std::printf("[hud] ship-frame HUD %s\n",
                         g.show_ship_frame_hud ? "on" : "off");
+        }
+        // F4 — toggle the dev Gun Mount Tuner overlay (off by default).
+        if (ev->key_code == SAPP_KEYCODE_F4 && !ev->key_repeat) {
+            g_show_mount_tuner = !g_show_mount_tuner;
+            std::printf("[mount-tuner] %s\n", g_show_mount_tuner ? "on" : "off");
         }
         // SPACE — toggle fly-by-wire vs free-cursor mode. Hides/shows
         // the OS cursor in lockstep so the visual matches the input

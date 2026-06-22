@@ -56,6 +56,38 @@ bool pick_travel_waypoint(HMM_Vec3 from, HMM_Vec3& out) {
     return true;
 }
 
+// Capital ships (data-driven "capital" flag in ship.json) keep a wide berth
+// from one another in transit -- two cruisers sharing a lane look wrong and
+// can slowly close into a hull-to-hull ram. We add a soft repulsion to the
+// steering target: for every other capital within k_cap_travel_sep, push the
+// target away (linear falloff, strongest when closest). It's a NUDGE on the
+// existing destination, so the capital banks clear while still heading
+// roughly on-course. Only meaningful for ships actively moving toward a
+// target (Traveler / Loiter / Escort).
+constexpr float k_cap_travel_sep = 1000.0f;   // min capital-vs-capital gap in transit
+
+void apply_capital_separation(Ship& s, const ShipRegistry& all) {
+    if (!s.klass || !s.klass->capital) return;
+    if (s.behavior.kind != ShipBehavior::PursueTarget) return;
+    HMM_Vec3 push = HMM_V3(0, 0, 0);
+    int near_caps = 0;
+    for (const Ship& o : all) {
+        if (o.id == s.id || !o.alive) continue;
+        if (!o.klass || !o.klass->capital) continue;
+        const HMM_Vec3 away = HMM_SubV3(s.position, o.position);
+        const float    d    = HMM_LenV3(away);
+        if (d > 1e-3f && d < k_cap_travel_sep) {
+            const float strength = (k_cap_travel_sep - d) / k_cap_travel_sep;  // 0..1
+            push = HMM_AddV3(push, HMM_MulV3F(HMM_DivV3F(away, d), strength));
+            ++near_caps;
+        }
+    }
+    if (near_caps > 0) {
+        s.behavior.target_pos =
+            HMM_AddV3(s.behavior.target_pos, HMM_MulV3F(push, k_cap_travel_sep));
+    }
+}
+
 // Drive a non-combat ship's controller for its civilian role. Runs on the
 // Patrol fallthrough (no hostiles). Leaves guns/afterburner off throughout.
 void civilian_behavior(Ship& s, const ShipRegistry& all, float t_now) {
@@ -113,6 +145,10 @@ void civilian_behavior(Ship& s, const ShipRegistry& all, float t_now) {
         s.behavior.kind = ShipBehavior::None;
         break;
     }
+
+    // Capital-vs-capital spacing: nudge the steering target clear of any
+    // other nearby capital so cruisers don't share a lane / ram in transit.
+    apply_capital_separation(s, all);
 }
 
 // Reset the data-driven brain's per-ship runtime when leaving combat so a

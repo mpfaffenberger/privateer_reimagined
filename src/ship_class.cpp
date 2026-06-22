@@ -30,6 +30,10 @@ std::string opt_str(const json::Value& v, const char* key,
     const json::Value* p = v.find(key);
     return (p && p->is_string()) ? p->as_string() : fallback;
 }
+bool opt_bool(const json::Value& v, const char* key, bool fallback) {
+    const json::Value* p = v.find(key);
+    return (p && p->is_bool()) ? p->as_bool() : fallback;
+}
 
 // Pull HMM_Vec3 out of a 3-element JSON array. Default to zero vec on
 // missing/malformed — the caller is expected to know whether absence
@@ -77,6 +81,9 @@ bool parse_one(const fs::path& path) {
             c.default_faction = f;
         }
     }
+
+    // Hull category — capital ships get extra spawn/travel spacing.
+    c.capital = opt_bool(root, "capital", c.capital);
 
     // Armor (base hull cm — independent of fitted ArmorType).
     c.armor_fore_cm = opt_num(root, "armor_fore_cm", c.armor_fore_cm);

@@ -57,6 +57,15 @@ struct ShipClass {
                                   // "ships/talon/atlas_manifest.json"
     Faction default_faction = Faction::Civilian;
 
+    // ---- hull category -------------------------------------------------
+    // Capital ships (Drayman / Paradigm / Kamekh and any future cruisers)
+    // are huge and slow. Marked true via "capital": true in ship.json so
+    // the encounter spawner + travel steering can keep them well clear of
+    // one another (a hull-to-hull capital ram is an instant double KO).
+    // Data-driven flag, not a hardcoded name list — add the flag to a new
+    // hull and the spacing rules apply automatically.
+    bool capital = false;
+
     // ---- hull (cm of durasteel) ----------------------------------------
     // Base armor that's always present. Add ArmorType::xxx_cm for the
     // total per-facing protection of an instance.
