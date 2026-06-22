@@ -729,11 +729,12 @@ static void apply_player_loadout(Ship& pl, const PlayerState& p, bool heal = tru
         } else if (k && !single_gun) {
             m.offset_body = HMM_V3(0.0f, 0.0f, 3.0f);
         } else {
-            // Single-gun: centered, slightly BELOW the crosshair. The
-            // engine maps world +Y to screen +Y (UP, see cockpit_hud.cpp),
-            // so a NEGATIVE body-Y drops the muzzle below the cockpit
-            // eye line. -0.5 felt right when tested.
-            m.offset_body = HMM_V3(0.0f, -0.5f, 2.0f);
+            // Single-gun: centered horizontally, pushed WELL below the
+            // crosshair, and slightly forward of the hull. The engine
+            // maps world +Y to screen +Y (UP, see cockpit_hud.cpp note),
+            // so a LARGE negative body-Y drops the muzzle visibly below
+            // the cockpit eye line.
+            m.offset_body = HMM_V3(0.0f, -3.0f, 4.0f);
         }
         if (i < p.gun_mounts.size() && !p.gun_mounts[i].empty()) {
             const GunType t = gun::from_name(p.gun_mounts[i]);
