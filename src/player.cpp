@@ -19,18 +19,20 @@ namespace player {
 PlayerState new_game(const std::string& start_system) {
     PlayerState p;
     p.credits         = k_new_game_credits;
-    p.ship_class_name = "centurion";
-    // Centurion loadout: 4x Tachyon Cannon, matching the player-spawn
-    // block in main.cpp (which sources the same types from the
-    // Centurion ShipClass). This pure-data layer keeps no catalog
-    // dependency (see file header), so the literal quadruple is
-    // intentional — it just has to agree with the class default_guns,
-    // which it does (np-e3x).
-    p.gun_mounts      = { "tachyon_cannon", "tachyon_cannon",
-                           "tachyon_cannon", "tachyon_cannon" };
+    // Canonical Privateer start (np-3dp.25): a stock 'barfy' Tarsus with a
+    // SINGLE laser cannon (not the class-default twin mass drivers) and a
+    // single missile launcher loaded with 4 heat-seekers. The spawn path in
+    // main.cpp fits these onto the live ship via apply_player_loadout, so
+    // the data here is the single source of truth for the starting hull.
+    p.ship_class_name = "tarsus";
+    p.gun_mounts      = { "laser" };          // one laser, one muzzle
     p.current_system  = start_system;
-    // Starter missile loadout (np-zte.2). Afterburner now shares the
-    // ship's energy bank (no separate fuel tank to initialize).
+    // Start docked at Achilles Mining Base (Troy) — you begin in the
+    // concourse, the way the 1995 game drops you on a base.
+    p.docked           = true;
+    p.last_docked_base = "achilles";
+    // Starter missile loadout (np-zte.2): 4 heat-seekers, nothing else.
+    // Afterburner shares the ship's energy bank (no separate fuel tank).
     for (int i = 0; i < 3; ++i) p.missiles[i] = k_new_game_missiles[i];
     // rep zero-initialized = unknown stranger; faction baselines decide
     // first impressions (see faction.h).

@@ -692,6 +692,36 @@ void init_cb() {
 // `first_time` gates the one-time work (GPU renderer inits, design-data table
 // loads, the player's slot-0 Ship + PlayerState) that must persist across a
 // switch rather than be rebuilt.
+// Fit the player's persistent loadout (PlayerState) onto the live slot-0
+// Ship (np-3dp.25): bind the hull class, heal to full, and mount the guns
+// named in p.gun_mounts. Mount OFFSETS are borrowed from the class
+// default_guns; the mount COUNT follows gun_mounts, so a single-gun loadout
+// (the stock Tarsus's one laser) flies a single muzzle. Shared by the boot
+// spawn AND the title NEW handler so the ship can never drift from the
+// player state. Unknown / empty gun names fall back to a Laser.
+static void apply_player_loadout(Ship& pl, const PlayerState& p) {
+    if (const ShipClass* k = ship_class::find(p.ship_class_name)) pl.klass = k;
+    ship::heal_to_full(pl);
+    const ShipClass* k = pl.klass;
+    pl.mounts.clear();
+    const size_t n = p.gun_mounts.empty()
+                       ? (k ? k->default_guns.size() : size_t{0})
+                       : p.gun_mounts.size();
+    for (size_t i = 0; i < n; ++i) {
+        GunMount m;
+        if (k && i < k->default_guns.size()) m = k->default_guns[i];   // borrow offset
+        else                                 m.offset_body = HMM_V3(0.0f, 0.0f, 3.0f);
+        if (i < p.gun_mounts.size() && !p.gun_mounts[i].empty()) {
+            const GunType t = gun::from_name(p.gun_mounts[i]);
+            m.type = (t == GunType::Count) ? GunType::Laser : t;
+        }
+        m.cone_half_angle_deg = 1.0f;
+        pl.mounts.push_back(m);
+    }
+    pl.gun_cooldowns.assign(pl.mounts.size(), 0.0f);
+    pl.gun_armed.assign(pl.mounts.size(), true);
+}
+
 void build_system_scene(bool first_time) {
     g.camera.position = g.system.player_start;
 
@@ -799,6 +829,26 @@ void build_system_scene(bool first_time) {
         } else {
             std::fprintf(stderr, "[save] could not load slot %d — starting a new game\n",
                          g.load_slot);
+        }
+    }
+
+    // --ship CLI override (dev): swap the player into an arbitrary hull AND
+    // refit it to that class's stock guns, so the override flies a complete
+    // ship rather than new_game's single laser. Applied to g.player HERE
+    // (before the atlas resolve + ship spawn below read ship_class_name) so
+    // the hull, the 3rd-person atlas, and the fitted guns all agree. No
+    // override -> keep new_game's canonical Tarsus + single laser.
+    if (!g_player_ship_override.empty()) {
+        if (const ShipClass* k = ship_class::find(g_player_ship_override)) {
+            g.player.ship_class_name = g_player_ship_override;
+            g.player.gun_mounts.clear();
+            for (const GunMount& m : k->default_guns)
+                g.player.gun_mounts.push_back(gun::to_name(m.type));
+            std::printf("[player] --ship override: flying '%s' with %zu stock guns\n",
+                        g_player_ship_override.c_str(), g.player.gun_mounts.size());
+        } else {
+            std::fprintf(stderr, "[player] --ship '%s' not found, keeping '%s'\n",
+                         g_player_ship_override.c_str(), g.player.ship_class_name.c_str());
         }
     }
 
@@ -1164,8 +1214,10 @@ void build_system_scene(bool first_time) {
     // every system build because g.ship_sprite_atlases is per-system; the
     // player persists but its atlas pointer must be re-resolved each time.
     {
-        const std::string pc = g_player_ship_override.empty()
-                             ? std::string("centurion") : g_player_ship_override;
+        // Hull atlas follows the player's actual class (np-3dp.25) — stock
+        // Tarsus by default, --ship override or a ship-swap save otherwise.
+        const std::string pc = g.player.ship_class_name.empty()
+                             ? std::string("tarsus") : g.player.ship_class_name;
         const std::string pstem = resolve_ship_atlas_stem("ships/" + pc + "/atlas_manifest");
         auto [it, inserted] = g.ship_sprite_atlases.try_emplace(pstem, ShipSpriteAtlas{});
         if (inserted && !load_ship_sprite_atlas(pstem, it->second, g.sprite_art)) {
@@ -1197,66 +1249,15 @@ void build_system_scene(bool first_time) {
     if (first_time) {
     g.ships.spawn(ship::spawn_player());
 
-    // Player ship — Centurion with 4x Tachyon Cannon (Mike's call). Class
-    // assignment gives the player real armor/shield/energy from the
-    // ShipClass data (matters once L4.2 damage lands; today it just
-    // feeds firing.cpp's energy budget). Player still moves via camera
-    // input, not the flight controller — class.cruise_speed / accel /
-    // max_ypr are not consulted for player kinematics.
+    // Fit the player's persistent loadout onto the freshly-spawned slot-0
+    // Ship (np-3dp.25). Class + guns come straight from g.player
+    // (new_game's stock Tarsus + single laser, a loaded save's hull, or a
+    // --ship override applied above), so the live ship can never drift from
+    // the player state / equipment shop. apply_player_loadout heals to full
+    // and mounts exactly the guns named in p.gun_mounts.
     {
         Ship& player = *g.ships.player();
-        // --ship CLI override (default centurion). Unknown name -> warn + centurion.
-        const char* requested =
-            g_player_ship_override.empty() ? "centurion" : g_player_ship_override.c_str();
-        const ShipClass* picked = ship_class::find(requested);
-        if (!picked && !g_player_ship_override.empty()) {
-            std::fprintf(stderr,
-                "[player] --ship '%s' not found, falling back to 'centurion'\n",
-                requested);
-            picked = ship_class::find("centurion");
-        }
-        if (picked) {
-            player.klass = picked;
-            // Health from class via the shared helper (np-ma2.2) so the
-            // spawn path and the respawn path can't drift apart.
-            ship::heal_to_full(player);
-
-            // Loadout sourced from the Centurion ShipClass default_guns —
-            // 4 mixed mounts from assets/ships/centurion/ship.json — so the
-            // player's fitted weapons can't drift from the ship class /
-            // equipment shop view (np-e3x). We take the gun OFFSETS from
-            // the class but override the TYPE below.
-            player.mounts = picked->default_guns;   // offsets from class
-            // Player Centurion flies with Nx Tachyon Cannon (Mike's call)
-            // rather than the class-default 2x Mass Driver + 1x Tachyon +
-            // 1x Particle. Tachyon is a fast hit: short refire, low per-
-            // shot energy, and the bolt art reads as a violet ray.
-            // NPC Centurions keep their ship.json mix — this override is
-            // player-only.
-            for (auto& m : player.mounts) {
-                m.type = GunType::TachyonCannon;
-                m.cone_half_angle_deg = 1.0f;
-            }
-            // 2x2 grid for 4 mounts. World +Y projects to screen +Y =
-            // downward direction, so positive Y appears BELOW center;
-            // the muzzles read as chin/wing guns under the cockpit eye
-            // line at typical FOV. Tracers still fire ALONG aim, not
-            // toward a convergence point; the ITTS gimbal block above
-            // lets aim track the locked target within a small cone, so
-            // the muzzles appear visibly below while the bullets land
-            // where the reticle says.
-            if (player.mounts.size() >= 4) {
-                player.mounts[0].offset_body = HMM_V3(-12.0f, 5.0f, 0.0f);
-                player.mounts[1].offset_body = HMM_V3(- 4.0f, 5.0f, 0.0f);
-                player.mounts[2].offset_body = HMM_V3(  4.0f, 5.0f, 0.0f);
-                player.mounts[3].offset_body = HMM_V3( 12.0f, 5.0f, 0.0f);
-            }
-            player.gun_cooldowns.assign(player.mounts.size(), 0.0f);
-            // All guns armed by default (mode 3) so the stock Centurion
-            // shoots all 4 tachyon cannons as before; the G-key cycle
-            // re-arms subsets per the spec.
-            player.gun_armed.assign(player.mounts.size(), true);
-        }
+        apply_player_loadout(player, g.player);
         std::printf("[player] equipped: klass=%s mounts=%zu shield F/A/S=%.0f/%.0f/%.0f "
                     "armor F/A/S=%.0f/%.0f/%.0f energy=%.0f\n",
                     player.klass ? player.klass->name.c_str() : "<null>",
@@ -1923,14 +1924,12 @@ static void respawn_player(bool to_title = false) {
         }
     }
 
-    // 2) Heal the player ship to full from its (possibly restored) class.
-    //    Re-bind klass from the owned ship name so a future ship-swap save
-    //    respawns in the right hull; today that's always the Tarsus.
+    // 2) Refit the player ship from the (possibly restored) player state:
+    //    re-bind the hull class, heal to full, and re-mount the saved guns
+    //    (np-3dp.25) so a ship-swap / re-armed save respawns correctly,
+    //    not just with the boot loadout.
     if (Ship* pl = g.ships.player()) {
-        if (const ShipClass* k = ship_class::find(g.player.ship_class_name)) {
-            pl->klass = k;
-        }
-        ship::heal_to_full(*pl);
+        apply_player_loadout(*pl, g.player);
     }
 
     // 3) Clear anything that could act on / kill the fresh player: in-flight
@@ -1955,8 +1954,8 @@ static void respawn_player(bool to_title = false) {
     //    we re-share the helper at the top of the file by inlining the
     //    resolve here (one-shot, cheap).
     {
-        const std::string pc = g_player_ship_override.empty()
-                             ? std::string("centurion") : g_player_ship_override;
+        const std::string pc = g.player.ship_class_name.empty()
+                             ? std::string("tarsus") : g.player.ship_class_name;
         const std::string pstem = resolve_ship_atlas_stem("ships/" + pc + "/atlas_manifest");
         auto [it, inserted] = g.ship_sprite_atlases.try_emplace(pstem, ShipSpriteAtlas{});
         if (inserted && !load_ship_sprite_atlas(pstem, it->second, g.sprite_art)) {
@@ -4459,7 +4458,14 @@ void frame_cb() {
                     // system as the start system.
                     g.player = player::new_game(g.system_name);
                     g.apply_health_pending = false;
-                    if (Ship* pl = g.ships.player()) ship::heal_to_full(*pl);
+                    // Refit the live ship to the fresh Tarsus + single-laser
+                    // loadout (np-3dp.25) — not just heal — so NEW after a
+                    // ship-swap save flies the stock starter hull/guns.
+                    if (Ship* pl = g.ships.player()) apply_player_loadout(*pl, g.player);
+                    // new_game starts docked at Achilles: drop into that
+                    // base's concourse rather than free flight.
+                    if (g.player.docked && !g.player.last_docked_base.empty())
+                        game_state::request_mode(g.game, GameMode::Landed);
                     g.show_title = false;
                     // Rebuild the start system from scratch (np-3dp.24):
                     // the title galaxy tour reskins the skybox + repicks

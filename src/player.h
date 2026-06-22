@@ -155,12 +155,12 @@ struct PlayerState {
 
 namespace player {
 
-// The canonical Privateer start: a Tarsus, a modest bankroll, the Troy
-// system, an empty hold. Gun loadout is the canonical 2x mass driver,
-// matching the Tarsus ShipClass default_guns that main.cpp sources the
-// player mounts from, so the data and the spawned Ship agree from day
-// one (np-e3x). `start_system` lets the --system CLI
-// override flow through.
+// The canonical Privateer start (np-3dp.25): a stock Tarsus fitted with a
+// SINGLE laser cannon + a single launcher of 4 heat-seekers, a modest
+// bankroll, an empty hold, docked at Achilles Mining Base in Troy. The
+// spawn path (main.cpp apply_player_loadout) fits these onto the live
+// Ship, so this data is the single source of truth. `start_system` lets
+// the --system CLI override the recorded location.
 PlayerState new_game(const std::string& start_system);
 
 // Starting credits. Named constant because the exact number is a
@@ -178,9 +178,10 @@ constexpr int64_t k_new_game_credits = 2000;
 constexpr float k_afterburner_drain_per_s = 50.0f;  // GJ/s drained from energy_gj
 
 // New-game / new-hull starting missile loadout, indexed by MissileType
-// (DF/HS/IR). A handful of each so the player has ordnance to learn the
-// system with; the equipment dealer (future) and base rearm restock it.
-constexpr int k_new_game_missiles[3] = { 4, 2, 2 };
+// (DF/HS/IR). The canonical Tarsus start (np-3dp.25) carries a single
+// launcher of 4 heat-seekers and nothing else; the equipment dealer and
+// base rearm restock / diversify it.
+constexpr int k_new_game_missiles[3] = { 0, 4, 0 };
 
 // ---- credits ------------------------------------------------------------
 // spend() refuses (returns false, no mutation) when funds are short.

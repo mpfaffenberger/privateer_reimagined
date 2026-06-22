@@ -23,9 +23,14 @@
 // homing types a forgiving "close enough" so a near-miss still detonates.
 const MissileStats g_missile_stats[kMissileTypeCount] = {
     //                short long          dmg   speed  turn   life  range   prox  lock  build
-    /* DF */ { "DF", "Dumbfire",       45.0f, 1400.0f, 0.0f, 6.0f, 8000.0f, 60.0f, false, false },
-    /* HS */ { "HS", "Heat-Seeker",    55.0f, 1200.0f, 1.2f, 8.0f, 9000.0f, 90.0f, true,  false },
-    /* IR */ { "IR", "Image-Rec",      70.0f, 1100.0f, 2.4f, 9.0f,10000.0f,100.0f, true,  true  },
+    // Damage = canonical Privateer cm-of-durasteel (Wing Commander CIC
+    // reference): DF 13.0, HS 16.0, IR 17.5. The old 45/55/70 numbers hit
+    // ~3-5x too hard (a single HS one-shot a Tarsus through armour+shield);
+    // these line the missile up with the gun damage scale (1.8-10 cm/shot)
+    // so a missile reads as a heavy single hit, not an instant kill.
+    /* DF */ { "DF", "Dumbfire",       13.0f, 1400.0f, 0.0f, 6.0f, 8000.0f, 60.0f, false, false },
+    /* HS */ { "HS", "Heat-Seeker",    16.0f, 1200.0f, 1.2f, 8.0f, 9000.0f, 90.0f, true,  false },
+    /* IR */ { "IR", "Image-Rec",      17.5f, 1100.0f, 2.4f, 9.0f,10000.0f,100.0f, true,  true  },
 };
 
 namespace missile {
