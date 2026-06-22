@@ -90,8 +90,18 @@ bool buy_gun(PlayerState& p, const std::string& gun_short_name,
 bool upgrade_shield(PlayerState& p, const ShipClass* klass);
 bool upgrade_engine(PlayerState& p, const ShipClass* klass);
 
+// Sell the current shield/engine upgrade (refund its upgrade price, drop
+// one level). PlayerState is the SINGLE point of truth; the live ship's
+// shield_mult is rebound on next launch by apply_player_loadout.
+bool sell_shield(PlayerState& p, const ShipClass* klass);
+bool sell_engine(PlayerState& p, const ShipClass* klass);
+
 // Buy the one-time cargo expansion flag. Refused if already owned.
 bool buy_cargo_expansion(PlayerState& p);
+
+// Sell the cargo expansion back to the dealer (full refund + clear the
+// flag). Refused if not owned.
+bool sell_cargo_expansion(PlayerState& p);
 
 // ---- discrete equipment (np-3dp.27) ----------------------------------------
 // Buy-once-per-ship upgrades read out of equipment_prices.json's

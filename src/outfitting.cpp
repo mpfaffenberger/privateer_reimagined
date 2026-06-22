@@ -327,6 +327,41 @@ bool upgrade_engine(PlayerState& p, const ShipClass* klass) {
     return true;
 }
 
+bool sell_shield(PlayerState& p, const ShipClass* klass) {
+    if (p.shield_level <= 0) {
+        std::printf("[outfit] SHIELD sell refused: nothing to sell (L0)\n");
+        return false;
+    }
+    // Refund the price the player originally paid for THIS level. Going
+    // down one rung so we can offer a partial refund rather than a hard
+    // wipe, matching how upgrade works one step at a time.
+    const int from = p.shield_level;
+    const int to   = from - 1;
+    const int64_t refund = shield_upgrade_price(from);
+    if (refund <= 0) { std::printf("[outfit] SHIELD sell refused: no price for L%d\n", from); return false; }
+    p.shield_level = to;
+    player::add_credits(p, refund);
+    std::printf("[outfit] SHIELD sold L%d -> L%d, refund %lld | credits %lld\n",
+                from, to, (long long)refund, (long long)p.credits);
+    return true;
+}
+
+bool sell_engine(PlayerState& p, const ShipClass* klass) {
+    if (p.engine_level <= 0) {
+        std::printf("[outfit] ENGINE sell refused: nothing to sell (L0)\n");
+        return false;
+    }
+    const int from = p.engine_level;
+    const int to   = from - 1;
+    const int64_t refund = engine_upgrade_price(from);
+    if (refund <= 0) { std::printf("[outfit] ENGINE sell refused: no price for L%d\n", from); return false; }
+    p.engine_level = to;
+    player::add_credits(p, refund);
+    std::printf("[outfit] ENGINE sold L%d -> L%d, refund %lld | credits %lld\n",
+                from, to, (long long)refund, (long long)p.credits);
+    return true;
+}
+
 bool buy_cargo_expansion(PlayerState& p) {
     if (p.cargo_expansion) {
         std::printf("[outfit] CARGO EXPANSION refused: already owned\n");
@@ -343,6 +378,20 @@ bool buy_cargo_expansion(PlayerState& p) {
     p.cargo_expansion = true;
     std::printf("[outfit] CARGO EXPANSION bought @ %lld | credits %lld\n",
                 (long long)price, (long long)p.credits);
+    return true;
+}
+
+bool sell_cargo_expansion(PlayerState& p) {
+    if (!p.cargo_expansion) {
+        std::printf("[outfit] CARGO EXPANSION sell refused: not owned\n");
+        return false;
+    }
+    const int64_t refund = cargo_expansion_price();
+    if (refund <= 0) { std::printf("[outfit] CARGO EXPANSION sell refused: no price\n"); return false; }
+    p.cargo_expansion = false;
+    player::add_credits(p, refund);
+    std::printf("[outfit] CARGO EXPANSION sold, refund %lld | credits %lld\n",
+                (long long)refund, (long long)p.credits);
     return true;
 }
 
@@ -544,6 +593,7 @@ void draw_equipment(BaseContext& ctx) {
 
     // Shield ladder.
     const int sh_cap = klass ? (int)klass->max_shield_level : 0;
+    ImGui::PushID("shield_ladder");
     ImGui::Text("Shield   L%d / %d", p.shield_level, sh_cap);
     ImGui::SameLine();
     if (p.shield_level >= sh_cap) {
@@ -551,13 +601,25 @@ void draw_equipment(BaseContext& ctx) {
     } else {
         const int64_t price = shield_upgrade_price(p.shield_level + 1);
         char b[48]; std::snprintf(b, sizeof(b), "Upgrade -> L%d (%lld)", p.shield_level + 1, (long long)price);
+        ImGui::PushID("buy");
         ImGui::BeginDisabled(price <= 0 || !player::can_afford(p, price));
         if (ImGui::SmallButton(b)) { if (outfitting::upgrade_shield(p, klass)) sfx::ui_click(); }
         ImGui::EndDisabled();
+        ImGui::PopID();
     }
+    if (p.shield_level > 0) {
+        ImGui::PushID("sell");
+        const int64_t refund = shield_upgrade_price(p.shield_level);
+        char s[48]; std::snprintf(s, sizeof(s), "Sell L%d (-%lld)", p.shield_level, (long long)refund);
+        if (ImGui::SmallButton(s)) { if (outfitting::sell_shield(p, klass)) sfx::ui_click(); }
+        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Sell the current shield generator and drop to L%d", p.shield_level - 1);
+        ImGui::PopID();
+    }
+    ImGui::PopID();
 
     // Engine ladder.
     const int en_cap = klass ? (int)klass->max_engine_level : 0;
+    ImGui::PushID("engine_ladder");
     ImGui::Text("Engine   L%d / %d", p.engine_level, en_cap);
     ImGui::SameLine();
     if (p.engine_level >= en_cap) {
@@ -565,10 +627,21 @@ void draw_equipment(BaseContext& ctx) {
     } else {
         const int64_t price = engine_upgrade_price(p.engine_level + 1);
         char b[48]; std::snprintf(b, sizeof(b), "Upgrade -> L%d (%lld)", p.engine_level + 1, (long long)price);
+        ImGui::PushID("buy");
         ImGui::BeginDisabled(price <= 0 || !player::can_afford(p, price));
         if (ImGui::SmallButton(b)) { if (outfitting::upgrade_engine(p, klass)) sfx::ui_click(); }
         ImGui::EndDisabled();
+        ImGui::PopID();
     }
+    if (p.engine_level > 0) {
+        ImGui::PushID("sell");
+        const int64_t refund = engine_upgrade_price(p.engine_level);
+        char s[48]; std::snprintf(s, sizeof(s), "Sell L%d (-%lld)", p.engine_level, (long long)refund);
+        if (ImGui::SmallButton(s)) { if (outfitting::sell_engine(p, klass)) sfx::ui_click(); }
+        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Sell the current engine upgrade and drop to L%d", p.engine_level - 1);
+        ImGui::PopID();
+    }
+    ImGui::PopID();
     const SpeedCaps caps = effective_speed_caps(p);
     ImGui::PushStyleColor(ImGuiCol_Text, kGrey);
     ImGui::Text("  effective top speed: %.0f / %.0f (cruise/AB)", caps.cruise0, caps.cruise1);
@@ -576,10 +649,16 @@ void draw_equipment(BaseContext& ctx) {
     ImGui::Spacing();
 
     // Cargo expansion (one-time).
+    ImGui::PushID("cargo_expansion");
     ImGui::TextUnformatted("Cargo Expansion");
     ImGui::SameLine();
     if (p.cargo_expansion) {
         ImGui::PushStyleColor(ImGuiCol_Text, kGreen); ImGui::TextUnformatted("OWNED"); ImGui::PopStyleColor();
+        ImGui::SameLine();
+        const int64_t price = cargo_expansion_price();
+        char s[40]; std::snprintf(s, sizeof(s), "Sell (-%lld)", (long long)price);
+        if (ImGui::SmallButton(s)) { if (outfitting::sell_cargo_expansion(p)) sfx::ui_click(); }
+        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Sell the cargo expansion back to the dealer (full refund)");
     } else {
         const int64_t price = cargo_expansion_price();
         char b[40]; std::snprintf(b, sizeof(b), "Buy (%lld)", (long long)price);
@@ -587,6 +666,7 @@ void draw_equipment(BaseContext& ctx) {
         if (ImGui::SmallButton(b)) { if (outfitting::buy_cargo_expansion(p)) sfx::ui_click(); }
         ImGui::EndDisabled();
     }
+    ImGui::PopID();
 
     // ---- Repair & Rearm (np-zte.2) -----------------------------------------
     // The base repair service: restore hull armor (Ship state), top off the

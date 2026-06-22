@@ -701,10 +701,12 @@ void init_cb() {
 // player state. Unknown / empty gun names fall back to a Laser.
 static void apply_player_loadout(Ship& pl, const PlayerState& p, bool heal = true) {
     if (const ShipClass* k = ship_class::find(p.ship_class_name)) pl.klass = k;
-    // Shield generator upgrade (np-3dp.26): each dealer shield level adds the
-    // stock generator's cm again (Privateer's Shield Generator 1/2/3 ladder).
-    // Set BEFORE heal so heal_to_full fills to the upgraded max.
-    pl.shield_mult = 1.0f + (float)p.shield_level;
+    // Shield generator upgrade (np-3dp.26, np-3dp.28): each dealer shield
+    // level adds the stock generator's cm again (Privateer's Shield
+    // Generator 1/2/3 ladder). L0 = NO shields (mult 0); L1+ = scale of
+    // the class default. Set BEFORE heal so heal_to_full fills to the
+    // upgraded max (and doesn't leave phantom shield on a sold shield gen).
+    pl.shield_mult = (float)p.shield_level;
     // heal=true on a fresh hull (boot / NEW / respawn / ship-swap); false on
     // a normal land->launch so battle damage you didn't pay to repair
     // persists across the base visit.
@@ -716,8 +718,22 @@ static void apply_player_loadout(Ship& pl, const PlayerState& p, bool heal = tru
                        : p.gun_mounts.size();
     for (size_t i = 0; i < n; ++i) {
         GunMount m;
-        if (k && i < k->default_guns.size()) m = k->default_guns[i];   // borrow offset
-        else                                 m.offset_body = HMM_V3(0.0f, 0.0f, 3.0f);
+        // Single-gun loadouts (the canonical Tarsus w/ one laser): center
+        // horizontally, sit slightly BELOW the cockpit eye line, and stay
+        // a touch forward of the hull origin. Multi-gun loadouts still
+        // borrow their offsets from the class default for the natural
+        // wing-tip spread.
+        const bool single_gun = (n == 1);
+        if (k && !single_gun && i < k->default_guns.size()) {
+            m = k->default_guns[i];   // borrow offset (NPC layout)
+        } else if (k && !single_gun) {
+            m.offset_body = HMM_V3(0.0f, 0.0f, 3.0f);
+        } else {
+            // Single-gun: centered, slight downward screen offset (body +Y
+            // projects to screen DOWN per the cockpit convention, so a +Y
+            // here drops the muzzle below the crosshair as Mike asked).
+            m.offset_body = HMM_V3(0.0f, 0.5f, 2.0f);
+        }
         if (i < p.gun_mounts.size() && !p.gun_mounts[i].empty()) {
             const GunType t = gun::from_name(p.gun_mounts[i]);
             m.type = (t == GunType::Count) ? GunType::Laser : t;
