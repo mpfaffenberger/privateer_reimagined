@@ -84,6 +84,14 @@ struct SpriteObject {
     float                  roll_rad   = 0.0f;      // in-plane billboard rotation, clockwise-ish screen roll
     HMM_Vec4               tint       {1, 1, 1, 1};// rgb tint + global alpha
     std::vector<LightSpot> lights;                 // animated glow spots
+    // Billboard mode (np-3dp.23). false (default) = SCREEN-aligned: the
+    // quad stays parallel to the view plane (classic sprite, good for
+    // small/distant objects). true = VIEWPOINT-aligned: the quad turns to
+    // face the camera's POSITION, so a large object off to the side of the
+    // screen rotates toward you as you pass it (reads as solid, not a
+    // flat card always facing front). Used for big environmental sprites
+    // like bases/stations/planets.
+    bool                   face_camera_position = false;
 };
 
 // Renders a list of SpriteObjects in two passes: hull (alpha) then lights

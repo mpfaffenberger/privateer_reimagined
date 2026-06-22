@@ -1107,6 +1107,12 @@ void build_system_scene(bool first_time) {
         s.position   = sd.position;
         s.world_size = sd.length_meters;
         s.tint       = HMM_V4(1.0f, 1.0f, 1.0f, 1.0f);
+        // Placed environmental sprites (bases / stations / planets) are
+        // big and you fly AROUND them, so they billboard toward the
+        // camera POSITION, not the view plane (np-3dp.23) — they turn to
+        // face you as you pass instead of staying a flat front-facing
+        // card.
+        s.face_camera_position = true;
         // Lights are loaded once into SpriteArt by load_sprite_art(); copy
         // them onto the instance so the F2 editor can mutate per-instance
         // lists without touching the shared art (and so future per-instance

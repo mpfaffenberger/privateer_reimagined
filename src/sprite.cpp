@@ -372,12 +372,36 @@ void SpriteRenderer::draw(const std::vector<SpriteObject>& sprites,
             const float sx = (float)tw / longest;
             const float sy = (float)th / longest;
 
+            // Billboard basis. Default is the shared SCREEN-aligned
+            // cam_right/cam_up (parallel to the view plane). When the
+            // sprite opts into VIEWPOINT alignment (np-3dp.23), build a
+            // per-sprite basis that faces the camera POSITION: forward =
+            // (cam - sprite), right = world_up x forward, up = forward x
+            // right. So an off-axis base turns toward the eye instead of
+            // staying a flat front-facing card. Falls back to the screen
+            // basis if the sprite is ~on the camera (degenerate).
+            HMM_Vec3 use_right = cam_right, use_up = cam_up;
+            if (s->face_camera_position) {
+                HMM_Vec3 fwd = HMM_SubV3(cam.position, s->position);
+                const float fl = HMM_LenV3(fwd);
+                if (fl > 1e-3f) {
+                    fwd = HMM_DivV3F(fwd, fl);
+                    HMM_Vec3 wup = HMM_V3(0.0f, 1.0f, 0.0f);
+                    HMM_Vec3 r   = HMM_Cross(wup, fwd);
+                    float rl = HMM_LenV3(r);
+                    if (rl < 1e-3f) { r = cam_right; rl = HMM_LenV3(r); }
+                    r = HMM_DivV3F(r, std::max(rl, 1e-6f));
+                    use_right = r;
+                    use_up    = HMM_Cross(fwd, r);
+                }
+            }
+
             vs_params_t vsp{};
             std::memcpy(vsp.view_proj, &vp, sizeof(float) * 16);
-            vsp.cam_right[0] = cam_right.X; vsp.cam_right[1] = cam_right.Y;
-            vsp.cam_right[2] = cam_right.Z; vsp.cam_right[3] = 0.0f;
-            vsp.cam_up[0]    = cam_up.X;    vsp.cam_up[1]    = cam_up.Y;
-            vsp.cam_up[2]    = cam_up.Z;    vsp.cam_up[3]    = 0.0f;
+            vsp.cam_right[0] = use_right.X; vsp.cam_right[1] = use_right.Y;
+            vsp.cam_right[2] = use_right.Z; vsp.cam_right[3] = 0.0f;
+            vsp.cam_up[0]    = use_up.X;    vsp.cam_up[1]    = use_up.Y;
+            vsp.cam_up[2]    = use_up.Z;    vsp.cam_up[3]    = 0.0f;
             vsp.inst_pos[0]  = s->position.X;
             vsp.inst_pos[1]  = s->position.Y;
             vsp.inst_pos[2]  = s->position.Z;
@@ -416,6 +440,25 @@ void SpriteRenderer::draw(const std::vector<SpriteObject>& sprites,
 
     for (const SpriteObject* s : order) {
         if (!s->art || s->lights.empty()) continue;
+
+        // Match the hull's billboard basis (np-3dp.23): a viewpoint-aligned
+        // base turns toward the eye, so its light spots must ride the SAME
+        // per-sprite right/up or they'd drift off the hull. Default is the
+        // shared screen-aligned cam_right/cam_up.
+        HMM_Vec3 use_right = cam_right, use_up = cam_up;
+        if (s->face_camera_position) {
+            HMM_Vec3 fwd = HMM_SubV3(cam.position, s->position);
+            const float fl = HMM_LenV3(fwd);
+            if (fl > 1e-3f) {
+                fwd = HMM_DivV3F(fwd, fl);
+                HMM_Vec3 r = HMM_Cross(HMM_V3(0.0f, 1.0f, 0.0f), fwd);
+                float rl = HMM_LenV3(r);
+                if (rl < 1e-3f) { r = cam_right; rl = HMM_LenV3(r); }
+                r = HMM_DivV3F(r, std::max(rl, 1e-6f));
+                use_right = r;
+                use_up    = HMM_Cross(fwd, r);
+            }
+        }
 
         // The sprite's half-extent along camera right/up — same math as
         // the hull quad. A light at UV (0.5, 0.5) sits at the sprite's
@@ -463,8 +506,8 @@ void SpriteRenderer::draw(const std::vector<SpriteObject>& sprites,
             const float dv_r = du * roll_s + dv * roll_c;
             const HMM_Vec3 world = HMM_AddV3(
                 s->position,
-                HMM_AddV3(HMM_MulV3F(cam_right, du_r),
-                          HMM_MulV3F(cam_up,    dv_r)));
+                HMM_AddV3(HMM_MulV3F(use_right, du_r),
+                          HMM_MulV3F(use_up,    dv_r)));
 
             vs_spot_params_t vsp{};
             std::memcpy(vsp.view_proj, &vp, sizeof(float) * 16);
