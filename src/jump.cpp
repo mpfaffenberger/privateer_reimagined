@@ -10,6 +10,7 @@
 
 #include "camera.h"
 #include "galaxy.h"
+#include "player.h"
 #include "system_def.h"
 #include "threat.h"
 
@@ -20,7 +21,8 @@ namespace jump {
 Eligibility evaluate(const Camera& cam, const StarSystem& system,
                      const galaxy::Galaxy& galaxy,
                      const std::string& current_system_id,
-                     int selected_nav) {
+                     int selected_nav,
+                     bool has_jump_drive) {
     Eligibility e;
 
     // 1. Must have a selected nav, and it must be a jump gate. Anything
@@ -31,6 +33,14 @@ Eligibility evaluate(const Camera& cam, const StarSystem& system,
     }
     const NavPointDef& nav = system.nav_points[selected_nav];
     if (nav.kind != "jump") {
+        return e;
+    }
+
+    // (np-3dp.27): the player needs a fitted Jump Drive to USE the gate.
+    // The prompt string still says "PRESS J"; we refuse with a dedicated
+    // NoDrive status so the UI can render a distinct amber "JUMP: NO DRIVE".
+    if (!has_jump_drive) {
+        e.status = Status::NoDrive;
         return e;
     }
 
@@ -80,6 +90,7 @@ const char* prompt(const Eligibility& e, bool* ready) {
         case Status::NoRoute:  return "JUMP: NO ROUTE";
         case Status::TooFar:   return "JUMP: TOO FAR";
         case Status::Hostiles: return "JUMP: HOSTILES NEAR";
+        case Status::NoDrive:  return "JUMP: NO DRIVE";
         case Status::NotJumpNav:
         default:               return nullptr;   // not a gate — no prompt
     }
@@ -92,6 +103,7 @@ const char* status_str(Status s) {
         case Status::NoRoute:    return "no route";
         case Status::TooFar:     return "too far";
         case Status::Hostiles:   return "hostiles near";
+        case Status::NoDrive:    return "no drive";
         default:                 return "?";
     }
 }

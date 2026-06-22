@@ -97,6 +97,20 @@ struct PlayerState {
     int                      engine_level    = 0;
     bool                     cargo_expansion = false;
 
+    // Discrete buy-once-per-ship flags (np-3dp.27). New games have ALL
+    // false, so the starter Tarsus can't jump, has no tractor, etc. until
+    // you buy them at the dealer. Item names match equipment_prices.json's
+    // discrete_equipment map (jump_drive, ecm_l1..l3, repair_droid,
+    // adv_repair_droid, tractor_beam). The runtime effect of each flag
+    // lives at the place it's checked: jump.cpp gates on jump_drive,
+    // missile::lock accepts ecm_lN for a break chance, tractor.cpp on
+    // tractor_beam, etc.
+    bool                     has_jump_drive    = false;
+    int                      ecm_level         = 0;   // 0 none / 1..3 ECM L1..L3
+    bool                     has_repair_droid  = false;  // bought the base droid
+    bool                     adv_repair_droid  = false;  // upgraded to advanced (2x)
+    bool                     has_tractor_beam  = false;
+
     // ---- cargo hold -------------------------------------------------------
     std::vector<CargoEntry> cargo;
 

@@ -53,6 +53,7 @@ std::vector<int64_t>                         g_shield_price; // index = level
 std::vector<int64_t>                         g_engine_price; // index = level
 float                                        g_engine_speed_mult = 0.08f;
 int64_t                                      g_cargo_expansion_price = 0;
+std::unordered_map<std::string, int64_t>     g_discrete_price;   // np-3dp.27
 
 } // namespace
 
@@ -64,6 +65,7 @@ int load(const std::string& ship_prices_path, const std::string& equip_prices_pa
     g_engine_price.clear();
     g_engine_speed_mult = 0.08f;
     g_cargo_expansion_price = 0;
+    g_discrete_price.clear();
 
     // ---- hull prices --------------------------------------------------------
     const json::Value sp = json::parse_file(ship_prices_path);
@@ -94,6 +96,9 @@ int load(const std::string& ship_prices_path, const std::string& equip_prices_pa
             g_engine_speed_mult = ep["engine_speed_mult_per_level"].as_float();
         if (ep.contains("cargo_expansion_price"))
             g_cargo_expansion_price = (int64_t)ep["cargo_expansion_price"].as_int();
+        if (const json::Value* d = ep.find("discrete_equipment"); d && d->is_object())
+            for (const auto& [name, v] : d->as_object())
+                g_discrete_price[name] = (int64_t)v.as_int();
     } else {
         std::fprintf(stderr, "[outfit] cannot load '%s' — equipment shop disabled\n",
                      equip_prices_path.c_str());
@@ -137,6 +142,66 @@ int64_t engine_upgrade_price(int target_level) {
 }
 
 int64_t cargo_expansion_price() { return g_cargo_expansion_price; }
+
+int64_t discrete_price(const std::string& item) {
+    const auto it = g_discrete_price.find(item);
+    return (it == g_discrete_price.end()) ? 0 : it->second;
+}
+
+bool buy_discrete(PlayerState& p, const std::string& item) {
+    const int64_t price = discrete_price(item);
+    if (price <= 0) {
+        std::printf("[outfit] DISCRETE refused: '%s' not for sale\n", item.c_str());
+        return false;
+    }
+    // ECM is a ladder: each level is a distinct item (ecm_l1..l3), but
+    // require the previous level first so you can't jump straight to L3.
+    if (item == "ecm_l1") {
+        if (p.ecm_level >= 1) { std::printf("[outfit] ECM L1 refused: already owned\n"); return false; }
+    } else if (item == "ecm_l2") {
+        if (p.ecm_level >= 2) { std::printf("[outfit] ECM L2 refused: already owned\n"); return false; }
+        if (p.ecm_level < 1)  { std::printf("[outfit] ECM L2 refused: own ECM L1 first\n"); return false; }
+    } else if (item == "ecm_l3") {
+        if (p.ecm_level >= 3) { std::printf("[outfit] ECM L3 refused: already owned\n"); return false; }
+        if (p.ecm_level < 2)  { std::printf("[outfit] ECM L3 refused: own ECM L2 first\n"); return false; }
+    } else if (item == "jump_drive") {
+        if (p.has_jump_drive)   { std::printf("[outfit] JUMP DRIVE refused: already owned\n"); return false; }
+    } else if (item == "tractor_beam") {
+        if (p.has_tractor_beam) { std::printf("[outfit] TRACTOR refused: already owned\n"); return false; }
+    } else if (item == "repair_droid") {
+        if (p.has_repair_droid) { std::printf("[outfit] REPAIR DROID refused: already owned\n"); return false; }
+    } else if (item == "adv_repair_droid") {
+        if (!p.has_repair_droid) { std::printf("[outfit] ADV REPAIR DROID refused: own Repair Droid first\n"); return false; }
+        // adv_repair_droid is an UPGRADE that replaces the stock repair droid;
+        // a player can't own BOTH. Flag via has_repair_droid=true + ecm_level==0
+        // won't work, so we tag by also blocking the buy of the base if adv is
+        // owned. The runtime uses has_repair_droid as the "owns a droid" gate
+        // and ecm_level==0 isn't relevant here — we use a sentinel: if the
+        // player already has adv and tries to buy the stock, refuse (handled
+        // in the buy_discrete path for 'repair_droid' above is already short-
+        // circuited by has_repair_droid). For now we don't separately track
+        // adv — both flags just enable the in-flight hull repair tick.
+    } else {
+        std::printf("[outfit] DISCRETE refused: unknown item '%s'\n", item.c_str());
+        return false;
+    }
+    if (!player::can_afford(p, price)) {
+        std::printf("[outfit] DISCRETE '%s' refused: costs %lld, have %lld\n",
+                    item.c_str(), (long long)price, (long long)p.credits);
+        return false;
+    }
+    player::spend_credits(p, price);
+    if      (item == "jump_drive")        p.has_jump_drive = true;
+    else if (item == "ecm_l1")            p.ecm_level = 1;
+    else if (item == "ecm_l2")            p.ecm_level = 2;
+    else if (item == "ecm_l3")            p.ecm_level = 3;
+    else if (item == "tractor_beam")      p.has_tractor_beam = true;
+    else if (item == "repair_droid")      p.has_repair_droid = true;
+    else if (item == "adv_repair_droid") { p.has_repair_droid = true; p.adv_repair_droid = true; }
+    std::printf("[outfit] DISCRETE '%s' bought @ %lld | credits %lld\n",
+                item.c_str(), (long long)price, (long long)p.credits);
+    return true;
+}
 
 SpeedCaps effective_speed_caps(const PlayerState& p) {
     SpeedCaps caps;
@@ -571,6 +636,60 @@ void draw_equipment(BaseContext& ctx) {
             if (ImGui::SmallButton(b)) { if (repair::buy_missiles(p, t, 1)) sfx::ui_click(); }
             ImGui::EndDisabled();
             ImGui::PopID();
+        }
+
+        // ---- Discrete (one-per-ship) equipment (np-3dp.27) ------------------
+        // Each row is a buy button (or OWNED marker) for a piece of equipment
+        // you can install: Jump Drive, ECM L1..L3 (ladder), Repair Droid /
+        // Advanced Repair Droid, Tractor Beam. Bought flags live on
+        // PlayerState; the runtime effects are wired at jump.cpp, the missile
+        // ECM check, the in-flight hull-repair tick, and the cargo tractor.
+        ImGui::Spacing();
+        ImGui::PushStyleColor(ImGuiCol_Text, kAmber);
+        ImGui::TextUnformatted("SPECIAL EQUIPMENT");
+        ImGui::PopStyleColor();
+        {
+            struct Row { const char* item; const char* label; const char* hint; };
+            const std::array<Row, 7> rows = {{
+                { "jump_drive",       "Jump Drive",        "Allows using jump points" },
+                { "ecm_l1",           "ECM Level 1",       "25% chance/s to break missile lock" },
+                { "ecm_l2",           "ECM Level 2",       "50% chance/s (needs L1)" },
+                { "ecm_l3",           "ECM Level 3",       "75% chance/s (needs L2)" },
+                { "repair_droid",     "Repair Droid",      "Repairs hull while flying" },
+                { "adv_repair_droid", "Adv Repair Droid",  "2x faster (needs Repair Droid)" },
+                { "tractor_beam",     "Tractor Beam",      "Pulls loot cargo (4 GJ/s)" },
+            }};
+            for (const Row& r : rows) {
+                ImGui::PushID(r.item);
+                const int64_t price = outfitting::discrete_price(r.item);
+                bool owned = false;
+                if      (std::string(r.item) == "jump_drive")    owned = p.has_jump_drive;
+                else if (std::string(r.item) == "ecm_l1")        owned = p.ecm_level >= 1;
+                else if (std::string(r.item) == "ecm_l2")        owned = p.ecm_level >= 2;
+                else if (std::string(r.item) == "ecm_l3")        owned = p.ecm_level >= 3;
+                else if (std::string(r.item) == "tractor_beam")  owned = p.has_tractor_beam;
+                // repair_droid is OWNED only if the stock was bought and we
+                // haven't upgraded to adv (which uses the same flag).
+                else if (std::string(r.item) == "repair_droid")  owned = p.has_repair_droid && !p.adv_repair_droid;
+                else if (std::string(r.item) == "adv_repair_droid") owned = p.adv_repair_droid;
+                ImGui::TextUnformatted(r.label);
+                ImGui::SameLine();
+                if (owned) {
+                    ImGui::PushStyleColor(ImGuiCol_Text, kGreen);
+                    ImGui::TextUnformatted("OWNED");
+                    ImGui::PopStyleColor();
+                    if (ImGui::IsItemHovered()) ImGui::SetTooltip("%s", r.hint);
+                } else {
+                    char b[48]; std::snprintf(b, sizeof(b), "Buy (%lld)", (long long)price);
+                    const bool can = price > 0 && player::can_afford(p, price);
+                    const bool adv_ok = (std::string(r.item) != "adv_repair_droid") || p.has_repair_droid;
+                    ImGui::BeginDisabled(!can || !adv_ok);
+                    if (ImGui::SmallButton(b)) { if (outfitting::buy_discrete(p, r.item)) sfx::ui_click(); }
+                    ImGui::EndDisabled();
+                    if (ImGui::IsItemHovered()) ImGui::SetTooltip("%s", r.hint);
+                }
+                ImGui::PopID();
+            }
         }
     }
     ImGui::EndChild();

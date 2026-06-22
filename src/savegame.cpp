@@ -203,6 +203,11 @@ static std::string serialize_player(const PlayerState& p) {
         w.key("shield_level");    w.value_int(p.shield_level);
         w.key("engine_level");    w.value_int(p.engine_level);
         w.key("cargo_expansion"); w.value_bool(p.cargo_expansion);
+        w.key("has_jump_drive");   w.value_bool(p.has_jump_drive);
+        w.key("ecm_level");        w.value_int(p.ecm_level);
+        w.key("has_repair_droid"); w.value_bool(p.has_repair_droid);
+        w.key("adv_repair_droid"); w.value_bool(p.adv_repair_droid);
+        w.key("has_tractor_beam"); w.value_bool(p.has_tractor_beam);
 
         w.key("cargo"); w.member_array_begin();
           for (const CargoEntry& e : p.cargo) {
@@ -415,6 +420,11 @@ bool load(PlayerState& p, const std::string& path) {
         out.shield_level    = pl.contains("shield_level")    ? (int)pl["shield_level"].number_or(0)  : 0;
         out.engine_level    = pl.contains("engine_level")    ? (int)pl["engine_level"].number_or(0)  : 0;
         out.cargo_expansion = pl.contains("cargo_expansion") ? pl["cargo_expansion"].bool_or(false)  : false;
+        out.has_jump_drive   = pl.contains("has_jump_drive")   ? pl["has_jump_drive"].bool_or(false)   : false;
+        out.ecm_level        = pl.contains("ecm_level")        ? (int)pl["ecm_level"].number_or(0)    : 0;
+        out.has_repair_droid = pl.contains("has_repair_droid") ? pl["has_repair_droid"].bool_or(false) : false;
+        out.adv_repair_droid = pl.contains("adv_repair_droid") ? pl["adv_repair_droid"].bool_or(false) : false;
+        out.has_tractor_beam = pl.contains("has_tractor_beam") ? pl["has_tractor_beam"].bool_or(false) : false;
 
         if (const json::Value* cg = pl.find("cargo"); cg && cg->is_array()) {
             for (const json::Value& e : cg->as_array()) {

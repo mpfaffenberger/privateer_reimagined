@@ -58,6 +58,7 @@ enum class Status : uint8_t {
     NoRoute,      // jump gate but dangling / unsurveyed — "JUMP: NO ROUTE"
     TooFar,       // outside trigger range — "JUMP: TOO FAR"
     Hostiles,     // hostiles in the bubble — "JUMP: HOSTILES NEAR"
+    NoDrive,      // player has no Jump Drive fitted — "JUMP: NO DRIVE"
 };
 
 struct Eligibility {
@@ -71,10 +72,12 @@ struct Eligibility {
 // Evaluate the jump verdict for `selected_nav` (index into
 // system.nav_points; -1 = none). Pure: reads the camera pose, the gate's
 // position, the galaxy topology, and the threat oracle — mutates nothing.
+// Pass `has_jump_drive` so the verdict can include NoDrive.
 Eligibility evaluate(const Camera& cam, const StarSystem& system,
                      const galaxy::Galaxy& galaxy,
                      const std::string& current_system_id,
-                     int selected_nav);
+                     int selected_nav,
+                     bool has_jump_drive);
 
 // HUD prompt for an eligibility, or nullptr when nothing should be drawn
 // (NotJumpNav). Sets *ready = true only for the green "PRESS J" line; every

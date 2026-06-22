@@ -93,6 +93,19 @@ bool upgrade_engine(PlayerState& p, const ShipClass* klass);
 // Buy the one-time cargo expansion flag. Refused if already owned.
 bool buy_cargo_expansion(PlayerState& p);
 
+// ---- discrete equipment (np-3dp.27) ----------------------------------------
+// Buy-once-per-ship upgrades read out of equipment_prices.json's
+// `discrete_equipment` map. Each is a bool flag the dealer flips; the
+// runtime effects are wired at the loadout/launch seam (jump drive gates
+// jump eligibility, ECM breaks missile locks, etc.). Known items:
+//   * jump_drive      — allows taking a jump gate (the J prompt)
+//   * ecm_lN (N=1..3) — passive missile-lock break chance per second
+//   * repair_droid    — hull repair while flying
+//   * adv_repair_droid (Righteous Fire) — repair_droid twice as fast
+//   * tractor_beam    — pull loot cargo
+int64_t discrete_price(const std::string& item);
+bool    buy_discrete(PlayerState& p, const std::string& item);
+
 // Register the Ship Dealer + Equipment screen bodies with the base-screen
 // framework (np-9cu.4 seam). Call once at startup, after load().
 void register_screens();

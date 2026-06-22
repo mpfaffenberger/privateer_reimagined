@@ -1859,7 +1859,8 @@ void update_dev_jump_soak(float dt) {
         into = (len > 1e-3f) ? HMM_DivV3F(into, len) : HMM_V3(0.0f, 0.0f, -1.0f);
         g.camera.position = HMM_AddV3(n.position, HMM_MulV3F(into, 1000.0f));
         g.camera.velocity = HMM_V3(0.0f, 0.0f, 0.0f);
-        e = jump::evaluate(g.camera, g.system, g.galaxy, g.player.current_system, i);
+        e = jump::evaluate(g.camera, g.system, g.galaxy, g.player.current_system, i,
+                            g.player.has_jump_drive);
         if (e.status == jump::Status::Ready) { idx = i; break; }
         std::printf("[dev] --dev-jump-soak: gate '%s' not ready (%s); trying next\n",
                     n.name.c_str(), jump::status_str(e.status));
@@ -3182,6 +3183,27 @@ void frame_cb() {
                 }
             }
         }
+
+        // ---- ECM break check (np-3dp.27) --------------------------------
+        // The player's fitted ECM has a per-second chance to drop any held
+        // missile lock. Canonical Privateer rates: L1 25%, L2 50%, L3 75%
+        // per second. Roll ONCE per second so the chance is independent of
+        // dt (not "every frame at 25%" which is way too strong).
+        if (g.player.ecm_level > 0 && lk.locked) {
+            constexpr float k_ecm_check_period = 1.0f;
+            static float  rate_dt = 0.0f;
+            rate_dt += dt;
+            if (rate_dt >= k_ecm_check_period) {
+                rate_dt = 0.0f;
+                const int ecm_pct = (int)g.player.ecm_level * 25;   // 25/50/75
+                if ((rand() % 100) < ecm_pct) {
+                    lk.locked = false;
+                    lk.progress_s = 0.0f;     // force IR to rebuild
+                    std::printf("[ecm] break (%d%% roll): missile lock dropped\n",
+                                ecm_pct);
+                }
+            }
+        }
     }
 
     // ---- missile fire (np-zte.2) ---------------------------------------
@@ -4372,7 +4394,7 @@ void frame_cb() {
                 // amber line straight off the eligibility verdict.
                 const jump::Eligibility e = jump::evaluate(
                     g.camera, g.system, g.galaxy, g.player.current_system,
-                    g.selected_nav);
+                    g.selected_nav, g.player.has_jump_drive);
                 bool ready = false;
                 dock_prompt = jump::prompt(e, &ready);
                 dock_ready  = ready;
@@ -5106,7 +5128,7 @@ void event_cb(const sapp_event* ev) {
         if (ev->key_code == SAPP_KEYCODE_J && g.autopilot.phase == AutopilotPhase::Idle) {
             const jump::Eligibility e = jump::evaluate(
                 g.camera, g.system, g.galaxy, g.player.current_system,
-                g.selected_nav);
+                g.selected_nav, g.player.has_jump_drive);
             if (e.status == jump::Status::Ready) {
                 const char* src_nav = g.system.nav_points[g.selected_nav].name.c_str();
                 std::printf("[jump] %s -> %s via %s (%.0fu out) — engaging\n",
