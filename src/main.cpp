@@ -1445,6 +1445,16 @@ void build_system_scene(bool first_time) {
         std::printf("[new_privateer] --dev-land '%s' — booting into Landed\n",
                     g.dev_land_base.c_str());
     }
+    // Resume a docked save AT its base (np-3dp.21): if --load/--continue
+    // restored a save that was docked, boot straight into that base's
+    // concourse rather than adrift in space. Mirrors --dev-land. Skipped
+    // when --dev-land already chose a destination.
+    else if (first_time && g.load_slot >= 0 &&
+             g.player.docked && !g.player.last_docked_base.empty()) {
+        game_state::request_mode(g.game, GameMode::Landed);
+        std::printf("[save] resumed docked save -> booting into Landed at %s\n",
+                    g.player.last_docked_base.c_str());
+    }
 }
 
 // ---- system teardown (np-6al.1) ---------------------------------------------
@@ -4440,7 +4450,6 @@ void frame_cb() {
                                 PlayerState restored;
                                 if (savegame::load(restored, s.path)) {
                                     g.player = restored;
-                                    g.player.docked = false;
                                     g.apply_health_pending = g.player.hp_valid;
                                     // Re-target the world to the saved system
                                     // so the scene matches the save.
@@ -4448,11 +4457,28 @@ void frame_cb() {
                                         g.player.current_system != g.system_name) {
                                         g.pending_goto = g.player.current_system;
                                     }
-                                    game_state::request_mode(g.game, GameMode::Flight);
+                                    // Resume WHERE you saved (np-3dp.21):
+                                    // the autosave fires on dock, so a save
+                                    // with a base lands you back in THAT
+                                    // base's concourse — not adrift in space
+                                    // at the system's default spawn. Manual
+                                    // in-flight saves (no base) resume in
+                                    // free flight.
+                                    if (g.player.docked &&
+                                        !g.player.last_docked_base.empty()) {
+                                        game_state::request_mode(g.game, GameMode::Landed);
+                                        std::printf("[title] LOAD -> %s (landed at %s)\n",
+                                                    s.path.c_str(),
+                                                    g.player.last_docked_base.c_str());
+                                    } else {
+                                        g.player.docked = false;
+                                        game_state::request_mode(g.game, GameMode::Flight);
+                                        std::printf("[title] LOAD -> %s (free flight)\n",
+                                                    s.path.c_str());
+                                    }
                                     g.show_title     = false;
                                     g.show_welcome   = false;
                                     g.show_load_menu = false;
-                                    std::printf("[title] LOAD -> %s\n", s.path.c_str());
                                 }
                             }
                             ImGui::PopID();
