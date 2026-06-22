@@ -123,7 +123,7 @@ void begin_auto(Docking& d, const NavPointDef& nav);
 // announce the zone (comms + sting) crossing inside k_zone_announce_m,
 // auto-capture the ship inside k_auto_land_m.
 constexpr float k_zone_announce_m = 900.0f;
-constexpr float k_auto_land_m     = 600.0f;
+constexpr float k_auto_land_m     = 800.0f;   // auto-capture the instant you cross this
 
 // Advance the approach. Drives camera pose/velocity while Approaching,
 // holds the beat while Docking, then requests Landed + flips the player
