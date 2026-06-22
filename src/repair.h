@@ -57,4 +57,24 @@ bool repair_hull(Ship& ship, PlayerState& p);
 // already stocked or unaffordable.
 bool rearm(PlayerState& p);
 
+// ---- missile buying (np-3dp.26) --------------------------------------------
+// Canonical Privateer models ONE missile launcher holding up to ML=10
+// missiles in any mix of types, bought individually at the equipment
+// dealer. (Per-hull launcher counts aren't modelled yet; this flat cap
+// matches the stock single launcher.)
+constexpr int k_missile_capacity = 10;
+
+// Per-missile dealer price by MissileType index (0=DF, 1=HS, 2=IR).
+// Canonical gamefaq prices: 20 / 35 / 75. Out-of-range -> 0.
+int64_t missile_price(int type);
+
+// Total missiles currently loaded across all types.
+int missiles_total(const PlayerState& p);
+
+// Buy `count` missiles of `type` (0=DF/1=HS/2=IR) at missile_price each,
+// capped so the rack never exceeds k_missile_capacity total. Returns false
+// (no spend) when the type/count is invalid, the rack is full, or the
+// player can't afford the FULL count.
+bool buy_missiles(PlayerState& p, int type, int count);
+
 } // namespace repair

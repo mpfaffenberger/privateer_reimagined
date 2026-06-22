@@ -28,7 +28,7 @@
   // Doubled from canonical 2500 m to match the longer-range demo regime.
   "weapons_range": 5000,
 
-  "max_engine_level": 1,
+  "max_engine_level": 2,
   "max_shield_level": 2,
   "default_shield":   "Shield Generator 1",
   "default_armor":    "Plasteel Armor",

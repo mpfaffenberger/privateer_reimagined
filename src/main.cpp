@@ -699,9 +699,16 @@ void init_cb() {
 // (the stock Tarsus's one laser) flies a single muzzle. Shared by the boot
 // spawn AND the title NEW handler so the ship can never drift from the
 // player state. Unknown / empty gun names fall back to a Laser.
-static void apply_player_loadout(Ship& pl, const PlayerState& p) {
+static void apply_player_loadout(Ship& pl, const PlayerState& p, bool heal = true) {
     if (const ShipClass* k = ship_class::find(p.ship_class_name)) pl.klass = k;
-    ship::heal_to_full(pl);
+    // Shield generator upgrade (np-3dp.26): each dealer shield level adds the
+    // stock generator's cm again (Privateer's Shield Generator 1/2/3 ladder).
+    // Set BEFORE heal so heal_to_full fills to the upgraded max.
+    pl.shield_mult = 1.0f + (float)p.shield_level;
+    // heal=true on a fresh hull (boot / NEW / respawn / ship-swap); false on
+    // a normal land->launch so battle damage you didn't pay to repair
+    // persists across the base visit.
+    if (heal) ship::heal_to_full(pl);
     const ShipClass* k = pl.klass;
     pl.mounts.clear();
     const size_t n = p.gun_mounts.empty()
@@ -2571,6 +2578,22 @@ void frame_cb() {
                                      g.player.current_system, g.galaxy);
         } else if (g.game.prev_mode == GameMode::Landed) {
             base_screens::exit();
+            // Re-fit the live ship from the player state on launch (np-3dp.26):
+            // the equipment dealer only mutates PlayerState (gun_mounts,
+            // ship_class_name), so without this a gun you fitted or a hull
+            // you bought wouldn't take effect until you died. Heal ONLY when
+            // the hull class actually changed (a brand-new ship comes full);
+            // a normal land/launch preserves unrepaired battle damage so the
+            // repair service still matters.
+            if (Ship* pl = g.ships.player()) {
+                const bool hull_changed =
+                    !pl->klass || pl->klass->name != g.player.ship_class_name;
+                apply_player_loadout(*pl, g.player, /*heal=*/hull_changed);
+                std::printf("[outfit] launch re-fit: klass=%s mounts=%zu%s\n",
+                            pl->klass ? pl->klass->name.c_str() : "<null>",
+                            pl->mounts.size(),
+                            hull_changed ? " (new hull -> healed)" : "");
+            }
             // Outfitting (np-9cu.3): fold the player's hull + engine_level into
             // the camera's flight speed caps as we launch back into Flight.
             // engine_level 0 on the stock Tarsus reproduces the old 300/600.

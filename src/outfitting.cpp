@@ -552,16 +552,25 @@ void draw_equipment(BaseContext& ctx) {
         // burner shares the ship's energy bank now; it recharges for
         // free in flight, so there's nothing to sell here.
 
-        // Missiles.
-        ImGui::Text("Missiles    DF %d / HS %d / IR %d", p.missiles[0], p.missiles[1], p.missiles[2]);
-        ImGui::SameLine();
-        if (!q.missiles_low) {
-            ImGui::PushStyleColor(ImGuiCol_Text, kGreen); ImGui::TextUnformatted("FULL"); ImGui::PopStyleColor();
-        } else {
-            char b[48]; std::snprintf(b, sizeof(b), "Rearm (%lld)", (long long)q.missile_cost);
-            ImGui::BeginDisabled(!player::can_afford(p, q.missile_cost));
-            if (ImGui::SmallButton(b)) { if (repair::rearm(p)) sfx::ui_click(); }
+        // Missiles — buy by type up to the launcher capacity (canon ML 10,
+        // np-3dp.26). One launcher, any mix of DF/HS/IR.
+        const int mtot = repair::missiles_total(p);
+        ImGui::Text("Missiles    DF %d / HS %d / IR %d   (%d/%d)",
+                    p.missiles[0], p.missiles[1], p.missiles[2],
+                    mtot, repair::k_missile_capacity);
+        const char* mlbl[3] = { "DF", "HS", "IR" };
+        for (int t = 0; t < 3; ++t) {
+            ImGui::SameLine();
+            ImGui::PushID(t);
+            char b[40];
+            std::snprintf(b, sizeof(b), "+%s (%lld)", mlbl[t],
+                          (long long)repair::missile_price(t));
+            const bool can = mtot < repair::k_missile_capacity &&
+                             player::can_afford(p, repair::missile_price(t));
+            ImGui::BeginDisabled(!can);
+            if (ImGui::SmallButton(b)) { if (repair::buy_missiles(p, t, 1)) sfx::ui_click(); }
             ImGui::EndDisabled();
+            ImGui::PopID();
         }
     }
     ImGui::EndChild();

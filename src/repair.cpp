@@ -26,9 +26,9 @@ namespace {
 constexpr double k_credits_per_armor_cm = 20.0;   // hull repair
 // k_credits_per_fuel removed: afterburner now shares the ship's energy bank
 // (recharges for free, no top-off service to sell).
-// Per-missile restock price, indexed by MissileType (DF/HS/IR). Mirrors the
-// rough firepower ordering (IR dearest).
-constexpr int64_t k_missile_price[3] = { 250, 600, 1200 };
+// Per-missile price, indexed by MissileType (DF/HS/IR). Canonical Privateer
+// (gamefaq): Dumb-Fire 20, Heat-Seeker 35, Image-Rec 75.
+constexpr int64_t k_missile_price[3] = { 20, 35, 75 };
 
 // Full per-facing armor for a ship's class (base + fitted armor tier).
 // Mirrors ship::heal_to_full's armor math so the "missing" calc agrees with
@@ -110,6 +110,40 @@ bool repair_hull(Ship& ship, PlayerState& p) {
     const float after = ship.armor_fore_cm + ship.armor_aft_cm + ship.armor_side_cm;
     std::printf("[repair] hull restored: armor %.0f -> %.0f cm | paid %lld | credits %lld\n",
                 before, after, (long long)q.hull_cost, (long long)p.credits);
+    return true;
+}
+
+int64_t missile_price(int type) {
+    return (type >= 0 && type < 3) ? k_missile_price[type] : 0;
+}
+
+int missiles_total(const PlayerState& p) {
+    return p.missiles[0] + p.missiles[1] + p.missiles[2];
+}
+
+bool buy_missiles(PlayerState& p, int type, int count) {
+    if (type < 0 || type >= 3 || count <= 0) {
+        std::printf("[repair] buy missiles refused: bad type/count %d x%d\n", type, count);
+        return false;
+    }
+    const int room = k_missile_capacity - missiles_total(p);
+    if (room <= 0) {
+        std::printf("[repair] buy missiles refused: rack full (%d/%d)\n",
+                    missiles_total(p), k_missile_capacity);
+        return false;
+    }
+    const int n = std::min(count, room);
+    const int64_t cost = (int64_t)n * k_missile_price[type];
+    if (!player::spend_credits(p, cost)) {
+        std::printf("[repair] buy missiles refused: %d x type%d costs %lld, have %lld\n",
+                    n, type, (long long)cost, (long long)p.credits);
+        return false;
+    }
+    player::add_missiles(p, type, n);
+    std::printf("[repair] bought %d type%d missile(s) | DF/HS/IR = %d/%d/%d | "
+                "paid %lld | credits %lld\n",
+                n, type, p.missiles[0], p.missiles[1], p.missiles[2],
+                (long long)cost, (long long)p.credits);
     return true;
 }
 

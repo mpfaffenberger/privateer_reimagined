@@ -432,9 +432,9 @@ void draw_target_mfd(const Camera& cam, const ShipRegistry& ships,
             float shield_max[3] = {0,0,0}, armor_max[3] = {0,0,0};
             if (k) {
                 if (k->default_shield) {
-                    shield_max[0] = k->default_shield->front_cm;
-                    shield_max[1] = k->default_shield->back_cm;
-                    shield_max[2] = k->default_shield->side_cm;
+                    shield_max[0] = k->default_shield->front_cm * target->shield_mult;
+                    shield_max[1] = k->default_shield->back_cm  * target->shield_mult;
+                    shield_max[2] = k->default_shield->side_cm  * target->shield_mult;
                 }
                 armor_max[0] = k->armor_fore_cm;
                 armor_max[1] = k->armor_aft_cm;
@@ -542,9 +542,9 @@ void draw_player_status(const ShipRegistry& ships) {
             float shield_max[3] = {0,0,0}, armor_max[3] = {0,0,0};
             if (k) {
                 if (k->default_shield) {
-                    shield_max[0] = k->default_shield->front_cm;
-                    shield_max[1] = k->default_shield->back_cm;
-                    shield_max[2] = k->default_shield->side_cm;
+                    shield_max[0] = k->default_shield->front_cm * player.shield_mult;
+                    shield_max[1] = k->default_shield->back_cm  * player.shield_mult;
+                    shield_max[2] = k->default_shield->side_cm  * player.shield_mult;
                 }
                 armor_max[0] = k->armor_fore_cm;
                 armor_max[1] = k->armor_aft_cm;

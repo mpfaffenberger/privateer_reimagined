@@ -19,22 +19,27 @@
   //                     (the +50% the ShipClass already advertises).
   // ---------------------------------------------------------------------------
 
+  // Canonical Privateer prices (gamefaq equipment list, np-3dp.26).
   "guns": {
-    "laser":              1500,
-    "mass_driver":        3000,
-    "meson_blaster":      5500,
-    "neutron_gun":        9000,
-    "particle_cannon":    12000,
-    "ionic_pulse_cannon": 15000,
-    "tachyon_cannon":     18000,
-    "plasma_gun":         24000
+    "laser":              1000,
+    "mass_driver":        1500,
+    "meson_blaster":      2500,
+    "neutron_gun":        5000,
+    "particle_cannon":    10000,
+    "tachyon_cannon":     20000,
+    "ionic_pulse_cannon": 40000,
+    "plasma_gun":         80000
   },
 
-  "shield_level_price": [0, 9000, 22000, 45000],
+  // Shield generator ladder (target level -> price): L1 10k, L2 30k, L3 50k,
+  // L4 100k, L5 150k. [0] is stock/free. Per-hull caps live in ship.json
+  // (Tarsus L2, Centurion/Galaxy L3 in the original game).
+  "shield_level_price": [0, 10000, 30000, 50000, 100000, 150000],
 
-  "engine_level_price": [0, 7000, 16000, 28000, 44000, 64000],
+  // Engine ladder: L1 10k, L2 30k, L3 60k, L4 100k, L5 150k.
+  "engine_level_price": [0, 10000, 30000, 60000, 100000, 150000],
 
   "engine_speed_mult_per_level": 0.08,
 
-  "cargo_expansion_price": 12000
+  "cargo_expansion_price": 5000
 }

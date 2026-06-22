@@ -326,8 +326,8 @@ float ai_brain::hp_fraction(const Ship& s) {
         maxv += s.klass->default_armor->front_cm + s.klass->default_armor->back_cm
               + s.klass->default_armor->side_cm;
     if (s.klass->default_shield)
-        maxv += s.klass->default_shield->front_cm + s.klass->default_shield->back_cm
-              + s.klass->default_shield->side_cm;
+        maxv += (s.klass->default_shield->front_cm + s.klass->default_shield->back_cm
+              +  s.klass->default_shield->side_cm) * s.shield_mult;
     return (maxv > 0.0f) ? (cur / maxv) : 1.0f;
 }
 
@@ -348,8 +348,8 @@ namespace {
 float shield_fraction(const Ship& s) {
     if (!s.klass || !s.klass->default_shield) return 1.0f;
     const float cur  = s.shield_fore_cm + s.shield_aft_cm + s.shield_side_cm;
-    const float maxv = s.klass->default_shield->front_cm + s.klass->default_shield->back_cm
-                     + s.klass->default_shield->side_cm;
+    const float maxv = (s.klass->default_shield->front_cm + s.klass->default_shield->back_cm
+                     +  s.klass->default_shield->side_cm) * s.shield_mult;
     return (maxv > 0.0f) ? (cur / maxv) : 1.0f;
 }
 

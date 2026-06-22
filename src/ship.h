@@ -182,6 +182,13 @@ struct Ship {
     float shield_pause_aft  = 0.0f;
     float shield_pause_side = 0.0f;
     float energy_gj         = 0.0f;
+    // Shield generator multiplier (np-3dp.26). 1.0 = the class's stock
+    // generator. The equipment dealer's shield-level upgrade scales this on
+    // the player ship: each level adds the base generator's cm again
+    // (mult = 1 + shield_level), reproducing Privateer's Shield Generator
+    // 1/2/3 ladder (10/20/30 cm). NPCs stay at 1.0. Applied wherever a
+    // facing's MAX shield is read off klass->default_shield.
+    float shield_mult       = 1.0f;
 
     // ---- weapons ------------------------------------------------------
     // Per-instance copy of the fitted gun mounts. Initialised from

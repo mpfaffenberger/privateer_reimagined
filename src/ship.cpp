@@ -188,9 +188,9 @@ Ship ship::spawn(const ShipClass& klass) {
         s.armor_side_cm += klass.default_armor->side_cm;
     }
     if (klass.default_shield) {
-        s.shield_fore_cm = klass.default_shield->front_cm;
-        s.shield_aft_cm  = klass.default_shield->back_cm;
-        s.shield_side_cm = klass.default_shield->side_cm;
+        s.shield_fore_cm = klass.default_shield->front_cm * s.shield_mult;
+        s.shield_aft_cm  = klass.default_shield->back_cm  * s.shield_mult;
+        s.shield_side_cm = klass.default_shield->side_cm  * s.shield_mult;
     }
     s.energy_gj = klass.energy_max;
 
@@ -230,9 +230,9 @@ void ship::heal_to_full(Ship& s) {
         s.armor_aft_cm  += k.default_armor->back_cm;
         s.armor_side_cm += k.default_armor->side_cm;
     }
-    s.shield_fore_cm = k.default_shield ? k.default_shield->front_cm : 0.0f;
-    s.shield_aft_cm  = k.default_shield ? k.default_shield->back_cm  : 0.0f;
-    s.shield_side_cm = k.default_shield ? k.default_shield->side_cm  : 0.0f;
+    s.shield_fore_cm = k.default_shield ? k.default_shield->front_cm * s.shield_mult : 0.0f;
+    s.shield_aft_cm  = k.default_shield ? k.default_shield->back_cm  * s.shield_mult : 0.0f;
+    s.shield_side_cm = k.default_shield ? k.default_shield->side_cm  * s.shield_mult : 0.0f;
     s.energy_gj      = k.energy_max;
 }
 
@@ -303,11 +303,11 @@ struct HitTarget { float* shield; float* armor; float* pause;
                    float shield_max; };
 HitTarget hit_target(Ship& s, HitFacing f) {
     const float sh_max_fore = s.klass && s.klass->default_shield
-                            ? s.klass->default_shield->front_cm : 0.0f;
+                            ? s.klass->default_shield->front_cm * s.shield_mult : 0.0f;
     const float sh_max_aft  = s.klass && s.klass->default_shield
-                            ? s.klass->default_shield->back_cm  : 0.0f;
+                            ? s.klass->default_shield->back_cm  * s.shield_mult : 0.0f;
     const float sh_max_side = s.klass && s.klass->default_shield
-                            ? s.klass->default_shield->side_cm  : 0.0f;
+                            ? s.klass->default_shield->side_cm  * s.shield_mult : 0.0f;
     switch (f) {
         case HitFacing::Fore: return { &s.shield_fore_cm, &s.armor_fore_cm,
                                        &s.shield_pause_fore, sh_max_fore };
@@ -383,9 +383,9 @@ void ship::regen_shields(Ship& s, float dt) {
             q = std::min(q + regen_rate * dt, max_cm);
         }
     };
-    tick_quad(s.shield_fore_cm, s.shield_pause_fore, s.klass->default_shield->front_cm);
-    tick_quad(s.shield_aft_cm,  s.shield_pause_aft,  s.klass->default_shield->back_cm);
-    tick_quad(s.shield_side_cm, s.shield_pause_side, s.klass->default_shield->side_cm);
+    tick_quad(s.shield_fore_cm, s.shield_pause_fore, s.klass->default_shield->front_cm * s.shield_mult);
+    tick_quad(s.shield_aft_cm,  s.shield_pause_aft,  s.klass->default_shield->back_cm  * s.shield_mult);
+    tick_quad(s.shield_side_cm, s.shield_pause_side, s.klass->default_shield->side_cm  * s.shield_mult);
 }
 
 float ship::hit_radius_m(const Ship& s) {

@@ -28,9 +28,13 @@ const MissileStats g_missile_stats[kMissileTypeCount] = {
     // ~3-5x too hard (a single HS one-shot a Tarsus through armour+shield);
     // these line the missile up with the gun damage scale (1.8-10 cm/shot)
     // so a missile reads as a heavy single hit, not an instant kill.
+    // Canonical Privateer (gamefaq): DF 13cm @1000kps, HS 16cm @800kps,
+    // IR 17cm @850kps. Our muzzle speeds run hotter than canon's kps for
+    // demo-scale readability, but the armour-penetration (damage) + lock
+    // technique match the source exactly.
     /* DF */ { "DF", "Dumbfire",       13.0f, 1400.0f, 0.0f, 6.0f, 8000.0f, 60.0f, false, false },
     /* HS */ { "HS", "Heat-Seeker",    16.0f, 1200.0f, 1.2f, 8.0f, 9000.0f, 90.0f, true,  false },
-    /* IR */ { "IR", "Image-Rec",      17.5f, 1100.0f, 2.4f, 9.0f,10000.0f,100.0f, true,  true  },
+    /* IR */ { "IR", "Image-Rec",      17.0f, 1100.0f, 2.4f, 9.0f,10000.0f,100.0f, true,  true  },
 };
 
 namespace missile {
