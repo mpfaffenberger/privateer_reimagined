@@ -311,14 +311,16 @@ static std::string serialize_player(const PlayerState& p) {
         // live ship-damage snapshot (np-3dp.19, v4). Absent/hp_valid=false
         // -> the loaded ship stays at full health.
         w.key("ship_health"); w.member_object_begin();
-          w.key("valid");       w.value_bool(p.hp_valid);
-          w.key("armor_fore");  w.value_raw(std::to_string(p.hp_armor_fore));
-          w.key("armor_aft");   w.value_raw(std::to_string(p.hp_armor_aft));
-          w.key("armor_side");  w.value_raw(std::to_string(p.hp_armor_side));
-          w.key("shield_fore"); w.value_raw(std::to_string(p.hp_shield_fore));
-          w.key("shield_aft");  w.value_raw(std::to_string(p.hp_shield_aft));
-          w.key("shield_side"); w.value_raw(std::to_string(p.hp_shield_side));
-          w.key("energy");      w.value_raw(std::to_string(p.hp_energy));
+          w.key("valid");          w.value_bool(p.hp_valid);
+          w.key("armor_fore");     w.value_raw(std::to_string(p.hp_armor_fore));
+          w.key("armor_aft");      w.value_raw(std::to_string(p.hp_armor_aft));
+          w.key("armor_port");     w.value_raw(std::to_string(p.hp_armor_port));
+          w.key("armor_starboard"); w.value_raw(std::to_string(p.hp_armor_starboard));
+          w.key("shield_fore");    w.value_raw(std::to_string(p.hp_shield_fore));
+          w.key("shield_aft");     w.value_raw(std::to_string(p.hp_shield_aft));
+          w.key("shield_port");    w.value_raw(std::to_string(p.hp_shield_port));
+          w.key("shield_starboard"); w.value_raw(std::to_string(p.hp_shield_starboard));
+          w.key("energy");         w.value_raw(std::to_string(p.hp_energy));
         w.end_object();
 
         w.key("current_system");   w.value_string(p.current_system);
@@ -646,13 +648,35 @@ bool load(PlayerState& p, const std::string& path) {
         if (const json::Value* sh = pl.find("ship_health"); sh && sh->is_object()) {
             const json::Value& h = *sh;
             out.hp_valid       = h.contains("valid")       ? h["valid"].bool_or(false)            : false;
+            // v5 split sides into port + starboard (issue #30). If the
+            // save still has the old *_side keys, split the cm evenly
+            // across the two new faces so total protection is preserved.
             out.hp_armor_fore  = h.contains("armor_fore")  ? (float)h["armor_fore"].number_or(0)  : 0.0f;
             out.hp_armor_aft   = h.contains("armor_aft")   ? (float)h["armor_aft"].number_or(0)   : 0.0f;
-            out.hp_armor_side  = h.contains("armor_side")  ? (float)h["armor_side"].number_or(0)  : 0.0f;
             out.hp_shield_fore = h.contains("shield_fore") ? (float)h["shield_fore"].number_or(0) : 0.0f;
             out.hp_shield_aft  = h.contains("shield_aft")  ? (float)h["shield_aft"].number_or(0)  : 0.0f;
-            out.hp_shield_side = h.contains("shield_side") ? (float)h["shield_side"].number_or(0) : 0.0f;
             out.hp_energy      = h.contains("energy")      ? (float)h["energy"].number_or(0)      : 0.0f;
+            if (h.contains("armor_port") && h.contains("armor_starboard")) {
+                out.hp_armor_port     = (float)h["armor_port"].number_or(0);
+                out.hp_armor_starboard = (float)h["armor_starboard"].number_or(0);
+            } else if (h.contains("armor_side")) {
+                // Old save had a single shared side value; under the
+                // issue-30 redesign each flank gets the FULL value (not
+                // half) so port/starboard don't halve each other.
+                const float v = (float)h["armor_side"].number_or(0);
+                out.hp_armor_port = out.hp_armor_starboard = v;
+            } else {
+                out.hp_armor_port = out.hp_armor_starboard = 0.0f;
+            }
+            if (h.contains("shield_port") && h.contains("shield_starboard")) {
+                out.hp_shield_port     = (float)h["shield_port"].number_or(0);
+                out.hp_shield_starboard = (float)h["shield_starboard"].number_or(0);
+            } else if (h.contains("shield_side")) {
+                const float v = (float)h["shield_side"].number_or(0);
+                out.hp_shield_port = out.hp_shield_starboard = v;
+            } else {
+                out.hp_shield_port = out.hp_shield_starboard = 0.0f;
+            }
         }
 
         out.current_system   = pl.contains("current_system")   ? pl["current_system"].string_or("")   : "";

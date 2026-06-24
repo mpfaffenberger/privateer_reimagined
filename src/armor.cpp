@@ -36,7 +36,14 @@ bool armor::load_table(const std::string& json_path) {
         if (a.name.empty()) continue;
         a.front_cm = opt_num(v, "Front (cm)", 0.0f);
         a.back_cm  = opt_num(v, "Back (cm)",  0.0f);
-        a.side_cm  = opt_num(v, "Sides (cm)", 0.0f);
+        // The source data only has a single "Sides (cm)" reading; per
+        // issue #30 + redesign each flank independently gets the FULL
+        // value (not half) so a port hit doesn't halve starboard's
+        // protection. Total protection across both flanks is 2x the old
+        // shared value — game-balance trade, not a bug.
+        const float sides_cm = opt_num(v, "Sides (cm)", 0.0f);
+        a.port_cm         = sides_cm;
+        a.starboard_cm    = sides_cm;
         g_armors.push_back(std::move(a));
     }
 

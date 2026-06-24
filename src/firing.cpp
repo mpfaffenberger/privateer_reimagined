@@ -104,7 +104,9 @@ void firing::tick(ShipRegistry& ships,
         // the upgrade flow); use a generous v1 default so the player
         // can always shoot. NPCs use class numbers.
         constexpr float k_player_energy_max     = 200.0f;
-        constexpr float k_player_energy_regen   = 50.0f;
+        // 75 GJ/s leaves ~15–30 GJ/s net once a stock shield gen (45–60
+        // GJ/s drain) is running, so the player's guns/AB always recover.
+        constexpr float k_player_energy_regen   = 75.0f;
         const float energy_max   = s.klass ? s.klass->energy_max
                                   : (s.is_player ? k_player_energy_max : 0.0f);
         const float energy_regen = s.klass ? s.klass->energy_recharge

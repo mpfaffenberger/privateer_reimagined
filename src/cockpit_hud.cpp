@@ -42,6 +42,7 @@
 #include <cctype>
 #include <cmath>
 #include <cstdio>
+#include <map>
 #include <string>
 
 namespace cockpit_hud {
@@ -436,60 +437,67 @@ void draw_target_mfd(const Camera& cam, const ShipRegistry& ships,
 
             ImGui::EndGroup();
 
-            // Bottom: per-facing shield + armor bars. F / A / S labels
-            // (Fore / Aft / Side); each bar fills proportionally to
-            // current vs. max for that facing. Shield max comes from
-            // the fitted ShieldType, armor max from class hull +
-            // fitted ArmorType.
+            // Bottom: per-facing shield + armor bars. F / A / P / St
+            // labels (Fore / Aft / Port / Starboard); each bar fills
+            // proportionally to current vs. max for that facing.
+            // Shield max comes from the fitted ShieldType, armor max
+            // from class hull + fitted ArmorType. 4 bars laid out 2x2
+            // so the row of labels stays narrow (port and starboard
+            // were a single "side" pool pre-issue-30).
             ImGui::Separator();
             const ShipClass* k = target->klass;
-            float shield_max[3] = {0,0,0}, armor_max[3] = {0,0,0};
+            float shield_max[4] = {0,0,0,0}, armor_max[4] = {0,0,0,0};
             if (k) {
                 if (k->default_shield) {
-                    shield_max[0] = k->default_shield->front_cm * target->shield_mult;
-                    shield_max[1] = k->default_shield->back_cm  * target->shield_mult;
-                    shield_max[2] = k->default_shield->side_cm  * target->shield_mult;
+                    shield_max[0] = k->default_shield->front_cm      * target->shield_mult;
+                    shield_max[1] = k->default_shield->back_cm       * target->shield_mult;
+                    shield_max[2] = k->default_shield->port_cm       * target->shield_mult;
+                    shield_max[3] = k->default_shield->starboard_cm  * target->shield_mult;
                 }
                 armor_max[0] = k->armor_fore_cm;
                 armor_max[1] = k->armor_aft_cm;
-                armor_max[2] = k->armor_side_cm;
+                armor_max[2] = k->armor_port_cm;
+                armor_max[3] = k->armor_starboard_cm;
                 if (k->default_armor) {
                     armor_max[0] += k->default_armor->front_cm;
                     armor_max[1] += k->default_armor->back_cm;
-                    armor_max[2] += k->default_armor->side_cm;
+                    armor_max[2] += k->default_armor->port_cm;
+                    armor_max[3] += k->default_armor->starboard_cm;
                 }
             }
-            const float shield_cur[3] = { target->shield_fore_cm,
+            const float shield_cur[4] = { target->shield_fore_cm,
                                           target->shield_aft_cm,
-                                          target->shield_side_cm };
-            const float armor_cur[3]  = { target->armor_fore_cm,
+                                          target->shield_port_cm,
+                                          target->shield_starboard_cm };
+            const float armor_cur[4]  = { target->armor_fore_cm,
                                           target->armor_aft_cm,
-                                          target->armor_side_cm };
-            const char* facing_lbl[3] = { "F", "A", "S" };
+                                          target->armor_port_cm,
+                                          target->armor_starboard_cm };
+            const char* facing_lbl[4] = { "F", "A", "P", "St" };
 
             ImGui::PushStyleColor(ImGuiCol_FrameBg,        IM_COL32(20,20,30,180));
             ImGui::PushStyleColor(ImGuiCol_PlotHistogram,  IM_COL32(80,160,255,220));
-            for (int i = 0; i < 3; ++i) {
+            for (int i = 0; i < 4; ++i) {
                 const float frac = shield_max[i] > 0.0f
                     ? std::clamp(shield_cur[i] / shield_max[i], 0.0f, 1.0f) : 0.0f;
                 char buf[24];
                 std::snprintf(buf, sizeof(buf), "S%s %.0f/%.0f",
                               facing_lbl[i], shield_cur[i], shield_max[i]);
                 ImGui::ProgressBar(frac, ImVec2(80.0f, 14.0f), buf);
-                if (i < 2) ImGui::SameLine();
+                if (i == 1) ImGui::SameLine();   // first row: F/A on top
             }
             ImGui::PopStyleColor(2);
 
             ImGui::PushStyleColor(ImGuiCol_FrameBg,        IM_COL32(20,20,30,180));
             ImGui::PushStyleColor(ImGuiCol_PlotHistogram,  IM_COL32(255,140,60,220));
-            for (int i = 0; i < 3; ++i) {
+            for (int i = 0; i < 4; ++i) {
                 const float frac = armor_max[i] > 0.0f
                     ? std::clamp(armor_cur[i] / armor_max[i], 0.0f, 1.0f) : 0.0f;
                 char buf[24];
                 std::snprintf(buf, sizeof(buf), "A%s %.0f/%.0f",
                               facing_lbl[i], armor_cur[i], armor_max[i]);
                 ImGui::ProgressBar(frac, ImVec2(80.0f, 14.0f), buf);
-                if (i < 2) ImGui::SameLine();
+                if (i == 1) ImGui::SameLine();
             }
             ImGui::PopStyleColor(2);
         }
@@ -552,55 +560,166 @@ void draw_player_status(const ShipRegistry& ships) {
 
             // Per-facing maxes (same math as target panel).
             const ShipClass* k = player.klass;
-            float shield_max[3] = {0,0,0}, armor_max[3] = {0,0,0};
+            float shield_max[4] = {0,0,0,0}, armor_max[4] = {0,0,0,0};
             if (k) {
                 if (k->default_shield) {
-                    shield_max[0] = k->default_shield->front_cm * player.shield_mult;
-                    shield_max[1] = k->default_shield->back_cm  * player.shield_mult;
-                    shield_max[2] = k->default_shield->side_cm  * player.shield_mult;
+                    shield_max[0] = k->default_shield->front_cm      * player.shield_mult;
+                    shield_max[1] = k->default_shield->back_cm       * player.shield_mult;
+                    shield_max[2] = k->default_shield->port_cm       * player.shield_mult;
+                    shield_max[3] = k->default_shield->starboard_cm  * player.shield_mult;
                 }
                 armor_max[0] = k->armor_fore_cm;
                 armor_max[1] = k->armor_aft_cm;
-                armor_max[2] = k->armor_side_cm;
+                armor_max[2] = k->armor_port_cm;
+                armor_max[3] = k->armor_starboard_cm;
                 if (k->default_armor) {
                     armor_max[0] += k->default_armor->front_cm;
                     armor_max[1] += k->default_armor->back_cm;
-                    armor_max[2] += k->default_armor->side_cm;
+                    armor_max[2] += k->default_armor->port_cm;
+                    armor_max[3] += k->default_armor->starboard_cm;
                 }
             }
-            const float shield_cur[3] = { player.shield_fore_cm,
+            const float shield_cur[4] = { player.shield_fore_cm,
                                           player.shield_aft_cm,
-                                          player.shield_side_cm };
-            const float armor_cur[3]  = { player.armor_fore_cm,
+                                          player.shield_port_cm,
+                                          player.shield_starboard_cm };
+            const float armor_cur[4]  = { player.armor_fore_cm,
                                           player.armor_aft_cm,
-                                          player.armor_side_cm };
-            const char* facing_lbl[3] = { "F", "A", "S" };
+                                          player.armor_port_cm,
+                                          player.armor_starboard_cm };
 
-            ImGui::PushStyleColor(ImGuiCol_FrameBg,        IM_COL32(20,20,30,180));
-            ImGui::PushStyleColor(ImGuiCol_PlotHistogram,  IM_COL32(80,160,255,220));
-            for (int i = 0; i < 3; ++i) {
-                const float frac = shield_max[i] > 0.0f
-                    ? std::clamp(shield_cur[i] / shield_max[i], 0.0f, 1.0f) : 0.0f;
-                char buf[24];
-                std::snprintf(buf, sizeof(buf), "S%s %.0f/%.0f",
-                              facing_lbl[i], shield_cur[i], shield_max[i]);
-                ImGui::ProgressBar(frac, ImVec2(80.0f, 14.0f), buf);
-                if (i < 2) ImGui::SameLine();
-            }
-            ImGui::PopStyleColor(2);
+            // ---- Ship diagram: 4 bars around a central circle ------
+            // Fore (top) and aft (bottom) sit horizontal; port (left)
+            // and starboard (right) sit vertical. Each bar shows shield
+            // (blue) + armor (orange) stacked, with bar size growing as
+            // health fills. Dim background = max capacity, bright fill
+            // = current. Result reads at a glance: more bar = more
+            // protection remaining, just from the silhouette.
 
-            ImGui::PushStyleColor(ImGuiCol_FrameBg,        IM_COL32(20,20,30,180));
-            ImGui::PushStyleColor(ImGuiCol_PlotHistogram,  IM_COL32(255,140,60,220));
-            for (int i = 0; i < 3; ++i) {
-                const float frac = armor_max[i] > 0.0f
-                    ? std::clamp(armor_cur[i] / armor_max[i], 0.0f, 1.0f) : 0.0f;
-                char buf[24];
-                std::snprintf(buf, sizeof(buf), "A%s %.0f/%.0f",
-                              facing_lbl[i], armor_cur[i], armor_max[i]);
-                ImGui::ProgressBar(frac, ImVec2(80.0f, 14.0f), buf);
-                if (i < 2) ImGui::SameLine();
-            }
-            ImGui::PopStyleColor(2);
+            constexpr float k_circle_r   = 11.0f;  // ship circle radius
+            constexpr float k_bar_thick  = 6.0f;   // bar thickness (px)
+            constexpr float k_h_bar_max  = 88.0f;  // max length, fore/aft bars
+            constexpr float k_v_bar_max  = 30.0f;  // max length, port/stbd bars
+            constexpr float k_bar_gap    = 5.0f;   // gap between circle & bar
+
+            constexpr ImU32 k_shield_col   = IM_COL32( 80, 160, 255, 220);
+            constexpr ImU32 k_armor_col    = IM_COL32(255, 140,  60, 220);
+            constexpr ImU32 k_bg_col       = IM_COL32( 20,  20,  30, 180);
+            constexpr ImU32 k_ship_col     = IM_COL32(255, 210, 100, 240);
+            constexpr ImU32 k_ship_outline = IM_COL32(220, 180, 100, 200);
+
+            ImDrawList* dl = ImGui::GetWindowDrawList();
+            const ImVec2 origin = ImGui::GetWindowPos();
+            const float  panel_w = 280.0f;
+            const float  cx      = origin.x + panel_w * 0.5f;
+            // Position the diagram centre ~38px below the current cursor
+            // (which sits just after the energy-bar separator).
+            const float  cy      = ImGui::GetCursorScreenPos().y + 38.0f;
+
+            // Helper: draw a horizontal bar (anchor at top-left).
+            // shield section on the LEFT (computed to its own max-width),
+            // armor section on the RIGHT (rest of the bar).
+            auto draw_h_bar = [&](float x, float y, float w, float h,
+                                  float sc, float sm, float ac, float am) {
+                const float total_m = sm + am;
+                if (total_m <= 0.0f) return;
+
+                // Dim background at full size (the max-capacity outline)
+                dl->AddRectFilled(ImVec2(x, y), ImVec2(x + w, y + h),
+                                  k_bg_col, 1.0f);
+
+                // Total fill fraction for the bar's overall size
+                const float total_frac = std::clamp((sc + ac) / total_m, 0.0f, 1.0f);
+                const float filled_w   = total_frac * w;
+
+                // Shield & armor SECTION max-widths follow the same
+                // proportions as their share of the original total_max.
+                const float shield_w_max = w * (sm / total_m);
+                const float shield_w_cur = (sm > 0.0f)
+                    ? shield_w_max * std::clamp(sc / sm, 0.0f, 1.0f) : 0.0f;
+                const float armor_w_cur  = filled_w - shield_w_cur;
+
+                if (shield_w_cur > 0.0f) {
+                    dl->AddRectFilled(ImVec2(x, y),
+                                      ImVec2(x + shield_w_cur, y + h),
+                                      k_shield_col, 1.0f);
+                }
+                if (armor_w_cur > 0.0f) {
+                    dl->AddRectFilled(ImVec2(x + shield_w_cur, y),
+                                      ImVec2(x + shield_w_cur + armor_w_cur, y + h),
+                                      k_armor_col, 1.0f);
+                }
+            };
+
+            // Helper: draw a vertical bar (anchor at top-left).
+            // shield section on TOP, armor section on BOTTOM.
+            auto draw_v_bar = [&](float x, float y, float w, float h,
+                                  float sc, float sm, float ac, float am) {
+                const float total_m = sm + am;
+                if (total_m <= 0.0f) return;
+
+                dl->AddRectFilled(ImVec2(x, y), ImVec2(x + w, y + h),
+                                  k_bg_col, 1.0f);
+
+                const float total_frac = std::clamp((sc + ac) / total_m, 0.0f, 1.0f);
+                const float filled_h   = total_frac * h;
+
+                const float shield_h_max = h * (sm / total_m);
+                const float shield_h_cur = (sm > 0.0f)
+                    ? shield_h_max * std::clamp(sc / sm, 0.0f, 1.0f) : 0.0f;
+                const float armor_h_cur  = filled_h - shield_h_cur;
+
+                if (shield_h_cur > 0.0f) {
+                    dl->AddRectFilled(ImVec2(x, y),
+                                      ImVec2(x + w, y + shield_h_cur),
+                                      k_shield_col, 1.0f);
+                }
+                if (armor_h_cur > 0.0f) {
+                    dl->AddRectFilled(ImVec2(x, y + shield_h_cur),
+                                      ImVec2(x + w, y + shield_h_cur + armor_h_cur),
+                                      k_armor_col, 1.0f);
+                }
+            };
+
+            // ---- Place 4 bars + ship circle ------
+            // Fore bar (above circle) — horizontal
+            const float fore_x = cx - k_h_bar_max * 0.5f;
+            const float fore_y = cy - k_circle_r - k_bar_gap - k_bar_thick;
+            draw_h_bar(fore_x, fore_y, k_h_bar_max, k_bar_thick,
+                       shield_cur[0], shield_max[0], armor_cur[0], armor_max[0]);
+
+            // Aft bar (below circle) — horizontal
+            const float aft_y = cy + k_circle_r + k_bar_gap;
+            draw_h_bar(fore_x, aft_y, k_h_bar_max, k_bar_thick,
+                       shield_cur[1], shield_max[1], armor_cur[1], armor_max[1]);
+
+            // Port bar (left of circle) — vertical
+            const float port_x = cx - k_circle_r - k_bar_gap - k_bar_thick;
+            const float port_y = cy - k_v_bar_max * 0.5f;
+            draw_v_bar(port_x, port_y, k_bar_thick, k_v_bar_max,
+                       shield_cur[2], shield_max[2], armor_cur[2], armor_max[2]);
+
+            // Starboard bar (right of circle) — vertical
+            const float stbd_x = cx + k_circle_r + k_bar_gap;
+            const float stbd_y = cy - k_v_bar_max * 0.5f;
+            draw_v_bar(stbd_x, stbd_y, k_bar_thick, k_v_bar_max,
+                       shield_cur[3], shield_max[3], armor_cur[3], armor_max[3]);
+
+            // Ship circle (centrepiece). Filled amber + outline so it
+            // reads as the ship's hull against the four bars.
+            dl->AddCircleFilled(ImVec2(cx, cy), k_circle_r, k_ship_col, 16);
+            dl->AddCircle(ImVec2(cx, cy), k_circle_r, k_ship_outline, 16, 1.0f);
+
+            // Tiny facing labels so the player can decode the diagram
+            // at a glance (F = fore, A = aft, P = port, St = starboard).
+            dl->AddText(ImVec2(fore_x + k_h_bar_max * 0.5f - 4.0f, fore_y - 12.0f),
+                        IM_COL32(180, 220, 255, 220), "F");
+            dl->AddText(ImVec2(fore_x + k_h_bar_max * 0.5f - 4.0f, aft_y + k_bar_thick + 2.0f),
+                        IM_COL32(180, 220, 255, 220), "A");
+            dl->AddText(ImVec2(port_x - 14.0f, port_y + 1.0f),
+                        IM_COL32(180, 220, 255, 220), "P");
+            dl->AddText(ImVec2(stbd_x + k_bar_thick + 4.0f, stbd_y + 1.0f),
+                        IM_COL32(180, 220, 255, 220), "St");
 
             // Gun arm-mode (np-3dp). Line under the armor bars so the
             // player sees at a glance which mode G picked and how many
@@ -845,7 +964,8 @@ bool project_world_point(const Camera& cam, HMM_Vec3 world,
 // already-surveyed patrol navs so the player reads route progress at a
 // glance without a second draw routine.
 void draw_objective_marker(const Camera& cam, HMM_Vec3 world,
-                           const char* label, ImU32 col = kObjective) {
+                           const char* label, ImU32 col = kObjective,
+                           int label_stagger_idx = 0) {
     float sx, sy;
     if (!project_world_point(cam, world, sx, sy)) return;
     auto* dl = ImGui::GetForegroundDrawList();
@@ -855,7 +975,12 @@ void draw_objective_marker(const Camera& cam, HMM_Vec3 world,
     dl->AddCircleFilled(ImVec2(sx, sy), 2.0f, col);
     if (label && label[0]) {
         const ImVec2 ts = ImGui::CalcTextSize(label);
-        dl->AddText(ImVec2(sx - ts.x * 0.5f, sy - r - ts.y - 3.0f),
+        // Issue #25: stagger overlapping labels. Multiple missions can share
+        // a single nav point (e.g. three cargo deliveries all bound for
+        // Tarsus). Stack their captions vertically above the diamond so the
+        // player can still read each one without them colliding.
+        const float y_off = (float)label_stagger_idx * (ts.y + 4.0f);
+        dl->AddText(ImVec2(sx - ts.x * 0.5f, sy - r - ts.y - 3.0f - y_off),
                     col, label);
     }
 }
@@ -1032,6 +1157,17 @@ void build_mission_objectives(const Camera& cam, const StarSystem& system,
     std::vector<Row> rows;
     rows.reserve(player.missions.size());
 
+    // Issue #25: stagger overlapping label captions. Multiple missions can
+    // share a nav (e.g. three cargo deliveries all bound for the same base)
+    // so we count how many labels have already been assigned to each nav and
+    // pass that as the stagger index into draw_objective_marker — each one
+    // above gets offset higher so they stack instead of overlapping.
+    std::map<const NavPointDef*, int> stagger_idx;
+    auto stagger_for = [&](const NavPointDef* n) -> int {
+        if (!n) return 0;
+        return stagger_idx[n]++;
+    };
+
     for (const ActiveMission& am : player.missions) {
         const missions::MissionStatus s =
             missions::mission_status(am, system, current_system);
@@ -1068,15 +1204,18 @@ void build_mission_objectives(const Camera& cam, const StarSystem& system,
                     bool first = true;
                     for (const NavPointDef* n : unsurveyed) {
                         draw_objective_marker(cam, n->position,
-                                             first ? label : nullptr);
+                                             first ? label : nullptr,
+                                             kObjective,
+                                             first ? stagger_for(n) : 0);
                         first = false;
                     }
                     for (const NavPointDef* n : surveyed)
                         draw_objective_marker(cam, n->position, nullptr,
-                                             kObjectiveDim);
+                                             kObjectiveDim, 0);
                 } else if (const NavPointDef* n =
                                objective_nav_in_system(am, system)) {
-                    draw_objective_marker(cam, n->position, label);
+                    draw_objective_marker(cam, n->position, label,
+                                          kObjective, stagger_for(n));
                 }
             }
         }

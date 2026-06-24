@@ -41,7 +41,14 @@ bool shield::load_table(const std::string& json_path) {
         s.regen_cm_per_s = opt_num(v, "Regen", 0.0f);
         s.front_cm       = opt_num(v, "Front (cm)", 0.0f);
         s.back_cm        = opt_num(v, "Back (cm)",  0.0f);
-        s.side_cm        = opt_num(v, "Sides (cm)", 0.0f);
+        // Issue #30 + redesign: the catalog still has a single "Sides
+        // (cm)" reading, but each flank independently gets the FULL
+        // value (not half) so a port hit doesn't halve starboard's
+        // protection. The total across both flanks is now 2x the old
+        // shared value — game-balance trade, not a bug.
+        const float sides_cm = opt_num(v, "Sides (cm)", 0.0f);
+        s.port_cm         = sides_cm;
+        s.starboard_cm    = sides_cm;
         s.effect_pct     = opt_num(v, "Effect %", 100.0f);
         g_shields.push_back(std::move(s));
     }
