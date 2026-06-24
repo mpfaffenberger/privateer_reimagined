@@ -49,6 +49,7 @@ enum class MissileType : uint8_t {
     DF = 0,   // dumbfire
     HS,       // heat-seeking
     IR,       // image-recognition
+    TORPEDO,  // torpedo (np-3dp.26 + np-zte.2) — its own launcher + ammo rack
     Count
 };
 constexpr int kMissileTypeCount = (int)MissileType::Count;

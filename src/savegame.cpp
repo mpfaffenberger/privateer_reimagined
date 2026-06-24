@@ -24,6 +24,7 @@
 #include "faction.h"
 #include "json.h"
 #include "player.h"
+#include "repair.h"
 
 #include <algorithm>
 #include <chrono>
@@ -208,6 +209,9 @@ static std::string serialize_player(const PlayerState& p) {
         w.key("has_repair_droid"); w.value_bool(p.has_repair_droid);
         w.key("adv_repair_droid"); w.value_bool(p.adv_repair_droid);
         w.key("has_tractor_beam"); w.value_bool(p.has_tractor_beam);
+        // guild memberships (#16, v6). Absent on older saves -> false.
+        w.key("merc_guild_member");     w.value_bool(p.merc_guild_member);
+        w.key("merchant_guild_member"); w.value_bool(p.merchant_guild_member);
 
         w.key("cargo"); w.member_array_begin();
           for (const CargoEntry& e : p.cargo) {
@@ -224,11 +228,19 @@ static std::string serialize_player(const PlayerState& p) {
         // Only the fields meaningful to each `type` are populated, but we
         // emit them all unconditionally — absent ones default harmlessly on
         // load and the uniform shape keeps the writer simple.
+        //
+        // (#8, format v5) the per-mission payload grew: `source`, the
+        // non-cargo `target_system`, the parallel `nav_targets` array,
+        // `nav_count`, the attack `hostiles_required`, the defend
+        // `target_base`, the bounty's `bounty_region` and
+        // `last_seen(_alt)?_system`. Same flat-shape policy — emit all,
+        // load tolerates missing keys.
         w.key("missions"); w.member_array_begin();
           for (const ActiveMission& m : p.missions) {
               w.begin_object();
                 w.key("id");             w.value_string(m.id);
                 w.key("type");           w.value_int(m.type);
+                w.key("source");         w.value_int(m.source);
                 w.key("giver_faction");  w.value_string(m.giver_faction);
                 w.key("title");          w.value_string(m.title);
                 w.key("reward");         w.value_string(std::to_string((long long)m.reward));
@@ -239,6 +251,25 @@ static std::string serialize_player(const PlayerState& p) {
                 w.key("target_faction"); w.value_string(m.target_faction);
                 w.key("count_required"); w.value_int(m.count_required);
                 w.key("progress");       w.value_int(m.progress);
+                w.key("target_system");  w.value_string(m.target_system);
+                w.key("target_base");    w.value_string(m.target_base);
+                w.key("last_seen_system");     w.value_string(m.last_seen_system);
+                w.key("last_seen_alt_system"); w.value_string(m.last_seen_alt_system);
+                w.key("nav_count");      w.value_int(m.nav_count);
+                w.key("hostiles_required"); w.value_int(m.hostiles_required);
+                // Vector<string> payloads (nav_targets + bounty_region).
+                w.key("nav_targets"); w.member_array_begin();
+                  for (const std::string& s : m.nav_targets)   w.value_string(s);
+                w.end_array();
+                w.key("bounty_region"); w.member_array_begin();
+                  for (const std::string& s : m.bounty_region) w.value_string(s);
+                w.end_array();
+                // Live in-flight progress (#12/#13): per-nav reached flags, so
+                // mid-mission survey progress survives save/reload. Written as
+                // 0/1 ints; absent on older saves -> resized empty on load.
+                w.key("nav_done"); w.member_array_begin();
+                  for (uint8_t d : m.nav_done) w.value_int(d ? 1 : 0);
+                w.end_array();
               w.end_object();
           }
         w.end_array();
@@ -252,6 +283,18 @@ static std::string serialize_player(const PlayerState& p) {
           w.key("hs"); w.value_int(p.missiles[1]);
           w.key("ir"); w.value_int(p.missiles[2]);
         w.end_object();
+        // Torpedo rack (np-zte.2 expansion, np-9cu-launchers-bump).
+        // Single counter now (was a DF/HS/IR fan-out; that was overkill
+        // since Privateer canon has exactly one torpedo ammo type).
+        w.key("torpedoes"); w.value_int(p.torpedoes);
+        // Per-side hardware slots (left + right for each ammo type).
+        // Four booleans; new-save format. Old saves that used the integer
+        // missile_launchers_owned / torpedo_tubes_owned keys get migrated
+        // on load (see the read half below).
+        w.key("missile_launcher_left");   w.value_bool(p.missile_launcher_left);
+        w.key("missile_launcher_right");  w.value_bool(p.missile_launcher_right);
+        w.key("torpedo_launcher_left");   w.value_bool(p.torpedo_launcher_left);
+        w.key("torpedo_launcher_right");  w.value_bool(p.torpedo_launcher_right);
         // afterburner_fuel removed (np-zte.2 merged pool). Old keys in v3
         // saves are ignored on load; new saves omit the key entirely.
 
@@ -425,6 +468,9 @@ bool load(PlayerState& p, const std::string& path) {
         out.has_repair_droid = pl.contains("has_repair_droid") ? pl["has_repair_droid"].bool_or(false) : false;
         out.adv_repair_droid = pl.contains("adv_repair_droid") ? pl["adv_repair_droid"].bool_or(false) : false;
         out.has_tractor_beam = pl.contains("has_tractor_beam") ? pl["has_tractor_beam"].bool_or(false) : false;
+        // guild memberships (#16, v6). Older saves default to non-member.
+        out.merc_guild_member     = pl.contains("merc_guild_member")     ? pl["merc_guild_member"].bool_or(false)     : false;
+        out.merchant_guild_member = pl.contains("merchant_guild_member") ? pl["merchant_guild_member"].bool_or(false) : false;
 
         if (const json::Value* cg = pl.find("cargo"); cg && cg->is_array()) {
             for (const json::Value& e : cg->as_array()) {
@@ -440,12 +486,34 @@ bool load(PlayerState& p, const std::string& path) {
         // accepted missions (np-zte.1, v2). Absent on a v1 save -> empty list
         // (back-compat). reward read as a string (bit-exact int64), tolerating
         // a legacy number. An entry with no id is skipped defensively.
+        //
+        // (#8, v5) the per-mission payload grew (see writer block). Old
+        // saves from before #6's MissionType renumber carry `type` values
+        // that no longer correspond to any legal mission — drop them and
+        // log one line so a hand-edited or pre-#6 save can't silently
+        // invent a bogus mission. Also drop any `type` outside [0,5].
         if (const json::Value* ms = pl.find("missions"); ms && ms->is_array()) {
             for (const json::Value& e : ms->as_array()) {
                 if (!e.is_object()) continue;
                 ActiveMission am;
                 am.id            = e.contains("id")            ? e["id"].string_or("")            : "";
                 am.type          = e.contains("type")          ? (int)e["type"].number_or(0)      : 0;
+                // (#9,#11) Pre-v5 saves used the OLD 2-value mission enum
+                // (0=CargoDelivery, 1=Bounty); remap to the current 0..5
+                // numbering (now 4=Bounty, 5=CargoDelivery; see MissionType
+                // in missions.h). Other values in old saves pass through to
+                // the existing 0..5 range check, which drop+logs them.
+                if (ver < 5) {
+                    if      (am.type == 0) am.type = 5;   // old CargoDelivery -> CargoDelivery
+                    else if (am.type == 1) am.type = 4;   // old Bounty        -> Bounty
+                }
+                if (am.type < 0 || am.type > 5) {
+                    std::fprintf(stderr,
+                        "[save] slot %d: dropping mission '%s' with out-of-range type %d\n",
+                        slot, am.id.c_str(), am.type);
+                    continue;
+                }
+                am.source        = e.contains("source")        ? (int)e["source"].number_or(0)    : 0;
                 am.giver_faction = e.contains("giver_faction") ? e["giver_faction"].string_or("") : "";
                 am.title         = e.contains("title")         ? e["title"].string_or("")         : "";
                 if (const json::Value* r = e.find("reward")) {
@@ -459,6 +527,29 @@ bool load(PlayerState& p, const std::string& path) {
                 am.target_faction = e.contains("target_faction") ? e["target_faction"].string_or("") : "";
                 am.count_required = e.contains("count_required") ? (int)e["count_required"].number_or(0) : 0;
                 am.progress       = e.contains("progress")       ? (int)e["progress"].number_or(0)       : 0;
+                am.target_system  = e.contains("target_system")  ? e["target_system"].string_or("")  : "";
+                am.target_base    = e.contains("target_base")    ? e["target_base"].string_or("")    : "";
+                am.last_seen_system     = e.contains("last_seen_system")     ? e["last_seen_system"].string_or("")     : "";
+                am.last_seen_alt_system = e.contains("last_seen_alt_system") ? e["last_seen_alt_system"].string_or("") : "";
+                am.nav_count      = e.contains("nav_count")      ? (int)e["nav_count"].number_or(0)         : 0;
+                am.hostiles_required = e.contains("hostiles_required") ? (int)e["hostiles_required"].number_or(0) : 0;
+                if (const json::Value* nt = e.find("nav_targets"); nt && nt->is_array()) {
+                    for (const json::Value& g : nt->as_array())
+                        if (g.is_string()) am.nav_targets.push_back(g.as_string());
+                }
+                if (const json::Value* br = e.find("bounty_region"); br && br->is_array()) {
+                    for (const json::Value& g : br->as_array())
+                        if (g.is_string()) am.bounty_region.push_back(g.as_string());
+                }
+                // Live in-flight progress (#12/#13). Absent on older saves ->
+                // stays empty here, then normalized to nav_targets length below
+                // so the #13 tracker always has a flag per nav target.
+                if (const json::Value* nd = e.find("nav_done"); nd && nd->is_array()) {
+                    for (const json::Value& g : nd->as_array())
+                        am.nav_done.push_back((uint8_t)(g.number_or(0) != 0 ? 1 : 0));
+                }
+                if (am.nav_done.size() != am.nav_targets.size())
+                    am.nav_done.resize(am.nav_targets.size(), (uint8_t)0);
                 if (!am.id.empty()) out.missions.push_back(std::move(am));
             }
         }
@@ -473,11 +564,67 @@ bool load(PlayerState& p, const std::string& path) {
             out.missiles[1] = ms->contains("hs") ? (int)(*ms)["hs"].number_or(0) : 0;
             out.missiles[2] = ms->contains("ir") ? (int)(*ms)["ir"].number_or(0) : 0;
         }
+        // Torpedo rack (np-zte.2, np-launchers-bump). Absent on v1/v2
+        // saves -> defaults to 0, which is the correct empty state. v1/v2
+        // saves that stored torpedoes as a {df,hs,ir} object also read OK
+        // (we sum the three counts together).
+        if (const json::Value* ts = pl.find("torpedoes"); ts) {
+            if (ts->is_object()) {
+                int sum = 0;
+                for (const char* k : {"df", "hs", "ir"}) {
+                    if (ts->contains(k)) sum += (int)(*ts)[k].number_or(0);
+                }
+                out.torpedoes = sum;
+            } else {
+                out.torpedoes = std::max(0, (int)ts->number_or(0));
+            }
+        }
+        // Launcher hardware (np-zte.2, np-launchers-bump).
+        // Each side is its own bool. New keys: missile_launcher_left,
+        // missile_launcher_right, torpedo_launcher_left, torpedo_launcher_right.
+        // Old format (missile_launchers_owned / torpedo_tubes_owned as ints)
+        // gets migrated: count == 1 -> fill the LEFT, count == 2 -> fill both.
+        // Defaults match the new-game loadout: missile LEFT on, others off.
+        auto fill_missile = [&](int n_owned) {
+            out.missile_launcher_left  = n_owned >= 1;
+            out.missile_launcher_right = n_owned >= 2;
+        };
+        auto fill_torpedo = [&](int n_owned) {
+            out.torpedo_launcher_left  = n_owned >= 1;
+            out.torpedo_launcher_right = n_owned >= 2;
+        };
+        bool got_ml = false, got_tl = false;
+        if (const json::Value* ml = pl.find("missile_launcher_left"); ml) {
+            out.missile_launcher_left  = ml->bool_or(false);
+            out.missile_launcher_right = pl.find("missile_launcher_right")->bool_or(false);
+            got_ml = true;
+        }
+        if (const json::Value* tl = pl.find("torpedo_launcher_left"); tl) {
+            out.torpedo_launcher_left  = tl->bool_or(false);
+            out.torpedo_launcher_right = pl.find("torpedo_launcher_right")->bool_or(false);
+            got_tl = true;
+        }
+        if (!got_ml) {
+            if (const json::Value* ml = pl.find("missile_launchers_owned"); ml) {
+                fill_missile(std::clamp((int)ml->number_or(1),
+                                        0, repair::k_max_missile_launchers));
+            } else {
+                fill_missile(1);   // Tarsus default: just the LEFT
+            }
+        }
+        if (!got_tl) {
+            if (const json::Value* tl = pl.find("torpedo_tubes_owned"); tl) {
+                fill_torpedo(std::clamp((int)tl->number_or(0),
+                                        0, repair::k_max_torpedo_launchers));
+            }
+            // else: leave torpedos empty
+        }
 
         // Clamp loaded ordnance to its invariants (#8): a hand-edited
         // save mustn't smuggle negative values past the player:: setters,
         // same as rep is clamped above.
         for (int& m : out.missiles) { if (m < 0) m = 0; }
+        if (out.torpedoes < 0) out.torpedoes = 0;
 
         // career kills per faction (np-3dp.19, v4). Read by faction NAME;
         // missing keys / older saves stay 0. STRING preferred (bit-exact),

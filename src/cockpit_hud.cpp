@@ -21,8 +21,11 @@
 #include "armor.h"
 #include "camera.h"
 #include "firing.h"
+#include "galaxy.h"
 #include "hazards.h"
+#include "missions.h"
 #include "perception.h"
+#include "player.h"
 #include "sfx.h"
 #include "shield.h"
 #include "ship.h"
@@ -641,12 +644,13 @@ void draw_radar_mfd(const Camera& cam, const StarSystem& system, int selected_na
 
         const ImVec2 ctr  = ImVec2(p0.x + w * 0.5f, p0.y + h * 0.5f);
         const float  rad  = std::min(w, h) * 0.5f - 6.0f;
-        // np-3dp: 15 km radar radius so local ships read clearly (matches
-        // the player's detection sphere set in perception.cpp). Anything
-        // past 15k clamps to the rim, so nav points 100+ km away overlap
-        // at the edge — that's the intended trade: the MFD is a "where's
-        // the contact NEAR me" display, not a system overview.
-        constexpr float max_range = 15000.0f;       // u — beyond 15km, clamp to rim
+        // 35 km radar radius (np-rad.1) — expanded from the legacy 15 km so
+        // a single screen frame can show more of the local traffic around
+        // the player. Anything past 35k clamps to the rim, so nav points
+        // 100+ km away overlap at the edge — that's the intended trade:
+        // the MFD is a "where's the contact NEAR me" display, not a
+        // system overview.
+        constexpr float max_range = 35000.0f;       // u — beyond 35km, clamp to rim
 
         // Concentric range rings + crosshair. Drawn before sweep so the
         // sweep line passes over them.
@@ -799,6 +803,152 @@ void draw_nav_labels(const Camera& cam, const StarSystem& system) {
     }
 }
 
+// ---- mission objective markers + readout (#18) ---------------------------
+//
+// Read-only surfacing of accepted missions (PlayerState::missions). For
+// active jobs whose objective sits in the CURRENT system we float a cyan
+// diamond over the targeted nav/base (so it's never confused with the amber
+// nav-target reticle), and we list a compact per-type progress string for
+// every active job. Every value is read straight off ActiveMission — the
+// HUD touches the mission model, never mutates it.
+
+// Mission-objective colour — a deliberate RED so nav objectives read
+// distinctly from the amber selected-nav reticle, the cyan jump holes,
+// and the green regular navs. Keep it its own constant (not an alias of
+// kCyan) so repurposing cyan elsewhere never bleeds into objectives.
+static const ImU32 kObjective    = IM_COL32(255,  80,  80, 240);  // objective markers + in-system lines
+static const ImU32 kObjectiveDim = IM_COL32(255,  80,  80,  85);  // surveyed patrol navs (route progress)
+
+// Camera-relative world->screen projection (same engine quirk as the nav
+// reticle: NO ndc-Y flip). Returns false when the point is behind the
+// camera so the caller can simply skip drawing rather than smear a marker
+// across the wrong half of the screen.
+bool project_world_point(const Camera& cam, HMM_Vec3 world,
+                         float& sx, float& sy) {
+    const HMM_Vec3 d = HMM_SubV3(world, cam.position);
+    if (HMM_DotV3(d, cam.forward()) <= 0.0f) return false;   // behind camera
+    const auto s = screen_size();
+    const float    aspect = s.w / s.h;
+    const HMM_Mat4 vp     = HMM_MulM4(cam.projection(aspect), cam.view());
+    const HMM_Vec4 ph     = { world.X, world.Y, world.Z, 1.0f };
+    const HMM_Vec4 clip   = HMM_MulM4V4(vp, ph);
+    if (clip.W <= 0.0f) return false;
+    const float ndc_x = clip.X / clip.W;
+    const float ndc_y = clip.Y / clip.W;     // engine quirk: no Y flip
+    sx = (ndc_x * 0.5f + 0.5f) * s.w;
+    sy = (ndc_y * 0.5f + 0.5f) * s.h;
+    return true;
+}
+
+// Cyan objective diamond + optional label, floating at a world position.
+// `col` defaults to the bright objective cyan; pass kObjectiveDim for
+// already-surveyed patrol navs so the player reads route progress at a
+// glance without a second draw routine.
+void draw_objective_marker(const Camera& cam, HMM_Vec3 world,
+                           const char* label, ImU32 col = kObjective) {
+    float sx, sy;
+    if (!project_world_point(cam, world, sx, sy)) return;
+    auto* dl = ImGui::GetForegroundDrawList();
+    constexpr float r = 11.0f;
+    dl->AddQuad(ImVec2(sx, sy - r), ImVec2(sx + r, sy),
+                ImVec2(sx, sy + r), ImVec2(sx - r, sy), col, 2.0f);
+    dl->AddCircleFilled(ImVec2(sx, sy), 2.0f, col);
+    if (label && label[0]) {
+        const ImVec2 ts = ImGui::CalcTextSize(label);
+        dl->AddText(ImVec2(sx - ts.x * 0.5f, sy - r - ts.y - 3.0f),
+                    col, label);
+    }
+}
+
+// Find a nav point in this system by its display name (Patrol/Scout/Attack
+// store nav-point NAMES in nav_targets). nullptr = not in this system.
+const NavPointDef* nav_by_name(const StarSystem& sys, const std::string& name) {
+    if (name.empty()) return nullptr;
+    for (const NavPointDef& n : sys.nav_points)
+        if (n.name == name) return &n;
+    return nullptr;
+}
+
+// Find a base nav point by base_id (DefendBase/Cargo store base_ids), with a
+// fallback to a name match for data that stores the base under either key.
+const NavPointDef* nav_by_base(const StarSystem& sys, const std::string& base_id) {
+    if (base_id.empty()) return nullptr;
+    for (const NavPointDef& n : sys.nav_points)
+        if (n.base_id == base_id) return &n;
+    return nav_by_name(sys, base_id);
+}
+
+// Resolve the in-system nav points a mission paints markers for. The HUD
+// is read-only on the model: this only reads nav_targets / nav_done.
+//
+// Per-type contract:
+//   * Patrol      : EVERY unsurveyed nav_targets entry that resolves via
+//                   nav_by_name in this system — a Patrol is a multi-nav
+//                   route, so the whole remaining route must read at once
+//                   (not just the first unsurveyed nav, which is what the
+//                   legacy single-nav resolver returned).
+//   * Scout/Attack: the single nav_targets.front() that resolves, if any.
+//   * DefendBase  : nav_by_base(target_base).
+//   * CargoDelivery: nav_by_base(dest_base).
+//   * default (Bounty + anything new): empty — bounties are faction hunts
+//                   across systems with no single nav target.
+//
+// `surveyed_out` (if non-null) collects the in-system Patrol navs that are
+// already done, so a draw site can paint route progress (a dimmer marker /
+// ring) without re-walking nav_targets. Left empty for non-Patrol types.
+static std::vector<const NavPointDef*>
+objective_navs_in_system(const ActiveMission& am, const StarSystem& sys,
+                        std::vector<const NavPointDef*>* surveyed_out = nullptr) {
+    using MT = missions::MissionType;
+    if (surveyed_out) surveyed_out->clear();
+    const MT type = (MT)am.type;
+    switch (type) {
+    case MT::Patrol: {
+        std::vector<const NavPointDef*> unsurveyed;
+        for (size_t i = 0; i < am.nav_targets.size(); ++i) {
+            const bool done = (i < am.nav_done.size()) && am.nav_done[i];
+            if (const NavPointDef* n = nav_by_name(sys, am.nav_targets[i])) {
+                if (done) { if (surveyed_out) surveyed_out->push_back(n); }
+                else      { unsurveyed.push_back(n); }
+            }
+        }
+        return unsurveyed;
+    }
+    case MT::Scout:
+    case MT::Attack:
+        if (!am.nav_targets.empty())
+            if (const NavPointDef* n = nav_by_name(sys, am.nav_targets.front()))
+                return { n };
+        return {};
+    case MT::DefendBase:
+        if (const NavPointDef* n = nav_by_base(sys, am.target_base)) return { n };
+        return {};
+    case MT::CargoDelivery:
+        if (const NavPointDef* n = nav_by_base(sys, am.dest_base)) return { n };
+        return {};
+    default:
+        return {};            // Bounty + any future type without a nav
+    }
+}
+
+// Resolve the SINGLE in-system nav point a mission points at. Shared
+// between the in-system half of resolve_nav_for_mission (click-to-target)
+// and the legacy single-nav draw paths. Delegates to objective_navs_in_system
+// so the two resolvers can't drift — for Patrol this is the first
+// unsurveyed nav (or nullptr when the whole route is done / has no targets).
+static const NavPointDef* objective_nav_in_system(const ActiveMission& am,
+                                                  const StarSystem& sys) {
+    const std::vector<const NavPointDef*> navs = objective_navs_in_system(am, sys);
+    return navs.empty() ? nullptr : navs.front();
+}
+
+// A display label for a base objective: prefer the nav point's human name,
+// fall back to the raw id when the base isn't in this system.
+std::string base_label(const StarSystem& sys, const std::string& base_id) {
+    if (const NavPointDef* n = nav_by_base(sys, base_id)) return n->name;
+    return base_id;
+}
+
 } // anonymous namespace
 
 // Top-centre FLIGHT panel. Mirrors STATUS / TARGET in style (dark bg +
@@ -847,17 +997,124 @@ void draw_flight_status_mfd(const FlightStatusHudState& s) {
 void build(const Camera& cam, const StarSystem& system, int selected_nav,
            float mouse_x, float mouse_y, bool fly_by_wire,
            const ShipRegistry& ships, uint32_t target_ship_id,
-           const char* dock_prompt, bool dock_ready) {
-    draw_crosshair(fly_by_wire);
-    draw_aim_cursor(mouse_x, mouse_y, fly_by_wire);
-    draw_nav_reticle(cam, system, selected_nav);
+           const char* dock_prompt, bool dock_ready, bool draw_world) {
+    // Crosshair + aim cursor are HUD overlays that distract or fight input
+    // when the navmap is up (it covers the screen centre) or autopilot owns
+    // the ship (the camera is on rails, no manual aiming to assist).
+    if (draw_world) {
+        draw_crosshair(fly_by_wire);
+        draw_aim_cursor(mouse_x, mouse_y, fly_by_wire);
+    }
+    // Nav reticle (yellow T crosshair) and mission-objective diamonds are
+    // world glyphs that distract when autopilot owns the ship or the
+    // navmap overlay is up (where the same info is rendered textually).
+    if (draw_world)
+        draw_nav_reticle(cam, system, selected_nav);
     draw_player_status(ships);
     draw_nav_mfd   (cam, system, selected_nav, dock_prompt, dock_ready);
     draw_target_mfd(cam, ships, target_ship_id);
     draw_radar_mfd (cam, system, selected_nav, ships, target_ship_id);
 }
 
+void build_mission_objectives(const Camera& cam, const StarSystem& system,
+                              const std::string& current_system,
+                              const PlayerState& player, bool draw_world) {
+    using MT = missions::MissionType;
+    if (player.missions.empty()) return;
+
+    // One readout line per active mission. We list EVERY active job (so the
+    // cargo "on the way" vs "ready" distinction reads), but only draw the
+    // floating objective marker when the objective resolves to a nav/base in
+    // THIS system. `in_current_system` just tints the line brighter — the
+    // status TEXT itself comes from missions::mission_status so the navmap
+    // panel (np-19.3) and this readout can't drift.
+    struct Row { std::string text; bool in_system; };
+    std::vector<Row> rows;
+    rows.reserve(player.missions.size());
+
+    for (const ActiveMission& am : player.missions) {
+        const missions::MissionStatus s =
+            missions::mission_status(am, system, current_system);
+
+        // Marker logic stays here (the 3D draw is per-call-site concern).
+        // Only in-system rows produce a marker; cross-system ones are still
+        // listed in the readout but get no floating diamond. The label
+        // string mirrors the type so the in-world diamond carries the
+        // same caption as the row text. The whole marker block is hidden
+        // when `draw_world` is false (autopilot / navmap open) so the
+        // world glyphs don't fight the autopilot HUD or double up with
+        // the navmap panel that renders the same info textually.
+        if (draw_world && s.in_current_system) {
+            const MT type = (MT)am.type;
+            const char* label = nullptr;
+            switch (type) {
+            case MT::Patrol:     label = "PATROL";  break;
+            case MT::Scout:      label = "SCOUT";   break;
+            case MT::Attack:     label = "ATTACK";  break;
+            case MT::DefendBase: label = "DEFEND";  break;
+            case MT::CargoDelivery: label = "DELIVER"; break;
+            default: break;
+            }
+            if (label) {
+                if (type == MT::Patrol) {
+                    // Multi-nav route: mark EVERY unsurveyed nav target that
+                    // resolves in this system, not just the first. Surveyed
+                    // navs get a dimmer diamond so the player sees route
+                    // progress. One "PATROL" caption on the first marker
+                    // keeps the HUD readable (no label soup).
+                    std::vector<const NavPointDef*> surveyed;
+                    const std::vector<const NavPointDef*> unsurveyed =
+                        objective_navs_in_system(am, system, &surveyed);
+                    bool first = true;
+                    for (const NavPointDef* n : unsurveyed) {
+                        draw_objective_marker(cam, n->position,
+                                             first ? label : nullptr);
+                        first = false;
+                    }
+                    for (const NavPointDef* n : surveyed)
+                        draw_objective_marker(cam, n->position, nullptr,
+                                             kObjectiveDim);
+                } else if (const NavPointDef* n =
+                               objective_nav_in_system(am, system)) {
+                    draw_objective_marker(cam, n->position, label);
+                }
+            }
+        }
+
+        rows.push_back({ s.text, s.in_current_system });
+    }
+
+    // ---- readout panel: top-left, tucked under the STATUS block ----------
+    constexpr float w = 280.0f, margin = 16.0f;
+    const float row_h = ImGui::GetTextLineHeightWithSpacing();
+    const float h = 26.0f + row_h * (float)rows.size() + 6.0f;
+    // STATUS panel is 184 tall at (16,16); sit just below it.
+    ImGui::SetNextWindowPos(ImVec2(margin, margin + 184.0f + 8.0f),
+                            ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(w, h), ImGuiCond_Always);
+    ImGui::SetNextWindowBgAlpha(0.55f);
+    push_hud_style();
+    if (ImGui::Begin("##mission_objectives", nullptr, kHudWindowFlags)) {
+        ImGui::PushStyleColor(ImGuiCol_Text, kAmber);
+        ImGui::TextUnformatted("OBJECTIVES");
+        ImGui::PopStyleColor();
+        ImGui::Separator();
+        for (const Row& r : rows) {
+            ImGui::PushStyleColor(ImGuiCol_Text, r.in_system ? kObjective : kDimAmber);
+            ImGui::TextUnformatted(r.text.c_str());
+            ImGui::PopStyleColor();
+        }
+    }
+    ImGui::End();
+    pop_hud_style();
+}
+
 void build_weapons_status(const WeaponsHudState& w) {
+    // Suppress the whole panel when the player has zero ammo — both lines
+    // become noise (DF always shows "DUMBFIRE", HS/IR always shows the
+    // lock-state legend which is meaningless without missiles to fire).
+    if (w.missile_count <= 0) return;
+
     const ScreenSize ss = screen_size();
     ImDrawList* dl = ImGui::GetForegroundDrawList();
 
@@ -879,7 +1136,7 @@ void build_weapons_status(const WeaponsHudState& w) {
     // DF (no lock) just shows "DUMBFIRE"; HS/IR show seeking/locked with
     // an IR build-up bar so the ~1.5s acquire is visible, not mysterious.
     if (!w.needs_lock) {
-        dl->AddText(ImVec2(x, y), kDimAmber, "DUMBFIRE");
+        dl->AddText(ImVec2(x, y), kDimAmber, w.no_lock_label);
     } else if (w.lock_state == 2) {
         dl->AddText(ImVec2(x, y), kGreen, "LOCKED");
     } else if (w.lock_state == 1) {
@@ -899,6 +1156,77 @@ void build_weapons_status(const WeaponsHudState& w) {
     // panel's ENERGY bar is the burner gauge now — same pool, one
     // readout. Don't re-add a bar here unless we re-split the resources.
     (void)y;
+}
+
+// ---- resolve_nav_for_mission (click-to-target, T5) -------------------------
+//
+// On a mission-panel row click, resolve the nav point to select. Pure: no
+// ImGui, no audio; nav_by_name/nav_by_base handle the in-system resolution,
+// and a galaxy-graph hops_between() lookup picks a jump nav for cross-system
+// cargo/bounty. Returns the nav index into system.nav_points, or -1 if no
+// nav can be resolved (the caller leaves the previous selection alone).
+static int resolve_nav_for_mission(const ActiveMission& am,
+                                   const StarSystem& sys,
+                                   const galaxy::Galaxy& galaxy,
+                                   const std::string& current_system_id) {
+    using MT = missions::MissionType;
+    const MT type = (MT)am.type;
+    const bool in_system =
+        (type == MT::CargoDelivery ? am.dest_system == current_system_id
+                                   : am.target_system == current_system_id);
+
+    // ---- in-system: the objective resolves to a real nav/base in THIS system ----
+    if (in_system) {
+        // Patrol has a documented fallback to the first nav when every
+        // target has already been surveyed (so a "completed patrol" click
+        // isn't a silent no-op). Capture that fallback BEFORE the helper
+        // skips done navs — then prefer the helper, then the fallback.
+        const NavPointDef* first_nav = nullptr;
+        if (type == MT::Patrol && !am.nav_targets.empty())
+            first_nav = nav_by_name(sys, am.nav_targets[0]);
+
+        const NavPointDef* def = objective_nav_in_system(am, sys);
+        if (!def) def = first_nav;        // patrol all-done fallback
+
+        if (def) {
+            for (size_t k = 0; k < sys.nav_points.size(); ++k)
+                if (&sys.nav_points[k] == def) return (int)k;
+        }
+        return -1;   // couldn't resolve in-system target
+    }
+
+    // ---- cross-system: pick a jump nav on the shortest path -----------
+    // Only Cargo cross-system and Bounty with no in-region nav hit this
+    // branch — anything else with an in-system target was handled above.
+    // The target system id is the Cargo destination or the Bounty search
+    // region (we use the first system in the region as the destination).
+    std::string target_sys;
+    if (type == MT::CargoDelivery) target_sys = am.dest_system;
+    else if (type == MT::Bounty) {
+        if (!am.bounty_region.empty()) target_sys = am.bounty_region.front();
+        else target_sys = am.target_system;
+    } else {
+        target_sys = am.target_system;
+    }
+    if (target_sys.empty()) return -1;
+    // Pre-compute the current->target distance so any nav that strictly
+    // reduces it is a valid hop nav. We pick the first one that does.
+    const int target_hops = missions::hops_between(galaxy, current_system_id, target_sys);
+    int best_k = -1;
+    int best_d = target_hops;   // lower is better; "no improvement" == current
+    for (size_t i = 0; i < sys.nav_points.size(); ++i) {
+        const NavPointDef& n = sys.nav_points[i];
+        // Need to be a jump nav with a real link out of this system.
+        const std::string& to_sys =
+            n.links_to.empty() ? current_system_id : n.links_to;
+        const int d = missions::hops_between(galaxy, to_sys, target_sys);
+        if (d < 0) continue;       // unreachable branch
+        if (d < best_d) {
+            best_d = d;
+            best_k = (int)i;
+        }
+    }
+    return best_k;
 }
 
 // ---- big navmap overlay --------------------------------------------------
@@ -922,28 +1250,34 @@ void build_weapons_status(const WeaponsHudState& w) {
 void build_navmap(const Camera& cam, const StarSystem& system,
                   int& selected_nav_in_out,
                   const ShipRegistry& ships,
+                  const PlayerState& player,
+                  const std::string& current_system_id,
+                  const galaxy::Galaxy& galaxy,
                   bool& shown_in_out) {
     if (!shown_in_out) return;
 
     const auto sz = screen_size();
-    // Square window (np-7gr.2): use min(sz.w, sz.h) so the navmap
-    // is always square. 92% of the min dimension so it fills more of
-    // the screen than the old 85%-of-each-axis sizing. Capped at 1100
-    // so it doesn't get unwieldy on huge monitors.
-    const float edge_raw = std::min(sz.w, sz.h) * 0.92f;
-    const float edge     = std::min(edge_raw, 1100.0f);
-    ImGui::SetNextWindowPos(ImVec2((sz.w - edge) * 0.5f,
-                                   (sz.h - edge) * 0.5f),
+    // Two-pane layout: full-screen-ish navmap window (np-19.3). 98% wide,
+    // 94% tall, centred — fits both the map AND a right-side mission
+    // panel without forcing the user to resize the window. Title says it
+    // out loud so the panel isn't a surprise.
+    const float win_w = sz.w * 0.98f;
+    const float win_h = sz.h * 0.94f;
+    ImGui::SetNextWindowPos(ImVec2((sz.w - win_w) * 0.5f,
+                                   (sz.h - win_h) * 0.5f),
                             ImGuiCond_Always);
-    ImGui::SetNextWindowSize(ImVec2(edge, edge), ImGuiCond_Always);
-    ImGui::SetNextWindowBgAlpha(0.92f);
+    ImGui::SetNextWindowSize(ImVec2(win_w, win_h), ImGuiCond_Always);
+    // Full opacity — the map panel is opaque so navmap navpoints aren't
+    // muddied by the cockpit backing through it (np-19.3 was 0.92).
+    ImGui::SetNextWindowBgAlpha(1.0f);
 
     push_hud_style();
     ImGuiWindowFlags flags = ImGuiWindowFlags_NoCollapse
                            | ImGuiWindowFlags_NoResize
                            | ImGuiWindowFlags_NoSavedSettings;
     bool open = true;
-    if (ImGui::Begin("NAVIGATION MAP   (N cycles, Esc to close)", &open, flags)) {
+    if (ImGui::Begin("NAVIGATION MAP \xE2\x80\x94 MISSION STATUS  (N cycles, Esc to close)",
+                     &open, flags)) {
 
         // Optional authored 2D navmap layout. Real gameplay keeps using
         // NavPointDef::position; this map can use NavPointDef::map_position
@@ -955,6 +1289,15 @@ void build_navmap(const Camera& cam, const StarSystem& system,
         auto world_map_pos = [](const HMM_Vec3& p) -> HMM_Vec2 {
             return navmap_project_world(p);
         };
+
+        // ---- two-pane layout (np-19.3) -------------------------------------
+        // 62 / 38 split of the window content with a small visual gap. Both
+        // children use the same vertical extent so the bottom aligns — the
+        // map pane owns the left, the mission-status panel owns the right.
+        const ImVec2 win_sz = ImGui::GetContentRegionAvail();
+        constexpr float kGap = 8.0f;
+        const float left_w  = std::max(0.0f, win_sz.x * 0.62f - kGap * 0.5f);
+        const float right_w = std::max(0.0f, win_sz.x - left_w - kGap);
 
         // Compute a square bbox around the MAP ORIGIN. Origin-centred
         // framing avoids the old centroid-fit bug where x=0 drifted to an
@@ -980,9 +1323,14 @@ void build_navmap(const Camera& cam, const StarSystem& system,
         min_y = -half; max_y = half;
         const float span = half * 2.0f;                     // now square
 
-        // Square map area: take the smaller content-region dimension
-        // as the edge so the area is always square, then center it
-        // within whatever space remains.
+        // ==== LEFT pane: top-down navmap =================================
+        ImGui::BeginChild("##navmap_map",
+                          ImVec2(left_w, win_sz.y - 24.0f),
+                          /*border=*/false,
+                          ImGuiWindowFlags_None);
+        // Square map area: take the smaller content-region dimension of
+        // the LEFT child (not the whole window) as the edge so the map is
+        // always square, then centre it within whatever space remains.
         const ImVec2 area_p0 = ImGui::GetCursorScreenPos();
         const ImVec2 area_sz = ImGui::GetContentRegionAvail();
         const float  edge = std::min(area_sz.x, area_sz.y);
@@ -1116,6 +1464,42 @@ void build_navmap(const Camera& cam, const StarSystem& system,
             }
         }
 
+        // ---- 2D objective rings (np-19.3 / T6) ---------------------------
+        // Thin cyan ring on top of the nav point an objective points at, so
+        // jobs read at a glance on the 2D map. Distinct from the amber
+        // selection outline (which is thicker + on selected navs only).
+        // Mirrors the 3D diamond draw_objective_marker() paints in the world
+        // — same resolver logic, same colours.
+        auto draw_ring = [&](const NavPointDef& n,
+                             ImU32 col = kObjective, float thickness = 1.5f) {
+            const HMM_Vec2 mp = nav_map_pos(n);
+            const ImVec2 sp2 = to_screen(mp.X, mp.Y);
+            // radius slightly bigger than the marker so it frames the dot
+            // without colliding with neighbour rings at this scale.
+            dl->AddCircle(sp2, 14.0f, col, 24, thickness);
+        };
+        for (const ActiveMission& am : player.missions) {
+            using MT = missions::MissionType;
+            const MT type = (MT)am.type;
+            const std::string& tgt_sys =
+                (type == MT::CargoDelivery) ? am.dest_system : am.target_system;
+            if (tgt_sys != current_system_id) continue;     // only this system
+            if (type == MT::Patrol) {
+                // Multi-nav route: ring every unsurveyed nav target in this
+                // system; surveyed navs get a dimmer, thinner ring for route
+                // progress. Mirrors the 3D diamond draw in
+                // build_mission_objectives. Other types stay single-nav.
+                std::vector<const NavPointDef*> surveyed;
+                const std::vector<const NavPointDef*> unsurveyed =
+                    objective_navs_in_system(am, system, &surveyed);
+                for (const NavPointDef* n : unsurveyed) draw_ring(*n);
+                for (const NavPointDef* n : surveyed)    draw_ring(*n, kObjectiveDim, 1.0f);
+            } else if (const NavPointDef* n =
+                           objective_nav_in_system(am, system)) {
+                draw_ring(*n);
+            }
+        }
+
         // Player marker — small triangle at camera position. Position and
         // heading both pass through world_map_pos(), keeping the live marker
         // on the same X/Z projection as navs and ship contacts.
@@ -1138,11 +1522,104 @@ void build_navmap(const Camera& cam, const StarSystem& system,
                             pp.y - uy * kSize * 0.4f - ux * kSize * 0.6f };
         dl->AddTriangleFilled(tip, bl, br, kHudWhite);
 
-        // Footer help.
+        // Tiny footer for the LEFT pane only — reads as part of the map
+        // chrome rather than the window chrome.
         ImGui::SetCursorScreenPos(ImVec2(area_p0.x, area_p0.y + area_sz.y + 4.0f));
         ImGui::PushStyleColor(ImGuiCol_Text, kDimAmber);
         ImGui::TextUnformatted("Click a nav point to select it.  N cycles; Esc / X to close.");
         ImGui::PopStyleColor();
+
+        ImGui::EndChild();     // ##navmap_map
+
+        // ==== RIGHT pane: mission status ==================================
+        // SameLine() resets the cursor X so the second child sits flush
+        // against the right edge of the left one. The small gap is what
+        // makes the two-pane layout read as two panels, not one blob.
+        ImGui::SameLine();
+        ImGui::BeginChild("##navmap_missions",
+                          ImVec2(right_w, win_sz.y - 24.0f),
+                          /*border=*/true,
+                          ImGuiWindowFlags_None);
+        {
+            ImGui::PushStyleColor(ImGuiCol_Text, kAmber);
+            char hdr[80];
+            std::snprintf(hdr, sizeof(hdr),
+                          "MISSION STATUS (%d active)",
+                          (int)player.missions.size());
+            ImGui::TextUnformatted(hdr);
+            ImGui::PopStyleColor();
+            ImGui::Separator();
+
+            if (player.missions.empty()) {
+                ImGui::PushStyleColor(ImGuiCol_Text, kDimAmber);
+                ImGui::TextUnformatted("No active missions.");
+                ImGui::PopStyleColor();
+            } else {
+                ImGui::BeginChild("##navmap_missions_scroll",
+                                  ImVec2(0, 0), false,
+                                  ImGuiWindowFlags_None);
+                for (size_t mi = 0; mi < player.missions.size(); ++mi) {
+                    const ActiveMission& am = player.missions[mi];
+                    const missions::MissionStatus s =
+                        missions::mission_status(am, system, current_system_id);
+
+                    // Resolve which system name to show after "→". Prefer
+                    // the human display name from the galaxy catalog;
+                    // fall back to the raw id when unknown.
+                    std::string sys_label;
+                    if (!s.target_system.empty()) {
+                        if (const galaxy::SystemEntry* se = galaxy.find(s.target_system))
+                            sys_label = se->display_name;
+                        else
+                            sys_label = s.target_system;
+                    }
+
+                    // The Selectable label. Always show status + reward; the
+                    // "→ X" is appended only on cross-system rows. The
+                    // small source tag is right-aligned.
+                    char line[256];
+                    const char* src =
+                        missions::source_label((missions::MissionSource)am.source);
+                    std::snprintf(line, sizeof(line), "%s   |   %lld cr   |   %s%s%s%s",
+                                  s.text.c_str(), (long long)am.reward,
+                                  s.in_current_system ? "" : "\xE2\x86\x92 ",
+                                  s.in_current_system ? "" : sys_label.c_str(),
+                                  s.in_current_system ? "" : "   |   ",
+                                  s.in_current_system ? "" : src);
+                    // Clicking the row selects its nav target (T5). Bounty
+                    // is always non-clickable here — it's a faction hunt
+                    // with no single nav, so we never resolve an index for
+                    // it (the resolver still handles cross-system jump-nav
+                    // logic for cargo). The dim "→ <system>" tag still
+                    // appears for cross-system rows so the bounty isn't
+                    // totally silent in the panel.
+                    const bool clickable =
+                        (am.type != (int)missions::MissionType::Bounty);
+                    ImGui::PushID((int)mi);
+                    if (clickable) {
+                        ImGui::Selectable(line);
+                        if (ImGui::IsItemClicked()) {
+                            const int idx = resolve_nav_for_mission(
+                                am, system, galaxy, current_system_id);
+                            if (idx >= 0) {
+                                selected_nav_in_out = idx;
+                                sfx::ui_click();
+                                std::printf("[nav] target → %s\n",
+                                    system.nav_points[idx].name.c_str());
+                            }
+                        }
+                    } else {
+                        // Dim + non-clickable for bounties (no single nav).
+                        ImGui::PushStyleColor(ImGuiCol_Text, kDimAmber);
+                        ImGui::TextUnformatted(line);
+                        ImGui::PopStyleColor();
+                    }
+                    ImGui::PopID();
+                }
+                ImGui::EndChild();
+            }
+        }
+        ImGui::EndChild();     // ##navmap_missions
     }
     ImGui::End();
     pop_hud_style();

@@ -1,6 +1,8 @@
 #include "firing.h"
 
+#include "aim.h"
 #include "gun.h"
+#include "perception.h"
 #include "projectile.h"
 #include "sfx.h"
 #include "ship.h"
@@ -9,17 +11,20 @@
 #include "ship_sprite.h"   // for sprite->forward_speed read
 
 #include <algorithm>
+#include <cmath>
 #include <cstdio>
 #include <vector>
 
 namespace {
 
-// Aim direction in world frame for projectile spawning. Two paths:
+// Nose-forward aim (world frame) for FIXED guns. Turret mounts do NOT
+// use this — they compute their own per-mount lead aim in firing::tick.
+// Two paths:
 //
 //   * NPCs use the SHIP convention (atlas-authored forward = body +Z)
 //     and aim along their CURRENT nose direction — orientation*+Z.
-//     Lead prediction happens at the AI layer (where to point the nose),
-//     not here.
+//     Lead prediction for fixed guns happens at the AI layer (where to
+//     point the nose), not here.
 //
 //   * Player uses controller.desired_forward as the aim vector. main.cpp
 //     sets this each frame from camera-forward + mouse-driven gimbal
@@ -44,11 +49,40 @@ HMM_Vec3 ship_forward_world(const Ship& s) {
 
 // Transform a body-frame offset into world space, given the ship's
 // orientation. Used to put the muzzle at the actual mount point on the
-// ship — wing-tip guns fire from the wing tips, not the center.
+// ship — wing-tip guns fire from the wing tips, not the center. With a
+// w=0 vector this also rotates a body-frame DIRECTION into world space
+// (turret forward_body cones reuse it).
 HMM_Vec3 body_to_world(const HMM_Quat& q, HMM_Vec3 v_body) {
     const HMM_Mat4 R = HMM_QToM4(q);
     const HMM_Vec4 v = HMM_MulM4V4(R, HMM_V4(v_body.X, v_body.Y, v_body.Z, 0));
     return HMM_V3(v.X, v.Y, v.Z);
+}
+
+// Resolve an NPC turret's current target from the ship's perception.
+// Prefer the pre-computed nearest hostile; otherwise scan the visible
+// list for the closest Hostile contact whose bearing already lies inside
+// this mount's firing cone. Returns nullptr when nothing shootable is in
+// view. The cone test here uses the contact's observer->target bearing;
+// the precise lead-aim cone test happens at the call site once we know
+// the predicted intercept direction.
+Ship* pick_turret_target(const Ship& s, ShipRegistry& ships,
+                         HMM_Vec3 base_dir_world, float cos_cone) {
+    if (s.perception.nearest_hostile_id != 0) {
+        Ship* t = ships.find_by_id(s.perception.nearest_hostile_id);
+        if (t && t->alive) return t;
+    }
+    Ship* best      = nullptr;
+    float best_dist = 1e30f;
+    for (const PerceivedContact& c : s.perception.visible) {
+        if (c.stance != Stance::Hostile)                     continue;
+        if (c.distance_m >= best_dist)                       continue;
+        if (HMM_DotV3(c.to_unit, base_dir_world) < cos_cone) continue;
+        Ship* t = ships.find_by_id(c.ship_id);
+        if (!t || !t->alive)                                 continue;
+        best      = t;
+        best_dist = c.distance_m;
+    }
+    return best;
 }
 
 } // namespace
@@ -75,18 +109,23 @@ void firing::tick(ShipRegistry& ships,
                                   : (s.is_player ? k_player_energy_max : 0.0f);
         const float energy_regen = s.klass ? s.klass->energy_recharge
                                   : (s.is_player ? k_player_energy_regen : 0.0f);
-        s.energy_gj = std::min(s.energy_gj + energy_regen * dt, energy_max);
+        // Engine upgrade ADDS GJ/s; shield gen DRAINS GJ/s from the budget.
+        // Both are absolute (not multipliers) per np-3dp.27 — when the
+        // drain exceeds the base + bonus, the shield pulls energy from
+        // whatever else is using it (guns/AB).
+        const float regen = energy_regen + s.engine_recharge_add_gj - s.shield_recharge_drain_gj;
+        s.energy_gj = std::min(s.energy_gj + std::max(0.0f, regen) * dt, energy_max);
 
-        if (!s.controller.fire_guns) continue;
-        if (s.mounts.empty())        continue;
+        if (s.mounts.empty()) continue;
 
+        // Shared nose-forward aim for FIXED guns (player gimbal handled
+        // inside ship_forward_world). No convergence — mounts fire
+        // parallel from their muzzle offsets; aim accuracy comes from
+        // the ITTS reticle. TURRET mounts ignore this and compute their
+        // own per-mount lead aim below, so we no longer gate the whole
+        // ship on controller.fire_guns: a fleeing merchant's tail
+        // turret still bites.
         const HMM_Vec3 fwd_world = ship_forward_world(s);
-
-        // No gun convergence — every mount fires straight along the
-        // ship's aim direction, tracers stay parallel from their muzzle
-        // offsets. Parallel is more legible than the toed-in V the
-        // earlier convergence math produced; aim accuracy comes from
-        // the ITTS reticle telling you where to point.
 
         // Inherit shooter velocity. ship.world_velocity is populated
         // by sync_from_sprite (NPCs: orientation*+Z*forward_speed) or
@@ -98,29 +137,71 @@ void firing::tick(ShipRegistry& ships,
         // matches real-world ballistics + every other space sim.
         const HMM_Vec3 ship_v = s.world_velocity;
 
-
-
         for (size_t i = 0; i < s.mounts.size(); ++i) {
-            // gun_armed (np-3dp): G-key cycle gates which mounts the
-            // player can actually fire. Skipping means the mount goes
-            // cold even if its own cooldown is ready.
-            if (i < s.gun_armed.size() && !s.gun_armed[i]) continue;
-            if (s.gun_cooldowns[i] > 0.0f)            continue;
             const GunMount& m  = s.mounts[i];
             if ((int)m.type < 0 || (int)m.type >= kGunTypeCount) continue;
             const GunStats& gs = g_gun_stats[(int)m.type];
             if (!gs.complete)                          continue;   // null-data gun
-            if (s.energy_gj < gs.energy_cost_gj)       continue;   // dry
+
+            // gun_armed (np-3dp): G-key cycle gates which mounts fire.
+            // NPCs leave gun_armed empty (treated as armed). Cooldown
+            // applies to every mount, fixed and turret alike.
+            if (i < s.gun_armed.size() && !s.gun_armed[i]) continue;
+            if (s.gun_cooldowns[i] > 0.0f)                 continue;
+
+            // Muzzle position: ship pos + rotated mount offset.
+            const HMM_Vec3 muzzle =
+                HMM_AddV3(s.position, body_to_world(s.orientation, m.offset_body));
+
+            // Per-mount aim direction. Two firing models below.
+            HMM_Vec3 aim_dir;
+
+            if (m.is_turret) {
+                // ---- NPC auto-turret (lead-predicting, fires FREE) ----
+                // Player turrets are OUT OF SCOPE.
+                if (s.is_player) continue;
+
+                // Cone geometry for this mount, world frame.
+                HMM_Vec3 base_dir = body_to_world(s.orientation, m.forward_body);
+                const float bl2 = HMM_DotV3(base_dir, base_dir);
+                if (bl2 < 1e-9f) continue;
+                base_dir = HMM_DivV3F(base_dir, std::sqrt(bl2));
+                constexpr float k_deg2rad = 3.14159265358979f / 180.0f;
+                const float cos_cone = std::cos(m.cone_half_angle_deg * k_deg2rad);
+
+                // Target: nearest hostile, else nearest in-cone hostile.
+                Ship* target = pick_turret_target(s, ships, base_dir, cos_cone);
+                if (!target) continue;
+
+                // Range gate against this gun's actual reach.
+                const HMM_Vec3 to_t = HMM_SubV3(target->position, muzzle);
+                if (HMM_DotV3(to_t, to_t) > gs.range_m * gs.range_m) continue;
+
+                // Lead prediction (ITTS) on the target's world velocity.
+                const HMM_Vec3 lead = aim::lead_point(
+                    muzzle, target->position, target->world_velocity, gs.speed_mps);
+                HMM_Vec3 d = HMM_SubV3(lead, muzzle);
+                const float dl2 = HMM_DotV3(d, d);
+                if (dl2 < 1e-9f) continue;
+                aim_dir = HMM_DivV3F(d, std::sqrt(dl2));
+
+                // Reject if the predicted aim leaves the mount's cone.
+                if (HMM_DotV3(aim_dir, base_dir) < cos_cone) continue;
+
+                // No fire_guns gate, no energy gate, no energy drain —
+                // turrets fire free, gated only by cooldown + arc.
+            } else {
+                // ---- Fixed forward gun (legacy path, unchanged) -------
+                if (!s.controller.fire_guns)         continue;
+                if (s.energy_gj < gs.energy_cost_gj) continue;   // dry
+                aim_dir = fwd_world;
+            }
 
             Projectile p;
-            // Muzzle position: ship pos + rotated mount offset.
-            p.position = HMM_AddV3(s.position, body_to_world(s.orientation, m.offset_body));
-            // Velocity: shooter's full 3D world velocity + muzzle
-            // speed along the aim direction. Inheritance lets the
-            // tracer fly with the player's frame so coasting / strafing
-            // doesn't make bullets visually drift sideways from the
-            // crosshair.
-            p.velocity = HMM_AddV3(ship_v, HMM_MulV3F(fwd_world, gs.speed_mps));
+            p.position = muzzle;
+            // Velocity: shooter's full 3D world velocity + muzzle speed
+            // along the (per-mount) aim direction.
+            p.velocity = HMM_AddV3(ship_v, HMM_MulV3F(aim_dir, gs.speed_mps));
             p.damage_cm        = gs.damage_cm;
             p.range_remaining  = gs.range_m;
             p.type             = m.type;
@@ -128,8 +209,9 @@ void firing::tick(ShipRegistry& ships,
             p.alive            = true;
             projectiles.push_back(p);
 
-            s.energy_gj         -= gs.energy_cost_gj;
-            s.gun_cooldowns[i]   = gs.refire_delay_s;
+            // Fixed guns drain the shared pool; turrets fire free.
+            if (!m.is_turret) s.energy_gj -= gs.energy_cost_gj;
+            s.gun_cooldowns[i] = gs.refire_delay_s;
 
             // One shot fired -> one sound. The gun type selects the
             // sample (per-gun originals, laser_fire fallback); player

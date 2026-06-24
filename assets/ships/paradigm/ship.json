@@ -37,14 +37,27 @@
   "default_armor":    "Isometal Armor",
 
   // Heavy forward battery: 2 Meson Blasters + 2 Tachyon Cannon + 1 Ionic
-  // Pulse Cannon (turreted lasers/mass drivers + missile farm omitted per
-  // the v1 no-turret scope note). Deep reactor sustains the volume.
+  // Pulse Cannon, backed by three 2-gun auto-turrets: one dorsal (Particle
+  // pair), one ventral (Particle pair), and a rear Neutron pair. Turrets
+  // fire free so the energy budget stays on the forward guns.
   "default_guns": [
     { "offset_body": [-5.0,  1.5, 6.0], "type": "meson_blaster" },
     { "offset_body": [ 5.0,  1.5, 6.0], "type": "meson_blaster" },
     { "offset_body": [-3.0, -1.5, 6.5], "type": "tachyon_cannon" },
     { "offset_body": [ 3.0, -1.5, 6.5], "type": "tachyon_cannon" },
-    { "offset_body": [ 0.0,  0.0, 7.0], "type": "ionic_pulse_cannon" }
+    { "offset_body": [ 0.0,  0.0, 7.0], "type": "ionic_pulse_cannon" },
+
+    // top turret: 2x particle_cannon
+    { "offset_body": [-4.6, 4.0,  4.0], "forward_body": [0, 1, 0], "cone_half_angle_deg": 120, "type": "particle_cannon",     "turret": true },
+    { "offset_body": [-3.4, 4.0,  4.0], "forward_body": [0, 1, 0], "cone_half_angle_deg": 120, "type": "particle_cannon",     "turret": true },
+
+    // bottom turret: 2x particle_cannon
+    { "offset_body": [-4.6, -4.0,  4.0], "forward_body": [0, -1, 0], "cone_half_angle_deg": 120, "type": "particle_cannon",     "turret": true },
+    { "offset_body": [-3.4, -4.0,  4.0], "forward_body": [0, -1, 0], "cone_half_angle_deg": 120, "type": "particle_cannon",     "turret": true },
+
+    // rear turret: 2x neutron_gun
+    { "offset_body": [-0.6, 0.0, -8.0], "forward_body": [0, 0, -1], "cone_half_angle_deg": 120, "type": "neutron_gun", "turret": true },
+    { "offset_body": [ 0.6, 0.0, -8.0], "forward_body": [0, 0, -1], "cone_half_angle_deg": 120, "type": "neutron_gun", "turret": true }
   ],
 
   "energy_max":      450,

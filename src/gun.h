@@ -15,8 +15,10 @@
 // damage" distinction (that's how the original game worked, and it makes
 // the damage pipeline trivially simple).
 //
-// Out of scope for v1: missiles, torpedoes, turreted guns. Each gets its
-// own file when we get there.
+// Out of scope for v1: missiles, torpedoes. Turreted guns now exist —
+// NPC-only auto-firing mounts flagged via GunMount::is_turret; see
+// firing.cpp's per-mount aim model. Each remaining item gets its own
+// file when we get there.
 // -----------------------------------------------------------------------------
 
 #include <HandmadeMath.h>
@@ -58,6 +60,11 @@ struct GunMount {
     HMM_Vec3 forward_body = {0, 0, 1};       // fire direction, body frame
     GunType  type         = GunType::Laser;
     float    cone_half_angle_deg = 1.0f;     // 0 = strictly fixed
+    // Turret mounts (NPC-only) auto-aim with lead prediction at the
+    // ship's perceived hostile, fire FREE (no energy gate) along their
+    // own forward_body cone — independent of controller.fire_guns. Fixed
+    // forward guns leave this false and keep the legacy nose-forward path.
+    bool     is_turret    = false;
 };
 
 namespace gun {

@@ -12,11 +12,21 @@
   //                     (index = target level; [0] is stock/free). Cumulative
   //                     ladder: each step costs shield_level_price[new_level].
   //   * engine_level_price[L] — same idea for the engine ladder.
-  //   * engine_speed_mult_per_level — each engine level adds this fraction to
-  //                     the hull's effective top speed (camera caps). 0.08 =
-  //                     +8%/level, so an Orion at L5 flies ~40% faster.
-  //   * cargo_expansion_price — one-time flag; bumps hold to cargo_units_max
-  //                     (the +50% the ShipClass already advertises).
+  //   * engine_regen_bonus_per_level — ABSOLUTE GJ/s the engine upgrade adds
+  //                     to the hull's energy-recharge rate (firing.cpp).
+  //                     Index by engine level (so [0]=L0 stock, [1]=L1, ...).
+  //                     Top speed + afterburner speed are HULL-only — engine
+  //                     upgrades produce more power for weapons/shields/AB,
+  //                     they don't make you go faster. (np-3dp.27 / gamefaq
+  //                     4.6.2: "Higher levels of engine also produce more
+  //                     power for other use, such as afterburner, weapons,
+  //                     shields, and so on.")
+  //   * shield_recharge_drain_per_level — ABSOLUTE GJ/s the shield gen
+  //                     CONSUMES from the player's energy budget. Drains
+  //                     whenever the gen is installed, regardless of state.
+  //                     Index by shield level. If a shield gen outpaces the
+  //                     player's available regen, the shield drains the bank
+  //                     to zero and won't sustain.
   // ---------------------------------------------------------------------------
 
   // Canonical Privateer prices (gamefaq equipment list, np-3dp.26).
@@ -39,7 +49,15 @@
   // Engine ladder: L1 10k, L2 30k, L3 60k, L4 100k, L5 150k.
   "engine_level_price": [0, 10000, 30000, 60000, 100000, 150000],
 
-  "engine_speed_mult_per_level": 0.08,
+  // Engine upgrade adds absolute GJ/s to the recharge rate. L0 = no bonus.
+  // Hand-authored (no canonical numbers); tune freely.
+  // L1=+55, L2=+70, L3=+90, L4=+112.5, L5=+135, L6=+157.5, L7=+180 GJ/s.
+  "engine_regen_bonus_per_level": [0, 55, 70, 90, 112.5, 135, 157.5, 180],
+
+  // Shield generator drain (absolute GJ/s consumed whenever the gen is
+  // installed). L0 = no shield gen, no drain. Hand-authored.
+  // L1=30, L2=45, L3=60, L4=80, L5=100, L6=116.25, L7=132.5 GJ/s.
+  "shield_recharge_drain_per_level": [0, 30, 45, 60, 80, 100, 116.25, 132.5],
 
   "cargo_expansion_price": 5000,
 

@@ -9,6 +9,7 @@
 
 #include "player.h"
 
+#include "missile.h"
 #include "ship_class.h"
 
 #include <algorithm>
@@ -37,6 +38,15 @@ PlayerState new_game(const std::string& start_system) {
     // Starter missile loadout (np-zte.2): 4 heat-seekers, nothing else.
     // Afterburner shares the ship's energy bank (no separate fuel tank).
     for (int i = 0; i < 3; ++i) p.missiles[i] = k_new_game_missiles[i];
+    // No starter torpedoes -- the dealer is the only place to load them,
+    // so a new pilot starts empty on the torpedo rack.
+    p.torpedoes = 0;
+    // Hardware: Tarsus starts with one missile launcher (LEFT hardpoint)
+    // and no torpedo launchers at all.
+    p.missile_launcher_left  = true;
+    p.missile_launcher_right = false;
+    p.torpedo_launcher_left  = false;
+    p.torpedo_launcher_right = false;
     // rep zero-initialized = unknown stranger; faction baselines decide
     // first impressions (see faction.h).
     return p;
@@ -100,13 +110,19 @@ bool add_cargo(PlayerState& p, const std::string& commodity_id,
 // ---- ordnance ---------------------------------------------------------------
 
 int missile_count(const PlayerState& p, int type_index) {
-    if (type_index < 0 || type_index >= 3) return 0;
+    if (type_index < 0 || type_index >= kMissileTypeCount) return 0;
+    if (type_index == (int)MissileType::TORPEDO) return p.torpedoes;
     return p.missiles[type_index];
 }
 
 bool consume_missile(PlayerState& p, int type_index) {
-    if (type_index < 0 || type_index >= 3) return false;
-    if (p.missiles[type_index] <= 0)       return false;   // empty rack
+    if (type_index < 0 || type_index >= kMissileTypeCount) return false;
+    if (type_index == (int)MissileType::TORPEDO) {
+        if (p.torpedoes <= 0) return false;
+        --p.torpedoes;
+        return true;
+    }
+    if (p.missiles[type_index] <= 0) return false;   // empty rack
     --p.missiles[type_index];
     return true;
 }
@@ -114,6 +130,21 @@ bool consume_missile(PlayerState& p, int type_index) {
 void add_missiles(PlayerState& p, int type_index, int count) {
     if (type_index < 0 || type_index >= 3 || count <= 0) return;
     p.missiles[type_index] += count;
+}
+
+int  torpedo_count(const PlayerState& p) {
+    return p.torpedoes;
+}
+
+bool consume_torpedo(PlayerState& p) {
+    if (p.torpedoes <= 0) return false;
+    --p.torpedoes;
+    return true;
+}
+
+void add_torpedoes(PlayerState& p, int count) {
+    if (count <= 0) return;
+    p.torpedoes += count;
 }
 
 // drain_afterburner / regen_afterburner / refuel_full removed (np-zte.2):

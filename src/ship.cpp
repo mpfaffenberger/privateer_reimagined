@@ -14,6 +14,19 @@ namespace {
 
 constexpr float k_deg_to_rad = 0.017453293f;
 
+// Per-facing shield maximum in cm, including the flat capital-ship bonus.
+// Capital hulls (klass.capital) carry an extra k_capital_shield_bonus_cm on
+// EVERY facing so they soak punishment befitting their size. The bonus is
+// only added on top of a real shield generator's facing value -- a hull
+// with no default_shield still has 0 cm of shields (matching the current
+// "no generator = no shields" behavior); callers guard the null case.
+constexpr float k_capital_shield_bonus_cm = 200.0f;
+static float shield_max_cm(const ShipClass& k, float base_facing_cm, float mult) {
+    float m = base_facing_cm * mult;
+    if (k.capital) m += k_capital_shield_bonus_cm;
+    return m;
+}
+
 // What direction the ship's nose is pointing, in world space. Identity
 // orientation = nose along world +Z (matches the atlas-authoring
 // convention; same as ship_sprite.cpp's integrator).
@@ -188,9 +201,9 @@ Ship ship::spawn(const ShipClass& klass) {
         s.armor_side_cm += klass.default_armor->side_cm;
     }
     if (klass.default_shield) {
-        s.shield_fore_cm = klass.default_shield->front_cm * s.shield_mult;
-        s.shield_aft_cm  = klass.default_shield->back_cm  * s.shield_mult;
-        s.shield_side_cm = klass.default_shield->side_cm  * s.shield_mult;
+        s.shield_fore_cm = shield_max_cm(klass, klass.default_shield->front_cm, s.shield_mult);
+        s.shield_aft_cm  = shield_max_cm(klass, klass.default_shield->back_cm,  s.shield_mult);
+        s.shield_side_cm = shield_max_cm(klass, klass.default_shield->side_cm,  s.shield_mult);
     }
     s.energy_gj = klass.energy_max;
 
@@ -230,9 +243,9 @@ void ship::heal_to_full(Ship& s) {
         s.armor_aft_cm  += k.default_armor->back_cm;
         s.armor_side_cm += k.default_armor->side_cm;
     }
-    s.shield_fore_cm = k.default_shield ? k.default_shield->front_cm * s.shield_mult : 0.0f;
-    s.shield_aft_cm  = k.default_shield ? k.default_shield->back_cm  * s.shield_mult : 0.0f;
-    s.shield_side_cm = k.default_shield ? k.default_shield->side_cm  * s.shield_mult : 0.0f;
+    s.shield_fore_cm = k.default_shield ? shield_max_cm(k, k.default_shield->front_cm, s.shield_mult) : 0.0f;
+    s.shield_aft_cm  = k.default_shield ? shield_max_cm(k, k.default_shield->back_cm,  s.shield_mult) : 0.0f;
+    s.shield_side_cm = k.default_shield ? shield_max_cm(k, k.default_shield->side_cm,  s.shield_mult) : 0.0f;
     s.energy_gj      = k.energy_max;
 }
 
@@ -303,11 +316,11 @@ struct HitTarget { float* shield; float* armor; float* pause;
                    float shield_max; };
 HitTarget hit_target(Ship& s, HitFacing f) {
     const float sh_max_fore = s.klass && s.klass->default_shield
-                            ? s.klass->default_shield->front_cm * s.shield_mult : 0.0f;
+                            ? shield_max_cm(*s.klass, s.klass->default_shield->front_cm, s.shield_mult) : 0.0f;
     const float sh_max_aft  = s.klass && s.klass->default_shield
-                            ? s.klass->default_shield->back_cm  * s.shield_mult : 0.0f;
+                            ? shield_max_cm(*s.klass, s.klass->default_shield->back_cm,  s.shield_mult) : 0.0f;
     const float sh_max_side = s.klass && s.klass->default_shield
-                            ? s.klass->default_shield->side_cm  * s.shield_mult : 0.0f;
+                            ? shield_max_cm(*s.klass, s.klass->default_shield->side_cm,  s.shield_mult) : 0.0f;
     switch (f) {
         case HitFacing::Fore: return { &s.shield_fore_cm, &s.armor_fore_cm,
                                        &s.shield_pause_fore, sh_max_fore };
@@ -383,9 +396,9 @@ void ship::regen_shields(Ship& s, float dt) {
             q = std::min(q + regen_rate * dt, max_cm);
         }
     };
-    tick_quad(s.shield_fore_cm, s.shield_pause_fore, s.klass->default_shield->front_cm * s.shield_mult);
-    tick_quad(s.shield_aft_cm,  s.shield_pause_aft,  s.klass->default_shield->back_cm  * s.shield_mult);
-    tick_quad(s.shield_side_cm, s.shield_pause_side, s.klass->default_shield->side_cm  * s.shield_mult);
+    tick_quad(s.shield_fore_cm, s.shield_pause_fore, shield_max_cm(*s.klass, s.klass->default_shield->front_cm, s.shield_mult));
+    tick_quad(s.shield_aft_cm,  s.shield_pause_aft,  shield_max_cm(*s.klass, s.klass->default_shield->back_cm,  s.shield_mult));
+    tick_quad(s.shield_side_cm, s.shield_pause_side, shield_max_cm(*s.klass, s.klass->default_shield->side_cm,  s.shield_mult));
 }
 
 float ship::hit_radius_m(const Ship& s) {

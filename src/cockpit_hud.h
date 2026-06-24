@@ -24,12 +24,16 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 #include "HandmadeMath.h"
 
 struct Camera;
 struct StarSystem;
 struct Ship;
+struct PlayerState;
 class ShipRegistry;
+
+namespace galaxy { struct Galaxy; }
 
 namespace cockpit_hud {
 
@@ -55,7 +59,22 @@ namespace cockpit_hud {
 void build(const Camera& cam, const StarSystem& system, int selected_nav,
            float mouse_x, float mouse_y, bool fly_by_wire,
            const ShipRegistry& ships, uint32_t target_ship_id,
-           const char* dock_prompt = nullptr, bool dock_ready = false);
+           const char* dock_prompt = nullptr, bool dock_ready = false,
+           bool draw_world = true);   // false hides nav-reticle + mission glyphs
+
+// Mission objective markers + per-type progress readout (#18). Read-only
+// over PlayerState::missions + the current system's nav set: floats a cyan
+// objective diamond on the targeted nav/base for active jobs in this system
+// (`current_system` is the galaxy system id, e.g. PlayerState::current_system),
+// and lists a compact progress string for every active mission. Pure draw
+// — never mutates the mission model. Call once per Flight frame after
+// build(). `draw_world` gates the in-world diamond+label draw; the on-screen
+// readout list is always drawn so autopilot/navmap don't leave the player
+// blind to active jobs.
+void build_mission_objectives(const Camera& cam, const StarSystem& system,
+                              const std::string& current_system,
+                              const PlayerState& player,
+                              bool draw_world = true);
 
 // Sun-proximity warning overlay (np-3dp). Centre-screen banner that
 // fires whenever the camera is inside the 20k avoid bubble around the
@@ -77,6 +96,7 @@ struct WeaponsHudState {
     bool        needs_lock     = false;  // selected type homes (HS/IR)
     int         lock_state     = 0;      // 0 none, 1 seeking, 2 locked
     float       lock_progress  = 0.0f;   // 0..1 IR build-up (seeking only)
+    const char* no_lock_label  = "DUMBFIRE";  // override label when needs_lock=false (torpedo)
 };
 void build_weapons_status(const WeaponsHudState& w);
 
@@ -98,13 +118,21 @@ void draw_flight_status_mfd(const FlightStatusHudState& s);
 // bool — first N opens, subsequent N presses cycle the selected nav
 // in place (same effect as outside-the-map N); Esc or the close
 // button flip `shown_in_out` to false. When shown_in_out is true
-// this draws a centered overlay with nav points and ship contacts
-// on a system-scale projection. Clicking a nav point selects it
-// (mutates `selected_nav_in_out`). Called AFTER build() so it draws
-// on top of the regular HUD.
+// this draws a near-fullscreen overlay split into a LEFT map pane
+// (top-down system map) and a RIGHT mission-status pane (one row per
+// active mission, click a row to select its nav target). Clicking a
+// nav point OR a mission row sets `selected_nav_in_out`. The mission
+// panel is rendered via missions::mission_status so the text can't
+// drift from the in-flight readout (#18). Pure read on `player` +
+// the live `current_system_id`; the galaxy graph is consulted only
+// to pick a cross-system jump nav toward cargo/bounty targets. Called
+// AFTER build() so it draws on top of the regular HUD.
 void build_navmap(const Camera& cam, const StarSystem& system,
                   int& selected_nav_in_out,
                   const ShipRegistry& ships,
+                  const PlayerState& player,
+                  const std::string& current_system_id,
+                  const galaxy::Galaxy& galaxy,
                   bool& shown_in_out);
 
 } // namespace cockpit_hud

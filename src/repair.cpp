@@ -30,6 +30,10 @@ constexpr double k_credits_per_armor_cm = 20.0;   // hull repair
 // (gamefaq): Dumb-Fire 20, Heat-Seeker 35, Image-Rec 75.
 constexpr int64_t k_missile_price[3] = { 20, 35, 75 };
 
+// Per-torpedo price (single rate). Torpedoes don't split into DF/HS/IR
+// variants in Privateer canon -- there's just one Proton Torpedo.
+constexpr int64_t k_torpedo_unit_price = 35;
+
 // Full per-facing armor for a ship's class (base + fitted armor tier).
 // Mirrors ship::heal_to_full's armor math so the "missing" calc agrees with
 // what a repair actually restores.
@@ -117,8 +121,42 @@ int64_t missile_price(int type) {
     return (type >= 0 && type < 3) ? k_missile_price[type] : 0;
 }
 
+int missile_rack_capacity(const PlayerState& p) {
+    const int n = (p.missile_launcher_left ? 1 : 0) + (p.missile_launcher_right ? 1 : 0);
+    return n * k_missile_rack_per_launcher;
+}
+
+int torpedo_rack_capacity(const PlayerState& p) {
+    const int n = (p.torpedo_launcher_left ? 1 : 0) + (p.torpedo_launcher_right ? 1 : 0);
+    return n * k_torpedo_rack_per_tube;
+}
+
+int missile_launchers_owned(const PlayerState& p) {
+    return (p.missile_launcher_left ? 1 : 0) + (p.missile_launcher_right ? 1 : 0);
+}
+
+int torpedo_launchers_owned(const PlayerState& p) {
+    return (p.torpedo_launcher_left ? 1 : 0) + (p.torpedo_launcher_right ? 1 : 0);
+}
+
+bool left_hardpoint_free(const PlayerState& p) {
+    return !p.missile_launcher_left && !p.torpedo_launcher_left;
+}
+
+bool right_hardpoint_free(const PlayerState& p) {
+    return !p.missile_launcher_right && !p.torpedo_launcher_right;
+}
+
 int missiles_total(const PlayerState& p) {
     return p.missiles[0] + p.missiles[1] + p.missiles[2];
+}
+
+int64_t torpedo_price() {
+    return k_torpedo_unit_price;
+}
+
+int torpedoes_total(const PlayerState& p) {
+    return p.torpedoes;
 }
 
 bool buy_missiles(PlayerState& p, int type, int count) {
@@ -126,10 +164,11 @@ bool buy_missiles(PlayerState& p, int type, int count) {
         std::printf("[repair] buy missiles refused: bad type/count %d x%d\n", type, count);
         return false;
     }
-    const int room = k_missile_capacity - missiles_total(p);
+    const int cap  = missile_rack_capacity(p);
+    const int room = cap - missiles_total(p);
     if (room <= 0) {
         std::printf("[repair] buy missiles refused: rack full (%d/%d)\n",
-                    missiles_total(p), k_missile_capacity);
+                    missiles_total(p), cap);
         return false;
     }
     const int n = std::min(count, room);
@@ -144,6 +183,174 @@ bool buy_missiles(PlayerState& p, int type, int count) {
                 "paid %lld | credits %lld\n",
                 n, type, p.missiles[0], p.missiles[1], p.missiles[2],
                 (long long)cost, (long long)p.credits);
+    return true;
+}
+
+bool buy_torpedo(PlayerState& p, int count) {
+    if (count <= 0) {
+        std::printf("[repair] buy torpedo refused: bad count %d\n", count);
+        return false;
+    }
+    const int cap  = torpedo_rack_capacity(p);
+    const int room = cap - torpedoes_total(p);
+    if (room <= 0) {
+        std::printf("[repair] buy torpedo refused: rack full (%d/%d)\n",
+                    torpedoes_total(p), cap);
+        return false;
+    }
+    const int n = std::min(count, room);
+    const int64_t cost = (int64_t)n * k_torpedo_unit_price;
+    if (!player::spend_credits(p, cost)) {
+        std::printf("[repair] buy torpedo refused: %d costs %lld, have %lld\n",
+                    n, (long long)cost, (long long)p.credits);
+        return false;
+    }
+    player::add_torpedoes(p, n);
+    std::printf("[repair] bought %d torpedo(es) | total %d/%d | paid %lld | credits %lld\n",
+                n, p.torpedoes, cap, (long long)cost, (long long)p.credits);
+    return true;
+}
+
+bool buy_missile_launcher_left(PlayerState& p) {
+    if (!left_hardpoint_free(p)) {
+        std::printf("[repair] buy missile launcher LEFT refused: LEFT hardpoint occupied\n");
+        return false;
+    }
+    if (!player::spend_credits(p, k_missile_launcher_price)) {
+        std::printf("[repair] buy missile launcher LEFT refused: costs %lld, have %lld\n",
+                    (long long)k_missile_launcher_price, (long long)p.credits);
+        return false;
+    }
+    p.missile_launcher_left = true;
+    std::printf("[repair] bought missile launcher LEFT | paid %lld | credits %lld\n",
+                (long long)k_missile_launcher_price, (long long)p.credits);
+    return true;
+}
+
+bool buy_missile_launcher_right(PlayerState& p) {
+    if (!right_hardpoint_free(p)) {
+        std::printf("[repair] buy missile launcher RIGHT refused: RIGHT hardpoint occupied\n");
+        return false;
+    }
+    if (!player::spend_credits(p, k_missile_launcher_price)) {
+        std::printf("[repair] buy missile launcher RIGHT refused: costs %lld, have %lld\n",
+                    (long long)k_missile_launcher_price, (long long)p.credits);
+        return false;
+    }
+    p.missile_launcher_right = true;
+    std::printf("[repair] bought missile launcher RIGHT | paid %lld | credits %lld\n",
+                (long long)k_missile_launcher_price, (long long)p.credits);
+    return true;
+}
+
+bool buy_torpedo_launcher_left(PlayerState& p) {
+    if (!left_hardpoint_free(p)) {
+        std::printf("[repair] buy torpedo launcher LEFT refused: LEFT hardpoint occupied\n");
+        return false;
+    }
+    if (!player::spend_credits(p, k_torpedo_launcher_price)) {
+        std::printf("[repair] buy torpedo launcher LEFT refused: costs %lld, have %lld\n",
+                    (long long)k_torpedo_launcher_price, (long long)p.credits);
+        return false;
+    }
+    p.torpedo_launcher_left = true;
+    std::printf("[repair] bought torpedo launcher LEFT | paid %lld | credits %lld\n",
+                (long long)k_torpedo_launcher_price, (long long)p.credits);
+    return true;
+}
+
+bool buy_torpedo_launcher_right(PlayerState& p) {
+    if (!right_hardpoint_free(p)) {
+        std::printf("[repair] buy torpedo launcher RIGHT refused: RIGHT hardpoint occupied\n");
+        return false;
+    }
+    if (!player::spend_credits(p, k_torpedo_launcher_price)) {
+        std::printf("[repair] buy torpedo launcher RIGHT refused: costs %lld, have %lld\n",
+                    (long long)k_torpedo_launcher_price, (long long)p.credits);
+        return false;
+    }
+    p.torpedo_launcher_right = true;
+    std::printf("[repair] bought torpedo launcher RIGHT | paid %lld | credits %lld\n",
+                (long long)k_torpedo_launcher_price, (long long)p.credits);
+    return true;
+}
+
+bool sell_missile_launcher_left(PlayerState& p) {
+    if (!p.missile_launcher_left) {
+        std::printf("[repair] sell missile launcher LEFT refused: not fitted\n");
+        return false;
+    }
+    p.missile_launcher_left = false;
+    player::add_credits(p, k_missile_launcher_sell_price);
+    std::printf("[repair] sold missile launcher LEFT | refund %lld | credits %lld\n",
+                (long long)k_missile_launcher_sell_price, (long long)p.credits);
+    return true;
+}
+
+bool sell_missile_launcher_right(PlayerState& p) {
+    if (!p.missile_launcher_right) {
+        std::printf("[repair] sell missile launcher RIGHT refused: not fitted\n");
+        return false;
+    }
+    p.missile_launcher_right = false;
+    player::add_credits(p, k_missile_launcher_sell_price);
+    std::printf("[repair] sold missile launcher RIGHT | refund %lld | credits %lld\n",
+                (long long)k_missile_launcher_sell_price, (long long)p.credits);
+    return true;
+}
+
+bool sell_torpedo_launcher_left(PlayerState& p) {
+    if (!p.torpedo_launcher_left) {
+        std::printf("[repair] sell torpedo launcher LEFT refused: not fitted\n");
+        return false;
+    }
+    p.torpedo_launcher_left = false;
+    player::add_credits(p, k_torpedo_launcher_sell_price);
+    std::printf("[repair] sold torpedo launcher LEFT | refund %lld | credits %lld\n",
+                (long long)k_torpedo_launcher_sell_price, (long long)p.credits);
+    return true;
+}
+
+bool sell_torpedo_launcher_right(PlayerState& p) {
+    if (!p.torpedo_launcher_right) {
+        std::printf("[repair] sell torpedo launcher RIGHT refused: not fitted\n");
+        return false;
+    }
+    p.torpedo_launcher_right = false;
+    player::add_credits(p, k_torpedo_launcher_sell_price);
+    std::printf("[repair] sold torpedo launcher RIGHT | refund %lld | credits %lld\n",
+                (long long)k_torpedo_launcher_sell_price, (long long)p.credits);
+    return true;
+}
+
+bool sell_missile(PlayerState& p, int type) {
+    if (type < 0 || type >= 3) {
+        std::printf("[repair] sell missile refused: bad type %d\n", type);
+        return false;
+    }
+    if (p.missiles[type] <= 0) {
+        std::printf("[repair] sell missile refused: type %d count %d\n",
+                    type, p.missiles[type]);
+        return false;
+    }
+    --p.missiles[type];
+    player::add_credits(p, k_missile_price[type]);
+    std::printf("[repair] sold 1 type%d missile | now %d/%d/%d | +%lld | credits %lld\n",
+                type, p.missiles[0], p.missiles[1], p.missiles[2],
+                (long long)k_missile_price[type], (long long)p.credits);
+    return true;
+}
+
+bool sell_torpedo(PlayerState& p) {
+    if (p.torpedoes <= 0) {
+        std::printf("[repair] sell torpedo refused: count %d\n", p.torpedoes);
+        return false;
+    }
+    --p.torpedoes;
+    player::add_credits(p, k_torpedo_unit_price);
+    std::printf("[repair] sold 1 torpedo | now %d | +%lld | credits %lld\n",
+                p.torpedoes, (long long)k_torpedo_unit_price,
+                (long long)p.credits);
     return true;
 }
 

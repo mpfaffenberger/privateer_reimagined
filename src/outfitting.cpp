@@ -51,7 +51,10 @@ float                                        g_trade_in_pct = 0.55f;
 std::unordered_map<std::string, int64_t>     g_gun_price;    // short_name -> price
 std::vector<int64_t>                         g_shield_price; // index = level
 std::vector<int64_t>                         g_engine_price; // index = level
-float                                        g_engine_speed_mult = 0.08f;
+float                                        g_engine_regen_mult = 0.08f;   // legacy mult (unused)
+std::vector<float>                           g_engine_regen_bonus;   // GJ/s by engine level
+std::vector<float>                           g_shield_regen_drain;   // GJ/s by shield level
+
 int64_t                                      g_cargo_expansion_price = 0;
 std::unordered_map<std::string, int64_t>     g_discrete_price;   // np-3dp.27
 
@@ -63,7 +66,9 @@ int load(const std::string& ship_prices_path, const std::string& equip_prices_pa
     g_gun_price.clear();
     g_shield_price.clear();
     g_engine_price.clear();
-    g_engine_speed_mult = 0.08f;
+    g_engine_regen_mult = 0.08f;
+    g_engine_regen_bonus.clear();
+    g_shield_regen_drain.clear();
     g_cargo_expansion_price = 0;
     g_discrete_price.clear();
 
@@ -92,8 +97,14 @@ int load(const std::string& ship_prices_path, const std::string& equip_prices_pa
             for (const json::Value& v : s->as_array()) g_shield_price.push_back((int64_t)v.as_int());
         if (const json::Value* e = ep.find("engine_level_price"); e && e->is_array())
             for (const json::Value& v : e->as_array()) g_engine_price.push_back((int64_t)v.as_int());
-        if (ep.contains("engine_speed_mult_per_level"))
-            g_engine_speed_mult = ep["engine_speed_mult_per_level"].as_float();
+        if (ep.contains("engine_regen_mult_per_level"))
+            g_engine_regen_mult = ep["engine_regen_mult_per_level"].as_float();
+        if (const json::Value* e = ep.find("engine_regen_bonus_per_level"); e && e->is_array())
+            for (const json::Value& v : e->as_array())
+                g_engine_regen_bonus.push_back((float)v.as_float());
+        if (const json::Value* e = ep.find("shield_recharge_drain_per_level"); e && e->is_array())
+            for (const json::Value& v : e->as_array())
+                g_shield_regen_drain.push_back((float)v.as_float());
         if (ep.contains("cargo_expansion_price"))
             g_cargo_expansion_price = (int64_t)ep["cargo_expansion_price"].as_int();
         if (const json::Value* d = ep.find("discrete_equipment"); d && d->is_object())
@@ -207,14 +218,34 @@ SpeedCaps effective_speed_caps(const PlayerState& p) {
     SpeedCaps caps;
     const ShipClass* k = ship_class::find(p.ship_class_name);
     if (!k) return caps;  // stock 300/600 fallback
-    const float mult = 1.0f + g_engine_speed_mult * (float)p.engine_level;
-    caps.cruise0 = k->cruise_speed * mult;
+    // Top speed (and afterburner speed) are HULL-only. Engine upgrades no
+    // longer scale them — they boost the energy regen rate via
+    // engine_recharge_mult_for() instead. (gamefaq 4.6.2.)
+    caps.cruise0 = k->cruise_speed;
     // afterburner_speed==0 means "none fitted" — fall back to 2x cruise so the
     // camera's cruise ceiling stays above its base.
     const float ab = k->afterburner_speed > k->cruise_speed
                    ? k->afterburner_speed : k->cruise_speed * 2.0f;
-    caps.cruise1 = ab * mult;
+    caps.cruise1 = ab;
     return caps;
+}
+
+// Absolute GJ/s the engine upgrade ADDS to the player's recharge rate,
+// per upgrade level. L0 = 0. NPCs always get 0 (engine_level is a player
+// construct). Out-of-range levels clamp to the last populated entry.
+float engine_recharge_bonus_for(int engine_level) {
+    if (g_engine_regen_bonus.empty()) return 0.0f;
+    const int idx = std::clamp(engine_level, 0, (int)g_engine_regen_bonus.size() - 1);
+    return g_engine_regen_bonus[idx];
+}
+
+// Absolute GJ/s the shield generator CONSUMES from the recharge budget,
+// per upgrade level. L0 = 0 (no shield gen installed). Out-of-range
+// levels clamp to the last populated entry.
+float shield_recharge_drain_for(int shield_level) {
+    if (g_shield_regen_drain.empty()) return 0.0f;
+    const int idx = std::clamp(shield_level, 0, (int)g_shield_regen_drain.size() - 1);
+    return g_shield_regen_drain[idx];
 }
 
 // ---- transactions (headless-safe; shared by UI + harness) -------------------
@@ -282,6 +313,31 @@ bool buy_gun(PlayerState& p, const std::string& gun_short_name,
     p.gun_mounts[mount_index] = gun_short_name;
     std::printf("[outfit] BUY GUN %s -> mount %d @ %lld | credits %lld\n",
                 gun_short_name.c_str(), mount_index, (long long)price, (long long)p.credits);
+    return true;
+}
+
+bool sell_gun(PlayerState& p, int mount_index, const ShipClass* klass) {
+    const int mounts = klass ? (int)klass->default_guns.size() : (int)p.gun_mounts.size();
+    if (mount_index < 0 || mount_index >= mounts) {
+        std::printf("[outfit] SELL GUN refused: mount %d out of range (hull has %d)\n",
+                    mount_index, mounts);
+        return false;
+    }
+    if ((int)p.gun_mounts.size() < mounts) p.gun_mounts.resize(mounts, "");
+    const std::string& name = p.gun_mounts[(size_t)mount_index];
+    if (name.empty()) {
+        std::printf("[outfit] SELL GUN refused: mount %d is empty\n", mount_index);
+        return false;
+    }
+    const int64_t refund = gun_price(name);
+    if (refund <= 0) {
+        std::printf("[outfit] SELL GUN refused: '%s' has no price\n", name.c_str());
+        return false;
+    }
+    p.gun_mounts[(size_t)mount_index] = "";
+    player::add_credits(p, refund);
+    std::printf("[outfit] SELL GUN %s <- mount %d refund %lld | credits %lld\n",
+                name.c_str(), mount_index, (long long)refund, (long long)p.credits);
     return true;
 }
 
@@ -546,6 +602,25 @@ void draw_equipment(BaseContext& ctx) {
         if (ImGui::Button(lbl)) g_sel_mount = i;
         if (sel) ImGui::PopStyleColor();
     }
+    // Sell-back button for the gun currently selected. Refused if the
+    // mount is empty (the function logs and returns false; UI just shows
+    // a disabled button so the player sees the affordance).
+    ImGui::SameLine();
+    ImGui::PushID("sell_selected_weapon");
+    const bool can_sell_gun = g_sel_mount < mounts &&
+                              (int)p.gun_mounts.size() > g_sel_mount &&
+                              !p.gun_mounts[(size_t)g_sel_mount].empty();
+    ImGui::BeginDisabled(!can_sell_gun);
+    if (ImGui::SmallButton("Sell weapon")) {
+        if (outfitting::sell_gun(p, g_sel_mount, klass)) sfx::ui_click();
+    }
+    ImGui::EndDisabled();
+    if (ImGui::IsItemHovered() && can_sell_gun) {
+        const int64_t refund = gun_price(p.gun_mounts[(size_t)g_sel_mount].c_str());
+        ImGui::SetTooltip("Sell the weapon at mount %d (+%lld)",
+                          g_sel_mount, (long long)refund);
+    }
+    ImGui::PopID();
 
     // ---- Gun catalog -> fit into selected mount ----------------------------
     ImGui::SetCursorScreenPos(ImVec2(28, 150));
@@ -703,24 +778,87 @@ void draw_equipment(BaseContext& ctx) {
         // burner shares the ship's energy bank now; it recharges for
         // free in flight, so there's nothing to sell here.
 
-        // Missiles — buy by type up to the launcher capacity (canon ML 10,
-        // np-3dp.26). One launcher, any mix of DF/HS/IR.
+        // Missiles -- buy by type up to the rack capacity (np-zte.2).
+        // Capacity scales with owned missile launchers: 1 launcher = 10
+        // slots, 2 launchers = 20 slots. The new-game Tarsus starts with
+        // 1 launcher so the cap is 10. Players can buy a second launcher
+        // (10k) below to double this row.
+        const int mcap = repair::missile_rack_capacity(p);
         const int mtot = repair::missiles_total(p);
-        ImGui::Text("Missiles    DF %d / HS %d / IR %d   (%d/%d)",
-                    p.missiles[0], p.missiles[1], p.missiles[2],
-                    mtot, repair::k_missile_capacity);
+        if (mcap <= 0) {
+            ImGui::PushStyleColor(ImGuiCol_Text, kRed);
+            ImGui::Text("Missiles    -- (no missile launcher fitted)");
+            ImGui::PopStyleColor();
+        } else {
+            ImGui::Text("Missiles    DF %d / HS %d / IR %d   (%d/%d)",
+                        p.missiles[0], p.missiles[1], p.missiles[2],
+                        mtot, mcap);
+        }
         const char* mlbl[3] = { "DF", "HS", "IR" };
         for (int t = 0; t < 3; ++t) {
+            if (mcap <= 0) break;          // hide the buy buttons if no rack
             ImGui::SameLine();
-            ImGui::PushID(t);
+            ImGui::PushID(100 + t);        // distinct ID space from torpedo row
             char b[40];
             std::snprintf(b, sizeof(b), "+%s (%lld)", mlbl[t],
                           (long long)repair::missile_price(t));
-            const bool can = mtot < repair::k_missile_capacity &&
+            const bool can = mtot < mcap &&
                              player::can_afford(p, repair::missile_price(t));
             ImGui::BeginDisabled(!can);
             if (ImGui::SmallButton(b)) { if (repair::buy_missiles(p, t, 1)) sfx::ui_click(); }
             ImGui::EndDisabled();
+            ImGui::PopID();
+            // Sell-back: one round at a time, full price refund. Refused
+            // when none of this type loaded.
+            ImGui::SameLine();
+            ImGui::PushID(300 + t);
+            char s[40];
+            std::snprintf(s, sizeof(s), "-%s", mlbl[t]);
+            const bool can_sell = p.missiles[t] > 0;
+            ImGui::BeginDisabled(!can_sell);
+            if (ImGui::SmallButton(s)) { if (repair::sell_missile(p, t)) sfx::ui_click(); }
+            ImGui::EndDisabled();
+            if (ImGui::IsItemHovered())
+                ImGui::SetTooltip("Sell 1 %s missile (+%lld)", mlbl[t],
+                                  (long long)repair::missile_price(t));
+            ImGui::PopID();
+        }
+
+        // Torpedoes -- single price (Proton Torpedo at 35 cr), no DF/HS/IR
+        // split. Rack capacity scales with owned torpedo tubes (one per
+        // tube, max 2 tubes). Capacity of 0 means the player has no tube
+        // fitted, so the row reads "no torpedo tube fitted" in red.
+        const int tcap = repair::torpedo_rack_capacity(p);
+        const int ttot = repair::torpedoes_total(p);
+        const int64_t tprice = repair::torpedo_price();
+        if (tcap <= 0) {
+            ImGui::PushStyleColor(ImGuiCol_Text, kRed);
+            ImGui::Text("Torpedoes   -- (no torpedo tube fitted)");
+            ImGui::PopStyleColor();
+        } else {
+            ImGui::Text("Torpedoes   %d   (%d/%d)", ttot, ttot, tcap);
+        }
+        if (tcap > 0) {
+            // Buy one (+/- pair). Same pattern as the DF/HS/IR missiles
+            // above but only one button pair instead of three.
+            ImGui::SameLine();
+            ImGui::PushID(200);
+            char b[40];
+            std::snprintf(b, sizeof(b), "+1 (%lld)", (long long)tprice);
+            const bool can = ttot < tcap && player::can_afford(p, tprice);
+            ImGui::BeginDisabled(!can);
+            if (ImGui::SmallButton(b)) { if (repair::buy_torpedo(p, 1)) sfx::ui_click(); }
+            ImGui::EndDisabled();
+            ImGui::PopID();
+
+            ImGui::SameLine();
+            ImGui::PushID(201);
+            const bool can_sell = p.torpedoes > 0;
+            ImGui::BeginDisabled(!can_sell);
+            if (ImGui::SmallButton("-1")) { if (repair::sell_torpedo(p)) sfx::ui_click(); }
+            ImGui::EndDisabled();
+            if (ImGui::IsItemHovered())
+                ImGui::SetTooltip("Sell 1 torpedo (+%lld)", (long long)tprice);
             ImGui::PopID();
         }
 
@@ -732,8 +870,170 @@ void draw_equipment(BaseContext& ctx) {
         // ECM check, the in-flight hull-repair tick, and the cargo tractor.
         ImGui::Spacing();
         ImGui::PushStyleColor(ImGuiCol_Text, kAmber);
-        ImGui::TextUnformatted("SPECIAL EQUIPMENT");
+        ImGui::TextUnformatted("LAUNCHER HARDWARE");
         ImGui::PopStyleColor();
+        {
+            // Per-side launcher hardpoints (np-launchers-bump). The
+            // hull has two physical hardpoints per ammo type (LEFT and
+            // RIGHT), each of which can be bought independently for 10k
+            // (missile) or 2.5k (torpedo). Sell returns 75% of buy.
+            // Rack capacity is the sum of fitted hardpoints times the
+            // per-launcher slot count.
+        }
+        {
+            // Two-row, per-side, callable UI for the four hardpoints.
+            ImGui::TextUnformatted("Missile Launcher");
+            ImGui::SameLine();
+            // LEFT hardpoint
+            {
+                ImGui::PushID("ml_L_buy");
+                const bool can = repair::left_hardpoint_free(p) &&
+                                 player::can_afford(p, repair::k_missile_launcher_price);
+                char b[40]; std::snprintf(b, sizeof(b), "Buy L (%lld)",
+                                          (long long)repair::k_missile_launcher_price);
+                ImGui::BeginDisabled(!can);
+                if (ImGui::SmallButton(b)) {
+                    if (repair::buy_missile_launcher_left(p)) sfx::ui_click();
+                }
+                ImGui::EndDisabled();
+                ImGui::PopID();
+                ImGui::SameLine();
+                ImGui::PushID("ml_L_state");
+                if (p.missile_launcher_left) {
+                    ImGui::PushStyleColor(ImGuiCol_Text, kGreen);
+                    ImGui::TextUnformatted("L:ON"); ImGui::PopStyleColor();
+                } else {
+                    ImGui::PushStyleColor(ImGuiCol_Text, kRed);
+                    ImGui::TextUnformatted("L:--"); ImGui::PopStyleColor();
+                }
+                ImGui::PopID();
+                ImGui::SameLine();
+                ImGui::PushID("ml_L_sell");
+                char s[40]; std::snprintf(s, sizeof(s), "Sell L (+%lld)",
+                                          (long long)repair::k_missile_launcher_sell_price);
+                ImGui::BeginDisabled(!p.missile_launcher_left);
+                if (ImGui::SmallButton(s)) {
+                    if (repair::sell_missile_launcher_left(p)) sfx::ui_click();
+                }
+                ImGui::EndDisabled();
+                ImGui::PopID();
+            }
+            // RIGHT hardpoint
+            {
+                ImGui::SameLine();
+                ImGui::PushID("ml_R_buy");
+                const bool can = repair::right_hardpoint_free(p) &&
+                                 player::can_afford(p, repair::k_missile_launcher_price);
+                char b[40]; std::snprintf(b, sizeof(b), "Buy R (%lld)",
+                                          (long long)repair::k_missile_launcher_price);
+                ImGui::BeginDisabled(!can);
+                if (ImGui::SmallButton(b)) {
+                    if (repair::buy_missile_launcher_right(p)) sfx::ui_click();
+                }
+                ImGui::EndDisabled();
+                ImGui::PopID();
+                ImGui::SameLine();
+                ImGui::PushID("ml_R_state");
+                if (p.missile_launcher_right) {
+                    ImGui::PushStyleColor(ImGuiCol_Text, kGreen);
+                    ImGui::TextUnformatted("R:ON"); ImGui::PopStyleColor();
+                } else {
+                    ImGui::PushStyleColor(ImGuiCol_Text, kRed);
+                    ImGui::TextUnformatted("R:--"); ImGui::PopStyleColor();
+                }
+                ImGui::PopID();
+                ImGui::SameLine();
+                ImGui::PushID("ml_R_sell");
+                char s[40]; std::snprintf(s, sizeof(s), "Sell R (+%lld)",
+                                          (long long)repair::k_missile_launcher_sell_price);
+                ImGui::BeginDisabled(!p.missile_launcher_right);
+                if (ImGui::SmallButton(s)) {
+                    if (repair::sell_missile_launcher_right(p)) sfx::ui_click();
+                }
+                ImGui::EndDisabled();
+                ImGui::PopID();
+            }
+
+            // Torpedo launchers (2.5k buy, 1.875k sell). Both sides
+            // start empty on the Tarsus.
+            ImGui::TextUnformatted("Torpedo Launcher");
+            ImGui::SameLine();
+            // LEFT hardpoint
+            {
+                ImGui::PushID("tl_L_buy");
+                const bool can = repair::left_hardpoint_free(p) &&
+                                 player::can_afford(p, repair::k_torpedo_launcher_price);
+                char b[40]; std::snprintf(b, sizeof(b), "Buy L (%lld)",
+                                          (long long)repair::k_torpedo_launcher_price);
+                ImGui::BeginDisabled(!can);
+                if (ImGui::SmallButton(b)) {
+                    if (repair::buy_torpedo_launcher_left(p)) sfx::ui_click();
+                }
+                ImGui::EndDisabled();
+                ImGui::PopID();
+                ImGui::SameLine();
+                ImGui::PushID("tl_L_state");
+                if (p.torpedo_launcher_left) {
+                    ImGui::PushStyleColor(ImGuiCol_Text, kGreen);
+                    ImGui::TextUnformatted("L:ON"); ImGui::PopStyleColor();
+                } else {
+                    ImGui::PushStyleColor(ImGuiCol_Text, kRed);
+                    ImGui::TextUnformatted("L:--"); ImGui::PopStyleColor();
+                }
+                ImGui::PopID();
+                ImGui::SameLine();
+                ImGui::PushID("tl_L_sell");
+                char s[40]; std::snprintf(s, sizeof(s), "Sell L (+%lld)",
+                                          (long long)repair::k_torpedo_launcher_sell_price);
+                ImGui::BeginDisabled(!p.torpedo_launcher_left);
+                if (ImGui::SmallButton(s)) {
+                    if (repair::sell_torpedo_launcher_left(p)) sfx::ui_click();
+                }
+                ImGui::EndDisabled();
+                ImGui::PopID();
+            }
+            // RIGHT hardpoint
+            {
+                ImGui::SameLine();
+                ImGui::PushID("tl_R_buy");
+                const bool can = repair::right_hardpoint_free(p) &&
+                                 player::can_afford(p, repair::k_torpedo_launcher_price);
+                char b[40]; std::snprintf(b, sizeof(b), "Buy R (%lld)",
+                                          (long long)repair::k_torpedo_launcher_price);
+                ImGui::BeginDisabled(!can);
+                if (ImGui::SmallButton(b)) {
+                    if (repair::buy_torpedo_launcher_right(p)) sfx::ui_click();
+                }
+                ImGui::EndDisabled();
+                ImGui::PopID();
+                ImGui::SameLine();
+                ImGui::PushID("tl_R_state");
+                if (p.torpedo_launcher_right) {
+                    ImGui::PushStyleColor(ImGuiCol_Text, kGreen);
+                    ImGui::TextUnformatted("R:ON"); ImGui::PopStyleColor();
+                } else {
+                    ImGui::PushStyleColor(ImGuiCol_Text, kRed);
+                    ImGui::TextUnformatted("R:--"); ImGui::PopStyleColor();
+                }
+                ImGui::PopID();
+                ImGui::SameLine();
+                ImGui::PushID("tl_R_sell");
+                char s[40]; std::snprintf(s, sizeof(s), "Sell R (+%lld)",
+                                          (long long)repair::k_torpedo_launcher_sell_price);
+                ImGui::BeginDisabled(!p.torpedo_launcher_right);
+                if (ImGui::SmallButton(s)) {
+                    if (repair::sell_torpedo_launcher_right(p)) sfx::ui_click();
+                }
+                ImGui::EndDisabled();
+                ImGui::PopID();
+            }
+        }
+        {
+            ImGui::Spacing();
+            ImGui::PushStyleColor(ImGuiCol_Text, kAmber);
+            ImGui::TextUnformatted("SPECIAL EQUIPMENT");
+            ImGui::PopStyleColor();
+        }
         {
             struct Row { const char* item; const char* label; const char* hint; };
             const std::array<Row, 7> rows = {{

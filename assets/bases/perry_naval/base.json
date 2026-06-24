@@ -11,6 +11,8 @@
   "market": { "archetype": "mining" },
 
   "hotspots": [
+    { "target": "MercenariesGuild", "label": "MERCENARIES' GUILD",
+      "rect": [0.37, 0.28, 0.26, 0.16], "tooltip": "Combat contracts (5000 cr to join)" },
     { "target": "Bar",               "label": "OFFICERS' CLUB",
       "rect": [0.04, 0.50, 0.26, 0.16], "tooltip": "Pilots, rumours, and military gossip" },
     { "target": "CommodityExchange", "label": "SUPPLY DEPOT",

@@ -14,6 +14,15 @@
 //   A              — autopilot to selected nav (hostile-gated; any input cancels)
 //   D              — dock at selected base when cleared
 //   Escape (×2)    — quit (double-tap within 1s so accidental taps are safe)
+//
+//   Open / unbound (free for new bindings — W, S, Q, E, R, F, Z, C, X):
+//     W/S — no longer forward/back throttle
+//     Q/E — no longer strafe
+//     R/F — no longer pitch (up/down)
+//     Z/C — no longer roll
+//     X   — no longer brake / fire (now used by gun cycle as alt-fire)
+//   Bind them to new features (shield level toggle, weapon group cycling,
+//   etc.) and update this header + the in-game reminder.
 // -----------------------------------------------------------------------------
 
 #include "sokol_log.h"
@@ -37,6 +46,7 @@
 #include "economy.h"
 #include "outfitting.h"
 #include "missions.h"
+#include "mission_tracker.h"
 #include "player.h"
 #include "savegame.h"
 #include "base_screens.h"
@@ -470,6 +480,13 @@ struct AppState {
     // unfreezes.
     bool show_welcome = false;   // welcome briefing REMOVED in np-3dp; the title screen owns the chrome
     bool show_title   = true;   // title/loading screen at app launch
+
+    // Flight pause toggle (np-pau.28): P in Flight mode freezes the sim
+    // (dt=0, no AI, no fire requests) without changing GameMode. ImGui
+    // and dev overlays stay live so the player can still inspect panels,
+    // retarget, etc. The P handler is a KEY_DOWN edge trigger, so holding
+    // the key can't strobe the state.
+    bool paused       = false;
     // Lazy-init latch for the title SCENE (patrol/chase ships, sky, music).
     // Reset to false whenever we (re)enter the title — at launch and again
     // when the player dies and we bounce back to the menu (np-3dp.18) — so
@@ -717,6 +734,14 @@ static void apply_player_loadout(Ship& pl, const PlayerState& p, bool heal = tru
     // the class default. Set BEFORE heal so heal_to_full fills to the
     // upgraded max (and doesn't leave phantom shield on a sold shield gen).
     pl.shield_mult = (float)p.shield_level;
+    // Energy regen bookkeeping (np-3dp.27, np-3dp.28). Engine upgrade
+    // ADDS GJ/s to the recharge rate (more power); shield gen DRAINS GJ/s
+    // from it whenever installed (running cost). Net effect on energy_gj
+    // is computed in firing::tick. engine_recharge_mult is a legacy
+    // multiplicative field; keep it at 1.0 for NPCs.
+    pl.engine_recharge_mult   = 1.0f;
+    pl.engine_recharge_add_gj = outfitting::engine_recharge_bonus_for(p.engine_level);
+    pl.shield_recharge_drain_gj = outfitting::shield_recharge_drain_for(p.shield_level);
     // heal=true on a fresh hull (boot / NEW / respawn / ship-swap); false on
     // a normal land->launch so battle damage you didn't pay to repair
     // persists across the base visit.
@@ -1433,6 +1458,25 @@ void build_system_scene(bool first_time) {
     for (const EncounterRuleDef& rule : g.system.encounters)
         for (const EncounterWeight& cw : rule.classes) preload_class(cw.name);
 
+    // #14: a mission-driven forced wing can field a faction with NO native
+    // presence in this system (a Pirate bounty issued in Confed space), whose
+    // fallback fighter won't appear in the nav/rule tables above. Preload the
+    // typical fighter classes for every active mission's target_faction —
+    // Scout/Patrol random spawns now use target_faction too — so the spawn
+    // always resolves to an atlas.
+    for (const ActiveMission& am : g.player.missions) {
+        const missions::MissionType mt = (missions::MissionType)am.type;
+        if (mt != missions::MissionType::Attack &&
+            mt != missions::MissionType::DefendBase &&
+            mt != missions::MissionType::Bounty &&
+            mt != missions::MissionType::Scout &&
+            mt != missions::MissionType::Patrol) continue;
+        const Faction fac = faction::from_name(am.target_faction);
+        if (fac == Faction::Count) continue;
+        for (const std::string& cls : encounters::faction_fighter_classes(g.system, fac))
+            preload_class(cls);
+    }
+
     // Hand the live ship registry + player reputation to the threat oracle so
     // threat::hostiles_near() (autopilot gate) queries the real world.
     encounters::init(g.system);   // legacy rule director (inert for nav-table systems)
@@ -1730,7 +1774,8 @@ void apply_ship_debug_requests() {
         g.ship_debug.sim_kill_faction = -1;
         std::printf("[debug] simulate player kill of %s\n", faction::to_name(vf));
         comm::report_player_kill(g.player, vf);
-        missions::on_player_kill(g.player, vf);   // advance matching bounties
+        // advance matching bounties, gated to the active system (np-zte.1/#15)
+        missions::on_player_kill(g.player, vf, g.player.current_system);
     }
 
     if (g.ship_debug.spawn_talon) {
@@ -2051,6 +2096,31 @@ static float encounter_class_length(const std::string& cls) {
 // ship::spawn() for class-derived stats, assign faction + enable AI, and
 // register in the slot-map. Returns the new ship's monotonic id, or 0 if
 // the class/atlas isn't loaded in this system (director skips a 0).
+//
+// On-demand atlas load: if the director preload loop missed this class
+// (a new mission target_faction not in any nav/rule table of the current
+// system), we try `load_ship_sprite_atlas` here so encounter_spawn never
+// silently 0's because the preload omitted it. A per-process "tried+failed"
+// set prevents spam on a hard asset miss.
+static bool ensure_ship_atlas_for_class(const std::string& cls) {
+    if (cls.empty()) return false;
+    const std::string atlas_stem =
+        resolve_ship_atlas_stem("ships/" + cls + "/atlas_manifest");
+    if (g.ship_sprite_atlases.find(atlas_stem) != g.ship_sprite_atlases.end())
+        return true;   // already loaded (preload or earlier on-demand hit)
+    static std::unordered_map<std::string, bool> failed;
+    if (failed.count(cls)) return false;   // we already proved it doesn't load
+    auto [it, inserted] = g.ship_sprite_atlases.try_emplace(atlas_stem, ShipSpriteAtlas{});
+    if (!load_ship_sprite_atlas(atlas_stem, it->second, g.sprite_art)) {
+        std::fprintf(stderr,
+            "[encounter] could not on-demand load atlas '%s' for class '%s'\n",
+            atlas_stem.c_str(), cls.c_str());
+        g.ship_sprite_atlases.erase(it);
+        failed[cls] = true;     // permanent miss — don't retry every frame
+        return false;
+    }
+    return true;
+}
 static uint32_t encounter_spawn(const encounters::SpawnRequest& req) {
     // np-wdk: resolve to the _3d cache key so this find() matches the slot
     // the encounter-director preload loop populated.
@@ -2058,6 +2128,16 @@ static uint32_t encounter_spawn(const encounters::SpawnRequest& req) {
         resolve_ship_atlas_stem("ships/" + req.class_name + "/atlas_manifest");
     const ShipClass*  klass     = ship_class::find(req.class_name);
     auto atlas_it = g.ship_sprite_atlases.find(atlas_key);
+    if (!klass || atlas_it == g.ship_sprite_atlases.end()) {
+        // On-demand load fallback: maybe a new mission target_faction slipped
+        // past the preload loop (this is the case for dralthi/kamekh etc when
+        // the current system has no native kilrathi in its nav tables). Try
+        // once now and retry the lookup; bail cleanly if the asset is missing.
+        if (klass && ensure_ship_atlas_for_class(req.class_name))
+            atlas_it = g.ship_sprite_atlases.find(atlas_key);
+        else
+            atlas_it = g.ship_sprite_atlases.end();
+    }
     if (!klass || atlas_it == g.ship_sprite_atlases.end()) {
         std::fprintf(stderr, "[encounter] spawn failed: class/atlas '%s' not loaded\n",
                      req.class_name.c_str());
@@ -2110,6 +2190,176 @@ static void despawn_all_npcs() {
     for (const Ship& s : g.ships)
         if (!s.is_player && s.id != 0) ids.push_back(s.id);
     for (uint32_t id : ids) encounter_despawn(id);
+}
+
+// ---- mission-driven forced spawns: host wiring (#14) ------------------------
+//
+// UNIFIED approach-trigger model: EVERY mission type triggers a ONE-TIME
+// spawn of enemies when the player approaches a nav point or base that meets
+// the mission's criteria. The difference is whether the spawn is RANDOM or
+// GIVEN:
+//
+//   * Scout / Patrol  -> RANDOM: a chance roll on first approach. If it hits,
+//     spawn a small group; if it misses, mark that objective "rolled" and
+//     never spawn there (true "enemies may or may not show up"). Mission
+//     still completes on reach regardless.
+//   * Attack / DefendBase / Bounty -> GIVEN: the specific target_faction,
+//     guaranteed to the required count, one-time, no top-up.
+//
+// Each objective keys on a unique string (nav name / base_id / "__bounty__")
+// so a Patrol spawns independently at each nav — one-time each. The roll
+// happens at most once per objective: mission_objective_triggered() gates it.
+// sync_active_missions() first drops bookkeeping for any mission we no longer
+// hold; prune_mission_tracks() drops stale ids so the triggered-set reflects
+// the LIVE wing. No type tops up — one-time spawns only.
+static void update_mission_forces() {
+    using MT = missions::MissionType;
+
+    // Reconcile tracked forces with the live mission set (drop abandoned /
+    // completed / jumped-away ids) BEFORE arming new ones.
+    std::vector<std::string> active_ids;
+    active_ids.reserve(g.player.missions.size());
+    for (const ActiveMission& am : g.player.missions) active_ids.push_back(am.id);
+    encounters::sync_active_missions(active_ids);
+    encounters::prune_mission_tracks(g.ships);   // drop stale ids before arming
+
+    // Nav/base position resolvers against the LIVE system — same rules the #13
+    // tracker uses, so the forced wing lands exactly where the objective clears.
+    auto nav_pos_by_name = [&](const std::string& name, HMM_Vec3& out) -> bool {
+        for (const NavPointDef& n : g.system.nav_points)
+            if (n.name == name) { out = n.position; return true; }
+        return false;
+    };
+    auto base_pos_by_id = [&](const std::string& base_id, HMM_Vec3& out) -> bool {
+        if (base_id.empty()) return false;
+        for (const NavPointDef& n : g.system.nav_points)
+            if (n.base_id == base_id) { out = n.position; return true; }
+        return nav_pos_by_name(base_id, out);
+    };
+
+    // Uniform random int in [lo, hi] (inclusive) for scout/patrol spawn counts.
+    auto uri = [](int lo, int hi) -> int {
+        if (hi <= lo) return lo;
+        return lo + (std::rand() % (hi - lo + 1));
+    };
+    // One chance roll: true with probability `p` (0..1).
+    auto chance_roll = [](float p) -> bool {
+        return (float)(std::rand() % 10000) < p * 10000.0f;
+    };
+
+    for (const ActiveMission& am : g.player.missions) {
+        const MT type = (MT)am.type;
+        if (type == MT::CargoDelivery) continue;   // no forced wing
+
+        // Scout / Patrol use the mission's target_faction for their random
+        // spawns too (it's set by the generator and matches the briefing's
+        // $EN). A random-outlaw variant is a one-line tweak here if an
+        // "undetermined type" is wanted later.
+        const Faction fac = faction::from_name(am.target_faction);
+        if (fac == Faction::Count) continue;
+
+        // ---- RANDOM types: Scout / Patrol ----
+        // Each nav rolls independently on first approach; a hit spawns a small
+        // group, a miss marks the objective one-time (never re-rolls).
+        if (type == MT::Scout || type == MT::Patrol) {
+            if (am.target_system != g.player.current_system) continue;
+            for (const std::string& nav_name : am.nav_targets) {
+                HMM_Vec3 nav_pos{ 0, 0, 0 };
+                if (!nav_pos_by_name(nav_name, nav_pos)) continue;
+                if (HMM_LenV3(HMM_SubV3(g.camera.position, nav_pos))
+                    > encounters::k_mission_arm_m)
+                    continue;   // not yet approaching this nav
+                if (encounters::mission_objective_triggered(am.id, nav_name))
+                    continue;   // already rolled (hit or miss) — one-time
+                // CAP: once k_patrol_max_enemy_navs navs on this route have
+                // actually yielded enemies, every remaining nav auto-misses
+                // (marked one-time) so a long patrol never becomes a gauntlet.
+                if (encounters::mission_yielded_count(am.id)
+                    >= encounters::k_patrol_max_enemy_navs) {
+                    encounters::mark_mission_objective_triggered(am.id, nav_name);
+                    continue;
+                }
+                if (chance_roll(encounters::k_scout_encounter_chance)) {
+                    encounters::MissionForce mf;
+                    mf.mission_id   = am.id;
+                    mf.objective_key = nav_name;
+                    mf.anchor        = nav_pos;
+                    mf.faction       = fac;
+                    mf.count         = uri(encounters::k_scout_spawn_min,
+                                           encounters::k_scout_spawn_max);
+                    encounters::ensure_mission_force(g.system, mf,
+                                                     g.camera.position, encounter_spawn);
+                } else {
+                    // Miss: mark one-time so this nav never re-rolls.
+                    encounters::mark_mission_objective_triggered(am.id, nav_name);
+                }
+            }
+            continue;   // Scout/Patrol handled — no GIVEN fallthrough
+        }
+
+        // ---- GIVEN types: Attack / DefendBase / Bounty ----
+        HMM_Vec3 anchor{ 0, 0, 0 };
+        int      count   = 0;
+        bool     armed   = false;
+        std::string obj_key;
+
+        switch (type) {
+        case MT::Attack:
+            // In the target system AND within arm range of the nav objective
+            // (don't pre-spawn a furball half a system away).
+            if (am.target_system != g.player.current_system) break;
+            if (!am.nav_targets.empty() && nav_pos_by_name(am.nav_targets.front(), anchor)) {
+                obj_key = am.nav_targets.front();
+                count   = am.hostiles_required > 0 ? am.hostiles_required : am.count_required;
+                armed   = HMM_LenV3(HMM_SubV3(g.camera.position, anchor))
+                          <= encounters::k_mission_arm_m;
+            }
+            break;
+        case MT::DefendBase:
+            // In the target system AND within arm range of the defend-target
+            // base: spawning on system entry (from a different base in the
+            // same system) left the attackers free to drift >40km and get
+            // despawned before the player arrived. Arm only when the player
+            // is actually approaching the base, same gate Attack uses.
+            if (am.target_system != g.player.current_system) break;
+            if (base_pos_by_id(am.target_base, anchor)) {
+                obj_key = am.target_base;
+                count   = am.hostiles_required > 0 ? am.hostiles_required : am.count_required;
+                armed   = HMM_LenV3(HMM_SubV3(g.camera.position, anchor))
+                          <= encounters::k_mission_arm_m;
+            }
+            break;
+        case MT::Bounty: {
+            // Roaming hunt across a region: arm whenever the player is in a
+            // system the bounty covers, anchored on the player so the quarry
+            // turns up wherever they search.
+            const std::string& sys = g.player.current_system;
+            bool in_region = (am.target_system == sys) ||
+                             (am.last_seen_system == sys) ||
+                             (am.last_seen_alt_system == sys);
+            for (const std::string& r : am.bounty_region)
+                if (r == sys) { in_region = true; break; }
+            if (!in_region) break;
+            obj_key = "__bounty__";
+            anchor  = g.camera.position;   // hunt finds them near the player
+            count   = am.count_required;
+            armed   = true;
+            break;
+        }
+        default: break;
+        }
+
+        if (!armed || count <= 0) continue;
+
+        encounters::MissionForce mf;
+        mf.mission_id    = am.id;
+        mf.objective_key = obj_key;
+        mf.anchor        = anchor;
+        mf.faction       = fac;
+        mf.count         = count;
+        mf.guarantee_full = true;   // Attack/DefendBase/Bounty: arm to `count`, top up partials
+        encounters::ensure_mission_force(g.system, mf, g.camera.position, encounter_spawn);
+    }
 }
 
 // ---- non-Flight stub screens ------------------------------------------------
@@ -2390,6 +2640,9 @@ void frame_cb() {
     // (g.show_welcome was the prior welcome-overlay freeze — REMOVED in
     // np-3dp.4 since the title screen owns the chrome now.)
     if (g.show_title)   dt = 0.0f;
+    // Flight pause (np-pau.28): P toggles g.paused; while up we freeze the
+    // sim the same way the title screen does so the world reads still.
+    if (g.paused)      dt = 0.0f;
 
     // Title scene (np-3dp): advance the patrol ships even while the sim
     // is frozen, otherwise the title would render static ships and the
@@ -2707,16 +2960,11 @@ void frame_cb() {
     const bool dock_autopilot = docking::controls_locked(g.docking);
 
     // Manual-override cancel (bead np-opa.3): once engaged, any deliberate
-    // flight input hands the stick back — the throttle/strafe/roll/brake
-    // keys, or a hard mouse-steer past the dead-zone (a resting cursor
-    // doesn't count, or the ship would never autopilot at all).
+    // flight input hands the stick back — the afterburner key, or a hard
+    // mouse-steer past the dead-zone (a resting cursor doesn't count, or
+    // the ship would never autopilot at all).
     if (autopilot::engaged(g.autopilot)) {
-        const bool key_input =
-            g.keys_down[SAPP_KEYCODE_W] || g.keys_down[SAPP_KEYCODE_S] ||
-            g.keys_down[SAPP_KEYCODE_Q] || g.keys_down[SAPP_KEYCODE_E] ||
-            g.keys_down[SAPP_KEYCODE_R] || g.keys_down[SAPP_KEYCODE_F] ||
-            g.keys_down[SAPP_KEYCODE_Z] || g.keys_down[SAPP_KEYCODE_C] ||
-            g.keys_down[SAPP_KEYCODE_X] || g.keys_down[SAPP_KEYCODE_TAB];
+        const bool key_input = g.keys_down[SAPP_KEYCODE_TAB];
         const bool mouse_steer =
             g.fly_by_wire && !ImGui::GetIO().WantCaptureMouse &&
             !autopilot::engaged(g.autopilot) &&   // during autopilot the mouse orbits the camera, never cancels
@@ -2776,7 +3024,9 @@ void frame_cb() {
         }
         // Throttle: HOLD + / - to ramp the cruising speed up/down at
         // k_throttle_rate m/s per second (smooth, no tapping). Capped at
-        // normal cruise; afterburn speed is Tab-only.
+        // normal cruise on the high end; MINUS clamps at zero so the ship
+        // decelerates to a stop rather than overshooting into negative
+        // throttle and flying backwards (np-spd.27).
         constexpr float k_throttle_rate = 150.0f;   // m/s per second held
         const float thr_step = k_throttle_rate * dt;
         if (g.keys_down[SAPP_KEYCODE_EQUAL])
@@ -2784,7 +3034,7 @@ void frame_cb() {
                                          g.camera.max_speed_cruise0);
         if (g.keys_down[SAPP_KEYCODE_MINUS])
             g_speed_input_ref = std::max(g_speed_input_ref - thr_step,
-                                        -g.camera.max_speed_cruise0);
+                                        0.0f);
 
         // Forward speed is the ONLY manual flight input now (the ship aims
         // by mouse). + / - set the cruising speed in g_speed_input_ref;
@@ -3104,7 +3354,10 @@ void frame_cb() {
             g.keys_down[SAPP_KEYCODE_LEFT_CONTROL] ||
             g.keys_down[SAPP_KEYCODE_RIGHT_CONTROL] ||
             g.mouse_left_held;
-        if (g.show_title) player.controller.fire_guns = false;   // frozen on briefing
+        if (g.show_title)    player.controller.fire_guns = false;   // frozen on briefing
+        // Navmap overlay owns the click — left-mouse would otherwise fire guns
+        // every time the player aimed for a navmap button or scrolled the map.
+        if (g.show_navmap)   player.controller.fire_guns = false;
 
         HMM_Vec3 aim = g.camera.forward();
         if (g.player_target_id != 0) {
@@ -3375,8 +3628,10 @@ void frame_cb() {
                 if (pl && s->killed_by_id == pl->id) {
                     comm::report_player_kill(g.player, s->faction);
                     // Bounty progress rides the SAME kill-attribution path
-                    // (np-zte.1) — no second source of truth for kills.
-                    missions::on_player_kill(g.player, s->faction);
+                    // (np-zte.1) — no second source of truth for kills. Gated
+                    // to the player's current system (#15).
+                    missions::on_player_kill(g.player, s->faction,
+                                             g.player.current_system);
                     // Career scoreboard (np-3dp.19): tally the kill by the
                     // victim's faction so the save records lifetime kills.
                     if ((int)s->faction >= 0 && (int)s->faction < kFactionCount)
@@ -3437,6 +3692,19 @@ void frame_cb() {
     }
     explosion::tick(g.explosions, dt);
     comm::tick(dt);   // age the reputation/taunt HUD feed (np-ma2.1)
+
+    // In-flight mission progress (#13): after perception/threat + the
+    // kill-attribution hooks above, flip nav-reach / clear state on active
+    // missions in THIS system and let the model settle any payouts. Flight
+    // only — landed/dying frames don't survey nav points. Player position is
+    // the camera (same point the autopilot/nav markers measure from).
+    if (g.game.mode == GameMode::Flight) {
+        // #14: guarantee the forced opposition for active combat missions is
+        // in the world FIRST, so the tracker below can detect (and clear) it.
+        update_mission_forces();
+        mission_tracker::tick(g.player, g.player.current_system,
+                              g.system.nav_points, g.camera.position);
+    }
 
     // Shield + armor impact detection. Walk every ship and check if any
     // facing dropped this frame; spawn the appropriate flash. Skip dead
@@ -3977,14 +4245,6 @@ void frame_cb() {
             sdtx_color3f(0.7f, 1.0f, 0.9f);   // restore default for any later block
         }
 
-        // Bottom-left: controls reminder in the second, thinner font.
-        sdtx_font(1);
-        sdtx_color3f(0.5f, 0.6f, 0.7f);
-        sdtx_pos(1.0f, fb_h * 0.5f / 8.0f - 4.0f);   // 4 lines up from bottom
-        sdtx_puts("W/S throttle   Q/E strafe   R/F up/down   Z/C roll\n");
-        sdtx_puts("mouse aim      SPACE toggle cursor   TAB cruise\n");
-        sdtx_puts("X brake        N cycle nav   A autopilot   D dock   T target\n");
-        sdtx_puts("CTRL+M debug   F2 lights   F3 ship-frame HUD   F5 mesh-orient   F6 sprite-gen   ESC x2 quit\n");
     }
 
     // --- draw ---------------------------------------------------------------
@@ -4476,10 +4736,23 @@ void frame_cb() {
         // sim is also frozen at this point (dt=0), so no overlay makes
         // sense anyway (np-3dp).
         if (!g.show_title) {
+            // World glyphs (nav reticle + mission objective diamonds) are
+            // hidden when autopilot owns the ship or the navmap overlay is
+            // up — the autopilot HUD already shows what's en route, and
+            // the navmap panel renders the same info textually.
+            const bool draw_world =
+                !autopilot::engaged(g.autopilot) && !g.show_navmap;
             cockpit_hud::build(g.camera, g.system, g.selected_nav,
                                g.mouse_x, g.mouse_y, g.fly_by_wire,
                                g.ships, g.player_target_id,
-                               dock_prompt, dock_ready);
+                               dock_prompt, dock_ready,
+                               draw_world);
+
+            // Mission objective markers + progress readout (#18). Read-only
+            // over the player's accepted missions + this system's nav set.
+            cockpit_hud::build_mission_objectives(
+                g.camera, g.system, g.player.current_system, g.player,
+                draw_world);
 
             // Sun-proximity warning overlay (np-3dp). Centre-screen banner
             // when inside the 20k avoid bubble; big red "DESTRUCTION
@@ -4510,7 +4783,11 @@ void frame_cb() {
             cockpit_hud::WeaponsHudState w;
             const MissileStats& sel = g_missile_stats[g.selected_missile];
             w.missile_name  = sel.short_name;
-            w.missile_count = g.player.missiles[g.selected_missile];
+            w.missile_count = player::missile_count(g.player, g.selected_missile);
+            // Torpedo uses its own label so the player can tell DUMBFIRE
+            // (DF) and TORPEDO apart at a glance.
+            if ((MissileType)g.selected_missile == MissileType::TORPEDO)
+                w.no_lock_label = "TORPEDO";
             w.needs_lock    = sel.needs_lock;
             w.lock_state    = g.missile_lock.locked ? 2
                             : (g.player_target_id != 0 && sel.needs_lock ? 1 : 0);
@@ -4521,9 +4798,12 @@ void frame_cb() {
         // HUD so it overlays on top. Mutates selected_nav when the
         // player clicks a nav point — same effect as the N-cycle.
         cockpit_hud::build_navmap(g.camera, g.system, g.selected_nav,
-                                   g.ships, g.show_navmap);
+                                   g.ships, g.player, g.player.current_system,
+                                   g.galaxy, g.show_navmap);
         // Reputation + comm-taunt feed (np-ma2.1), drawn over the HUD.
-        comm::draw();
+        // ---- HIDDEN TEMPORARILY (re-enable by uncommenting the line below) ----
+        // comm::draw();
+        (void)0;   // silence unused-function warnings when re-enabled
 
         // Alpha welcome/briefing overlay — drawn last so it sits on top of
         // the whole HUD. The sim is frozen (dt=0) while this is up.
@@ -4552,6 +4832,23 @@ void frame_cb() {
                                   ImVec2(vpf->WorkPos.x + vpf->WorkSize.x,
                                          vpf->WorkPos.y + vpf->WorkSize.y),
                                   wash);
+            }
+            // Flight pause banner (np-pau.28). Drawn on the foreground
+            // list so it sits on top of the HUD even mid-fight. Amber so
+            // it reads as a UI element, not an in-fiction warning.
+            if (g.paused) {
+                const ImGuiViewport* vpf = ImGui::GetMainViewport();
+                ImDrawList* fg = ImGui::GetForegroundDrawList();
+                const ImVec2 sz(280.0f, 44.0f);
+                const ImVec2 pos(vpf->WorkPos.x + (vpf->WorkSize.x - sz.x) * 0.5f,
+                                 vpf->WorkPos.y + 24.0f);
+                fg->AddRectFilled(pos, ImVec2(pos.x + sz.x, pos.y + sz.y),
+                                  IM_COL32(20, 16, 8, 220), 6.0f);
+                fg->AddRect(pos, ImVec2(pos.x + sz.x, pos.y + sz.y),
+                            IM_COL32(255, 200, 60, 255), 6.0f, 0, 2.0f);
+                fg->AddText(ImVec2(pos.x + 16.0f, pos.y + 12.0f),
+                            IM_COL32(255, 220, 120, 255),
+                            "PAUSED  -  press P to resume");
             }
             if (a != title_screen::Action::None) {
                 if (a == title_screen::Action::NewGame) {
@@ -5309,6 +5606,15 @@ void event_cb(const sapp_event* ev) {
             sapp_show_mouse(!g.fly_by_wire);
             std::printf("[input] fly-by-wire %s\n",
                         g.fly_by_wire ? "ENGAGED" : "PAUSED (cursor free)");
+        }
+        // P — toggle Flight pause (np-pau.28). Edge-triggered so a held
+        // key can't strobe. Only valid in Flight mode — in Landed the
+        // sim is already frozen by the mode itself, and in Dying/Loading
+        // the player should be on the cinematic, not a pause overlay.
+        if (ev->key_code == SAPP_KEYCODE_P && !ev->key_repeat &&
+            g.game.mode == GameMode::Flight && !g.show_title) {
+            g.paused = !g.paused;
+            std::printf("[pause] sim %s\n", g.paused ? "PAUSED" : "RESUMED");
         }
         if ((size_t)ev->key_code < g.keys_down.size()) g.keys_down[ev->key_code] = true;
         break;

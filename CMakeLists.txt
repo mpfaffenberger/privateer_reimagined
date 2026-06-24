@@ -96,6 +96,30 @@ compile_shader(post_blur)
 compile_shader(post_composite)
 
 # ---------------------------------------------------------------------------
+
+# Mission Computer briefing-text gen header (issue #10).
+# tools/gen_mission_templates.py reads re/mission_text.json (gitignored;
+# user-recovered via re/extract_mission_text.py) and bakes the per-type
+# summary + copy[] variants + ENMY/CORP name pools into
+# src/mission_templates.gen.h. A missing re/mission_text.json is OK at
+# config time -- the checked-in header acts as the fallback until the
+# generator is actually invoked (which we never do at configure time).
+add_custom_command(
+    OUTPUT  ${CMAKE_SOURCE_DIR}/src/mission_templates.gen.h
+    COMMAND ${CMAKE_COMMAND} -E env python3
+            ${CMAKE_SOURCE_DIR}/tools/gen_mission_templates.py
+            ${CMAKE_SOURCE_DIR}/re/mission_text.json
+            ${CMAKE_SOURCE_DIR}/src/mission_templates.gen.h
+    DEPENDS ${CMAKE_SOURCE_DIR}/tools/gen_mission_templates.py
+            ${CMAKE_SOURCE_DIR}/re/mission_text.json
+    COMMENT "gen_mission_templates: re/mission_text.json -> src/mission_templates.gen.h"
+    VERBATIM
+)
+# Wire the rule into every target that compiles missions.cpp so a stale
+# header is regenerated on the next build (see add_dependencies below).
+add_custom_target(mission_templates_gen
+    DEPENDS ${CMAKE_SOURCE_DIR}/src/mission_templates.gen.h
+)
 # Target: new_privateer
 # ---------------------------------------------------------------------------
 # The Obj-C++ TU exists only on Apple (Metal + Foundation headers force ObjC
@@ -163,6 +187,7 @@ add_executable(new_privateer
     src/economy.cpp
     src/outfitting.cpp
     src/missions.cpp
+    src/mission_tracker.cpp
     src/faction.cpp
     src/comm.cpp
     src/game_state.cpp
@@ -231,6 +256,7 @@ target_include_directories(new_privateer PRIVATE
     ${CMAKE_SOURCE_DIR}/third_party
     ${IMGUI_DIR}
 )
+add_dependencies(new_privateer mission_templates_gen)
 
 # Dear ImGui is a big codebase that triggers lots of unused-function /
 # unused-parameter warnings under -Wall -Wextra. We trust upstream, so
@@ -343,7 +369,7 @@ add_executable(test_full_loop EXCLUDE_FROM_ALL
     src/docking.cpp src/autopilot.cpp src/threat.cpp src/jump.cpp
     src/encounters.cpp src/repair.cpp src/missile.cpp src/ship.cpp
     src/ship_class.cpp src/ship_registry.cpp src/ship_ai.cpp
-    src/ai_brain.cpp
+    src/ai_brain.cpp src/hazards.cpp
     src/perception.cpp src/gun.cpp src/shield.cpp src/armor.cpp
     src/mobility.cpp src/camera.cpp
 )
@@ -354,6 +380,7 @@ target_include_directories(test_full_loop PRIVATE
 target_compile_definitions(test_full_loop PRIVATE
     ECONOMY_HEADLESS OUTFITTING_HEADLESS MISSIONS_HEADLESS COMM_HEADLESS
 )
+add_dependencies(test_full_loop mission_templates_gen)
 
 # Headless proof harness for the data-driven combat brain (docs/ai_maneuver_system.md).
 #   cmake --build build --target test_ai_brain && ./build/test_ai_brain
@@ -365,7 +392,7 @@ add_executable(test_ai_brain EXCLUDE_FROM_ALL
     src/docking.cpp src/autopilot.cpp src/threat.cpp src/jump.cpp
     src/encounters.cpp src/repair.cpp src/missile.cpp src/ship.cpp
     src/ship_class.cpp src/ship_registry.cpp src/ship_ai.cpp
-    src/ai_brain.cpp
+    src/ai_brain.cpp src/hazards.cpp
     src/perception.cpp src/gun.cpp src/shield.cpp src/armor.cpp
     src/mobility.cpp src/camera.cpp
 )
@@ -376,6 +403,61 @@ target_include_directories(test_ai_brain PRIVATE
 target_compile_definitions(test_ai_brain PRIVATE
     ECONOMY_HEADLESS OUTFITTING_HEADLESS MISSIONS_HEADLESS COMM_HEADLESS
 )
+add_dependencies(test_ai_brain mission_templates_gen)
+
+
+# Round-trip proof for the Mission Computer + #9/#11 nav/distance/pay helpers.
+# Exercises generate() / accept() / complete_delivery() / bounty progress
+# AND the pure anon-namespace helpers from issue #9 (nonbase_navs /
+# bases_in_system / hops_between / bounty_region) against the real
+# assets/galaxy.json. Built MISSIONS_HEADLESS + COMM_HEADLESS so no UI/audio.
+#   cmake --build build --target test_missions && ./build/test_missions
+add_executable(test_missions EXCLUDE_FROM_ALL
+    tools/test_missions.cpp
+    src/missions.cpp src/comm.cpp src/player.cpp src/faction.cpp
+    src/commodity.cpp
+    src/galaxy.cpp src/system_def.cpp src/json.cpp src/savegame.cpp
+    src/ship_class.cpp src/ship_registry.cpp
+    src/encounters.cpp
+    src/mobility.cpp
+    src/gun.cpp src/armor.cpp src/shield.cpp
+)
+target_include_directories(test_missions PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/third_party
+)
+target_compile_definitions(test_missions PRIVATE
+    MISSIONS_HEADLESS COMM_HEADLESS
+)
+# encounters.cpp references ship_ai::from_name (in init()), which the test
+# never calls. -dead_strip lets the linker drop that unreachable code path
+# so we don't need to pull in ship_ai.cpp's full dependency chain.
+target_link_options(test_missions PRIVATE -Wl,-dead_strip)
+add_dependencies(test_missions mission_templates_gen)
+
+# Focused proof for #13 in-flight nav-reach + clear tracking. Drives
+# mission_tracker::tick() against a hand-built PlayerState + nav list:
+# Scout far->not done / at-nav->complete+credited; Patrol completes only
+# when ALL navs reached. Built MISSIONS_HEADLESS + COMM_HEADLESS (no UI/audio).
+#   cmake --build build --target test_mission_tracker && ./build/test_mission_tracker
+add_executable(test_mission_tracker EXCLUDE_FROM_ALL
+    tools/test_mission_tracker.cpp
+    src/mission_tracker.cpp
+    src/missions.cpp src/comm.cpp src/player.cpp src/faction.cpp
+    src/threat.cpp src/commodity.cpp
+    src/galaxy.cpp src/system_def.cpp src/json.cpp src/savegame.cpp
+    src/ship_class.cpp src/ship_registry.cpp
+    src/mobility.cpp
+    src/gun.cpp src/armor.cpp src/shield.cpp
+)
+target_include_directories(test_mission_tracker PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/third_party
+)
+target_compile_definitions(test_mission_tracker PRIVATE
+    MISSIONS_HEADLESS COMM_HEADLESS
+)
+add_dependencies(test_mission_tracker mission_templates_gen)
 
 # Round-trip proof for the save system (np-ymp.1 + np-3dp.19 timestamped
 # unlimited saves + faction kills + ship-damage snapshot).

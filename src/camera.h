@@ -69,12 +69,13 @@ float max_roll_rate   = 2.0f;
 // half-screen radius. 0.05 = ignore the inner 5 % so the player
 // can fly straight without micrometre-perfect cursor placement.
 float mouse_dead_zone = 0.05f;
-    // Arcade flight: forward/back keys command SPEED directly (no
+    // Arcade flight: throttle keys (+/-) command SPEED directly (no
     // inertia), lerping toward the target at the ship's acceleration rate.
-    // Strafe (Q/E/R/F) still uses Newtonian thrust so lateral motion feels
-    // responsive without stick. Damping bleeds velocity to zero on release
-    // for snappy stop feel. X brakes everything to zero.
-    float thrust_accel      = 200.0f;   // units / s^2, for strafe Q/E/R/F
+    // Strafe / pitch / roll / brake keys (Q/E/R/F/Z/C/X) are now unbound
+    // in main.cpp — see the controls header there for the open-binding
+    // list. Damping bleeds velocity to zero on release for snappy stop
+    // feel.
+    float thrust_accel      = 200.0f;   // units / s^2, for strafe Q/E/R/F (legacy)
     float linear_damping    = 4.0f;     // arcade stop feel on strafe release
     float desired_forward_speed = 0.0f; // set by + / - keys, lerped toward each frame
 

@@ -128,6 +128,17 @@ music::Track g_cached_base_track = music::Track::None;
 GameMode g_prev_mode = GameMode::Flight;
 bool     g_have_prev = false;
 
+// ---- active sting tracking (issue #23) --------------------------------------
+// One short sting is on the music bus at a time (jump/landing/death are
+// exclusive events). We track its VoiceId so a bed transition can FADE it
+// out cleanly instead of leaving it to play over the new bed — the landing
+// sting in particular would otherwise ride over the base music that just
+// started. (Death-time transition to Track::None leaves the sting to finish
+// naturally; only non-None transitions kick the fade.)
+VoiceId g_active_sting      = 0;
+float   g_active_sting_gain = 0.0f;     // current gain on the music bus
+bool    g_active_sting_fading = false;  // true = bed swap marked us to fade
+
 // Crossfade speed: exponential lerp ~1.5/s (~0.67s time constant) — a quick but
 // click-free transition that matches Privateer's snappy combat swap without a
 // hard cut. Same rate fades the master/mute changes.
@@ -188,6 +199,14 @@ void start_crossfade(music::Track t) {
         g_active.voice = audio::play_loop(g_samples[(int)t], 0.0f);
         g_active.gain  = 0.0f;          // update() lerps it up
     }
+    // Issue #23: when a bed swap brings in a NEW loop, fade out any active
+    // sting cleanly. Without this the landing sting plays over the base
+    // music we just started (the new bed is the BaseAgricultural/Mining
+    // tune for the just-docked base). A None transition (death mode)
+    // leaves the sting alone — it should play alone over the dropping loop.
+    if (t != music::Track::None && g_active_sting != 0) {
+        g_active_sting_fading = true;
+    }
     std::printf("[music] -> %s\n", music::to_name(t));
 }
 
@@ -227,7 +246,13 @@ music::Track tier_track(Tier tier) {
 // out from under it (caller handles that via the desired==None path).
 void play_sting(music::Track t) {
     if (!available(t) || g_muted) return;
-    audio::play(g_samples[(int)t], clamp01(g_master));
+    const float g = clamp01(g_master);
+    const VoiceId v = audio::play(g_samples[(int)t], g);
+    if (v == 0) return;                         // pool full / init failed
+    if (g_active_sting != 0) audio::stop(g_active_sting);   // 1 sting at a time
+    g_active_sting       = v;
+    g_active_sting_gain  = g;
+    g_active_sting_fading = false;
     std::printf("[music] sting %s\n", music::to_name(t));
 }
 
@@ -370,6 +395,20 @@ void update(GameMode mode, HMM_Vec3 player_pos, const char* base_id, float dt) {
             audio::stop(g_prev.voice);
             g_prev.voice = 0;
             g_prev.gain  = 0.0f;
+        }
+    }
+
+    // Active sting fade (issue #23): if a bed swap marked the active sting
+    // for fading, lerp its gain to 0 with the same k as the loop layer so
+    // they finish together. Retired once it's silent.
+    if (g_active_sting != 0 && g_active_sting_fading) {
+        g_active_sting_gain += (0.0f - g_active_sting_gain) * k;
+        audio::set_voice_gain(g_active_sting, g_active_sting_gain);
+        if (g_active_sting_gain < 0.003f) {
+            audio::stop(g_active_sting);
+            g_active_sting        = 0;
+            g_active_sting_gain   = 0.0f;
+            g_active_sting_fading = false;
         }
     }
 }

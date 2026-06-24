@@ -28,11 +28,26 @@
   "default_shield":   "Shield Generator 5",
   "default_armor":    "Isometal Armor",
 
+  // Forward battery (2 Meson Blasters + 2 Mass Drivers) plus the Kilrathi
+  // corvette's three 2-gun turrets: one dorsal (Plasma pair), one ventral
+  // (Plasma pair), and a rear Tachyon pair. Turrets fire free.
   "default_guns": [
     { "offset_body": [-5.0, 0.0, 8.0], "type": "meson_blaster" },
     { "offset_body": [ 5.0, 0.0, 8.0], "type": "meson_blaster" },
     { "offset_body": [-4.0, 0.0, 6.0], "type": "mass_driver" },
-    { "offset_body": [ 4.0, 0.0, 6.0], "type": "mass_driver" }
+    { "offset_body": [ 4.0, 0.0, 6.0], "type": "mass_driver" },
+
+    // top turret: 2x plasma_gun
+    { "offset_body": [-4.6, 4.0,  4.0], "forward_body": [0, 1, 0], "cone_half_angle_deg": 120, "type": "plasma_gun", "turret": true },
+    { "offset_body": [-3.4, 4.0,  4.0], "forward_body": [0, 1, 0], "cone_half_angle_deg": 120, "type": "plasma_gun", "turret": true },
+
+    // bottom turret: 2x plasma_gun
+    { "offset_body": [-4.6, -4.0,  4.0], "forward_body": [0, -1, 0], "cone_half_angle_deg": 120, "type": "plasma_gun", "turret": true },
+    { "offset_body": [-3.4, -4.0,  4.0], "forward_body": [0, -1, 0], "cone_half_angle_deg": 120, "type": "plasma_gun", "turret": true },
+
+    // rear turret: 2x tachyon_cannon
+    { "offset_body": [-0.6, 0.0, -9.0], "forward_body": [0, 0, -1], "cone_half_angle_deg": 120, "type": "tachyon_cannon", "turret": true },
+    { "offset_body": [ 0.6, 0.0, -9.0], "forward_body": [0, 0, -1], "cone_half_angle_deg": 120, "type": "tachyon_cannon", "turret": true }
   ],
 
   "energy_max":      420,

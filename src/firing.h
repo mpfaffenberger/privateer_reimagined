@@ -7,20 +7,29 @@
 //
 //   1. Decrement every gun's cooldown by dt; clamp at 0.
 //   2. Recharge every ship's energy_gj toward klass->energy_recharge.
-//   3. For ships whose controller.fire_guns is set: try to fire each
-//      mount that's off-cooldown, has energy, AND is currently "armed"
-//      (gun_armed[i] == true). A successful fire spawns one Projectile,
-//      drains energy_cost_gj from the shared pool, and sets cooldown to
-//      refire_delay_s. Misses (energy too low, gun on cooldown, mount
-//      disarmed) silently skip — Privateer didn't have an "out of ammo"
-//      feedback loop and we don't need one yet.
+//   3. Fire each ready mount. The aim model is now PER-MOUNT, with two
+//      kinds of mount (GunMount::is_turret):
 //
-// Aim model for v1: every mount fires straight along the SHIP's body
-// +Z (forward). No gimbal, no per-mount aim, no lead prediction. The
-// AI's Engage state already turns the ship to point at the target; if
-// the target is in front of the nose, fire_guns is set. Mounts at off-
-// center body offsets still fire forward, just from their offset
-// position — produces the "wing guns converge somewhere ahead" look.
+//      FIXED forward gun (is_turret == false): fires only when the
+//      ship's controller.fire_guns is set, the mount is off-cooldown,
+//      has energy, AND is currently "armed" (gun_armed[i] == true). A
+//      successful fire spawns one Projectile along the SHIP's nose
+//      direction (body +Z; player uses the gimballed aim vector),
+//      drains energy_cost_gj from the shared pool, and sets cooldown to
+//      refire_delay_s. Off-center mounts still fire parallel from their
+//      offset — the "wing guns converge somewhere ahead" look. Misses
+//      (energy too low, on cooldown, disarmed) silently skip.
+//
+//      TURRET mount (is_turret == true, NPC ONLY): fires FREE and
+//      INDEPENDENT of controller.fire_guns — a fleeing merchant's tail
+//      turret still bites. Each frame it picks a target from the ship's
+//      perception (nearest hostile, else the nearest in-cone Hostile
+//      contact), lead-predicts the intercept point (aim.h) for that
+//      gun's projectile speed, and fires along that per-mount direction
+//      IF the lead bearing lies within the mount's forward_body cone
+//      (cone_half_angle_deg) AND the target is within range_m. No energy
+//      cost, no energy gate — only cooldown + arc + range gate it.
+//      Player turrets are OUT OF SCOPE (guarded by !is_player).
 //
 // Inheritance velocity: projectile starts with the SHIP's forward
 // velocity added to the gun's muzzle speed. Realistic-feel — a fast

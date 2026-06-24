@@ -61,6 +61,8 @@ enum class BaseScreen {
     ShipDealer,
     Equipment,
     MissionComputer,
+    MercenariesGuild,   // #16 — paid combat-mission board
+    MerchantsGuild,     // #16 — paid trade-mission board
     Launch,
 };
 

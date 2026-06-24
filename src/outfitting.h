@@ -64,11 +64,21 @@ int64_t shield_upgrade_price(int target_level);
 int64_t engine_upgrade_price(int target_level);
 int64_t cargo_expansion_price();
 
-// Effective top-speed caps for the player's current hull + engine_level:
-// hull cruise/afterburner speed scaled by (1 + per_level * engine_level).
+// Effective top-speed caps for the player's current hull. Pure hull value;
+// engine upgrades no longer scale speed (gamefaq 4.6.2 — engine upgrades
+// produce power for weapons/AB/shields, they don't make you go faster).
 // Falls back to the stock 300/600 when the hull class isn't loaded.
 struct SpeedCaps { float cruise0 = 300.0f; float cruise1 = 600.0f; };
 SpeedCaps effective_speed_caps(const PlayerState& p);
+
+// Absolute GJ/s the engine upgrade ADDS to the player's recharge rate at
+// the given upgrade level (hand-authored per-level table in
+// equipment_prices.json).
+float engine_recharge_bonus_for(int engine_level);
+
+// Absolute GJ/s the shield generator CONSUMES from the player's recharge
+// budget at the given upgrade level (hand-authored per-level table).
+float shield_recharge_drain_for(int shield_level);
 
 // ---- transactions (headless-safe; UI + harness share these) -----------------
 // All enforce affordability + catalog/hull limits and mutate ONLY through
@@ -84,6 +94,11 @@ bool buy_hull(PlayerState& p, const std::string& target);
 // slot is out of the hull's mount count or the gun isn't for sale.
 bool buy_gun(PlayerState& p, const std::string& gun_short_name,
              int mount_index, const ShipClass* klass);
+
+// Sell the gun currently fitted at `mount_index` back to the dealer for a
+// full-price refund. Refused if the mount is empty (or out of range).
+// The mount is cleared to "" on success so the slot can be re-fitted.
+bool sell_gun(PlayerState& p, int mount_index, const ShipClass* klass);
 
 // Climb one rung of the shield / engine ladder (level -> level+1), capped by
 // the hull's max_shield_level / max_engine_level.

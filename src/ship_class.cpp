@@ -195,7 +195,8 @@ bool parse_one(const fs::path& path) {
     c.cargo_units_max = (int)opt_num(root, "cargo_units_max", c.cargo_units);
 
     // Guns. Each entry: { offset_body: [x,y,z], type: "mass_driver",
-    // forward_body?: [...], cone_half_angle_deg?: float }.
+    // forward_body?: [...], cone_half_angle_deg?: float, turret?: bool }.
+    // turret=true flags an NPC auto-firing turret mount (firing.cpp).
     if (auto* gs = root.find("default_guns"); gs && gs->is_array()) {
         for (const auto& gv : gs->as_array()) {
             if (!gv.is_object()) continue;
@@ -211,6 +212,7 @@ bool parse_one(const fs::path& path) {
             }
             m.type = t;
             m.cone_half_angle_deg = opt_num(gv, "cone_half_angle_deg", 1.0f);
+            m.is_turret           = opt_bool(gv, "turret", false);
             c.default_guns.push_back(m);
         }
     }

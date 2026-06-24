@@ -1,3 +1,4 @@
+#include "sfx.h"
 // -----------------------------------------------------------------------------
 // base_screens.cpp — Privateer-style 2D base screens implementation.
 //
@@ -22,9 +23,6 @@
 #include "json.h"
 #include "material.h"   // TextureSlot, load_texture_png
 #include "player.h"
-#include "savegame.h"
-#include "sokol_time.h"   // stm_now for the "Saved!" banner deadline
-#include "sfx.h"
 
 #include "imgui.h"
 #include "sokol_app.h"
@@ -67,7 +65,7 @@ struct BaseDef {
 BaseDef                  g_def;
 TextureSlot              g_art;            // concourse PNG; valid==false if missing
 std::vector<BaseScreen>  g_stack;          // Concourse always sits at index 0
-std::array<ScreenHook, 7> g_hooks{};       // index by (int)BaseScreen
+std::array<ScreenHook, 9> g_hooks{};       // index by (int)BaseScreen
 bool                     g_launch_pending = false;
 // Player's in-flight Ship for this Landed session (np-zte.2). Set by build()
 // each frame, handed to the screen hooks via BaseContext so the Repair
@@ -84,6 +82,8 @@ const char* screen_name(BaseScreen s) {
         case BaseScreen::ShipDealer:       return "Ship Dealer";
         case BaseScreen::Equipment:        return "Equipment";
         case BaseScreen::MissionComputer:  return "Mission Computer";
+        case BaseScreen::MercenariesGuild: return "Mercenaries' Guild";
+        case BaseScreen::MerchantsGuild:   return "Merchants' Guild";
         case BaseScreen::Launch:           return "Launch";
         default:                           return "?";
     }
@@ -97,6 +97,8 @@ bool parse_target(const std::string& s, BaseScreen& out) {
     if (s == "ShipDealer")        { out = BaseScreen::ShipDealer;        return true; }
     if (s == "Equipment")         { out = BaseScreen::Equipment;         return true; }
     if (s == "MissionComputer")   { out = BaseScreen::MissionComputer;   return true; }
+    if (s == "MercenariesGuild")  { out = BaseScreen::MercenariesGuild;  return true; }
+    if (s == "MerchantsGuild")    { out = BaseScreen::MerchantsGuild;    return true; }
     if (s == "Launch")            { out = BaseScreen::Launch;            return true; }
     if (s == "Concourse")         { out = BaseScreen::Concourse;         return true; }
     return false;
@@ -115,7 +117,6 @@ ScreenSize screen_size() {
 constexpr ImU32 kAmber    = IM_COL32(255, 217,  77, 255);
 constexpr ImU32 kAmberDim = IM_COL32(200, 170,  60, 200);
 constexpr ImU32 kWhite    = IM_COL32(225, 232, 238, 255);
-constexpr ImU32 kPanelBg  = IM_COL32(  8,  12,  18, 210);
 constexpr ImU32 kHotFill  = IM_COL32( 40,  80, 120,  70);
 constexpr ImU32 kHotHover = IM_COL32( 80, 150, 210, 130);
 
@@ -143,93 +144,6 @@ void activate(BaseScreen target) {
 
 // ---- concourse + sub-screen rendering ---------------------------------------
 
-// Small player-context strip (credits / ship / base) — proves the data
-// wiring the downstream shop screens depend on. Drawn top-left on the
-// concourse only.
-void draw_context_strip(ImDrawList* dl, const PlayerState& player,
-                        const BaseDef& def) {
-    char line0[160], line1[96];
-    std::snprintf(line0, sizeof(line0), "%s   [%s]",
-                  def.display_name.empty() ? "(unknown base)" : def.display_name.c_str(),
-                  def.faction.empty() ? "independent" : def.faction.c_str());
-    std::snprintf(line1, sizeof(line1), "CR %lld    SHIP %s",
-                  (long long)player.credits,
-                  player.ship_class_name.empty() ? "(none)" : player.ship_class_name.c_str());
-
-    const ImVec2 s0 = ImGui::CalcTextSize(line0);
-    const ImVec2 s1 = ImGui::CalcTextSize(line1);
-    const float  pad = 10.0f;
-    const float  bw  = (s0.x > s1.x ? s0.x : s1.x) + pad * 2.0f;
-    const float  bh  = s0.y + s1.y + pad * 2.0f + 4.0f;
-
-    dl->AddRectFilled(ImVec2(16, 16), ImVec2(16 + bw, 16 + bh), kPanelBg, 6.0f);
-    dl->AddRect(ImVec2(16, 16), ImVec2(16 + bw, 16 + bh), kAmberDim, 6.0f);
-    dl->AddText(ImVec2(16 + pad, 16 + pad), kAmber, line0);
-    dl->AddText(ImVec2(16 + pad, 16 + pad + s0.y + 4.0f), kWhite, line1);
-}
-
-// Minimal save affordance (np-ymp.1 / np-3dp.19) drawn under the context
-// strip: a "Save game" button that writes a NEW timestamped save (saves
-// accumulate; nothing overwritten) plus a one-line readout of the most
-// recent save on disk. Landing already autosaves; this is the manual
-// save-anytime-at-base convenience.
-//
-// Wrapped in a kPanelBg panel (same idiom as draw_context_strip) so it
-// doesn't visually collide with the concourse art's baked-in base-name
-// title — issue #2. Also adds a transient "Saved!" banner so a manual
-// save produces unambiguous feedback even when the Last-save line is
-// obscured by the title.
-void draw_save_widget(PlayerState& player) {
-    // TU-local banner state. Wall-clock deadline (sapp's stm_now ns).
-    // Banner is shown while stm_now() < this deadline.
-    static uint64_t s_banner_until_ns = 0;
-    constexpr uint64_t k_banner_ns = (uint64_t)(2.0 * 1e9);   // ~2 s
-
-    constexpr float k_x = 16.0f;
-    constexpr float k_y = 92.0f;
-    constexpr float k_w = 220.0f;
-    constexpr float k_h = 80.0f;
-    constexpr float k_pad = 8.0f;
-
-    // Panel container (kPanelBg + kAmberDim border, same idiom as context_strip).
-    ImDrawList* dl = ImGui::GetForegroundDrawList();
-    dl->AddRectFilled(ImVec2(k_x, k_y), ImVec2(k_x + k_w, k_y + k_h),
-                      kPanelBg, 6.0f);
-    dl->AddRect(ImVec2(k_x, k_y), ImVec2(k_x + k_w, k_y + k_h),
-                kAmberDim, 6.0f);
-
-    // Save button (issue #2: now in its own panel + immediate "Saved!" feedback).
-    ImGui::SetCursorScreenPos(ImVec2(k_x + k_pad, k_y + k_pad));
-    if (ImGui::Button("Save game", ImVec2(k_w - k_pad * 2, 28))) {
-        sfx::ui_click();
-        if (!savegame::save_timestamped(player).empty()) {
-            s_banner_until_ns = stm_now() + k_banner_ns;
-            std::printf("[save] manual save (%lld cr)\n",
-                        (long long)player.credits);
-        }
-    }
-
-    // Most-recent save readout (newest by timestamp; no full load).
-    const std::vector<savegame::SlotInfo> saves = savegame::list_saves();
-    char info[256];
-    if (!saves.empty()) {
-        std::snprintf(info, sizeof(info), "Last save: %s",
-                      saves.front().label.c_str());
-    } else {
-        std::snprintf(info, sizeof(info), "Last save: (none yet)");
-    }
-    ImGui::SetCursorScreenPos(ImVec2(k_x + k_pad, k_y + 44));
-    ImGui::TextColored(ImVec4(0.78f, 0.67f, 0.24f, 1.0f), "%s", info);
-
-    // Transient "Saved!" banner (only while inside the deadline).
-    if (stm_now() < s_banner_until_ns) {
-        ImGui::SetCursorScreenPos(ImVec2(k_x + k_pad, k_y + 62));
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.9f, 0.5f, 1.0f));
-        ImGui::TextUnformatted("Saved!");
-        ImGui::PopStyleColor();
-    }
-}
-
 // Draw the concourse hub: hotspot regions over the art + the context strip.
 void draw_concourse(ImDrawList* dl, const ScreenSize& ss, PlayerState& player) {
     for (const Hotspot& hs : g_def.hotspots) {
@@ -253,8 +167,105 @@ void draw_concourse(ImDrawList* dl, const ScreenSize& ss, PlayerState& player) {
         if (hovered && !hs.tooltip.empty()) ImGui::SetTooltip("%s", hs.tooltip.c_str());
     }
 
-    draw_context_strip(dl, player, g_def);
-    draw_save_widget(player);
+    // No overlay — concourse shows the art + hotspots; the player can
+    // tell where they are from the art itself. Saving is still handled
+    // by the landing-time autosave (see launch/land transitions).
+}
+
+// ---- guild screens (#16) ----------------------------------------------------
+// The two guild computers (Mercenaries' / Merchants') are first-class base
+// screens, but unlike the shops they gate on a PAID membership. Until you
+// join, the screen body is a join prompt; once you're a member it shows the
+// guild's board. The board ITSELF is #17 — if that task has registered a
+// hook for this screen we hand the body to it; otherwise a labelled stub
+// makes clear the screen exists but isn't wired yet.
+
+bool is_guild(BaseScreen s) {
+    return s == BaseScreen::MercenariesGuild || s == BaseScreen::MerchantsGuild;
+}
+bool& guild_member_flag(PlayerState& p, BaseScreen s) {
+    return (s == BaseScreen::MercenariesGuild) ? p.merc_guild_member
+                                               : p.merchant_guild_member;
+}
+int64_t guild_fee(BaseScreen s) {
+    return (s == BaseScreen::MercenariesGuild) ? player::k_merc_guild_fee
+                                               : player::k_merchant_guild_fee;
+}
+
+// Transient feedback line shown under the JOIN button (welcome / refusal).
+std::string g_guild_msg;
+double      g_guild_msg_until = 0.0;
+void guild_flash(const std::string& m) {
+    g_guild_msg = m;
+    g_guild_msg_until = ImGui::GetTime() + 4.0;
+}
+
+void draw_guild(ImDrawList* dl, const ScreenSize& ss, BaseScreen cur,
+                PlayerState& player) {
+    const char* guild_name = screen_name(cur);   // "Mercenaries' Guild" etc.
+    bool&         member = guild_member_flag(player, cur);
+    const int64_t fee    = guild_fee(cur);
+
+    // #17 owns the whole guild body — including the membership gate (join
+    // prompt vs board). When its hook is registered, hand off entirely so the
+    // gate has a single home in missions::draw_board. The join/stub fallback
+    // below only runs in a partial build where #17 hasn't wired this screen.
+    if (const ScreenHook& board_hook = g_hooks[(int)cur]) {
+        BaseContext ctx{ g_def.id, g_def.display_name, g_def.faction,
+                         &player, g_player_ship };
+        board_hook(ctx);
+        return;
+    }
+
+    if (!member) {
+        const float bx = 40.0f, by = ss.h * 0.38f;
+        char prompt[160];
+        std::snprintf(prompt, sizeof(prompt),
+                      "%s membership costs %lld cr (one-time).",
+                      guild_name, (long long)fee);
+        ImGui::SetCursorScreenPos(ImVec2(bx, by));
+        ImGui::PushStyleColor(ImGuiCol_Text, kAmber);
+        ImGui::TextUnformatted(prompt);
+        ImGui::PopStyleColor();
+
+        ImGui::SetCursorScreenPos(ImVec2(bx, by + 28));
+        ImGui::Text("Credits on hand: %lld", (long long)player.credits);
+
+        ImGui::SetCursorScreenPos(ImVec2(bx, by + 64));
+        if (ImGui::Button("JOIN GUILD", ImVec2(160, 36))) {
+            if (player::spend_credits(player, fee)) {
+                member = true;
+                sfx::ui_click();
+                std::printf("[guild] joined %s (-%lld cr, %lld left)\n",
+                            guild_name, (long long)fee, (long long)player.credits);
+                guild_flash(std::string("Welcome to the ") + guild_name + ".");
+            } else {
+                std::printf("[guild] join %s REFUSED — need %lld, have %lld\n",
+                            guild_name, (long long)fee, (long long)player.credits);
+                guild_flash("COMM: Insufficient credits for membership dues.");
+            }
+        }
+        if (!g_guild_msg.empty() && ImGui::GetTime() < g_guild_msg_until) {
+            ImGui::SetCursorScreenPos(ImVec2(bx, by + 112));
+            ImGui::PushStyleColor(ImGuiCol_Text, kWhite);
+            ImGui::TextUnformatted(g_guild_msg.c_str());
+            ImGui::PopStyleColor();
+        }
+        return;
+    }
+
+    // Member: the #17 board hook draws the body if registered; else a stub.
+    const ScreenHook& hook = g_hooks[(int)cur];
+    if (hook) {
+        BaseContext ctx{ g_def.id, g_def.display_name, g_def.faction,
+                         &player, g_player_ship };
+        hook(ctx);
+    } else {
+        char msg[128];
+        std::snprintf(msg, sizeof(msg),
+                      "%s - MEMBER. Board wired in by #17.", guild_name);
+        draw_centered(dl, msg, 0, 0, ss.w, ss.h, kWhite);
+    }
 }
 
 // Draw a sub-screen: title + (hook body OR labelled stub) + Back affordance.
@@ -272,16 +283,21 @@ void draw_subscreen(ImDrawList* dl, const ScreenSize& ss, BaseScreen cur,
     // clearly-labelled stub so it's obvious the screen exists but isn't
     // wired yet. The framework still drew the background + title + (below)
     // the Back button — np-9cu.2/.3/zte.1 only fill in the middle.
-    const ScreenHook& hook = g_hooks[(int)cur];
-    if (hook) {
-        BaseContext ctx{ g_def.id, g_def.display_name, g_def.faction,
-                         &player, g_player_ship };
-        hook(ctx);
+    if (is_guild(cur)) {
+        // Guilds gate on paid membership (#16) — own body path.
+        draw_guild(dl, ss, cur, player);
     } else {
-        const char* msg = (cur == BaseScreen::Bar)
-            ? "BAR - fixers TBD"
-            : "screen stub - wired in by a later task";
-        draw_centered(dl, msg, 0, 0, ss.w, ss.h, kWhite);
+        const ScreenHook& hook = g_hooks[(int)cur];
+        if (hook) {
+            BaseContext ctx{ g_def.id, g_def.display_name, g_def.faction,
+                             &player, g_player_ship };
+            hook(ctx);
+        } else {
+            const char* msg = (cur == BaseScreen::Bar)
+                ? "BAR - fixers TBD"
+                : "screen stub - wired in by a later task";
+            draw_centered(dl, msg, 0, 0, ss.w, ss.h, kWhite);
+        }
     }
 
     // Back affordance — pops to the Concourse.

@@ -53,13 +53,16 @@ struct CargoEntry {
 // preserve player.h's "no upstream deps, no pointers, serializes clean"
 // discipline. missions.cpp converts between Mission and ActiveMission.
 //
-// `type` is a STABLE integer key (0 = CargoDelivery, 1 = Bounty), mirrored
-// by missions::MissionType — an int rather than the enum so the save format
-// (savegame.cpp) and this struct never depend on the enum's declaration
-// order. Only the fields relevant to the mission's `type` are meaningful.
+// `type` is a STABLE integer key mirroring missions::MissionType — an int
+// rather than the enum so the save format (savegame.cpp) and this struct
+// never depend on the enum's declaration order. The vanilla Privateer set
+// (see missions.h) covers Patrol / Scout / Attack / DefendBase / Bounty /
+// CargoDelivery. Only the fields relevant to the mission's `type` are
+// meaningful.
 struct ActiveMission {
     std::string id;                  // stable id within its origin board
-    int         type           = 0;  // 0 = CargoDelivery, 1 = Bounty
+    int         type           = 0;  // missions::MissionType value
+    int         source         = 0;  // missions::MissionSource value (#7, save-stable int)
     std::string giver_faction;       // display flavour, e.g. "Confederation"
     std::string title;               // pre-formatted one-liner for the board
     int64_t     reward         = 0;  // credits paid on completion
@@ -74,6 +77,29 @@ struct ActiveMission {
     std::string target_faction;      // lowercase faction name to hunt
     int         count_required = 0;  // kills needed
     int         progress       = 0;  // kills landed so far (<= count_required)
+
+    // ---- Per-type payload (#7) — mirrors Mission:: in missions.h ----
+    // Only the subset meaningful to this ActiveMission's `type` is set;
+    // the rest stay at default ("" / 0 / empty vector). All string/int/
+    // vector<string> by design — NO HMM_Vec3 / heavy includes — so #8's
+    // save format stays a simple field dump. Live nav positions and world
+    // resolution are #13's job; this struct carries only ids.
+    std::string               target_system;        // $DS for non-cargo (action system)
+    std::vector<std::string>  nav_targets;          // $DN / $DN1 / $DN2 nav points
+    int                       nav_count        = 0; // $NN (Patrol)
+    int                       hostiles_required = 0;// Attack kill count (parallel to count_required)
+    std::string               target_base;          // $DB for DefendBase (base under attack)
+    std::vector<std::string>  bounty_region;        // $DO for Bounty (systems in hunt region)
+    std::string               last_seen_system;     // $D1 for Bounty
+    std::string               last_seen_alt_system; // $D2 for Bounty
+
+    // ---- live in-flight progress (#12 / set by the #13 tracker) ----
+    // Per-nav "reached" flags, sized to nav_targets on accept() and flipped
+    // to 1 as the player visits each nav point. Scout completes when its
+    // single entry is 1; Patrol when ALL are 1. Attack/DefendBase ride the
+    // shared `progress` counter against `hostiles_required` instead. Kept a
+    // plain uint8 vector (no enum/heavy include) so it serializes clean.
+    std::vector<uint8_t>      nav_done;
 };
 
 struct PlayerState {
@@ -111,6 +137,14 @@ struct PlayerState {
     bool                     adv_repair_droid  = false;  // upgraded to advanced (2x)
     bool                     has_tractor_beam  = false;
 
+    // ---- guild memberships (#16) -----------------------------------------
+    // One-time paid memberships that unlock a guild's mission board at any
+    // base hosting that guild's computer. New games start in neither — you
+    // pay the join fee (below) the first time you walk into the screen.
+    // The board bodies themselves are #17; this flag just gates entry.
+    bool                     merc_guild_member     = false;  // Mercenaries' Guild
+    bool                     merchant_guild_member = false;  // Merchants' Guild
+
     // ---- cargo hold -------------------------------------------------------
     std::vector<CargoEntry> cargo;
 
@@ -120,7 +154,24 @@ struct PlayerState {
     // restocked at a base. Kept as a flat array (not a missile.h include) to
     // preserve player.h's "strings + ints, no upstream deps" discipline —
     // the index meaning is the stable contract, mirrored by MissileType.
-    int missiles[3] = { 0, 0, 0 };
+    int missiles[3]  = { 0, 0, 0 };
+
+    // Torpedo rack (separate physical launcher on the hull). Just one
+    // canonical ammo type -- Proton Torpedo. Indexing by DF/HS/IR is gone;
+    // the rack holds a flat count of 35-cr torpedoes.
+    int torpedoes   = 0;
+
+    // Hardware ownership for the launcher slots themselves (np-zte.2,
+    // np-launchers-bump). Modelled as four discrete physical hardpoints
+    // — left/right on each side, one for missiles and one for torpedoes
+    // — so the player can buy/sell either side independently of the
+    // other. The Tarsus starts the run with one missile launcher (the
+    // left hardpoint), and neither torpedo launcher. Total hardware
+    // count is the sum of the four flags; capacity is count * 10.
+    bool missile_launcher_left  = true;  // Tarsus starter: one launcher
+    bool missile_launcher_right = false; // second slot, can be bought
+    bool torpedo_launcher_left  = false; // not in Tarsus starter
+    bool torpedo_launcher_right = false; // not in Tarsus starter
 
     // ---- afterburner fuel (np-zte.2) -- MERGED INTO MAIN ENERGY POOL ----
     // The separate `afterburner_fuel` float is gone. The cruise/afterburner
@@ -182,6 +233,15 @@ PlayerState new_game(const std::string& start_system);
 // bankroll barely covering one cargo run, which is the feel we want.
 constexpr int64_t k_new_game_credits = 2000;
 
+// ---- guild join fees (#16) ----------------------------------------------
+// One-time membership dues, deducted via spend_credits() the first time the
+// player enters a guild screen and accepts. Values are the vanilla Privateer
+// numbers (FAQ): the Mercenaries' Guild is the pricier combat board, the
+// Merchants' Guild the cheaper trade board. spend_credits refuses the join
+// (and the screen says so) if the player is short.
+constexpr int64_t k_merc_guild_fee     = 5000;
+constexpr int64_t k_merchant_guild_fee = 1000;
+
 // ---- afterburner energy drain (np-zte.2 / merged pool) ---------------------
 // Afterburner now spends from the player Ship's energy_gj (shared with the
 // guns). Drain rate matches the Tarsus's 50 GJ/s recharge so holding TAB
@@ -230,6 +290,11 @@ bool remove_cargo(PlayerState& p, const std::string& commodity_id, int units);
 int  missile_count(const PlayerState& p, int type_index);
 bool consume_missile(PlayerState& p, int type_index);
 void add_missiles(PlayerState& p, int type_index, int count);
+
+// Same shape as the missile helpers, but for the torpedo rack (no type).
+int  torpedo_count(const PlayerState& p);
+bool consume_torpedo(PlayerState& p);
+void add_torpedoes(PlayerState& p, int count);
 
 // ---- afterburner fuel (np-zte.2) -- merged into energy pool -------------
 // drain_afterburner / regen_afterburner / refuel_full are gone: callers now

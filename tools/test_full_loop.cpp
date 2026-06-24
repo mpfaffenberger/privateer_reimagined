@@ -336,7 +336,8 @@ int main() {
         // +25 Allied threshold (lawful universe approves of pirate-hunting).
         for (int k = 0; k < 6; ++k) {
             comm::report_player_kill(player, Faction::Pirate);
-            missions::on_player_kill(player, Faction::Pirate);
+            // inline bounty above has no region -> "any system" fallback.
+            missions::on_player_kill(player, Faction::Pirate, player.current_system);
         }
         const Stance confed_stance1 = faction::stance_npc_vs_player(Faction::Confed, player.rep);
         std::printf("  pirate rep %d -> %d | confed rep %d -> %d | confed stance %d -> %d\n",
@@ -506,13 +507,17 @@ int main() {
             const Faction tgt = faction::from_name(bounty->target_faction);
             // Non-matching kill must not advance.
             const Faction other = (tgt == Faction::Pirate) ? Faction::Kilrathi : Faction::Pirate;
-            missions::on_player_kill(player, other);
+            // Hunt inside the bounty's posted region (empty -> "any").
+            const std::string hunt = bounty->bounty_region.empty()
+                                   ? player.current_system
+                                   : bounty->bounty_region.front();
+            missions::on_player_kill(player, other, hunt);
             bool unchanged = false;
             for (const ActiveMission& m : player.missions)
                 if (m.id == bounty->id && m.progress == 0) unchanged = true;
             check(unchanged, "non-matching kill leaves bounty progress at 0");
             for (int k = 0; k < bounty->count_required; ++k)
-                missions::on_player_kill(player, tgt);
+                missions::on_player_kill(player, tgt, hunt);
             bool done = true;
             for (const ActiveMission& m : player.missions) if (m.id == bounty->id) done = false;
             check(done, "bounty completed after the required kills");
@@ -637,7 +642,8 @@ int main() {
             Camera cam;
             cam.position = troy.nav_points[gate].position;   // sitting on the gate
 
-            const jump::Eligibility clear = jump::evaluate(cam, troy, gal, "troy", gate);
+            const jump::Eligibility clear = jump::evaluate(cam, troy, gal, "troy", gate,
+                                                           /*has_jump_drive=*/true);
             bool ready = false; (void)jump::prompt(clear, &ready);
             check(clear.status == jump::Status::Ready && ready,
                   "jump READY at the gate with no hostiles");
@@ -647,7 +653,8 @@ int main() {
             if (talon) {
                 spawn_npc(w, *talon, Faction::Pirate,
                           HMM_AddV3(cam.position, HMM_V3(2000, 0, 0)));
-                const jump::Eligibility blocked = jump::evaluate(cam, troy, gal, "troy", gate);
+                const jump::Eligibility blocked = jump::evaluate(cam, troy, gal, "troy", gate,
+                                                                 /*has_jump_drive=*/true);
                 check(blocked.status == jump::Status::Hostiles,
                       "jump REFUSED with a hostile in the bubble");
             }

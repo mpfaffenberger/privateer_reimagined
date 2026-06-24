@@ -2,8 +2,8 @@
   // Authored from docs/privateer_ship_data.json (np-9cu.3): the Centurion
   // is the premium bounty-hunter combat hull. Sprites existed already; this
   // is the stat/loadout side the ship dealer + flight code read. Four fixed
-  // forward guns (Mass Drivers x2 + Tachyon + Particle) — turrets ignored
-  // for v1 per ship_class.h's scope note.
+  // forward guns (Mass Drivers x2 + Tachyon + Particle) plus a rear
+  // auto-turret (2x Ionic Pulse) that bites pursuers.
   "name":           "centurion",
   "display_name":   "Centurion",
   "class_label":    "Bounty Hunter Heavy Fighter",
@@ -33,7 +33,10 @@
     { "offset_body": [-3.0, 0.0, 3.0], "type": "mass_driver" },
     { "offset_body": [ 3.0, 0.0, 3.0], "type": "mass_driver" },
     { "offset_body": [-1.5, 0.0, 3.5], "type": "tachyon_cannon" },
-    { "offset_body": [ 1.5, 0.0, 3.5], "type": "particle_cannon" }
+    { "offset_body": [ 1.5, 0.0, 3.5], "type": "particle_cannon" },
+
+    { "offset_body": [-0.6, 0.0, -3.0], "forward_body": [0, 0, -1], "cone_half_angle_deg": 120, "type": "ionic_pulse_cannon", "turret": true },
+    { "offset_body": [ 0.6, 0.0, -3.0], "forward_body": [0, 0, -1], "cone_half_angle_deg": 120, "type": "ionic_pulse_cannon", "turret": true }
   ],
 
   "energy_max":      250,

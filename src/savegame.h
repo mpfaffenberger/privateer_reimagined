@@ -57,7 +57,16 @@ namespace savegame {
 // snapshot (per-facing armor/shield + energy), and switched the on-disk
 // label to the full timestamped title. Older saves default the new keys
 // (kills -> 0, hp_valid -> false => spawn at full health).
-constexpr int k_format_version = 4;
+// v5 (#8) expanded the per-mission payload on the accepted-missions list
+// (source, target_system, nav_targets, nav_count, hostiles_required,
+// target_base, bounty_region, last_seen(_alt)?_system) for the new
+// mission types (#7). The new keys default on load for older saves; the
+// only back-compat hazard is a `type` outside 0..5 — load() skips that
+// entry and logs once.
+// v6 (#16) added the two guild-membership bools (merc_guild_member,
+// merchant_guild_member). Older saves default both to false (non-member),
+// so a v5 save still loads cleanly.
+constexpr int k_format_version = 6;
 
 // Slot 0 is the autosave; manual saves start at 1.
 constexpr int k_autosave_slot = 0;

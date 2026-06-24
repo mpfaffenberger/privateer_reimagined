@@ -25,6 +25,7 @@
 #include <cstdio>
 #include <random>
 #include <string>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -65,10 +66,24 @@ struct RuleRuntime {
     std::vector<uint32_t> managed_ids;
 };
 
+// One active combat mission's forced wing: the mission id we key off (so we
+// spawn it exactly once) and the registry ids we brought in. Lives ALONGSIDE
+// the rule director but is NOT a spawn rule — keeping it separate is what lets
+// abandoning the mission (sync_active_missions drops the track) remove the
+// bias without touching ambient traffic.
+struct MissionTrack {
+    std::string                     mission_id;
+    std::vector<uint32_t>           ids;
+    std::unordered_set<std::string>  triggered;   // objective_keys already rolled/spawned
+    std::unordered_set<std::string>  yielded;     // objective_keys that actually spawned >0
+    int                             arm_attempts = 0;  // guarantee_full top-up tries (anti-hammer)
+};
+
 struct DirectorState {
-    bool                     active = false;
-    std::vector<RuleRuntime> rules;
-    std::mt19937             rng{ 0xE2C0DE11u };   // fixed seed: reproducible feel
+    bool                      active = false;
+    std::vector<RuleRuntime>  rules;
+    std::vector<MissionTrack> mission_forces;   // #14: per-mission forced wings
+    std::mt19937              rng{ 0xE2C0DE11u };   // fixed seed: reproducible feel
 };
 
 DirectorState g_dir;
@@ -222,6 +237,112 @@ int total_managed() {
     return n;
 }
 
+// ---- mission force: faction typical-fighter weighting (#14) ------------------
+
+// Per-faction fallback fighter when the system has no native presence for
+// that faction (a Pirate bounty issued in a Confed system still needs a
+// hull). Mirrors the hulls each faction actually fields in the nav tables.
+const char* fallback_fighter(Faction f) {
+    switch (f) {
+    case Faction::Pirate:   return "talon";
+    case Faction::Retro:    return "talon";
+    case Faction::Kilrathi: return "dralthi";
+    case Faction::Confed:   return "stiletto";
+    case Faction::Militia:  return "talon";
+    case Faction::Hunter:   return "demon";
+    case Faction::Merchant: return "tarsus";
+    case Faction::Civilian: return "tarsus";
+    default:                return "talon";
+    }
+}
+
+// Build a weighted ship-class table for `faction` from the SAME spawn data
+// ambient traffic uses: per-nav encounter groups (weighted by group chance x
+// member count) plus any legacy rule class mixes whose faction list includes
+// `faction`. names/weights are parallel. Falls back to the per-faction
+// default fighter when the system has no native presence for the faction so
+// a mission target is never left without a hull.
+void build_faction_fighter_table(const StarSystem& system, Faction faction,
+                                 std::vector<std::string>& names,
+                                 std::vector<float>& weights) {
+    auto add = [&](const std::string& cls, float w) {
+        if (cls.empty() || w <= 0.0f) return;
+        for (size_t i = 0; i < names.size(); ++i)
+            if (names[i] == cls) { weights[i] += w; return; }
+        names.push_back(cls);
+        weights.push_back(w);
+    };
+
+    // Per-nav wcnews tables (the canonical ambient model).
+    for (const NavPointDef& nav : system.nav_points)
+        for (const EncounterGroupDef& g : nav.encounters)
+            for (const EncounterMemberDef& m : g.members)
+                if (faction::from_name(m.faction) == faction)
+                    add(m.ship_class, std::max(g.chance, 1.0f) * (float)std::max(1, m.count));
+
+    // Legacy rule class mixes (only when the rule can field this faction).
+    for (const EncounterRuleDef& rule : system.encounters) {
+        bool fields = false;
+        for (const EncounterWeight& fw : rule.factions)
+            if (fw.weight > 0.0f && faction::from_name(fw.name) == faction) { fields = true; break; }
+        if (!fields) continue;
+        for (const EncounterWeight& cw : rule.classes)
+            add(cw.name, std::max(cw.weight, 1.0f));
+    }
+
+    if (names.empty()) add(fallback_fighter(faction), 1.0f);
+}
+
+// Weighted draw over a parallel name/weight table (non-cumulative). Empty
+// table -> "".
+const std::string& weighted_pick_w(const std::vector<std::string>& names,
+                                   const std::vector<float>& weights,
+                                   std::mt19937& rng) {
+    static const std::string empty;
+    if (names.empty()) return empty;
+    float total = 0.0f;
+    for (float w : weights) total += w;
+    if (total <= 0.0f) return names.front();
+    std::uniform_real_distribution<float> u(0.0f, total);
+    float roll = u(rng);
+    for (size_t i = 0; i < names.size(); ++i) {
+        roll -= weights[i];
+        if (roll <= 0.0f) return names[i];
+    }
+    return names.back();
+}
+
+// A spawn point for ONE mission-force member: a random point on the 8-15 km
+// shell around the objective `anchor`, pushed clear of the player's own
+// min-spawn shell (so nothing pops in on screen even when the player is
+// loitering at the objective) and kept a fighter's-berth from earlier
+// members. Best-effort: returns the least-crowded candidate if 8 tries can't
+// satisfy separation, so the spawn never stalls.
+HMM_Vec3 mission_spawn_point(HMM_Vec3 anchor, HMM_Vec3 player, std::mt19937& rng,
+                            const std::vector<HMM_Vec3>& placed) {
+    constexpr float k_min_sep = 600.0f;   // fighters: don't spawn on top of each other
+    std::uniform_real_distribution<float> ud(k_spawn_dist_min, k_spawn_dist_max);
+    HMM_Vec3 best = anchor;
+    float    best_slack = -1e30f;
+    for (int tries = 0; tries < 8; ++tries) {
+        const HMM_Vec3 dir = random_unit_dir(rng);
+        HMM_Vec3 p = HMM_AddV3(anchor, HMM_MulV3F(dir, ud(rng)));
+        // Never inside the player's min-spawn shell (no visible pop-in).
+        const HMM_Vec3 to = HMM_SubV3(p, player);
+        const float    d  = len(to);
+        if (d < k_spawn_dist_min) {
+            const HMM_Vec3 u = (d > 1e-3f) ? HMM_DivV3F(to, d) : dir;
+            p = HMM_AddV3(player, HMM_MulV3F(u, k_spawn_dist_min + 1000.0f));
+        }
+        float worst = 1e30f;
+        for (const HMM_Vec3& q : placed)
+            worst = std::min(worst, len(HMM_SubV3(p, q)) - k_min_sep);
+        if (worst >= 0.0f) return p;
+        if (worst > best_slack) { best_slack = worst; best = p; }
+    }
+    return best;
+}
+
 } // namespace
 
 // ---- public API -------------------------------------------------------------
@@ -292,6 +413,7 @@ void init(const StarSystem& system) {
 
 void shutdown() {
     g_dir.rules.clear();
+    g_dir.mission_forces.clear();   // #14: a new system re-arms missions fresh
     g_dir.active = false;
 }
 
@@ -484,6 +606,187 @@ void populate_on_entry(const StarSystem& system, HMM_Vec3 player_pos,
     std::printf("[encounter] system entry roll: %d nav table(s), %d convoy(s), "
                 "spawned %d ship(s) (no refill until next entry/launch)\n",
                 nav_tables, convoys, spawned);
+}
+
+// ---- mission-driven forced spawns (#14) ------------------------------------
+
+std::vector<std::string> faction_fighter_classes(const StarSystem& system,
+                                                 Faction faction) {
+    std::vector<std::string> names;
+    std::vector<float>       weights;
+    build_faction_fighter_table(system, faction, names, weights);
+    return names;
+}
+
+namespace {
+// Find the track for `mission_id`, or nullptr if none exists yet.
+MissionTrack* find_track(const std::string& mission_id) {
+    for (MissionTrack& t : g_dir.mission_forces)
+        if (t.mission_id == mission_id) return &t;
+    return nullptr;
+}
+// Find-or-create the track for `mission_id`. Returns a reference into
+// g_dir.mission_forces (stable for the rest of this call).
+MissionTrack& find_or_create_track(const std::string& mission_id) {
+    if (MissionTrack* t = find_track(mission_id)) return *t;
+    MissionTrack t;
+    t.mission_id = mission_id;
+    g_dir.mission_forces.push_back(std::move(t));
+    return g_dir.mission_forces.back();
+}
+} // namespace
+
+int ensure_mission_force(const StarSystem& system, const MissionForce& mf,
+                         HMM_Vec3 player_pos, const SpawnFn& spawn) {
+    if (mf.count <= 0 || mf.faction == Faction::Count) return 0;
+
+    // Per-objective one-time gate: if this objective already triggered
+    // (spawned or pre-rolled-miss), don't spawn again. A Patrol with navs
+    // A/B/C keys on the nav NAME so each gets its own one-time spawn.
+    MissionTrack& track = find_or_create_track(mf.mission_id);
+    if (track.triggered.count(mf.objective_key)) return 0;
+
+    const int ids_before = (int)track.ids.size();   // for per-call yield accounting
+    std::vector<std::string> names;
+    std::vector<float>       weights;
+    build_faction_fighter_table(system, mf.faction, names, weights);
+
+    const int target = std::min(mf.count, k_mission_force_max);
+
+    // Spawn one ship, retrying the class pick up to a few times so a single
+    // bad entry in the faction's fighter table (an unregistered class or a
+    // missing atlas -> encounter_spawn returns 0) doesn't strand the slot.
+    // Falls back to the first table entry if weighting rolls nothing. Returns
+    // the new id, or 0 if every pick failed to spawn.
+    auto spawn_one = [&](std::vector<HMM_Vec3>& placed) -> uint32_t {
+        for (int tries = 0; tries < 4; ++tries) {
+            SpawnRequest req;
+            req.class_name = weighted_pick_w(names, weights, g_dir.rng);
+            if (req.class_name.empty()) {
+                if (!names.empty()) req.class_name = names.front();
+                else return 0;
+            }
+            req.faction          = mf.faction;
+            req.position         = mission_spawn_point(mf.anchor, player_pos,
+                                                       g_dir.rng, placed);
+            // Seed Patrol anchored on the objective; perception flips them to
+            // Engage the moment the (hostile) player is in range. Same as ambient.
+            req.initial_ai_state = AIState::Patrol;
+            req.patrol_anchor    = mf.anchor;
+            const uint32_t id = spawn(req);
+            if (id != 0) {
+                placed.push_back(req.position);
+                return id;
+            }
+        }
+        return 0;
+    };
+
+    if (mf.guarantee_full) {
+        // GIVEN types (Attack/DefendBase/Bounty): keep the objective armed to
+        // `target`. Spawn only the deficit (so combat losses after full arming
+        // are NOT replaced — the goal is to kill what was there). Mark
+        // triggered only once `target` are live; until then leave it
+        // un-triggered so a partial first call (e.g. a bad class pick) is
+        // topped up next frame. Bounded by arm_attempts so a hard failure
+        // (faction has no spawnable class at all) eventually stops retrying.
+        const int live = (int)track.ids.size();
+        const int deficit = target - live;
+        if (deficit <= 0) {
+            track.triggered.insert(mf.objective_key);   // fully armed — one-time now
+            return 0;
+        }
+        std::vector<HMM_Vec3> placed;
+        for (int i = 0; i < deficit; ++i) {
+            const uint32_t id = spawn_one(placed);
+            if (id != 0) track.ids.push_back(id);
+        }
+        const int live_now = (int)track.ids.size();
+        const int spawned_this_call = live_now - ids_before;
+        if (spawned_this_call > 0) track.yielded.insert(mf.objective_key);
+        if (live_now >= target) {
+            track.triggered.insert(mf.objective_key);   // armed to target — done
+        } else {
+            // Still short. Retry next frame unless we've burned through the
+            // attempt budget — then give up (mark one-time) so we don't hammer.
+            if (++track.arm_attempts >= k_max_arm_attempts) {
+                track.triggered.insert(mf.objective_key);
+                std::fprintf(stderr,
+                    "[encounter] mission '%s' [%s]: gave up arming after %d "
+                    "attempts (%d/%d %s spawned) — target class unavailable\n",
+                    mf.mission_id.c_str(), mf.objective_key.c_str(),
+                    track.arm_attempts, live_now, target,
+                    faction::to_name(mf.faction));
+            }
+        }
+        std::printf("[encounter] mission '%s' [%s]: forced %d/%d %s hostile(s) at objective\n",
+                    mf.mission_id.c_str(), mf.objective_key.c_str(),
+                    spawned_this_call, target, faction::to_name(mf.faction));
+        return spawned_this_call;
+    }
+
+    // RANDOM types (Scout/Patrol): spawn up to `target`, mark one-time
+    // regardless (a partial roll is acceptable — enemies "may not show up").
+    std::vector<HMM_Vec3> placed;
+    placed.reserve(target);
+    for (int i = 0; i < target; ++i) {
+        const uint32_t id = spawn_one(placed);
+        if (id != 0) track.ids.push_back(id);
+    }
+
+    track.triggered.insert(mf.objective_key);
+    const int spawned_this_call = (int)track.ids.size() - ids_before;
+    if (spawned_this_call > 0)
+        track.yielded.insert(mf.objective_key);
+    std::printf("[encounter] mission '%s' [%s]: forced %d/%d %s hostile(s) at objective\n",
+                mf.mission_id.c_str(), mf.objective_key.c_str(),
+                spawned_this_call, target, faction::to_name(mf.faction));
+    return spawned_this_call;
+}
+
+void mark_mission_objective_triggered(const std::string& mission_id,
+                                      const std::string& objective_key) {
+    MissionTrack& track = find_or_create_track(mission_id);
+    track.triggered.insert(objective_key);
+}
+
+bool mission_objective_triggered(const std::string& mission_id,
+                                 const std::string& objective_key) {
+    const MissionTrack* t = find_track(mission_id);
+    return t && t->triggered.count(objective_key);
+}
+
+int mission_yielded_count(const std::string& mission_id) {
+    const MissionTrack* t = find_track(mission_id);
+    return t ? (int)t->yielded.size() : 0;
+}
+
+void sync_active_missions(const std::vector<std::string>& active_ids) {
+    if (g_dir.mission_forces.empty()) return;
+    std::unordered_set<std::string> live(active_ids.begin(), active_ids.end());
+    for (auto it = g_dir.mission_forces.begin(); it != g_dir.mission_forces.end(); ) {
+        if (!live.count(it->mission_id)) {
+            std::printf("[encounter] mission '%s': force bookkeeping dropped "
+                        "(abandoned/completed/left) — no further mission spawns\n",
+                        it->mission_id.c_str());
+            it = g_dir.mission_forces.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
+void prune_mission_tracks(const ShipRegistry& ships) {
+    for (MissionTrack& t : g_dir.mission_forces) {
+        auto it = t.ids.begin();
+        while (it != t.ids.end()) {
+            const Ship* s = ships.find_by_id(*it);
+            if (!s || !s->alive)
+                it = t.ids.erase(it);
+            else
+                ++it;
+        }
+    }
 }
 
 void tick(const ShipRegistry& ships, HMM_Vec3 player_pos, float dt,

@@ -1,0 +1,80 @@
+{
+  // ---------------------------------------------------------------------
+  // turret_show.json -- 2v2 CAPITAL BRAWL SCENE
+  //
+  // 4 NPC ships, all auto-firing turret-equipped: a pure 2 Paradigms vs
+  // 2 Kamekhs capital brawl. Two of each hull:
+  //   * 2x Paradigm (confed,   far-left, large)
+  //   * 2x Kamekh   (kilrathi, far-left, large)
+  //
+  // Every ship starts "idle", but the Paradigm (confed) and Kamekh
+  // (kilrathi) capital ships are jammed into a tight brawl knot, ~1km
+  // apart, so their auto-turrets immediately open up on each other --
+  // Kilrathi vs Confed point-blank. Expect an instant capital-ship
+  // slugfest in the far-left cluster.
+  //
+  // Forward is -Z: the player spawns right on top of the brawl knot,
+  // looking straight at the Paradigm/Kamekh cluster.
+  //
+  // Launch with:  ./build/new_privateer --system turret_show
+  // ---------------------------------------------------------------------
+  "name":        "Turret Show",
+  "description": "2v2 capital brawl: 2 Paradigms vs 2 Kamekhs — all turret-equipped.",
+
+  "skybox_seed": "sector_4774",
+  "star":        { "preset": "orange" },
+
+  "asteroid_fields": [],
+  "placed_meshes":   [],
+  "placed_sprites":  [],
+
+  "placed_ship_sprites": [
+    // --- Paradigm pair -- confed, far-left, large ---
+    {
+      "atlas":          "ships/paradigm/atlas_manifest_3d",
+      "position":       [-5800, 300, -3200],
+      "length_meters":  250,
+      "lights_enabled": true,
+      "faction":        "confed",
+      "ai": { "initial_state": "idle" }
+    },
+    {
+      "atlas":          "ships/paradigm/atlas_manifest_3d",
+      "position":       [-4600, -200, -4000],
+      "length_meters":  250,
+      "lights_enabled": true,
+      "faction":        "confed",
+      "ai": { "initial_state": "idle" }
+    },
+
+    // --- Kamekh pair -- kilrathi, far-right, large ---
+    {
+      "atlas":          "ships/kamekh/atlas_manifest_3d",
+      "position":       [-5200, 500, -2600],
+      "length_meters":  180,
+      "lights_enabled": true,
+      "faction":        "kilrathi",
+      "ai": { "initial_state": "idle" }
+    },
+    {
+      "atlas":          "ships/kamekh/atlas_manifest_3d",
+      "position":       [-5000, -400, -4600],
+      "length_meters":  180,
+      "lights_enabled": true,
+      "faction":        "kilrathi",
+      "ai": { "initial_state": "idle" }
+    }
+  ],
+
+  "nav_points": [
+    { "name": "Muster Point", "kind": "nav", "position": [0, 0, 0] }
+  ],
+
+  // No dynamic spawns -- fixed display.
+  "encounters": [],
+
+  "player_start": {
+    "position": [-5100, 400, -1000],
+    "look_at":  [-5100, 0, -3600]
+  }
+}

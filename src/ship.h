@@ -190,6 +190,22 @@ struct Ship {
     // facing's MAX shield is read off klass->default_shield.
     float shield_mult       = 1.0f;
 
+    // Engine recharge — additive ABSOLUTE GJ/s from the engine upgrade
+    // ladder (np-3dp.27 / gamefaq 4.6.2). Refreshed on the player in
+    // apply_player_loadout from outfitting::engine_recharge_bonus_for.
+    // 0 on NPCs.
+    float engine_recharge_add_gj = 0.0f;
+
+    // Shield gen drain — absolute GJ/s consumed from the recharge budget
+    // whenever the shield gen is installed. Refreshed on the player in
+    // apply_player_loadout from outfitting::shield_recharge_drain_for.
+    // 0 on NPCs.
+    float shield_recharge_drain_gj = 0.0f;
+
+    // Legacy engine multiplier hook (kept for ABI; not currently used by
+    // firing.cpp — the additive fields above take over). 1.0 is a no-op.
+    float engine_recharge_mult = 1.0f;
+
     // ---- weapons ------------------------------------------------------
     // Per-instance copy of the fitted gun mounts. Initialised from
     // klass->default_guns at spawn for NPCs; the player ship is also
