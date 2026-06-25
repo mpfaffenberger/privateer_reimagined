@@ -720,11 +720,15 @@ void draw_equipment(BaseContext& ctx) {
     // armor overrides that per-instance; no shared ShipClass mutation. We
     // like our NPCs not accidentally receiving Mike's shopping cart.
     {
-        const char* stock = (klass && klass->default_armor)
+                const char* stock = (klass && klass->default_armor)
             ? klass->default_armor->name.c_str() : "None";
-        const std::string current = p.armor_name.empty() ? std::string(stock) : p.armor_name;
+        const bool on_default = p.armor_name.empty();
+        const std::string current = on_default ? std::string(stock) : p.armor_name;
         ImGui::PushID("armor_packages");
-        ImGui::Text("Armor   %s", current.c_str());
+        // Tag the stock package so players know it's the hull default they
+        // were born with, not an upgrade they bought (np armor).
+        ImGui::Text("Armor   %s%s", current.c_str(),
+                    on_default ? " (hull default)" : "");
         for (const ArmorType& a : armor::all()) {
             const int64_t price = armor_price(a.name);
             if (price <= 0) continue;
