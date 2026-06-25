@@ -607,6 +607,7 @@ void draw_player_status(const ShipRegistry& ships) {
             constexpr float k_v_bar_max  = 82.0f;  // port/stbd bar length (TALL)
             constexpr float k_frame_hw   = 40.0f;  // half-width  (to side bar pair)
             constexpr float k_frame_hh   = 38.0f;  // half-height (to top/bot pair)
+            constexpr float k_side_y_off = -9.0f;  // nudge side pairs upward to visually center
             constexpr float k_bar_round  = 2.5f;   // bar corner rounding (px)
 
             constexpr ImU32 k_shield_col   = IM_COL32( 80, 160, 255, 220);
@@ -681,7 +682,7 @@ void draw_player_status(const ShipRegistry& ships) {
             // Port pair — shield outside/left, armor inside/right.
             const float port_sh_x = cx - k_frame_hw;
             const float port_ar_x = port_sh_x + k_bar_thick + k_pair_gap;
-            const float port_y    = cy - k_v_bar_max * 0.5f;
+            const float port_y    = cy - k_v_bar_max * 0.5f + k_side_y_off;
             draw_v_single(port_sh_x, port_y, k_v_bar_max, k_shield_col,
                           shield_cur[2], shield_max[2]);
             draw_v_single(port_ar_x, port_y, k_v_bar_max, k_armor_col,
@@ -690,7 +691,7 @@ void draw_player_status(const ShipRegistry& ships) {
             // Starboard pair — armor inside/left, shield outside/right.
             const float stbd_ar_x = cx + k_frame_hw - pair_span;
             const float stbd_sh_x = stbd_ar_x + k_bar_thick + k_pair_gap;
-            const float stbd_y    = cy - k_v_bar_max * 0.5f;
+            const float stbd_y    = cy - k_v_bar_max * 0.5f + k_side_y_off;
             draw_v_single(stbd_sh_x, stbd_y, k_v_bar_max, k_shield_col,
                           shield_cur[3], shield_max[3]);
             draw_v_single(stbd_ar_x, stbd_y, k_v_bar_max, k_armor_col,
@@ -710,8 +711,8 @@ void draw_player_status(const ShipRegistry& ships) {
             };
             label_at(cx, fore_sh_y - 15.0f, "F");
             label_at(cx, aft_sh_y + k_bar_thick + 3.0f, "A");
-            label_at(port_sh_x - 9.0f, cy - 7.0f, "P");
-            label_at(stbd_sh_x + k_bar_thick + 9.0f, cy - 7.0f, "St");
+            label_at(port_sh_x - 9.0f, cy + k_side_y_off - 7.0f, "P");
+            label_at(stbd_sh_x + k_bar_thick + 9.0f, cy + k_side_y_off - 7.0f, "St");
 
             // Gun arm-mode (np-3dp). Line under the armor bars so the
             // player sees at a glance which mode G picked and how many
