@@ -2482,6 +2482,24 @@ void frame_stub() {
     debug_panel::build(g.placed_meshes, g.placed_ship_sprites, g.game,
                        g.ship_debug, g.audio_debug, g.player);
     if (landed) {
+        // A save loaded straight into a base (autosave-on-dock, or LOAD from
+        // the menu) never passes through the Flight update where the loaded
+        // loadout + damage snapshot are normally stamped onto the live hull
+        // (np-3dp.19). Do it here, BEFORE the base screens read the ship, or
+        // the repair desk quotes a stale/full hull until you launch + land
+        // again. Gated on the one-shot apply_health_pending flag so it runs
+        // once per load, not every landed frame.
+        if (Ship* pl = g.ships.player()) {
+            if (g.apply_health_pending) {
+                // Re-fit the live hull to the loaded player state (the menu
+                // load rebuilds the system with first_time=false, which skips
+                // the spawn-time loadout, so a ship-swap/re-armed save would
+                // otherwise show the previously-spawned hull). heal=false so
+                // the damage snapshot below is what defines current health.
+                apply_player_loadout(*pl, g.player, /*heal=*/false);
+            }
+            apply_pending_player_health_snapshot(*pl);
+        }
         base_screens::build(g.player, g.ships.player(), g.docking, g.camera, g.game,
                             g.sun.position);
     }
