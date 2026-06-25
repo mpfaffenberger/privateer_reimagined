@@ -1345,8 +1345,9 @@ void build_mission_objectives(const Camera& cam, const StarSystem& system,
     constexpr float w = 280.0f, margin = 16.0f;
     const float row_h = ImGui::GetTextLineHeightWithSpacing();
     const float h = 26.0f + row_h * (float)rows.size() + 6.0f;
-    // STATUS panel is 184 tall at (16,16); sit just below it.
-    ImGui::SetNextWindowPos(ImVec2(margin, margin + 184.0f + 8.0f),
+    // STATUS panel is 224 tall at (16,16); sit just below it.
+    constexpr float kStatusPanelH = 224.0f;
+    ImGui::SetNextWindowPos(ImVec2(margin, margin + kStatusPanelH + 8.0f),
                             ImGuiCond_Always);
     ImGui::SetNextWindowSize(ImVec2(w, h), ImGuiCond_Always);
     ImGui::SetNextWindowBgAlpha(0.55f);
