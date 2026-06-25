@@ -159,6 +159,7 @@ add_executable(new_privateer
     src/audio.cpp
     src/sfx.cpp
     src/music.cpp
+    src/tracelog.cpp
     src/camera.cpp
     src/skybox.cpp
     src/skybox_gen.cpp
@@ -243,10 +244,14 @@ src/bolt_art.cpp
 # Bake the asset path into the runtime so we can launch from anywhere. For
 # now we just use a relative path + chdir-to-source; for shipping we'd copy
 # assets next to the binary. Good enough for Stage 2.
+# Hardcode "build" relative to source so the symlink lands next to the
+# binary. We can't use $TARGET_FILE_DIR in this POST_BUILD because of
+# how the build system is wired (the binary lives in build/, not in
+# CMAKE_BINARY_DIR's value at config time).
 add_custom_command(TARGET new_privateer POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E create_symlink
             ${CMAKE_SOURCE_DIR}/assets
-            $<TARGET_FILE_DIR:new_privateer>/assets
+            ${CMAKE_SOURCE_DIR}/build/assets
     COMMENT "symlinking assets/ next to binary"
 )
 
