@@ -1162,11 +1162,12 @@ std::string base_label(const StarSystem& sys, const std::string& base_id) {
 void draw_flight_status_mfd(const FlightStatusHudState& s) {
     const auto sz = screen_size();
     constexpr float w = 280.0f, margin = 16.0f;
-    // Height grows if autopilot rows are present so the box always frames
-    // the content snugly.
+    // Height grows for the energy gauge + any autopilot rows so the box
+    // always frames the content snugly.
     float h = 110.0f;
-    if (s.autopilot_nav) h += 18.0f;
-    if (s.autopilot_msg) h += 18.0f;
+    if (s.energy_max > 0.0f) h += 22.0f;
+    if (s.autopilot_nav)     h += 18.0f;
+    if (s.autopilot_msg)     h += 18.0f;
     ImGui::SetNextWindowPos(ImVec2(sz.w * 0.5f - w * 0.5f, margin),
                             ImGuiCond_Always);
     ImGui::SetNextWindowSize(ImVec2(w, h), ImGuiCond_Always);
@@ -1182,6 +1183,19 @@ void draw_flight_status_mfd(const FlightStatusHudState& s) {
         ImGui::Text("MODE   %s",        s.mode);
         ImGui::Text("D(SUN) %7.0f u",   s.d_sun);
         ImGui::Text("POS    %5.0f %5.0f %5.0f", s.pos_x, s.pos_y, s.pos_z);
+        // Energy bank — full-width yellow gauge (relocated here from the
+        // STATUS panel). Drives both guns and the afterburner; watch it
+        // dip during sustained fire / burn.
+        if (s.energy_max > 0.0f) {
+            const float e_frac = std::clamp(s.energy / s.energy_max, 0.0f, 1.0f);
+            char ebuf[32];
+            std::snprintf(ebuf, sizeof(ebuf), "ENERGY %.0f / %.0f GJ",
+                          s.energy, s.energy_max);
+            ImGui::PushStyleColor(ImGuiCol_FrameBg,       IM_COL32(20,20,30,180));
+            ImGui::PushStyleColor(ImGuiCol_PlotHistogram, IM_COL32(255,210,60,220));
+            ImGui::ProgressBar(e_frac, ImVec2(-1.0f, 14.0f), ebuf);
+            ImGui::PopStyleColor(2);
+        }
         if (s.autopilot_nav) {
             ImGui::PushStyleColor(ImGuiCol_Text, kGreen);
             ImGui::Text("AUTOPILOT - %s", s.autopilot_nav);

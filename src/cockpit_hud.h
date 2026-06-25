@@ -111,6 +111,8 @@ struct FlightStatusHudState {
     const char* mode  = "NORMAL";        // NORMAL / SPOOL / CRUISE
     float       d_sun = 0.0f;            // world units to the system sun
     float       pos_x = 0.0f, pos_y = 0.0f, pos_z = 0.0f;
+    float       energy     = 0.0f;       // current energy bank (GJ)
+    float       energy_max = 0.0f;       // max bank (GJ); 0 hides the bar
     const char* autopilot_nav = nullptr; // null = none engaged
     const char* autopilot_msg = nullptr; // null = no transient banner
 };

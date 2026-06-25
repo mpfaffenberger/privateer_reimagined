@@ -4868,6 +4868,10 @@ void frame_cb() {
                      :                                   "NORMAL";
             fs.d_sun = HMM_LenV3(HMM_SubV3(g.sun.position, pp));
             fs.pos_x = pp.X; fs.pos_y = pp.Y; fs.pos_z = pp.Z;
+            if (const Ship* pl = g.ships.player()) {
+                fs.energy     = pl->energy_gj;
+                fs.energy_max = pl->klass ? pl->klass->energy_max : 0.0f;
+            }
             if (autopilot::engaged(g.autopilot))
                 fs.autopilot_nav = g.autopilot.nav_name.c_str();
             if (g.autopilot.msg_timer_s > 0.0f)
