@@ -517,7 +517,7 @@ void draw_player_status(const ShipRegistry& ships) {
     if (!player_p) return;
     const Ship& player = *player_p;
 
-    constexpr float w = 280.0f, h = 184.0f, margin = 16.0f;
+    constexpr float w = 280.0f, h = 212.0f, margin = 16.0f;
     ImGui::SetNextWindowPos(ImVec2(margin, margin), ImGuiCond_Always);
     ImGui::SetNextWindowSize(ImVec2(w, h), ImGuiCond_Always);
     ImGui::SetNextWindowBgAlpha(0.55f);
@@ -596,11 +596,12 @@ void draw_player_status(const ShipRegistry& ships) {
             // = current. Result reads at a glance: more bar = more
             // protection remaining, just from the silhouette.
 
-            constexpr float k_circle_r   = 11.0f;  // ship circle radius
-            constexpr float k_bar_thick  = 6.0f;   // bar thickness (px)
-            constexpr float k_h_bar_max  = 88.0f;  // max length, fore/aft bars
-            constexpr float k_v_bar_max  = 30.0f;  // max length, port/stbd bars
-            constexpr float k_bar_gap    = 5.0f;   // gap between circle & bar
+            constexpr float k_circle_r   = 13.0f;  // ship circle radius
+            constexpr float k_bar_thick  = 7.0f;   // bar thickness (px)
+            constexpr float k_h_bar_max  = 92.0f;  // max length, fore/aft bars
+            constexpr float k_v_bar_max  = 34.0f;  // max length, port/stbd bars
+            constexpr float k_bar_gap    = 7.0f;   // gap between circle & bar
+            constexpr float k_bar_round  = 2.5f;   // bar corner rounding (px)
 
             constexpr ImU32 k_shield_col   = IM_COL32( 80, 160, 255, 220);
             constexpr ImU32 k_armor_col    = IM_COL32(255, 140,  60, 220);
@@ -609,12 +610,6 @@ void draw_player_status(const ShipRegistry& ships) {
             constexpr ImU32 k_ship_outline = IM_COL32(220, 180, 100, 200);
 
             ImDrawList* dl = ImGui::GetWindowDrawList();
-            const ImVec2 origin = ImGui::GetWindowPos();
-            const float  panel_w = 280.0f;
-            const float  cx      = origin.x + panel_w * 0.5f;
-            // Position the diagram centre ~38px below the current cursor
-            // (which sits just after the energy-bar separator).
-            const float  cy      = ImGui::GetCursorScreenPos().y + 38.0f;
 
             // Helper: draw a horizontal bar (anchor at top-left).
             // shield section on the LEFT (computed to its own max-width),
@@ -626,7 +621,7 @@ void draw_player_status(const ShipRegistry& ships) {
 
                 // Dim background at full size (the max-capacity outline)
                 dl->AddRectFilled(ImVec2(x, y), ImVec2(x + w, y + h),
-                                  k_bg_col, 1.0f);
+                                  k_bg_col, k_bar_round);
 
                 // Total fill fraction for the bar's overall size
                 const float total_frac = std::clamp((sc + ac) / total_m, 0.0f, 1.0f);
@@ -642,12 +637,12 @@ void draw_player_status(const ShipRegistry& ships) {
                 if (shield_w_cur > 0.0f) {
                     dl->AddRectFilled(ImVec2(x, y),
                                       ImVec2(x + shield_w_cur, y + h),
-                                      k_shield_col, 1.0f);
+                                      k_shield_col, k_bar_round);
                 }
                 if (armor_w_cur > 0.0f) {
                     dl->AddRectFilled(ImVec2(x + shield_w_cur, y),
                                       ImVec2(x + shield_w_cur + armor_w_cur, y + h),
-                                      k_armor_col, 1.0f);
+                                      k_armor_col, k_bar_round);
                 }
             };
 
@@ -659,7 +654,7 @@ void draw_player_status(const ShipRegistry& ships) {
                 if (total_m <= 0.0f) return;
 
                 dl->AddRectFilled(ImVec2(x, y), ImVec2(x + w, y + h),
-                                  k_bg_col, 1.0f);
+                                  k_bg_col, k_bar_round);
 
                 const float total_frac = std::clamp((sc + ac) / total_m, 0.0f, 1.0f);
                 const float filled_h   = total_frac * h;
@@ -672,14 +667,26 @@ void draw_player_status(const ShipRegistry& ships) {
                 if (shield_h_cur > 0.0f) {
                     dl->AddRectFilled(ImVec2(x, y),
                                       ImVec2(x + w, y + shield_h_cur),
-                                      k_shield_col, 1.0f);
+                                      k_shield_col, k_bar_round);
                 }
                 if (armor_h_cur > 0.0f) {
                     dl->AddRectFilled(ImVec2(x, y + shield_h_cur),
                                       ImVec2(x + w, y + shield_h_cur + armor_h_cur),
-                                      k_armor_col, 1.0f);
+                                      k_armor_col, k_bar_round);
                 }
             };
+
+            // Reserve a fixed-height block for the diagram so the GUNS
+            // line below flows underneath instead of overlapping. The
+            // bars/circle are drawn with the window drawlist (absolute
+            // coords) centred inside this reserved region.
+            const float  k_diagram_h = 104.0f;
+            const ImVec2 region_tl   = ImGui::GetCursorScreenPos();
+            const float  avail_w     = ImGui::GetContentRegionAvail().x;
+            ImGui::Dummy(ImVec2(avail_w, k_diagram_h));
+
+            const float cx = region_tl.x + avail_w     * 0.5f;
+            const float cy = region_tl.y + k_diagram_h * 0.5f;
 
             // ---- Place 4 bars + ship circle ------
             // Fore bar (above circle) — horizontal
@@ -707,19 +714,21 @@ void draw_player_status(const ShipRegistry& ships) {
 
             // Ship circle (centrepiece). Filled amber + outline so it
             // reads as the ship's hull against the four bars.
-            dl->AddCircleFilled(ImVec2(cx, cy), k_circle_r, k_ship_col, 16);
-            dl->AddCircle(ImVec2(cx, cy), k_circle_r, k_ship_outline, 16, 1.0f);
+            dl->AddCircleFilled(ImVec2(cx, cy), k_circle_r, k_ship_col, 24);
+            dl->AddCircle(ImVec2(cx, cy), k_circle_r, k_ship_outline, 24, 1.5f);
 
-            // Tiny facing labels so the player can decode the diagram
-            // at a glance (F = fore, A = aft, P = port, St = starboard).
-            dl->AddText(ImVec2(fore_x + k_h_bar_max * 0.5f - 4.0f, fore_y - 12.0f),
-                        IM_COL32(180, 220, 255, 220), "F");
-            dl->AddText(ImVec2(fore_x + k_h_bar_max * 0.5f - 4.0f, aft_y + k_bar_thick + 2.0f),
-                        IM_COL32(180, 220, 255, 220), "A");
-            dl->AddText(ImVec2(port_x - 14.0f, port_y + 1.0f),
-                        IM_COL32(180, 220, 255, 220), "P");
-            dl->AddText(ImVec2(stbd_x + k_bar_thick + 4.0f, stbd_y + 1.0f),
-                        IM_COL32(180, 220, 255, 220), "St");
+            // Facing labels — centred over/under the fore & aft bars and
+            // outboard of the port/starboard bars. Dim blue so the bars
+            // stay the focus.
+            const ImU32 k_lbl_col = IM_COL32(150, 190, 230, 200);
+            auto label_at = [&](float center_x, float top_y, const char* s) {
+                const ImVec2 ts = ImGui::CalcTextSize(s);
+                dl->AddText(ImVec2(center_x - ts.x * 0.5f, top_y), k_lbl_col, s);
+            };
+            label_at(cx, fore_y - 15.0f, "F");
+            label_at(cx, aft_y + k_bar_thick + 3.0f, "A");
+            label_at(port_x - 8.0f, cy - 7.0f, "P");
+            label_at(stbd_x + k_bar_thick + 8.0f, cy - 7.0f, "St");
 
             // Gun arm-mode (np-3dp). Line under the armor bars so the
             // player sees at a glance which mode G picked and how many
