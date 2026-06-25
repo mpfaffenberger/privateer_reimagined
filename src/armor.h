@@ -21,7 +21,10 @@ struct ArmorType {
     std::string name;
     float front_cm = 0.0f;
     float back_cm  = 0.0f;
-    float side_cm  = 0.0f;
+    // Sides split port/starboard; on-disk JSON keeps side_cm; engine
+    // splits 50/50 into the two new fields on spawn.
+    float port_cm         = 0.0f;
+    float starboard_cm    = 0.0f;
 };
 
 namespace armor {

@@ -86,10 +86,12 @@ PlayerState make_mutated() {
     p.hp_valid       = true;
     p.hp_armor_fore  = 12.5f;
     p.hp_armor_aft   = 8.25f;
-    p.hp_armor_side  = 6.75f;
+    p.hp_armor_port  = 6.75f;
+    p.hp_armor_starboard = 2.5f;
     p.hp_shield_fore = 3.5f;
     p.hp_shield_aft  = 1.25f;
-    p.hp_shield_side = 0.0f;
+    p.hp_shield_port = 0.75f;
+    p.hp_shield_starboard = 0.0f;
     p.hp_energy      = 99.0f;
     p.current_system   = "pentonville";
     p.last_docked_base = "achilles";
@@ -286,14 +288,17 @@ int main() {
     CHECK_EQ("kills[Retro]",    dst.faction_kills[(int)Faction::Retro],    src.faction_kills[(int)Faction::Retro]);
 
     // np-3dp.19: live ship-damage snapshot survives the round-trip.
-    CHECK_EQ("hp_valid",       dst.hp_valid,       src.hp_valid);
-    CHECK_EQ("hp_armor_fore",  dst.hp_armor_fore,  src.hp_armor_fore);
-    CHECK_EQ("hp_armor_aft",   dst.hp_armor_aft,   src.hp_armor_aft);
-    CHECK_EQ("hp_armor_side",  dst.hp_armor_side,  src.hp_armor_side);
-    CHECK_EQ("hp_shield_fore", dst.hp_shield_fore, src.hp_shield_fore);
-    CHECK_EQ("hp_shield_aft",  dst.hp_shield_aft,  src.hp_shield_aft);
-    CHECK_EQ("hp_shield_side", dst.hp_shield_side, src.hp_shield_side);
-    CHECK_EQ("hp_energy",      dst.hp_energy,      src.hp_energy);
+    // Issue #30: sides split into port + starboard (4 fields now).
+    CHECK_EQ("hp_valid",          dst.hp_valid,          src.hp_valid);
+    CHECK_EQ("hp_armor_fore",     dst.hp_armor_fore,     src.hp_armor_fore);
+    CHECK_EQ("hp_armor_aft",      dst.hp_armor_aft,      src.hp_armor_aft);
+    CHECK_EQ("hp_armor_port",     dst.hp_armor_port,     src.hp_armor_port);
+    CHECK_EQ("hp_armor_starboard", dst.hp_armor_starboard, src.hp_armor_starboard);
+    CHECK_EQ("hp_shield_fore",    dst.hp_shield_fore,    src.hp_shield_fore);
+    CHECK_EQ("hp_shield_aft",     dst.hp_shield_aft,     src.hp_shield_aft);
+    CHECK_EQ("hp_shield_port",    dst.hp_shield_port,    src.hp_shield_port);
+    CHECK_EQ("hp_shield_starboard", dst.hp_shield_starboard, src.hp_shield_starboard);
+    CHECK_EQ("hp_energy",         dst.hp_energy,         src.hp_energy);
 
     // (#8) accepted missions round-trip — Patrol + Bounty + Cargo + DefendBase,
     // each populated with every new field, plus a field-by-field compare.

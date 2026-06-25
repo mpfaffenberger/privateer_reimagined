@@ -24,7 +24,11 @@ struct ShieldType {
     float regen_cm_per_s  = 0.0f;
     float front_cm        = 0.0f;
     float back_cm         = 0.0f;
-    float side_cm         = 0.0f;
+    // Original game calls the flanks "side" — we split into port (left)
+    // and starboard (right). The on-disk JSON still has a single side_cm;
+    // engine code splits it 50/50 into the two new fields on spawn.
+    float port_cm         = 0.0f;
+    float starboard_cm    = 0.0f;
     float effect_pct      = 100.0f;  // 87..111 in the source data
 };
 

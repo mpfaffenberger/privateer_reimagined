@@ -1,2 +1,8 @@
 [
+  { "u": 0.44058, "v": 0.489855, "color": [255, 26, 26], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.457971, "v": 0.498551, "color": [255, 26, 26], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.465217, "v": 0.585507, "color": [255, 26, 26], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.47971, "v": 0.592754, "color": [255, 26, 26], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.637681, "v": 0.586957, "color": [255, 26, 26], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.656522, "v": 0.595652, "color": [255, 26, 26], "size": 5, "hz": 0, "phase": 0, "kind": "steady" }
 ]

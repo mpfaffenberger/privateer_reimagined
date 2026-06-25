@@ -46,7 +46,7 @@ constexpr float k_nav_reach_m = 2000.0f;
 constexpr float k_clear_radius_m = 6000.0f;
 
 // Call once per Flight frame, AFTER perception/threat are updated and the
-// missions::on_player_kill hook. Resolves each active mission's nav targets to
+// missions::on_target_destroyed hook. Resolves each active mission's nav targets to
 // positions in the CURRENT system, flips nav_done / progress, and triggers
 // completion through the missions:: model helpers. No-op for missions whose
 // target_system != current_system (cross-system jobs wait until you jump there)

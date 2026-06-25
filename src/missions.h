@@ -20,7 +20,7 @@
 //                      pays the reward and removes it.
 //
 // Bounty progress advances through the SAME player-kill path the reputation
-// system rides (np-ma2.1): missions::on_player_kill is called next to
+// system rides (np-ma2.1): missions::on_target_destroyed is called next to
 // comm::report_player_kill, so there's one kill-attribution truth, not two.
 //
 // DATA-DRIVEN, NOT a hardcoded list. generate() enumerates real destination
@@ -36,7 +36,7 @@
 // not saved). The missions you ACCEPT live in PlayerState::missions and ARE
 // saved (savegame.cpp) — see player.h ActiveMission.
 //
-// HEADLESS SPLIT: the model (generate / accept / deliver / on_player_kill)
+// HEADLESS SPLIT: the model (generate / accept / deliver / on_target_destroyed)
 // is pure logic and unit-testable offline; the ImGui screen body is compiled
 // only when MISSIONS_HEADLESS is undefined (same pattern as ECONOMY_HEADLESS
 // / COMM_HEADLESS), so tools/test_missions.cpp links the real logic without
@@ -189,6 +189,13 @@ bool complete_delivery(PlayerState& p, const std::string& mission_id,
 // jettisons the hauled cargo. Returns false if the id isn't active.
 bool abandon(PlayerState& p, const std::string& mission_id);
 
+// Issue #24 "fail on land" hook. Call from the docking path when the player
+// commits to a Landed base: any cargo contract whose dest_base isn't this
+// dock is failed (cargo jettisoned, no reward). Missions at the target are
+// kept — the player can still click Deliver on them. Other mission types
+// aren't touched (they may span multiple visits).
+void fail_cargo_on_dock(PlayerState& p, const std::string& at_base);
+
 // ---- in-flight progress + generic completion (the #13 tracker seam) --------
 //
 // #13 owns the live world tracking; it just flips reach/clear state on the
@@ -239,15 +246,20 @@ bool mark_nav_reached(PlayerState& p, const std::string& mission_id,
 // line — the SAME payout path as the cargo/bounty completions. Handles
 // Scout (single nav done), Patrol (all navs done), Attack & DefendBase
 // (progress >= hostiles_required). CargoDelivery settles via
-// complete_delivery() and Bounty via on_player_kill(), so for those this is
-// a no-op returning false. Returns true iff the mission completed + dropped.
+// complete_delivery() and Bounty via on_target_destroyed(), so for those this
+// is a no-op returning false. Returns true iff the mission completed + dropped.
 bool complete_if_objectives_met(PlayerState& p, const std::string& mission_id);
 
-// ---- kill progress (wired into the np-ma2.1 player-kill path) --------------
+// ---- kill progress (wired into the np-ma2.1 death pass) --------------------
 
-// The player just destroyed a `victim`-faction ship in `current_system`.
-// Two kinds of missions advance here, both off the one kill-attribution
-// truth (called right beside comm::report_player_kill):
+// A `victim`-faction ship was just destroyed in `current_system`. This
+// advances mission KILL PROGRESS only — it deliberately does NOT touch
+// reputation or the lifetime-kill scoreboard (those stay player-attributed
+// in the death pass). Crediting progress regardless of who landed the kill
+// is intentional: a third party stealing your bounty/hunt target must not be
+// able to soft-lock the contract (mission forces aren't replaced after combat
+// losses). The death pass already only fires for ships in the player's
+// current system, so the region gates below keep this honest.
 //
 //   * Bounty  — every active bounty whose target faction matches AND whose
 //     hunt region (`bounty_region`) contains `current_system` (an empty
@@ -260,14 +272,10 @@ bool complete_if_objectives_met(PlayerState& p, const std::string& mission_id);
 //     NOT settle inline: the next mission_tracker::tick() runs
 //     complete_if_objectives_met() (every frame for attack/defend), keeping
 //     a single completion path and avoiding erase-mid-iteration hazards.
-//     (The mission force spawns outside the tracker's 6km nav bubble, so the
-//     spawned hostiles are what the player actually kills — counting those
-//     per-kill is what lets attack/defend ever complete.)
 //
-// Returns the number of missions that advanced. Called right beside
-// comm::report_player_kill so kill attribution stays single-sourced.
-int on_player_kill(PlayerState& p, Faction victim,
-                   const std::string& current_system);
+// Returns the number of missions that advanced.
+int on_target_destroyed(PlayerState& p, Faction victim,
+                        const std::string& current_system);
 
 // ---- screen (np-9cu.4 hook seam) --------------------------------------------
 

@@ -49,6 +49,13 @@ build/
 build-*/
 cmake-build-*/
 
+# In-source CMake build artifacts (please use an out-of-source build instead!)
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+/new_privateer
+
 # Generated shader headers (sokol-shdc output)
 src/generated/
 *.glsl.h

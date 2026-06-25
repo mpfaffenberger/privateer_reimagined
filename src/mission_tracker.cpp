@@ -170,7 +170,7 @@ void tick(PlayerState& p, const std::string& current_system,
                 break;
             case MT::Bounty:
             case MT::CargoDelivery:
-                // Settle via on_player_kill() / complete_delivery() — not here.
+                // Settle via on_target_destroyed() / complete_delivery() — not here.
                 break;
         }
     }

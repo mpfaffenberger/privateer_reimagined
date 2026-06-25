@@ -163,10 +163,10 @@ const NavPointDef* nav_with_base(const StarSystem& s, const std::string& base_id
     return nullptr;
 }
 
-float total_armor(const Ship& s)  { return s.armor_fore_cm + s.armor_aft_cm + s.armor_side_cm; }
+float total_armor(const Ship& s)  { return s.armor_fore_cm + s.armor_aft_cm + s.armor_port_cm + s.armor_starboard_cm; }
 float total_health(const Ship& s) {
-    return s.shield_fore_cm + s.shield_aft_cm + s.shield_side_cm
-         + s.armor_fore_cm  + s.armor_aft_cm  + s.armor_side_cm;
+    return s.shield_fore_cm + s.shield_aft_cm + s.shield_port_cm + s.shield_starboard_cm
+         + s.armor_fore_cm  + s.armor_aft_cm  + s.armor_port_cm  + s.armor_starboard_cm;
 }
 
 // ---- sprite-pool model for the corpse-reap regression (STEP m / np-zte.1) --
@@ -337,7 +337,7 @@ int main() {
         for (int k = 0; k < 6; ++k) {
             comm::report_player_kill(player, Faction::Pirate);
             // inline bounty above has no region -> "any system" fallback.
-            missions::on_player_kill(player, Faction::Pirate, player.current_system);
+            missions::on_target_destroyed(player, Faction::Pirate, player.current_system);
         }
         const Stance confed_stance1 = faction::stance_npc_vs_player(Faction::Confed, player.rep);
         std::printf("  pirate rep %d -> %d | confed rep %d -> %d | confed stance %d -> %d\n",
@@ -511,13 +511,13 @@ int main() {
             const std::string hunt = bounty->bounty_region.empty()
                                    ? player.current_system
                                    : bounty->bounty_region.front();
-            missions::on_player_kill(player, other, hunt);
+            missions::on_target_destroyed(player, other, hunt);
             bool unchanged = false;
             for (const ActiveMission& m : player.missions)
                 if (m.id == bounty->id && m.progress == 0) unchanged = true;
             check(unchanged, "non-matching kill leaves bounty progress at 0");
             for (int k = 0; k < bounty->count_required; ++k)
-                missions::on_player_kill(player, tgt, hunt);
+                missions::on_target_destroyed(player, tgt, hunt);
             bool done = true;
             for (const ActiveMission& m : player.missions) if (m.id == bounty->id) done = false;
             check(done, "bounty completed after the required kills");

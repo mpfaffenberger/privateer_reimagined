@@ -9,8 +9,8 @@
     {
       "center": [
         -25000,
-        33333,
-        40000
+        -33333,
+        -40000
       ],
       "half_extent": [
         40000,
@@ -73,77 +73,6 @@
               "ship": "talon",
               "count": 2
             },
-            {
-              "faction": "retro",
-              "ship": "talon",
-              "count": 2
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Asteroid Field 2",
-      "kind": "nav",
-      "position": [
-        -25000,
-        -33333,
-        -40000
-      ],
-      "encounters": [
-        {
-          "chance": 30,
-          "members": [
-            {
-              "faction": "pirate",
-              "ship": "talon",
-              "count": 3
-            }
-          ]
-        },
-        {
-          "chance": 20,
-          "members": [
-            {
-              "faction": "pirate",
-              "ship": "talon",
-              "count": 2
-            },
-            {
-              "faction": "militia",
-              "ship": "talon",
-              "count": 1
-            }
-          ]
-        },
-        {
-          "chance": 20,
-          "members": [
-            {
-              "faction": "militia",
-              "ship": "talon",
-              "count": 3
-            },
-            {
-              "faction": "merchant",
-              "ship": "tarsus",
-              "count": 1
-            }
-          ]
-        },
-        {
-          "chance": 20,
-          "members": [
-            {
-              "faction": "pirate",
-              "ship": "talon",
-              "count": 2
-            }
-          ]
-        },
-        {
-          "chance": 10,
-          "members": [
             {
               "faction": "retro",
               "ship": "talon",

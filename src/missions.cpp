@@ -6,7 +6,7 @@
 // two halves, mirroring economy.cpp:
 //
 //   1. The MODEL — generate() / accept() / complete_delivery() / abandon() /
-//      on_player_kill(). Pure logic: it reads the commodity catalog, the
+//      on_target_destroyed(). Pure logic: it reads the commodity catalog, the
 //      galaxy graph + neighbouring system JSON (for real destination bases),
 //      moves credits/cargo ONLY through player:: helpers, and pushes comm
 //      lines. No ImGui, no audio — links into tools/test_missions.cpp.
@@ -123,8 +123,12 @@ constexpr int k_cargo_units_max    = 28;
 // $DO ranges stay plausible. Patrol sweeps every non-base nav in the system
 // (no count knob here) so its $NN scales naturally with system size.
 // Bounty is a single named target (count_required always 1) — no range knob.
-constexpr int k_max_board_missions = 8;    // total missions emitted per generate()
-constexpr int k_min_board_missions = 5;    // minimum we always try to hit
+// Issue #24: board offer count is FIXED per source — the Mission Computer
+// shows 5, each Guild board shows 4. The min/max pair was a 5–8 random
+// swing; that violated the rule and let a player be deluged with 8 offers
+// at a heavy base.
+constexpr int k_board_size_computer = 5;   // Mission Computer offer count
+constexpr int k_board_size_guild    = 4;   // Merc / Merchants guild offer count
 constexpr int k_max_attack_hostiles= 5;
 constexpr int k_min_attack_hostiles= 2;
 constexpr int k_max_defend_hostiles= 6;
@@ -607,7 +611,12 @@ std::vector<Mission> generate(const std::string& base_id,
         return faction::to_name(outlaws[urz(outlaws.size())]);
     };
 
-    const int slots = uri(k_min_board_missions, k_max_board_missions);
+    // Issue #24: board offer count is FIXED per source — Mission Computer
+    // shows 5, each Guild board shows 4. No more 5-8 random swing that
+    // could dump 8 offers on the player at a heavy base.
+    const int slots = (source == MissionSource::Computer)
+                          ? k_board_size_computer
+                          : k_board_size_guild;
     for (int i = 0; i < slots; ++i) {
         const MissionType t = types[urz(types.size())];
 
@@ -817,6 +826,11 @@ bool can_accept(const PlayerState& p, const Mission& m, int capacity) {
     for (const ActiveMission& am : p.missions) {
         if (am.id == m.id) return false;
     }
+    // Issue #24: 3-active cap. The Mission Computer can hold at most 3
+    // active missions; further accepts are blocked at the UI layer (the
+    // board still renders all offers, but Accept is greyed). We enforce
+    // it here as a hard rule so a future scripted accept can't bypass it.
+    if (p.missions.size() >= 3) return false;
     // Hold-space gate for deliveries: the consignment must fit on accept.
     if (m.type == MissionType::CargoDelivery &&
         player::cargo_units_used(p) + m.units > capacity)
@@ -920,6 +934,28 @@ bool abandon(PlayerState& p, const std::string& mission_id) {
     return false;
 }
 
+// Issue #24 fail-on-land (cargo): when the player docks anywhere, drop any
+// cargo consignment whose dest_base isn't this dock (cargo jettisoned, no
+// reward, no comm payout). Matches the rule that landing without delivering
+// fails the contract. Other (non-cargo) mission types aren't auto-failed
+// here — they persist until the player delivers or manually abandons, so
+// a defend/patrol can still span multiple visits.
+void fail_cargo_on_dock(PlayerState& p, const std::string& at_base) {
+    for (size_t i = 0; i < p.missions.size(); /* manual */) {
+        ActiveMission& am = p.missions[i];
+        if (am.type != (int)MissionType::CargoDelivery) { ++i; continue; }
+        if (am.dest_base == at_base) { ++i; continue; }   // at target — keep
+        // Off-target dock: cargo goes (jettisoned), mission fails (no reward).
+        const std::string title = am.title;
+        player::remove_cargo(p, am.commodity_id, am.units);
+        std::printf("[missions] FAIL on dock at '%s': %s\n",
+                    at_base.c_str(), title.c_str());
+        comm::push("Cargo contract failed: landed at the wrong base.",
+                   /*taunt=*/false);
+        p.missions.erase(p.missions.begin() + (long)i);
+    }
+}
+
 // ---- in-flight progress + generic completion (#13 tracker seam) -------------
 
 bool mark_nav_reached(PlayerState& p, const std::string& mission_id,
@@ -964,7 +1000,7 @@ bool complete_if_objectives_met(PlayerState& p, const std::string& mission_id) {
                 break;
             case MissionType::CargoDelivery:
             case MissionType::Bounty:
-                // These settle through complete_delivery() / on_player_kill();
+                // These settle through complete_delivery() / on_target_destroyed();
                 // not this generic path.
                 return false;
         }
@@ -1063,16 +1099,21 @@ MissionStatus mission_status(const ActiveMission& am,
     return s;
 }
 
-// ---- bounty progress (np-ma2.1 player-kill path) ----------------------------
+// ---- mission kill progress (np-ma2.1 death pass) ----------------------------
+// NOTE: this credits mission progress for the destruction of a qualifying
+// target REGARDLESS of who landed the kill. That's deliberate — a third
+// party stealing your bounty/hunt target must not soft-lock the contract
+// (mission forces aren't replaced after combat losses). Reputation + the
+// lifetime-kill scoreboard are handled separately and stay player-only.
 
-int on_player_kill(PlayerState& p, Faction victim,
-                   const std::string& current_system) {
+int on_target_destroyed(PlayerState& p, Faction victim,
+                        const std::string& current_system) {
     const char* victim_name = faction::to_name(victim);
     int advanced = 0;
 
-    // A kill only counts when the player is hunting in one of the bounty's
-    // posted systems. An empty region means "any system" (safety fallback for
-    // older saves / generators that didn't stamp a region).
+    // A kill only counts toward a bounty hunted in one of its posted systems.
+    // An empty region means "any system" (safety fallback for older saves /
+    // generators that didn't stamp a region).
     auto in_region = [&](const ActiveMission& am) {
         if (am.bounty_region.empty()) return true;   // "any"
         for (const std::string& sys : am.bounty_region)

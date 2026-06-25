@@ -13,7 +13,7 @@
 //   * ACCEPT a cargo mission (cargo loaded into the hold) + prove an
 //     over-capacity accept is REFUSED,
 //   * "travel" to the destination + DELIVER (reward paid, cargo removed),
-//   * ACCEPT a bounty + simulate qualifying kills via on_player_kill ->
+//   * ACCEPT a bounty + simulate qualifying kills via on_target_destroyed ->
 //     progress increments -> completion auto-pays,
 //   * SAVE then LOAD and confirm accepted missions survive the round-trip.
 //
@@ -239,7 +239,7 @@ int main() {
         check(last_comm() != fb, "PATROL: comm line pushed");
     }
 
-    // Attack: progress advances PER-KILL via on_player_kill (the mission force
+    // Attack: progress advances PER-KILL via on_target_destroyed (the mission force
     // spawns outside the tracker's 6km nav bubble, so killing the spawned
     // hostiles — not update_clear's at-nav gate — drives completion). In-system
     // kills of the target faction increment; out-of-system or wrong faction do
@@ -265,23 +265,23 @@ int main() {
         check(need > 0, "ATTACK: hostiles_required posted");
 
         // Wrong faction, in-system: no advance.
-        check(missions::on_player_kill(pp, wrong, m.target_system) == 0 &&
+        check(missions::on_target_destroyed(pp, wrong, m.target_system) == 0 &&
               !pp.missions.empty() && pp.missions[0].progress == 0,
               "ATTACK: wrong-faction kill never advances");
         // Right faction, wrong system: no advance.
-        check(missions::on_player_kill(pp, tgt, far) == 0 &&
+        check(missions::on_target_destroyed(pp, tgt, far) == 0 &&
               !pp.missions.empty() && pp.missions[0].progress == 0,
               "ATTACK: out-of-system kill does NOT advance");
 
         // In-system kills of the target faction advance progress; NOT settled
         // inline (mission stays in the active list until tick settles it).
         for (int k = 1; k <= need; ++k) {
-            check(missions::on_player_kill(pp, tgt, m.target_system) == 1 &&
+            check(missions::on_target_destroyed(pp, tgt, m.target_system) == 1 &&
                   !pp.missions.empty() && pp.missions[0].progress == k,
                   "ATTACK: in-system kill advances progress (no inline settle)");
         }
         // A stray kill at the cap is a no-op (the < hostiles_required guard).
-        check(missions::on_player_kill(pp, tgt, m.target_system) == 0 &&
+        check(missions::on_target_destroyed(pp, tgt, m.target_system) == 0 &&
               !pp.missions.empty() && pp.missions[0].progress == need,
               "ATTACK: kill at cap does not over-count");
 
@@ -313,20 +313,20 @@ int main() {
         check(need > 0, "DEFEND: hostiles_required posted");
 
         // Wrong faction / wrong system never advance.
-        check(missions::on_player_kill(pp, wrong, m.target_system) == 0 &&
+        check(missions::on_target_destroyed(pp, wrong, m.target_system) == 0 &&
               !pp.missions.empty() && pp.missions[0].progress == 0,
               "DEFEND: wrong-faction kill never advances");
-        check(missions::on_player_kill(pp, tgt, far) == 0 &&
+        check(missions::on_target_destroyed(pp, tgt, far) == 0 &&
               !pp.missions.empty() && pp.missions[0].progress == 0,
               "DEFEND: out-of-system kill does NOT advance");
 
         // In-system kills advance; not settled inline.
         for (int k = 1; k <= need; ++k) {
-            check(missions::on_player_kill(pp, tgt, m.target_system) == 1 &&
+            check(missions::on_target_destroyed(pp, tgt, m.target_system) == 1 &&
                   !pp.missions.empty() && pp.missions[0].progress == k,
                   "DEFEND: in-system kill advances progress (no inline settle)");
         }
-        check(missions::on_player_kill(pp, tgt, m.target_system) == 0 &&
+        check(missions::on_target_destroyed(pp, tgt, m.target_system) == 0 &&
               !pp.missions.empty() && pp.missions[0].progress == need,
               "DEFEND: kill at cap does not over-count");
 
@@ -363,17 +363,17 @@ int main() {
         const int need = m.count_required;
 
         // Wrong faction never advances, even standing in-region.
-        check(missions::on_player_kill(pp, wrong, "troy") == 0 &&
+        check(missions::on_target_destroyed(pp, wrong, "troy") == 0 &&
               !pp.missions.empty() && pp.missions[0].progress == 0,
               "BOUNTY: wrong-faction kill never advances");
         // Right faction, wrong system: no progress.
-        check(missions::on_player_kill(pp, tgt, far) == 0 &&
+        check(missions::on_target_destroyed(pp, tgt, far) == 0 &&
               !pp.missions.empty() && pp.missions[0].progress == 0,
               "BOUNTY: out-of-region kill does NOT advance");
 
         // In-region ("troy") kills advance; the final one auto-pays + drops.
         for (int k = 1; k <= need; ++k) {
-            const int adv = missions::on_player_kill(pp, tgt, "troy");
+            const int adv = missions::on_target_destroyed(pp, tgt, "troy");
             if (k < need)
                 check(adv == 1 && !pp.missions.empty() && pp.missions[0].progress == k,
                       "BOUNTY: in-region kill advances progress");

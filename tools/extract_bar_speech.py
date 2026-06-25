@@ -13,9 +13,20 @@ VPK format (reverse-engineered):
   dword[0]  total file size (LE uint32, == filesize)
   dword[1+]: index table, each entry 4 bytes (3-byte abs offset + 1-byte
              flag 0x20). Reads until first non-0x20 entry or EOF.
-  Each audio entry starts at the indexed offset; the first 4 bytes is a
-             length field (LE 32-bit) and the remainder is the audio payload
-             (raw 8-bit unsigned mono PCM at the configured sample rate).
+  Each audio entry starts at the indexed offset.
+
+  !!! WARNING -- THE AUDIO PAYLOAD IS *NOT* RAW u8 PCM !!!
+  The original assumption (payload = raw 8-bit unsigned mono PCM, piped to
+  `ffmpeg -f u8`) is WRONG and produces pure static. The payload is a custom,
+  COMPRESSED Origin codec and must be DECOMPRESSED, not reinterpreted.
+  Confirmed entry layout:
+    bytes [0:2]   decompressed length, LE u16 (varies; ~1.2-1.7x payload size)
+    bytes [2:34]  32-byte static decode table, byte-identical across ALL
+                  entries in ALL VPKs (a baked-in codebook/dictionary)
+    bytes [34:]   compressed bitstream (the actual audio)
+  See docs/bar_speech_vpk_format.md for the full evidence + next steps.
+  The ffmpeg `-f u8` path below is LEFT IN PLACE only so the pipeline runs;
+  its output is static until the real decompressor is implemented.
 
 PFC format (each dialog line is):
   NUL + 'rand_npc\0' (NPC class)

@@ -1816,7 +1816,7 @@ void apply_ship_debug_requests() {
         std::printf("[debug] simulate player kill of %s\n", faction::to_name(vf));
         comm::report_player_kill(g.player, vf);
         // advance matching bounties, gated to the active system (np-zte.1/#15)
-        missions::on_player_kill(g.player, vf, g.player.current_system);
+        missions::on_target_destroyed(g.player, vf, g.player.current_system);
     }
 
     if (g.ship_debug.spawn_talon) {
@@ -3712,25 +3712,38 @@ void frame_cb() {
             // fighters and class-less placeholders get the small one.
             sfx::ship_exploded(pos, s->klass && s->klass->cargo_units >= 100);
 
-            // Reputation fallout (np-ma2.1): if the PLAYER landed the
-            // killing shot, the victim's faction (and everyone who cares
-            // about them) updates its opinion. killed_by_id is stamped by
-            // projectile::collide_and_damage at the lethal hit. We skip
-            // the player's own death and any non-projectile cause (id 0).
-            if (!s->is_player && s->killed_by_id != 0) {
+            // Reputation + mission fallout (np-ma2.1). Two different
+            // attribution rules, intentionally split:
+            //
+            //   * Reputation + the lifetime-kill scoreboard are PLAYER-ONLY
+            //     — only the shot the player fired changes how factions feel
+            //     about them. killed_by_id is stamped by
+            //     projectile::collide_and_damage at the lethal hit (0 = a
+            //     non-projectile cause).
+            //
+            //   * Mission KILL PROGRESS (bounty / attack / defend) counts the
+            //     target's death REGARDLESS of who landed it. Mission forces
+            //     aren't replaced after combat losses, so if a third party
+            //     (ally patrol, faction infighting, a collision) destroys
+            //     your bounty target, crediting only player kills would
+            //     soft-lock the contract. This pass only runs for ships in
+            //     the player's current system, and on_target_destroyed
+            //     re-gates by mission region, so it can't credit kills the
+            //     player isn't around to witness.
+            if (!s->is_player) {
                 const Ship* pl = g.ships.player();
-                if (pl && s->killed_by_id == pl->id) {
+                const bool by_player =
+                    pl && s->killed_by_id != 0 && s->killed_by_id == pl->id;
+                if (by_player) {
                     comm::report_player_kill(g.player, s->faction);
-                    // Bounty progress rides the SAME kill-attribution path
-                    // (np-zte.1) — no second source of truth for kills. Gated
-                    // to the player's current system (#15).
-                    missions::on_player_kill(g.player, s->faction,
-                                             g.player.current_system);
                     // Career scoreboard (np-3dp.19): tally the kill by the
                     // victim's faction so the save records lifetime kills.
                     if ((int)s->faction >= 0 && (int)s->faction < kFactionCount)
                         g.player.faction_kills[(int)s->faction]++;
                 }
+                // Mission progress: any killer counts (see above).
+                missions::on_target_destroyed(g.player, s->faction,
+                                              g.player.current_system);
             }
             // Capture the camera basis at the moment of death so the
             // disc shockwave stays where it was if the camera rotates

@@ -49,14 +49,14 @@ int g_fail = 0;
 // Total armor across the three facings — the "is it healed?" probe for repair
 // (heal_to_full restores armor + shields, but armor is what repair quotes on).
 float total_armor(const Ship& s) {
-    return s.armor_fore_cm + s.armor_aft_cm + s.armor_side_cm;
+    return s.armor_fore_cm + s.armor_aft_cm + s.armor_port_cm + s.armor_starboard_cm;
 }
 
 // Total durability (shields + armor) — the "did it take damage?" probe. A
 // light hit lands on shields first, so checking armor alone would miss it.
 float total_health(const Ship& s) {
-    return s.shield_fore_cm + s.shield_aft_cm + s.shield_side_cm
-         + s.armor_fore_cm  + s.armor_aft_cm  + s.armor_side_cm;
+    return s.shield_fore_cm + s.shield_aft_cm + s.shield_port_cm + s.shield_starboard_cm
+         + s.armor_fore_cm  + s.armor_aft_cm  + s.armor_port_cm  + s.armor_starboard_cm;
 }
 
 // Spawn a stationary target ship of the given class at a world point. We
