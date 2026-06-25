@@ -517,7 +517,7 @@ void draw_player_status(const ShipRegistry& ships) {
     if (!player_p) return;
     const Ship& player = *player_p;
 
-    constexpr float w = 280.0f, h = 212.0f, margin = 16.0f;
+    constexpr float w = 280.0f, h = 224.0f, margin = 16.0f;
     ImGui::SetNextWindowPos(ImVec2(margin, margin), ImGuiCond_Always);
     ImGui::SetNextWindowSize(ImVec2(w, h), ImGuiCond_Always);
     ImGui::SetNextWindowBgAlpha(0.55f);
@@ -596,11 +596,17 @@ void draw_player_status(const ShipRegistry& ships) {
             // = current. Result reads at a glance: more bar = more
             // protection remaining, just from the silhouette.
 
+            // The four bars form a rectangular FRAME around the ship
+            // circle: short horizontal bars centred top (fore) & bottom
+            // (aft), tall vertical bars at the left (port) & right
+            // (starboard) edges. Frame half-extents keep the bars off
+            // the corners so nothing overlaps.
             constexpr float k_circle_r   = 13.0f;  // ship circle radius
             constexpr float k_bar_thick  = 7.0f;   // bar thickness (px)
-            constexpr float k_h_bar_max  = 92.0f;  // max length, fore/aft bars
-            constexpr float k_v_bar_max  = 34.0f;  // max length, port/stbd bars
-            constexpr float k_bar_gap    = 7.0f;   // gap between circle & bar
+            constexpr float k_h_bar_max  = 46.0f;  // fore/aft length (SHORT)
+            constexpr float k_v_bar_max  = 56.0f;  // port/stbd length (TALL)
+            constexpr float k_frame_hw   = 38.0f;  // half-width  (to side bars)
+            constexpr float k_frame_hh   = 36.0f;  // half-height (to top/bot bars)
             constexpr float k_bar_round  = 2.5f;   // bar corner rounding (px)
 
             constexpr ImU32 k_shield_col   = IM_COL32( 80, 160, 255, 220);
@@ -680,7 +686,7 @@ void draw_player_status(const ShipRegistry& ships) {
             // line below flows underneath instead of overlapping. The
             // bars/circle are drawn with the window drawlist (absolute
             // coords) centred inside this reserved region.
-            const float  k_diagram_h = 104.0f;
+            const float  k_diagram_h = 116.0f;
             const ImVec2 region_tl   = ImGui::GetCursorScreenPos();
             const float  avail_w     = ImGui::GetContentRegionAvail().x;
             ImGui::Dummy(ImVec2(avail_w, k_diagram_h));
@@ -688,26 +694,26 @@ void draw_player_status(const ShipRegistry& ships) {
             const float cx = region_tl.x + avail_w     * 0.5f;
             const float cy = region_tl.y + k_diagram_h * 0.5f;
 
-            // ---- Place 4 bars + ship circle ------
-            // Fore bar (above circle) — horizontal
+            // ---- Place 4 bars (frame edges) + ship circle ------
+            // Fore bar — top edge, horizontal, centred on cx
             const float fore_x = cx - k_h_bar_max * 0.5f;
-            const float fore_y = cy - k_circle_r - k_bar_gap - k_bar_thick;
+            const float fore_y = cy - k_frame_hh;
             draw_h_bar(fore_x, fore_y, k_h_bar_max, k_bar_thick,
                        shield_cur[0], shield_max[0], armor_cur[0], armor_max[0]);
 
-            // Aft bar (below circle) — horizontal
-            const float aft_y = cy + k_circle_r + k_bar_gap;
+            // Aft bar — bottom edge, horizontal, centred on cx
+            const float aft_y = cy + k_frame_hh - k_bar_thick;
             draw_h_bar(fore_x, aft_y, k_h_bar_max, k_bar_thick,
                        shield_cur[1], shield_max[1], armor_cur[1], armor_max[1]);
 
-            // Port bar (left of circle) — vertical
-            const float port_x = cx - k_circle_r - k_bar_gap - k_bar_thick;
+            // Port bar — left edge, vertical, centred on cy
+            const float port_x = cx - k_frame_hw;
             const float port_y = cy - k_v_bar_max * 0.5f;
             draw_v_bar(port_x, port_y, k_bar_thick, k_v_bar_max,
                        shield_cur[2], shield_max[2], armor_cur[2], armor_max[2]);
 
-            // Starboard bar (right of circle) — vertical
-            const float stbd_x = cx + k_circle_r + k_bar_gap;
+            // Starboard bar — right edge, vertical, centred on cy
+            const float stbd_x = cx + k_frame_hw - k_bar_thick;
             const float stbd_y = cy - k_v_bar_max * 0.5f;
             draw_v_bar(stbd_x, stbd_y, k_bar_thick, k_v_bar_max,
                        shield_cur[3], shield_max[3], armor_cur[3], armor_max[3]);
