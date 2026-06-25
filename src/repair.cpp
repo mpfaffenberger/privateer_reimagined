@@ -37,18 +37,20 @@ constexpr int64_t k_torpedo_unit_price = 35;
 // Full per-facing armor for a ship's class (base + fitted armor tier).
 // Mirrors ship::heal_to_full's armor math so the "missing" calc agrees with
 // what a repair actually restores.
-struct FullArmor { float fore, aft, side; };
+struct FullArmor { float fore, aft, port, starboard; };
 FullArmor full_armor(const Ship& s) {
-    FullArmor fa{ 0, 0, 0 };
+    FullArmor fa{ 0, 0, 0, 0 };
     if (!s.klass) return fa;
     const ShipClass& k = *s.klass;
-    fa.fore = k.armor_fore_cm;
-    fa.aft  = k.armor_aft_cm;
-    fa.side = k.armor_side_cm;
+    fa.fore      = k.armor_fore_cm;
+    fa.aft       = k.armor_aft_cm;
+    fa.port      = k.armor_port_cm;
+    fa.starboard = k.armor_starboard_cm;
     if (k.default_armor) {
-        fa.fore += k.default_armor->front_cm;
-        fa.aft  += k.default_armor->back_cm;
-        fa.side += k.default_armor->side_cm;
+        fa.fore      += k.default_armor->front_cm;
+        fa.aft       += k.default_armor->back_cm;
+        fa.port      += k.default_armor->port_cm;
+        fa.starboard += k.default_armor->starboard_cm;
     }
     return fa;
 }
@@ -56,9 +58,10 @@ FullArmor full_armor(const Ship& s) {
 float armor_missing(const Ship& s) {
     const FullArmor fa = full_armor(s);
     float miss = 0.0f;
-    miss += std::max(0.0f, fa.fore - s.armor_fore_cm);
-    miss += std::max(0.0f, fa.aft  - s.armor_aft_cm);
-    miss += std::max(0.0f, fa.side - s.armor_side_cm);
+    miss += std::max(0.0f, fa.fore      - s.armor_fore_cm);
+    miss += std::max(0.0f, fa.aft       - s.armor_aft_cm);
+    miss += std::max(0.0f, fa.port      - s.armor_port_cm);
+    miss += std::max(0.0f, fa.starboard - s.armor_starboard_cm);
     return miss;
 }
 
@@ -109,9 +112,24 @@ bool repair_hull(Ship& ship, PlayerState& p) {
                     (long long)q.hull_cost, (long long)p.credits);
         return false;
     }
-    const float before = ship.armor_fore_cm + ship.armor_aft_cm + ship.armor_side_cm;
+    const float before = ship.armor_fore_cm + ship.armor_aft_cm
+                        + ship.armor_port_cm + ship.armor_starboard_cm;
     ship::heal_to_full(ship);
-    const float after = ship.armor_fore_cm + ship.armor_aft_cm + ship.armor_side_cm;
+    // Landed repair happens outside the Flight-frame Ship -> PlayerState
+    // mirror, so persist the repaired condition immediately. Otherwise a
+    // save made while still landed could keep the old damage snapshot.
+    p.hp_valid = true;
+    p.hp_armor_fore      = ship.armor_fore_cm;
+    p.hp_armor_aft       = ship.armor_aft_cm;
+    p.hp_armor_port      = ship.armor_port_cm;
+    p.hp_armor_starboard = ship.armor_starboard_cm;
+    p.hp_shield_fore     = ship.shield_fore_cm;
+    p.hp_shield_aft      = ship.shield_aft_cm;
+    p.hp_shield_port     = ship.shield_port_cm;
+    p.hp_shield_starboard = ship.shield_starboard_cm;
+    p.hp_energy          = ship.energy_gj;
+    const float after = ship.armor_fore_cm + ship.armor_aft_cm
+                       + ship.armor_port_cm + ship.armor_starboard_cm;
     std::printf("[repair] hull restored: armor %.0f -> %.0f cm | paid %lld | credits %lld\n",
                 before, after, (long long)q.hull_cost, (long long)p.credits);
     return true;

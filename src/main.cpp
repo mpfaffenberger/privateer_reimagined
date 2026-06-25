@@ -780,6 +780,23 @@ static void apply_player_loadout(Ship& pl, const PlayerState& p, bool heal = tru
     pl.gun_armed.assign(pl.mounts.size(), true);
 }
 
+static void apply_pending_player_health_snapshot(Ship& player) {
+    if (!g.apply_health_pending) return;
+    g.apply_health_pending = false;
+    if (!g.player.hp_valid) return;
+
+    player.armor_fore_cm      = g.player.hp_armor_fore;
+    player.armor_aft_cm       = g.player.hp_armor_aft;
+    player.armor_port_cm      = g.player.hp_armor_port;
+    player.armor_starboard_cm = g.player.hp_armor_starboard;
+    player.shield_fore_cm     = g.player.hp_shield_fore;
+    player.shield_aft_cm      = g.player.hp_shield_aft;
+    player.shield_port_cm     = g.player.hp_shield_port;
+    player.shield_starboard_cm = g.player.hp_shield_starboard;
+    player.energy_gj          = g.player.hp_energy;
+    std::printf("[save] applied loaded ship damage to hull\n");
+}
+
 void build_system_scene(bool first_time) {
     g.camera.position = g.system.player_start;
 
@@ -1317,6 +1334,12 @@ void build_system_scene(bool first_time) {
     {
         Ship& player = *g.ships.player();
         apply_player_loadout(player, g.player);
+        // A loaded save may start docked/landed. Apply its HP snapshot
+        // immediately after the boot loadout heals the live ship, or the
+        // base repair screen will quote a magically-full hull until the
+        // player launches and the Flight-frame pending apply runs. UI
+        // should not require a ceremonial space lap. Ridiculous.
+        apply_pending_player_health_snapshot(player);
         std::printf("[player] equipped: klass=%s mounts=%zu shield F/A/P/St=%.0f/%.0f/%.0f/%.0f "
                     "armor F/A/P/St=%.0f/%.0f/%.0f/%.0f energy=%.0f\n",
                     player.klass ? player.klass->name.c_str() : "<null>",
@@ -3305,21 +3328,7 @@ void frame_cb() {
         // On the frame after a save load, stamp the loaded damage snapshot
         // onto the live hull (np-3dp.19), BEFORE the mirror below, so a
         // reloaded damaged save stays damaged. One-shot.
-        if (g.apply_health_pending) {
-            g.apply_health_pending = false;
-            if (g.player.hp_valid) {
-                player->armor_fore_cm      = g.player.hp_armor_fore;
-                player->armor_aft_cm       = g.player.hp_armor_aft;
-                player->armor_port_cm      = g.player.hp_armor_port;
-                player->armor_starboard_cm = g.player.hp_armor_starboard;
-                player->shield_fore_cm     = g.player.hp_shield_fore;
-                player->shield_aft_cm      = g.player.hp_shield_aft;
-                player->shield_port_cm     = g.player.hp_shield_port;
-                player->shield_starboard_cm = g.player.hp_shield_starboard;
-                player->energy_gj          = g.player.hp_energy;
-                std::printf("[save] applied loaded ship damage to hull\n");
-            }
-        }
+        apply_pending_player_health_snapshot(*player);
         // Mirror the hull's CURRENT condition into PlayerState every
         // frame (np-3dp.19) so any save (autosave-on-land, manual)
         // captures live damage without needing the Ship at the save
