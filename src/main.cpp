@@ -498,6 +498,7 @@ struct AppState {
     // the scene re-rolls a fresh variant + ship set each visit.
     bool title_scene_inited = false;
     bool skip_title_at_boot = false;   // --skip-title dev flag
+    bool dev_seed_missions  = false;   // --dev-missions: one-shot accept a few jobs (dev/test)
     // Set when a save is loaded (np-3dp.19): the next Flight frame copies
     // the loaded PlayerState hp_* snapshot onto the live player Ship
     // BEFORE the per-frame ship->PlayerState mirror, so reloading a
@@ -1817,6 +1818,29 @@ void apply_ship_debug_requests() {
         comm::report_player_kill(g.player, vf);
         // advance matching bounties, gated to the active system (np-zte.1/#15)
         missions::on_target_destroyed(g.player, vf, g.player.current_system);
+    }
+
+    // --dev-missions: one-shot — accept a handful of generated jobs so the
+    // navmap MISSION STATUS panel has real cards to inspect. Dev aid only;
+    // fires once we're actually in Flight (galaxy + system are ready).
+    if (g.dev_seed_missions && g.game.mode == GameMode::Flight) {
+        g.dev_seed_missions = false;
+        g.player.has_jump_drive = true;   // so cross-system jobs are acceptable
+        std::string base = g.player.last_docked_base;
+        if (base.empty())
+            for (const NavPointDef& n : g.system.nav_points)
+                if (!n.base_id.empty()) { base = n.base_id; break; }
+        const std::vector<missions::Mission> offers = missions::generate(
+            base, g.player.current_system, g.galaxy, 12345u,
+            missions::MissionSource::Computer);
+        int taken = 0;
+        for (const missions::Mission& m : offers) {
+            if (taken >= 6) break;
+            if (missions::accept(g.player, m, /*capacity=*/1000)) ++taken;
+        }
+        std::printf("[dev] --dev-missions: accepted %d of %d generated jobs\n",
+                    taken, (int)offers.size());
+        g.show_navmap = true;             // pop the map so the cards are visible
     }
 
     if (g.ship_debug.spawn_talon) {
@@ -5825,6 +5849,8 @@ sapp_desc sokol_main(int argc, char** argv) {
         } else if (std::strcmp(argv[i], "--dev-land") == 0 && i + 1 < argc) {
             g.dev_land_base = argv[i + 1];
             ++i;
+        } else if (std::strcmp(argv[i], "--dev-missions") == 0) {
+            g.dev_seed_missions = true;   // accept a few generated jobs on boot
         } else if (std::strcmp(argv[i], "--load") == 0 && i + 1 < argc) {
             g.load_slot = std::atoi(argv[i + 1]);
             ++i;

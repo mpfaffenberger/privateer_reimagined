@@ -1786,62 +1786,164 @@ void build_navmap(const Camera& cam, const StarSystem& system,
                 ImGui::BeginChild("##navmap_missions_scroll",
                                   ImVec2(0, 0), false,
                                   ImGuiWindowFlags_None);
+
+                // Display name for a system id (galaxy catalog); raw id if
+                // unknown. Used by the destination / bounty-search lines.
+                auto sys_disp = [&](const std::string& id) -> std::string {
+                    if (id.empty()) return std::string();
+                    if (const galaxy::SystemEntry* se = galaxy.find(id))
+                        return se->display_name;
+                    return id;
+                };
+                // Per-type accent colour for the badge + left rail so the
+                // job type reads at a glance instead of buried in text.
+                auto type_accent = [](missions::MissionType t) -> ImVec4 {
+                    using MT = missions::MissionType;
+                    switch (t) {
+                        case MT::Bounty:        return ImVec4(1.00f, 0.47f, 0.35f, 1.0f);
+                        case MT::Attack:        return ImVec4(1.00f, 0.38f, 0.38f, 1.0f);
+                        case MT::DefendBase:    return ImVec4(0.40f, 0.68f, 1.00f, 1.0f);
+                        case MT::Patrol:        return ImVec4(0.38f, 0.82f, 1.00f, 1.0f);
+                        case MT::Scout:         return ImVec4(0.50f, 0.90f, 0.58f, 1.0f);
+                        case MT::CargoDelivery: return ImVec4(1.00f, 0.80f, 0.38f, 1.0f);
+                        default:                return ImVec4(0.78f, 0.78f, 0.78f, 1.0f);
+                    }
+                };
+
+                ImDrawList* dl    = ImGui::GetWindowDrawList();
+                const ImVec4 dimV   = ImVec4(0.62f, 0.58f, 0.42f, 1.0f);
+                const ImVec4 whiteV = ImVec4(0.92f, 0.92f, 0.92f, 1.0f);
+                const ImVec4 goldV  = ImVec4(1.00f, 0.85f, 0.40f, 1.0f);
+                const ImVec4 hereV  = ImVec4(0.55f, 0.95f, 0.60f, 1.0f);
+
                 for (size_t mi = 0; mi < player.missions.size(); ++mi) {
                     const ActiveMission& am = player.missions[mi];
-                    const missions::MissionStatus s =
+                    const auto type = (missions::MissionType)am.type;
+                    const missions::MissionStatus st =
                         missions::mission_status(am, system, current_system_id);
+                    const ImVec4 accent = type_accent(type);
 
-                    // Resolve which system name to show after "→". Prefer
-                    // the human display name from the galaxy catalog;
-                    // fall back to the raw id when unknown.
-                    std::string sys_label;
-                    if (!s.target_system.empty()) {
-                        if (const galaxy::SystemEntry* se = galaxy.find(s.target_system))
-                            sys_label = se->display_name;
-                        else
-                            sys_label = s.target_system;
-                    }
-
-                    // The Selectable label. Always show status + reward; the
-                    // "→ X" is appended only on cross-system rows. The
-                    // small source tag is right-aligned.
-                    char line[256];
-                    const char* src =
-                        missions::source_label((missions::MissionSource)am.source);
-                    std::snprintf(line, sizeof(line), "%s   |   %lld cr   |   %s%s%s%s",
-                                  s.text.c_str(), (long long)am.reward,
-                                  s.in_current_system ? "" : "\xE2\x86\x92 ",
-                                  s.in_current_system ? "" : sys_label.c_str(),
-                                  s.in_current_system ? "" : "   |   ",
-                                  s.in_current_system ? "" : src);
-                    // Clicking the row selects its nav target (T5). Bounty
-                    // is always non-clickable here — it's a faction hunt
-                    // with no single nav, so we never resolve an index for
-                    // it (the resolver still handles cross-system jump-nav
-                    // logic for cargo). The dim "→ <system>" tag still
-                    // appears for cross-system rows so the bounty isn't
-                    // totally silent in the panel.
-                    const bool clickable =
-                        (am.type != (int)missions::MissionType::Bounty);
                     ImGui::PushID((int)mi);
-                    if (clickable) {
-                        ImGui::Selectable(line);
-                        if (ImGui::IsItemClicked()) {
-                            const int idx = resolve_nav_for_mission(
-                                am, system, galaxy, current_system_id);
-                            if (idx >= 0) {
-                                selected_nav_in_out = idx;
-                                sfx::ui_click();
-                                std::printf("[nav] target → %s\n",
-                                    system.nav_points[idx].name.c_str());
-                            }
+
+                    const ImVec2 card_tl = ImGui::GetCursorScreenPos();
+                    const float  card_w  = ImGui::GetContentRegionAvail().x;
+                    constexpr float pad  = 8.0f;
+
+                    // Content on channel 1; card background + accent rail on
+                    // channel 0 once we know the laid-out height.
+                    dl->ChannelsSplit(2);
+                    dl->ChannelsSetCurrent(1);
+
+                    ImGui::BeginGroup();
+                    ImGui::Indent(pad + 4.0f);
+                    ImGui::Dummy(ImVec2(0.0f, pad * 0.5f));
+
+                    // -- header: type badge + right-aligned reward --
+                    ImGui::TextColored(accent, "%s", missions::type_label(type));
+                    char rew[40];
+                    std::snprintf(rew, sizeof(rew), "%lld cr", (long long)am.reward);
+                    ImGui::SameLine();
+                    {
+                        const float rw   = ImGui::CalcTextSize(rew).x;
+                        const float room = ImGui::GetContentRegionAvail().x;
+                        if (room > rw + pad) {
+                            ImGui::Dummy(ImVec2(room - rw - pad, 0.0f));
+                            ImGui::SameLine();
                         }
-                    } else {
-                        // Dim + non-clickable for bounties (no single nav).
-                        ImGui::PushStyleColor(ImGuiCol_Text, kDimAmber);
-                        ImGui::TextUnformatted(line);
-                        ImGui::PopStyleColor();
+                        ImGui::TextColored(goldV, "%s", rew);
                     }
+
+                    // -- concise status line (includes progress counters) --
+                    ImGui::TextColored(whiteV, "%s", st.text.c_str());
+
+                    // -- destination / search line(s), per type --
+                    if (type == missions::MissionType::Bounty) {
+                        // THE point of this panel for a bounty: which systems
+                        // to hunt in. List the posted region, highlighting the
+                        // one you're currently in.
+                        ImGui::TextColored(dimV, "Search:");
+                        bool any = false;
+                        for (const std::string& rid : am.bounty_region) {
+                            const std::string nm = sys_disp(rid);
+                            if (nm.empty()) continue;
+                            if (any) { ImGui::SameLine(0.0f, 0.0f); ImGui::TextColored(dimV, ","); }
+                            ImGui::SameLine(0.0f, any ? 4.0f : 6.0f);
+                            const bool here = (rid == current_system_id);
+                            ImGui::TextColored(here ? hereV : whiteV, "%s%s",
+                                               nm.c_str(), here ? " (here)" : "");
+                            any = true;
+                        }
+                        if (!any) {
+                            const std::string ls = sys_disp(am.last_seen_system);
+                            ImGui::SameLine(0.0f, 6.0f);
+                            ImGui::TextColored(whiteV, "%s",
+                                ls.empty() ? "anywhere in range" : ls.c_str());
+                        }
+                    } else if (type == missions::MissionType::CargoDelivery) {
+                        const std::string sys = sys_disp(am.dest_system);
+                        ImGui::TextColored(dimV, "Deliver:");
+                        ImGui::SameLine();
+                        ImGui::TextColored(whiteV, "%s%s%s",
+                            am.dest_base.c_str(),
+                            (!am.dest_base.empty() && !sys.empty()) ? "  \xC2\xB7  " : "",
+                            sys.c_str());
+                    } else {
+                        if (!st.in_current_system && !st.target_system.empty()) {
+                            ImGui::TextColored(dimV, "Travel to:");
+                            ImGui::SameLine();
+                            ImGui::TextColored(whiteV, "%s",
+                                               sys_disp(st.target_system).c_str());
+                        } else {
+                            ImGui::TextColored(hereV, "In this system");
+                        }
+                    }
+
+                    // -- footer: issuing guild --
+                    ImGui::TextColored(dimV, "%s",
+                        missions::source_label((missions::MissionSource)am.source));
+
+                    ImGui::Unindent(pad + 4.0f);
+                    ImGui::Dummy(ImVec2(0.0f, pad * 0.5f));
+                    ImGui::EndGroup();
+
+                    // Whole-card click routes to the mission's nav (non-bounty;
+                    // a bounty has no single nav, only a search region).
+                    const ImVec2 rmin = ImGui::GetItemRectMin();
+                    const ImVec2 rmax = ImGui::GetItemRectMax();
+                    const ImVec2 bg0(card_tl.x, rmin.y);
+                    const ImVec2 bg1(card_tl.x + card_w, rmax.y);
+
+                    bool hovered = false, clicked = false;
+                    const bool clickable = (type != missions::MissionType::Bounty);
+                    if (clickable) {
+                        ImGui::SetCursorScreenPos(bg0);
+                        ImGui::InvisibleButton("##card_hit",
+                            ImVec2(card_w, rmax.y - rmin.y));
+                        hovered = ImGui::IsItemHovered();
+                        clicked = ImGui::IsItemClicked();
+                    }
+
+                    dl->ChannelsSetCurrent(0);
+                    const ImU32 bgc = hovered ? IM_COL32(255, 255, 255, 24)
+                                              : IM_COL32(255, 255, 255, 10);
+                    dl->AddRectFilled(bg0, bg1, bgc, 5.0f);
+                    dl->AddRect(bg0, bg1, IM_COL32(255, 255, 255, 32), 5.0f);
+                    dl->AddRectFilled(bg0, ImVec2(bg0.x + 3.0f, bg1.y),
+                                      ImGui::GetColorU32(accent), 5.0f);
+                    dl->ChannelsMerge();
+
+                    if (clicked) {
+                        const int idx = resolve_nav_for_mission(
+                            am, system, galaxy, current_system_id);
+                        if (idx >= 0) {
+                            selected_nav_in_out = idx;
+                            sfx::ui_click();
+                            std::printf("[nav] target → %s\n",
+                                system.nav_points[idx].name.c_str());
+                        }
+                    }
+
+                    ImGui::Dummy(ImVec2(0.0f, 6.0f));   // gap between cards
                     ImGui::PopID();
                 }
                 ImGui::EndChild();
