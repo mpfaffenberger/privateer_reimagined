@@ -56,8 +56,11 @@
 
   // Shield generator drain (absolute GJ/s consumed whenever the gen is
   // installed). L0 = no shield gen, no drain. Hand-authored.
-  // L1=30, L2=45, L3=60, L4=80, L5=100, L6=116.25, L7=132.5 GJ/s.
-  "shield_recharge_drain_per_level": [0, 30, 45, 60, 80, 100, 116.25, 132.5],
+  // L1 must stay below the starter Tarsus' 20 GJ/s hull recharge, or a
+  // new-game ship has zero net weapon/afterburner energy regen. Yes,
+  // balance bugs can be one rude number. L1=10, L2=45, L3=60, L4=80,
+  // L5=100, L6=116.25, L7=132.5 GJ/s.
+  "shield_recharge_drain_per_level": [0, 10, 45, 60, 80, 100, 116.25, 132.5],
 
   "cargo_expansion_price": 5000,
 
