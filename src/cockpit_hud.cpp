@@ -604,7 +604,7 @@ void draw_player_status(const ShipRegistry& ships) {
             constexpr float k_bar_thick  = 6.0f;   // each shield/armor bar thickness
             constexpr float k_pair_gap   = 3.0f;   // gap between shield + armor bars
             constexpr float k_h_bar_max  = 46.0f;  // fore/aft bar length (SHORT)
-            constexpr float k_v_bar_max  = 58.0f;  // port/stbd bar length (TALL)
+            constexpr float k_v_bar_max  = 82.0f;  // port/stbd bar length (TALL)
             constexpr float k_frame_hw   = 40.0f;  // half-width  (to side bar pair)
             constexpr float k_frame_hh   = 38.0f;  // half-height (to top/bot pair)
             constexpr float k_bar_round  = 2.5f;   // bar corner rounding (px)
