@@ -122,6 +122,28 @@ bool is_outlaw_faction(Faction f) {
     return g_faction_baseline_to_player[(int)f] < 0;
 }
 
+// Whether destroying `victim` earns the player POSITIVE reputation with
+// faction `f` — i.e. f counts this kill as a service done to it, not just
+// "f happens to be hostile to victim" in the NPC matrix.
+//
+//   * Lawful factions thank you for culling ANYONE they're hostile to
+//     (pirates, retros, Kilrathi) — public service.
+//   * OUTLAW factions are pickier:
+//       - No honour among thieves: killing another outlaw never earns an
+//         outlaw's gratitude. (This is what stops pirate/retro kills from
+//         feeding Kilrathi reputation.)
+//       - The Kilrathi are a foreign military, not a street gang: the ONLY
+//         kill that earns their respect is striking the Terran
+//         Confederation (Confed). They don't care about your pirate,
+//         retro, civilian, militia or hunter body count.
+//       - Pirates / Retros still approve of any lawful target they hate.
+bool faction_approves_kill(Faction f, Faction victim) {
+    if (!is_outlaw_faction(f))      return true;
+    if (is_outlaw_faction(victim))  return false;
+    if (f == Faction::Kilrathi)     return victim == Faction::Confed;
+    return true;
+}
+
 int8_t clamp_rep(int v) {
     return (int8_t)std::clamp(v, -100, 100);
 }
@@ -149,8 +171,11 @@ std::vector<RepKillEffect> faction::apply_player_kill(PlayerReputation& rep,
                                      : KillReaction::Anger;
         } else {
             const Stance st = g_faction_stance[i][(int)victim];
-            if (st == Stance::Hostile) {
-                // f hates the victim, so the player did f a favour.
+            if (st == Stance::Hostile && faction_approves_kill(f, victim)) {
+                // f hates the victim AND counts the kill as a service done
+                // to it, so the player earns favour with f. (Outlaws don't
+                // thank you for killing other outlaws; Kilrathi only reward
+                // Confed kills — see faction_approves_kill.)
                 delta    = victim_outlaw ? k_kill_outlaw_enemy_bonus
                                          : k_kill_lawful_enemy_bonus;
                 reaction = KillReaction::Praise;
