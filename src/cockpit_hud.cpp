@@ -111,6 +111,39 @@ void pop_hud_style() {
     ImGui::PopStyleColor(2);
 }
 
+void draw_ship_diagram_centerpiece(ImDrawList* dl, const Ship& ship,
+                                   ImVec2 center, float max_px,
+                                   ImU32 fallback_fill,
+                                   ImU32 fallback_outline) {
+    const ShipSpriteFrame* frame = nullptr;
+    if (ship.sprite && ship.sprite->atlas) {
+        // Fixed top-down query: az=0, el=90. The atlas selector returns
+        // the nearest authored frame, so exact pole cells win when present
+        // and partial atlases still degrade sensibly.
+        frame = choose_ship_sprite_frame_by_angles(*ship.sprite->atlas, 0.0f, 90.0f);
+    }
+
+    if (!frame || !frame->art || frame->art->hull.view.id == SG_INVALID_ID) {
+        dl->AddCircleFilled(center, max_px * 0.5f, fallback_fill, 24);
+        dl->AddCircle(center, max_px * 0.5f, fallback_outline, 24, 1.25f);
+        return;
+    }
+
+    const SpriteArt& art = *frame->art;
+    const float src_w = (art.hull_w > 0) ? (float)art.hull_w : 1.0f;
+    const float src_h = (art.hull_h > 0) ? (float)art.hull_h : 1.0f;
+    float draw_w = max_px;
+    float draw_h = max_px;
+    if (src_w >= src_h) draw_h = max_px * (src_h / src_w);
+    else                draw_w = max_px * (src_w / src_h);
+
+    const ImVec2 tl(center.x - draw_w * 0.5f, center.y - draw_h * 0.5f);
+    const ImVec2 br(center.x + draw_w * 0.5f, center.y + draw_h * 0.5f);
+    dl->AddImage(simgui_imtextureid(art.hull.view), tl, br,
+                 ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f),
+                 IM_COL32(255, 255, 255, 235));
+}
+
 // ---- gun crosshair (centre) ---------------------------------------------
 //
 // Distinct from the nav reticle in role and colour: this one says "here
@@ -561,8 +594,9 @@ void draw_target_mfd(const Camera& cam, const ShipRegistry& ships,
             draw_v_single(stbd_ar_x, stbd_ar_y, k_v_armor_bar_max, k_armor_col,
                           armor_cur[3], armor_max[3]);
 
-            dl->AddCircleFilled(ImVec2(cx, cy), k_circle_r, k_ship_col, 24);
-            dl->AddCircle(ImVec2(cx, cy), k_circle_r, k_ship_outline, 24, 1.25f);
+            draw_ship_diagram_centerpiece(dl, *target, ImVec2(cx, cy),
+                                           k_circle_r * 2.4f,
+                                           k_ship_col, k_ship_outline);
 
             const ImU32 k_lbl_col = IM_COL32(150, 190, 230, 200);
             auto label_at = [&](float center_x, float top_y, const char* s) {
@@ -774,10 +808,12 @@ void draw_player_status(const ShipRegistry& ships) {
             draw_v_single(stbd_ar_x, stbd_ar_y, k_v_armor_bar_max, k_armor_col,
                           armor_cur[3], armor_max[3]);
 
-            // Ship circle (centrepiece). Filled amber + outline so it
-            // reads as the ship's hull against the eight bars.
-            dl->AddCircleFilled(ImVec2(cx, cy), k_circle_r, k_ship_col, 24);
-            dl->AddCircle(ImVec2(cx, cy), k_circle_r, k_ship_outline, 24, 1.5f);
+            // Ship icon (centrepiece). Use the atlas top-down frame when
+            // available; fallback amber circle keeps HUD robust for any
+            // ship/class missing sprite data.
+            draw_ship_diagram_centerpiece(dl, player, ImVec2(cx, cy),
+                                           k_circle_r * 2.4f,
+                                           k_ship_col, k_ship_outline);
 
             // Facing labels — centred around the bar pairs. Dim blue so
             // the bars stay the focus.
