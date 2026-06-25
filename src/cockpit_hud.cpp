@@ -354,7 +354,7 @@ void draw_target_mfd(const Camera& cam, const ShipRegistry& ships,
     const Ship* target = ships.find_by_id(target_ship_id);
 
     const auto sz = screen_size();
-    constexpr float w = 280.0f, h = 152.0f, margin = 16.0f;
+    constexpr float w = 280.0f, h = 248.0f, margin = 16.0f;
     ImGui::SetNextWindowPos(ImVec2(sz.w - w - margin, margin), ImGuiCond_Always);
     ImGui::SetNextWindowSize(ImVec2(w, h), ImGuiCond_Always);
     ImGui::SetNextWindowBgAlpha(0.55f);
@@ -473,33 +473,106 @@ void draw_target_mfd(const Camera& cam, const ShipRegistry& ships,
                                           target->armor_aft_cm,
                                           target->armor_port_cm,
                                           target->armor_starboard_cm };
-            const char* facing_lbl[4] = { "F", "A", "P", "St" };
+            // Same visual vocabulary as the player STATUS diagram:
+            // two independent bars per facing, shield outside / armor
+            // inside, arranged around a tiny ship circle. The old target
+            // panel used stacked progress bars and clipped the final row;
+            // tiny rectangle crimes, basically.
+            constexpr float k_circle_r          = 11.0f;
+            constexpr float k_bar_thick         = 6.0f;
+            constexpr float k_pair_gap          = 3.0f;
+            constexpr float k_h_bar_max         = 46.0f;
+            constexpr float k_v_shield_bar_max  = 40.0f;
+            constexpr float k_v_armor_bar_max   = 40.0f;
+            constexpr float k_frame_hw          = 40.0f;
+            constexpr float k_frame_hh          = 35.0f;
+            constexpr float k_side_shield_y_off = 0.0f;
+            constexpr float k_side_armor_y_off  = 0.0f;
+            constexpr float k_bar_round         = 2.5f;
 
-            ImGui::PushStyleColor(ImGuiCol_FrameBg,        IM_COL32(20,20,30,180));
-            ImGui::PushStyleColor(ImGuiCol_PlotHistogram,  IM_COL32(80,160,255,220));
-            for (int i = 0; i < 4; ++i) {
-                const float frac = shield_max[i] > 0.0f
-                    ? std::clamp(shield_cur[i] / shield_max[i], 0.0f, 1.0f) : 0.0f;
-                char buf[24];
-                std::snprintf(buf, sizeof(buf), "S%s %.0f/%.0f",
-                              facing_lbl[i], shield_cur[i], shield_max[i]);
-                ImGui::ProgressBar(frac, ImVec2(80.0f, 14.0f), buf);
-                if (i == 1) ImGui::SameLine();   // first row: F/A on top
-            }
-            ImGui::PopStyleColor(2);
+            constexpr ImU32 k_shield_col   = IM_COL32( 80, 160, 255, 220);
+            constexpr ImU32 k_armor_col    = IM_COL32(255, 140,  60, 220);
+            constexpr ImU32 k_bg_col       = IM_COL32( 20,  20,  30, 180);
+            constexpr ImU32 k_ship_col     = IM_COL32(255, 210, 100, 230);
+            constexpr ImU32 k_ship_outline = IM_COL32(220, 180, 100, 190);
 
-            ImGui::PushStyleColor(ImGuiCol_FrameBg,        IM_COL32(20,20,30,180));
-            ImGui::PushStyleColor(ImGuiCol_PlotHistogram,  IM_COL32(255,140,60,220));
-            for (int i = 0; i < 4; ++i) {
-                const float frac = armor_max[i] > 0.0f
-                    ? std::clamp(armor_cur[i] / armor_max[i], 0.0f, 1.0f) : 0.0f;
-                char buf[24];
-                std::snprintf(buf, sizeof(buf), "A%s %.0f/%.0f",
-                              facing_lbl[i], armor_cur[i], armor_max[i]);
-                ImGui::ProgressBar(frac, ImVec2(80.0f, 14.0f), buf);
-                if (i == 1) ImGui::SameLine();
-            }
-            ImGui::PopStyleColor(2);
+            ImDrawList* dl = ImGui::GetWindowDrawList();
+            auto draw_h_single = [&](float x, float y, float w, ImU32 col,
+                                     float cur, float maxv) {
+                dl->AddRectFilled(ImVec2(x, y), ImVec2(x + w, y + k_bar_thick),
+                                  k_bg_col, k_bar_round);
+                if (maxv <= 0.0f) return;
+                const float frac = std::clamp(cur / maxv, 0.0f, 1.0f);
+                dl->AddRectFilled(ImVec2(x, y),
+                                  ImVec2(x + w * frac, y + k_bar_thick),
+                                  col, k_bar_round);
+            };
+            auto draw_v_single = [&](float x, float y, float h, ImU32 col,
+                                     float cur, float maxv) {
+                dl->AddRectFilled(ImVec2(x, y), ImVec2(x + k_bar_thick, y + h),
+                                  k_bg_col, k_bar_round);
+                if (maxv <= 0.0f) return;
+                const float frac = std::clamp(cur / maxv, 0.0f, 1.0f);
+                const float fill_h = h * frac;
+                dl->AddRectFilled(ImVec2(x, y + h - fill_h),
+                                  ImVec2(x + k_bar_thick, y + h),
+                                  col, k_bar_round);
+            };
+
+            const float  k_diagram_h = 104.0f;
+            const ImVec2 region_tl   = ImGui::GetCursorScreenPos();
+            const float  avail_w     = ImGui::GetContentRegionAvail().x;
+            ImGui::Dummy(ImVec2(avail_w, k_diagram_h));
+
+            const float cx = region_tl.x + avail_w     * 0.5f;
+            const float cy = region_tl.y + k_diagram_h * 0.5f;
+            const float pair_span = k_bar_thick * 2.0f + k_pair_gap;
+
+            const float fore_x    = cx - k_h_bar_max * 0.5f;
+            const float fore_sh_y = cy - k_frame_hh;
+            const float fore_ar_y = fore_sh_y + k_bar_thick + k_pair_gap;
+            draw_h_single(fore_x, fore_sh_y, k_h_bar_max, k_shield_col,
+                          shield_cur[0], shield_max[0]);
+            draw_h_single(fore_x, fore_ar_y, k_h_bar_max, k_armor_col,
+                          armor_cur[0], armor_max[0]);
+
+            const float aft_ar_y = cy + k_frame_hh - pair_span;
+            const float aft_sh_y = aft_ar_y + k_bar_thick + k_pair_gap;
+            draw_h_single(fore_x, aft_sh_y, k_h_bar_max, k_shield_col,
+                          shield_cur[1], shield_max[1]);
+            draw_h_single(fore_x, aft_ar_y, k_h_bar_max, k_armor_col,
+                          armor_cur[1], armor_max[1]);
+
+            const float port_sh_x = cx - k_frame_hw;
+            const float port_ar_x = port_sh_x + k_bar_thick + k_pair_gap;
+            const float port_sh_y = cy - k_v_shield_bar_max * 0.5f + k_side_shield_y_off;
+            const float port_ar_y = cy - k_v_armor_bar_max  * 0.5f + k_side_armor_y_off;
+            draw_v_single(port_sh_x, port_sh_y, k_v_shield_bar_max, k_shield_col,
+                          shield_cur[2], shield_max[2]);
+            draw_v_single(port_ar_x, port_ar_y, k_v_armor_bar_max, k_armor_col,
+                          armor_cur[2], armor_max[2]);
+
+            const float stbd_ar_x = cx + k_frame_hw - pair_span;
+            const float stbd_sh_x = stbd_ar_x + k_bar_thick + k_pair_gap;
+            const float stbd_sh_y = cy - k_v_shield_bar_max * 0.5f + k_side_shield_y_off;
+            const float stbd_ar_y = cy - k_v_armor_bar_max  * 0.5f + k_side_armor_y_off;
+            draw_v_single(stbd_sh_x, stbd_sh_y, k_v_shield_bar_max, k_shield_col,
+                          shield_cur[3], shield_max[3]);
+            draw_v_single(stbd_ar_x, stbd_ar_y, k_v_armor_bar_max, k_armor_col,
+                          armor_cur[3], armor_max[3]);
+
+            dl->AddCircleFilled(ImVec2(cx, cy), k_circle_r, k_ship_col, 24);
+            dl->AddCircle(ImVec2(cx, cy), k_circle_r, k_ship_outline, 24, 1.25f);
+
+            const ImU32 k_lbl_col = IM_COL32(150, 190, 230, 200);
+            auto label_at = [&](float center_x, float top_y, const char* s) {
+                const ImVec2 ts = ImGui::CalcTextSize(s);
+                dl->AddText(ImVec2(center_x - ts.x * 0.5f, top_y), k_lbl_col, s);
+            };
+            label_at(cx, fore_sh_y - 15.0f, "F");
+            label_at(cx, aft_sh_y + k_bar_thick + 3.0f, "A");
+            label_at(port_sh_x - 9.0f, cy + k_side_shield_y_off - 7.0f, "P");
+            label_at(stbd_sh_x + k_bar_thick + 9.0f, cy + k_side_shield_y_off - 7.0f, "St");
         }
     }
     ImGui::End();
