@@ -603,12 +603,14 @@ void draw_player_status(const ShipRegistry& ships) {
             constexpr float k_circle_r   = 13.0f;  // ship circle radius
             constexpr float k_bar_thick  = 6.0f;   // each shield/armor bar thickness
             constexpr float k_pair_gap   = 3.0f;   // gap between shield + armor bars
-            constexpr float k_h_bar_max  = 46.0f;  // fore/aft bar length (SHORT)
-            constexpr float k_v_bar_max  = 82.0f;  // port/stbd bar length (TALL)
-            constexpr float k_frame_hw   = 40.0f;  // half-width  (to side bar pair)
-            constexpr float k_frame_hh   = 38.0f;  // half-height (to top/bot pair)
-            constexpr float k_side_y_off = -16.0f; // nudge side pairs upward to visually center
-            constexpr float k_bar_round  = 2.5f;   // bar corner rounding (px)
+            constexpr float k_h_bar_max       = 46.0f;  // fore/aft bar length (SHORT)
+            constexpr float k_v_shield_bar_max = 74.0f;  // side shield length: shorter at top
+            constexpr float k_v_armor_bar_max  = 82.0f;  // side armor length stays tall
+            constexpr float k_frame_hw         = 40.0f;  // half-width  (to side bar pair)
+            constexpr float k_frame_hh         = 38.0f;  // half-height (to top/bot pair)
+            constexpr float k_side_y_off       = -16.0f; // base side-pair visual centering
+            constexpr float k_side_armor_y_off = -4.0f;  // raise side armor a touch more
+            constexpr float k_bar_round        = 2.5f;   // bar corner rounding (px)
 
             constexpr ImU32 k_shield_col   = IM_COL32( 80, 160, 255, 220);
             constexpr ImU32 k_armor_col    = IM_COL32(255, 140,  60, 220);
@@ -682,19 +684,25 @@ void draw_player_status(const ShipRegistry& ships) {
             // Port pair — shield outside/left, armor inside/right.
             const float port_sh_x = cx - k_frame_hw;
             const float port_ar_x = port_sh_x + k_bar_thick + k_pair_gap;
-            const float port_y    = cy - k_v_bar_max * 0.5f + k_side_y_off;
-            draw_v_single(port_sh_x, port_y, k_v_bar_max, k_shield_col,
+            const float port_sh_y = cy - k_v_armor_bar_max * 0.5f + k_side_y_off
+                                  + (k_v_armor_bar_max - k_v_shield_bar_max);
+            const float port_ar_y = cy - k_v_armor_bar_max * 0.5f + k_side_y_off
+                                  + k_side_armor_y_off;
+            draw_v_single(port_sh_x, port_sh_y, k_v_shield_bar_max, k_shield_col,
                           shield_cur[2], shield_max[2]);
-            draw_v_single(port_ar_x, port_y, k_v_bar_max, k_armor_col,
+            draw_v_single(port_ar_x, port_ar_y, k_v_armor_bar_max, k_armor_col,
                           armor_cur[2], armor_max[2]);
 
             // Starboard pair — armor inside/left, shield outside/right.
             const float stbd_ar_x = cx + k_frame_hw - pair_span;
             const float stbd_sh_x = stbd_ar_x + k_bar_thick + k_pair_gap;
-            const float stbd_y    = cy - k_v_bar_max * 0.5f + k_side_y_off;
-            draw_v_single(stbd_sh_x, stbd_y, k_v_bar_max, k_shield_col,
+            const float stbd_sh_y = cy - k_v_armor_bar_max * 0.5f + k_side_y_off
+                                  + (k_v_armor_bar_max - k_v_shield_bar_max);
+            const float stbd_ar_y = cy - k_v_armor_bar_max * 0.5f + k_side_y_off
+                                  + k_side_armor_y_off;
+            draw_v_single(stbd_sh_x, stbd_sh_y, k_v_shield_bar_max, k_shield_col,
                           shield_cur[3], shield_max[3]);
-            draw_v_single(stbd_ar_x, stbd_y, k_v_bar_max, k_armor_col,
+            draw_v_single(stbd_ar_x, stbd_ar_y, k_v_armor_bar_max, k_armor_col,
                           armor_cur[3], armor_max[3]);
 
             // Ship circle (centrepiece). Filled amber + outline so it
