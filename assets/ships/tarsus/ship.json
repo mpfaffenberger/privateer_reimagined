@@ -31,7 +31,6 @@
   "max_engine_level": 2,
   "max_shield_level": 2,
   "default_shield":   "Shield Generator 1",
-  "default_armor":    "Plasteel Armor",
 
   // Gun hardpoints (body frame, metres) — the single source of truth for
   // muzzle geometry, used by BOTH the player cockpit and NPC Tarsuses.

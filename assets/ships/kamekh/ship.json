@@ -26,7 +26,6 @@
   "max_engine_level": 1,
   "max_shield_level": 5,
   "default_shield":   "Shield Generator 5",
-  "default_armor":    "Isometal Armor",
 
   // Forward battery (2 Meson Blasters + 2 Mass Drivers) plus the Kilrathi
   // corvette's three 2-gun turrets: one dorsal (Plasma pair), one ventral

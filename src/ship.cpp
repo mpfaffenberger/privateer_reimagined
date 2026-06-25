@@ -191,18 +191,11 @@ Ship ship::spawn(const ShipClass& klass) {
     s.armor_aft_cm   = klass.armor_aft_cm;
     s.armor_port_cm  = klass.armor_port_cm;
     s.armor_starboard_cm = klass.armor_starboard_cm;
-    s.fitted_armor = klass.default_armor;
-    if (s.fitted_armor) {
-        // Stack fitted-armor cm onto the base hull. Privateer's manual
-        // mostly treats armor as "tier replaces base" rather than "tier
-        // adds to base", but the additive interpretation is what the
-        // fan-data ArmorType numbers were authored for. Either is fine
-        // gameplay-wise; pick one and stay consistent.
-        s.armor_fore_cm += s.fitted_armor->front_cm;
-        s.armor_aft_cm  += s.fitted_armor->back_cm;
-        s.armor_port_cm     += s.fitted_armor->port_cm;
-        s.armor_starboard_cm += s.fitted_armor->starboard_cm;
-    }
+    // No armor package at spawn — armor is a purchasable upgrade only
+    // (np armor). Every ship starts on its base hull cm; fitted armor is
+    // attached later (the player buys it; NPCs never get any). When
+    // present it stacks additively on the base hull (see heal_to_full).
+    s.fitted_armor = nullptr;
     if (klass.default_shield) {
         s.shield_fore_cm = shield_max_cm(klass, klass.default_shield->front_cm, s.shield_mult);
         s.shield_aft_cm  = shield_max_cm(klass, klass.default_shield->back_cm,  s.shield_mult);
@@ -244,8 +237,9 @@ void ship::heal_to_full(Ship& s) {
     s.armor_aft_cm  = k.armor_aft_cm;
     s.armor_port_cm     = k.armor_port_cm;
     s.armor_starboard_cm = k.armor_starboard_cm;
-    const ArmorType* fitted_armor = s.fitted_armor ? s.fitted_armor : k.default_armor;
-    if (fitted_armor) {
+    // Stack the per-instance fitted armor (if any) on top of base hull cm.
+    // null = no package bought = base hull only.
+    if (const ArmorType* fitted_armor = s.fitted_armor) {
         s.armor_fore_cm += fitted_armor->front_cm;
         s.armor_aft_cm  += fitted_armor->back_cm;
         s.armor_port_cm     += fitted_armor->port_cm;

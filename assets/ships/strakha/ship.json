@@ -22,7 +22,6 @@
   "max_engine_level": 2,
   "max_shield_level": 3,
   "default_shield":   "Shield Generator 2",
-  "default_armor":    "Tungsten Armor",
 
   "default_guns": [
     { "offset_body": [-2.5, 0.0, 3.0], "type": "laser" },

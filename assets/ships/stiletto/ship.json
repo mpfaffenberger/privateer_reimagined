@@ -29,7 +29,6 @@
   "max_engine_level": 2,
   "max_shield_level": 2,
   "default_shield":   "Shield Generator 2",
-  "default_armor":    "Plasteel Armor",
 
   // Mass Drivers x2: the Stiletto's whole offensive kit (plus 2 HS missiles
   // we don't model). Cheap on energy so the light reactor sustains them.

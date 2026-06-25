@@ -34,7 +34,6 @@
   "max_engine_level": 1,
   "max_shield_level": 5,
   "default_shield":   "Shield Generator 5",
-  "default_armor":    "Isometal Armor",
 
   // Heavy forward battery: 2 Meson Blasters + 2 Tachyon Cannon + 1 Ionic
   // Pulse Cannon, backed by three 2-gun auto-turrets: one dorsal (Particle

@@ -321,8 +321,7 @@ float ai_brain::hp_fraction(const Ship& s) {
     const float cur = s.armor_fore_cm  + s.armor_aft_cm  + s.armor_port_cm  + s.armor_starboard_cm
                     + s.shield_fore_cm + s.shield_aft_cm + s.shield_port_cm + s.shield_starboard_cm;
     float maxv = s.klass->armor_fore_cm + s.klass->armor_aft_cm + s.klass->armor_port_cm + s.klass->armor_starboard_cm;
-    const ArmorType* fitted_armor = s.fitted_armor ? s.fitted_armor : s.klass->default_armor;
-    if (fitted_armor)
+    if (const ArmorType* fitted_armor = s.fitted_armor)
         maxv += fitted_armor->front_cm + fitted_armor->back_cm
               + fitted_armor->port_cm + fitted_armor->starboard_cm;
     if (s.klass->default_shield)

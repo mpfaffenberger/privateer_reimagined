@@ -22,7 +22,6 @@
   "max_engine_level": 2,
   "max_shield_level": 2,
   "default_shield":   "Light Shields",
-  "default_armor":    "Plasteel Armor",
 
   "default_guns": [
     { "offset_body": [-2.0, 0.0, 3.0], "type": "mass_driver" },

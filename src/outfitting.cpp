@@ -715,25 +715,20 @@ void draw_equipment(BaseContext& ctx) {
     ImGui::PopStyleColor();
     ImGui::Spacing();
 
-    // Armor packages. PlayerState::armor_name empty means the hull's stock
-    // package, usually Plasteel on starter ships. Buying explicitly fitted
-    // armor overrides that per-instance; no shared ShipClass mutation. We
-    // like our NPCs not accidentally receiving Mike's shopping cart.
+    // Armor packages. Armor is a purchasable upgrade only — no ship spawns
+    // with one (np armor), so an empty armor_name means NO package fitted
+    // (base hull cm only). Buying fits the package per-instance; nothing
+    // touches the shared ShipClass, so NPCs never inherit your shopping.
     {
-                const char* stock = (klass && klass->default_armor)
-            ? klass->default_armor->name.c_str() : "None";
-        const bool on_default = p.armor_name.empty();
-        const std::string current = on_default ? std::string(stock) : p.armor_name;
         ImGui::PushID("armor_packages");
-        // Tag the stock package so players know it's the hull default they
-        // were born with, not an upgrade they bought (np armor).
-        ImGui::Text("Armor   %s%s", current.c_str(),
-                    on_default ? " (hull default)" : "");
+        ImGui::Text("Armor   %s",
+                    p.armor_name.empty() ? "None (base hull only)"
+                                         : p.armor_name.c_str());
         for (const ArmorType& a : armor::all()) {
             const int64_t price = armor_price(a.name);
             if (price <= 0) continue;
             ImGui::PushID(a.name.c_str());
-            const bool fitted = (current == a.name);
+            const bool fitted = (p.armor_name == a.name);
             ImGui::Text("  %s  %.0f/%.0f/%.0f/%.0f cm",
                         a.name.c_str(), a.front_cm, a.back_cm,
                         a.port_cm, a.starboard_cm);

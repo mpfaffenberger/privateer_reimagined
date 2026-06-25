@@ -46,7 +46,6 @@ enum class AIPersonality : uint8_t {
 #include <vector>
 
 struct ShieldType;
-struct ArmorType;
 
 struct ShipClass {
     // ---- identity ------------------------------------------------------
@@ -71,7 +70,10 @@ struct ShipClass {
     // total per-facing protection of an instance.
     float armor_fore_cm = 10.0f;
     float armor_aft_cm  = 10.0f;
-    float armor_side_cm =  8.0f;
+    // Side is split port/starboard. Defaults mirror the old single
+    // side_cm 4 / split-in-half — sum preserved vs the previous model.
+    float armor_port_cm     =  4.0f;
+    float armor_starboard_cm = 4.0f;
 
     // ---- mobility ------------------------------------------------------
     float        cruise_speed       = 300.0f;   // m/s top speed without afterburner
@@ -146,13 +148,17 @@ struct ShipClass {
 
     // ---- default fitted loadout ---------------------------------------
     // Each instance starts with these unless the spawner overrides. The
-    // string fields are looked up against the shield/armor tables at
-    // ShipClass load time and resolved to pointers below; if the lookup
-    // fails the pointer is null and the loader logs a warning.
+    // string field is looked up against the shield table at ShipClass load
+    // time and resolved to a pointer below; if the lookup fails the pointer
+    // is null and the loader logs a warning.
+    //
+    // NOTE: there is intentionally NO default armor. Armor is a purely
+    // purchasable upgrade (np armor) — no ship, player or NPC, spawns with
+    // an armor package. A ship's stock durability is its base hull cm
+    // (armor_*_cm above); fitted armor stacks on top only once bought and
+    // lives on the Ship instance (Ship::fitted_armor), never the class.
     std::string default_shield_name;
-    std::string default_armor_name;
     const ShieldType* default_shield = nullptr;
-    const ArmorType*  default_armor  = nullptr;
 
     std::vector<GunMount> default_guns;
 

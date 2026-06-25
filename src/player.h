@@ -122,7 +122,8 @@ struct PlayerState {
     int                      shield_level    = 0;
     int                      engine_level    = 0;
     // Name from armor::find(), e.g. "Plasteel Armor" / "Tungsten Armor".
-    // Empty means use the hull class's stock default_armor.
+    // Empty means NO armor package fitted (base hull cm only) — armor is a
+    // purchasable upgrade, so new games / fresh hulls start empty.
     std::string              armor_name;
     bool                     cargo_expansion = false;
 

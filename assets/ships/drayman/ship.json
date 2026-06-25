@@ -26,7 +26,6 @@
   "max_engine_level": 2,
   "max_shield_level": 5,
   "default_shield":   "Shield Generator 5",
-  "default_armor":    "Tungsten Armor",
 
   // Two fixed forward Meson Blasters, but the merchant's real teeth are
   // its defensive turrets: dorsal, ventral, and rear Mass Driver pairs

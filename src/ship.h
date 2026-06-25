@@ -194,10 +194,11 @@ struct Ship {
     // facing's MAX shield is read off klass->default_shield.
     float shield_mult       = 1.0f;
 
-    // Per-instance fitted armor. Null means use the hull class's stock
-    // default_armor. Player purchases set this without mutating ShipClass,
-    // so buying armor for your Tarsus does not secretly upgrade every NPC
-    // Tarsus in Gemini. Which would be hilarious, but no.
+    // Per-instance fitted armor. Armor is a purchasable upgrade only — no
+    // ship spawns with one — so null means NO armor package (base hull cm
+    // only), which is every ship's stock state. The player buys a package
+    // (Plasteel/Tungsten/Isometal) and it lands here; NPCs always stay null.
+    // Per-instance so it never mutates the shared ShipClass.
     const ArmorType* fitted_armor = nullptr;
 
     // Engine recharge — additive ABSOLUTE GJ/s from the engine upgrade

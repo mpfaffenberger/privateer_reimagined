@@ -29,7 +29,6 @@
   "max_engine_level": 3,
   "max_shield_level": 4,
   "default_shield":   "Shield Generator 4",
-  "default_armor":    "Tungsten Armor",
 
   // Mass Drivers x3 — the canonical forward battery (turreted particle/laser
   // omitted per the v1 no-turret scope note).

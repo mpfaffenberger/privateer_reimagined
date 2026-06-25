@@ -834,7 +834,7 @@ void build_system_scene(bool first_time) {
 
     // ---- load the design-data tables (factions, guns, shields, armor, ----
     // ship classes). Order matters: ship_class::load_all resolves
-    // default_shield/default_armor strings against the shield/armor
+    // default_shield strings against the shield/armor
     // tables, so those must be populated first. None of these touch the
     // GPU; they're pure data loaders, safe to run after system_def and
     // before any rendering init.
@@ -2933,13 +2933,12 @@ void frame_cb() {
             if (Ship* pl = g.ships.player()) {
                 const bool hull_changed =
                     !pl->klass || pl->klass->name != g.player.ship_class_name;
+                // Armor is a per-instance purchase (no hull default); compare
+                // the player's bought package against what's currently fitted
+                // so installing/removing armor re-heals to the new max.
                 const ArmorType* desired_armor = g.player.armor_name.empty()
-                    ? (pl->klass ? pl->klass->default_armor : nullptr)
-                    : armor::find(g.player.armor_name);
-                const ArmorType* current_armor = pl->fitted_armor
-                    ? pl->fitted_armor
-                    : (pl->klass ? pl->klass->default_armor : nullptr);
-                const bool armor_changed = desired_armor != current_armor;
+                    ? nullptr : armor::find(g.player.armor_name);
+                const bool armor_changed = desired_armor != pl->fitted_armor;
                 apply_player_loadout(*pl, g.player, /*heal=*/hull_changed || armor_changed);
                 std::printf("[outfit] launch re-fit: klass=%s mounts=%zu%s%s\n",
                             pl->klass ? pl->klass->name.c_str() : "<null>",

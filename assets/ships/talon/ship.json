@@ -28,7 +28,6 @@
   "max_engine_level": 1,
   "max_shield_level": 1,
   "default_shield":   "Light Shields",
-  "default_armor":    "Plasteel Armor",
 
   // Muzzle offsets are WORLD METERS (firing.cpp applies body_to_world
   // rotation but NO size scaling). The original sub-2 m offsets put all

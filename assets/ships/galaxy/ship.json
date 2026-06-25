@@ -22,7 +22,6 @@
   "max_engine_level": 3,
   "max_shield_level": 3,
   "default_shield":   "Shield Generator 2",
-  "default_armor":    "Tungsten Armor",
 
   // Two fixed forward Mass Drivers plus defensive turrets (dorsal +
   // ventral Mass Driver pairs, rear Meson Blaster pair) so this merchant

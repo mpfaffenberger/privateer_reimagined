@@ -1,6 +1,5 @@
 #include "ship_class.h"
 
-#include "armor.h"
 #include "gun.h"
 #include "json.h"
 #include "mobility.h"
@@ -85,10 +84,14 @@ bool parse_one(const fs::path& path) {
     // Hull category — capital ships get extra spawn/travel spacing.
     c.capital = opt_bool(root, "capital", c.capital);
 
-    // Armor (base hull cm — independent of fitted ArmorType).
+    // Armor (base hull cm — independent of fitted ArmorType). The
+    // old JSON 'armor_side_cm' is split across port + starboard here
+    // (each face gets half the old cm) so ships keep their effective
+    // total armor across the issue-30 cutover.
     c.armor_fore_cm = opt_num(root, "armor_fore_cm", c.armor_fore_cm);
     c.armor_aft_cm  = opt_num(root, "armor_aft_cm",  c.armor_aft_cm);
-    c.armor_side_cm = opt_num(root, "armor_side_cm", c.armor_side_cm);
+    c.armor_port_cm     = opt_num(root, "armor_port_cm",     c.armor_port_cm);
+    c.armor_starboard_cm = opt_num(root, "armor_starboard_cm", c.armor_starboard_cm);
 
     // Mobility.
     c.cruise_speed      = opt_num(root, "cruise_speed",      c.cruise_speed);
@@ -166,23 +169,17 @@ bool parse_one(const fs::path& path) {
     c.max_engine_level = (uint8_t)opt_num(root, "max_engine_level", c.max_engine_level);
     c.max_shield_level = (uint8_t)opt_num(root, "max_shield_level", c.max_shield_level);
 
-    // Default fitted shield + armor. Names point into the tables loaded
-    // earlier; resolve to pointers now so spawn paths don't have to
-    // re-look-up. Missing entries are warned but don't fail the load.
+    // Default fitted shield. Name points into the shield table loaded
+    // earlier; resolve to a pointer now so spawn paths don't have to
+    // re-look-up. Missing entry is warned but doesn't fail the load.
+    // Armor is deliberately NOT a class default — it's a purchasable
+    // upgrade fitted per-instance (see ship_class.h / Ship::fitted_armor).
     c.default_shield_name = opt_str(root, "default_shield");
-    c.default_armor_name  = opt_str(root, "default_armor");
     if (!c.default_shield_name.empty()) {
         c.default_shield = shield::find(c.default_shield_name);
         if (!c.default_shield) {
             std::fprintf(stderr, "[ship_class] '%s': default_shield '%s' not in table\n",
                          c.name.c_str(), c.default_shield_name.c_str());
-        }
-    }
-    if (!c.default_armor_name.empty()) {
-        c.default_armor = armor::find(c.default_armor_name);
-        if (!c.default_armor) {
-            std::fprintf(stderr, "[ship_class] '%s': default_armor '%s' not in table\n",
-                         c.name.c_str(), c.default_armor_name.c_str());
         }
     }
 
@@ -254,12 +251,13 @@ int ship_class::load_all(const std::string& ships_dir) {
         total_guns += (int)g_classes.back().default_guns.size();
 
         const auto& c = g_classes.back();
-        std::printf("[ship_class] %-12s (%s, %s)  hull=%.0f/%.0f/%.0f cm  "
+        std::printf("[ship_class] %-12s (%s, %s)  hull=%.0f/%.0f/%.0f/%.0f cm  "
                     "speed=%.0f/%.0f m/s  guns=%zu\n",
                     c.name.c_str(),
                     c.class_label.empty() ? "?" : c.class_label.c_str(),
                     faction::to_name(c.default_faction),
-                    c.armor_fore_cm, c.armor_aft_cm, c.armor_side_cm,
+                    c.armor_fore_cm, c.armor_aft_cm,
+                    c.armor_port_cm, c.armor_starboard_cm,
                     c.cruise_speed, c.afterburner_speed,
                     c.default_guns.size());
     }

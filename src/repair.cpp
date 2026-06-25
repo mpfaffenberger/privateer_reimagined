@@ -46,8 +46,9 @@ FullArmor full_armor(const Ship& s) {
     fa.aft       = k.armor_aft_cm;
     fa.port      = k.armor_port_cm;
     fa.starboard = k.armor_starboard_cm;
-    const ArmorType* fitted_armor = s.fitted_armor ? s.fitted_armor : k.default_armor;
-    if (fitted_armor) {
+    // Fitted armor (purchasable upgrade) stacks on the base hull; null =
+    // no package, base hull only.
+    if (const ArmorType* fitted_armor = s.fitted_armor) {
         fa.fore      += fitted_armor->front_cm;
         fa.aft       += fitted_armor->back_cm;
         fa.port      += fitted_armor->port_cm;
