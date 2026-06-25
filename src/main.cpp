@@ -2381,6 +2381,23 @@ static void update_mission_forces() {
             for (const std::string& r : am.bounty_region)
                 if (r == sys) { in_region = true; break; }
             if (!in_region) break;
+
+            // Don't ambush the player on the launch pad. The quarry anchors
+            // on the player (spawns ~8-15km out), so arming the instant the
+            // player is in-region makes the bounty pop in the moment they
+            // undock from a base that happens to sit in the hunt region.
+            // Gate on standoff from the NEAREST base: only arm once the
+            // player has left a base's vicinity and is actually out hunting.
+            // (Jump-ins land far from bases, so this fires shortly after
+            // arrival there; deep-space systems with no base arm at once.)
+            float nearest_base_m = 1e30f;
+            for (const NavPointDef& n : g.system.nav_points) {
+                if (n.base_id.empty()) continue;
+                nearest_base_m = std::min(nearest_base_m,
+                    HMM_LenV3(HMM_SubV3(g.camera.position, n.position)));
+            }
+            if (nearest_base_m < encounters::k_bounty_base_standoff_m) break;
+
             obj_key = "__bounty__";
             anchor  = g.camera.position;   // hunt finds them near the player
             count   = am.count_required;

@@ -81,6 +81,7 @@ constexpr int   k_registry_hard_cap = 64;        // absolute backstop on registr
 constexpr int   k_entry_population_max = 24;     // cap for a one-shot system-entry roll
 constexpr int   k_mission_force_max  = 8;        // hard cap on one mission's forced wing
 constexpr float k_mission_arm_m      = 20000.0f; // arm a mission spawn within this of its objective
+constexpr float k_bounty_base_standoff_m = 18000.0f; // bounty quarry won't arm while the player is this close to a base (no launch-pad ambush)
 
 // Scout / Patrol RANDOM encounter knobs (the "enemies may or may not show
 // up" model). Each nav rolls once on first approach; a hit spawns a small
