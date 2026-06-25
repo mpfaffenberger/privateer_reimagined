@@ -8,6 +8,10 @@
 //   + / - (hold)   — throttle: ramp cruising speed up / down
 //   Tab (hold)     — afterburner: snap to full afterburn speed; release
 //                    returns to the throttle setting
+//   , / . (hold)   — roll: rotate around the view axis. , rolls left,
+//                    . rolls right. Held (release levels out via the
+//                    camera's angular damping). Coexists with mouse
+//                    aim — pitch/yaw by mouse + roll by keys.
 //   N              — cycle selected nav point; opens the navmap if
 //                      closed (Esc / X to close). N cycles inside an
 //                      already-open navmap.
@@ -81,6 +85,7 @@ HMM_Mat4 model_matrix(HMM_Vec3 pos, HMM_Vec3 euler_deg, float s);
 #include "ship.h"
 #include "ai_brain.h"
 #include "ship_ai.h"
+#include "tracelog.h"
 #include "ship_registry.h"
 #include "ship_class.h"
 #include "shield.h"
@@ -629,6 +634,12 @@ void init_cb() {
     desc.buffer_pool_size = 1024;
     sg_setup(&desc);
     stm_setup();
+
+    // Buffered logger (issue #26). Bring it up before any other subsystem
+    // so its buffered flush thread doesn't catch a tear-down race at exit.
+    // Cheap to leave enabled; the flush thread sleeps when the queue is
+    // empty and the producer never blocks (drops oldest on overflow).
+    tracelog::init();
 
     // --- on-screen text HUD -----------------------------------------------
     // sokol_debugtext gives us several built-in bitmap fonts. We enable a
@@ -1306,12 +1317,14 @@ void build_system_scene(bool first_time) {
     {
         Ship& player = *g.ships.player();
         apply_player_loadout(player, g.player);
-        std::printf("[player] equipped: klass=%s mounts=%zu shield F/A/S=%.0f/%.0f/%.0f "
-                    "armor F/A/S=%.0f/%.0f/%.0f energy=%.0f\n",
+        std::printf("[player] equipped: klass=%s mounts=%zu shield F/A/P/St=%.0f/%.0f/%.0f/%.0f "
+                    "armor F/A/P/St=%.0f/%.0f/%.0f/%.0f energy=%.0f\n",
                     player.klass ? player.klass->name.c_str() : "<null>",
                     player.mounts.size(),
-                    player.shield_fore_cm, player.shield_aft_cm, player.shield_side_cm,
-                    player.armor_fore_cm, player.armor_aft_cm, player.armor_side_cm,
+                    player.shield_fore_cm, player.shield_aft_cm,
+                    player.shield_port_cm, player.shield_starboard_cm,
+                    player.armor_fore_cm, player.armor_aft_cm,
+                    player.armor_port_cm, player.armor_starboard_cm,
                     player.energy_gj);
     }
     }  // end if (first_time) — one-time player Ship spawn + loadout
@@ -2626,6 +2639,14 @@ void draw_welcome_overlay() {
 
 
 void frame_cb() {
+    // Issue #26 scoped timer for the whole frame, plus a free log line on
+    // every event we know is part of combat input. Together these let a
+    // postmortem correlate "key down at T+0" with "engine responded at T+23ms"
+    // (ScopEDTimer at the function reading the key) with "frame finished at
+    // T+16ms" (this top-level TRACELOG_SCOPED_FUNC). They're cheap and
+    // compile out cleanly when TRACELOG_ENABLE is 0.
+    TRACELOG_SCOPED_FUNC();
+
     // --- timestep -----------------------------------------------------------
     const uint64_t now    = stm_now();
     const float    raw_dt = (float)stm_sec(stm_diff(now, g.last_frame_ticks));
@@ -3036,6 +3057,18 @@ void frame_cb() {
             g_speed_input_ref = std::max(g_speed_input_ref - thr_step,
                                         0.0f);
 
+        // Roll: HOLD , / . to roll around the camera view axis. Held
+        // action — release lets the camera's angular damping (in
+        // Camera::integrate) level it back out. Scoped to Flight mode
+        // to match the throttle block above. Sign: , rolls left (-1),
+        // . rolls right (+1). apply_roll composes locally on the
+        // orientation quaternion, so it coexists with mouse-aim
+        // pitch+yaw without cancelling either.
+        if (g.keys_down[SAPP_KEYCODE_COMMA])
+            g.camera.apply_roll(-1.0f, dt);
+        if (g.keys_down[SAPP_KEYCODE_PERIOD])
+            g.camera.apply_roll(+1.0f, dt);
+
         // Forward speed is the ONLY manual flight input now (the ship aims
         // by mouse). + / - set the cruising speed in g_speed_input_ref;
         // holding Tab overrides to full afterburn speed and snaps back to
@@ -3086,6 +3119,20 @@ void frame_cb() {
     // physics so its pose is the one the audio listener + render see.
     docking::tick(g.docking, g.camera, g.game, g.player, dt);
 
+    // Issue #24 fail-on-land: any cargo consignment whose dest_base isn't
+    // the base we just docked at gets failed (cargo jettisoned, no reward).
+    // Idempotent — the moment we commit to the pad is the only time the
+    // "off-target" check kicks in; the function also no-ops on missions
+    // whose target is this dock (so Deliver still works) and on every
+    // non-cargo mission.
+    if (g.player.docked && !g.player.last_docked_base.empty()) {
+        static std::string s_last_docked;
+        if (s_last_docked != g.player.last_docked_base) {
+            missions::fail_cargo_on_dock(g.player, g.player.last_docked_base);
+            s_last_docked = g.player.last_docked_base;
+        }
+    }
+
     // Nav autopilot step (np-opa.3). While engaged it owns the camera:
     // orients toward the selected nav, winds up the cruise engine, and
     // eases to a stop on arrival (or drops out if threat:: trips). No-op
@@ -3109,7 +3156,8 @@ void frame_cb() {
                 // do for the player right now (just barely past a Heavy
                 // Shields block, say) — same code path the NPCs use.
                 static const HitFacing k_faces[] = {
-                    HitFacing::Fore, HitFacing::Aft, HitFacing::Side, HitFacing::Side};
+                    HitFacing::Fore, HitFacing::Aft,
+                    HitFacing::Port, HitFacing::Starboard};
                 const HitFacing face = k_faces[((int)(stm_sec(stm_now()) * 1000.0)) & 3];
                 ship::take_damage(*pl, hazards::k_sun_damage_per_s_cm, face);
             }
@@ -3260,13 +3308,15 @@ void frame_cb() {
         if (g.apply_health_pending) {
             g.apply_health_pending = false;
             if (g.player.hp_valid) {
-                player->armor_fore_cm  = g.player.hp_armor_fore;
-                player->armor_aft_cm   = g.player.hp_armor_aft;
-                player->armor_side_cm  = g.player.hp_armor_side;
-                player->shield_fore_cm = g.player.hp_shield_fore;
-                player->shield_aft_cm  = g.player.hp_shield_aft;
-                player->shield_side_cm = g.player.hp_shield_side;
-                player->energy_gj      = g.player.hp_energy;
+                player->armor_fore_cm      = g.player.hp_armor_fore;
+                player->armor_aft_cm       = g.player.hp_armor_aft;
+                player->armor_port_cm      = g.player.hp_armor_port;
+                player->armor_starboard_cm = g.player.hp_armor_starboard;
+                player->shield_fore_cm     = g.player.hp_shield_fore;
+                player->shield_aft_cm      = g.player.hp_shield_aft;
+                player->shield_port_cm     = g.player.hp_shield_port;
+                player->shield_starboard_cm = g.player.hp_shield_starboard;
+                player->energy_gj          = g.player.hp_energy;
                 std::printf("[save] applied loaded ship damage to hull\n");
             }
         }
@@ -3275,14 +3325,16 @@ void frame_cb() {
         // captures live damage without needing the Ship at the save
         // site. Applied back to the spawned ship on load/respawn.
         if (player->alive && g.game.mode == GameMode::Flight) {
-            g.player.hp_valid       = true;
-            g.player.hp_armor_fore  = player->armor_fore_cm;
-            g.player.hp_armor_aft   = player->armor_aft_cm;
-            g.player.hp_armor_side  = player->armor_side_cm;
-            g.player.hp_shield_fore = player->shield_fore_cm;
-            g.player.hp_shield_aft  = player->shield_aft_cm;
-            g.player.hp_shield_side = player->shield_side_cm;
-            g.player.hp_energy      = player->energy_gj;
+            g.player.hp_valid          = true;
+            g.player.hp_armor_fore     = player->armor_fore_cm;
+            g.player.hp_armor_aft      = player->armor_aft_cm;
+            g.player.hp_armor_port     = player->armor_port_cm;
+            g.player.hp_armor_starboard = player->armor_starboard_cm;
+            g.player.hp_shield_fore    = player->shield_fore_cm;
+            g.player.hp_shield_aft     = player->shield_aft_cm;
+            g.player.hp_shield_port    = player->shield_port_cm;
+            g.player.hp_shield_starboard = player->shield_starboard_cm;
+            g.player.hp_energy         = player->energy_gj;
         }
     }
     for (Ship& s : g.ships) {
@@ -3562,9 +3614,10 @@ void frame_cb() {
     }
 
     // Same idea for shield + armor values — record per-facing cm so we
-    // can spawn flashes whenever any facing decreases. 6 floats per ship
+    // can spawn flashes whenever any facing decreases. 8 floats per ship
     // total; ~400 bytes per frame at the demo's scale.
-    struct HpSnap { float sh_fore, sh_aft, sh_side, ar_fore, ar_aft, ar_side; };
+    struct HpSnap { float sh_fore, sh_aft, sh_port, sh_stbd,
+                        ar_fore, ar_aft, ar_port, ar_stbd; };
     static thread_local std::vector<HpSnap> hp_prev;
     hp_prev.resize(g.ships.slot_count());
     for (size_t i = 0; i < g.ships.slot_count(); ++i) {
@@ -3572,10 +3625,12 @@ void frame_cb() {
         if (!s) { hp_prev[i] = {}; continue; }
         hp_prev[i] = { s->shield_fore_cm,
                        s->shield_aft_cm,
-                       s->shield_side_cm,
+                       s->shield_port_cm,
+                       s->shield_starboard_cm,
                        s->armor_fore_cm,
                        s->armor_aft_cm,
-                       s->armor_side_cm };
+                       s->armor_port_cm,
+                       s->armor_starboard_cm };
     }
 
     // Collision + damage. Runs AFTER projectile::tick — by this point
@@ -3721,10 +3776,12 @@ void frame_cb() {
         const HpSnap& prev = hp_prev[i];
         const bool sh_hit = (prev.sh_fore > s.shield_fore_cm)
                          || (prev.sh_aft  > s.shield_aft_cm)
-                         || (prev.sh_side > s.shield_side_cm);
+                         || (prev.sh_port > s.shield_port_cm)
+                         || (prev.sh_stbd > s.shield_starboard_cm);
         const bool ar_hit = (prev.ar_fore > s.armor_fore_cm)
                          || (prev.ar_aft  > s.armor_aft_cm)
-                         || (prev.ar_side > s.armor_side_cm);
+                         || (prev.ar_port > s.armor_port_cm)
+                         || (prev.ar_stbd > s.armor_starboard_cm);
         if (!(sh_hit || ar_hit)) continue;
 
         if (s.is_player) {
@@ -4183,9 +4240,11 @@ void frame_cb() {
             if (g.ships.player() && g.ships.player()->klass) {
                 const Ship& pl = *g.ships.player();
                 if (pl.alive) {
-                    sdtx_printf("PLAYER  shield F%.0f A%.0f S%.0f  armor F%.0f A%.0f S%.0f\n",
-                                pl.shield_fore_cm, pl.shield_aft_cm, pl.shield_side_cm,
-                                pl.armor_fore_cm,  pl.armor_aft_cm,  pl.armor_side_cm);
+                    sdtx_printf("PLAYER  shield F%.0f A%.0f P%.0f St%.0f  armor F%.0f A%.0f P%.0f St%.0f\n",
+                                pl.shield_fore_cm, pl.shield_aft_cm,
+                                pl.shield_port_cm, pl.shield_starboard_cm,
+                                pl.armor_fore_cm,  pl.armor_aft_cm,
+                                pl.armor_port_cm,  pl.armor_starboard_cm);
                 } else {
                     sdtx_puts("PLAYER  *** DEAD ***\n");
                 }
@@ -4228,8 +4287,8 @@ void frame_cb() {
                                   " [H%d A%d N%d]",
                                   p.n_hostile, p.n_allied, p.n_neutral);
                     if (sh.alive) {
-                        const float sh_sum = sh.shield_fore_cm + sh.shield_aft_cm + sh.shield_side_cm;
-                        const float ar_sum = sh.armor_fore_cm  + sh.armor_aft_cm  + sh.armor_side_cm;
+                        const float sh_sum = sh.shield_fore_cm + sh.shield_aft_cm + sh.shield_port_cm + sh.shield_starboard_cm;
+                        const float ar_sum = sh.armor_fore_cm  + sh.armor_aft_cm  + sh.armor_port_cm  + sh.armor_starboard_cm;
                         std::snprintf(hp_buf, sizeof(hp_buf),
                                       " S%.0f A%.0f", sh_sum, ar_sum);
                     } else {
@@ -4745,6 +4804,7 @@ void frame_cb() {
             cockpit_hud::build(g.camera, g.system, g.selected_nav,
                                g.mouse_x, g.mouse_y, g.fly_by_wire,
                                g.ships, g.player_target_id,
+                               g.player_atlas,
                                dock_prompt, dock_ready,
                                draw_world);
 
@@ -5303,6 +5363,10 @@ void cleanup_cb() {
     g.sun.destroy();
     g.skybox.destroy();
     sg_shutdown();
+    // Buffered logger (issue #26): join the flush thread and close the log
+    // file before sokol teardown finishes — after this point we lose any
+    // log lines that didn't get drained.
+    tracelog::shutdown();
 }
 
 void event_cb(const sapp_event* ev) {

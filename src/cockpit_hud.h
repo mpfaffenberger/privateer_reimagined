@@ -31,6 +31,7 @@ struct Camera;
 struct StarSystem;
 struct Ship;
 struct PlayerState;
+struct ShipSpriteAtlas;
 class ShipRegistry;
 
 namespace galaxy { struct Galaxy; }
@@ -59,6 +60,7 @@ namespace cockpit_hud {
 void build(const Camera& cam, const StarSystem& system, int selected_nav,
            float mouse_x, float mouse_y, bool fly_by_wire,
            const ShipRegistry& ships, uint32_t target_ship_id,
+           const ShipSpriteAtlas* player_preview_atlas = nullptr,
            const char* dock_prompt = nullptr, bool dock_ready = false,
            bool draw_world = true);   // false hides nav-reticle + mission glyphs
 

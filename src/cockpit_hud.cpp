@@ -112,15 +112,19 @@ void pop_hud_style() {
 }
 
 void draw_ship_diagram_centerpiece(ImDrawList* dl, const Ship& ship,
+                                   const ShipSpriteAtlas* atlas_override,
                                    ImVec2 center, float max_px,
                                    ImU32 fallback_fill,
                                    ImU32 fallback_outline) {
+    const ShipSpriteAtlas* atlas = atlas_override;
+    if (!atlas && ship.sprite) atlas = ship.sprite->atlas;
+
     const ShipSpriteFrame* frame = nullptr;
-    if (ship.sprite && ship.sprite->atlas) {
+    if (atlas) {
         // Fixed top-down query: az=0, el=90. The atlas selector returns
         // the nearest authored frame, so exact pole cells win when present
         // and partial atlases still degrade sensibly.
-        frame = choose_ship_sprite_frame_by_angles(*ship.sprite->atlas, 0.0f, 90.0f);
+        frame = choose_ship_sprite_frame_by_angles(*atlas, 0.0f, 90.0f);
     }
 
     if (!frame || !frame->art || frame->art->hull.view.id == SG_INVALID_ID) {
@@ -139,9 +143,12 @@ void draw_ship_diagram_centerpiece(ImDrawList* dl, const Ship& ship,
 
     const ImVec2 tl(center.x - draw_w * 0.5f, center.y - draw_h * 0.5f);
     const ImVec2 br(center.x + draw_w * 0.5f, center.y + draw_h * 0.5f);
+    // HUD atlas image needs a 180° turn relative to texture-space here.
+    // Flipping both UV axes is equivalent to rotating the sampled image
+    // 180° without adding custom quad math. Tiny ships, tiny crimes.
     dl->AddImage(simgui_imtextureid(art.hull.view), tl, br,
-                 ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f),
-                 IM_COL32(255, 255, 255, 235));
+                 ImVec2(1.0f, 1.0f), ImVec2(0.0f, 0.0f),
+                 IM_COL32(255, 255, 255, 245));
 }
 
 // ---- gun crosshair (centre) ---------------------------------------------
@@ -594,8 +601,8 @@ void draw_target_mfd(const Camera& cam, const ShipRegistry& ships,
             draw_v_single(stbd_ar_x, stbd_ar_y, k_v_armor_bar_max, k_armor_col,
                           armor_cur[3], armor_max[3]);
 
-            draw_ship_diagram_centerpiece(dl, *target, ImVec2(cx, cy),
-                                           k_circle_r * 2.4f,
+            draw_ship_diagram_centerpiece(dl, *target, nullptr, ImVec2(cx, cy),
+                                           k_circle_r * 2.9f,
                                            k_ship_col, k_ship_outline);
 
             const ImU32 k_lbl_col = IM_COL32(150, 190, 230, 200);
@@ -619,7 +626,8 @@ void draw_target_mfd(const Camera& cam, const ShipRegistry& ships,
 // thumbnail since the player has no sprite. Energy displayed as a
 // numeric current/max instead of a bar — energy ticks fast enough
 // during sustained fire that a bar would just look noisy.
-void draw_player_status(const ShipRegistry& ships) {
+void draw_player_status(const ShipRegistry& ships,
+                        const ShipSpriteAtlas* player_preview_atlas) {
     const Ship* player_p = ships.player();
     if (!player_p) return;
     const Ship& player = *player_p;
@@ -811,8 +819,8 @@ void draw_player_status(const ShipRegistry& ships) {
             // Ship icon (centrepiece). Use the atlas top-down frame when
             // available; fallback amber circle keeps HUD robust for any
             // ship/class missing sprite data.
-            draw_ship_diagram_centerpiece(dl, player, ImVec2(cx, cy),
-                                           k_circle_r * 2.4f,
+            draw_ship_diagram_centerpiece(dl, player, player_preview_atlas, ImVec2(cx, cy),
+                                           k_circle_r * 2.9f,
                                            k_ship_col, k_ship_outline);
 
             // Facing labels — centred around the bar pairs. Dim blue so
@@ -1229,6 +1237,7 @@ void draw_flight_status_mfd(const FlightStatusHudState& s) {
 void build(const Camera& cam, const StarSystem& system, int selected_nav,
            float mouse_x, float mouse_y, bool fly_by_wire,
            const ShipRegistry& ships, uint32_t target_ship_id,
+           const ShipSpriteAtlas* player_preview_atlas,
            const char* dock_prompt, bool dock_ready, bool draw_world) {
     // Crosshair + aim cursor are HUD overlays that distract or fight input
     // when the navmap is up (it covers the screen centre) or autopilot owns
@@ -1242,7 +1251,7 @@ void build(const Camera& cam, const StarSystem& system, int selected_nav,
     // navmap overlay is up (where the same info is rendered textually).
     if (draw_world)
         draw_nav_reticle(cam, system, selected_nav);
-    draw_player_status(ships);
+    draw_player_status(ships, player_preview_atlas);
     draw_nav_mfd   (cam, system, selected_nav, dock_prompt, dock_ready);
     draw_target_mfd(cam, ships, target_ship_id);
     draw_radar_mfd (cam, system, selected_nav, ships, target_ship_id);
