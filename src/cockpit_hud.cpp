@@ -607,7 +607,7 @@ void draw_player_status(const ShipRegistry& ships) {
             constexpr float k_v_bar_max  = 82.0f;  // port/stbd bar length (TALL)
             constexpr float k_frame_hw   = 40.0f;  // half-width  (to side bar pair)
             constexpr float k_frame_hh   = 38.0f;  // half-height (to top/bot pair)
-            constexpr float k_side_y_off = -9.0f;  // nudge side pairs upward to visually center
+            constexpr float k_side_y_off = -16.0f; // nudge side pairs upward to visually center
             constexpr float k_bar_round  = 2.5f;   // bar corner rounding (px)
 
             constexpr ImU32 k_shield_col   = IM_COL32( 80, 160, 255, 220);
