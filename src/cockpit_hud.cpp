@@ -520,17 +520,6 @@ void draw_target_mfd(const Camera& cam, const ShipRegistry& ships,
             // inside, arranged around a tiny ship circle. The old target
             // panel used stacked progress bars and clipped the final row;
             // tiny rectangle crimes, basically.
-            constexpr float k_circle_r          = 11.0f;
-            constexpr float k_bar_thick         = 6.0f;
-            constexpr float k_pair_gap          = 3.0f;
-            constexpr float k_h_bar_max         = 46.0f;
-            constexpr float k_v_shield_bar_max  = 40.0f;
-            constexpr float k_v_armor_bar_max   = 40.0f;
-            constexpr float k_frame_hw          = 40.0f;
-            constexpr float k_frame_hh          = 35.0f;
-            constexpr float k_side_shield_y_off = 0.0f;
-            constexpr float k_bar_round         = 2.5f;
-
             constexpr ImU32 k_shield_col   = IM_COL32( 80, 160, 255, 220);
             constexpr ImU32 k_armor_col    = IM_COL32(255, 140,  60, 220);
             constexpr ImU32 k_bg_col       = IM_COL32( 20,  20,  30, 180);
@@ -538,6 +527,37 @@ void draw_target_mfd(const Camera& cam, const ShipRegistry& ships,
             constexpr ImU32 k_ship_outline = IM_COL32(220, 180, 100, 190);
 
             ImDrawList* dl = ImGui::GetWindowDrawList();
+
+            // Claim the ENTIRE remaining panel area for the diagram and
+            // scale the layout to fill it (same treatment as the player
+            // STATUS panel, so target + own-ship diagrams read alike).
+            const ImVec2 region_tl = ImGui::GetCursorScreenPos();
+            const float  avail_w   = ImGui::GetContentRegionAvail().x;
+            const float  avail_h   = ImGui::GetContentRegionAvail().y;
+            ImGui::Dummy(ImVec2(avail_w, avail_h));
+            const float cx = region_tl.x + avail_w * 0.5f;
+            const float cy = region_tl.y + avail_h * 0.5f;
+
+            // Uniform scale to fill. Base layout was authored ~150x104 px
+            // (bars + facing labels); grow it to whatever room is left below
+            // the target's portrait/identity block, clamped so it can't get
+            // absurd.
+            // No facing labels to reserve room for, so the base height is the
+            // bare bar/frame extent and the drawing fills the space below the
+            // portrait/identity block.
+            const float s = std::clamp(std::min(avail_w / 150.0f,
+                                                avail_h / 82.0f), 1.0f, 3.0f);
+
+            const float k_circle_r         = 11.0f * s;
+            const float k_bar_thick        = 6.0f  * s;
+            const float k_pair_gap         = 3.0f  * s;
+            const float k_h_bar_max        = 46.0f * s;
+            const float k_v_shield_bar_max = 40.0f * s;
+            const float k_v_armor_bar_max  = 40.0f * s;
+            const float k_frame_hw         = 40.0f * s;
+            const float k_frame_hh         = 35.0f * s;
+            const float k_bar_round        = 2.5f  * s;
+
             auto draw_h_single = [&](float x, float y, float w, ImU32 col,
                                      float cur, float maxv) {
                 dl->AddRectFilled(ImVec2(x, y), ImVec2(x + w, y + k_bar_thick),
@@ -560,13 +580,6 @@ void draw_target_mfd(const Camera& cam, const ShipRegistry& ships,
                                   col, k_bar_round);
             };
 
-            const float  k_diagram_h = 104.0f;
-            const ImVec2 region_tl   = ImGui::GetCursorScreenPos();
-            const float  avail_w     = ImGui::GetContentRegionAvail().x;
-            ImGui::Dummy(ImVec2(avail_w, k_diagram_h));
-
-            const float cx = region_tl.x + avail_w     * 0.5f;
-            const float cy = region_tl.y + k_diagram_h * 0.5f;
             const float pair_span = k_bar_thick * 2.0f + k_pair_gap;
 
             const float fore_x    = cx - k_h_bar_max * 0.5f;
@@ -605,16 +618,6 @@ void draw_target_mfd(const Camera& cam, const ShipRegistry& ships,
             draw_ship_diagram_centerpiece(dl, *target, nullptr, ImVec2(cx, cy),
                                            k_circle_r * kShipDiagramIconScale,
                                            k_ship_col, k_ship_outline);
-
-            const ImU32 k_lbl_col = IM_COL32(150, 190, 230, 200);
-            auto label_at = [&](float center_x, float top_y, const char* s) {
-                const ImVec2 ts = ImGui::CalcTextSize(s);
-                dl->AddText(ImVec2(center_x - ts.x * 0.5f, top_y), k_lbl_col, s);
-            };
-            label_at(cx, fore_sh_y - 15.0f, "F");
-            label_at(cx, aft_sh_y + k_bar_thick + 3.0f, "A");
-            label_at(port_sh_x - 9.0f, cy + k_side_shield_y_off - 7.0f, "P");
-            label_at(stbd_sh_x + k_bar_thick + 9.0f, cy + k_side_shield_y_off - 7.0f, "St");
         }
     }
     ImGui::End();
@@ -716,8 +719,11 @@ void draw_player_status(const ShipRegistry& ships,
             // authored to occupy ~150x118 px (bars + facing labels); grow
             // it to fit whatever room the panel gives, clamped so a giant
             // window can't blow it up absurdly.
+            // Base height is the bare bar/frame extent now that the F/A/P/St
+            // facing labels are gone — no label margin to reserve, so the
+            // drawing grows to nearly fill the panel.
             const float s = std::clamp(std::min(avail_w / 150.0f,
-                                                avail_h / 118.0f), 1.0f, 3.0f);
+                                                avail_h / 98.0f), 1.0f, 3.0f);
 
             const float k_circle_r         = 13.0f * s;  // ship icon radius
             const float k_bar_thick        = 7.0f  * s;  // each bar thickness
@@ -803,17 +809,6 @@ void draw_player_status(const ShipRegistry& ships,
                                            k_circle_r * kShipDiagramIconScale,
                                            k_ship_col, k_ship_outline);
 
-            // Facing labels — centred around the bar pairs. Dim blue so
-            // the bars stay the focus.
-            const ImU32 k_lbl_col = IM_COL32(150, 190, 230, 200);
-            auto label_at = [&](float center_x, float top_y, const char* s) {
-                const ImVec2 ts = ImGui::CalcTextSize(s);
-                dl->AddText(ImVec2(center_x - ts.x * 0.5f, top_y), k_lbl_col, s);
-            };
-            label_at(cx, fore_sh_y - 16.0f, "F");
-            label_at(cx, aft_sh_y + k_bar_thick + 3.0f, "A");
-            label_at(port_sh_x - 10.0f, cy - 7.0f, "P");
-            label_at(stbd_sh_x + k_bar_thick + 10.0f, cy - 7.0f, "St");
         }
     }
     ImGui::End();
