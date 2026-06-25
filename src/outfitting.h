@@ -58,6 +58,7 @@ int64_t hull_trade_in(const std::string& hull_id);
 int64_t hull_net_cost(const std::string& target, const std::string& current);
 
 int64_t gun_price(const std::string& gun_short_name);
+int64_t armor_price(const std::string& armor_name);
 // Credits to upgrade the shield/engine to `target_level` (one step). 0 if the
 // level is out of the priced ladder.
 int64_t shield_upgrade_price(int target_level);
@@ -99,6 +100,10 @@ bool buy_gun(PlayerState& p, const std::string& gun_short_name,
 // full-price refund. Refused if the mount is empty (or out of range).
 // The mount is cleared to "" on success so the slot can be re-fitted.
 bool sell_gun(PlayerState& p, int mount_index, const ShipClass* klass);
+
+// Buy and fit an armor package by ArmorType::name. Replaces the currently
+// fitted package; empty PlayerState::armor_name means the hull's stock armor.
+bool buy_armor(PlayerState& p, const std::string& armor_name);
 
 // Climb one rung of the shield / engine ladder (level -> level+1), capped by
 // the hull's max_shield_level / max_engine_level.

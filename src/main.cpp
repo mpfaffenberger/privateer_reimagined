@@ -745,6 +745,11 @@ static void apply_player_loadout(Ship& pl, const PlayerState& p, bool heal = tru
     // the class default. Set BEFORE heal so heal_to_full fills to the
     // upgraded max (and doesn't leave phantom shield on a sold shield gen).
     pl.shield_mult = (float)p.shield_level;
+    pl.fitted_armor = p.armor_name.empty() ? nullptr : armor::find(p.armor_name);
+    if (!p.armor_name.empty() && !pl.fitted_armor) {
+        std::printf("[outfit] WARN: armor '%s' not found; using hull default\n",
+                    p.armor_name.c_str());
+    }
     // Energy regen bookkeeping (np-3dp.27, np-3dp.28). Engine upgrade
     // ADDS GJ/s to the recharge rate (more power); shield gen DRAINS GJ/s
     // from it whenever installed (running cost). Net effect on energy_gj
@@ -2910,11 +2915,19 @@ void frame_cb() {
             if (Ship* pl = g.ships.player()) {
                 const bool hull_changed =
                     !pl->klass || pl->klass->name != g.player.ship_class_name;
-                apply_player_loadout(*pl, g.player, /*heal=*/hull_changed);
-                std::printf("[outfit] launch re-fit: klass=%s mounts=%zu%s\n",
+                const ArmorType* desired_armor = g.player.armor_name.empty()
+                    ? (pl->klass ? pl->klass->default_armor : nullptr)
+                    : armor::find(g.player.armor_name);
+                const ArmorType* current_armor = pl->fitted_armor
+                    ? pl->fitted_armor
+                    : (pl->klass ? pl->klass->default_armor : nullptr);
+                const bool armor_changed = desired_armor != current_armor;
+                apply_player_loadout(*pl, g.player, /*heal=*/hull_changed || armor_changed);
+                std::printf("[outfit] launch re-fit: klass=%s mounts=%zu%s%s\n",
                             pl->klass ? pl->klass->name.c_str() : "<null>",
                             pl->mounts.size(),
-                            hull_changed ? " (new hull -> healed)" : "");
+                            hull_changed ? " (new hull -> healed)" : "",
+                            (!hull_changed && armor_changed) ? " (new armor -> healed)" : "");
             }
             // Outfitting (np-9cu.3): fold the player's hull + engine_level into
             // the camera's flight speed caps as we launch back into Flight.

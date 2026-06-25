@@ -46,11 +46,12 @@ FullArmor full_armor(const Ship& s) {
     fa.aft       = k.armor_aft_cm;
     fa.port      = k.armor_port_cm;
     fa.starboard = k.armor_starboard_cm;
-    if (k.default_armor) {
-        fa.fore      += k.default_armor->front_cm;
-        fa.aft       += k.default_armor->back_cm;
-        fa.port      += k.default_armor->port_cm;
-        fa.starboard += k.default_armor->starboard_cm;
+    const ArmorType* fitted_armor = s.fitted_armor ? s.fitted_armor : k.default_armor;
+    if (fitted_armor) {
+        fa.fore      += fitted_armor->front_cm;
+        fa.aft       += fitted_armor->back_cm;
+        fa.port      += fitted_armor->port_cm;
+        fa.starboard += fitted_armor->starboard_cm;
     }
     return fa;
 }

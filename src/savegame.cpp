@@ -203,6 +203,7 @@ static std::string serialize_player(const PlayerState& p) {
 
         w.key("shield_level");    w.value_int(p.shield_level);
         w.key("engine_level");    w.value_int(p.engine_level);
+        w.key("armor_name");      w.value_string(p.armor_name);
         w.key("cargo_expansion"); w.value_bool(p.cargo_expansion);
         w.key("has_jump_drive");   w.value_bool(p.has_jump_drive);
         w.key("ecm_level");        w.value_int(p.ecm_level);
@@ -464,6 +465,7 @@ bool load(PlayerState& p, const std::string& path) {
 
         out.shield_level    = pl.contains("shield_level")    ? (int)pl["shield_level"].number_or(0)  : 0;
         out.engine_level    = pl.contains("engine_level")    ? (int)pl["engine_level"].number_or(0)  : 0;
+        out.armor_name      = pl.contains("armor_name")      ? pl["armor_name"].string_or("")       : "";
         out.cargo_expansion = pl.contains("cargo_expansion") ? pl["cargo_expansion"].bool_or(false)  : false;
         out.has_jump_drive   = pl.contains("has_jump_drive")   ? pl["has_jump_drive"].bool_or(false)   : false;
         out.ecm_level        = pl.contains("ecm_level")        ? (int)pl["ecm_level"].number_or(0)    : 0;

@@ -318,15 +318,16 @@ const AILogicTable* ai_brain::resolve_for_faction(Faction f) {
 // ====================================================================== //
 float ai_brain::hp_fraction(const Ship& s) {
     if (!s.klass) return 1.0f;
-    const float cur = s.armor_fore_cm  + s.armor_aft_cm  + s.armor_side_cm
-                    + s.shield_fore_cm + s.shield_aft_cm + s.shield_side_cm;
-    float maxv = s.klass->armor_fore_cm + s.klass->armor_aft_cm + s.klass->armor_side_cm;
-    if (s.klass->default_armor)
-        maxv += s.klass->default_armor->front_cm + s.klass->default_armor->back_cm
-              + s.klass->default_armor->side_cm;
+    const float cur = s.armor_fore_cm  + s.armor_aft_cm  + s.armor_port_cm  + s.armor_starboard_cm
+                    + s.shield_fore_cm + s.shield_aft_cm + s.shield_port_cm + s.shield_starboard_cm;
+    float maxv = s.klass->armor_fore_cm + s.klass->armor_aft_cm + s.klass->armor_port_cm + s.klass->armor_starboard_cm;
+    const ArmorType* fitted_armor = s.fitted_armor ? s.fitted_armor : s.klass->default_armor;
+    if (fitted_armor)
+        maxv += fitted_armor->front_cm + fitted_armor->back_cm
+              + fitted_armor->port_cm + fitted_armor->starboard_cm;
     if (s.klass->default_shield)
         maxv += (s.klass->default_shield->front_cm + s.klass->default_shield->back_cm
-              +  s.klass->default_shield->side_cm) * s.shield_mult;
+              +  s.klass->default_shield->port_cm + s.klass->default_shield->starboard_cm) * s.shield_mult;
     return (maxv > 0.0f) ? (cur / maxv) : 1.0f;
 }
 
@@ -346,9 +347,9 @@ namespace {
 
 float shield_fraction(const Ship& s) {
     if (!s.klass || !s.klass->default_shield) return 1.0f;
-    const float cur  = s.shield_fore_cm + s.shield_aft_cm + s.shield_side_cm;
+    const float cur  = s.shield_fore_cm + s.shield_aft_cm + s.shield_port_cm + s.shield_starboard_cm;
     const float maxv = (s.klass->default_shield->front_cm + s.klass->default_shield->back_cm
-                     +  s.klass->default_shield->side_cm) * s.shield_mult;
+                     +  s.klass->default_shield->port_cm + s.klass->default_shield->starboard_cm) * s.shield_mult;
     return (maxv > 0.0f) ? (cur / maxv) : 1.0f;
 }
 

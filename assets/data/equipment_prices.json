@@ -41,6 +41,11 @@
     "plasma_gun":         80000
   },
 
+  "armor": {
+    "Plasteel Armor": 1000,
+    "Tungsten Armor": 1500
+  },
+
   // Shield generator ladder (target level -> price): L1 10k, L2 30k, L3 50k,
   // L4 100k, L5 150k. [0] is stock/free. Per-hull caps live in ship.json
   // (Tarsus L2, Centurion/Galaxy L3 in the original game).

@@ -16,6 +16,7 @@
 
 #include "outfitting.h"
 
+#include "armor.h"
 #include "gun.h"
 #include "json.h"
 #include "player.h"
@@ -49,6 +50,7 @@ struct HullPrice { std::string id; int64_t price = 0; };
 std::vector<HullPrice>                       g_hulls;        // authored order
 float                                        g_trade_in_pct = 0.55f;
 std::unordered_map<std::string, int64_t>     g_gun_price;    // short_name -> price
+std::unordered_map<std::string, int64_t>     g_armor_price;  // ArmorType::name -> price
 std::vector<int64_t>                         g_shield_price; // index = level
 std::vector<int64_t>                         g_engine_price; // index = level
 float                                        g_engine_regen_mult = 0.08f;   // legacy mult (unused)
@@ -64,6 +66,7 @@ int load(const std::string& ship_prices_path, const std::string& equip_prices_pa
     g_hulls.clear();
     g_trade_in_pct = 0.55f;
     g_gun_price.clear();
+    g_armor_price.clear();
     g_shield_price.clear();
     g_engine_price.clear();
     g_engine_regen_mult = 0.08f;
@@ -92,6 +95,9 @@ int load(const std::string& ship_prices_path, const std::string& equip_prices_pa
     if (ep.is_object()) {
         if (const json::Value* g = ep.find("guns"); g && g->is_object()) {
             for (const auto& [name, v] : g->as_object()) g_gun_price[name] = (int64_t)v.as_int();
+        }
+        if (const json::Value* a = ep.find("armor"); a && a->is_object()) {
+            for (const auto& [name, v] : a->as_object()) g_armor_price[name] = (int64_t)v.as_int();
         }
         if (const json::Value* s = ep.find("shield_level_price"); s && s->is_array())
             for (const json::Value& v : s->as_array()) g_shield_price.push_back((int64_t)v.as_int());
@@ -140,6 +146,11 @@ int64_t hull_net_cost(const std::string& target, const std::string& current) {
 int64_t gun_price(const std::string& gun_short_name) {
     const auto it = g_gun_price.find(gun_short_name);
     return (it == g_gun_price.end()) ? 0 : it->second;
+}
+
+int64_t armor_price(const std::string& armor_name) {
+    const auto it = g_armor_price.find(armor_name);
+    return (it == g_armor_price.end()) ? 0 : it->second;
 }
 
 int64_t shield_upgrade_price(int target_level) {
@@ -275,6 +286,7 @@ bool buy_hull(PlayerState& p, const std::string& target) {
     p.ship_class_name = target;
     p.shield_level    = 0;
     p.engine_level    = 0;
+    p.armor_name      = "";
     p.cargo_expansion = false;
     p.gun_mounts.clear();
     if (const ShipClass* k = ship_class::find(target))
@@ -338,6 +350,35 @@ bool sell_gun(PlayerState& p, int mount_index, const ShipClass* klass) {
     player::add_credits(p, refund);
     std::printf("[outfit] SELL GUN %s <- mount %d refund %lld | credits %lld\n",
                 name.c_str(), mount_index, (long long)refund, (long long)p.credits);
+    return true;
+}
+
+bool buy_armor(PlayerState& p, const std::string& armor_name) {
+    if (armor_name.empty() || !armor::find(armor_name)) {
+        std::printf("[outfit] ARMOR refused: unknown armor '%s'\n", armor_name.c_str());
+        return false;
+    }
+    if (p.armor_name == armor_name) {
+        std::printf("[outfit] ARMOR refused: '%s' already fitted\n", armor_name.c_str());
+        return false;
+    }
+    const int64_t price = armor_price(armor_name);
+    if (price <= 0) {
+        std::printf("[outfit] ARMOR refused: '%s' not for sale\n", armor_name.c_str());
+        return false;
+    }
+    if (!player::can_afford(p, price)) {
+        std::printf("[outfit] ARMOR refused: %s costs %lld, have %lld\n",
+                    armor_name.c_str(), (long long)price, (long long)p.credits);
+        return false;
+    }
+    player::spend_credits(p, price);
+    p.armor_name = armor_name;
+    // Armor changes max hull cm; clear stale damage snapshot so launch/reload
+    // does not reapply old lower-armor HP onto the new fitted package.
+    p.hp_valid = false;
+    std::printf("[outfit] ARMOR fitted '%s' @ %lld | credits %lld\n",
+                armor_name.c_str(), (long long)price, (long long)p.credits);
     return true;
 }
 
@@ -495,7 +536,7 @@ void draw_dealer(BaseContext& ctx) {
         ImGui::TableSetupScrollFreeze(0, 1);
         ImGui::TableSetupColumn("Hull", ImGuiTableColumnFlags_WidthStretch);
         ImGui::TableSetupColumn("Top Spd");
-        ImGui::TableSetupColumn("Armor F/A/S");
+        ImGui::TableSetupColumn("Armor F/A/P/St");
         ImGui::TableSetupColumn("Cargo");
         ImGui::TableSetupColumn("Mounts");
         ImGui::TableSetupColumn("Price");
@@ -520,7 +561,9 @@ void draw_dealer(BaseContext& ctx) {
             if (k) ImGui::Text("%.0f/%.0f", k->cruise_speed, k->afterburner_speed);
             else   ImGui::TextUnformatted("--");
             ImGui::TableNextColumn();
-            if (k) ImGui::Text("%.0f/%.0f/%.0f", k->armor_fore_cm, k->armor_aft_cm, k->armor_side_cm);
+            if (k) ImGui::Text("%.0f/%.0f/%.0f/%.0f",
+                                k->armor_fore_cm, k->armor_aft_cm,
+                                k->armor_port_cm, k->armor_starboard_cm);
             else   ImGui::TextUnformatted("--");
             ImGui::TableNextColumn();
             if (k) ImGui::Text("%d (%d)", k->cargo_units, k->cargo_units_max);
@@ -664,12 +707,49 @@ void draw_equipment(BaseContext& ctx) {
     }
     ImGui::EndChild();
 
-    // ---- Upgrades (shield / engine / cargo) --------------------------------
+    // ---- Upgrades (armor / shield / engine / cargo) ------------------------
     ImGui::SetCursorScreenPos(ImVec2(ss.w * 0.5f + 12, 150));
     ImGui::BeginChild("##upgrades", ImVec2(ss.w * 0.5f - 40, ss.h - 150 - 70), false);
     ImGui::PushStyleColor(ImGuiCol_Text, kAmber);
     ImGui::TextUnformatted("UPGRADES");
     ImGui::PopStyleColor();
+    ImGui::Spacing();
+
+    // Armor packages. PlayerState::armor_name empty means the hull's stock
+    // package, usually Plasteel on starter ships. Buying explicitly fitted
+    // armor overrides that per-instance; no shared ShipClass mutation. We
+    // like our NPCs not accidentally receiving Mike's shopping cart.
+    {
+        const char* stock = (klass && klass->default_armor)
+            ? klass->default_armor->name.c_str() : "None";
+        const std::string current = p.armor_name.empty() ? std::string(stock) : p.armor_name;
+        ImGui::PushID("armor_packages");
+        ImGui::Text("Armor   %s", current.c_str());
+        for (const ArmorType& a : armor::all()) {
+            const int64_t price = armor_price(a.name);
+            if (price <= 0) continue;
+            ImGui::PushID(a.name.c_str());
+            const bool fitted = (current == a.name);
+            ImGui::Text("  %s  %.0f/%.0f/%.0f/%.0f cm",
+                        a.name.c_str(), a.front_cm, a.back_cm,
+                        a.port_cm, a.starboard_cm);
+            ImGui::SameLine();
+            if (fitted) {
+                ImGui::PushStyleColor(ImGuiCol_Text, kGreen);
+                ImGui::TextUnformatted("FITTED");
+                ImGui::PopStyleColor();
+            } else {
+                char b[48]; std::snprintf(b, sizeof(b), "Fit (%lld)", (long long)price);
+                ImGui::BeginDisabled(!player::can_afford(p, price));
+                if (ImGui::SmallButton(b)) {
+                    if (outfitting::buy_armor(p, a.name)) sfx::ui_click();
+                }
+                ImGui::EndDisabled();
+            }
+            ImGui::PopID();
+        }
+        ImGui::PopID();
+    }
     ImGui::Spacing();
 
     // Shield ladder.

@@ -500,11 +500,12 @@ void draw_target_mfd(const Camera& cam, const ShipRegistry& ships,
                 armor_max[1] = k->armor_aft_cm;
                 armor_max[2] = k->armor_port_cm;
                 armor_max[3] = k->armor_starboard_cm;
-                if (k->default_armor) {
-                    armor_max[0] += k->default_armor->front_cm;
-                    armor_max[1] += k->default_armor->back_cm;
-                    armor_max[2] += k->default_armor->port_cm;
-                    armor_max[3] += k->default_armor->starboard_cm;
+                const ArmorType* fitted_armor = target->fitted_armor ? target->fitted_armor : k->default_armor;
+                if (fitted_armor) {
+                    armor_max[0] += fitted_armor->front_cm;
+                    armor_max[1] += fitted_armor->back_cm;
+                    armor_max[2] += fitted_armor->port_cm;
+                    armor_max[3] += fitted_armor->starboard_cm;
                 }
             }
             const float shield_cur[4] = { target->shield_fore_cm,
@@ -689,11 +690,12 @@ void draw_player_status(const ShipRegistry& ships,
                 armor_max[1] = k->armor_aft_cm;
                 armor_max[2] = k->armor_port_cm;
                 armor_max[3] = k->armor_starboard_cm;
-                if (k->default_armor) {
-                    armor_max[0] += k->default_armor->front_cm;
-                    armor_max[1] += k->default_armor->back_cm;
-                    armor_max[2] += k->default_armor->port_cm;
-                    armor_max[3] += k->default_armor->starboard_cm;
+                const ArmorType* fitted_armor = player.fitted_armor ? player.fitted_armor : k->default_armor;
+                if (fitted_armor) {
+                    armor_max[0] += fitted_armor->front_cm;
+                    armor_max[1] += fitted_armor->back_cm;
+                    armor_max[2] += fitted_armor->port_cm;
+                    armor_max[3] += fitted_armor->starboard_cm;
                 }
             }
             const float shield_cur[4] = { player.shield_fore_cm,

@@ -121,6 +121,9 @@ struct PlayerState {
     std::vector<std::string> gun_mounts;
     int                      shield_level    = 0;
     int                      engine_level    = 0;
+    // Name from armor::find(), e.g. "Plasteel Armor" / "Tungsten Armor".
+    // Empty means use the hull class's stock default_armor.
+    std::string              armor_name;
     bool                     cargo_expansion = false;
 
     // Discrete buy-once-per-ship flags (np-3dp.27). New games have ALL
@@ -206,10 +209,12 @@ struct PlayerState {
     bool  hp_valid       = false;
     float hp_armor_fore  = 0.0f;
     float hp_armor_aft   = 0.0f;
-    float hp_armor_side  = 0.0f;
+    float hp_armor_port  = 0.0f;
+    float hp_armor_starboard = 0.0f;
     float hp_shield_fore = 0.0f;
     float hp_shield_aft  = 0.0f;
-    float hp_shield_side = 0.0f;
+    float hp_shield_port = 0.0f;
+    float hp_shield_starboard = 0.0f;
     float hp_energy      = 0.0f;
 
     // ---- location ---------------------------------------------------------

@@ -189,21 +189,25 @@ Ship ship::spawn(const ShipClass& klass) {
     // fitted shield generator if one is configured.
     s.armor_fore_cm  = klass.armor_fore_cm;
     s.armor_aft_cm   = klass.armor_aft_cm;
-    s.armor_side_cm  = klass.armor_side_cm;
-    if (klass.default_armor) {
+    s.armor_port_cm  = klass.armor_port_cm;
+    s.armor_starboard_cm = klass.armor_starboard_cm;
+    s.fitted_armor = klass.default_armor;
+    if (s.fitted_armor) {
         // Stack fitted-armor cm onto the base hull. Privateer's manual
         // mostly treats armor as "tier replaces base" rather than "tier
         // adds to base", but the additive interpretation is what the
         // fan-data ArmorType numbers were authored for. Either is fine
         // gameplay-wise; pick one and stay consistent.
-        s.armor_fore_cm += klass.default_armor->front_cm;
-        s.armor_aft_cm  += klass.default_armor->back_cm;
-        s.armor_side_cm += klass.default_armor->side_cm;
+        s.armor_fore_cm += s.fitted_armor->front_cm;
+        s.armor_aft_cm  += s.fitted_armor->back_cm;
+        s.armor_port_cm     += s.fitted_armor->port_cm;
+        s.armor_starboard_cm += s.fitted_armor->starboard_cm;
     }
     if (klass.default_shield) {
         s.shield_fore_cm = shield_max_cm(klass, klass.default_shield->front_cm, s.shield_mult);
         s.shield_aft_cm  = shield_max_cm(klass, klass.default_shield->back_cm,  s.shield_mult);
-        s.shield_side_cm = shield_max_cm(klass, klass.default_shield->side_cm,  s.shield_mult);
+        s.shield_port_cm     = shield_max_cm(klass, klass.default_shield->port_cm,     s.shield_mult);
+        s.shield_starboard_cm = shield_max_cm(klass, klass.default_shield->starboard_cm, s.shield_mult);
     }
     s.energy_gj = klass.energy_max;
 
@@ -232,20 +236,25 @@ void ship::heal_to_full(Ship& s) {
     s.alive             = true;
     s.shield_pause_fore = 0.0f;
     s.shield_pause_aft  = 0.0f;
-    s.shield_pause_side = 0.0f;
+    s.shield_pause_port = 0.0f;
+    s.shield_pause_starboard = 0.0f;
     if (!s.klass) return;   // class-less player: health doesn't apply yet
     const ShipClass& k = *s.klass;
     s.armor_fore_cm = k.armor_fore_cm;
     s.armor_aft_cm  = k.armor_aft_cm;
-    s.armor_side_cm = k.armor_side_cm;
-    if (k.default_armor) {
-        s.armor_fore_cm += k.default_armor->front_cm;
-        s.armor_aft_cm  += k.default_armor->back_cm;
-        s.armor_side_cm += k.default_armor->side_cm;
+    s.armor_port_cm     = k.armor_port_cm;
+    s.armor_starboard_cm = k.armor_starboard_cm;
+    const ArmorType* fitted_armor = s.fitted_armor ? s.fitted_armor : k.default_armor;
+    if (fitted_armor) {
+        s.armor_fore_cm += fitted_armor->front_cm;
+        s.armor_aft_cm  += fitted_armor->back_cm;
+        s.armor_port_cm     += fitted_armor->port_cm;
+        s.armor_starboard_cm += fitted_armor->starboard_cm;
     }
     s.shield_fore_cm = k.default_shield ? shield_max_cm(k, k.default_shield->front_cm, s.shield_mult) : 0.0f;
     s.shield_aft_cm  = k.default_shield ? shield_max_cm(k, k.default_shield->back_cm,  s.shield_mult) : 0.0f;
-    s.shield_side_cm = k.default_shield ? shield_max_cm(k, k.default_shield->side_cm,  s.shield_mult) : 0.0f;
+    s.shield_port_cm     = k.default_shield ? shield_max_cm(k, k.default_shield->port_cm,     s.shield_mult) : 0.0f;
+    s.shield_starboard_cm = k.default_shield ? shield_max_cm(k, k.default_shield->starboard_cm, s.shield_mult) : 0.0f;
     s.energy_gj      = k.energy_max;
 }
 
@@ -319,15 +328,19 @@ HitTarget hit_target(Ship& s, HitFacing f) {
                             ? shield_max_cm(*s.klass, s.klass->default_shield->front_cm, s.shield_mult) : 0.0f;
     const float sh_max_aft  = s.klass && s.klass->default_shield
                             ? shield_max_cm(*s.klass, s.klass->default_shield->back_cm,  s.shield_mult) : 0.0f;
-    const float sh_max_side = s.klass && s.klass->default_shield
-                            ? shield_max_cm(*s.klass, s.klass->default_shield->side_cm,  s.shield_mult) : 0.0f;
+    const float sh_max_port = s.klass && s.klass->default_shield
+                            ? shield_max_cm(*s.klass, s.klass->default_shield->port_cm,     s.shield_mult) : 0.0f;
+    const float sh_max_stbd = s.klass && s.klass->default_shield
+                            ? shield_max_cm(*s.klass, s.klass->default_shield->starboard_cm, s.shield_mult) : 0.0f;
     switch (f) {
         case HitFacing::Fore: return { &s.shield_fore_cm, &s.armor_fore_cm,
                                        &s.shield_pause_fore, sh_max_fore };
         case HitFacing::Aft:  return { &s.shield_aft_cm,  &s.armor_aft_cm,
                                        &s.shield_pause_aft,  sh_max_aft  };
-        case HitFacing::Side: return { &s.shield_side_cm, &s.armor_side_cm,
-                                       &s.shield_pause_side, sh_max_side };
+        case HitFacing::Port: return { &s.shield_port_cm, &s.armor_port_cm,
+                                       &s.shield_pause_port, sh_max_port };
+        case HitFacing::Starboard: return { &s.shield_starboard_cm, &s.armor_starboard_cm,
+                                            &s.shield_pause_starboard, sh_max_stbd };
     }
     // Unreachable (enum exhausted), but the compiler wants a return.
     return { &s.shield_fore_cm, &s.armor_fore_cm, &s.shield_pause_fore, sh_max_fore };
@@ -336,7 +349,8 @@ HitTarget hit_target(Ship& s, HitFacing f) {
 const char* facing_name(HitFacing f) {
     switch (f) { case HitFacing::Fore: return "fore";
                  case HitFacing::Aft:  return "aft";
-                 case HitFacing::Side: return "side"; }
+                 case HitFacing::Port: return "port";
+                 case HitFacing::Starboard: return "starboard"; }
     return "?";
 }
 
@@ -398,7 +412,8 @@ void ship::regen_shields(Ship& s, float dt) {
     };
     tick_quad(s.shield_fore_cm, s.shield_pause_fore, shield_max_cm(*s.klass, s.klass->default_shield->front_cm, s.shield_mult));
     tick_quad(s.shield_aft_cm,  s.shield_pause_aft,  shield_max_cm(*s.klass, s.klass->default_shield->back_cm,  s.shield_mult));
-    tick_quad(s.shield_side_cm, s.shield_pause_side, shield_max_cm(*s.klass, s.klass->default_shield->side_cm,  s.shield_mult));
+    tick_quad(s.shield_port_cm, s.shield_pause_port, shield_max_cm(*s.klass, s.klass->default_shield->port_cm,     s.shield_mult));
+    tick_quad(s.shield_starboard_cm, s.shield_pause_starboard, shield_max_cm(*s.klass, s.klass->default_shield->starboard_cm, s.shield_mult));
 }
 
 float ship::hit_radius_m(const Ship& s) {
@@ -419,7 +434,9 @@ float ship::hit_radius_m(const Ship& s) {
 
 HitFacing ship::facing_of_hit(const Ship& s, const HMM_Vec3& hit_pos_world) {
     // Take hit position into body frame and look at which axis dominates.
-    // Body +Z forward = Fore, -Z = Aft, |X| or |Y| dominant = Side.
+    // Body +Z forward = Fore, -Z = Aft, +X = starboard, -X = port.
+    // |Y| dominant -> port or starboard too (top/bottom hits are
+    // sides in this game's accounting) — see the Y-fallback below.
     HMM_Vec3 to_hit = HMM_SubV3(hit_pos_world, s.position);
     const HMM_Mat4 R_inv = HMM_QToM4(HMM_InvQ(s.orientation));
     const HMM_Vec4 v = HMM_MulM4V4(R_inv, HMM_V4(to_hit.X, to_hit.Y, to_hit.Z, 0.0f));
@@ -430,10 +447,14 @@ HitFacing ship::facing_of_hit(const Ship& s, const HMM_Vec3& hit_pos_world) {
     const float bx = v.X, by = v.Y;
 
     // Threshold: pick fore/aft only if the Z-axis component is at least
-    // half the magnitude of the lateral axes. Otherwise it's a side hit.
+    // half the magnitude of the lateral axes. Otherwise it's a side hit
+    // and we pick port vs starboard by which way bx leans (X axis);
+    // a Y-only hit (pure top/bottom) is bucketed to starboard as a
+    // tie-breaker — both port and starboard here share the same
+    // original "Side" pool, so the split is cosmetic for now.
     const float lateral = std::sqrt(bx * bx + by * by);
     if (std::fabs(bz) > lateral) {
         return (bz > 0.0f) ? HitFacing::Fore : HitFacing::Aft;
     }
-    return HitFacing::Side;
+    return bx >= 0.0f ? HitFacing::Starboard : HitFacing::Port;
 }

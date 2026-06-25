@@ -42,12 +42,13 @@
 #include <cstdint>
 #include <vector>
 
+struct ArmorType;
 struct ShipClass;
 struct ShipSpriteObject;
 
 // Hit facing classification — top-level so collision code (projectile.cpp)
 // and ship code (ship.cpp) can share without nested-namespace gymnastics.
-enum class HitFacing : uint8_t { Fore, Aft, Side };
+enum class HitFacing : uint8_t { Fore, Aft, Port, Starboard };
 
 // What the controller is aiming for THIS tick. Behaviors write here;
 // the flight controller reads here.
@@ -170,17 +171,20 @@ struct Ship {
     // ship::regen_shields after a per-facing pause window.
     float armor_fore_cm  = 0.0f;
     float armor_aft_cm   = 0.0f;
-    float armor_side_cm  = 0.0f;
+    float armor_port_cm  = 0.0f;   // left  flank
+    float armor_starboard_cm = 0.0f;   // right flank
     float shield_fore_cm = 0.0f;
     float shield_aft_cm  = 0.0f;
-    float shield_side_cm = 0.0f;
+    float shield_port_cm = 0.0f;   // left  shield facet
+    float shield_starboard_cm = 0.0f;   // right shield facet
     // Regen-pause timers (seconds remaining) per facing. Set to
     // k_shield_pause_after_hit when that quadrant takes damage; the
     // shield can't refill until this hits zero. Privateer-canonical
     // "shields drop, can't immediately recover" feel.
     float shield_pause_fore = 0.0f;
     float shield_pause_aft  = 0.0f;
-    float shield_pause_side = 0.0f;
+    float shield_pause_port = 0.0f;
+    float shield_pause_starboard = 0.0f;
     float energy_gj         = 0.0f;
     // Shield generator multiplier (np-3dp.26). 1.0 = the class's stock
     // generator. The equipment dealer's shield-level upgrade scales this on
@@ -189,6 +193,12 @@ struct Ship {
     // 1/2/3 ladder (10/20/30 cm). NPCs stay at 1.0. Applied wherever a
     // facing's MAX shield is read off klass->default_shield.
     float shield_mult       = 1.0f;
+
+    // Per-instance fitted armor. Null means use the hull class's stock
+    // default_armor. Player purchases set this without mutating ShipClass,
+    // so buying armor for your Tarsus does not secretly upgrade every NPC
+    // Tarsus in Gemini. Which would be hilarious, but no.
+    const ArmorType* fitted_armor = nullptr;
 
     // Engine recharge — additive ABSOLUTE GJ/s from the engine upgrade
     // ladder (np-3dp.27 / gamefaq 4.6.2). Refreshed on the player in
