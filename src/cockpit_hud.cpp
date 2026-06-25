@@ -111,19 +111,7 @@ void pop_hud_style() {
     ImGui::PopStyleColor(2);
 }
 
-float g_ship_diagram_icon_scale = 2.9f;
-
-void draw_ship_icon_size_tuner() {
-    ImGui::SetNextWindowPos(ImVec2(304.0f, 16.0f), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(ImVec2(245.0f, 78.0f), ImGuiCond_FirstUseEver);
-    if (ImGui::Begin("Cute ship icon slider", nullptr,
-                     ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings)) {
-        ImGui::TextUnformatted("SPACE = free cursor");
-        ImGui::SliderFloat("icon size", &g_ship_diagram_icon_scale,
-                           1.5f, 5.0f, "%.2fx");
-    }
-    ImGui::End();
-}
+constexpr float kShipDiagramIconScale = 4.15f;
 
 void draw_ship_diagram_centerpiece(ImDrawList* dl, const Ship& ship,
                                    const ShipSpriteAtlas* atlas_override,
@@ -616,7 +604,7 @@ void draw_target_mfd(const Camera& cam, const ShipRegistry& ships,
                           armor_cur[3], armor_max[3]);
 
             draw_ship_diagram_centerpiece(dl, *target, nullptr, ImVec2(cx, cy),
-                                           k_circle_r * g_ship_diagram_icon_scale,
+                                           k_circle_r * kShipDiagramIconScale,
                                            k_ship_col, k_ship_outline);
 
             const ImU32 k_lbl_col = IM_COL32(150, 190, 230, 200);
@@ -834,7 +822,7 @@ void draw_player_status(const ShipRegistry& ships,
             // available; fallback amber circle keeps HUD robust for any
             // ship/class missing sprite data.
             draw_ship_diagram_centerpiece(dl, player, player_preview_atlas, ImVec2(cx, cy),
-                                           k_circle_r * g_ship_diagram_icon_scale,
+                                           k_circle_r * kShipDiagramIconScale,
                                            k_ship_col, k_ship_outline);
 
             // Facing labels — centred around the bar pairs. Dim blue so
@@ -1266,7 +1254,6 @@ void build(const Camera& cam, const StarSystem& system, int selected_nav,
     if (draw_world)
         draw_nav_reticle(cam, system, selected_nav);
     draw_player_status(ships, player_preview_atlas);
-    draw_ship_icon_size_tuner();
     draw_nav_mfd   (cam, system, selected_nav, dock_prompt, dock_ready);
     draw_target_mfd(cam, ships, target_ship_id);
     draw_radar_mfd (cam, system, selected_nav, ships, target_ship_id);
