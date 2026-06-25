@@ -756,10 +756,13 @@ void draw_player_status(const ShipRegistry& ships) {
     // the cursor, drag sliders, then copy the numbers into the constants
     // once the pixels stop offending our delicate eyeballs.
     ImGui::SetNextWindowPos(ImVec2(margin + w + 8.0f, margin), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(ImVec2(245.0f, 150.0f), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(285.0f, 205.0f), ImGuiCond_FirstUseEver);
     if (ImGui::Begin("Status bar tuner", nullptr,
                      ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings)) {
         ImGui::TextUnformatted("SPACE = free cursor");
+        ImGui::Separator();
+        ImGui::Text("P  shield %.1f  armor %.1f", player.shield_port_cm, player.armor_port_cm);
+        ImGui::Text("St shield %.1f  armor %.1f", player.shield_starboard_cm, player.armor_starboard_cm);
         ImGui::Separator();
         ImGui::SliderFloat("shield H", &g_status_tuning.side_shield_h, 40.0f, 100.0f, "%.0f");
         ImGui::SliderFloat("shield Y", &g_status_tuning.side_shield_y_off, -35.0f, 20.0f, "%.0f");
