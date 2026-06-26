@@ -17,6 +17,7 @@
 #include "player.h"
 #include "ship_class.h"
 #include "ship_sprite.h"
+#include "voice.h"
 
 // Dear ImGui + sokol backend. The sokol_imgui.h header is both the
 // declaration and implementation — we define SOKOL_IMGUI_IMPL here so it
@@ -253,6 +254,65 @@ static void build_audio_section(AudioDebugRequests& req) {
         music::set_muted(mmute);
 }
 
+// Voice-line test harness (np-ma3 / Phase 0). Lets a dev force a specific
+// (faction, category) into the voice layer without needing to find an
+// NPC that happens to bark at them. Reads/writes the voice module
+// directly (main-thread ImGui build) — no deferred-request plumbing,
+// same as the music master volume above.
+static void build_voice_section() {
+    if (!ImGui::CollapsingHeader("Voice")) return;
+
+    // Combo names for the category enum — match the voice::Category
+    // order so the int round-trip stays valid for new entries.
+    static const char* kCatNames[] = {
+        "Greeting", "Hostile", "LowHp", "Kill",
+        "Demand",   "Rumor",   "Search","Clear",
+    };
+    static_assert(sizeof(kCatNames) / sizeof(kCatNames[0]) ==
+                  (int)voice::Category::Clear + 1,
+                  "kCatNames must cover every voice::Category");
+
+    static int cat_idx = (int)voice::Category::Hostile;
+    ImGui::SetNextItemWidth(140.0f);
+    if (ImGui::Combo("category", &cat_idx, kCatNames,
+                     (int)(sizeof(kCatNames) / sizeof(kCatNames[0])))) {
+        (void)0;   // nothing to do on change — just keep the int live
+    }
+
+    static int faction_idx = (int)Faction::Pirate;
+    const char* fnames[kFactionCount] = {};
+    for (int i = 0; i < kFactionCount; ++i)
+        fnames[i] = faction::to_name((Faction)i);
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(140.0f);
+    ImGui::Combo("faction", &faction_idx, fnames, kFactionCount);
+
+    if (ImGui::Button("say (2D)")) {
+        voice::say((Faction)faction_idx, (voice::Category)cat_idx,
+                   HMM_Vec3{0,0,0}, /*to_player=*/true);
+    }
+    ImGui::SameLine();
+    ImGui::TextDisabled("(force bark)");
+
+    // Quick presets — same triplet as the issue spec so the obvious
+    // smoke test is one click even before fiddling with combos.
+    ImGui::Separator();
+    if (ImGui::Button("Pirate hostile")) {
+        voice::say(Faction::Pirate, voice::Category::Hostile,
+                   HMM_Vec3{0,0,0}, true);
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Confed greeting")) {
+        voice::say(Faction::Confed, voice::Category::Greeting,
+                   HMM_Vec3{0,0,0}, true);
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Militia search")) {
+        voice::say(Faction::Militia, voice::Category::Search,
+                   HMM_Vec3{0,0,0}, true);
+    }
+}
+
 // Read-only player summary — proves the PlayerState wiring (np-eag.3)
 // and gives every downstream shop/trading feature a live view of the
 // numbers it's mutating. Intentionally display-only: mutation goes
@@ -316,6 +376,8 @@ void build(std::vector<PlacedMesh>& placed_meshes,
         build_ship_debug_buttons(ship_debug);
         ImGui::Separator();
         build_audio_section(audio_debug);
+        ImGui::Separator();
+        build_voice_section();
         ImGui::Separator();
         build_player_section(player);
         ImGui::Separator();

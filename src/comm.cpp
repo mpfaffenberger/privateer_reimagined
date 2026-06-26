@@ -6,6 +6,7 @@
 
 #include "json.h"
 #include "player.h"
+#include "voice.h"
 
 // draw() is the only GPU/UI-coupled entry point. Gate it (and the ImGui +
 // sokol headers it needs) behind COMM_HEADLESS so the offline rep test
@@ -35,6 +36,16 @@ TauntTable g_table;
 const char* event_key(Event e) {
     return (e == Event::KillTheirEnemy) ? "kill_their_enemy"
                                         : "killed_by_player_crime";
+}
+
+// Map a comm Event to the voice Category it should speak in. Single
+// source of truth for the comm -> voice wiring so callers don't have
+// to remember which Category goes with which Event (or duplicate the
+// event_key switch into a parallel category switch).
+voice::Category event_to_category(Event e) {
+    return (e == Event::KillTheirEnemy)
+               ? voice::Category::Greeting   // praise -> friendly line
+               : voice::Category::Hostile;    // aggression/threat -> bark
 }
 
 // One shared RNG. Comm flavour is cosmetic, so a default seed is fine —
@@ -144,6 +155,15 @@ void report_player_kill(PlayerState& player, Faction victim) {
              :                          "Neutral";
     };
 
+    // Voice candidate tracking (#43): at most ONE spoken line per kill
+    // report, regardless of how many factions react. Anger wins over
+    // Praise, and within either bucket we keep the FIRST faction to
+    // appear in the effects list (iteration order == most-natural
+    // "this is the biggest deal" ordering already).
+    Faction       voice_speaker = Faction::Civilian;
+    voice::Category voice_cat   = voice::Category::Greeting;
+    bool          voice_chosen  = false;
+
     for (const RepKillEffect& e : effects) {
         const int   delta = (int)e.after - (int)e.before;
         const char* fname = faction::to_name(e.faction);
@@ -179,7 +199,29 @@ void report_player_kill(PlayerState& player, Faction victim) {
                 std::printf("[comm]   %s\n", line.c_str());
                 push(line, /*taunt=*/true);
             }
+            // Pick the most-salient voice candidate for this kill report.
+            // Anger beats Praise (we'd rather hear the angrier faction),
+            // and we cap at ONE spoken line per call no matter how many
+            // factions react — so multiple anger/praise reactions in the
+            // same call don't pile on top of each other in audio.
+            if (!voice_chosen) {
+                if (e.reaction == KillReaction::Anger) {
+                    voice_speaker = e.faction;
+                    voice_cat     = voice::Category::Hostile;
+                    voice_chosen  = true;
+                } else if (e.reaction == KillReaction::Praise) {
+                    voice_speaker = e.faction;
+                    voice_cat     = voice::Category::Greeting;
+                    voice_chosen  = true;
+                }
+            }
         }
+    }
+
+    // One-and-only-one spoken line for this report_player_kill call.
+    if (voice_chosen) {
+        voice::say(voice_speaker, voice_cat, HMM_Vec3{0,0,0},
+                   /*to_player=*/true);
     }
 }
 
@@ -190,6 +232,10 @@ void npc_engage_bark(Faction speaker, bool target_is_player) {
     std::string line = pick_line(speaker, Event::KilledByPlayerCrime);
     if (line.empty()) return;
     push(line, /*taunt=*/true);
+    // Voice the bark (radio path, 2D). Rate-limiting is the caller's
+    // job (ShipAIState::last_bark_at) so this stays unconditional.
+    voice::say(speaker, event_to_category(Event::KilledByPlayerCrime),
+               HMM_Vec3{0,0,0}, /*to_player=*/true);
 }
 
 #ifndef COMM_HEADLESS
