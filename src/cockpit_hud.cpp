@@ -1013,27 +1013,6 @@ void draw_nav_labels(const Camera& cam, const StarSystem& system) {
 static const ImU32 kObjective    = IM_COL32(255,  80,  80, 240);  // objective markers + in-system lines
 static const ImU32 kObjectiveDim = IM_COL32(255,  80,  80,  85);  // surveyed patrol navs (route progress)
 
-// Camera-relative world->screen projection (same engine quirk as the nav
-// reticle: NO ndc-Y flip). Returns false when the point is behind the
-// camera so the caller can simply skip drawing rather than smear a marker
-// across the wrong half of the screen.
-bool project_world_point(const Camera& cam, HMM_Vec3 world,
-                         float& sx, float& sy) {
-    const HMM_Vec3 d = HMM_SubV3(world, cam.position);
-    if (HMM_DotV3(d, cam.forward()) <= 0.0f) return false;   // behind camera
-    const auto s = screen_size();
-    const float    aspect = s.w / s.h;
-    const HMM_Mat4 vp     = HMM_MulM4(cam.projection(aspect), cam.view());
-    const HMM_Vec4 ph     = { world.X, world.Y, world.Z, 1.0f };
-    const HMM_Vec4 clip   = HMM_MulM4V4(vp, ph);
-    if (clip.W <= 0.0f) return false;
-    const float ndc_x = clip.X / clip.W;
-    const float ndc_y = clip.Y / clip.W;     // engine quirk: no Y flip
-    sx = (ndc_x * 0.5f + 0.5f) * s.w;
-    sy = (ndc_y * 0.5f + 0.5f) * s.h;
-    return true;
-}
-
 // Cyan objective diamond + optional label, floating at a world position.
 // `col` defaults to the bright objective cyan; pass kObjectiveDim for
 // already-surveyed patrol navs so the player reads route progress at a
@@ -1196,6 +1175,29 @@ std::string base_label(const StarSystem& sys, const std::string& base_id) {
 }
 
 } // anonymous namespace
+
+// Camera-relative world->screen projection (same engine quirk as the nav
+// reticle: NO ndc-Y flip). Returns false when the point is behind the
+// camera so the caller can simply skip drawing rather than smear a marker
+// across the wrong half of the screen. Declared in cockpit_hud.h so other
+// TUs (loot.cpp, #84 DRY) can share this helper instead of re-deriving
+// the projection matrix.
+bool project_world_point(const Camera& cam, HMM_Vec3 world,
+                         float& sx, float& sy) {
+    const HMM_Vec3 d = HMM_SubV3(world, cam.position);
+    if (HMM_DotV3(d, cam.forward()) <= 0.0f) return false;   // behind camera
+    const auto s = screen_size();
+    const float    aspect = s.w / s.h;
+    const HMM_Mat4 vp     = HMM_MulM4(cam.projection(aspect), cam.view());
+    const HMM_Vec4 ph     = { world.X, world.Y, world.Z, 1.0f };
+    const HMM_Vec4 clip   = HMM_MulM4V4(vp, ph);
+    if (clip.W <= 0.0f) return false;
+    const float ndc_x = clip.X / clip.W;
+    const float ndc_y = clip.Y / clip.W;     // engine quirk: no Y flip
+    sx = (ndc_x * 0.5f + 0.5f) * s.w;
+    sy = (ndc_y * 0.5f + 0.5f) * s.h;
+    return true;
+}
 
 // Top-centre FLIGHT panel. Mirrors STATUS / TARGET in style (dark bg +
 // amber border, amber title, separator) so the data-at-the-top reads as

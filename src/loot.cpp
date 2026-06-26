@@ -23,6 +23,8 @@
 
 #include <algorithm>
 #include <cstdio>
+#include "cockpit_hud.h"
+#include "player.h"
 #include <cstring>
 #include <random>
 
@@ -270,30 +272,63 @@ void clear() {
     drops().clear();
 }
 
+// ----- try_pull ------------------------------------------------------------
+// Phase 4 (#84 + #83) — Z-key universal tractor. Walks every live drop,
+// keeps the ones out of range, and tries to add the in-range ones to the
+// unified hold. Commodity-kind items go via `add_cargo` (qty units, free);
+// everything else goes via `add_item` (one entry per drop, qty included).
+// When the add succeeds the drop is erased; when the add refuses (hold
+// full) the drop is LEFT IN PLACE so a later press can retry. Returns
+// the number of drops successfully pulled.
+int try_pull(HMM_Vec3 player_pos, float range, PlayerState& player,
+             int capacity) {
+    const float r2 = range * range;     // squared distance avoids sqrt
+    auto& v = drops();
+    int pulled = 0;
+    // Walk by index so we can erase failed-then-retained drops without
+    // invalidating the iterator. Iterate in spawn order so the player
+    // gets the closest-feeling drop first when two share an overlapping
+    // range bucket (unusual, but keeps the tie-break deterministic).
+    for (size_t i = 0; i < v.size(); /* manual advance inside branches */) {
+        const LootDrop& d = v[i];
+        const float dx = d.pos.X - player_pos.X;
+        const float dy = d.pos.Y - player_pos.Y;
+        const float dz = d.pos.Z - player_pos.Z;
+        const float d2 = dx*dx + dy*dy + dz*dz;
+        if (d2 > r2) { ++i; continue; }   // out of range, leave alone
+
+        // In range. Try the right add for the item's kind. Any refusal
+        // (qty<=0, hold full, etc.) leaves the drop in place.
+        bool ok = false;
+        if (d.item.kind == inventory::ItemKind::Commodity) {
+            // add_cargo takes units, not a full InventoryItem. qty IS the
+            // unit count for a commodity drop, and the catalog id is the
+            // drop's `id` string.
+            ok = player::add_cargo(player, d.item.id, d.item.qty,
+                                    /*price_per_unit*/ 0, capacity);
+        } else {
+            ok = player::add_item(player, d.item, capacity);
+        }
+        if (ok) {
+            v.erase(v.begin() + i);    // erase: don't advance i (next entry shifts down)
+            ++pulled;
+        } else {
+            ++i;                       // retain, try next
+        }
+    }
+    if (pulled > 0) {
+        std::printf("[tractor] pulled %d item(s)\n", pulled);
+    }
+    return pulled;
+}
+
 // ----- render --------------------------------------------------------------
 
-// World->screen projection duplicated locally. Mirrors
-// cockpit_hud::project_world_point exactly (same engine quirk: no ndc-Y
-// flip; returns false when behind the camera or clip.W <= 0). We can't
-// reach cockpit_hud's static helper from another TU, so re-implement
-// here. Cheap (~6 mul + a div), called once per drop per frame.
-static bool project_world(const Camera& cam, HMM_Vec3 world, float& sx, float& sy) {
-    const HMM_Vec3 d = HMM_SubV3(world, cam.position);
-    if (HMM_DotV3(d, cam.forward()) <= 0.0f) return false;
-    const float dpi     = sapp_dpi_scale();
-    const float scr_w   = (float)sapp_width()  / dpi;
-    const float scr_h   = (float)sapp_height() / dpi;
-    const float aspect  = scr_w / scr_h;
-    const HMM_Mat4 vp   = HMM_MulM4(cam.projection(aspect), cam.view());
-    const HMM_Vec4 ph   = { world.X, world.Y, world.Z, 1.0f };
-    const HMM_Vec4 clip = HMM_MulM4V4(vp, ph);
-    if (clip.W <= 0.0f) return false;
-    const float ndc_x = clip.X / clip.W;
-    const float ndc_y = clip.Y / clip.W;
-    sx = (ndc_x * 0.5f + 0.5f) * scr_w;
-    sy = (ndc_y * 0.5f + 0.5f) * scr_h;
-    return true;
-}
+// World->screen projection now uses the shared cockpit_hud::project_world_point
+// (declared in cockpit_hud.h, defined in cockpit_hud.cpp). Previously this
+// block had its own private project_world implementation that re-derived
+// the projection matrix + screen-size math; we now share the helper and
+// the DRY fix removes the duplicate code (#84).
 
 void render(const Camera& cam, bool draw_world) {
     if (!draw_world) return;
@@ -310,7 +345,7 @@ void render(const Camera& cam, bool draw_world) {
 
     for (const LootDrop& d : v) {
         float sx, sy;
-        if (!project_world(cam, d.pos, sx, sy)) continue;
+        if (!cockpit_hud::project_world_point(cam, d.pos, sx, sy)) continue;
         constexpr float r = 9.0f;   // a touch smaller than the objective marker
 
         // Weapon = amber; everything else = cyan. Same diamond shape as

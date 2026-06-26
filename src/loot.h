@@ -28,6 +28,7 @@
 
 enum class Faction : uint8_t;
 struct Camera;
+struct PlayerState;
 
 namespace loot {
 
@@ -67,5 +68,20 @@ void clear();
 
 // Time-out for a drop. Public so the HUD/tests can use the same value.
 constexpr float k_loot_ttl_s = 180.0f;
+
+// Tractor/pull a drop into the cargo hold (#84 + #83, universal). Walks
+// every live drop within `range` world units of `player_pos`; for each
+// in-range drop it tries to add to the hold via the unified-hold
+// helpers. A Commodity-kind item goes through `add_cargo` (qty units,
+// free-price); every other kind goes through `add_item` (one slot per
+// InventoryItem, qty included). On success the drop is removed. On
+// hold-full (the add refuses) the drop is LEFT IN PLACE so the next
+// press can try again. Returns the number of drops successfully
+// pulled (0 if no in-range drops or all adds were refused).
+//
+// `capacity` is the unified-hold cap the caller resolved (typically
+// `player::cargo_capacity(g.player, ship_class::find(g.player.ship_class_name))`).
+int try_pull(HMM_Vec3 player_pos, float range, PlayerState& player,
+             int capacity);
 
 } // namespace loot

@@ -48,6 +48,13 @@ PlayerState new_game(const std::string& start_system) {
     p.missile_launcher_right = false;
     p.torpedo_launcher_left  = false;
     p.torpedo_launcher_right = false;
+    // Universal tractor (#83): every new ship has the tractor beam from
+    // the start. #82 stops the dealer selling it, so this is now the only
+    // way to acquire one — every pilot can pull loot on day one. The
+    // flag stays in the save schema in case a future design wants to
+    // gate pulling (e.g. a heavier cargo tractor that ships don't all
+    // mount).
+    p.has_tractor_beam = true;
     // rep zero-initialized = unknown stranger; faction baselines decide
     // first impressions (see faction.h).
     return p;

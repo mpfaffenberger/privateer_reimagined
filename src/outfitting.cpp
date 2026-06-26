@@ -189,7 +189,12 @@ bool buy_discrete(PlayerState& p, const std::string& item) {
     } else if (item == "jump_drive") {
         if (p.has_jump_drive)   { std::printf("[outfit] JUMP DRIVE refused: already owned\n"); return false; }
     } else if (item == "tractor_beam") {
-        if (p.has_tractor_beam) { std::printf("[outfit] TRACTOR refused: already owned\n"); return false; }
+        // (#82) Universal tractor — no longer purchasable. Every new
+        // ship gets the flag for free (player.cpp new_game). If some
+        // legacy code path tries to buy one, refuse with a noisy log so
+        // it's obvious the item is intentionally not for sale.
+        std::printf("[outfit] DISCRETE refused: '%s' not for sale (universal)\n", item.c_str());
+        return false;
     } else if (item == "repair_droid") {
         if (p.has_repair_droid) { std::printf("[outfit] REPAIR DROID refused: already owned\n"); return false; }
     } else if (item == "adv_repair_droid") {
@@ -217,7 +222,6 @@ bool buy_discrete(PlayerState& p, const std::string& item) {
     else if (item == "ecm_l1")            p.ecm_level = 1;
     else if (item == "ecm_l2")            p.ecm_level = 2;
     else if (item == "ecm_l3")            p.ecm_level = 3;
-    else if (item == "tractor_beam")      p.has_tractor_beam = true;
     else if (item == "repair_droid")      p.has_repair_droid = true;
     else if (item == "adv_repair_droid") { p.has_repair_droid = true; p.adv_repair_droid = true; }
     std::printf("[outfit] DISCRETE '%s' bought @ %lld | credits %lld\n",
@@ -1115,14 +1119,18 @@ void draw_equipment(BaseContext& ctx) {
         }
         {
             struct Row { const char* item; const char* label; const char* hint; };
-            const std::array<Row, 7> rows = {{
+            // (#82) tractor_beam dropped from the purchasable list — it's
+            // universal on every ship now (player.cpp new_game + #83). The
+            // PlayerState flag is still alive (savegame schema) for any
+            // future design that wants to gate pulling behind a heavier
+            // cargo-tractor upgrade.
+            const std::array<Row, 6> rows = {{
                 { "jump_drive",       "Jump Drive",        "Allows using jump points" },
                 { "ecm_l1",           "ECM Level 1",       "25% chance/s to break missile lock" },
                 { "ecm_l2",           "ECM Level 2",       "50% chance/s (needs L1)" },
                 { "ecm_l3",           "ECM Level 3",       "75% chance/s (needs L2)" },
                 { "repair_droid",     "Repair Droid",      "Repairs hull while flying" },
                 { "adv_repair_droid", "Adv Repair Droid",  "2x faster (needs Repair Droid)" },
-                { "tractor_beam",     "Tractor Beam",      "Pulls loot cargo (4 GJ/s)" },
             }};
             for (const Row& r : rows) {
                 ImGui::PushID(r.item);
@@ -1132,7 +1140,6 @@ void draw_equipment(BaseContext& ctx) {
                 else if (std::string(r.item) == "ecm_l1")        owned = p.ecm_level >= 1;
                 else if (std::string(r.item) == "ecm_l2")        owned = p.ecm_level >= 2;
                 else if (std::string(r.item) == "ecm_l3")        owned = p.ecm_level >= 3;
-                else if (std::string(r.item) == "tractor_beam")  owned = p.has_tractor_beam;
                 // repair_droid is OWNED only if the stock was bought and we
                 // haven't upgraded to adv (which uses the same flag).
                 else if (std::string(r.item) == "repair_droid")  owned = p.has_repair_droid && !p.adv_repair_droid;

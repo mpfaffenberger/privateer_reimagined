@@ -38,6 +38,15 @@ namespace galaxy { struct Galaxy; }
 
 namespace cockpit_hud {
 
+// World->screen projection (shared between cockpit HUD overlays and the
+// loot marker renderer, #84 + DRY). Camera-relative: returns false when
+// the point is behind the camera or clip.W <= 0 so the caller can simply
+// skip drawing rather than smear a marker across the wrong half of the
+// screen. Same engine quirk as the rest of the cockpit: no NDC Y flip
+// (cockpit hud rotates via the camera matrix, not the projection).
+bool project_world_point(const Camera& cam, HMM_Vec3 world,
+                         float& sx, float& sy);
+
 // One call, one frame.
 //
 //   selected_nav   index into system.nav_points; -1 = no target

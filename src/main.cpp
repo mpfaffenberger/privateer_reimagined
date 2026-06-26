@@ -5850,6 +5850,21 @@ void event_cb(const sapp_event* ev) {
         if (ev->key_code == SAPP_KEYCODE_ENTER && !ev->key_repeat) {
             g.missile_fire_request = true;
         }
+        // Z — tractor/pull loot into the hold (#84 + #83). Universal —
+        // the player doesn't need a tractor_beam flag to use it (every
+        // ship has one). Edge-triggered so a held Z can't spam-pull.
+        // Range is 2500m (matches the visual drop TTL window); capacity
+        // resolves through the same ship_class::find / cargo_capacity
+        // path the trading screen uses (no per-frame heap math).
+        if (ev->key_code == SAPP_KEYCODE_Z && !ev->key_repeat &&
+            g.game.mode == GameMode::Flight) {
+            const ShipClass* klass = ship_class::find(g.player.ship_class_name);
+            const int capacity = player::cargo_capacity(g.player, klass);
+            // The camera sits at the player ship, so camera.position IS
+            // the player's world position for proximity checks.
+            loot::try_pull(g.camera.position, /*range=*/2500.0f,
+                           g.player, capacity);
+        }
         // M — cycle the selected missile type (DF -> HS -> IR -> DF). Pure
         // UI state; resets the lock so switching to a lock type re-acquires.
         if (ev->key_code == SAPP_KEYCODE_RIGHT_BRACKET && !ev->key_repeat) {
