@@ -3539,7 +3539,7 @@ void frame_cb() {
             // Scripted scenario director (Phase 2). Runs AFTER hailing so
             // any aggro override hailing set is read by the AI on the next
             // frame; scenario triggers care about faction stance state too.
-            scripted::tick(g.ships, *pl, t_now);
+            scripted::tick(g.ships, *pl, g.player, t_now, encounter_spawn);
         }
     }
 
