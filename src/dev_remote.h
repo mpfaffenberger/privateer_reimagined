@@ -52,6 +52,10 @@
 //                          faction::from_name; enqueued and run on the
 //                          main thread by the registered spawn hook.
 //                          Returns { ok } or { ok:false, error }.
+//   GET  /loot           → { loot: [ { dist, id, kind, rarity }, ... ] }
+//   GET  /inventory      → { items: [...], cargo_used, cargo_cap }
+//   POST /kill           → kill a ship. Body { id? } (0/missing = nearest).
+//   POST /tractor/pull   → pull in-range loot into the hold.
 //
 // Everything else 404s.
 // -----------------------------------------------------------------------------
@@ -139,5 +143,49 @@ void set_cargo_give_hook(std::function<void(std::string commodity, int units)> h
 // invokes this hook on the main thread with (faction, class, dist). The
 // host wires it to its existing debug-spawn recipe.
 void set_spawn_hook(std::function<void(std::string faction, std::string klass, float dist)> hook);
+
+// ---------------------------------------------------------------------------
+// /loot snapshot — in-world loot drops near the player (the loot loop).
+// ---------------------------------------------------------------------------
+// A flat view of one live loot drop. The host builds a vector of these from
+// loot::all() each Flight frame and hands it to publish_loot(); the HTTP
+// thread serves the latest copy to GET /loot. Same decoupling trick as
+// ShipInfo — dev_remote never sees the real LootDrop/InventoryItem types.
+struct LootInfo {
+    float       dist;
+    std::string id;
+    int         kind;
+    int         rarity;
+};
+
+// Publish the latest near-player loot snapshot for GET /loot. Called once
+// per Flight frame from the main thread; stored mutex-guarded.
+void publish_loot(const std::vector<LootInfo>& loot);
+
+// ---------------------------------------------------------------------------
+// /inventory snapshot — the player's unified-hold items + cargo usage.
+// ---------------------------------------------------------------------------
+// A flat view of one unified-hold item. The host builds these from
+// g.player.items each Flight frame and hands them to publish_inventory()
+// along with the current cargo usage + capacity.
+struct ItemInfo {
+    std::string id;
+    int         kind;
+    int         rarity;
+    int         qty;
+};
+
+// Publish the latest inventory snapshot for GET /inventory. Called once
+// per Flight frame from the main thread; stored mutex-guarded.
+void publish_inventory(const std::vector<ItemInfo>& items, int used, int cap);
+
+// POST /kill enqueues a command; drain_commands invokes this hook on the
+// main thread with the requested ship id (0 = "nearest alive non-player").
+// The host wires it to its kill-processing path.
+void set_kill_hook(std::function<void(uint32_t id)> hook);
+
+// POST /tractor/pull enqueues a command; drain_commands invokes this hook
+// on the main thread. The host wires it to loot::try_pull.
+void set_tractor_pull_hook(std::function<void()> hook);
 
 } // namespace dev_remote

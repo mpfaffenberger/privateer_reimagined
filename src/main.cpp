@@ -1178,6 +1178,52 @@ void build_system_scene(bool first_time) {
                     std::printf("[dev_remote] spawn: %s %s id=%u at %.0fm\n",
                                 faction_name.c_str(), klass.c_str(), id, d);
             });
+
+        // POST /kill — destroy a ship for loot-loop testing. With an
+        // explicit id we kill that ship; with id==0 (missing in the body)
+        // we pick the NEAREST alive non-player ship to the player. Either
+        // way we stamp killed_by_id with the player ship id so the death
+        // pass (~L3883) credits the player: reputation, scoreboard, AND
+        // the loot::spawn_for drop that makes this whole harness useful.
+        dev_remote::set_kill_hook(
+            [](uint32_t id) {
+                const Ship* pl = g.ships.player();
+                if (!pl) return;
+                Ship* target = nullptr;
+                if (id != 0) {
+                    for (Ship& s : g.ships)
+                        if (s.id == id && s.alive && !s.is_player) { target = &s; break; }
+                } else {
+                    float best = 0.0f;
+                    for (Ship& s : g.ships) {
+                        if (!s.alive || s.is_player || s.id == 0) continue;
+                        const float d = HMM_LenV3(HMM_SubV3(s.position, pl->position));
+                        if (!target || d < best) { best = d; target = &s; }
+                    }
+                }
+                if (!target) {
+                    std::fprintf(stderr, "[dev_remote] kill: no target (id=%u)\n", id);
+                    return;
+                }
+                target->alive        = false;
+                target->killed_by_id = pl->id;
+                std::printf("[dev_remote] kill: id=%u\n", target->id);
+            });
+
+        // POST /tractor/pull — vacuum every in-range loot drop into the
+        // hold, reusing the SAME loot::try_pull the in-flight tractor uses.
+        // Capacity is resolved exactly like the trading screen / cargo/give
+        // hook above: ship_class::find -> player::cargo_capacity.
+        dev_remote::set_tractor_pull_hook(
+            []() {
+                const Ship* pl = g.ships.player();
+                if (!pl) return;
+                const ShipClass* klass = ship_class::find(g.player.ship_class_name);
+                const int capacity = player::cargo_capacity(g.player, klass);
+                const int pulled = loot::try_pull(pl->position, 2500.0f,
+                                                  g.player, capacity);
+                std::printf("[dev_remote] tractor/pull: %d drop(s)\n", pulled);
+            });
     }
     dev_remote::publish_system_name(g.system.name.c_str());
 
@@ -3206,6 +3252,35 @@ void frame_cb() {
             infos.push_back(std::move(info));
         }
         dev_remote::publish_ships(infos);
+
+        // loot-loop harness: publish the live loot drops (GET /loot) and
+        // the player's unified hold (GET /inventory) each Flight frame.
+        // Both are flat PODs built from loot::all() / g.player.items —
+        // dev_remote never sees LootDrop / InventoryItem / PlayerState.
+        std::vector<dev_remote::LootInfo> loot_infos;
+        for (const loot::LootDrop& d : loot::all()) {
+            dev_remote::LootInfo li;
+            li.dist   = HMM_LenV3(HMM_SubV3(d.pos, pl->position));
+            li.id     = d.item.id;
+            li.kind   = (int)d.item.kind;
+            li.rarity = (int)d.item.rarity;
+            loot_infos.push_back(std::move(li));
+        }
+        dev_remote::publish_loot(loot_infos);
+
+        std::vector<dev_remote::ItemInfo> item_infos;
+        for (const inventory::InventoryItem& it : g.player.items) {
+            dev_remote::ItemInfo ii;
+            ii.id     = it.id;
+            ii.kind   = (int)it.kind;
+            ii.rarity = (int)it.rarity;
+            ii.qty    = it.qty;
+            item_infos.push_back(std::move(ii));
+        }
+        const ShipClass* pk = ship_class::find(g.player.ship_class_name);
+        dev_remote::publish_inventory(item_infos,
+                                      player::cargo_units_used(g.player),
+                                      player::cargo_capacity(g.player, pk));
     }
 
     // --- physics ------------------------------------------------------------

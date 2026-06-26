@@ -52,7 +52,8 @@ struct ScreenshotWaiter {
 };
 
 struct Command {
-    enum class Kind { SetCamera, Screenshot, VoiceSay, CommBark, CargoGive, Spawn };
+    enum class Kind { SetCamera, Screenshot, VoiceSay, CommBark, CargoGive, Spawn,
+                      Kill, TractorPull };
     Kind kind;
 
     // SetCamera — any optional field is encoded with `has_*`.
@@ -78,6 +79,7 @@ struct Command {
     std::string     faction_name;     // raw faction string (Spawn)
     int             int_arg = 0;      // units (CargoGive)
     float           dist    = 0.0f;   // spawn distance (Spawn)
+    uint32_t        kill_id = 0;      // target ship id (Kill; 0 = nearest)
 };
 
 std::mutex          g_queue_mu;
@@ -113,6 +115,20 @@ bool       g_proj_ready = false;   // false until first publish
 std::mutex             g_ships_mu;
 std::vector<ShipInfo>  g_ships;
 
+// Latest near-player loot snapshot for GET /loot, published once per Flight
+// frame by the main thread (publish_loot). Guarded so a serialise never
+// races a mid-frame rebuild.
+std::mutex             g_loot_mu;
+std::vector<LootInfo>  g_loot;
+
+// Latest inventory snapshot for GET /inventory, published once per Flight
+// frame by the main thread (publish_inventory). The cargo usage/cap pair
+// rides under the same lock so the three values stay consistent.
+std::mutex             g_inventory_mu;
+std::vector<ItemInfo>  g_inventory;
+int                    g_cargo_used = 0;
+int                    g_cargo_cap  = 0;
+
 // Registered host hooks (the decoupling seam). Set once at startup by the
 // host via set_*_hook; invoked only on the main thread inside
 // drain_commands. Guarded for the (unlikely) case of a late registration
@@ -121,6 +137,8 @@ std::vector<ShipInfo>  g_ships;
 std::mutex                                                  g_hooks_mu;
 std::function<void(std::string, int)>                       g_cargo_give_hook;
 std::function<void(std::string, std::string, float)>        g_spawn_hook;
+std::function<void(uint32_t)>                               g_kill_hook;
+std::function<void()>                                       g_tractor_pull_hook;
 
 std::thread       g_thread;
 std::atomic<bool> g_running{false};
@@ -472,6 +490,91 @@ void handle_spawn(int fd, const std::string& body) {
     send_json(fd, "{\"ok\":true}");
 }
 
+// GET /loot — serialise the latest near-player loot snapshot. Pure read of
+// the published vector; no command queued, no main-thread round trip,
+// because the host publishes the snapshot every Flight frame.
+void handle_loot(int fd) {
+    std::vector<LootInfo> loot;
+    {
+        std::lock_guard lk(g_loot_mu);
+        loot = g_loot;
+    }
+    std::string out = "{\"loot\":[";
+    for (size_t i = 0; i < loot.size(); ++i) {
+        const LootInfo& l = loot[i];
+        char buf[256];
+        std::snprintf(buf, sizeof(buf),
+            "%s{\"dist\":%.1f,\"id\":\"%s\",\"kind\":%d,\"rarity\":%d}",
+            i ? "," : "", l.dist, l.id.c_str(), l.kind, l.rarity);
+        out += buf;
+    }
+    out += "]}";
+    send_json(fd, out);
+}
+
+// GET /inventory — serialise the player's unified-hold items + cargo usage.
+// Pure read of the published snapshot; the host rebuilds it each Flight
+// frame from g.player.items + cargo_units_used + cargo_capacity.
+void handle_inventory(int fd) {
+    std::vector<ItemInfo> items;
+    int used, cap;
+    {
+        std::lock_guard lk(g_inventory_mu);
+        items = g_inventory;
+        used  = g_cargo_used;
+        cap   = g_cargo_cap;
+    }
+    std::string out = "{\"items\":[";
+    for (size_t i = 0; i < items.size(); ++i) {
+        const ItemInfo& it = items[i];
+        char buf[256];
+        std::snprintf(buf, sizeof(buf),
+            "%s{\"id\":\"%s\",\"kind\":%d,\"rarity\":%d,\"qty\":%d}",
+            i ? "," : "", it.id.c_str(), it.kind, it.rarity, it.qty);
+        out += buf;
+    }
+    char tail[64];
+    std::snprintf(tail, sizeof(tail), "],\"cargo_used\":%d,\"cargo_cap\":%d}",
+                  used, cap);
+    out += tail;
+    send_json(fd, out);
+}
+
+// POST /kill — kill a ship. Body {"id":N} is optional; a missing/zero id
+// means "nearest alive non-player ship to the player". Validation is
+// trivial (any uint), so we enqueue and reply optimistically with the
+// requested id; the registered kill hook resolves the actual target on the
+// main thread (see the cargo/give + spawn fire-and-forget precedent).
+void handle_kill(int fd, const std::string& body) {
+    float id_f = 0.0f;
+    extract_float(body, "id", &id_f);   // optional; 0 → nearest
+    const uint32_t id = (uint32_t)(id_f < 0.0f ? 0.0f : id_f);
+
+    Command c;
+    c.kind    = Command::Kind::Kill;
+    c.kill_id = id;
+    {
+        std::lock_guard lk(g_queue_mu);
+        g_queue.push_back(c);
+    }
+    char buf[64];
+    std::snprintf(buf, sizeof(buf), "{\"ok\":true,\"killed\":%u}", id);
+    send_json(fd, buf);
+}
+
+// POST /tractor/pull — pull every in-range loot drop into the player's
+// hold. No body. Enqueued and run on the main thread by the registered
+// tractor hook (loot::try_pull).
+void handle_tractor_pull(int fd) {
+    Command c;
+    c.kind = Command::Kind::TractorPull;
+    {
+        std::lock_guard lk(g_queue_mu);
+        g_queue.push_back(c);
+    }
+    send_json(fd, "{\"ok\":true}");
+}
+
 // Project mesh-local 3D points into screen UV using the published render
 // matrices. Body is a flat float array [x,y,z,nx,ny,nz, ...]; we read 6
 // floats per point (position + outward normal). Pure read of the snapshot
@@ -621,6 +724,10 @@ void handle_connection(int fd) {
     else if (method == "GET"  && path == "/ships")      handle_ships(fd);
     else if (method == "POST" && path == "/cargo/give") handle_cargo_give(fd, body);
     else if (method == "POST" && path == "/spawn")      handle_spawn(fd, body);
+    else if (method == "GET"  && path == "/loot")       handle_loot(fd);
+    else if (method == "GET"  && path == "/inventory")  handle_inventory(fd);
+    else if (method == "POST" && path == "/kill")       handle_kill(fd, body);
+    else if (method == "POST" && path == "/tractor/pull") handle_tractor_pull(fd);
     else                                                send_404(fd);
 
     ::close(fd);
@@ -766,6 +873,28 @@ void drain_commands(Camera& cam) {
             if (hook) hook(c.faction_name, c.str_arg, c.dist);
             break;
         }
+        case Command::Kind::Kill: {
+            // Run the host's registered kill hook on the main thread; it
+            // resolves the target (explicit id or nearest) and kills it.
+            std::function<void(uint32_t)> hook;
+            {
+                std::lock_guard lk(g_hooks_mu);
+                hook = g_kill_hook;
+            }
+            if (hook) hook(c.kill_id);
+            break;
+        }
+        case Command::Kind::TractorPull: {
+            // Run the host's registered tractor hook on the main thread;
+            // it pulls in-range loot into the hold via loot::try_pull.
+            std::function<void()> hook;
+            {
+                std::lock_guard lk(g_hooks_mu);
+                hook = g_tractor_pull_hook;
+            }
+            if (hook) hook();
+            break;
+        }
         }
     }
 
@@ -820,6 +949,18 @@ void publish_ships(const std::vector<ShipInfo>& ships) {
     g_ships = ships;
 }
 
+void publish_loot(const std::vector<LootInfo>& loot) {
+    std::lock_guard lk(g_loot_mu);
+    g_loot = loot;
+}
+
+void publish_inventory(const std::vector<ItemInfo>& items, int used, int cap) {
+    std::lock_guard lk(g_inventory_mu);
+    g_inventory  = items;
+    g_cargo_used = used;
+    g_cargo_cap  = cap;
+}
+
 void set_cargo_give_hook(std::function<void(std::string, int)> hook) {
     std::lock_guard lk(g_hooks_mu);
     g_cargo_give_hook = std::move(hook);
@@ -828,6 +969,16 @@ void set_cargo_give_hook(std::function<void(std::string, int)> hook) {
 void set_spawn_hook(std::function<void(std::string, std::string, float)> hook) {
     std::lock_guard lk(g_hooks_mu);
     g_spawn_hook = std::move(hook);
+}
+
+void set_kill_hook(std::function<void(uint32_t)> hook) {
+    std::lock_guard lk(g_hooks_mu);
+    g_kill_hook = std::move(hook);
+}
+
+void set_tractor_pull_hook(std::function<void()> hook) {
+    std::lock_guard lk(g_hooks_mu);
+    g_tractor_pull_hook = std::move(hook);
 }
 
 } // namespace dev_remote
