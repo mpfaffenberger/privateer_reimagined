@@ -1122,6 +1122,56 @@ void build_system_scene(bool first_time) {
     // servers (3000, 5000, 8080, 8765, …).
     if (first_time) {
         dev_remote::start(47001);
+
+        // issue #103: register the dev_remote host hooks (the decoupling
+        // seam, mirroring encounters' SpawnFn). dev_remote validates +
+        // enqueues; these run on the main thread inside drain_commands.
+
+        // POST /cargo/give — add cargo to the player's hold. Capacity is
+        // resolved exactly like the trading screen (draw_exchange):
+        // ship_class::find(ship_class_name) -> player::cargo_capacity.
+        dev_remote::set_cargo_give_hook(
+            [](std::string commodity, int units) {
+                const ShipClass* klass = ship_class::find(g.player.ship_class_name);
+                const int capacity = player::cargo_capacity(g.player, klass);
+                if (!player::add_cargo(g.player, commodity, units, /*price*/0, capacity)) {
+                    std::fprintf(stderr,
+                        "[dev_remote] cargo/give refused: %d units of '%s' "
+                        "(bad id or over capacity %d)\n",
+                        units, commodity.c_str(), capacity);
+                } else {
+                    std::printf("[dev_remote] cargo/give: +%d %s\n",
+                                units, commodity.c_str());
+                }
+            });
+
+        // POST /spawn — spawn an NPC near the player, reusing the EXISTING
+        // host spawn recipe (encounter_spawn, the encounters::SpawnFn used
+        // for all NPC traffic). We just assemble a SpawnRequest and hand it
+        // off — no duplicated claim-slot / ship::spawn / atlas-load logic.
+        dev_remote::set_spawn_hook(
+            [](std::string faction_name, std::string klass, float dist) {
+                const Faction fac = faction::from_name(faction_name);
+                if (fac == Faction::Count) return;   // already validated, belt+braces
+                const float d = (dist > 0.0f) ? dist : 2500.0f;
+                // ~d metres ahead of the player, matching the debug-spawn
+                // "in front of the camera" convention.
+                const HMM_Vec3 spawn_pos = HMM_AddV3(
+                    g.camera.position, HMM_MulV3F(g.camera.forward(), d));
+                encounters::SpawnRequest req;
+                req.class_name    = klass;
+                req.position      = spawn_pos;
+                req.faction       = fac;
+                req.patrol_anchor = spawn_pos;
+                const uint32_t id = encounter_spawn(req);
+                if (id == 0)
+                    std::fprintf(stderr,
+                        "[dev_remote] spawn failed: class '%s' / faction '%s'\n",
+                        klass.c_str(), faction_name.c_str());
+                else
+                    std::printf("[dev_remote] spawn: %s %s id=%u at %.0fm\n",
+                                faction_name.c_str(), klass.c_str(), id, d);
+            });
     }
     dev_remote::publish_system_name(g.system.name.c_str());
 
@@ -3117,6 +3167,26 @@ void frame_cb() {
     // physics / rendering — a /camera/set that arrived this frame
     // should be visible in the frame we're about to produce.
     dev_remote::drain_commands(g.camera);
+
+    // issue #103: publish a near-player ship snapshot for GET /ships. Built
+    // fresh each Flight frame from the live registry; the player ship is
+    // skipped (it's not an "NPC near the player"). dev_remote only ever
+    // sees the flat ShipInfo POD — it never touches the Ship/AppState types.
+    if (const Ship* pl = g.ships.player()) {
+        std::vector<dev_remote::ShipInfo> infos;
+        for (const Ship& s : g.ships) {
+            if (s.is_player || s.id == 0) continue;
+            dev_remote::ShipInfo info;
+            info.id           = s.id;
+            info.faction      = faction::to_name(s.faction);
+            info.dist         = HMM_LenV3(HMM_SubV3(s.position, pl->position));
+            info.alive        = s.alive;
+            info.aggro_player = s.ai.aggro_player;
+            info.provoked     = s.provoked_by_player;
+            infos.push_back(std::move(info));
+        }
+        dev_remote::publish_ships(infos);
+    }
 
     // --- physics ------------------------------------------------------------
     // Hold-Tab cruise: drive target to 1 while held, 0 otherwise. Camera

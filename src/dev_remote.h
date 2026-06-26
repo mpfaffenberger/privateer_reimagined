@@ -38,11 +38,30 @@
 //                          { ok:false, error } on a bad faction/category.
 //   POST /comm/bark      → enqueue a hostile comm bark. Body { faction }.
 //                          Returns { ok } or { ok:false, error }.
+//   GET  /ships          → { ships: [ { id, faction, dist, alive,
+//                          aggro_player, provoked }, ... ] } — a snapshot
+//                          of the NPC ships near the player, published
+//                          once per Flight frame by the host.
+//   POST /cargo/give     → add cargo to the player's hold. Body
+//                          { commodity, units }. Validated + enqueued;
+//                          the host's registered hook runs it on the main
+//                          thread. Returns { ok } or { ok:false, error }.
+//   POST /spawn          → spawn an NPC near the player. Body
+//                          { faction, class, dist? } (dist defaults to a
+//                          host-chosen distance). Faction validated via
+//                          faction::from_name; enqueued and run on the
+//                          main thread by the registered spawn hook.
+//                          Returns { ok } or { ok:false, error }.
 //
 // Everything else 404s.
 // -----------------------------------------------------------------------------
 
 #include "HandmadeMath.h"
+
+#include <cstdint>
+#include <functional>
+#include <string>
+#include <vector>
 
 struct Camera;
 
@@ -85,5 +104,40 @@ void publish_system_name(const char* name);
 void publish_render_matrices(const HMM_Mat4& view_proj,
                              const HMM_Mat4& model,
                              HMM_Vec3 cam_pos);
+
+// ---------------------------------------------------------------------------
+// /ships snapshot (issue #103)
+// ---------------------------------------------------------------------------
+// A flat, decoupled view of one NPC ship near the player. The host builds
+// a vector of these from its ShipRegistry each Flight frame and hands it to
+// publish_ships(); the HTTP thread serves the latest copy to GET /ships.
+// dev_remote never sees the real Ship/AppState types — same decoupling
+// trick `encounters` uses with its SpawnFn.
+struct ShipInfo {
+    uint32_t    id;
+    std::string faction;
+    float       dist;
+    bool        alive;
+    bool        aggro_player;
+    bool        provoked;
+};
+
+// Publish the latest near-player ship snapshot for GET /ships. Called once
+// per Flight frame from the main thread. Stored mutex-guarded; the HTTP
+// thread serialises whatever the most recent call left behind.
+void publish_ships(const std::vector<ShipInfo>& ships);
+
+// ---------------------------------------------------------------------------
+// Registered host hooks (issue #103) — the decoupling seam.
+// ---------------------------------------------------------------------------
+// POST /cargo/give validates + enqueues a command; drain_commands invokes
+// this hook on the main thread with (commodity_id, units). The host wires
+// it to player::add_cargo.
+void set_cargo_give_hook(std::function<void(std::string commodity, int units)> hook);
+
+// POST /spawn validates the faction, enqueues a command; drain_commands
+// invokes this hook on the main thread with (faction, class, dist). The
+// host wires it to its existing debug-spawn recipe.
+void set_spawn_hook(std::function<void(std::string faction, std::string klass, float dist)> hook);
 
 } // namespace dev_remote

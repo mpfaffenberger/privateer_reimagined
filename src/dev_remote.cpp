@@ -52,7 +52,7 @@ struct ScreenshotWaiter {
 };
 
 struct Command {
-    enum class Kind { SetCamera, Screenshot, VoiceSay, CommBark };
+    enum class Kind { SetCamera, Screenshot, VoiceSay, CommBark, CargoGive, Spawn };
     Kind kind;
 
     // SetCamera — any optional field is encoded with `has_*`.
@@ -64,12 +64,20 @@ struct Command {
     // thread only sets fields on it and notifies.
     ScreenshotWaiter* waiter = nullptr;
 
-    // VoiceSay / CommBark — parsed + validated on the HTTP thread, the
-    // actual voice::say / comm::npc_engage_bark runs on the main thread
-    // in drain_commands (game code never touches the HTTP thread).
+    // VoiceSay / CommBark / Spawn — parsed + validated on the HTTP thread,
+    // the actual game call runs on the main thread in drain_commands
+    // (game code never touches the HTTP thread).
     Faction         faction   = Faction::Count;
     voice::Category category  = voice::Category::Greeting;
     bool            to_player = true;
+
+    // CargoGive — commodity id + unit count, applied via the cargo hook.
+    // Spawn — ship class name + spawn distance, applied via the spawn hook
+    // (faction reuses the field above).
+    std::string     str_arg;          // commodity id (CargoGive) / class (Spawn)
+    std::string     faction_name;     // raw faction string (Spawn)
+    int             int_arg = 0;      // units (CargoGive)
+    float           dist    = 0.0f;   // spawn distance (Spawn)
 };
 
 std::mutex          g_queue_mu;
@@ -98,6 +106,21 @@ HMM_Mat4   g_view_proj{};
 HMM_Mat4   g_model{};
 HMM_Vec3   g_proj_cam_pos{};
 bool       g_proj_ready = false;   // false until first publish
+
+// Latest near-player ship snapshot for GET /ships. Published once per
+// Flight frame by the main thread (publish_ships); read by the HTTP thread
+// in handle_ships. Guarded so a serialise never races a mid-frame rebuild.
+std::mutex             g_ships_mu;
+std::vector<ShipInfo>  g_ships;
+
+// Registered host hooks (the decoupling seam). Set once at startup by the
+// host via set_*_hook; invoked only on the main thread inside
+// drain_commands. Guarded for the (unlikely) case of a late registration
+// racing the HTTP thread — though in practice both are touched only after
+// start(). The HTTP thread never calls these; it only enqueues commands.
+std::mutex                                                  g_hooks_mu;
+std::function<void(std::string, int)>                       g_cargo_give_hook;
+std::function<void(std::string, std::string, float)>        g_spawn_hook;
 
 std::thread       g_thread;
 std::atomic<bool> g_running{false};
@@ -357,6 +380,98 @@ void handle_comm_bark(int fd, const std::string& body) {
     send_json(fd, "{\"ok\":true}");
 }
 
+// GET /ships — serialise the latest near-player ship snapshot. Pure read
+// of the published vector; no command queued, no main-thread round trip,
+// because the host publishes the snapshot every Flight frame.
+void handle_ships(int fd) {
+    std::vector<ShipInfo> ships;
+    {
+        std::lock_guard lk(g_ships_mu);
+        ships = g_ships;
+    }
+    std::string out = "{\"ships\":[";
+    for (size_t i = 0; i < ships.size(); ++i) {
+        const ShipInfo& s = ships[i];
+        char buf[256];
+        std::snprintf(buf, sizeof(buf),
+            "%s{\"id\":%u,\"faction\":\"%s\",\"dist\":%.1f,"
+            "\"alive\":%s,\"aggro_player\":%s,\"provoked\":%s}",
+            i ? "," : "", s.id, s.faction.c_str(), s.dist,
+            s.alive        ? "true" : "false",
+            s.aggro_player ? "true" : "false",
+            s.provoked     ? "true" : "false");
+        out += buf;
+    }
+    out += "]}";
+    send_json(fd, out);
+}
+
+// POST /cargo/give — add cargo to the player. Body:
+//   {"commodity":"tungsten","units":10}
+// Validate here on the HTTP thread; the actual player::add_cargo runs on
+// the main thread via the registered hook.
+void handle_cargo_give(int fd, const std::string& body) {
+    std::string commodity;
+    if (!extract_string(body, "commodity", &commodity)) {
+        send_json(fd, "{\"ok\":false,\"error\":\"missing commodity\"}");
+        return;
+    }
+    float units_f = 0.0f;
+    if (!extract_float(body, "units", &units_f)) {
+        send_json(fd, "{\"ok\":false,\"error\":\"missing units\"}");
+        return;
+    }
+    const int units = (int)units_f;
+    if (units <= 0) {
+        send_json(fd, "{\"ok\":false,\"error\":\"units must be positive\"}");
+        return;
+    }
+
+    Command c;
+    c.kind    = Command::Kind::CargoGive;
+    c.str_arg = commodity;
+    c.int_arg = units;
+    {
+        std::lock_guard lk(g_queue_mu);
+        g_queue.push_back(c);
+    }
+    send_json(fd, "{\"ok\":true}");
+}
+
+// POST /spawn — spawn an NPC near the player. Body:
+//   {"faction":"militia","class":"talon","dist":2500}
+// dist is optional (0 → host default). Faction is validated here so a bad
+// name 400s cleanly before we queue anything; the host's spawn hook runs
+// the real recipe on the main thread.
+void handle_spawn(int fd, const std::string& body) {
+    std::string fac_s, klass;
+    if (!extract_string(body, "faction", &fac_s)) {
+        send_json(fd, "{\"ok\":false,\"error\":\"missing faction\"}");
+        return;
+    }
+    if (!extract_string(body, "class", &klass)) {
+        send_json(fd, "{\"ok\":false,\"error\":\"missing class\"}");
+        return;
+    }
+    if (faction::from_name(fac_s) == Faction::Count) {
+        send_json(fd, "{\"ok\":false,\"error\":\"unknown faction\"}");
+        return;
+    }
+    float dist = 0.0f;
+    extract_float(body, "dist", &dist);   // optional; 0 → host default
+
+    Command c;
+    c.kind         = Command::Kind::Spawn;
+    c.faction_name = fac_s;
+    c.str_arg      = klass;
+    c.dist         = dist;
+    {
+        std::lock_guard lk(g_queue_mu);
+        g_queue.push_back(c);
+    }
+    send_json(fd, "{\"ok\":true}");
+}
+
 // Project mesh-local 3D points into screen UV using the published render
 // matrices. Body is a flat float array [x,y,z,nx,ny,nz, ...]; we read 6
 // floats per point (position + outward normal). Pure read of the snapshot
@@ -503,6 +618,9 @@ void handle_connection(int fd) {
     else if (method == "POST" && path == "/project")    handle_project(fd, body);
     else if (method == "POST" && path == "/voice/say")  handle_voice_say(fd, body);
     else if (method == "POST" && path == "/comm/bark")  handle_comm_bark(fd, body);
+    else if (method == "GET"  && path == "/ships")      handle_ships(fd);
+    else if (method == "POST" && path == "/cargo/give") handle_cargo_give(fd, body);
+    else if (method == "POST" && path == "/spawn")      handle_spawn(fd, body);
     else                                                send_404(fd);
 
     ::close(fd);
@@ -626,6 +744,27 @@ void drain_commands(Camera& cam) {
             // surface on the HUD comm feed.
             comm::npc_engage_bark(c.faction, /*target_is_player=*/true);
             break;
+        case Command::Kind::CargoGive: {
+            // Run the host's registered cargo hook on the main thread.
+            std::function<void(std::string, int)> hook;
+            {
+                std::lock_guard lk(g_hooks_mu);
+                hook = g_cargo_give_hook;
+            }
+            if (hook) hook(c.str_arg, c.int_arg);
+            break;
+        }
+        case Command::Kind::Spawn: {
+            // Run the host's registered spawn hook on the main thread,
+            // reusing whatever debug-spawn recipe the host wired in.
+            std::function<void(std::string, std::string, float)> hook;
+            {
+                std::lock_guard lk(g_hooks_mu);
+                hook = g_spawn_hook;
+            }
+            if (hook) hook(c.faction_name, c.str_arg, c.dist);
+            break;
+        }
         }
     }
 
@@ -673,6 +812,21 @@ void publish_render_matrices(const HMM_Mat4& view_proj,
     g_model       = model;
     g_proj_cam_pos = cam_pos;
     g_proj_ready  = true;
+}
+
+void publish_ships(const std::vector<ShipInfo>& ships) {
+    std::lock_guard lk(g_ships_mu);
+    g_ships = ships;
+}
+
+void set_cargo_give_hook(std::function<void(std::string, int)> hook) {
+    std::lock_guard lk(g_hooks_mu);
+    g_cargo_give_hook = std::move(hook);
+}
+
+void set_spawn_hook(std::function<void(std::string, std::string, float)> hook) {
+    std::lock_guard lk(g_hooks_mu);
+    g_spawn_hook = std::move(hook);
 }
 
 } // namespace dev_remote
