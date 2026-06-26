@@ -526,5 +526,14 @@
   "file_id": 413216112779557,
   "voice_id": "PrivFlightV0701",
   "upload_status": "success"
+ },
+ {
+  "speaker": "V00_merchant_clean",
+  "source": "flight",
+  "faction": "merchant",
+  "file_id": 413415806042356,
+  "voice_id": "PrivMerchantFem01",
+  "ref": "assets/speech/clone_refs/merchant_fem.mp3",
+  "note": "V00 re-cloned from merchant-only clips (clean trader delivery); replaces V0001/V0601 in merchant pool"
  }
 ]

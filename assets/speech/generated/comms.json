@@ -25,7 +25,7 @@
    "id": "comm_0003",
    "faction": "merchant",
    "category": "greeting",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "Just a peaceful trader, buddy, don't get jumpy."
   },
   {
@@ -46,7 +46,7 @@
    "id": "comm_0006",
    "faction": "merchant",
    "category": "greeting",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "Just a peaceful trader, sport, don't get jumpy."
   },
   {
@@ -67,49 +67,49 @@
    "id": "comm_0009",
    "faction": "merchant",
    "category": "greeting",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "Just a peaceful trader, hotshot, don't get jumpy."
   },
   {
    "id": "comm_0010",
    "faction": "merchant",
    "category": "greeting",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "Good to see a friendly hull out here."
   },
   {
    "id": "comm_0011",
    "faction": "merchant",
    "category": "greeting",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "Care to do a little business, stranger?"
   },
   {
    "id": "comm_0012",
    "faction": "merchant",
    "category": "greeting",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "Care to do a little business, Ace?"
   },
   {
    "id": "comm_0013",
    "faction": "merchant",
    "category": "greeting",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "Care to do a little business, chum?"
   },
   {
    "id": "comm_0014",
    "faction": "merchant",
    "category": "greeting",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "Care to do a little business, rookie?"
   },
   {
    "id": "comm_0015",
    "faction": "merchant",
    "category": "greeting",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "Care to do a little business, pilot?"
   },
   {
@@ -123,7 +123,7 @@
    "id": "comm_0017",
    "faction": "merchant",
    "category": "greeting",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "Care to do a little business, old-timer?"
   },
   {
@@ -137,7 +137,7 @@
    "id": "comm_0019",
    "faction": "merchant",
    "category": "greeting",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "Care to do a little business, buddy?"
   },
   {
@@ -151,28 +151,28 @@
    "id": "comm_0021",
    "faction": "merchant",
    "category": "greeting",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "Fly safe out in this dead end of space, the void's hungry today."
   },
   {
    "id": "comm_0022",
    "faction": "merchant",
    "category": "greeting",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "Fly safe out in this quadrant, the void's hungry today."
   },
   {
    "id": "comm_0023",
    "faction": "merchant",
    "category": "greeting",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "Fly safe out in the Oxford run, the void's hungry today."
   },
   {
    "id": "comm_0024",
    "faction": "merchant",
    "category": "greeting",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "Fly safe out in Pleiades, the void's hungry today."
   },
   {
@@ -186,7 +186,7 @@
    "id": "comm_0026",
    "faction": "merchant",
    "category": "greeting",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "Fly safe out in these lanes, the void's hungry today."
   },
   {
@@ -200,28 +200,28 @@
    "id": "comm_0028",
    "faction": "merchant",
    "category": "greeting",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "Fly safe out in the Troy system, the void's hungry today."
   },
   {
    "id": "comm_0029",
    "faction": "merchant",
    "category": "greeting",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "Fly safe out in the Humboldt quad, the void's hungry today."
   },
   {
    "id": "comm_0030",
    "faction": "merchant",
    "category": "greeting",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "Fly safe out in Confed space, the void's hungry today."
   },
   {
    "id": "comm_0031",
    "faction": "merchant",
    "category": "greeting",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "Don't mind me, sport, just making an honest living."
   },
   {
@@ -263,21 +263,21 @@
    "id": "comm_0037",
    "faction": "merchant",
    "category": "greeting",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "Don't mind me, old-timer, just making an honest living."
   },
   {
    "id": "comm_0038",
    "faction": "merchant",
    "category": "greeting",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "Don't mind me, pilot, just making an honest living."
   },
   {
    "id": "comm_0039",
    "faction": "merchant",
    "category": "greeting",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "Don't mind me, chum, just making an honest living."
   },
   {
@@ -298,14 +298,14 @@
    "id": "comm_0042",
    "faction": "merchant",
    "category": "greeting",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "Cargo hauler coming through this sector, no trouble here."
   },
   {
    "id": "comm_0043",
    "faction": "merchant",
    "category": "greeting",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "Cargo hauler coming through the asteroid fields, no trouble here."
   },
   {
@@ -326,14 +326,14 @@
    "id": "comm_0046",
    "faction": "merchant",
    "category": "greeting",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "Cargo hauler coming through the Oxford run, no trouble here."
   },
   {
    "id": "comm_0047",
    "faction": "merchant",
    "category": "greeting",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "Cargo hauler coming through Pleiades, no trouble here."
   },
   {
@@ -347,7 +347,7 @@
    "id": "comm_0049",
    "faction": "merchant",
    "category": "greeting",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "Cargo hauler coming through Confed space, no trouble here."
   },
   {
@@ -361,7 +361,7 @@
    "id": "comm_0051",
    "faction": "merchant",
    "category": "greeting",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "You buying or selling, sport? I deal fair."
   },
   {
@@ -382,21 +382,21 @@
    "id": "comm_0054",
    "faction": "merchant",
    "category": "greeting",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "You buying or selling, stranger? I deal fair."
   },
   {
    "id": "comm_0055",
    "faction": "merchant",
    "category": "greeting",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "You buying or selling, buddy? I deal fair."
   },
   {
    "id": "comm_0056",
    "faction": "merchant",
    "category": "greeting",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "You buying or selling, rookie? I deal fair."
   },
   {
@@ -410,7 +410,7 @@
    "id": "comm_0058",
    "faction": "merchant",
    "category": "greeting",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "You buying or selling, tin can? I deal fair."
   },
   {
@@ -431,14 +431,14 @@
    "id": "comm_0061",
    "faction": "merchant",
    "category": "greeting",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "Lovely day for a milk run, wouldn't you say, pilot?"
   },
   {
    "id": "comm_0062",
    "faction": "merchant",
    "category": "greeting",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "Lovely day for a milk run, wouldn't you say, buddy?"
   },
   {
@@ -459,7 +459,7 @@
    "id": "comm_0065",
    "faction": "merchant",
    "category": "greeting",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "Lovely day for a milk run, wouldn't you say, sport?"
   },
   {
@@ -473,14 +473,14 @@
    "id": "comm_0067",
    "faction": "merchant",
    "category": "greeting",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "Lovely day for a milk run, wouldn't you say, friend?"
   },
   {
    "id": "comm_0068",
    "faction": "merchant",
    "category": "greeting",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "Lovely day for a milk run, wouldn't you say, old-timer?"
   },
   {
@@ -501,49 +501,49 @@
    "id": "comm_0071",
    "faction": "merchant",
    "category": "hostile",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "Back off! The guild will hear about this!"
   },
   {
    "id": "comm_0072",
    "faction": "merchant",
    "category": "hostile",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "You maniac, I'm just hauling freight!"
   },
   {
    "id": "comm_0073",
    "faction": "merchant",
    "category": "hostile",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "I've got nothing worth dying over, big shot!"
   },
   {
    "id": "comm_0074",
    "faction": "merchant",
    "category": "hostile",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "I've got nothing worth dying over, sport!"
   },
   {
    "id": "comm_0075",
    "faction": "merchant",
    "category": "hostile",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "I've got nothing worth dying over, rookie!"
   },
   {
    "id": "comm_0076",
    "faction": "merchant",
    "category": "hostile",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "I've got nothing worth dying over, chum!"
   },
   {
    "id": "comm_0077",
    "faction": "merchant",
    "category": "hostile",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "I've got nothing worth dying over, stranger!"
   },
   {
@@ -557,21 +557,21 @@
    "id": "comm_0079",
    "faction": "merchant",
    "category": "hostile",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "I've got nothing worth dying over, pilot!"
   },
   {
    "id": "comm_0080",
    "faction": "merchant",
    "category": "hostile",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "I've got nothing worth dying over, Ace!"
   },
   {
    "id": "comm_0081",
    "faction": "merchant",
    "category": "hostile",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "I've got nothing worth dying over, hotshot!"
   },
   {
@@ -585,14 +585,14 @@
    "id": "comm_0083",
    "faction": "merchant",
    "category": "hostile",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "Hey! Watch the paint, you lunatic!"
   },
   {
    "id": "comm_0084",
    "faction": "merchant",
    "category": "hostile",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "I'm unarmed, big shot, this is piracy!"
   },
   {
@@ -606,7 +606,7 @@
    "id": "comm_0086",
    "faction": "merchant",
    "category": "hostile",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "I'm unarmed, hotshot, this is piracy!"
   },
   {
@@ -620,35 +620,35 @@
    "id": "comm_0088",
    "faction": "merchant",
    "category": "hostile",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "I'm unarmed, friend, this is piracy!"
   },
   {
    "id": "comm_0089",
    "faction": "merchant",
    "category": "hostile",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "I'm unarmed, tin can, this is piracy!"
   },
   {
    "id": "comm_0090",
    "faction": "merchant",
    "category": "hostile",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "I'm unarmed, pilot, this is piracy!"
   },
   {
    "id": "comm_0091",
    "faction": "merchant",
    "category": "hostile",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "I'm unarmed, old-timer, this is piracy!"
   },
   {
    "id": "comm_0092",
    "faction": "merchant",
    "category": "hostile",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "I'm unarmed, mister, this is piracy!"
   },
   {
@@ -662,21 +662,21 @@
    "id": "comm_0094",
    "faction": "merchant",
    "category": "hostile",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "You'll never haul in this guild again, you hear me?"
   },
   {
    "id": "comm_0095",
    "faction": "merchant",
    "category": "low_hp",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "Please, I'll dump your precious freight, just let me live!"
   },
   {
    "id": "comm_0096",
    "faction": "merchant",
    "category": "low_hp",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "Please, I'll dump that contraband, just let me live!"
   },
   {
@@ -697,7 +697,7 @@
    "id": "comm_0099",
    "faction": "merchant",
    "category": "low_hp",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "Please, I'll dump that hot merchandise, just let me live!"
   },
   {
@@ -711,14 +711,14 @@
    "id": "comm_0101",
    "faction": "merchant",
    "category": "low_hp",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "Please, I'll dump your manifest, just let me live!"
   },
   {
    "id": "comm_0102",
    "faction": "merchant",
    "category": "low_hp",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "Please, I'll dump those goods, just let me live!"
   },
   {
@@ -732,35 +732,35 @@
    "id": "comm_0104",
    "faction": "merchant",
    "category": "low_hp",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "My poor ship! I'll be selling it for scrap!"
   },
   {
    "id": "comm_0105",
    "faction": "merchant",
    "category": "low_hp",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "Mayday! I'm a civilian, somebody help!"
   },
   {
    "id": "comm_0106",
    "faction": "merchant",
    "category": "low_hp",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "My engine's on fire! I'm punching out!"
   },
   {
    "id": "comm_0107",
    "faction": "merchant",
    "category": "low_hp",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "Take your cargo, take it all, just spare the lifeboat!"
   },
   {
    "id": "comm_0108",
    "faction": "merchant",
    "category": "low_hp",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "Take that contraband, take it all, just spare the lifeboat!"
   },
   {
@@ -774,14 +774,14 @@
    "id": "comm_0110",
    "faction": "merchant",
    "category": "low_hp",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "Take your shipment, take it all, just spare the lifeboat!"
   },
   {
    "id": "comm_0111",
    "faction": "merchant",
    "category": "low_hp",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "Take your manifest, take it all, just spare the lifeboat!"
   },
   {
@@ -823,35 +823,35 @@
    "id": "comm_0117",
    "faction": "merchant",
    "category": "low_hp",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "Twenty years building this business, gone in the Troy system..."
   },
   {
    "id": "comm_0118",
    "faction": "merchant",
    "category": "low_hp",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "Twenty years building this business, gone in Confed space..."
   },
   {
    "id": "comm_0119",
    "faction": "merchant",
    "category": "low_hp",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "Twenty years building this business, gone in the Palan blockade..."
   },
   {
    "id": "comm_0120",
    "faction": "merchant",
    "category": "low_hp",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "Twenty years building this business, gone in the Oxford run..."
   },
   {
    "id": "comm_0121",
    "faction": "merchant",
    "category": "low_hp",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "Twenty years building this business, gone in the Humboldt quad..."
   },
   {
@@ -865,14 +865,14 @@
    "id": "comm_0123",
    "faction": "merchant",
    "category": "low_hp",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "Twenty years building this business, gone in my quad..."
   },
   {
    "id": "comm_0124",
    "faction": "merchant",
    "category": "low_hp",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "Twenty years building this business, gone in this sector..."
   },
   {
@@ -886,14 +886,14 @@
    "id": "comm_0126",
    "faction": "merchant",
    "category": "kill",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "Serves you right, attacking an honest dealer."
   },
   {
    "id": "comm_0127",
    "faction": "merchant",
    "category": "kill",
-   "voice_id": "PrivFlightV0001",
+   "voice_id": "PrivMerchantFem01",
    "text": "Another bandit cashes in his chips."
   },
   {
@@ -907,7 +907,7 @@
    "id": "comm_0129",
    "faction": "merchant",
    "category": "kill",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "And stay down, you space-faring leech."
   },
   {
@@ -928,7 +928,7 @@
    "id": "comm_0132",
    "faction": "merchant",
    "category": "long",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "Look, sweetheart, I've been hauling this route for thirty years. I've paid the pirates, paid the militia, paid the guild dues. I just want to reach port with my hold intact and maybe see my kids again. So whatever you're planning, let's both be reasonable about it."
   },
   {
@@ -942,7 +942,7 @@
    "id": "comm_0134",
    "faction": "merchant",
    "category": "long",
-   "voice_id": "PrivFlightV0601",
+   "voice_id": "PrivMerchantFem01",
    "text": "Friendly ship, am I glad to see you. The whole run through the Palan blockade has been nothing but trouble. Lost my escort two jumps back, scanners keep ghosting contacts. If you're headed my way, mind flying cover? I'll make it worth your while at the next base, I swear it."
   },
   {

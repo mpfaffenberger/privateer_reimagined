@@ -32,8 +32,9 @@ AUDIO_REL_PREFIX = "assets/speech/generated/audio"
 # Female voice classification (Phase-0). The preferred placeholder for the
 # Confed female voice is PrivFlightV0001; the rest are fallbacks so the alias
 # can still resolve if the preferred voice ever drops out of comms.json.
-PREFERRED_CONFED_F_VOICE = "PrivFlightV0001"
+PREFERRED_CONFED_F_VOICE = "PrivMerchantFem01"
 KNOWN_FEMALE_VOICES = (
+    "PrivMerchantFem01",
     "PrivFlightV0001",
     "PrivFlightV0401",
     "PrivFlightV1401",

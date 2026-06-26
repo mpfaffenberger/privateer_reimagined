@@ -21,7 +21,7 @@ random.seed(7)
 # Faction -> primary cloned voice (from clone_refs/uploads.json). Some factions
 # list alternates so the corpus uses more than one actor where we have them.
 VOICE = {
-    "merchant": ["PrivFlightV1401", "PrivFlightV0001", "PrivFlightV0601"],
+    "merchant": ["PrivFlightV1401", "PrivMerchantFem01"],  # V00 re-cloned clean as PrivMerchantFem01; V06 was militia
     "militia": ["PrivFlightV0101", "PrivFlightV0701"],
     "pirate": ["PrivFlightV1501", "PrivFlightV0201", "PrivFlightV1201"],
     "bounty_hunter": ["PrivFlightV0501", "PrivFlightV1101", "PrivFlightV1301"],
