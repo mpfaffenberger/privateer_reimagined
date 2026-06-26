@@ -1,0 +1,530 @@
+[
+ {
+  "id": "priv_bar_rand_npc_randcu_3",
+  "source": "bar",
+  "speaker": "rand_npc/randcu_3",
+  "n_clips": 5,
+  "duration_s": 28.5,
+  "ref": "assets/speech/clone_refs/priv_bar_rand_npc_randcu_3.mp3",
+  "samples": [
+   "It was massive, not-kill-rathy, not-confid,and every instrument said it wasn't there.",
+   "It was massive, not kill-rathy, not confed,and every instrument said it wasn't there.",
+   "SIS has revealed deposits of tungsten, iron and radioactive wars. We never would have found."
+  ],
+  "file_id": 413209544081718,
+  "voice_id": "PrivBarRandNpcRandcu301",
+  "upload_status": "success"
+ },
+ {
+  "id": "priv_bar_rand_npc_shpdlr_1",
+  "source": "bar",
+  "speaker": "rand_npc/shpdlr_1",
+  "n_clips": 6,
+  "duration_s": 31.5,
+  "ref": "assets/speech/clone_refs/priv_bar_rand_npc_shpdlr_1.mp3",
+  "samples": [
+   "The problem is, all of the car go currently listed on your ships manifest won't fit in this baby.",
+   "Sure the cargo space is limited, but you'll keep you and your cargo safe, get it?",
+   "you'll find the galaxy fills your shipping needs.And it's a steal at only 150,000."
+  ],
+  "file_id": 413213263315051,
+  "voice_id": "PrivBarRandNpcShpdlr101",
+  "upload_status": "success"
+ },
+ {
+  "id": "priv_bar_terrel",
+  "source": "bar",
+  "speaker": "terrel",
+  "n_clips": 7,
+  "duration_s": 29.7,
+  "ref": "assets/speech/clone_refs/priv_bar_terrel.mp3",
+  "samples": [
+   "You're an insubordinate smart-ass and one of the best pilots I've ever seen.",
+   "Okay, I'm sure you're headed for trouble, and I'm sure you probably deserve it.",
+   "As I said, I won't force you to do this, but you're making a bad mistake."
+  ],
+  "file_id": 413216246964313,
+  "voice_id": "PrivBarTerrel01",
+  "upload_status": "success"
+ },
+ {
+  "id": "priv_bar_pc",
+  "source": "bar",
+  "speaker": "pc",
+  "n_clips": 6,
+  "duration_s": 31.4,
+  "ref": "assets/speech/clone_refs/priv_bar_pc.mp3",
+  "samples": [
+   "Sweetheart, Commodore Ryceman had an entire fleet. I had a gun.",
+   "Okay, as Taylor probably told you, I need information on an artifact.",
+   "Bosrow refinery base? It's not exactly vacation central. Why go there?"
+  ],
+  "file_id": 413217335136533,
+  "voice_id": "PrivBarPc01",
+  "upload_status": "success"
+ },
+ {
+  "id": "priv_bar_mercgirl",
+  "source": "bar",
+  "speaker": "mercgirl",
+  "n_clips": 9,
+  "duration_s": 29.3,
+  "ref": "assets/speech/clone_refs/priv_bar_mercgirl.mp3",
+  "samples": [
+   "The application fee is now 5,000 credits, our rates have only recently gone up.",
+   "Good. The application fee will be automatically deducted from your account.",
+   "Just remember, the mercenaries killed not only get you the best jobs."
+  ],
+  "file_id": 413215874445405,
+  "voice_id": "PrivBarMercgirl01",
+  "upload_status": "success"
+ },
+ {
+  "id": "priv_bar_miggs",
+  "source": "bar",
+  "speaker": "miggs",
+  "n_clips": 8,
+  "duration_s": 28.6,
+  "ref": "assets/speech/clone_refs/priv_bar_miggs.mp3",
+  "samples": [
+   "And anyone that makes me do what I don't want to do gets a painwise, get me.",
+   "Are the business? You why I should help them priority wise Mr. Lynch?",
+   "You want I should take you outside the air lock and feature not a sock vacuum."
+  ],
+  "file_id": 413212592558175,
+  "voice_id": "PrivBarMiggs01",
+  "upload_status": "success"
+ },
+ {
+  "id": "priv_bar_merchguy",
+  "source": "bar",
+  "speaker": "merchguy",
+  "n_clips": 7,
+  "duration_s": 29.0,
+  "ref": "assets/speech/clone_refs/priv_bar_merchguy.mp3",
+  "samples": [
+   "Sorry, but Guild Records show that you lacked the 1000 credits required to join.",
+   "Remember, we pay premium bounties on ships that Harris merchants killed members.",
+   "Great! We will automatically debit the service fee from your current banking system."
+  ],
+  "file_id": 413211851747564,
+  "voice_id": "PrivBarMerchguy01",
+  "upload_status": "success"
+ },
+ {
+  "id": "priv_bar_mastersn",
+  "source": "bar",
+  "speaker": "mastersn",
+  "n_clips": 7,
+  "duration_s": 32.3,
+  "ref": "assets/speech/clone_refs/priv_bar_mastersn.mp3",
+  "samples": [
+   "I told you, if you want 10,000 credits and access to our files, you need to defend it.",
+   "Okay, I'll save your freighter, but I'd better get full access to the library.",
+   "Impossible, I'm afraid.Now kindly leave, or I'll have security assist you out."
+  ],
+  "file_id": 413212440121446,
+  "voice_id": "PrivBarMastersn01",
+  "upload_status": "success"
+ },
+ {
+  "id": "priv_bar_sandra",
+  "source": "bar",
+  "speaker": "sandra",
+  "n_clips": 8,
+  "duration_s": 29.9,
+  "ref": "assets/speech/clone_refs/priv_bar_sandra.mp3",
+  "samples": [
+   "Red tape or blood? Same color either way. No skin off my nose.",
+   "And unless you want to be thrown into the brig,you better hit the lanes before he sees you.",
+   "but something out there has the hots for you, something nasty."
+  ],
+  "file_id": 413209569964341,
+  "voice_id": "PrivBarSandra01",
+  "upload_status": "success"
+ },
+ {
+  "id": "priv_bar_monkhous",
+  "source": "bar",
+  "speaker": "monkhous",
+  "n_clips": 6,
+  "duration_s": 31.6,
+  "ref": "assets/speech/clone_refs/priv_bar_monkhous.mp3",
+  "samples": [
+   "Well, suffice it to say, I recovered an interesting piece of Steltech manufacturer.",
+   "My patience is wearing thin, and the longer we delay, the more it deteriorates.",
+   "That I am, but my consulting price is currently transportation off this rock."
+  ],
+  "file_id": 413211786117228,
+  "voice_id": "PrivBarMonkhous01",
+  "upload_status": "success"
+ },
+ {
+  "id": "priv_bar_monte",
+  "source": "bar",
+  "speaker": "monte",
+  "n_clips": 7,
+  "duration_s": 29.6,
+  "ref": "assets/speech/clone_refs/priv_bar_monte.mp3",
+  "samples": [
+   "I wise move.I can't understand why you walked away from such an easy job.",
+   "Afterwards, return here for your payment, 15,000 credits.Interested?",
+   "You labor the iron return here and I'll pay you 15,000 feet ourselves."
+  ],
+  "file_id": 413208779243838,
+  "voice_id": "PrivBarMonte01",
+  "upload_status": "success"
+ },
+ {
+  "id": "priv_bar_tayla",
+  "source": "bar",
+  "speaker": "tayla",
+  "n_clips": 7,
+  "duration_s": 30.5,
+  "ref": "assets/speech/clone_refs/priv_bar_tayla.mp3",
+  "samples": [
+   "I'll pay you 15,000 credits for the mission.And tell you a little more about your treasure.",
+   "I have information on the artifact, info I'll share if you fly for me.",
+   "Actually, you're running more brilliance to new Constantinople.It pays 10,000 credits."
+  ],
+  "file_id": 413212897218674,
+  "voice_id": "PrivBarTayla01",
+  "upload_status": "success"
+ },
+ {
+  "id": "priv_bar_roman",
+  "source": "bar",
+  "speaker": "roman",
+  "n_clips": 5,
+  "duration_s": 28.8,
+  "ref": "assets/speech/clone_refs/priv_bar_roman.mp3",
+  "samples": [
+   "Excellent.Please accept this payment of 30,000 credits with my warmest banks.",
+   "I go to great lengths for my friends, Captain, but I am not a charity.",
+   "Smite, a man in my employee found vital information regarding the artifact at the Oxford Library."
+  ],
+  "file_id": 413215870988378,
+  "voice_id": "PrivBarRoman01",
+  "upload_status": "success"
+ },
+ {
+  "id": "priv_bar_lynn",
+  "source": "bar",
+  "speaker": "lynn",
+  "n_clips": 6,
+  "duration_s": 30.7,
+  "ref": "assets/speech/clone_refs/priv_bar_lynn.mp3",
+  "samples": [
+   "This next mission, an intercept operation, pays 15,000 credits.Interested?",
+   "I never considered a swift kick in the butt and incentive, but have it your way.",
+   "But this is your best chance to get to Palin and make 15,000 credits to boot."
+  ],
+  "file_id": 413216474800404,
+  "voice_id": "PrivBarLynn01",
+  "upload_status": "success"
+ },
+ {
+  "id": "priv_bar_taryn",
+  "source": "bar",
+  "speaker": "taryn",
+  "n_clips": 6,
+  "duration_s": 28.4,
+  "ref": "assets/speech/clone_refs/priv_bar_taryn.mp3",
+  "samples": [
+   "Ah, why not? Some say life is held in death and escape.",
+   "Yeah, then get to it.I wanna see Delta Prime charted in my lifetime.",
+   "Ah, why not? Some say life is hell and death and escape."
+  ],
+  "file_id": 413211103211749,
+  "voice_id": "PrivBarTaryn01",
+  "upload_status": "success"
+ },
+ {
+  "id": "priv_flight_V14",
+  "source": "flight",
+  "speaker": "V14",
+  "n_clips": 13,
+  "duration_s": 23.9,
+  "ref": "assets/speech/clone_refs/priv_flight_V14.mp3",
+  "samples": [
+   "Ah, another dissatisfied customer.",
+   "And one more loser, cash is in his chips.",
+   "Not bad for a lowly merchant, a pirate."
+  ],
+  "gender": "M",
+  "faction": "flight_controller",
+  "file_id": 413216710918227,
+  "voice_id": "PrivFlightV1401",
+  "upload_status": "success"
+ },
+ {
+  "id": "priv_flight_V05",
+  "source": "flight",
+  "speaker": "V05",
+  "n_clips": 8,
+  "duration_s": 28.8,
+  "ref": "assets/speech/clone_refs/priv_flight_V05.mp3",
+  "samples": [
+   "Those books go in my hold or up in flames.",
+   "Nothing personal, but your death is my gain.",
+   "The advantage is mine. Now you die."
+  ],
+  "gender": "M",
+  "faction": "bounty_hunter",
+  "file_id": 413209023930490,
+  "voice_id": "PrivFlightV0501",
+  "upload_status": "success"
+ },
+ {
+  "id": "priv_flight_V04",
+  "source": "flight",
+  "speaker": "V04",
+  "n_clips": 9,
+  "duration_s": 29.6,
+  "ref": "assets/speech/clone_refs/priv_flight_V04.mp3",
+  "samples": [
+   "Toth, forget Oxford! Your next stop is hell!",
+   "Sinner, ready thyself for righteous retribution.",
+   "He then taste a purifying fire of the Lord."
+  ],
+  "gender": "M",
+  "faction": "retro",
+  "file_id": 413211276366059,
+  "voice_id": "PrivFlightV0401",
+  "upload_status": "success"
+ },
+ {
+  "id": "priv_flight_V08",
+  "source": "flight",
+  "speaker": "V08",
+  "n_clips": 10,
+  "duration_s": 29.3,
+  "ref": "assets/speech/clone_refs/priv_flight_V08.mp3",
+  "samples": [
+   "Entering disputed space, report any disturbances.",
+   "We have you on our screens.Continue on course.",
+   "Flying in shared airspace, keep your Vidcom open."
+  ],
+  "gender": "M",
+  "faction": "confed",
+  "file_id": 413213426528354,
+  "voice_id": "PrivFlightV0801",
+  "upload_status": "success"
+ },
+ {
+  "id": "priv_flight_V09",
+  "source": "flight",
+  "speaker": "V09",
+  "n_clips": 8,
+  "duration_s": 29.1,
+  "ref": "assets/speech/clone_refs/priv_flight_V09.mp3",
+  "samples": [
+   "Do not, my claws are sheathed, my belly full.",
+   "",
+   "I make power before the claws of a warrior!"
+  ],
+  "gender": "M",
+  "faction": "kilrathi",
+  "file_id": 413209569964342,
+  "voice_id": "PrivFlightV0901",
+  "upload_status": "success"
+ },
+ {
+  "id": "priv_flight_V00",
+  "source": "flight",
+  "speaker": "V00",
+  "n_clips": 8,
+  "duration_s": 28.4,
+  "ref": "assets/speech/clone_refs/priv_flight_V00.mp3",
+  "samples": [
+   "Entering disputed space, report any disturbances.",
+   "Flying in shared air space. Keep your Vidcom open.",
+   "A life sentence doesn't look so bad now, a-rejust?"
+  ],
+  "gender": "F",
+  "faction": "merchant",
+  "file_id": 413216101478490,
+  "voice_id": "PrivFlightV0001",
+  "upload_status": "success"
+ },
+ {
+  "id": "priv_flight_V01",
+  "source": "flight",
+  "speaker": "V01",
+  "n_clips": 9,
+  "duration_s": 28.4,
+  "ref": "assets/speech/clone_refs/priv_flight_V01.mp3",
+  "samples": [
+   "Prepare to be searched, maintain speed and course.",
+   "You cannot win with draw or be destroyed.",
+   "Contraband detected. All units close and terminate."
+  ],
+  "gender": "M",
+  "faction": "merchant",
+  "file_id": 413213360169059,
+  "voice_id": "PrivFlightV0101",
+  "upload_status": "success"
+ },
+ {
+  "id": "priv_flight_V02",
+  "source": "flight",
+  "speaker": "V02",
+  "n_clips": 10,
+  "duration_s": 28.9,
+  "ref": "assets/speech/clone_refs/priv_flight_V02.mp3",
+  "samples": [
+   "Oxford has no right to hoard data.Access is ours.",
+   "Should have stepped to your charts. It's dangerous out here.",
+   "and one more loser caches in their chips"
+  ],
+  "gender": "M",
+  "faction": "militia",
+  "file_id": 413213701664993,
+  "voice_id": "PrivFlightV0201",
+  "upload_status": "success"
+ },
+ {
+  "id": "priv_flight_V11",
+  "source": "flight",
+  "speaker": "V11",
+  "n_clips": 8,
+  "duration_s": 28.1,
+  "ref": "assets/speech/clone_refs/priv_flight_V11.mp3",
+  "samples": [
+   "I am Salman Kreitz, Privateer extraordinaire.",
+   "Hey, what can I say?I'm a professional.",
+   "I say, would you kindly identify yourself?"
+  ],
+  "gender": "M",
+  "faction": "bounty_hunter",
+  "file_id": 413218507440195,
+  "voice_id": "PrivFlightV1101",
+  "upload_status": "success"
+ },
+ {
+  "id": "priv_flight_V12",
+  "source": "flight",
+  "speaker": "V12",
+  "n_clips": 11,
+  "duration_s": 29.4,
+  "ref": "assets/speech/clone_refs/priv_flight_V12.mp3",
+  "samples": [
+   "and feel free to join in.Riceman out.",
+   "A cream kill should have been a bounty hunter.",
+   "Why's Guy thinks he's winning?"
+  ],
+  "gender": "M",
+  "faction": "bounty_hunter",
+  "file_id": 413209325605117,
+  "voice_id": "PrivFlightV1201",
+  "upload_status": "success"
+ },
+ {
+  "id": "priv_flight_V15",
+  "source": "flight",
+  "speaker": "V15",
+  "n_clips": 10,
+  "duration_s": 20.7,
+  "ref": "assets/speech/clone_refs/priv_flight_V15.mp3",
+  "samples": [
+   "A clean kill should have been a bounty hunter.",
+   "Yeah, you were nailed, Paolo.",
+   "How's that from, message, errand boy?"
+  ],
+  "gender": "M",
+  "faction": "pirate",
+  "file_id": 413215471452254,
+  "voice_id": "PrivFlightV1501",
+  "upload_status": "success"
+ },
+ {
+  "id": "priv_flight_V13",
+  "source": "flight",
+  "speaker": "V13",
+  "n_clips": 13,
+  "duration_s": 28.4,
+  "ref": "assets/speech/clone_refs/priv_flight_V13.mp3",
+  "samples": [
+   "You take over my route, fly for Taylor.",
+   "There's not enough work for two private tiers.",
+   "Nothing personal, but your death is my game."
+  ],
+  "gender": "M",
+  "faction": "bounty_hunter",
+  "file_id": 413214058266734,
+  "voice_id": "PrivFlightV1301",
+  "upload_status": "success"
+ },
+ {
+  "id": "priv_flight_V10",
+  "source": "flight",
+  "speaker": "V10",
+  "n_clips": 8,
+  "duration_s": 30.9,
+  "ref": "assets/speech/clone_refs/priv_flight_V10.mp3",
+  "samples": [
+   "",
+   "I agree.",
+   "Again."
+  ],
+  "gender": "M",
+  "faction": "steltek",
+  "file_id": 413218657403143,
+  "voice_id": "PrivFlightV1001",
+  "upload_status": "success"
+ },
+ {
+  "id": "priv_flight_V03",
+  "source": "flight",
+  "speaker": "V03",
+  "n_clips": 6,
+  "duration_s": 29.2,
+  "ref": "assets/speech/clone_refs/priv_flight_V03.mp3",
+  "samples": [
+   "You heathen's lorry be unto the most high!",
+   "the purifying fire of the Lord!",
+   "Can it be as the god of man abandoned us?"
+  ],
+  "gender": "F",
+  "faction": "retro",
+  "file_id": 413215919034585,
+  "voice_id": "PrivFlightV0301",
+  "upload_status": "success"
+ },
+ {
+  "id": "priv_flight_V06",
+  "source": "flight",
+  "speaker": "V06",
+  "n_clips": 11,
+  "duration_s": 29.9,
+  "ref": "assets/speech/clone_refs/priv_flight_V06.mp3",
+  "samples": [
+   "Prepare to be searched, maintained speed, and coarse.",
+   "Contraband detected all units close and terminate.",
+   "your luck as run out, along with my patients."
+  ],
+  "gender": "F",
+  "faction": "merchant",
+  "file_id": 413210477817974,
+  "voice_id": "PrivFlightV0601",
+  "upload_status": "success"
+ },
+ {
+  "id": "priv_flight_V07",
+  "source": "flight",
+  "speaker": "V07",
+  "n_clips": 14,
+  "duration_s": 29.0,
+  "ref": "assets/speech/clone_refs/priv_flight_V07.mp3",
+  "samples": [
+   "Oxford has no right to hoard data.Access is ours.",
+   "Should have stuck to your charts.It's dangerous out here.",
+   "A clean kill, should have been a bounty hunter."
+  ],
+  "gender": "M",
+  "faction": "militia",
+  "file_id": 413216112779557,
+  "voice_id": "PrivFlightV0701",
+  "upload_status": "success"
+ }
+]

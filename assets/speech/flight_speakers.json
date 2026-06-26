@@ -1,0 +1,4354 @@
+{
+ "speech_0000.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "Male flight controller",
+  "method": "label",
+  "speaker": "flight_controller",
+  "text": "Now entering an automatic landing zone."
+ },
+ "speech_0001.wav": {
+  "disposition": "friendly",
+  "disposition_method": "label",
+  "label": "M Bounty hunter friendly",
+  "method": "label",
+  "speaker": "bounty_hunter",
+  "text": "Welcome to the happy hunting grounds."
+ },
+ "speech_0002.wav": {
+  "disposition": "friendly",
+  "disposition_method": "label",
+  "label": "M Bounty hunter friendly",
+  "method": "label",
+  "speaker": "bounty_hunter",
+  "text": "If you're smart, you'll watch your back."
+ },
+ "speech_0003.wav": {
+  "disposition": "friendly",
+  "disposition_method": "label",
+  "label": "Bounty hunter friendly",
+  "method": "label",
+  "speaker": "bounty_hunter",
+  "text": "Better clear out, trouble's brewing."
+ },
+ "speech_0004.wav": {
+  "disposition": "friendly",
+  "disposition_method": "label",
+  "label": "Bounty hunter friendly",
+  "method": "label",
+  "speaker": "bounty_hunter",
+  "text": "You're not on my list, this time."
+ },
+ "speech_0005.wav": {
+  "disposition": "friendly",
+  "disposition_method": "label",
+  "label": "Bounty hunter friendly",
+  "method": "label",
+  "speaker": "bounty_hunter",
+  "text": "Just smoking out a little game, flyboy."
+ },
+ "speech_0006.wav": {
+  "disposition": "friendly",
+  "disposition_method": "label",
+  "label": "Bounty hunter friendly",
+  "method": "label",
+  "speaker": "bounty_hunter",
+  "text": "Don't worry, I only kill for a fee."
+ },
+ "speech_0007.wav": {
+  "disposition": "hostile",
+  "disposition_method": "label",
+  "label": "Bounty hunter hostile",
+  "method": "label",
+  "speaker": "bounty_hunter",
+  "text": "The advantage is mine. Now you die."
+ },
+ "speech_0008.wav": {
+  "disposition": "hostile",
+  "disposition_method": "label",
+  "label": "Bounty hunter hostile",
+  "method": "label",
+  "speaker": "bounty_hunter",
+  "text": "Nothing personal, but your death is my gain."
+ },
+ "speech_0009.wav": {
+  "disposition": "hostile",
+  "disposition_method": "label",
+  "label": "Bounty hunter hostile",
+  "method": "label",
+  "speaker": "bounty_hunter",
+  "text": "Killing you will put me in the black, fly boy."
+ },
+ "speech_0010.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "label",
+  "label": "Bounty hunter low hp",
+  "method": "label",
+  "speaker": "bounty_hunter",
+  "text": "It can't end like this."
+ },
+ "speech_0011.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "label",
+  "label": "Bounty hunter low hp",
+  "method": "label",
+  "speaker": "bounty_hunter",
+  "text": "Oh, this is not good."
+ },
+ "speech_0012.wav": {
+  "disposition": "hostile",
+  "disposition_method": "label",
+  "label": "Bounty hunter hostile",
+  "method": "label",
+  "speaker": "bounty_hunter",
+  "text": "Hey, what can I say? I'm a professional."
+ },
+ "speech_0013.wav": {
+  "disposition": "hostile",
+  "disposition_method": "label",
+  "label": "Bounty hunter hostile",
+  "method": "label",
+  "speaker": "bounty_hunter",
+  "text": "Your death is my living, buddy."
+ },
+ "speech_0014.wav": {
+  "disposition": "kill",
+  "disposition_method": "label",
+  "label": "Bounty hunter kill achieved",
+  "method": "label",
+  "speaker": "bounty_hunter",
+  "text": "Another day, another kill."
+ },
+ "speech_0015.wav": {
+  "disposition": "kill",
+  "disposition_method": "label",
+  "label": "Bounty hunter kill achieved",
+  "method": "label",
+  "speaker": "bounty_hunter",
+  "text": "One more for the resume."
+ },
+ "speech_0016.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "Bounty hunter Oxford Book Mission",
+  "method": "label",
+  "speaker": "bounty_hunter",
+  "text": "Those books go in my hold or up in flames."
+ },
+ "speech_0017.wav": {
+  "disposition": "hostile",
+  "disposition_method": "label",
+  "label": "Bounty hunter hostile",
+  "method": "label",
+  "speaker": "bounty_hunter",
+  "text": "Nothing personal, but your death is my gain."
+ },
+ "speech_0018.wav": {
+  "disposition": "hostile",
+  "disposition_method": "label",
+  "label": "Bounty hunter hostile",
+  "method": "label",
+  "speaker": "bounty_hunter",
+  "text": "Killing you will put me in the black, fly boy."
+ },
+ "speech_0019.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "label",
+  "label": "Bounty hunter low hp",
+  "method": "label",
+  "speaker": "bounty_hunter",
+  "text": "It can't end like this."
+ },
+ "speech_0020.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "label",
+  "label": "Bounty hunter low hp",
+  "method": "label",
+  "speaker": "bounty_hunter",
+  "text": "Oh, this is not good."
+ },
+ "speech_0021.wav": {
+  "disposition": "hostile",
+  "disposition_method": "label",
+  "label": "Bounty hunter hostile",
+  "method": "label",
+  "speaker": "bounty_hunter",
+  "text": "Hey, what can I say? I'm a professional."
+ },
+ "speech_0022.wav": {
+  "disposition": "hostile",
+  "disposition_method": "label",
+  "label": "Bounty hunter hostile",
+  "method": "label",
+  "speaker": "bounty_hunter",
+  "text": "Your death is my living, buddy."
+ },
+ "speech_0023.wav": {
+  "disposition": "kill",
+  "disposition_method": "label",
+  "label": "Bounty hunter kill achieved",
+  "method": "label",
+  "speaker": "bounty_hunter",
+  "text": "Another day, another kill."
+ },
+ "speech_0024.wav": {
+  "disposition": "kill",
+  "disposition_method": "label",
+  "label": "Bounty hunter kill achieved",
+  "method": "label",
+  "speaker": "bounty_hunter",
+  "text": "One more for the resume."
+ },
+ "speech_0025.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "The advantage is mine. Now you die."
+ },
+ "speech_0026.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "Bounty hunter Palan blockade",
+  "method": "label",
+  "speaker": "bounty_hunter",
+  "text": "You'll have to go through us to get the Palin."
+ },
+ "speech_0027.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "Killing you will put me in the black, fly boy."
+ },
+ "speech_0028.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "It can't end like this."
+ },
+ "speech_0029.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "Oh, this is not good."
+ },
+ "speech_0030.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "Hey, what can I say? I'm a professional."
+ },
+ "speech_0031.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "Your death is my living, buddy."
+ },
+ "speech_0032.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "Another day, another kill."
+ },
+ "speech_0033.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "One more for the resume."
+ },
+ "speech_0034.wav": {
+  "disposition": "hostile",
+  "disposition_method": "label",
+  "label": "Retro hostile",
+  "method": "label",
+  "speaker": "retro",
+  "text": "Die by the very weapons you adore!"
+ },
+ "speech_0035.wav": {
+  "disposition": "hostile",
+  "disposition_method": "label",
+  "label": "Retro hostile",
+  "method": "label",
+  "speaker": "retro",
+  "text": "Train our to humanity. Feel our wrath."
+ },
+ "speech_0036.wav": {
+  "disposition": "hostile",
+  "disposition_method": "label",
+  "label": "Retro hostile",
+  "method": "label",
+  "speaker": "retro",
+  "text": "Repent and accept our righteous judgment."
+ },
+ "speech_0037.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "label",
+  "label": "Retro low hp",
+  "method": "label",
+  "speaker": "retro",
+  "text": "Can it be? Has the God of man abandoned us?"
+ },
+ "speech_0038.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "label",
+  "label": "M Retro low hp",
+  "method": "label",
+  "speaker": "retro",
+  "text": "Deliver us, O Lord, for we are in need."
+ },
+ "speech_0039.wav": {
+  "disposition": "hostile",
+  "disposition_method": "label",
+  "label": "M Retro hostile",
+  "method": "label",
+  "speaker": "retro",
+  "text": "Your destruction is the will of God!"
+ },
+ "speech_0040.wav": {
+  "disposition": "hostile",
+  "disposition_method": "label",
+  "label": "M Retro hostile",
+  "method": "label",
+  "speaker": "retro",
+  "text": "He then taste a purifying fire of the Lord."
+ },
+ "speech_0041.wav": {
+  "disposition": "kill",
+  "disposition_method": "label",
+  "label": "M Retro kill achieved",
+  "method": "label",
+  "speaker": "retro",
+  "text": "Death to heat and glory be unto the Most High!"
+ },
+ "speech_0042.wav": {
+  "disposition": "kill",
+  "disposition_method": "label",
+  "label": "M Retro kill achieved",
+  "method": "label",
+  "speaker": "retro",
+  "text": "The piety has prevailed again!Die, devil!"
+ },
+ "speech_0043.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "retro",
+  "text": "Die by the very weapons you adore!"
+ },
+ "speech_0044.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "retro",
+  "text": "Train our to humanity. Feel our wrath."
+ },
+ "speech_0045.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "M Retro Thoth forget oxford",
+  "method": "label",
+  "speaker": "retro",
+  "text": "Toth, forget Oxford! Your next stop is hell!"
+ },
+ "speech_0046.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "retro",
+  "text": "Can it be? Has the God of man abandoned us?"
+ },
+ "speech_0047.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "retro",
+  "text": "Deliver us, O Lord, for we are in need."
+ },
+ "speech_0048.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "retro",
+  "text": "Your destruction is the will of God!"
+ },
+ "speech_0049.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "retro",
+  "text": "He then taste a purifying fire of the Lord."
+ },
+ "speech_0050.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "retro",
+  "text": "Death to heat and glory be unto the Most High!"
+ },
+ "speech_0051.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "retro",
+  "text": "The piety has prevailed again!Die, devil!"
+ },
+ "speech_0052.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "M Retro Hunter Thoth?",
+  "method": "label",
+  "speaker": "retro",
+  "text": "Hunt it off."
+ },
+ "speech_0053.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "M Retro You are hereby sentenced to death for your heresy",
+  "method": "label",
+  "speaker": "retro",
+  "text": "You are hereby sentenced to death for your heresy."
+ },
+ "speech_0054.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "M Retro The execution shall commence now",
+  "method": "label",
+  "speaker": "retro",
+  "text": "The execution shall commence now."
+ },
+ "speech_0055.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "retro",
+  "text": "Die by the very weapons you adore!"
+ },
+ "speech_0056.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "retro",
+  "text": "Train our to humanity. Feel our wrath."
+ },
+ "speech_0057.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "retro",
+  "text": "Repent and accept our righteous judgment."
+ },
+ "speech_0058.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "retro",
+  "text": "Can it be? Has the God of man abandoned us?"
+ },
+ "speech_0059.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "retro",
+  "text": "Deliver us, O Lord, for we are in need."
+ },
+ "speech_0060.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "retro",
+  "text": "Your destruction is the will of God!"
+ },
+ "speech_0061.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "retro",
+  "text": "He then taste a purifying fire of the Lord."
+ },
+ "speech_0062.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "retro",
+  "text": "Death to heat and glory be unto the Most High!"
+ },
+ "speech_0063.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "retro",
+  "text": "The piety has prevailed again!Die, devil!"
+ },
+ "speech_0064.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "M Retro Sinner ready thyself for righteous retribution",
+  "method": "label",
+  "speaker": "retro",
+  "text": "Sinner, ready thyself for righteous retribution."
+ },
+ "speech_0065.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "M Retro We know you posess high level alien devices",
+  "method": "label",
+  "speaker": "retro",
+  "text": "We know you possess high-level alien devices."
+ },
+ "speech_0066.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "M retro Machines of damnable intent!",
+  "method": "label",
+  "speaker": "retro",
+  "text": "Machines of damnable intent!"
+ },
+ "speech_0067.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "M retro For adding to the technological burden of mankind",
+  "method": "label",
+  "speaker": "retro",
+  "text": "for adding to the technological burden of mankind."
+ },
+ "speech_0068.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "M retro The Church of Man Condemns you!",
+  "method": "label",
+  "speaker": "retro",
+  "text": "The Church of Man condemns you!"
+ },
+ "speech_0069.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "M retro In the moments you have left to you, repent!",
+  "method": "label",
+  "speaker": "retro",
+  "text": "In the moments, you have left to you.Repent."
+ },
+ "speech_0070.wav": {
+  "disposition": "friendly",
+  "disposition_method": "label",
+  "label": "M Confed friendly",
+  "method": "label",
+  "speaker": "confed",
+  "text": "Your profile is clear to sector's edge."
+ },
+ "speech_0071.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "Stick to establish lanes for your own good."
+ },
+ "speech_0072.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "Patrol to civilian craft, keep your distance."
+ },
+ "speech_0073.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "Flying in shared airspace, keep your Vidcom open."
+ },
+ "speech_0074.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "Entering disputed space, report any disturbances."
+ },
+ "speech_0075.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "We have you on our screens.Continue on course."
+ },
+ "speech_0076.wav": {
+  "disposition": "hostile",
+  "disposition_method": "label",
+  "label": "M Confed hostile",
+  "method": "label",
+  "speaker": "confed",
+  "text": "You've got quite a record pal, but it ends here."
+ },
+ "speech_0077.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "We've accessed your fire pirate, your dead."
+ },
+ "speech_0078.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "Hey, give me a call when you get the hell."
+ },
+ "speech_0079.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "label",
+  "label": "M Confed low hp",
+  "method": "label",
+  "speaker": "confed",
+  "text": "Mayday, we've sustained massive damage."
+ },
+ "speech_0080.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "Unless we get some help, we're finished."
+ },
+ "speech_0081.wav": {
+  "disposition": "hostile",
+  "disposition_method": "label",
+  "label": "M Confed hostile",
+  "method": "label",
+  "speaker": "confed",
+  "text": "I use smuggling scum."
+ },
+ "speech_0082.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "You're beaten.Want us a render?"
+ },
+ "speech_0083.wav": {
+  "disposition": "kill",
+  "disposition_method": "label",
+  "label": "M Confied kill achieved",
+  "method": "label",
+  "speaker": "confed",
+  "text": "One bogey terminated."
+ },
+ "speech_0084.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "enemy target destroyed"
+ },
+ "speech_0085.wav": {
+  "disposition": "contraband",
+  "disposition_method": "label",
+  "label": "M Confed contraband",
+  "method": "label",
+  "speaker": "confed",
+  "text": "Maintain speed and course for contraband search."
+ },
+ "speech_0086.wav": {
+  "disposition": "contraband",
+  "disposition_method": "label",
+  "label": "M Confed contraband detected!",
+  "method": "label",
+  "speaker": "confed",
+  "text": "contact main detected, target offender and fire at will."
+ },
+ "speech_0087.wav": {
+  "disposition": "contraband",
+  "disposition_method": "label",
+  "label": "M Confed no contraband",
+  "method": "label",
+  "speaker": "confed",
+  "text": "No contraband detected, you may proceed."
+ },
+ "speech_0088.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "confed",
+  "text": "You've got quite a record pal, but it ends here."
+ },
+ "speech_0089.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "We've accessed your fire pirate, your dead."
+ },
+ "speech_0090.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "Hey, give me a call when you get the hell."
+ },
+ "speech_0091.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "Mayday, we've sustained massive damage."
+ },
+ "speech_0092.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "Unless we get some help, we're finished."
+ },
+ "speech_0093.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "confed",
+  "text": "A life sentence doesn't look so bad now, Avery, just..."
+ },
+ "speech_0094.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "You're beaten.Want us a render?"
+ },
+ "speech_0095.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "One bogey terminated."
+ },
+ "speech_0096.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "enemy target destroyed"
+ },
+ "speech_0097.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "confed",
+  "text": "We know you are transporting a known felon."
+ },
+ "speech_0098.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "confed",
+  "text": "Prepare to die, criminal scum."
+ },
+ "speech_0099.wav": {
+  "disposition": "friendly",
+  "disposition_method": "label",
+  "label": "Kilrathi friendly",
+  "method": "label",
+  "speaker": "kilrathi",
+  "text": "Do not, my claws are sheathed, my belly full."
+ },
+ "speech_0100.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "kilrathi",
+  "text": "I grant you passage today, looking ape."
+ },
+ "speech_0101.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "kilrathi",
+  "text": "Pointy boy, you make me laugh."
+ },
+ "speech_0102.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "kilrathi",
+  "text": "I have no time to die with you, monkey boy!"
+ },
+ "speech_0103.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "kilrathi",
+  "text": "We are tracking your deeper distance."
+ },
+ "speech_0104.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "kilrathi",
+  "text": "for my brothers to kill."
+ },
+ "speech_0105.wav": {
+  "disposition": "hostile",
+  "disposition_method": "label",
+  "label": "Kilrathi hostile",
+  "method": "label",
+  "speaker": "kilrathi",
+  "text": "As you mount your bones in my hall."
+ },
+ "speech_0106.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "kilrathi",
+  "text": "Your death will honor my name."
+ },
+ "speech_0107.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "kilrathi",
+  "text": "I make power before the claws of a warrior!"
+ },
+ "speech_0108.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "label",
+  "label": "Kilrathi low hp",
+  "method": "label",
+  "speaker": "kilrathi",
+  "text": "I salute you."
+ },
+ "speech_0109.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "label",
+  "label": "Kilrathi low hp",
+  "method": "label",
+  "speaker": "kilrathi",
+  "text": "better to human, yet unbeaton."
+ },
+ "speech_0110.wav": {
+  "disposition": "hostile",
+  "disposition_method": "label",
+  "label": "Kilrathi winning fight",
+  "method": "label",
+  "speaker": "kilrathi",
+  "text": "Fight back! There is no honor in slaughter!"
+ },
+ "speech_0111.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "kilrathi",
+  "text": "You are hardly worthy of my fire."
+ },
+ "speech_0112.wav": {
+  "disposition": "kill",
+  "disposition_method": "label",
+  "label": "Kilrathi kill achieved",
+  "method": "label",
+  "speaker": "kilrathi",
+  "text": "I have gained another slave in the afterworld."
+ },
+ "speech_0113.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "kilrathi",
+  "text": "lead another enemy to the void."
+ },
+ "speech_0114.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "Kilrathi - Monkhouse Surrender",
+  "method": "label",
+  "speaker": "kilrathi",
+  "text": "Funkos, Surrender, and Be Spared."
+ },
+ "speech_0115.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "kilrathi",
+  "text": "Your death will honor my name."
+ },
+ "speech_0116.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "kilrathi",
+  "text": "I make power before the claws of a warrior!"
+ },
+ "speech_0117.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "kilrathi",
+  "text": "I salute you."
+ },
+ "speech_0118.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "kilrathi",
+  "text": "better to human, yet unbeaton."
+ },
+ "speech_0119.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "kilrathi",
+  "text": "Fight back! There is no honor in slaughter!"
+ },
+ "speech_0120.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "kilrathi",
+  "text": "You are hardly worthy of my fire."
+ },
+ "speech_0121.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "kilrathi",
+  "text": "I have gained another slave in the afterworld."
+ },
+ "speech_0122.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "kilrathi",
+  "text": "lead another enemy to the void."
+ },
+ "speech_0123.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "Kilrathi - Apeling, you are entirely in our power",
+  "method": "label",
+  "speaker": "kilrathi",
+  "text": ""
+ },
+ "speech_0124.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "Kilrathi - We know monkhouse is aboard your craft",
+  "method": "label",
+  "speaker": "kilrathi",
+  "text": ""
+ },
+ "speech_0125.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "Kilrathi - You will surrendur him to us immediately",
+  "method": "label",
+  "speaker": "kilrathi",
+  "text": "You will surrender him to us immediately."
+ },
+ "speech_0126.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "Kilrathi - Or be destroyed",
+  "method": "label",
+  "speaker": "kilrathi",
+  "text": ""
+ },
+ "speech_0127.wav": {
+  "disposition": "friendly",
+  "disposition_method": "label",
+  "label": "Male Merch friendly",
+  "method": "label",
+  "speaker": "merchant",
+  "text": "How's it going friend?"
+ },
+ "speech_0128.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "merchant",
+  "text": "good to see a friendly ship."
+ },
+ "speech_0129.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "merchant",
+  "text": "business treating you well"
+ },
+ "speech_0130.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "merchant",
+  "text": "Just a passing merchant, don't get jumpy."
+ },
+ "speech_0131.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "merchant",
+  "text": "I'm not looking for any trouble."
+ },
+ "speech_0132.wav": {
+  "disposition": "friendly",
+  "disposition_method": "label",
+  "label": "Female merch friendly",
+  "method": "label",
+  "speaker": "merchant",
+  "text": "Maybe we can do business sometime."
+ },
+ "speech_0133.wav": {
+  "disposition": "hostile",
+  "disposition_method": "label",
+  "label": "Male merch hostile",
+  "method": "label",
+  "speaker": "merchant",
+  "text": "Come eat some slack, will you?"
+ },
+ "speech_0134.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "merchant",
+  "text": "You're scaring away my business."
+ },
+ "speech_0135.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "merchant",
+  "text": "Please don't trash me, man!"
+ },
+ "speech_0136.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "merchant",
+  "text": "You maniac! The guild will hear about this!"
+ },
+ "speech_0137.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "merchant",
+  "text": "my poor ship. I'll have to sell it for scrap."
+ },
+ "speech_0138.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "merchant",
+  "text": "Not bad for a lowly merchant, a pirate."
+ },
+ "speech_0139.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "merchant",
+  "text": "serves you right attacking an honest dealer"
+ },
+ "speech_0140.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "merchant",
+  "text": "Ah, another dissatisfied customer."
+ },
+ "speech_0141.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "merchant",
+  "text": "And one more loser, cash is in his chips."
+ },
+ "speech_0142.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "merchant",
+  "text": "Keep your eyes peeled for trouble, Ace."
+ },
+ "speech_0143.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "Let me know if you hit trouble in my quad."
+ },
+ "speech_0144.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "militia",
+  "text": "We got this sector bottle tight friend."
+ },
+ "speech_0145.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "militia",
+  "text": "Militia here, stick to your flight path."
+ },
+ "speech_0146.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "militia",
+  "text": "Keep your nose clean in our sector."
+ },
+ "speech_0147.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "You're clear to pass."
+ },
+ "speech_0148.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "You're not leaving this quad alive, pirate."
+ },
+ "speech_0149.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "This is your last run."
+ },
+ "speech_0150.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "Your luck is run out, along with my patience."
+ },
+ "speech_0151.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "militia",
+  "text": "Malaysia forces in need of assistance."
+ },
+ "speech_0152.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "We're in trouble."
+ },
+ "speech_0153.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "You cannot win with draw or be destroyed."
+ },
+ "speech_0154.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "Dancers show you are breaking up. Retreat."
+ },
+ "speech_0155.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "Target eliminated command."
+ },
+ "speech_0156.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "militia",
+  "text": "militia to base, enemy dispatched."
+ },
+ "speech_0157.wav": {
+  "disposition": "contraband",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "Prepare to be searched, maintain speed and course."
+ },
+ "speech_0158.wav": {
+  "disposition": "contraband",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "Contraband detected. All units close and terminate."
+ },
+ "speech_0159.wav": {
+  "disposition": "contraband",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "No contraband detected, you may proceed."
+ },
+ "speech_0160.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "militia",
+  "text": "Filthy little brilliance runner, you're busted!"
+ },
+ "speech_0161.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "This is your last run!"
+ },
+ "speech_0162.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "militia",
+  "text": "Filthy little brilliance runner, you're busted!"
+ },
+ "speech_0163.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "militia",
+  "text": "Malaysia forces in need of assistance."
+ },
+ "speech_0164.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "We're in trouble."
+ },
+ "speech_0165.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "You cannot win with draw or be destroyed."
+ },
+ "speech_0166.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "Dancers show you are breaking up. Retreat."
+ },
+ "speech_0167.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "Target eliminated command."
+ },
+ "speech_0168.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "militia",
+  "text": "militia to base, enemy dispatched."
+ },
+ "speech_0169.wav": {
+  "disposition": "contraband",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "Prepare to be searched, maintain speed and course."
+ },
+ "speech_0170.wav": {
+  "disposition": "contraband",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "Contraband detected. All units close and terminate."
+ },
+ "speech_0171.wav": {
+  "disposition": "contraband",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "No contraband detected, you may proceed."
+ },
+ "speech_0172.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "Looking sharp, Ace."
+ },
+ "speech_0173.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "You're clear for clicks."
+ },
+ "speech_0174.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "Catch you on the next run."
+ },
+ "speech_0175.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "Not looking for trouble, Ace."
+ },
+ "speech_0176.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "Forget this meat happened. We got no problem."
+ },
+ "speech_0177.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "I didn't see you and your blind, got it?"
+ },
+ "speech_0178.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "pirate",
+  "text": "You're about to suck void, buddy."
+ },
+ "speech_0179.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "You're finished, fly boy."
+ },
+ "speech_0180.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "pirate",
+  "text": "You're about to suck void, buddy."
+ },
+ "speech_0181.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "Damn, you're ripping me apart!"
+ },
+ "speech_0182.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "This crate's about to explode!"
+ },
+ "speech_0183.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "pirate",
+  "text": "Just dump your cargo before you blow, will ya?"
+ },
+ "speech_0184.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "Yeah, you're nailed, pal."
+ },
+ "speech_0185.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "A clean kill should have been a bounty hunter."
+ },
+ "speech_0186.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "retro",
+  "text": "You're dead, chump."
+ },
+ "speech_0187.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "retro",
+  "text": "Knowledge belongs to the galaxy, you fashists!"
+ },
+ "speech_0188.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "retro",
+  "text": "Oxford has no right to hoard data.Access is ours."
+ },
+ "speech_0189.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "pirate",
+  "text": "You're about to suck void, buddy."
+ },
+ "speech_0190.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "Damn, you're ripping me apart!"
+ },
+ "speech_0191.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "This crate's about to explode!"
+ },
+ "speech_0192.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "pirate",
+  "text": "Just dump your cargo before you blow, will ya?"
+ },
+ "speech_0193.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "Yeah, you're nailed, pal."
+ },
+ "speech_0194.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "A clean kill should have been a bounty hunter."
+ },
+ "speech_0195.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "You're dead, chump."
+ },
+ "speech_0196.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "Should have stepped to your charts. It's dangerous out here."
+ },
+ "speech_0197.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "You're finished, fly boy."
+ },
+ "speech_0198.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "pirate",
+  "text": "You're about to suck void, buddy."
+ },
+ "speech_0199.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "Damn, you're ripping me apart!"
+ },
+ "speech_0200.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "This crate's about to explode!"
+ },
+ "speech_0201.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "pirate",
+  "text": "Just dump your cargo before you blow, will ya?"
+ },
+ "speech_0202.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "Yeah, you're nailed, pal."
+ },
+ "speech_0203.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "A clean kill should have been a bounty hunter."
+ },
+ "speech_0204.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "You're dead, chump."
+ },
+ "speech_0205.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "Welcome to the Happy Hunting Ground!"
+ },
+ "speech_0206.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "If you're smart, you'll watch your back."
+ },
+ "speech_0207.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "Better clear out.There could be trouble soon."
+ },
+ "speech_0208.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "This is bastard murderer, I'll show you!"
+ },
+ "speech_0209.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "This is bastard murderer, I'll show you!"
+ },
+ "speech_0210.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "This is bastard murderer, I'll show you!"
+ },
+ "speech_0211.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "No! It can't end like this!"
+ },
+ "speech_0212.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "Oh, this is not good!"
+ },
+ "speech_0213.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "Hey, what can I say?I'm a professional."
+ },
+ "speech_0214.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "Your death is my living, buddy."
+ },
+ "speech_0215.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "Another day, another kill."
+ },
+ "speech_0216.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "One more for the resume."
+ },
+ "speech_0217.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "Tell me you'll keep back!"
+ },
+ "speech_0218.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "No, no!"
+ },
+ "speech_0219.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "Stay away! You hear me? Back off!"
+ },
+ "speech_0220.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "All right, you asked for it."
+ },
+ "speech_0221.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "Oh, this is most distasteful, I must say."
+ },
+ "speech_0222.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "If you're smart, you'll watch your back."
+ },
+ "speech_0223.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "Oh, this is most distasteful, I must say."
+ },
+ "speech_0224.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "The advantage is mine. Now you die."
+ },
+ "speech_0225.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "Nothing personal, but your death is my game."
+ },
+ "speech_0226.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "Killing you will put me in the black flyboy."
+ },
+ "speech_0227.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "No! It can't! And like this..."
+ },
+ "speech_0228.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "Oh, this is not good."
+ },
+ "speech_0229.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "Hey, what can I say?I'm a professional."
+ },
+ "speech_0230.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "Your death is my living, old boy."
+ },
+ "speech_0231.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "Another day, another kill."
+ },
+ "speech_0232.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "One more for the resume."
+ },
+ "speech_0233.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "I say, would you kindly identify yourself?"
+ },
+ "speech_0234.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "salman_kreitz",
+  "text": "I am Salman Kreitz, Privateer extraordinaire."
+ },
+ "speech_0235.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "salman_kreitz",
+  "text": "terribly sorry to interrupt your flight, but..."
+ },
+ "speech_0236.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "salman_kreitz",
+  "text": "It seems as we're a bit at odds here."
+ },
+ "speech_0237.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "salman_kreitz",
+  "text": "I'm to prevent you from delivering those weapons."
+ },
+ "speech_0238.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "salman_kreitz",
+  "text": "Since we both cannot fulfill our contracts..."
+ },
+ "speech_0239.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "salman_kreitz",
+  "text": "It seems we'll need to settle this ourselves."
+ },
+ "speech_0240.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "salman_kreitz",
+  "text": "Would you consider dumping your cargo?"
+ },
+ "speech_0241.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "salman_kreitz",
+  "text": "Alas, we'll have to settle this by violent means."
+ },
+ "speech_0242.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "salman_kreitz",
+  "text": "So sorry, but I'm afraid I cannot let you pass."
+ },
+ "speech_0243.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "salman_kreitz",
+  "text": "Now my operatives and I will end your career."
+ },
+ "speech_0244.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "and bolster our resumes in the process.Cheers!"
+ },
+ "speech_0245.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "What can sharp base?"
+ },
+ "speech_0246.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "You're clear for clicks."
+ },
+ "speech_0247.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "Catch you on the next run."
+ },
+ "speech_0248.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "Not looking for trouble, Ace."
+ },
+ "speech_0249.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "Forget this meat happened. We got no problem."
+ },
+ "speech_0250.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "I didn't see you and you blind, got it."
+ },
+ "speech_0251.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "pirate",
+  "text": "you'll loose end looking to be tied pal."
+ },
+ "speech_0252.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "You're finished, Flyboy."
+ },
+ "speech_0253.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "pirate",
+  "text": "You're about to suck void, buddy."
+ },
+ "speech_0254.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "Why's Guy thinks he's winning?"
+ },
+ "speech_0255.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "Uh, run button."
+ },
+ "speech_0256.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "come to your cargo before you blow, will ya?"
+ },
+ "speech_0257.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "Yeah, you were nailed, Paolo."
+ },
+ "speech_0258.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "A cream kill should have been a bounty hunter."
+ },
+ "speech_0259.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "You were dead, jump."
+ },
+ "speech_0260.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "A bright boy, guess who's in deep trouble?"
+ },
+ "speech_0261.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "pirate",
+  "text": "Mr. Lynch wants that artifact."
+ },
+ "speech_0262.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "I'm gonna count to 10, then I start shooting."
+ },
+ "speech_0263.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "One, two, uh..."
+ },
+ "speech_0264.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "Forget this, start shooting boys!"
+ },
+ "speech_0265.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "Continue on course."
+ },
+ "speech_0266.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "Continue on course."
+ },
+ "speech_0267.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "Continue on course."
+ },
+ "speech_0268.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "Continue on course."
+ },
+ "speech_0269.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "Continue on course."
+ },
+ "speech_0270.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "Continue on course."
+ },
+ "speech_0271.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "Continue on course."
+ },
+ "speech_0272.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "Continue on course."
+ },
+ "speech_0273.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "Continue on course."
+ },
+ "speech_0274.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "Mayday, we've sustained massive damage."
+ },
+ "speech_0275.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "Unless we get some help, we're finished."
+ },
+ "speech_0276.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "confed",
+  "text": "Die, you smuggling scum."
+ },
+ "speech_0277.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "You are beaten. Want a surrender?"
+ },
+ "speech_0278.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "One bogey terminated."
+ },
+ "speech_0279.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "enemy target destroyed."
+ },
+ "speech_0280.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "You are just in time for the massacre."
+ },
+ "speech_0281.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "Cut the chatter and listen."
+ },
+ "speech_0282.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "confed",
+  "text": "This is Admiral Riceman."
+ },
+ "speech_0283.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "We'll hit the thing as soon as it arrives."
+ },
+ "speech_0284.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "Hold your position until it does."
+ },
+ "speech_0285.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "confed",
+  "text": "and feel free to join in.Riceman out."
+ },
+ "speech_0286.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "The advantage is mine. Now you die."
+ },
+ "speech_0287.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "Nothing personal, but your death is my game."
+ },
+ "speech_0288.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "Killing you will put me in the black fly, boy."
+ },
+ "speech_0289.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "No, it can't end like this."
+ },
+ "speech_0290.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "Oh, this is not good."
+ },
+ "speech_0291.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "I'll show Taylor what a real man can do."
+ },
+ "speech_0292.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "Your death is my living, buddy."
+ },
+ "speech_0293.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "another day, another kill."
+ },
+ "speech_0294.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "One more for the resume."
+ },
+ "speech_0295.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "Where the hell do you think you're going?"
+ },
+ "speech_0296.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "You don't recognize me, do you?"
+ },
+ "speech_0297.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "Hold on, Mr."
+ },
+ "speech_0298.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "william_reordion",
+  "text": "I think it's high time we were introduced."
+ },
+ "speech_0299.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "william_reordion",
+  "text": "Don't you?"
+ },
+ "speech_0300.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "william_reordion",
+  "text": "Come on, you steal a man's business."
+ },
+ "speech_0301.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "william_reordion",
+  "text": "you ought to at least know his name."
+ },
+ "speech_0302.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "william_reordion",
+  "text": "My name is William Reordion."
+ },
+ "speech_0303.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "william_reordion",
+  "text": "My name is William Reordion."
+ },
+ "speech_0304.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "william_reordion",
+  "text": "You take over my route, fly for Taylor."
+ },
+ "speech_0305.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "william_reordion",
+  "text": "and then have a God to insult me."
+ },
+ "speech_0306.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "william_reordion",
+  "text": "There's not enough work for two private tiers."
+ },
+ "speech_0307.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "william_reordion",
+  "text": "I'll teach you to steal my business."
+ },
+ "speech_0308.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "william_reordion",
+  "text": "You're a dead man."
+ },
+ "speech_0309.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "william_reordion",
+  "text": "Looking sharp, Ace!"
+ },
+ "speech_0310.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "You are clear for clicks."
+ },
+ "speech_0311.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "Catch you on the next run."
+ },
+ "speech_0312.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "pirate",
+  "text": "You're a loose end looking to be tied, pal."
+ },
+ "speech_0313.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "You're finished, fly boy!"
+ },
+ "speech_0314.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "pirate",
+  "text": "You're about to suck void, buddy."
+ },
+ "speech_0315.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "Damn, you're ripping me apart!"
+ },
+ "speech_0316.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "This creates about to explode."
+ },
+ "speech_0317.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "pirate",
+  "text": "How's that from, message, errand boy?"
+ },
+ "speech_0318.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "Yeah, you're nailed, pal."
+ },
+ "speech_0319.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "A clean kill should have been a bounty hunter."
+ },
+ "speech_0320.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "You're dead, chump!"
+ },
+ "speech_0321.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "Nice ship, Captain. How about a little tour?"
+ },
+ "speech_0322.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "steltek",
+  "text": "Okay, you've got my attention. What do you want?"
+ },
+ "speech_0323.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "steltek",
+  "text": "He is easy.What a hero response."
+ },
+ "speech_0324.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "steltek",
+  "text": "Well, here it comes!"
+ },
+ "speech_0325.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "Steltek scout",
+  "method": "label",
+  "speaker": "steltek",
+  "text": ""
+ },
+ "speech_0326.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "steltek",
+  "text": ""
+ },
+ "speech_0327.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "steltek",
+  "text": "We are Delta!"
+ },
+ "speech_0328.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "steltek",
+  "text": ""
+ },
+ "speech_0329.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "steltek",
+  "text": "You will tell us what..."
+ },
+ "speech_0330.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "steltek",
+  "text": "Hunters to it."
+ },
+ "speech_0331.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "steltek",
+  "text": ""
+ },
+ "speech_0332.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "steltek",
+  "text": ""
+ },
+ "speech_0333.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "steltek",
+  "text": ""
+ },
+ "speech_0334.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "steltek",
+  "text": "We lemonade out."
+ },
+ "speech_0335.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "steltek",
+  "text": ""
+ },
+ "speech_0336.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "steltek",
+  "text": ""
+ },
+ "speech_0337.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "steltek",
+  "text": ""
+ },
+ "speech_0338.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "steltek",
+  "text": ""
+ },
+ "speech_0339.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "steltek",
+  "text": "Thank you very much."
+ },
+ "speech_0340.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "merchant",
+  "text": "Again."
+ },
+ "speech_0341.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "merchant",
+  "text": "Again."
+ },
+ "speech_0342.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "merchant",
+  "text": "Economic"
+ },
+ "speech_0343.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "merchant",
+  "text": "We call it."
+ },
+ "speech_0344.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "merchant",
+  "text": ""
+ },
+ "speech_0345.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "merchant",
+  "text": ""
+ },
+ "speech_0346.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "merchant",
+  "text": ""
+ },
+ "speech_0347.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "merchant",
+  "text": ""
+ },
+ "speech_0348.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "merchant",
+  "text": "I agree."
+ },
+ "speech_0349.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "merchant",
+  "text": "Sir, will."
+ },
+ "speech_0350.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "merchant",
+  "text": "to destroy Iran.Underneath."
+ },
+ "speech_0351.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "merchant",
+  "text": ""
+ },
+ "speech_0352.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "merchant",
+  "text": "How's the going friend?"
+ },
+ "speech_0353.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "merchant",
+  "text": "Good to see a friendly ship."
+ },
+ "speech_0354.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "merchant",
+  "text": "Isn't this treating you well?"
+ },
+ "speech_0355.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "merchant",
+  "text": "You maniac, the guild will hear about this."
+ },
+ "speech_0356.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "merchant",
+  "text": "My poor ship, I'll have to sell it for scrap."
+ },
+ "speech_0357.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "merchant",
+  "text": "Not bad for a lowly merchant, a pirate."
+ },
+ "speech_0358.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "merchant",
+  "text": "serves you right, attacking an honest dealer."
+ },
+ "speech_0359.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "merchant",
+  "text": "Ah, another dissatisfied customer."
+ },
+ "speech_0360.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "merchant",
+  "text": "and one more loser caches in their chips"
+ },
+ "speech_0361.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "merchant",
+  "text": "Oh dear, are you one of those dreadful retros?"
+ },
+ "speech_0362.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "merchant",
+  "text": "Please tell me you're not here to kill me."
+ },
+ "speech_0363.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "merchant",
+  "text": "Thank you, young man."
+ },
+ "speech_0364.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "merchant",
+  "text": "I just hope we don't encounter any retros."
+ },
+ "speech_0365.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "merchant",
+  "text": "Of that, I'm sure."
+ },
+ "speech_0366.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "merchant",
+  "text": "Oh, gracious me."
+ },
+ "speech_0367.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "flight_controller",
+  "text": "Now entering an automatic landing zone."
+ },
+ "speech_0368.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "Welcome to the Happy Hunting Ground!"
+ },
+ "speech_0369.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "If you're smart, you'll watch your back."
+ },
+ "speech_0370.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "Better clear out, troubles brewing."
+ },
+ "speech_0371.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "You're not on my list, this time."
+ },
+ "speech_0372.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "Just smoking out a little game, flyboy."
+ },
+ "speech_0373.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "Don't worry, I only kill for a fee."
+ },
+ "speech_0374.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "The advantage is mine, now you die!"
+ },
+ "speech_0375.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "Nothing personal, but your death is my gain."
+ },
+ "speech_0376.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "Killing you will put me in the black fly, boy."
+ },
+ "speech_0377.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "No, it can't end like this."
+ },
+ "speech_0378.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "This is not good."
+ },
+ "speech_0379.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "Hey, what can I say? I'm a professional."
+ },
+ "speech_0380.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "Your death is my living, buddy."
+ },
+ "speech_0381.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "Another day, another kill."
+ },
+ "speech_0382.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "One more for the resume."
+ },
+ "speech_0383.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "Those books go in my hold or up in flames."
+ },
+ "speech_0384.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "Nothing personal, but your death is my gain."
+ },
+ "speech_0385.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "Killing you will put me in the black fly, boy."
+ },
+ "speech_0386.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "No, it can't end like this."
+ },
+ "speech_0387.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "This is not good."
+ },
+ "speech_0388.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "Hey, what can I say? I'm a professional."
+ },
+ "speech_0389.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "Your death is my living, buddy."
+ },
+ "speech_0390.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "Another day, another kill."
+ },
+ "speech_0391.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "One more for the resume."
+ },
+ "speech_0392.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "The advantage is mine, now you die!"
+ },
+ "speech_0393.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "You'll have to go through us to get to Palin."
+ },
+ "speech_0394.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "Killing you will put me in the black fly, boy."
+ },
+ "speech_0395.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "No, it can't end like this."
+ },
+ "speech_0396.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "This is not good."
+ },
+ "speech_0397.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "Hey, what can I say? I'm a professional."
+ },
+ "speech_0398.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "Your death is my living, buddy."
+ },
+ "speech_0399.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "bounty_hunter",
+  "text": "Another day, another kill."
+ },
+ "speech_0400.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "bounty_hunter",
+  "text": "One more for the resume."
+ },
+ "speech_0401.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "retro",
+  "text": "weapons you adore!"
+ },
+ "speech_0402.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "retro",
+  "text": "Greater to humanity, we are wrath."
+ },
+ "speech_0403.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "retro",
+  "text": "Repent! And accept our righteous judgment!"
+ },
+ "speech_0404.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "retro",
+  "text": "Can it be as the god of man abandoned us?"
+ },
+ "speech_0405.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "retro",
+  "text": ""
+ },
+ "speech_0406.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "retro",
+  "text": "Your destruction is the will of God!"
+ },
+ "speech_0407.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "retro",
+  "text": "the purifying fire of the Lord!"
+ },
+ "speech_0408.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "retro",
+  "text": "You heathen's lorry be unto the most high!"
+ },
+ "speech_0409.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "retro",
+  "text": "Hyattie has prevailed again, die devil!"
+ },
+ "speech_0410.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "retro",
+  "text": "weapons you adore!"
+ },
+ "speech_0411.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "retro",
+  "text": "Greater to humanity, we are wrath."
+ },
+ "speech_0412.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "retro",
+  "text": "Oh, forget Oxford, your next stop is hell."
+ },
+ "speech_0413.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "retro",
+  "text": "Can it be as the god of man abandoned us?"
+ },
+ "speech_0414.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "retro",
+  "text": ""
+ },
+ "speech_0415.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "retro",
+  "text": "Your destruction is the will of God!"
+ },
+ "speech_0416.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "retro",
+  "text": "the purifying fire of the Lord!"
+ },
+ "speech_0417.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "retro",
+  "text": "You heathen's lorry be unto the most high!"
+ },
+ "speech_0418.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "retro",
+  "text": "Hyattie has prevailed again, die devil!"
+ },
+ "speech_0419.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "retro",
+  "text": "Hunter Tom?"
+ },
+ "speech_0420.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "retro",
+  "text": "That's for your heresy!"
+ },
+ "speech_0421.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "retro",
+  "text": "Execution cell commence now"
+ },
+ "speech_0422.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "retro",
+  "text": "weapons you adore!"
+ },
+ "speech_0423.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "retro",
+  "text": "Greater to humanity, we are wrath."
+ },
+ "speech_0424.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "retro",
+  "text": "Repent! And accept our righteous judgment!"
+ },
+ "speech_0425.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "retro",
+  "text": "Can it be as the god of man abandoned us?"
+ },
+ "speech_0426.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "retro",
+  "text": ""
+ },
+ "speech_0427.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "retro",
+  "text": "Your destruction is the will of God!"
+ },
+ "speech_0428.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "retro",
+  "text": "the purifying fire of the Lord!"
+ },
+ "speech_0429.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "retro",
+  "text": "You heathen's lorry be unto the most high!"
+ },
+ "speech_0430.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "retro",
+  "text": "Hyattie has prevailed again, die devil!"
+ },
+ "speech_0431.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "retro",
+  "text": "Sinner, ready myself for righteous retribution."
+ },
+ "speech_0432.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "retro",
+  "text": "We know you possess high-level alien devices!"
+ },
+ "speech_0433.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "retro",
+  "text": "of damnable intent."
+ },
+ "speech_0434.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "retro",
+  "text": "for adding to the technological burden of mankind."
+ },
+ "speech_0435.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "retro",
+  "text": "The Church of Man condemns you!"
+ },
+ "speech_0436.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "retro",
+  "text": ""
+ },
+ "speech_0437.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "retro",
+  "text": "Your profile is clear to sector's edge."
+ },
+ "speech_0438.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "retro",
+  "text": "Stick to established lanes for your own good."
+ },
+ "speech_0439.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "retro",
+  "text": "Patrol to civilian craft. Keep your distance."
+ },
+ "speech_0440.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "Flying in shared air space. Keep your Vidcom open."
+ },
+ "speech_0441.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "Entering disputed space, report any disturbances."
+ },
+ "speech_0442.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "We have you on our screens. Continue on course."
+ },
+ "speech_0443.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "confed",
+  "text": "You've got quite a record pal, but it ends here."
+ },
+ "speech_0444.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "confed",
+  "text": "We've accessed your file, pirate.You're dead."
+ },
+ "speech_0445.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "Hey, give me a call when you get the hell."
+ },
+ "speech_0446.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "Mayday, we've sustained massive damage."
+ },
+ "speech_0447.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "Unless we get some help, we're finished."
+ },
+ "speech_0448.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "confed",
+  "text": "Dive smuggling scum!"
+ },
+ "speech_0449.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "You're beaten. Want us to render?"
+ },
+ "speech_0450.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "One bogey terminated."
+ },
+ "speech_0451.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "Enemy target destroyed."
+ },
+ "speech_0452.wav": {
+  "disposition": "contraband",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "Maintain speed and course for contraband search."
+ },
+ "speech_0453.wav": {
+  "disposition": "contraband",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "Contraband Detective Target Offender and fire at will."
+ },
+ "speech_0454.wav": {
+  "disposition": "contraband",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "No contraband detected. You may proceed."
+ },
+ "speech_0455.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "confed",
+  "text": "You've got quite a record pal, but it ends here."
+ },
+ "speech_0456.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "confed",
+  "text": "We've accessed your file, pirate.You're dead."
+ },
+ "speech_0457.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "Hey, give me a call when you get the hell."
+ },
+ "speech_0458.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "Mayday, we've sustained massive damage."
+ },
+ "speech_0459.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "Unless we get some help, we're finished."
+ },
+ "speech_0460.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "confed",
+  "text": "A life sentence doesn't look so bad now, a-rejust?"
+ },
+ "speech_0461.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "You're beaten. Want us to render?"
+ },
+ "speech_0462.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "One bogey terminated."
+ },
+ "speech_0463.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "Enemy target destroyed."
+ },
+ "speech_0464.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "confed",
+  "text": "We know you are transporting and known fellan."
+ },
+ "speech_0465.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "confed",
+  "text": "Prepare to die criminal scum."
+ },
+ "speech_0466.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "confed",
+  "text": "How's it going, friend?"
+ },
+ "speech_0467.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "merchant",
+  "text": "Good to see a friendly ship."
+ },
+ "speech_0468.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "merchant",
+  "text": "business treating you well?"
+ },
+ "speech_0469.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "merchant",
+  "text": "Just a passing merchant.Don't get jumpy."
+ },
+ "speech_0470.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "merchant",
+  "text": "I'm not looking for any trouble."
+ },
+ "speech_0471.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "merchant",
+  "text": "Maybe we can do business sometime."
+ },
+ "speech_0472.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "merchant",
+  "text": "Cut me some slack, will ya?"
+ },
+ "speech_0473.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "merchant",
+  "text": "You're scaring away my business."
+ },
+ "speech_0474.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "merchant",
+  "text": "Hey, don't trash me, man!"
+ },
+ "speech_0475.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "merchant",
+  "text": "You maniac! The guild will hear about this!"
+ },
+ "speech_0476.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "merchant",
+  "text": "my poor ship. I'll have to sell it for scrap."
+ },
+ "speech_0477.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "merchant",
+  "text": "Not bad for a lowly merchant, hey, pirate."
+ },
+ "speech_0478.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "merchant",
+  "text": "serves you right attacking an honest dealer."
+ },
+ "speech_0479.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "merchant",
+  "text": "Another dissatisfied customer."
+ },
+ "speech_0480.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "merchant",
+  "text": "and one more loser cash is in its chips."
+ },
+ "speech_0481.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "merchant",
+  "text": "Keep your eyes peeled for trouble, Ace."
+ },
+ "speech_0482.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "Let me know if you hit trouble in my quad."
+ },
+ "speech_0483.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "militia",
+  "text": "We've got this sector-bottled tight friend."
+ },
+ "speech_0484.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "militia",
+  "text": "Malisha here, stick to your flight path."
+ },
+ "speech_0485.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "militia",
+  "text": "Keep your nose clean in our sector."
+ },
+ "speech_0486.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "You're clear to pass."
+ },
+ "speech_0487.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "You're not leaving this quite a live pirate."
+ },
+ "speech_0488.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "This is your last run."
+ },
+ "speech_0489.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "your luck as run out, along with my patients."
+ },
+ "speech_0490.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "militia",
+  "text": "Militia forces in need of assistance."
+ },
+ "speech_0491.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "We're in trouble."
+ },
+ "speech_0492.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "You cannot win with draw or be destroyed."
+ },
+ "speech_0493.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "Sensors show you are breaking up. Retreat."
+ },
+ "speech_0494.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "Target eliminated command."
+ },
+ "speech_0495.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "militia",
+  "text": "militia to base, enemy dispatched."
+ },
+ "speech_0496.wav": {
+  "disposition": "contraband",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "Prepare to be searched, maintained speed, and coarse."
+ },
+ "speech_0497.wav": {
+  "disposition": "contraband",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "Contraband detected all units close and terminate."
+ },
+ "speech_0498.wav": {
+  "disposition": "contraband",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "No contraband detected, you may proceed."
+ },
+ "speech_0499.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "militia",
+  "text": "healthy little brilliance runner, you're busted."
+ },
+ "speech_0500.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "This is your last run."
+ },
+ "speech_0501.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "militia",
+  "text": "healthy little brilliance runner, you're busted."
+ },
+ "speech_0502.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "militia",
+  "text": "Militia forces in need of assistance."
+ },
+ "speech_0503.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "We're in trouble."
+ },
+ "speech_0504.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "You cannot win with draw or be destroyed."
+ },
+ "speech_0505.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "Sensors show you are breaking up. Retreat."
+ },
+ "speech_0506.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "Target eliminated command."
+ },
+ "speech_0507.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "militia",
+  "text": "militia to base, enemy dispatched."
+ },
+ "speech_0508.wav": {
+  "disposition": "contraband",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "Prepare to be searched, maintained speed, and coarse."
+ },
+ "speech_0509.wav": {
+  "disposition": "contraband",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "Contraband detected all units close and terminate."
+ },
+ "speech_0510.wav": {
+  "disposition": "contraband",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "No contraband detected, you may proceed."
+ },
+ "speech_0511.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "Looking sharp, Ace!"
+ },
+ "speech_0512.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "militia",
+  "text": "You're clear for clicks."
+ },
+ "speech_0513.wav": {
+  "disposition": "friendly",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "Catch you on the next run."
+ },
+ "speech_0514.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "Now I'm looking for trouble, Ace."
+ },
+ "speech_0515.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "Forget this meat happened, we got no problem."
+ },
+ "speech_0516.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "I didn't see you, and you're blind.Got it?"
+ },
+ "speech_0517.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "pirate",
+  "text": "You're a loose end looking to be tied, pal."
+ },
+ "speech_0518.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "You're finished, fly, boy."
+ },
+ "speech_0519.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "You're about to suck, boy, buddy."
+ },
+ "speech_0520.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "Damn, you're ripping me apart!"
+ },
+ "speech_0521.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "This creates a bow to explode."
+ },
+ "speech_0522.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "pirate",
+  "text": "Drop your cargo before you blow, will ya?"
+ },
+ "speech_0523.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "Yeah, you nailed, pal."
+ },
+ "speech_0524.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "A clean kill, should have been a bounty hunter."
+ },
+ "speech_0525.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "retro",
+  "text": "You're dead, jump."
+ },
+ "speech_0526.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "retro",
+  "text": "Now let's blow us to the galaxy, you fashers."
+ },
+ "speech_0527.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "content",
+  "speaker": "retro",
+  "text": "Oxford has no right to hoard data.Access is ours."
+ },
+ "speech_0528.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "retro",
+  "text": "Give out the such void, buddy."
+ },
+ "speech_0529.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "retro",
+  "text": "Damn, you're ripping me apart!"
+ },
+ "speech_0530.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "This creates a bow to explode."
+ },
+ "speech_0531.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "pirate",
+  "text": "Drop your cargo before you blow, will ya?"
+ },
+ "speech_0532.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "Yeah, you nailed, pal."
+ },
+ "speech_0533.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "A clean kill, should have been a bounty hunter."
+ },
+ "speech_0534.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "You're dead, jump."
+ },
+ "speech_0535.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "Should have stuck to your charts.It's dangerous out here."
+ },
+ "speech_0536.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "You're finished, fly, boy."
+ },
+ "speech_0537.wav": {
+  "disposition": "other",
+  "disposition_method": "none",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "You're about to suck, boy, buddy."
+ },
+ "speech_0538.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "Damn, you're ripping me apart!"
+ },
+ "speech_0539.wav": {
+  "disposition": "low_hp",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "This creates a bow to explode."
+ },
+ "speech_0540.wav": {
+  "disposition": "hostile",
+  "disposition_method": "content",
+  "label": "",
+  "method": "content",
+  "speaker": "pirate",
+  "text": "Drop your cargo before you blow, will ya?"
+ },
+ "speech_0541.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "Yeah, you nailed, pal."
+ },
+ "speech_0542.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "A clean kill, should have been a bounty hunter."
+ },
+ "speech_0543.wav": {
+  "disposition": "kill",
+  "disposition_method": "content",
+  "label": "",
+  "method": "block",
+  "speaker": "pirate",
+  "text": "You're dead, jump."
+ }
+}

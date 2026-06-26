@@ -1,11 +1,28 @@
 # Bar/Fixer speech (`CONV/*.VPK`) — format findings
 
-## TL;DR
-The WAVs in `assets/speech/bar/*` are **static** because
-`tools/extract_bar_speech.py` decodes the VPK audio payload as **raw 8-bit
-unsigned PCM** (`ffmpeg -f u8`). That assumption is **wrong**. The payload is a
-**custom, compressed Origin codec** — it must be *decompressed*, not
-reinterpreted. Until we implement the real decoder, every WAV here is noise.
+## STATUS: SOLVED 
+The static was caused by `tools/extract_bar_speech.py` decoding the VPK payload
+as raw 8-bit PCM (`ffmpeg -f u8`). The payload is actually an **LZW-compressed
+Creative VOC file** (confirmed via the WC Encyclopedia + a decode that matches
+the `Creative Voice File` magic AND the 2-byte length oracle on every entry).
+
+**Final format**
+```
+VPK file : dword[0]=filesize; then 4-byte index entries (3-byte offset +
+           0x20 flag) slicing per-line entries.
+entry    : [0:2] decompressed length (LE u16)
+           [2:4] zero (length high word / reserved)
+           [4:]  LZW bitstream  ->  a standard Creative VOC (.VOC)
+LZW      : LSB-first; 9-bit codes growing to 12-bit max; clear=256, end=257,
+           first free code=258; width++ when next_code == (1<<width) (NO early
+           change). Output = the VOC; hand it to ffmpeg for PCM (8-bit ~11kHz).
+```
+`tools/extract_bar_speech.py` now implements this (`_lzw_decode_voc`) and
+re-extracted all 1854 WAVs as clean speech (mean abs sample-delta ~3-7 vs the
+old static ~85). The whole RE journey below is kept for posterity.
+
+> Key lesson: a 2-minute web search (WC Encyclopedia: *".VPK = LZW-compressed
+> VOC"*) beat a from-scratch CPU-emulator dig. Always check prior art first.
 
 ## Evidence (how we know it's not PCM)
 - Raw entry bytes start `218,156,0,0,0,135,200,41,19,...` — full-scale jumps
@@ -142,10 +159,15 @@ Two options, both real work:
    then call the CONV speech loader and dump the decoded buffer. Most robust;
    it's a small DOS shim on top of the existing harness.
 
-## Recommended next step
-Recover the decoder authoritatively from the game itself:
-- `re/PRCD.EXE` (and `re/dosbox/game_patched/PRCD.EXE`) contain the routine.
-- Use `tools/ghidra/` to locate the CONV/VPK speech loader; the 32-byte static
-  table and the decompressor will be right next to each other.
-Then reimplement it and re-run extraction. Do **not** trust the current
-`-f u8` path — it cannot produce intelligible audio.
+## Resolution (what shipped)
+The emulator dig (above) was made unnecessary by finding prior art: the WC
+Encyclopedia documents `.VPK` as an LZW-compressed VOC. `re/vpk_lzw.py`
+brute-forced the exact LZW variant against the VOC-magic + length oracle, and
+`tools/extract_bar_speech.py` now does LZW -> VOC -> ffmpeg WAV. Re-extraction
+of all 1854 lines yields clean speech.
+
+Note: `tools/priv_emu.py` (the validated Unicorn harness) and the brute-force
+scanner are kept as general RE tooling, but are NOT needed for speech anymore.
+
+Sources: wcnews.com/wcpedia/Privateer_File_Formats (".VPK = LZW-compressed
+VOC"); HCl (hcl.solsector.net) + DMJC/wctools for Origin format RE background.

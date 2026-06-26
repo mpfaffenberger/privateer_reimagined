@@ -1,0 +1,5017 @@
+{
+ "lines": [
+  {
+   "id": "comm_0000",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1401",
+   "text": "Just a peaceful trader, chum, don't get jumpy."
+  },
+  {
+   "id": "comm_0001",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1401",
+   "text": "Just a peaceful trader, flyboy, don't get jumpy."
+  },
+  {
+   "id": "comm_0002",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1401",
+   "text": "Just a peaceful trader, pilot, don't get jumpy."
+  },
+  {
+   "id": "comm_0003",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0601",
+   "text": "Just a peaceful trader, buddy, don't get jumpy."
+  },
+  {
+   "id": "comm_0004",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1401",
+   "text": "Just a peaceful trader, Ace, don't get jumpy."
+  },
+  {
+   "id": "comm_0005",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1401",
+   "text": "Just a peaceful trader, Captain, don't get jumpy."
+  },
+  {
+   "id": "comm_0006",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0601",
+   "text": "Just a peaceful trader, sport, don't get jumpy."
+  },
+  {
+   "id": "comm_0007",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1401",
+   "text": "Just a peaceful trader, mister, don't get jumpy."
+  },
+  {
+   "id": "comm_0008",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1401",
+   "text": "Just a peaceful trader, rookie, don't get jumpy."
+  },
+  {
+   "id": "comm_0009",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0001",
+   "text": "Just a peaceful trader, hotshot, don't get jumpy."
+  },
+  {
+   "id": "comm_0010",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0001",
+   "text": "Good to see a friendly hull out here."
+  },
+  {
+   "id": "comm_0011",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0001",
+   "text": "Care to do a little business, stranger?"
+  },
+  {
+   "id": "comm_0012",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0001",
+   "text": "Care to do a little business, Ace?"
+  },
+  {
+   "id": "comm_0013",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0601",
+   "text": "Care to do a little business, chum?"
+  },
+  {
+   "id": "comm_0014",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0601",
+   "text": "Care to do a little business, rookie?"
+  },
+  {
+   "id": "comm_0015",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0601",
+   "text": "Care to do a little business, pilot?"
+  },
+  {
+   "id": "comm_0016",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1401",
+   "text": "Care to do a little business, friend?"
+  },
+  {
+   "id": "comm_0017",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0601",
+   "text": "Care to do a little business, old-timer?"
+  },
+  {
+   "id": "comm_0018",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1401",
+   "text": "Care to do a little business, hotshot?"
+  },
+  {
+   "id": "comm_0019",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0001",
+   "text": "Care to do a little business, buddy?"
+  },
+  {
+   "id": "comm_0020",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1401",
+   "text": "Care to do a little business, sweetheart?"
+  },
+  {
+   "id": "comm_0021",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0601",
+   "text": "Fly safe out in this dead end of space, the void's hungry today."
+  },
+  {
+   "id": "comm_0022",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0001",
+   "text": "Fly safe out in this quadrant, the void's hungry today."
+  },
+  {
+   "id": "comm_0023",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0601",
+   "text": "Fly safe out in the Oxford run, the void's hungry today."
+  },
+  {
+   "id": "comm_0024",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0001",
+   "text": "Fly safe out in Pleiades, the void's hungry today."
+  },
+  {
+   "id": "comm_0025",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1401",
+   "text": "Fly safe out in my quad, the void's hungry today."
+  },
+  {
+   "id": "comm_0026",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0601",
+   "text": "Fly safe out in these lanes, the void's hungry today."
+  },
+  {
+   "id": "comm_0027",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1401",
+   "text": "Fly safe out in the Palan blockade, the void's hungry today."
+  },
+  {
+   "id": "comm_0028",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0001",
+   "text": "Fly safe out in the Troy system, the void's hungry today."
+  },
+  {
+   "id": "comm_0029",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0601",
+   "text": "Fly safe out in the Humboldt quad, the void's hungry today."
+  },
+  {
+   "id": "comm_0030",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0601",
+   "text": "Fly safe out in Confed space, the void's hungry today."
+  },
+  {
+   "id": "comm_0031",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0001",
+   "text": "Don't mind me, sport, just making an honest living."
+  },
+  {
+   "id": "comm_0032",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1401",
+   "text": "Don't mind me, big shot, just making an honest living."
+  },
+  {
+   "id": "comm_0033",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1401",
+   "text": "Don't mind me, mister, just making an honest living."
+  },
+  {
+   "id": "comm_0034",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1401",
+   "text": "Don't mind me, friend, just making an honest living."
+  },
+  {
+   "id": "comm_0035",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1401",
+   "text": "Don't mind me, sunshine, just making an honest living."
+  },
+  {
+   "id": "comm_0036",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1401",
+   "text": "Don't mind me, flyboy, just making an honest living."
+  },
+  {
+   "id": "comm_0037",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0001",
+   "text": "Don't mind me, old-timer, just making an honest living."
+  },
+  {
+   "id": "comm_0038",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0601",
+   "text": "Don't mind me, pilot, just making an honest living."
+  },
+  {
+   "id": "comm_0039",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0601",
+   "text": "Don't mind me, chum, just making an honest living."
+  },
+  {
+   "id": "comm_0040",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1401",
+   "text": "Don't mind me, Captain, just making an honest living."
+  },
+  {
+   "id": "comm_0041",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1401",
+   "text": "Cargo hauler coming through the Humboldt quad, no trouble here."
+  },
+  {
+   "id": "comm_0042",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0601",
+   "text": "Cargo hauler coming through this sector, no trouble here."
+  },
+  {
+   "id": "comm_0043",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0001",
+   "text": "Cargo hauler coming through the asteroid fields, no trouble here."
+  },
+  {
+   "id": "comm_0044",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1401",
+   "text": "Cargo hauler coming through the New Detroit run, no trouble here."
+  },
+  {
+   "id": "comm_0045",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1401",
+   "text": "Cargo hauler coming through the Palan blockade, no trouble here."
+  },
+  {
+   "id": "comm_0046",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0001",
+   "text": "Cargo hauler coming through the Oxford run, no trouble here."
+  },
+  {
+   "id": "comm_0047",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0001",
+   "text": "Cargo hauler coming through Pleiades, no trouble here."
+  },
+  {
+   "id": "comm_0048",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1401",
+   "text": "Cargo hauler coming through the Troy system, no trouble here."
+  },
+  {
+   "id": "comm_0049",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0001",
+   "text": "Cargo hauler coming through Confed space, no trouble here."
+  },
+  {
+   "id": "comm_0050",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1401",
+   "text": "Cargo hauler coming through my quad, no trouble here."
+  },
+  {
+   "id": "comm_0051",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0601",
+   "text": "You buying or selling, sport? I deal fair."
+  },
+  {
+   "id": "comm_0052",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1401",
+   "text": "You buying or selling, sunshine? I deal fair."
+  },
+  {
+   "id": "comm_0053",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1401",
+   "text": "You buying or selling, flyboy? I deal fair."
+  },
+  {
+   "id": "comm_0054",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0001",
+   "text": "You buying or selling, stranger? I deal fair."
+  },
+  {
+   "id": "comm_0055",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0601",
+   "text": "You buying or selling, buddy? I deal fair."
+  },
+  {
+   "id": "comm_0056",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0601",
+   "text": "You buying or selling, rookie? I deal fair."
+  },
+  {
+   "id": "comm_0057",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1401",
+   "text": "You buying or selling, hotshot? I deal fair."
+  },
+  {
+   "id": "comm_0058",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0601",
+   "text": "You buying or selling, tin can? I deal fair."
+  },
+  {
+   "id": "comm_0059",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1401",
+   "text": "You buying or selling, old-timer? I deal fair."
+  },
+  {
+   "id": "comm_0060",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1401",
+   "text": "You buying or selling, pilot? I deal fair."
+  },
+  {
+   "id": "comm_0061",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0001",
+   "text": "Lovely day for a milk run, wouldn't you say, pilot?"
+  },
+  {
+   "id": "comm_0062",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0601",
+   "text": "Lovely day for a milk run, wouldn't you say, buddy?"
+  },
+  {
+   "id": "comm_0063",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1401",
+   "text": "Lovely day for a milk run, wouldn't you say, hotshot?"
+  },
+  {
+   "id": "comm_0064",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1401",
+   "text": "Lovely day for a milk run, wouldn't you say, mister?"
+  },
+  {
+   "id": "comm_0065",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0001",
+   "text": "Lovely day for a milk run, wouldn't you say, sport?"
+  },
+  {
+   "id": "comm_0066",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1401",
+   "text": "Lovely day for a milk run, wouldn't you say, sunshine?"
+  },
+  {
+   "id": "comm_0067",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0601",
+   "text": "Lovely day for a milk run, wouldn't you say, friend?"
+  },
+  {
+   "id": "comm_0068",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0601",
+   "text": "Lovely day for a milk run, wouldn't you say, old-timer?"
+  },
+  {
+   "id": "comm_0069",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1401",
+   "text": "Lovely day for a milk run, wouldn't you say, sweetheart?"
+  },
+  {
+   "id": "comm_0070",
+   "faction": "merchant",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1401",
+   "text": "Lovely day for a milk run, wouldn't you say, chum?"
+  },
+  {
+   "id": "comm_0071",
+   "faction": "merchant",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0001",
+   "text": "Back off! The guild will hear about this!"
+  },
+  {
+   "id": "comm_0072",
+   "faction": "merchant",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0001",
+   "text": "You maniac, I'm just hauling freight!"
+  },
+  {
+   "id": "comm_0073",
+   "faction": "merchant",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0601",
+   "text": "I've got nothing worth dying over, big shot!"
+  },
+  {
+   "id": "comm_0074",
+   "faction": "merchant",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0001",
+   "text": "I've got nothing worth dying over, sport!"
+  },
+  {
+   "id": "comm_0075",
+   "faction": "merchant",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0601",
+   "text": "I've got nothing worth dying over, rookie!"
+  },
+  {
+   "id": "comm_0076",
+   "faction": "merchant",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0001",
+   "text": "I've got nothing worth dying over, chum!"
+  },
+  {
+   "id": "comm_0077",
+   "faction": "merchant",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0001",
+   "text": "I've got nothing worth dying over, stranger!"
+  },
+  {
+   "id": "comm_0078",
+   "faction": "merchant",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1401",
+   "text": "I've got nothing worth dying over, tin can!"
+  },
+  {
+   "id": "comm_0079",
+   "faction": "merchant",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0601",
+   "text": "I've got nothing worth dying over, pilot!"
+  },
+  {
+   "id": "comm_0080",
+   "faction": "merchant",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0601",
+   "text": "I've got nothing worth dying over, Ace!"
+  },
+  {
+   "id": "comm_0081",
+   "faction": "merchant",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0601",
+   "text": "I've got nothing worth dying over, hotshot!"
+  },
+  {
+   "id": "comm_0082",
+   "faction": "merchant",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1401",
+   "text": "I've got nothing worth dying over, sweetheart!"
+  },
+  {
+   "id": "comm_0083",
+   "faction": "merchant",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0601",
+   "text": "Hey! Watch the paint, you lunatic!"
+  },
+  {
+   "id": "comm_0084",
+   "faction": "merchant",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0601",
+   "text": "I'm unarmed, big shot, this is piracy!"
+  },
+  {
+   "id": "comm_0085",
+   "faction": "merchant",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1401",
+   "text": "I'm unarmed, Captain, this is piracy!"
+  },
+  {
+   "id": "comm_0086",
+   "faction": "merchant",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0601",
+   "text": "I'm unarmed, hotshot, this is piracy!"
+  },
+  {
+   "id": "comm_0087",
+   "faction": "merchant",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1401",
+   "text": "I'm unarmed, sunshine, this is piracy!"
+  },
+  {
+   "id": "comm_0088",
+   "faction": "merchant",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0001",
+   "text": "I'm unarmed, friend, this is piracy!"
+  },
+  {
+   "id": "comm_0089",
+   "faction": "merchant",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0601",
+   "text": "I'm unarmed, tin can, this is piracy!"
+  },
+  {
+   "id": "comm_0090",
+   "faction": "merchant",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0601",
+   "text": "I'm unarmed, pilot, this is piracy!"
+  },
+  {
+   "id": "comm_0091",
+   "faction": "merchant",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0601",
+   "text": "I'm unarmed, old-timer, this is piracy!"
+  },
+  {
+   "id": "comm_0092",
+   "faction": "merchant",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0001",
+   "text": "I'm unarmed, mister, this is piracy!"
+  },
+  {
+   "id": "comm_0093",
+   "faction": "merchant",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1401",
+   "text": "I'm unarmed, sport, this is piracy!"
+  },
+  {
+   "id": "comm_0094",
+   "faction": "merchant",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0601",
+   "text": "You'll never haul in this guild again, you hear me?"
+  },
+  {
+   "id": "comm_0095",
+   "faction": "merchant",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV0001",
+   "text": "Please, I'll dump your precious freight, just let me live!"
+  },
+  {
+   "id": "comm_0096",
+   "faction": "merchant",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV0001",
+   "text": "Please, I'll dump that contraband, just let me live!"
+  },
+  {
+   "id": "comm_0097",
+   "faction": "merchant",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV1401",
+   "text": "Please, I'll dump your cargo, just let me live!"
+  },
+  {
+   "id": "comm_0098",
+   "faction": "merchant",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV1401",
+   "text": "Please, I'll dump your shipment, just let me live!"
+  },
+  {
+   "id": "comm_0099",
+   "faction": "merchant",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV0601",
+   "text": "Please, I'll dump that hot merchandise, just let me live!"
+  },
+  {
+   "id": "comm_0100",
+   "faction": "merchant",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV1401",
+   "text": "Please, I'll dump those crates, just let me live!"
+  },
+  {
+   "id": "comm_0101",
+   "faction": "merchant",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV0001",
+   "text": "Please, I'll dump your manifest, just let me live!"
+  },
+  {
+   "id": "comm_0102",
+   "faction": "merchant",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV0601",
+   "text": "Please, I'll dump those goods, just let me live!"
+  },
+  {
+   "id": "comm_0103",
+   "faction": "merchant",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV1401",
+   "text": "Please, I'll dump your hold, just let me live!"
+  },
+  {
+   "id": "comm_0104",
+   "faction": "merchant",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV0001",
+   "text": "My poor ship! I'll be selling it for scrap!"
+  },
+  {
+   "id": "comm_0105",
+   "faction": "merchant",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV0001",
+   "text": "Mayday! I'm a civilian, somebody help!"
+  },
+  {
+   "id": "comm_0106",
+   "faction": "merchant",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV0001",
+   "text": "My engine's on fire! I'm punching out!"
+  },
+  {
+   "id": "comm_0107",
+   "faction": "merchant",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV0001",
+   "text": "Take your cargo, take it all, just spare the lifeboat!"
+  },
+  {
+   "id": "comm_0108",
+   "faction": "merchant",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV0601",
+   "text": "Take that contraband, take it all, just spare the lifeboat!"
+  },
+  {
+   "id": "comm_0109",
+   "faction": "merchant",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV1401",
+   "text": "Take your precious freight, take it all, just spare the lifeboat!"
+  },
+  {
+   "id": "comm_0110",
+   "faction": "merchant",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV0601",
+   "text": "Take your shipment, take it all, just spare the lifeboat!"
+  },
+  {
+   "id": "comm_0111",
+   "faction": "merchant",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV0001",
+   "text": "Take your manifest, take it all, just spare the lifeboat!"
+  },
+  {
+   "id": "comm_0112",
+   "faction": "merchant",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV1401",
+   "text": "Take that hot merchandise, take it all, just spare the lifeboat!"
+  },
+  {
+   "id": "comm_0113",
+   "faction": "merchant",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV1401",
+   "text": "Take those goods, take it all, just spare the lifeboat!"
+  },
+  {
+   "id": "comm_0114",
+   "faction": "merchant",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV1401",
+   "text": "Take your hold, take it all, just spare the lifeboat!"
+  },
+  {
+   "id": "comm_0115",
+   "faction": "merchant",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV1401",
+   "text": "Take those crates, take it all, just spare the lifeboat!"
+  },
+  {
+   "id": "comm_0116",
+   "faction": "merchant",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV1401",
+   "text": "Twenty years building this business, gone in the New Detroit run..."
+  },
+  {
+   "id": "comm_0117",
+   "faction": "merchant",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV0601",
+   "text": "Twenty years building this business, gone in the Troy system..."
+  },
+  {
+   "id": "comm_0118",
+   "faction": "merchant",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV0001",
+   "text": "Twenty years building this business, gone in Confed space..."
+  },
+  {
+   "id": "comm_0119",
+   "faction": "merchant",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV0001",
+   "text": "Twenty years building this business, gone in the Palan blockade..."
+  },
+  {
+   "id": "comm_0120",
+   "faction": "merchant",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV0001",
+   "text": "Twenty years building this business, gone in the Oxford run..."
+  },
+  {
+   "id": "comm_0121",
+   "faction": "merchant",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV0001",
+   "text": "Twenty years building this business, gone in the Humboldt quad..."
+  },
+  {
+   "id": "comm_0122",
+   "faction": "merchant",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV1401",
+   "text": "Twenty years building this business, gone in these lanes..."
+  },
+  {
+   "id": "comm_0123",
+   "faction": "merchant",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV0001",
+   "text": "Twenty years building this business, gone in my quad..."
+  },
+  {
+   "id": "comm_0124",
+   "faction": "merchant",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV0001",
+   "text": "Twenty years building this business, gone in this sector..."
+  },
+  {
+   "id": "comm_0125",
+   "faction": "merchant",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV1401",
+   "text": "Twenty years building this business, gone in this quadrant..."
+  },
+  {
+   "id": "comm_0126",
+   "faction": "merchant",
+   "category": "kill",
+   "voice_id": "PrivFlightV0601",
+   "text": "Serves you right, attacking an honest dealer."
+  },
+  {
+   "id": "comm_0127",
+   "faction": "merchant",
+   "category": "kill",
+   "voice_id": "PrivFlightV0001",
+   "text": "Another bandit cashes in his chips."
+  },
+  {
+   "id": "comm_0128",
+   "faction": "merchant",
+   "category": "kill",
+   "voice_id": "PrivFlightV1401",
+   "text": "Not bad for a lowly merchant, eh?"
+  },
+  {
+   "id": "comm_0129",
+   "faction": "merchant",
+   "category": "kill",
+   "voice_id": "PrivFlightV0601",
+   "text": "And stay down, you space-faring leech."
+  },
+  {
+   "id": "comm_0130",
+   "faction": "merchant",
+   "category": "kill",
+   "voice_id": "PrivFlightV1401",
+   "text": "Turns out the merchant had teeth after all."
+  },
+  {
+   "id": "comm_0131",
+   "faction": "merchant",
+   "category": "long",
+   "voice_id": "PrivFlightV1401",
+   "text": "Look, buddy, I've been hauling this route for thirty years. I've paid the pirates, paid the militia, paid the guild dues. I just want to reach port with my hold intact and maybe see my kids again. So whatever you're planning, let's both be reasonable about it."
+  },
+  {
+   "id": "comm_0132",
+   "faction": "merchant",
+   "category": "long",
+   "voice_id": "PrivFlightV0601",
+   "text": "Look, sweetheart, I've been hauling this route for thirty years. I've paid the pirates, paid the militia, paid the guild dues. I just want to reach port with my hold intact and maybe see my kids again. So whatever you're planning, let's both be reasonable about it."
+  },
+  {
+   "id": "comm_0133",
+   "faction": "merchant",
+   "category": "long",
+   "voice_id": "PrivFlightV1401",
+   "text": "Friendly ship, am I glad to see you. The whole run through Confed space has been nothing but trouble. Lost my escort two jumps back, scanners keep ghosting contacts. If you're headed my way, mind flying cover? I'll make it worth your while at the next base, I swear it."
+  },
+  {
+   "id": "comm_0134",
+   "faction": "merchant",
+   "category": "long",
+   "voice_id": "PrivFlightV0601",
+   "text": "Friendly ship, am I glad to see you. The whole run through the Palan blockade has been nothing but trouble. Lost my escort two jumps back, scanners keep ghosting contacts. If you're headed my way, mind flying cover? I'll make it worth your while at the next base, I swear it."
+  },
+  {
+   "id": "comm_0135",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0701",
+   "text": "Militia patrol, stick to your flight path, friend."
+  },
+  {
+   "id": "comm_0136",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0101",
+   "text": "Militia patrol, stick to your flight path, rookie."
+  },
+  {
+   "id": "comm_0137",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0701",
+   "text": "Militia patrol, stick to your flight path, sunshine."
+  },
+  {
+   "id": "comm_0138",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0701",
+   "text": "Militia patrol, stick to your flight path, sweetheart."
+  },
+  {
+   "id": "comm_0139",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0701",
+   "text": "Militia patrol, stick to your flight path, sport."
+  },
+  {
+   "id": "comm_0140",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0101",
+   "text": "Militia patrol, stick to your flight path, pilot."
+  },
+  {
+   "id": "comm_0141",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0101",
+   "text": "Militia patrol, stick to your flight path, Captain."
+  },
+  {
+   "id": "comm_0142",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0701",
+   "text": "Militia patrol, stick to your flight path, old-timer."
+  },
+  {
+   "id": "comm_0143",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0701",
+   "text": "Militia patrol, stick to your flight path, tin can."
+  },
+  {
+   "id": "comm_0144",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0701",
+   "text": "Militia patrol, stick to your flight path, chum."
+  },
+  {
+   "id": "comm_0145",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0701",
+   "text": "We've got this dead end of space bottled up tight, keep it clean."
+  },
+  {
+   "id": "comm_0146",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0101",
+   "text": "We've got the Oxford run bottled up tight, keep it clean."
+  },
+  {
+   "id": "comm_0147",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0101",
+   "text": "We've got the asteroid fields bottled up tight, keep it clean."
+  },
+  {
+   "id": "comm_0148",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0101",
+   "text": "We've got the New Detroit run bottled up tight, keep it clean."
+  },
+  {
+   "id": "comm_0149",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0101",
+   "text": "We've got the Troy system bottled up tight, keep it clean."
+  },
+  {
+   "id": "comm_0150",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0101",
+   "text": "We've got the Palan blockade bottled up tight, keep it clean."
+  },
+  {
+   "id": "comm_0151",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0701",
+   "text": "We've got Confed space bottled up tight, keep it clean."
+  },
+  {
+   "id": "comm_0152",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0101",
+   "text": "We've got Pleiades bottled up tight, keep it clean."
+  },
+  {
+   "id": "comm_0153",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0701",
+   "text": "We've got this sector bottled up tight, keep it clean."
+  },
+  {
+   "id": "comm_0154",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0701",
+   "text": "We've got these lanes bottled up tight, keep it clean."
+  },
+  {
+   "id": "comm_0155",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0101",
+   "text": "You're clear to pass. Keep your nose clean."
+  },
+  {
+   "id": "comm_0156",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0101",
+   "text": "Welcome to the New Detroit run, sport. We run a tight ship here."
+  },
+  {
+   "id": "comm_0157",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0701",
+   "text": "Welcome to this quadrant, sport. We run a tight ship here."
+  },
+  {
+   "id": "comm_0158",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0701",
+   "text": "Welcome to this quadrant, big shot. We run a tight ship here."
+  },
+  {
+   "id": "comm_0159",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0701",
+   "text": "Welcome to these lanes, flyboy. We run a tight ship here."
+  },
+  {
+   "id": "comm_0160",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0701",
+   "text": "Welcome to the Oxford run, Captain. We run a tight ship here."
+  },
+  {
+   "id": "comm_0161",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0101",
+   "text": "Welcome to the New Detroit run, Ace. We run a tight ship here."
+  },
+  {
+   "id": "comm_0162",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0701",
+   "text": "Welcome to Pleiades, mister. We run a tight ship here."
+  },
+  {
+   "id": "comm_0163",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0701",
+   "text": "Welcome to this dead end of space, Captain. We run a tight ship here."
+  },
+  {
+   "id": "comm_0164",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0101",
+   "text": "Welcome to my quad, stranger. We run a tight ship here."
+  },
+  {
+   "id": "comm_0165",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0701",
+   "text": "Welcome to these lanes, friend. We run a tight ship here."
+  },
+  {
+   "id": "comm_0166",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0101",
+   "text": "Keep your transponder lit and we'll get along fine."
+  },
+  {
+   "id": "comm_0167",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0101",
+   "text": "Eyes open out there, buddy, pirates have been busy."
+  },
+  {
+   "id": "comm_0168",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0701",
+   "text": "Eyes open out there, flyboy, pirates have been busy."
+  },
+  {
+   "id": "comm_0169",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0101",
+   "text": "Eyes open out there, rookie, pirates have been busy."
+  },
+  {
+   "id": "comm_0170",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0101",
+   "text": "Eyes open out there, old-timer, pirates have been busy."
+  },
+  {
+   "id": "comm_0171",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0101",
+   "text": "Eyes open out there, hotshot, pirates have been busy."
+  },
+  {
+   "id": "comm_0172",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0701",
+   "text": "Eyes open out there, pilot, pirates have been busy."
+  },
+  {
+   "id": "comm_0173",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0101",
+   "text": "Eyes open out there, tin can, pirates have been busy."
+  },
+  {
+   "id": "comm_0174",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0701",
+   "text": "Eyes open out there, stranger, pirates have been busy."
+  },
+  {
+   "id": "comm_0175",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0701",
+   "text": "Eyes open out there, chum, pirates have been busy."
+  },
+  {
+   "id": "comm_0176",
+   "faction": "militia",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0101",
+   "text": "Eyes open out there, friend, pirates have been busy."
+  },
+  {
+   "id": "comm_0177",
+   "faction": "militia",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0101",
+   "text": "Prepare for inspection, cut your engines."
+  },
+  {
+   "id": "comm_0178",
+   "faction": "militia",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0701",
+   "text": "You're not leaving this quadrant alive, smuggler."
+  },
+  {
+   "id": "comm_0179",
+   "faction": "militia",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0101",
+   "text": "You're not leaving Confed space alive, smuggler."
+  },
+  {
+   "id": "comm_0180",
+   "faction": "militia",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0701",
+   "text": "You're not leaving these lanes alive, smuggler."
+  },
+  {
+   "id": "comm_0181",
+   "faction": "militia",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0101",
+   "text": "You're not leaving the Troy system alive, smuggler."
+  },
+  {
+   "id": "comm_0182",
+   "faction": "militia",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0101",
+   "text": "You're not leaving Pleiades alive, smuggler."
+  },
+  {
+   "id": "comm_0183",
+   "faction": "militia",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0701",
+   "text": "You're not leaving the asteroid fields alive, smuggler."
+  },
+  {
+   "id": "comm_0184",
+   "faction": "militia",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0101",
+   "text": "You're not leaving the New Detroit run alive, smuggler."
+  },
+  {
+   "id": "comm_0185",
+   "faction": "militia",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0701",
+   "text": "You're not leaving my quad alive, smuggler."
+  },
+  {
+   "id": "comm_0186",
+   "faction": "militia",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0701",
+   "text": "You're not leaving this sector alive, smuggler."
+  },
+  {
+   "id": "comm_0187",
+   "faction": "militia",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0701",
+   "text": "You're not leaving this dead end of space alive, smuggler."
+  },
+  {
+   "id": "comm_0188",
+   "faction": "militia",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0101",
+   "text": "Contraband detected. All units, close and terminate."
+  },
+  {
+   "id": "comm_0189",
+   "faction": "militia",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0101",
+   "text": "That's a restricted lane, stranger. Turn back or be fired on."
+  },
+  {
+   "id": "comm_0190",
+   "faction": "militia",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0701",
+   "text": "That's a restricted lane, Ace. Turn back or be fired on."
+  },
+  {
+   "id": "comm_0191",
+   "faction": "militia",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0701",
+   "text": "That's a restricted lane, friend. Turn back or be fired on."
+  },
+  {
+   "id": "comm_0192",
+   "faction": "militia",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0701",
+   "text": "That's a restricted lane, flyboy. Turn back or be fired on."
+  },
+  {
+   "id": "comm_0193",
+   "faction": "militia",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0701",
+   "text": "That's a restricted lane, rookie. Turn back or be fired on."
+  },
+  {
+   "id": "comm_0194",
+   "faction": "militia",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0101",
+   "text": "That's a restricted lane, mister. Turn back or be fired on."
+  },
+  {
+   "id": "comm_0195",
+   "faction": "militia",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0701",
+   "text": "That's a restricted lane, pilot. Turn back or be fired on."
+  },
+  {
+   "id": "comm_0196",
+   "faction": "militia",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0701",
+   "text": "That's a restricted lane, hotshot. Turn back or be fired on."
+  },
+  {
+   "id": "comm_0197",
+   "faction": "militia",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0701",
+   "text": "That's a restricted lane, Captain. Turn back or be fired on."
+  },
+  {
+   "id": "comm_0198",
+   "faction": "militia",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0101",
+   "text": "That's a restricted lane, sport. Turn back or be fired on."
+  },
+  {
+   "id": "comm_0199",
+   "faction": "militia",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0101",
+   "text": "You've ignored three hails. That's enough."
+  },
+  {
+   "id": "comm_0200",
+   "faction": "militia",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0701",
+   "text": "Hostile confirmed. Militia weapons free."
+  },
+  {
+   "id": "comm_0201",
+   "faction": "militia",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV0101",
+   "text": "Militia forces need assistance, we're in trouble!"
+  },
+  {
+   "id": "comm_0202",
+   "faction": "militia",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV0101",
+   "text": "Sensors show we're breaking up, falling back!"
+  },
+  {
+   "id": "comm_0203",
+   "faction": "militia",
+   "category": "kill",
+   "voice_id": "PrivFlightV0701",
+   "text": "Target eliminated. Militia to base, enemy dispatched."
+  },
+  {
+   "id": "comm_0204",
+   "faction": "militia",
+   "category": "kill",
+   "voice_id": "PrivFlightV0701",
+   "text": "That's another runner off the board."
+  },
+  {
+   "id": "comm_0205",
+   "faction": "militia",
+   "category": "kill",
+   "voice_id": "PrivFlightV0101",
+   "text": "Threat neutralized. these lanes is secure once more."
+  },
+  {
+   "id": "comm_0206",
+   "faction": "militia",
+   "category": "kill",
+   "voice_id": "PrivFlightV0101",
+   "text": "Threat neutralized. the Oxford run is secure once more."
+  },
+  {
+   "id": "comm_0207",
+   "faction": "militia",
+   "category": "kill",
+   "voice_id": "PrivFlightV0101",
+   "text": "Threat neutralized. the asteroid fields is secure once more."
+  },
+  {
+   "id": "comm_0208",
+   "faction": "militia",
+   "category": "kill",
+   "voice_id": "PrivFlightV0101",
+   "text": "Threat neutralized. my quad is secure once more."
+  },
+  {
+   "id": "comm_0209",
+   "faction": "militia",
+   "category": "kill",
+   "voice_id": "PrivFlightV0701",
+   "text": "Threat neutralized. this sector is secure once more."
+  },
+  {
+   "id": "comm_0210",
+   "faction": "militia",
+   "category": "kill",
+   "voice_id": "PrivFlightV0701",
+   "text": "Threat neutralized. the Palan blockade is secure once more."
+  },
+  {
+   "id": "comm_0211",
+   "faction": "militia",
+   "category": "kill",
+   "voice_id": "PrivFlightV0701",
+   "text": "Threat neutralized. the Troy system is secure once more."
+  },
+  {
+   "id": "comm_0212",
+   "faction": "militia",
+   "category": "kill",
+   "voice_id": "PrivFlightV0101",
+   "text": "Threat neutralized. Confed space is secure once more."
+  },
+  {
+   "id": "comm_0213",
+   "faction": "militia",
+   "category": "kill",
+   "voice_id": "PrivFlightV0101",
+   "text": "Threat neutralized. the Humboldt quad is secure once more."
+  },
+  {
+   "id": "comm_0214",
+   "faction": "militia",
+   "category": "kill",
+   "voice_id": "PrivFlightV0701",
+   "text": "Threat neutralized. this quadrant is secure once more."
+  },
+  {
+   "id": "comm_0215",
+   "faction": "militia",
+   "category": "demand",
+   "voice_id": "PrivFlightV0101",
+   "text": "Maintain speed and course for a contraband search."
+  },
+  {
+   "id": "comm_0216",
+   "faction": "militia",
+   "category": "demand",
+   "voice_id": "PrivFlightV0701",
+   "text": "Power down and prepare to be boarded, stranger."
+  },
+  {
+   "id": "comm_0217",
+   "faction": "militia",
+   "category": "demand",
+   "voice_id": "PrivFlightV0101",
+   "text": "Power down and prepare to be boarded, big shot."
+  },
+  {
+   "id": "comm_0218",
+   "faction": "militia",
+   "category": "demand",
+   "voice_id": "PrivFlightV0101",
+   "text": "Power down and prepare to be boarded, sweetheart."
+  },
+  {
+   "id": "comm_0219",
+   "faction": "militia",
+   "category": "demand",
+   "voice_id": "PrivFlightV0101",
+   "text": "Power down and prepare to be boarded, Captain."
+  },
+  {
+   "id": "comm_0220",
+   "faction": "militia",
+   "category": "demand",
+   "voice_id": "PrivFlightV0101",
+   "text": "Power down and prepare to be boarded, friend."
+  },
+  {
+   "id": "comm_0221",
+   "faction": "militia",
+   "category": "demand",
+   "voice_id": "PrivFlightV0701",
+   "text": "Power down and prepare to be boarded, hotshot."
+  },
+  {
+   "id": "comm_0222",
+   "faction": "militia",
+   "category": "demand",
+   "voice_id": "PrivFlightV0101",
+   "text": "Power down and prepare to be boarded, buddy."
+  },
+  {
+   "id": "comm_0223",
+   "faction": "militia",
+   "category": "demand",
+   "voice_id": "PrivFlightV0101",
+   "text": "Power down and prepare to be boarded, pilot."
+  },
+  {
+   "id": "comm_0224",
+   "faction": "militia",
+   "category": "demand",
+   "voice_id": "PrivFlightV0701",
+   "text": "Power down and prepare to be boarded, rookie."
+  },
+  {
+   "id": "comm_0225",
+   "faction": "militia",
+   "category": "demand",
+   "voice_id": "PrivFlightV0101",
+   "text": "Power down and prepare to be boarded, tin can."
+  },
+  {
+   "id": "comm_0226",
+   "faction": "militia",
+   "category": "demand",
+   "voice_id": "PrivFlightV0101",
+   "text": "Reduce speed to dock velocity and stand by for boarding."
+  },
+  {
+   "id": "comm_0227",
+   "faction": "militia",
+   "category": "demand",
+   "voice_id": "PrivFlightV0101",
+   "text": "Open that contraband for inspection, Ace, this won't take long."
+  },
+  {
+   "id": "comm_0228",
+   "faction": "militia",
+   "category": "demand",
+   "voice_id": "PrivFlightV0701",
+   "text": "Open your precious freight for inspection, flyboy, this won't take long."
+  },
+  {
+   "id": "comm_0229",
+   "faction": "militia",
+   "category": "demand",
+   "voice_id": "PrivFlightV0701",
+   "text": "Open that contraband for inspection, Captain, this won't take long."
+  },
+  {
+   "id": "comm_0230",
+   "faction": "militia",
+   "category": "demand",
+   "voice_id": "PrivFlightV0101",
+   "text": "Open your shipment for inspection, buddy, this won't take long."
+  },
+  {
+   "id": "comm_0231",
+   "faction": "militia",
+   "category": "demand",
+   "voice_id": "PrivFlightV0101",
+   "text": "Open those goods for inspection, sport, this won't take long."
+  },
+  {
+   "id": "comm_0232",
+   "faction": "militia",
+   "category": "demand",
+   "voice_id": "PrivFlightV0701",
+   "text": "Open your precious freight for inspection, sunshine, this won't take long."
+  },
+  {
+   "id": "comm_0233",
+   "faction": "militia",
+   "category": "demand",
+   "voice_id": "PrivFlightV0101",
+   "text": "Open your cargo for inspection, old-timer, this won't take long."
+  },
+  {
+   "id": "comm_0234",
+   "faction": "militia",
+   "category": "demand",
+   "voice_id": "PrivFlightV0701",
+   "text": "Open your precious freight for inspection, mister, this won't take long."
+  },
+  {
+   "id": "comm_0235",
+   "faction": "militia",
+   "category": "demand",
+   "voice_id": "PrivFlightV0701",
+   "text": "Open your hold for inspection, friend, this won't take long."
+  },
+  {
+   "id": "comm_0236",
+   "faction": "militia",
+   "category": "demand",
+   "voice_id": "PrivFlightV0101",
+   "text": "Open your shipment for inspection, old-timer, this won't take long."
+  },
+  {
+   "id": "comm_0237",
+   "faction": "militia",
+   "category": "long",
+   "voice_id": "PrivFlightV0701",
+   "text": "Attention all craft in Confed space. This is system militia. We have reports of pirate activity along the main shipping lane. Maintain escort formation, keep your comms open, and report any unidentified contacts immediately. We're stretched thin out here, so watch each other's backs. Militia out."
+  },
+  {
+   "id": "comm_0238",
+   "faction": "militia",
+   "category": "long",
+   "voice_id": "PrivFlightV0701",
+   "text": "Attention all craft in this dead end of space. This is system militia. We have reports of pirate activity along the main shipping lane. Maintain escort formation, keep your comms open, and report any unidentified contacts immediately. We're stretched thin out here, so watch each other's backs. Militia out."
+  },
+  {
+   "id": "comm_0239",
+   "faction": "militia",
+   "category": "long",
+   "voice_id": "PrivFlightV0101",
+   "text": "Listen up, sunshine. Your transponder's flagged, your manifest doesn't add up, and you've been loitering near a restricted jump point. Now, I can do this the easy way, where you power down and let us aboard, or the hard way, where I call in a strike wing. Your call. You've got ten seconds."
+  },
+  {
+   "id": "comm_0240",
+   "faction": "militia",
+   "category": "long",
+   "voice_id": "PrivFlightV0101",
+   "text": "Listen up, buddy. Your transponder's flagged, your manifest doesn't add up, and you've been loitering near a restricted jump point. Now, I can do this the easy way, where you power down and let us aboard, or the hard way, where I call in a strike wing. Your call. You've got ten seconds."
+  },
+  {
+   "id": "comm_0241",
+   "faction": "pirate",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1201",
+   "text": "Well, well, fresh meat drifts into the Palan blockade."
+  },
+  {
+   "id": "comm_0242",
+   "faction": "pirate",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1501",
+   "text": "Well, well, fresh meat drifts into this quadrant."
+  },
+  {
+   "id": "comm_0243",
+   "faction": "pirate",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0201",
+   "text": "Well, well, fresh meat drifts into the New Detroit run."
+  },
+  {
+   "id": "comm_0244",
+   "faction": "pirate",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0201",
+   "text": "Well, well, fresh meat drifts into the Oxford run."
+  },
+  {
+   "id": "comm_0245",
+   "faction": "pirate",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0201",
+   "text": "Well, well, fresh meat drifts into the Humboldt quad."
+  },
+  {
+   "id": "comm_0246",
+   "faction": "pirate",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0201",
+   "text": "Well, well, fresh meat drifts into the asteroid fields."
+  },
+  {
+   "id": "comm_0247",
+   "faction": "pirate",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0201",
+   "text": "Well, well, fresh meat drifts into these lanes."
+  },
+  {
+   "id": "comm_0248",
+   "faction": "pirate",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0201",
+   "text": "Well, well, fresh meat drifts into this sector."
+  },
+  {
+   "id": "comm_0249",
+   "faction": "pirate",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1201",
+   "text": "Well, well, fresh meat drifts into Pleiades."
+  },
+  {
+   "id": "comm_0250",
+   "faction": "pirate",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0201",
+   "text": "Well, well, fresh meat drifts into my quad."
+  },
+  {
+   "id": "comm_0251",
+   "faction": "pirate",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0201",
+   "text": "Looking sharp, Captain. Shame about what's coming."
+  },
+  {
+   "id": "comm_0252",
+   "faction": "pirate",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1501",
+   "text": "Looking sharp, chum. Shame about what's coming."
+  },
+  {
+   "id": "comm_0253",
+   "faction": "pirate",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0201",
+   "text": "Looking sharp, stranger. Shame about what's coming."
+  },
+  {
+   "id": "comm_0254",
+   "faction": "pirate",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1201",
+   "text": "Looking sharp, big shot. Shame about what's coming."
+  },
+  {
+   "id": "comm_0255",
+   "faction": "pirate",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1201",
+   "text": "Looking sharp, mister. Shame about what's coming."
+  },
+  {
+   "id": "comm_0256",
+   "faction": "pirate",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1501",
+   "text": "Looking sharp, flyboy. Shame about what's coming."
+  },
+  {
+   "id": "comm_0257",
+   "faction": "pirate",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0201",
+   "text": "Looking sharp, friend. Shame about what's coming."
+  },
+  {
+   "id": "comm_0258",
+   "faction": "pirate",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1201",
+   "text": "Looking sharp, tin can. Shame about what's coming."
+  },
+  {
+   "id": "comm_0259",
+   "faction": "pirate",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1501",
+   "text": "Looking sharp, rookie. Shame about what's coming."
+  },
+  {
+   "id": "comm_0260",
+   "faction": "pirate",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0201",
+   "text": "Looking sharp, pilot. Shame about what's coming."
+  },
+  {
+   "id": "comm_0261",
+   "faction": "pirate",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1501",
+   "text": "Lost, little friend? Let me take that burden off your hands."
+  },
+  {
+   "id": "comm_0262",
+   "faction": "pirate",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1501",
+   "text": "Lost, little rookie? Let me take that burden off your hands."
+  },
+  {
+   "id": "comm_0263",
+   "faction": "pirate",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0201",
+   "text": "Lost, little stranger? Let me take that burden off your hands."
+  },
+  {
+   "id": "comm_0264",
+   "faction": "pirate",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1501",
+   "text": "Lost, little sport? Let me take that burden off your hands."
+  },
+  {
+   "id": "comm_0265",
+   "faction": "pirate",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0201",
+   "text": "Lost, little sweetheart? Let me take that burden off your hands."
+  },
+  {
+   "id": "comm_0266",
+   "faction": "pirate",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1501",
+   "text": "Lost, little old-timer? Let me take that burden off your hands."
+  },
+  {
+   "id": "comm_0267",
+   "faction": "pirate",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0201",
+   "text": "Lost, little sunshine? Let me take that burden off your hands."
+  },
+  {
+   "id": "comm_0268",
+   "faction": "pirate",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0201",
+   "text": "Lost, little flyboy? Let me take that burden off your hands."
+  },
+  {
+   "id": "comm_0269",
+   "faction": "pirate",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0201",
+   "text": "Lost, little mister? Let me take that burden off your hands."
+  },
+  {
+   "id": "comm_0270",
+   "faction": "pirate",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1501",
+   "text": "Lost, little Ace? Let me take that burden off your hands."
+  },
+  {
+   "id": "comm_0271",
+   "faction": "pirate",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0201",
+   "text": "Pretty that crate you got there. Be a shame if I kept it."
+  },
+  {
+   "id": "comm_0272",
+   "faction": "pirate",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1501",
+   "text": "Pretty your bucket you got there. Be a shame if I kept it."
+  },
+  {
+   "id": "comm_0273",
+   "faction": "pirate",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0201",
+   "text": "Pretty your tin can you got there. Be a shame if I kept it."
+  },
+  {
+   "id": "comm_0274",
+   "faction": "pirate",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1201",
+   "text": "Pretty that flying coffin you got there. Be a shame if I kept it."
+  },
+  {
+   "id": "comm_0275",
+   "faction": "pirate",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1201",
+   "text": "Pretty your pretty little ship you got there. Be a shame if I kept it."
+  },
+  {
+   "id": "comm_0276",
+   "faction": "pirate",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1201",
+   "text": "Pretty that scrap heap you got there. Be a shame if I kept it."
+  },
+  {
+   "id": "comm_0277",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1501",
+   "text": "Drop your cargo or I scatter you across my quad!"
+  },
+  {
+   "id": "comm_0278",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1201",
+   "text": "Drop your hold or I scatter you across Confed space!"
+  },
+  {
+   "id": "comm_0279",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0201",
+   "text": "Drop your shipment or I scatter you across Confed space!"
+  },
+  {
+   "id": "comm_0280",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0201",
+   "text": "Drop your cargo or I scatter you across this sector!"
+  },
+  {
+   "id": "comm_0281",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1501",
+   "text": "Drop your cargo or I scatter you across Pleiades!"
+  },
+  {
+   "id": "comm_0282",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0201",
+   "text": "Drop your hold or I scatter you across Pleiades!"
+  },
+  {
+   "id": "comm_0283",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0201",
+   "text": "Drop your precious freight or I scatter you across the Troy system!"
+  },
+  {
+   "id": "comm_0284",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1201",
+   "text": "Drop your shipment or I scatter you across the Troy system!"
+  },
+  {
+   "id": "comm_0285",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0201",
+   "text": "Drop your hold or I scatter you across the Troy system!"
+  },
+  {
+   "id": "comm_0286",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0201",
+   "text": "Drop those crates or I scatter you across the Oxford run!"
+  },
+  {
+   "id": "comm_0287",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1501",
+   "text": "You're a loose end looking to be tied, friend."
+  },
+  {
+   "id": "comm_0288",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1201",
+   "text": "You're a loose end looking to be tied, hotshot."
+  },
+  {
+   "id": "comm_0289",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1201",
+   "text": "You're a loose end looking to be tied, Captain."
+  },
+  {
+   "id": "comm_0290",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1201",
+   "text": "You're a loose end looking to be tied, tin can."
+  },
+  {
+   "id": "comm_0291",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0201",
+   "text": "You're a loose end looking to be tied, Ace."
+  },
+  {
+   "id": "comm_0292",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1501",
+   "text": "You're a loose end looking to be tied, flyboy."
+  },
+  {
+   "id": "comm_0293",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1201",
+   "text": "You're a loose end looking to be tied, pilot."
+  },
+  {
+   "id": "comm_0294",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0201",
+   "text": "You're a loose end looking to be tied, chum."
+  },
+  {
+   "id": "comm_0295",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1501",
+   "text": "You're a loose end looking to be tied, big shot."
+  },
+  {
+   "id": "comm_0296",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0201",
+   "text": "You're a loose end looking to be tied, sweetheart."
+  },
+  {
+   "id": "comm_0297",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1201",
+   "text": "Nice ship. It'll look better in my hangar."
+  },
+  {
+   "id": "comm_0298",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1501",
+   "text": "Hand over your precious freight or I paint this quadrant with your guts!"
+  },
+  {
+   "id": "comm_0299",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0201",
+   "text": "Hand over that contraband or I paint the Oxford run with your guts!"
+  },
+  {
+   "id": "comm_0300",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1201",
+   "text": "Hand over that hot merchandise or I paint Pleiades with your guts!"
+  },
+  {
+   "id": "comm_0301",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0201",
+   "text": "Hand over your cargo or I paint the Palan blockade with your guts!"
+  },
+  {
+   "id": "comm_0302",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0201",
+   "text": "Hand over your cargo or I paint the Humboldt quad with your guts!"
+  },
+  {
+   "id": "comm_0303",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1501",
+   "text": "Hand over your shipment or I paint the Troy system with your guts!"
+  },
+  {
+   "id": "comm_0304",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1501",
+   "text": "Hand over your cargo or I paint the Troy system with your guts!"
+  },
+  {
+   "id": "comm_0305",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1501",
+   "text": "Hand over that hot merchandise or I paint my quad with your guts!"
+  },
+  {
+   "id": "comm_0306",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1201",
+   "text": "Hand over those goods or I paint this sector with your guts!"
+  },
+  {
+   "id": "comm_0307",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1201",
+   "text": "Hand over those crates or I paint this dead end of space with your guts!"
+  },
+  {
+   "id": "comm_0308",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1501",
+   "text": "You picked the wrong shortcut through Confed space, chum."
+  },
+  {
+   "id": "comm_0309",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0201",
+   "text": "You picked the wrong shortcut through this dead end of space, pilot."
+  },
+  {
+   "id": "comm_0310",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1201",
+   "text": "You picked the wrong shortcut through Pleiades, tin can."
+  },
+  {
+   "id": "comm_0311",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1201",
+   "text": "You picked the wrong shortcut through this sector, chum."
+  },
+  {
+   "id": "comm_0312",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0201",
+   "text": "You picked the wrong shortcut through Confed space, mister."
+  },
+  {
+   "id": "comm_0313",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1201",
+   "text": "You picked the wrong shortcut through these lanes, buddy."
+  },
+  {
+   "id": "comm_0314",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1201",
+   "text": "You picked the wrong shortcut through this dead end of space, Captain."
+  },
+  {
+   "id": "comm_0315",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1201",
+   "text": "You picked the wrong shortcut through the Humboldt quad, tin can."
+  },
+  {
+   "id": "comm_0316",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1201",
+   "text": "You picked the wrong shortcut through this dead end of space, sport."
+  },
+  {
+   "id": "comm_0317",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1501",
+   "text": "You picked the wrong shortcut through these lanes, tin can."
+  },
+  {
+   "id": "comm_0318",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1201",
+   "text": "Nothing personal, tin can. Okay, maybe a little personal."
+  },
+  {
+   "id": "comm_0319",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1501",
+   "text": "Nothing personal, sunshine. Okay, maybe a little personal."
+  },
+  {
+   "id": "comm_0320",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1201",
+   "text": "Nothing personal, friend. Okay, maybe a little personal."
+  },
+  {
+   "id": "comm_0321",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1201",
+   "text": "Nothing personal, big shot. Okay, maybe a little personal."
+  },
+  {
+   "id": "comm_0322",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1201",
+   "text": "Nothing personal, stranger. Okay, maybe a little personal."
+  },
+  {
+   "id": "comm_0323",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0201",
+   "text": "Nothing personal, hotshot. Okay, maybe a little personal."
+  },
+  {
+   "id": "comm_0324",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1501",
+   "text": "Nothing personal, sweetheart. Okay, maybe a little personal."
+  },
+  {
+   "id": "comm_0325",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1201",
+   "text": "Nothing personal, flyboy. Okay, maybe a little personal."
+  },
+  {
+   "id": "comm_0326",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0201",
+   "text": "Nothing personal, buddy. Okay, maybe a little personal."
+  },
+  {
+   "id": "comm_0327",
+   "faction": "pirate",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0201",
+   "text": "Nothing personal, mister. Okay, maybe a little personal."
+  },
+  {
+   "id": "comm_0328",
+   "faction": "pirate",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV1501",
+   "text": "Damn, you're ripping me apart!"
+  },
+  {
+   "id": "comm_0329",
+   "faction": "pirate",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV1201",
+   "text": "This crate's about to blow, I'm out!"
+  },
+  {
+   "id": "comm_0330",
+   "faction": "pirate",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV1201",
+   "text": "Alright, alright, take your cargo, just stop shooting!"
+  },
+  {
+   "id": "comm_0331",
+   "faction": "pirate",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV1501",
+   "text": "Alright, alright, take those crates, just stop shooting!"
+  },
+  {
+   "id": "comm_0332",
+   "faction": "pirate",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV1201",
+   "text": "Alright, alright, take your shipment, just stop shooting!"
+  },
+  {
+   "id": "comm_0333",
+   "faction": "pirate",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV0201",
+   "text": "Alright, alright, take your hold, just stop shooting!"
+  },
+  {
+   "id": "comm_0334",
+   "faction": "pirate",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV1201",
+   "text": "Alright, alright, take that hot merchandise, just stop shooting!"
+  },
+  {
+   "id": "comm_0335",
+   "faction": "pirate",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV1201",
+   "text": "Alright, alright, take those goods, just stop shooting!"
+  },
+  {
+   "id": "comm_0336",
+   "faction": "pirate",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV1201",
+   "text": "Alright, alright, take that contraband, just stop shooting!"
+  },
+  {
+   "id": "comm_0337",
+   "faction": "pirate",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV1201",
+   "text": "Alright, alright, take your precious freight, just stop shooting!"
+  },
+  {
+   "id": "comm_0338",
+   "faction": "pirate",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV0201",
+   "text": "Alright, alright, take your manifest, just stop shooting!"
+  },
+  {
+   "id": "comm_0339",
+   "faction": "pirate",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV1201",
+   "text": "Okay okay, you win! I'm jettisoning the loot!"
+  },
+  {
+   "id": "comm_0340",
+   "faction": "pirate",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV0201",
+   "text": "Not like this! Lynch promised me an easy mark!"
+  },
+  {
+   "id": "comm_0341",
+   "faction": "pirate",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV0201",
+   "text": "Not like this! command promised me an easy mark!"
+  },
+  {
+   "id": "comm_0342",
+   "faction": "pirate",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV1501",
+   "text": "Not like this! the guild promised me an easy mark!"
+  },
+  {
+   "id": "comm_0343",
+   "faction": "pirate",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV0201",
+   "text": "Not like this! the Admiral promised me an easy mark!"
+  },
+  {
+   "id": "comm_0344",
+   "faction": "pirate",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV0201",
+   "text": "Not like this! my employer promised me an easy mark!"
+  },
+  {
+   "id": "comm_0345",
+   "faction": "pirate",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV1501",
+   "text": "Not like this! the boss promised me an easy mark!"
+  },
+  {
+   "id": "comm_0346",
+   "faction": "pirate",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV1201",
+   "text": "Not like this! Sandoval promised me an easy mark!"
+  },
+  {
+   "id": "comm_0347",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV1201",
+   "text": "You're nailed, hotshot. Easy money."
+  },
+  {
+   "id": "comm_0348",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV1201",
+   "text": "You're nailed, sweetheart. Easy money."
+  },
+  {
+   "id": "comm_0349",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV1501",
+   "text": "You're nailed, big shot. Easy money."
+  },
+  {
+   "id": "comm_0350",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV1201",
+   "text": "You're nailed, sunshine. Easy money."
+  },
+  {
+   "id": "comm_0351",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV1201",
+   "text": "You're nailed, friend. Easy money."
+  },
+  {
+   "id": "comm_0352",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV1501",
+   "text": "You're nailed, Ace. Easy money."
+  },
+  {
+   "id": "comm_0353",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV0201",
+   "text": "You're nailed, tin can. Easy money."
+  },
+  {
+   "id": "comm_0354",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV1201",
+   "text": "You're nailed, buddy. Easy money."
+  },
+  {
+   "id": "comm_0355",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV1501",
+   "text": "You're nailed, mister. Easy money."
+  },
+  {
+   "id": "comm_0356",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV1501",
+   "text": "You're nailed, pilot. Easy money."
+  },
+  {
+   "id": "comm_0357",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV1201",
+   "text": "Should've paid the toll, mister."
+  },
+  {
+   "id": "comm_0358",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV1201",
+   "text": "Should've paid the toll, sport."
+  },
+  {
+   "id": "comm_0359",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV1501",
+   "text": "Should've paid the toll, friend."
+  },
+  {
+   "id": "comm_0360",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV1201",
+   "text": "Should've paid the toll, tin can."
+  },
+  {
+   "id": "comm_0361",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV1201",
+   "text": "Should've paid the toll, chum."
+  },
+  {
+   "id": "comm_0362",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV1201",
+   "text": "Should've paid the toll, stranger."
+  },
+  {
+   "id": "comm_0363",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV1501",
+   "text": "Should've paid the toll, rookie."
+  },
+  {
+   "id": "comm_0364",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV0201",
+   "text": "Should've paid the toll, sunshine."
+  },
+  {
+   "id": "comm_0365",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV1501",
+   "text": "Should've paid the toll, sweetheart."
+  },
+  {
+   "id": "comm_0366",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV1501",
+   "text": "Should've paid the toll, flyboy."
+  },
+  {
+   "id": "comm_0367",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV1201",
+   "text": "Another fool who couldn't fly. Hah!"
+  },
+  {
+   "id": "comm_0368",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV0201",
+   "text": "Ha! the boss'll pay extra for that that scrap heap of yours."
+  },
+  {
+   "id": "comm_0369",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV1501",
+   "text": "Ha! the Admiral'll pay extra for that that crate of yours."
+  },
+  {
+   "id": "comm_0370",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV1501",
+   "text": "Ha! the boss'll pay extra for that that crate of yours."
+  },
+  {
+   "id": "comm_0371",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV1201",
+   "text": "Ha! Sandoval'll pay extra for that that scrap heap of yours."
+  },
+  {
+   "id": "comm_0372",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV1201",
+   "text": "Ha! Sandoval'll pay extra for that your bucket of yours."
+  },
+  {
+   "id": "comm_0373",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV1201",
+   "text": "Ha! my employer'll pay extra for that your pretty little ship of yours."
+  },
+  {
+   "id": "comm_0374",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV1501",
+   "text": "Ha! my employer'll pay extra for that that scrap heap of yours."
+  },
+  {
+   "id": "comm_0375",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV1201",
+   "text": "Ha! my employer'll pay extra for that that crate of yours."
+  },
+  {
+   "id": "comm_0376",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV1501",
+   "text": "Ha! Lynch'll pay extra for that your tin can of yours."
+  },
+  {
+   "id": "comm_0377",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV1501",
+   "text": "Ha! my employer'll pay extra for that your tin can of yours."
+  },
+  {
+   "id": "comm_0378",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV1501",
+   "text": "Sleep tight in the void, old-timer."
+  },
+  {
+   "id": "comm_0379",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV1201",
+   "text": "Sleep tight in the void, Captain."
+  },
+  {
+   "id": "comm_0380",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV1501",
+   "text": "Sleep tight in the void, chum."
+  },
+  {
+   "id": "comm_0381",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV1201",
+   "text": "Sleep tight in the void, friend."
+  },
+  {
+   "id": "comm_0382",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV1201",
+   "text": "Sleep tight in the void, pilot."
+  },
+  {
+   "id": "comm_0383",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV1201",
+   "text": "Sleep tight in the void, sport."
+  },
+  {
+   "id": "comm_0384",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV0201",
+   "text": "Sleep tight in the void, mister."
+  },
+  {
+   "id": "comm_0385",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV0201",
+   "text": "Sleep tight in the void, flyboy."
+  },
+  {
+   "id": "comm_0386",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV0201",
+   "text": "Sleep tight in the void, sunshine."
+  },
+  {
+   "id": "comm_0387",
+   "faction": "pirate",
+   "category": "kill",
+   "voice_id": "PrivFlightV1501",
+   "text": "Sleep tight in the void, Ace."
+  },
+  {
+   "id": "comm_0388",
+   "faction": "pirate",
+   "category": "demand",
+   "voice_id": "PrivFlightV0201",
+   "text": "Jettison your cargo now and maybe you live."
+  },
+  {
+   "id": "comm_0389",
+   "faction": "pirate",
+   "category": "demand",
+   "voice_id": "PrivFlightV0201",
+   "text": "Jettison your hold now and maybe you live."
+  },
+  {
+   "id": "comm_0390",
+   "faction": "pirate",
+   "category": "demand",
+   "voice_id": "PrivFlightV1501",
+   "text": "Jettison that hot merchandise now and maybe you live."
+  },
+  {
+   "id": "comm_0391",
+   "faction": "pirate",
+   "category": "demand",
+   "voice_id": "PrivFlightV0201",
+   "text": "Jettison those crates now and maybe you live."
+  },
+  {
+   "id": "comm_0392",
+   "faction": "pirate",
+   "category": "demand",
+   "voice_id": "PrivFlightV1201",
+   "text": "Jettison those goods now and maybe you live."
+  },
+  {
+   "id": "comm_0393",
+   "faction": "pirate",
+   "category": "demand",
+   "voice_id": "PrivFlightV1201",
+   "text": "Jettison your precious freight now and maybe you live."
+  },
+  {
+   "id": "comm_0394",
+   "faction": "pirate",
+   "category": "demand",
+   "voice_id": "PrivFlightV1501",
+   "text": "Jettison your shipment now and maybe you live."
+  },
+  {
+   "id": "comm_0395",
+   "faction": "pirate",
+   "category": "demand",
+   "voice_id": "PrivFlightV1201",
+   "text": "Jettison that contraband now and maybe you live."
+  },
+  {
+   "id": "comm_0396",
+   "faction": "pirate",
+   "category": "demand",
+   "voice_id": "PrivFlightV1501",
+   "text": "Jettison your manifest now and maybe you live."
+  },
+  {
+   "id": "comm_0397",
+   "faction": "pirate",
+   "category": "demand",
+   "voice_id": "PrivFlightV0201",
+   "text": "This is a toll road, stranger. Pay up."
+  },
+  {
+   "id": "comm_0398",
+   "faction": "pirate",
+   "category": "demand",
+   "voice_id": "PrivFlightV1501",
+   "text": "This is a toll road, mister. Pay up."
+  },
+  {
+   "id": "comm_0399",
+   "faction": "pirate",
+   "category": "demand",
+   "voice_id": "PrivFlightV1501",
+   "text": "This is a toll road, sunshine. Pay up."
+  },
+  {
+   "id": "comm_0400",
+   "faction": "pirate",
+   "category": "demand",
+   "voice_id": "PrivFlightV1201",
+   "text": "This is a toll road, pilot. Pay up."
+  },
+  {
+   "id": "comm_0401",
+   "faction": "pirate",
+   "category": "demand",
+   "voice_id": "PrivFlightV0201",
+   "text": "This is a toll road, Ace. Pay up."
+  },
+  {
+   "id": "comm_0402",
+   "faction": "pirate",
+   "category": "demand",
+   "voice_id": "PrivFlightV1501",
+   "text": "This is a toll road, tin can. Pay up."
+  },
+  {
+   "id": "comm_0403",
+   "faction": "pirate",
+   "category": "demand",
+   "voice_id": "PrivFlightV1501",
+   "text": "This is a toll road, hotshot. Pay up."
+  },
+  {
+   "id": "comm_0404",
+   "faction": "pirate",
+   "category": "demand",
+   "voice_id": "PrivFlightV1501",
+   "text": "This is a toll road, friend. Pay up."
+  },
+  {
+   "id": "comm_0405",
+   "faction": "pirate",
+   "category": "demand",
+   "voice_id": "PrivFlightV0201",
+   "text": "This is a toll road, Captain. Pay up."
+  },
+  {
+   "id": "comm_0406",
+   "faction": "pirate",
+   "category": "demand",
+   "voice_id": "PrivFlightV0201",
+   "text": "This is a toll road, chum. Pay up."
+  },
+  {
+   "id": "comm_0407",
+   "faction": "pirate",
+   "category": "demand",
+   "voice_id": "PrivFlightV0201",
+   "text": "This is the Admiral's space now. Toll's everything you got."
+  },
+  {
+   "id": "comm_0408",
+   "faction": "pirate",
+   "category": "demand",
+   "voice_id": "PrivFlightV1501",
+   "text": "This is the guild's space now. Toll's everything you got."
+  },
+  {
+   "id": "comm_0409",
+   "faction": "pirate",
+   "category": "demand",
+   "voice_id": "PrivFlightV1501",
+   "text": "This is command's space now. Toll's everything you got."
+  },
+  {
+   "id": "comm_0410",
+   "faction": "pirate",
+   "category": "demand",
+   "voice_id": "PrivFlightV1501",
+   "text": "This is Lynch's space now. Toll's everything you got."
+  },
+  {
+   "id": "comm_0411",
+   "faction": "pirate",
+   "category": "demand",
+   "voice_id": "PrivFlightV1501",
+   "text": "This is the boss's space now. Toll's everything you got."
+  },
+  {
+   "id": "comm_0412",
+   "faction": "pirate",
+   "category": "demand",
+   "voice_id": "PrivFlightV1201",
+   "text": "This is my employer's space now. Toll's everything you got."
+  },
+  {
+   "id": "comm_0413",
+   "faction": "pirate",
+   "category": "demand",
+   "voice_id": "PrivFlightV0201",
+   "text": "This is Sandoval's space now. Toll's everything you got."
+  },
+  {
+   "id": "comm_0414",
+   "faction": "pirate",
+   "category": "demand",
+   "voice_id": "PrivFlightV1201",
+   "text": "Cut engines and prepare to be relieved of those goods."
+  },
+  {
+   "id": "comm_0415",
+   "faction": "pirate",
+   "category": "demand",
+   "voice_id": "PrivFlightV0201",
+   "text": "Cut engines and prepare to be relieved of your hold."
+  },
+  {
+   "id": "comm_0416",
+   "faction": "pirate",
+   "category": "demand",
+   "voice_id": "PrivFlightV1201",
+   "text": "Cut engines and prepare to be relieved of your manifest."
+  },
+  {
+   "id": "comm_0417",
+   "faction": "pirate",
+   "category": "demand",
+   "voice_id": "PrivFlightV0201",
+   "text": "Cut engines and prepare to be relieved of that hot merchandise."
+  },
+  {
+   "id": "comm_0418",
+   "faction": "pirate",
+   "category": "demand",
+   "voice_id": "PrivFlightV1201",
+   "text": "Cut engines and prepare to be relieved of your precious freight."
+  },
+  {
+   "id": "comm_0419",
+   "faction": "pirate",
+   "category": "demand",
+   "voice_id": "PrivFlightV1201",
+   "text": "Cut engines and prepare to be relieved of your shipment."
+  },
+  {
+   "id": "comm_0420",
+   "faction": "pirate",
+   "category": "demand",
+   "voice_id": "PrivFlightV0201",
+   "text": "Cut engines and prepare to be relieved of your cargo."
+  },
+  {
+   "id": "comm_0421",
+   "faction": "pirate",
+   "category": "demand",
+   "voice_id": "PrivFlightV0201",
+   "text": "Cut engines and prepare to be relieved of those crates."
+  },
+  {
+   "id": "comm_0422",
+   "faction": "pirate",
+   "category": "demand",
+   "voice_id": "PrivFlightV0201",
+   "text": "Cut engines and prepare to be relieved of that contraband."
+  },
+  {
+   "id": "comm_0423",
+   "faction": "pirate",
+   "category": "long",
+   "voice_id": "PrivFlightV1501",
+   "text": "Well now, what have we here. A fat little hauler, all alone, miles from any patrol. You know how this goes, friend. You dump your cargo, I let you limp home to tell everyone how generous my employer was. Or you can be a hero, and I sell your tin can for scrap with you still in it. Tick tock."
+  },
+  {
+   "id": "comm_0424",
+   "faction": "pirate",
+   "category": "long",
+   "voice_id": "PrivFlightV0201",
+   "text": "Well now, what have we here. A fat little hauler, all alone, miles from any patrol. You know how this goes, hotshot. You dump your cargo, I let you limp home to tell everyone how generous command was. Or you can be a hero, and I sell your tin can for scrap with you still in it. Tick tock."
+  },
+  {
+   "id": "comm_0425",
+   "faction": "pirate",
+   "category": "long",
+   "voice_id": "PrivFlightV0201",
+   "text": "You Confed types always think you're untouchable out here. But this is the frontier, hotshot. No badges, no backup, no rules. Out here the only law is who's got the bigger guns, and pal, I've been upgrading. Let's find out whose toll the void collects today."
+  },
+  {
+   "id": "comm_0426",
+   "faction": "pirate",
+   "category": "long",
+   "voice_id": "PrivFlightV1201",
+   "text": "You Confed types always think you're untouchable out here. But this is the frontier, buddy. No badges, no backup, no rules. Out here the only law is who's got the bigger guns, and pal, I've been upgrading. Let's find out whose toll the void collects today."
+  },
+  {
+   "id": "comm_0427",
+   "faction": "bounty_hunter",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1301",
+   "text": "You're on my list today, Ace. Nothing personal."
+  },
+  {
+   "id": "comm_0428",
+   "faction": "bounty_hunter",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1101",
+   "text": "You're on my list today, stranger. Nothing personal."
+  },
+  {
+   "id": "comm_0429",
+   "faction": "bounty_hunter",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1101",
+   "text": "You're on my list today, pilot. Nothing personal."
+  },
+  {
+   "id": "comm_0430",
+   "faction": "bounty_hunter",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0501",
+   "text": "You're on my list today, Captain. Nothing personal."
+  },
+  {
+   "id": "comm_0431",
+   "faction": "bounty_hunter",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1101",
+   "text": "You're on my list today, big shot. Nothing personal."
+  },
+  {
+   "id": "comm_0432",
+   "faction": "bounty_hunter",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0501",
+   "text": "You're on my list today, flyboy. Nothing personal."
+  },
+  {
+   "id": "comm_0433",
+   "faction": "bounty_hunter",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0501",
+   "text": "You're on my list today, sport. Nothing personal."
+  },
+  {
+   "id": "comm_0434",
+   "faction": "bounty_hunter",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1301",
+   "text": "You're on my list today, rookie. Nothing personal."
+  },
+  {
+   "id": "comm_0435",
+   "faction": "bounty_hunter",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1101",
+   "text": "You're on my list today, hotshot. Nothing personal."
+  },
+  {
+   "id": "comm_0436",
+   "faction": "bounty_hunter",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0501",
+   "text": "You're on my list today, sweetheart. Nothing personal."
+  },
+  {
+   "id": "comm_0437",
+   "faction": "bounty_hunter",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1301",
+   "text": "I only kill for a fee, pilot. Today the fee's on you."
+  },
+  {
+   "id": "comm_0438",
+   "faction": "bounty_hunter",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1101",
+   "text": "I only kill for a fee, flyboy. Today the fee's on you."
+  },
+  {
+   "id": "comm_0439",
+   "faction": "bounty_hunter",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1101",
+   "text": "I only kill for a fee, mister. Today the fee's on you."
+  },
+  {
+   "id": "comm_0440",
+   "faction": "bounty_hunter",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0501",
+   "text": "I only kill for a fee, sport. Today the fee's on you."
+  },
+  {
+   "id": "comm_0441",
+   "faction": "bounty_hunter",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0501",
+   "text": "I only kill for a fee, old-timer. Today the fee's on you."
+  },
+  {
+   "id": "comm_0442",
+   "faction": "bounty_hunter",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0501",
+   "text": "I only kill for a fee, stranger. Today the fee's on you."
+  },
+  {
+   "id": "comm_0443",
+   "faction": "bounty_hunter",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1301",
+   "text": "I only kill for a fee, hotshot. Today the fee's on you."
+  },
+  {
+   "id": "comm_0444",
+   "faction": "bounty_hunter",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1101",
+   "text": "I only kill for a fee, sunshine. Today the fee's on you."
+  },
+  {
+   "id": "comm_0445",
+   "faction": "bounty_hunter",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1101",
+   "text": "I only kill for a fee, buddy. Today the fee's on you."
+  },
+  {
+   "id": "comm_0446",
+   "faction": "bounty_hunter",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1301",
+   "text": "I only kill for a fee, rookie. Today the fee's on you."
+  },
+  {
+   "id": "comm_0447",
+   "faction": "bounty_hunter",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1101",
+   "text": "the guild put a price on your head, mister. I came to collect."
+  },
+  {
+   "id": "comm_0448",
+   "faction": "bounty_hunter",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1301",
+   "text": "the guild put a price on your head, big shot. I came to collect."
+  },
+  {
+   "id": "comm_0449",
+   "faction": "bounty_hunter",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1101",
+   "text": "my employer put a price on your head, big shot. I came to collect."
+  },
+  {
+   "id": "comm_0450",
+   "faction": "bounty_hunter",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0501",
+   "text": "the guild put a price on your head, stranger. I came to collect."
+  },
+  {
+   "id": "comm_0451",
+   "faction": "bounty_hunter",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0501",
+   "text": "my employer put a price on your head, rookie. I came to collect."
+  },
+  {
+   "id": "comm_0452",
+   "faction": "bounty_hunter",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1101",
+   "text": "my employer put a price on your head, sport. I came to collect."
+  },
+  {
+   "id": "comm_0453",
+   "faction": "bounty_hunter",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1101",
+   "text": "Sandoval put a price on your head, mister. I came to collect."
+  },
+  {
+   "id": "comm_0454",
+   "faction": "bounty_hunter",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1301",
+   "text": "Sandoval put a price on your head, rookie. I came to collect."
+  },
+  {
+   "id": "comm_0455",
+   "faction": "bounty_hunter",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1101",
+   "text": "Lynch put a price on your head, tin can. I came to collect."
+  },
+  {
+   "id": "comm_0456",
+   "faction": "bounty_hunter",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1101",
+   "text": "Lynch put a price on your head, Ace. I came to collect."
+  },
+  {
+   "id": "comm_0457",
+   "faction": "bounty_hunter",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1101",
+   "text": "Don't run. They always run. It's so undignified."
+  },
+  {
+   "id": "comm_0458",
+   "faction": "bounty_hunter",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1101",
+   "text": "The advantage is mine. Now you die."
+  },
+  {
+   "id": "comm_0459",
+   "faction": "bounty_hunter",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0501",
+   "text": "Nothing personal, but your death is my paycheck."
+  },
+  {
+   "id": "comm_0460",
+   "faction": "bounty_hunter",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0501",
+   "text": "Oh, this is most distasteful, I must say."
+  },
+  {
+   "id": "comm_0461",
+   "faction": "bounty_hunter",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1101",
+   "text": "Hold still, chum, this is just business."
+  },
+  {
+   "id": "comm_0462",
+   "faction": "bounty_hunter",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0501",
+   "text": "Hold still, tin can, this is just business."
+  },
+  {
+   "id": "comm_0463",
+   "faction": "bounty_hunter",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1101",
+   "text": "Hold still, Ace, this is just business."
+  },
+  {
+   "id": "comm_0464",
+   "faction": "bounty_hunter",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1301",
+   "text": "Hold still, big shot, this is just business."
+  },
+  {
+   "id": "comm_0465",
+   "faction": "bounty_hunter",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1101",
+   "text": "Hold still, sweetheart, this is just business."
+  },
+  {
+   "id": "comm_0466",
+   "faction": "bounty_hunter",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0501",
+   "text": "Hold still, stranger, this is just business."
+  },
+  {
+   "id": "comm_0467",
+   "faction": "bounty_hunter",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1301",
+   "text": "Hold still, mister, this is just business."
+  },
+  {
+   "id": "comm_0468",
+   "faction": "bounty_hunter",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0501",
+   "text": "Hold still, hotshot, this is just business."
+  },
+  {
+   "id": "comm_0469",
+   "faction": "bounty_hunter",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1101",
+   "text": "Hold still, flyboy, this is just business."
+  },
+  {
+   "id": "comm_0470",
+   "faction": "bounty_hunter",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1101",
+   "text": "Hold still, sunshine, this is just business."
+  },
+  {
+   "id": "comm_0471",
+   "faction": "bounty_hunter",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1301",
+   "text": "Your bounty just covered my fuel for a year."
+  },
+  {
+   "id": "comm_0472",
+   "faction": "bounty_hunter",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV1301",
+   "text": "This wasn't in the contract!"
+  },
+  {
+   "id": "comm_0473",
+   "faction": "bounty_hunter",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV1101",
+   "text": "No! It can't end like this!"
+  },
+  {
+   "id": "comm_0474",
+   "faction": "bounty_hunter",
+   "category": "kill",
+   "voice_id": "PrivFlightV1301",
+   "text": "Another day, another kill. One more for the resume."
+  },
+  {
+   "id": "comm_0475",
+   "faction": "bounty_hunter",
+   "category": "kill",
+   "voice_id": "PrivFlightV0501",
+   "text": "Clean shot. The guild pays well for you, stranger."
+  },
+  {
+   "id": "comm_0476",
+   "faction": "bounty_hunter",
+   "category": "kill",
+   "voice_id": "PrivFlightV1101",
+   "text": "Clean shot. The guild pays well for you, flyboy."
+  },
+  {
+   "id": "comm_0477",
+   "faction": "bounty_hunter",
+   "category": "kill",
+   "voice_id": "PrivFlightV0501",
+   "text": "Clean shot. The guild pays well for you, mister."
+  },
+  {
+   "id": "comm_0478",
+   "faction": "bounty_hunter",
+   "category": "kill",
+   "voice_id": "PrivFlightV1301",
+   "text": "Clean shot. The guild pays well for you, big shot."
+  },
+  {
+   "id": "comm_0479",
+   "faction": "bounty_hunter",
+   "category": "kill",
+   "voice_id": "PrivFlightV1301",
+   "text": "Clean shot. The guild pays well for you, sunshine."
+  },
+  {
+   "id": "comm_0480",
+   "faction": "bounty_hunter",
+   "category": "kill",
+   "voice_id": "PrivFlightV1301",
+   "text": "Clean shot. The guild pays well for you, old-timer."
+  },
+  {
+   "id": "comm_0481",
+   "faction": "bounty_hunter",
+   "category": "kill",
+   "voice_id": "PrivFlightV1101",
+   "text": "Clean shot. The guild pays well for you, chum."
+  },
+  {
+   "id": "comm_0482",
+   "faction": "bounty_hunter",
+   "category": "kill",
+   "voice_id": "PrivFlightV1301",
+   "text": "Clean shot. The guild pays well for you, pilot."
+  },
+  {
+   "id": "comm_0483",
+   "faction": "bounty_hunter",
+   "category": "kill",
+   "voice_id": "PrivFlightV1301",
+   "text": "Clean shot. The guild pays well for you, sweetheart."
+  },
+  {
+   "id": "comm_0484",
+   "faction": "bounty_hunter",
+   "category": "kill",
+   "voice_id": "PrivFlightV0501",
+   "text": "Clean shot. The guild pays well for you, rookie."
+  },
+  {
+   "id": "comm_0485",
+   "faction": "bounty_hunter",
+   "category": "kill",
+   "voice_id": "PrivFlightV1301",
+   "text": "Killing you put me in the black, sweetheart."
+  },
+  {
+   "id": "comm_0486",
+   "faction": "bounty_hunter",
+   "category": "kill",
+   "voice_id": "PrivFlightV0501",
+   "text": "Killing you put me in the black, Ace."
+  },
+  {
+   "id": "comm_0487",
+   "faction": "bounty_hunter",
+   "category": "kill",
+   "voice_id": "PrivFlightV1101",
+   "text": "Killing you put me in the black, stranger."
+  },
+  {
+   "id": "comm_0488",
+   "faction": "bounty_hunter",
+   "category": "kill",
+   "voice_id": "PrivFlightV1101",
+   "text": "Killing you put me in the black, big shot."
+  },
+  {
+   "id": "comm_0489",
+   "faction": "bounty_hunter",
+   "category": "kill",
+   "voice_id": "PrivFlightV1101",
+   "text": "Killing you put me in the black, sport."
+  },
+  {
+   "id": "comm_0490",
+   "faction": "bounty_hunter",
+   "category": "kill",
+   "voice_id": "PrivFlightV1301",
+   "text": "Killing you put me in the black, flyboy."
+  },
+  {
+   "id": "comm_0491",
+   "faction": "bounty_hunter",
+   "category": "kill",
+   "voice_id": "PrivFlightV1301",
+   "text": "Killing you put me in the black, mister."
+  },
+  {
+   "id": "comm_0492",
+   "faction": "bounty_hunter",
+   "category": "kill",
+   "voice_id": "PrivFlightV1101",
+   "text": "Killing you put me in the black, chum."
+  },
+  {
+   "id": "comm_0493",
+   "faction": "bounty_hunter",
+   "category": "kill",
+   "voice_id": "PrivFlightV1301",
+   "text": "Killing you put me in the black, tin can."
+  },
+  {
+   "id": "comm_0494",
+   "faction": "bounty_hunter",
+   "category": "kill",
+   "voice_id": "PrivFlightV1301",
+   "text": "Killing you put me in the black, friend."
+  },
+  {
+   "id": "comm_0495",
+   "faction": "bounty_hunter",
+   "category": "kill",
+   "voice_id": "PrivFlightV1101",
+   "text": "Contract fulfilled. the Admiral will be pleased."
+  },
+  {
+   "id": "comm_0496",
+   "faction": "bounty_hunter",
+   "category": "kill",
+   "voice_id": "PrivFlightV1101",
+   "text": "Contract fulfilled. the guild will be pleased."
+  },
+  {
+   "id": "comm_0497",
+   "faction": "bounty_hunter",
+   "category": "kill",
+   "voice_id": "PrivFlightV0501",
+   "text": "Contract fulfilled. Sandoval will be pleased."
+  },
+  {
+   "id": "comm_0498",
+   "faction": "bounty_hunter",
+   "category": "kill",
+   "voice_id": "PrivFlightV1301",
+   "text": "Contract fulfilled. my employer will be pleased."
+  },
+  {
+   "id": "comm_0499",
+   "faction": "bounty_hunter",
+   "category": "kill",
+   "voice_id": "PrivFlightV0501",
+   "text": "Contract fulfilled. Lynch will be pleased."
+  },
+  {
+   "id": "comm_0500",
+   "faction": "bounty_hunter",
+   "category": "kill",
+   "voice_id": "PrivFlightV1101",
+   "text": "Contract fulfilled. the boss will be pleased."
+  },
+  {
+   "id": "comm_0501",
+   "faction": "bounty_hunter",
+   "category": "kill",
+   "voice_id": "PrivFlightV1301",
+   "text": "Contract fulfilled. command will be pleased."
+  },
+  {
+   "id": "comm_0502",
+   "faction": "bounty_hunter",
+   "category": "kill",
+   "voice_id": "PrivFlightV1101",
+   "text": "Tag and bag. Another name off the board."
+  },
+  {
+   "id": "comm_0503",
+   "faction": "bounty_hunter",
+   "category": "long",
+   "voice_id": "PrivFlightV1301",
+   "text": "You want to know the secret, sport? It's not about the killing. Any fool with a gun can kill. It's about the patience. I've tracked you across four systems, learned your jump patterns, your fuel stops, your habits. By the time you saw me, it was already over. Nothing personal. It never is. It's just the only thing I'm good at."
+  },
+  {
+   "id": "comm_0504",
+   "faction": "bounty_hunter",
+   "category": "long",
+   "voice_id": "PrivFlightV1301",
+   "text": "You want to know the secret, stranger? It's not about the killing. Any fool with a gun can kill. It's about the patience. I've tracked you across four systems, learned your jump patterns, your fuel stops, your habits. By the time you saw me, it was already over. Nothing personal. It never is. It's just the only thing I'm good at."
+  },
+  {
+   "id": "comm_0505",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "Confederation patrol. State your business in Pleiades."
+  },
+  {
+   "id": "comm_0506",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "Confederation patrol. State your business in the Humboldt quad."
+  },
+  {
+   "id": "comm_0507",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "Confederation patrol. State your business in this quadrant."
+  },
+  {
+   "id": "comm_0508",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "Confederation patrol. State your business in the New Detroit run."
+  },
+  {
+   "id": "comm_0509",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "Confederation patrol. State your business in this dead end of space."
+  },
+  {
+   "id": "comm_0510",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "Confederation patrol. State your business in my quad."
+  },
+  {
+   "id": "comm_0511",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "Confederation patrol. State your business in these lanes."
+  },
+  {
+   "id": "comm_0512",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "Confederation patrol. State your business in the Palan blockade."
+  },
+  {
+   "id": "comm_0513",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "Confederation patrol. State your business in the asteroid fields."
+  },
+  {
+   "id": "comm_0514",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "Confederation patrol. State your business in the Troy system."
+  },
+  {
+   "id": "comm_0515",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "We have you on our screens, mister. Continue on course."
+  },
+  {
+   "id": "comm_0516",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "We have you on our screens, stranger. Continue on course."
+  },
+  {
+   "id": "comm_0517",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "We have you on our screens, rookie. Continue on course."
+  },
+  {
+   "id": "comm_0518",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "We have you on our screens, big shot. Continue on course."
+  },
+  {
+   "id": "comm_0519",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "We have you on our screens, Ace. Continue on course."
+  },
+  {
+   "id": "comm_0520",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "We have you on our screens, old-timer. Continue on course."
+  },
+  {
+   "id": "comm_0521",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "We have you on our screens, chum. Continue on course."
+  },
+  {
+   "id": "comm_0522",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "We have you on our screens, friend. Continue on course."
+  },
+  {
+   "id": "comm_0523",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "We have you on our screens, flyboy. Continue on course."
+  },
+  {
+   "id": "comm_0524",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "We have you on our screens, sweetheart. Continue on course."
+  },
+  {
+   "id": "comm_0525",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "This is a Confederation checkpoint, old-timer. Slow and steady."
+  },
+  {
+   "id": "comm_0526",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "This is a Confederation checkpoint, flyboy. Slow and steady."
+  },
+  {
+   "id": "comm_0527",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "This is a Confederation checkpoint, big shot. Slow and steady."
+  },
+  {
+   "id": "comm_0528",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "This is a Confederation checkpoint, sport. Slow and steady."
+  },
+  {
+   "id": "comm_0529",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "This is a Confederation checkpoint, friend. Slow and steady."
+  },
+  {
+   "id": "comm_0530",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "This is a Confederation checkpoint, sweetheart. Slow and steady."
+  },
+  {
+   "id": "comm_0531",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "This is a Confederation checkpoint, chum. Slow and steady."
+  },
+  {
+   "id": "comm_0532",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "This is a Confederation checkpoint, Captain. Slow and steady."
+  },
+  {
+   "id": "comm_0533",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "This is a Confederation checkpoint, Ace. Slow and steady."
+  },
+  {
+   "id": "comm_0534",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "This is a Confederation checkpoint, tin can. Slow and steady."
+  },
+  {
+   "id": "comm_0535",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "Your file's clean, Captain. Move along."
+  },
+  {
+   "id": "comm_0536",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "Your file's clean, sunshine. Move along."
+  },
+  {
+   "id": "comm_0537",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "Your file's clean, old-timer. Move along."
+  },
+  {
+   "id": "comm_0538",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "Your file's clean, sweetheart. Move along."
+  },
+  {
+   "id": "comm_0539",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "Your file's clean, Ace. Move along."
+  },
+  {
+   "id": "comm_0540",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "Your file's clean, sport. Move along."
+  },
+  {
+   "id": "comm_0541",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "Your file's clean, flyboy. Move along."
+  },
+  {
+   "id": "comm_0542",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "Your file's clean, rookie. Move along."
+  },
+  {
+   "id": "comm_0543",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "Your file's clean, friend. Move along."
+  },
+  {
+   "id": "comm_0544",
+   "faction": "confed",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0801",
+   "text": "Your file's clean, stranger. Move along."
+  },
+  {
+   "id": "comm_0545",
+   "faction": "confed",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0801",
+   "text": "You've got quite a record, pilot, but it ends here."
+  },
+  {
+   "id": "comm_0546",
+   "faction": "confed",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0801",
+   "text": "You've got quite a record, rookie, but it ends here."
+  },
+  {
+   "id": "comm_0547",
+   "faction": "confed",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0801",
+   "text": "You've got quite a record, flyboy, but it ends here."
+  },
+  {
+   "id": "comm_0548",
+   "faction": "confed",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0801",
+   "text": "You've got quite a record, buddy, but it ends here."
+  },
+  {
+   "id": "comm_0549",
+   "faction": "confed",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0801",
+   "text": "You've got quite a record, Captain, but it ends here."
+  },
+  {
+   "id": "comm_0550",
+   "faction": "confed",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0801",
+   "text": "You've got quite a record, sport, but it ends here."
+  },
+  {
+   "id": "comm_0551",
+   "faction": "confed",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0801",
+   "text": "You've got quite a record, old-timer, but it ends here."
+  },
+  {
+   "id": "comm_0552",
+   "faction": "confed",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0801",
+   "text": "You've got quite a record, big shot, but it ends here."
+  },
+  {
+   "id": "comm_0553",
+   "faction": "confed",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0801",
+   "text": "You've got quite a record, friend, but it ends here."
+  },
+  {
+   "id": "comm_0554",
+   "faction": "confed",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0801",
+   "text": "You've got quite a record, mister, but it ends here."
+  },
+  {
+   "id": "comm_0555",
+   "faction": "confed",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0801",
+   "text": "We've accessed your file, pirate. You're done."
+  },
+  {
+   "id": "comm_0556",
+   "faction": "confed",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0801",
+   "text": "Halt and surrender, by order of the Confederation."
+  },
+  {
+   "id": "comm_0557",
+   "faction": "confed",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0801",
+   "text": "Last warning, buddy. Stand down or be destroyed."
+  },
+  {
+   "id": "comm_0558",
+   "faction": "confed",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0801",
+   "text": "Last warning, hotshot. Stand down or be destroyed."
+  },
+  {
+   "id": "comm_0559",
+   "faction": "confed",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0801",
+   "text": "Last warning, tin can. Stand down or be destroyed."
+  },
+  {
+   "id": "comm_0560",
+   "faction": "confed",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0801",
+   "text": "Last warning, Ace. Stand down or be destroyed."
+  },
+  {
+   "id": "comm_0561",
+   "faction": "confed",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0801",
+   "text": "Last warning, stranger. Stand down or be destroyed."
+  },
+  {
+   "id": "comm_0562",
+   "faction": "confed",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0801",
+   "text": "Last warning, mister. Stand down or be destroyed."
+  },
+  {
+   "id": "comm_0563",
+   "faction": "confed",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0801",
+   "text": "Last warning, pilot. Stand down or be destroyed."
+  },
+  {
+   "id": "comm_0564",
+   "faction": "confed",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0801",
+   "text": "Last warning, sport. Stand down or be destroyed."
+  },
+  {
+   "id": "comm_0565",
+   "faction": "confed",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0801",
+   "text": "Last warning, old-timer. Stand down or be destroyed."
+  },
+  {
+   "id": "comm_0566",
+   "faction": "confed",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0801",
+   "text": "Last warning, sunshine. Stand down or be destroyed."
+  },
+  {
+   "id": "comm_0567",
+   "faction": "confed",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0801",
+   "text": "You're a wanted criminal in Confed space. Surrender now."
+  },
+  {
+   "id": "comm_0568",
+   "faction": "confed",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0801",
+   "text": "You're a wanted criminal in the asteroid fields. Surrender now."
+  },
+  {
+   "id": "comm_0569",
+   "faction": "confed",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0801",
+   "text": "You're a wanted criminal in this dead end of space. Surrender now."
+  },
+  {
+   "id": "comm_0570",
+   "faction": "confed",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0801",
+   "text": "You're a wanted criminal in the New Detroit run. Surrender now."
+  },
+  {
+   "id": "comm_0571",
+   "faction": "confed",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0801",
+   "text": "You're a wanted criminal in this sector. Surrender now."
+  },
+  {
+   "id": "comm_0572",
+   "faction": "confed",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0801",
+   "text": "You're a wanted criminal in this quadrant. Surrender now."
+  },
+  {
+   "id": "comm_0573",
+   "faction": "confed",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0801",
+   "text": "You're a wanted criminal in the Troy system. Surrender now."
+  },
+  {
+   "id": "comm_0574",
+   "faction": "confed",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0801",
+   "text": "You're a wanted criminal in the Humboldt quad. Surrender now."
+  },
+  {
+   "id": "comm_0575",
+   "faction": "confed",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0801",
+   "text": "You're a wanted criminal in the Oxford run. Surrender now."
+  },
+  {
+   "id": "comm_0576",
+   "faction": "confed",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0801",
+   "text": "You're a wanted criminal in Pleiades. Surrender now."
+  },
+  {
+   "id": "comm_0577",
+   "faction": "confed",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV0801",
+   "text": "Mayday, we've sustained massive damage!"
+  },
+  {
+   "id": "comm_0578",
+   "faction": "confed",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV0801",
+   "text": "Confed wing breaking up, need backup now!"
+  },
+  {
+   "id": "comm_0579",
+   "faction": "confed",
+   "category": "kill",
+   "voice_id": "PrivFlightV0801",
+   "text": "One bogey terminated. Enemy target destroyed."
+  },
+  {
+   "id": "comm_0580",
+   "faction": "confed",
+   "category": "kill",
+   "voice_id": "PrivFlightV0801",
+   "text": "Criminal scum, neutralized. Confed out."
+  },
+  {
+   "id": "comm_0581",
+   "faction": "confed",
+   "category": "kill",
+   "voice_id": "PrivFlightV0801",
+   "text": "Fugitive neutralized. Logging the kill, the Humboldt quad, Confed out."
+  },
+  {
+   "id": "comm_0582",
+   "faction": "confed",
+   "category": "kill",
+   "voice_id": "PrivFlightV0801",
+   "text": "Fugitive neutralized. Logging the kill, my quad, Confed out."
+  },
+  {
+   "id": "comm_0583",
+   "faction": "confed",
+   "category": "kill",
+   "voice_id": "PrivFlightV0801",
+   "text": "Fugitive neutralized. Logging the kill, this dead end of space, Confed out."
+  },
+  {
+   "id": "comm_0584",
+   "faction": "confed",
+   "category": "kill",
+   "voice_id": "PrivFlightV0801",
+   "text": "Fugitive neutralized. Logging the kill, these lanes, Confed out."
+  },
+  {
+   "id": "comm_0585",
+   "faction": "confed",
+   "category": "kill",
+   "voice_id": "PrivFlightV0801",
+   "text": "Fugitive neutralized. Logging the kill, this quadrant, Confed out."
+  },
+  {
+   "id": "comm_0586",
+   "faction": "confed",
+   "category": "kill",
+   "voice_id": "PrivFlightV0801",
+   "text": "Fugitive neutralized. Logging the kill, the Palan blockade, Confed out."
+  },
+  {
+   "id": "comm_0587",
+   "faction": "confed",
+   "category": "kill",
+   "voice_id": "PrivFlightV0801",
+   "text": "Fugitive neutralized. Logging the kill, the Troy system, Confed out."
+  },
+  {
+   "id": "comm_0588",
+   "faction": "confed",
+   "category": "kill",
+   "voice_id": "PrivFlightV0801",
+   "text": "Fugitive neutralized. Logging the kill, Confed space, Confed out."
+  },
+  {
+   "id": "comm_0589",
+   "faction": "confed",
+   "category": "kill",
+   "voice_id": "PrivFlightV0801",
+   "text": "Fugitive neutralized. Logging the kill, the Oxford run, Confed out."
+  },
+  {
+   "id": "comm_0590",
+   "faction": "confed",
+   "category": "kill",
+   "voice_id": "PrivFlightV0801",
+   "text": "Fugitive neutralized. Logging the kill, this sector, Confed out."
+  },
+  {
+   "id": "comm_0591",
+   "faction": "confed",
+   "category": "demand",
+   "voice_id": "PrivFlightV0801",
+   "text": "Prepare to be searched for contraband, big shot."
+  },
+  {
+   "id": "comm_0592",
+   "faction": "confed",
+   "category": "demand",
+   "voice_id": "PrivFlightV0801",
+   "text": "Prepare to be searched for contraband, chum."
+  },
+  {
+   "id": "comm_0593",
+   "faction": "confed",
+   "category": "demand",
+   "voice_id": "PrivFlightV0801",
+   "text": "Prepare to be searched for contraband, sunshine."
+  },
+  {
+   "id": "comm_0594",
+   "faction": "confed",
+   "category": "demand",
+   "voice_id": "PrivFlightV0801",
+   "text": "Prepare to be searched for contraband, sport."
+  },
+  {
+   "id": "comm_0595",
+   "faction": "confed",
+   "category": "demand",
+   "voice_id": "PrivFlightV0801",
+   "text": "Prepare to be searched for contraband, old-timer."
+  },
+  {
+   "id": "comm_0596",
+   "faction": "confed",
+   "category": "demand",
+   "voice_id": "PrivFlightV0801",
+   "text": "Prepare to be searched for contraband, buddy."
+  },
+  {
+   "id": "comm_0597",
+   "faction": "confed",
+   "category": "demand",
+   "voice_id": "PrivFlightV0801",
+   "text": "Prepare to be searched for contraband, Captain."
+  },
+  {
+   "id": "comm_0598",
+   "faction": "confed",
+   "category": "demand",
+   "voice_id": "PrivFlightV0801",
+   "text": "Prepare to be searched for contraband, tin can."
+  },
+  {
+   "id": "comm_0599",
+   "faction": "confed",
+   "category": "demand",
+   "voice_id": "PrivFlightV0801",
+   "text": "Prepare to be searched for contraband, mister."
+  },
+  {
+   "id": "comm_0600",
+   "faction": "confed",
+   "category": "demand",
+   "voice_id": "PrivFlightV0801",
+   "text": "Prepare to be searched for contraband, rookie."
+  },
+  {
+   "id": "comm_0601",
+   "faction": "confed",
+   "category": "demand",
+   "voice_id": "PrivFlightV0801",
+   "text": "Cut your engines. This is a Confederation stop."
+  },
+  {
+   "id": "comm_0602",
+   "faction": "confed",
+   "category": "demand",
+   "voice_id": "PrivFlightV0801",
+   "text": "Heave to and prepare for a Confederation contraband sweep."
+  },
+  {
+   "id": "comm_0603",
+   "faction": "confed",
+   "category": "long",
+   "voice_id": "PrivFlightV0801",
+   "text": "This is Admiral's wing, all units, listen close. The target jumps in at these coordinates in under a minute. We hit it hard and fast the moment it arrives, no hesitation. Hold your positions until then, keep formation tight, and watch your fire. Any privateers in the area, feel free to join in. There's bounty enough to share."
+  },
+  {
+   "id": "comm_0604",
+   "faction": "kilrathi",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0901",
+   "text": "My claws are sheathed today, apeling. Pass."
+  },
+  {
+   "id": "comm_0605",
+   "faction": "kilrathi",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0901",
+   "text": "You amuse me, hairless one. For now."
+  },
+  {
+   "id": "comm_0606",
+   "faction": "kilrathi",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0901",
+   "text": "Today I do not hunger, ape. Be gone before that changes."
+  },
+  {
+   "id": "comm_0607",
+   "faction": "kilrathi",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0901",
+   "text": "Your pelt will adorn my hall, ape!"
+  },
+  {
+   "id": "comm_0608",
+   "faction": "kilrathi",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0901",
+   "text": "Crawl back to your dirtball, human filth!"
+  },
+  {
+   "id": "comm_0609",
+   "faction": "kilrathi",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0901",
+   "text": "I will savor the snapping of your bones."
+  },
+  {
+   "id": "comm_0610",
+   "faction": "kilrathi",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0901",
+   "text": "You stink of fear, ape. It excites me."
+  },
+  {
+   "id": "comm_0611",
+   "faction": "kilrathi",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0901",
+   "text": "Run, little human. It makes the kill sweeter."
+  },
+  {
+   "id": "comm_0612",
+   "faction": "kilrathi",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0901",
+   "text": "Your ancestors fled us. You will only die tired."
+  },
+  {
+   "id": "comm_0613",
+   "faction": "kilrathi",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV0901",
+   "text": "The hunt turns! This cannot be!"
+  },
+  {
+   "id": "comm_0614",
+   "faction": "kilrathi",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV0901",
+   "text": "My ship bleeds! Curse you, ape!"
+  },
+  {
+   "id": "comm_0615",
+   "faction": "kilrathi",
+   "category": "kill",
+   "voice_id": "PrivFlightV0901",
+   "text": "Your bones are mine to mount."
+  },
+  {
+   "id": "comm_0616",
+   "faction": "kilrathi",
+   "category": "kill",
+   "voice_id": "PrivFlightV0901",
+   "text": "Another ape returns to the void. Hrrr."
+  },
+  {
+   "id": "comm_0617",
+   "faction": "kilrathi",
+   "category": "kill",
+   "voice_id": "PrivFlightV0901",
+   "text": "Hrraaa! A worthy pelt for my wall."
+  },
+  {
+   "id": "comm_0618",
+   "faction": "kilrathi",
+   "category": "long",
+   "voice_id": "PrivFlightV0901",
+   "text": "You fly well, ape. For a hairless thing born in the mud, you have surprised me. So I will grant you the honor my kind reserves for worthy prey. I will tell of this hunt in my hall, and your name, if you have one, will be spoken with something near respect. Now. Let us finish this as warriors. Claws out."
+  },
+  {
+   "id": "comm_0619",
+   "faction": "retro",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0401",
+   "text": "Repent, sinner, the Church of Man watches my quad."
+  },
+  {
+   "id": "comm_0620",
+   "faction": "retro",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0401",
+   "text": "Repent, sinner, the Church of Man watches the Palan blockade."
+  },
+  {
+   "id": "comm_0621",
+   "faction": "retro",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0401",
+   "text": "Repent, sinner, the Church of Man watches the Troy system."
+  },
+  {
+   "id": "comm_0622",
+   "faction": "retro",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0401",
+   "text": "Repent, sinner, the Church of Man watches these lanes."
+  },
+  {
+   "id": "comm_0623",
+   "faction": "retro",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0401",
+   "text": "Repent, sinner, the Church of Man watches this quadrant."
+  },
+  {
+   "id": "comm_0624",
+   "faction": "retro",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0401",
+   "text": "Repent, sinner, the Church of Man watches Pleiades."
+  },
+  {
+   "id": "comm_0625",
+   "faction": "retro",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0401",
+   "text": "Repent, sinner, the Church of Man watches Confed space."
+  },
+  {
+   "id": "comm_0626",
+   "faction": "retro",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0401",
+   "text": "Repent, sinner, the Church of Man watches the asteroid fields."
+  },
+  {
+   "id": "comm_0627",
+   "faction": "retro",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0401",
+   "text": "Repent, sinner, the Church of Man watches the New Detroit run."
+  },
+  {
+   "id": "comm_0628",
+   "faction": "retro",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0401",
+   "text": "Repent, sinner, the Church of Man watches this sector."
+  },
+  {
+   "id": "comm_0629",
+   "faction": "retro",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0401",
+   "text": "Cast off your machines and be saved."
+  },
+  {
+   "id": "comm_0630",
+   "faction": "retro",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0401",
+   "text": "Turn from your wicked circuitry, chum, and live."
+  },
+  {
+   "id": "comm_0631",
+   "faction": "retro",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0401",
+   "text": "Turn from your wicked circuitry, sunshine, and live."
+  },
+  {
+   "id": "comm_0632",
+   "faction": "retro",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0401",
+   "text": "Turn from your wicked circuitry, Ace, and live."
+  },
+  {
+   "id": "comm_0633",
+   "faction": "retro",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0401",
+   "text": "Turn from your wicked circuitry, buddy, and live."
+  },
+  {
+   "id": "comm_0634",
+   "faction": "retro",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0401",
+   "text": "Turn from your wicked circuitry, rookie, and live."
+  },
+  {
+   "id": "comm_0635",
+   "faction": "retro",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0401",
+   "text": "Turn from your wicked circuitry, sweetheart, and live."
+  },
+  {
+   "id": "comm_0636",
+   "faction": "retro",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0401",
+   "text": "Turn from your wicked circuitry, mister, and live."
+  },
+  {
+   "id": "comm_0637",
+   "faction": "retro",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0401",
+   "text": "Turn from your wicked circuitry, pilot, and live."
+  },
+  {
+   "id": "comm_0638",
+   "faction": "retro",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0401",
+   "text": "Turn from your wicked circuitry, big shot, and live."
+  },
+  {
+   "id": "comm_0639",
+   "faction": "retro",
+   "category": "greeting",
+   "voice_id": "PrivFlightV0401",
+   "text": "Turn from your wicked circuitry, stranger, and live."
+  },
+  {
+   "id": "comm_0640",
+   "faction": "retro",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0401",
+   "text": "Die by the very weapons you adore!"
+  },
+  {
+   "id": "comm_0641",
+   "faction": "retro",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0401",
+   "text": "Your destruction is the will of God!"
+  },
+  {
+   "id": "comm_0642",
+   "faction": "retro",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0401",
+   "text": "Sinner, ready thyself for righteous retribution!"
+  },
+  {
+   "id": "comm_0643",
+   "faction": "retro",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0401",
+   "text": "Your engines are blasphemy! I will silence them!"
+  },
+  {
+   "id": "comm_0644",
+   "faction": "retro",
+   "category": "hostile",
+   "voice_id": "PrivFlightV0401",
+   "text": "The machine-spirit in you must be purged, heathen!"
+  },
+  {
+   "id": "comm_0645",
+   "faction": "retro",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV0401",
+   "text": "The Lord tests me! I shall not yield!"
+  },
+  {
+   "id": "comm_0646",
+   "faction": "retro",
+   "category": "low_hp",
+   "voice_id": "PrivFlightV0401",
+   "text": "Machines of damnable intent, you wound me!"
+  },
+  {
+   "id": "comm_0647",
+   "faction": "retro",
+   "category": "kill",
+   "voice_id": "PrivFlightV0401",
+   "text": "The purifying fire takes another heathen!"
+  },
+  {
+   "id": "comm_0648",
+   "faction": "retro",
+   "category": "kill",
+   "voice_id": "PrivFlightV0401",
+   "text": "The Church of Man condemns you. Burn."
+  },
+  {
+   "id": "comm_0649",
+   "faction": "retro",
+   "category": "kill",
+   "voice_id": "PrivFlightV0401",
+   "text": "Cleansed. The Church of Man rejoices."
+  },
+  {
+   "id": "comm_0650",
+   "faction": "retro",
+   "category": "long",
+   "voice_id": "PrivFlightV0401",
+   "text": "Sinner! Look upon your works and despair! You wrap yourself in metal and circuitry, you trust your soul to soulless machines, and you call it progress. It is rot. It is the great lie that doomed the old world. But the Church of Man offers you one mercy: repent, cast out your devices, and embrace a clean death. Refuse, and the purifying fire shall do for you what you would not do for yourself."
+  },
+  {
+   "id": "comm_0651",
+   "faction": "steltek",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1001",
+   "text": "We are the guardians. Your kind is... noted."
+  },
+  {
+   "id": "comm_0652",
+   "faction": "steltek",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1001",
+   "text": "Lifeform detected. Intent: unknown."
+  },
+  {
+   "id": "comm_0653",
+   "faction": "steltek",
+   "category": "greeting",
+   "voice_id": "PrivFlightV1001",
+   "text": "We have watched your kind crawl from the mud. Curious."
+  },
+  {
+   "id": "comm_0654",
+   "faction": "steltek",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1001",
+   "text": "You will surrender the relic, primitive."
+  },
+  {
+   "id": "comm_0655",
+   "faction": "steltek",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1001",
+   "text": "Your weapons are dust against us."
+  },
+  {
+   "id": "comm_0656",
+   "faction": "steltek",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1001",
+   "text": "Your tools are crude. Your end is certain."
+  },
+  {
+   "id": "comm_0657",
+   "faction": "steltek",
+   "category": "hostile",
+   "voice_id": "PrivFlightV1001",
+   "text": "You touch what is not yours, fledgling species."
+  },
+  {
+   "id": "comm_0658",
+   "faction": "steltek",
+   "category": "kill",
+   "voice_id": "PrivFlightV1001",
+   "text": "Threat neutralized. We endure."
+  },
+  {
+   "id": "comm_0659",
+   "faction": "steltek",
+   "category": "kill",
+   "voice_id": "PrivFlightV1001",
+   "text": "You were nothing. We remain."
+  },
+  {
+   "id": "comm_0660",
+   "faction": "steltek",
+   "category": "long",
+   "voice_id": "PrivFlightV1001",
+   "text": "Lifeform. You carry a relic of the makers, a fragment of a power your kind cannot comprehend and must not wield. We were left to watch. To wait. To ensure the old weapons never woke. You have woken one. This cannot be permitted. Surrender it, and you may yet return to your mud. Refuse, and you will simply cease."
+  }
+ ],
+ "conversations": [
+  {
+   "id": "conv_00",
+   "title": "Inspection gone wrong",
+   "participants": [
+    "merchant",
+    "militia"
+   ],
+   "turns": [
+    {
+     "faction": "militia",
+     "voice_id": "PrivFlightV0101",
+     "text": "Trader, this is the militia. Cut engines for a contraband check."
+    },
+    {
+     "faction": "merchant",
+     "voice_id": "PrivFlightV0601",
+     "text": "Of course, officer, I'm clean, just hauling grain to New Detroit."
+    },
+    {
+     "faction": "militia",
+     "voice_id": "PrivFlightV0101",
+     "text": "Our scanners say otherwise. Those crates read as Brilliance."
+    },
+    {
+     "faction": "merchant",
+     "voice_id": "PrivFlightV0601",
+     "text": "That's-- that's a sensor glitch, I swear on the guild!"
+    },
+    {
+     "faction": "militia",
+     "voice_id": "PrivFlightV0101",
+     "text": "Power down. You're impounded, smuggler."
+    },
+    {
+     "faction": "merchant",
+     "voice_id": "PrivFlightV0601",
+     "text": "No, please, I'll lose everything! Can't we work something out?"
+    },
+    {
+     "faction": "militia",
+     "voice_id": "PrivFlightV0101",
+     "text": "Bribery now? That's another charge. Prepare to be boarded."
+    }
+   ]
+  },
+  {
+   "id": "conv_01",
+   "title": "Turf war",
+   "participants": [
+    "bounty_hunter",
+    "pirate"
+   ],
+   "turns": [
+    {
+     "faction": "pirate",
+     "voice_id": "PrivFlightV1201",
+     "text": "Back off, hunter. This merchant's cargo is mine."
+    },
+    {
+     "faction": "bounty_hunter",
+     "voice_id": "PrivFlightV0501",
+     "text": "I'm not here for the cargo. I'm here for you."
+    },
+    {
+     "faction": "pirate",
+     "voice_id": "PrivFlightV1201",
+     "text": "You've got a contract on me? Who's paying?"
+    },
+    {
+     "faction": "bounty_hunter",
+     "voice_id": "PrivFlightV0501",
+     "text": "Does it matter? Nothing personal. It's just good business."
+    },
+    {
+     "faction": "pirate",
+     "voice_id": "PrivFlightV1201",
+     "text": "Then come and collect, you cold-blooded snake!"
+    },
+    {
+     "faction": "bounty_hunter",
+     "voice_id": "PrivFlightV0501",
+     "text": "Gladly. One more for the resume."
+    }
+   ]
+  },
+  {
+   "id": "conv_02",
+   "title": "The arrest",
+   "participants": [
+    "confed",
+    "pirate"
+   ],
+   "turns": [
+    {
+     "faction": "confed",
+     "voice_id": "PrivFlightV0801",
+     "text": "Pirate vessel, this is Confed patrol. You're under arrest."
+    },
+    {
+     "faction": "pirate",
+     "voice_id": "PrivFlightV1201",
+     "text": "Arrest? Out here? You Confed boys are a long way from home."
+    },
+    {
+     "faction": "confed",
+     "voice_id": "PrivFlightV0801",
+     "text": "We've accessed your file. Murder, smuggling, piracy. It ends now."
+    },
+    {
+     "faction": "pirate",
+     "voice_id": "PrivFlightV1201",
+     "text": "It ends when I say it ends, badge."
+    },
+    {
+     "faction": "confed",
+     "voice_id": "PrivFlightV0801",
+     "text": "Have it your way. All units, weapons free."
+    }
+   ]
+  },
+  {
+   "id": "conv_03",
+   "title": "Zealot and trader",
+   "participants": [
+    "merchant",
+    "retro"
+   ],
+   "turns": [
+    {
+     "faction": "retro",
+     "voice_id": "PrivFlightV0401",
+     "text": "Heathen! Your hold is full of the devil's machines!"
+    },
+    {
+     "faction": "merchant",
+     "voice_id": "PrivFlightV0601",
+     "text": "It's mining equipment, you lunatic! Leave me be!"
+    },
+    {
+     "faction": "retro",
+     "voice_id": "PrivFlightV0401",
+     "text": "Technology is the rot of mankind. Repent, or burn!"
+    },
+    {
+     "faction": "merchant",
+     "voice_id": "PrivFlightV0601",
+     "text": "Somebody, anybody, there's a retro on my tail!"
+    },
+    {
+     "faction": "retro",
+     "voice_id": "PrivFlightV0401",
+     "text": "No one hears you out here. Only God. And He approves."
+    }
+   ]
+  },
+  {
+   "id": "conv_04",
+   "title": "Predator's mercy",
+   "participants": [
+    "kilrathi",
+    "player"
+   ],
+   "turns": [
+    {
+     "faction": "kilrathi",
+     "voice_id": "PrivFlightV0901",
+     "text": "Halt, apeling. Your cargo smells of fear."
+    },
+    {
+     "faction": "player",
+     "voice_id": "PrivBarPc01",
+     "text": "I'm just passing through. I don't want a fight."
+    },
+    {
+     "faction": "kilrathi",
+     "voice_id": "PrivFlightV0901",
+     "text": "Wise. Perhaps I let you live, to tell the others of me."
+    },
+    {
+     "faction": "player",
+     "voice_id": "PrivBarPc01",
+     "text": "...Generous of you."
+    },
+    {
+     "faction": "kilrathi",
+     "voice_id": "PrivFlightV0901",
+     "text": "Do not mistake boredom for mercy. Fly, before I change my mind."
+    }
+   ]
+  },
+  {
+   "id": "conv_05",
+   "title": "Jurisdiction",
+   "participants": [
+    "confed",
+    "militia"
+   ],
+   "turns": [
+    {
+     "faction": "militia",
+     "voice_id": "PrivFlightV0101",
+     "text": "Confed wing, this is system militia. We've got this one."
+    },
+    {
+     "faction": "confed",
+     "voice_id": "PrivFlightV0801",
+     "text": "Negative, militia. That's a Confederation fugitive."
+    },
+    {
+     "faction": "militia",
+     "voice_id": "PrivFlightV0101",
+     "text": "He's in our space, breaking our laws. He's ours."
+    },
+    {
+     "faction": "confed",
+     "voice_id": "PrivFlightV0801",
+     "text": "Stand down. You're outgunned and out-ranked."
+    },
+    {
+     "faction": "militia",
+     "voice_id": "PrivFlightV0101",
+     "text": "...Acknowledged. He's all yours, flyboy. Don't lose him."
+    }
+   ]
+  },
+  {
+   "id": "conv_06",
+   "title": "The contract",
+   "participants": [
+    "bounty_hunter",
+    "player"
+   ],
+   "turns": [
+    {
+     "faction": "bounty_hunter",
+     "voice_id": "PrivFlightV1301",
+     "text": "There you are. You're worth a lot of credits, Captain."
+    },
+    {
+     "faction": "player",
+     "voice_id": "PrivBarPc01",
+     "text": "Whoever hired you, I can pay double. Name it."
+    },
+    {
+     "faction": "bounty_hunter",
+     "voice_id": "PrivFlightV1301",
+     "text": "Tempting. But a hunter who breaks contract never works again."
+    },
+    {
+     "faction": "player",
+     "voice_id": "PrivBarPc01",
+     "text": "Then you leave me no choice."
+    },
+    {
+     "faction": "bounty_hunter",
+     "voice_id": "PrivFlightV1301",
+     "text": "None of us ever had one, friend. Now hold still."
+    }
+   ]
+  },
+  {
+   "id": "conv_07",
+   "title": "Old war, new fight",
+   "participants": [
+    "confed",
+    "kilrathi"
+   ],
+   "turns": [
+    {
+     "faction": "kilrathi",
+     "voice_id": "PrivFlightV0901",
+     "text": "Confederation ship. We have unfinished business, your kind and mine."
+    },
+    {
+     "faction": "confed",
+     "voice_id": "PrivFlightV0801",
+     "text": "The war's over, cat. Your empire lost."
+    },
+    {
+     "faction": "kilrathi",
+     "voice_id": "PrivFlightV0901",
+     "text": "Empires fall. Hatred endures. Defend yourself."
+    },
+    {
+     "faction": "confed",
+     "voice_id": "PrivFlightV0801",
+     "text": "All wings, Kilrathi raider, weapons hot!"
+    }
+   ]
+  },
+  {
+   "id": "conv_08",
+   "title": "Two traders",
+   "participants": [
+    "merchant"
+   ],
+   "turns": [
+    {
+     "faction": "merchant",
+     "voice_id": "PrivFlightV1401",
+     "text": "Friendly hull, good to see one out here. Slow run today?"
+    },
+    {
+     "faction": "merchant",
+     "voice_id": "PrivFlightV0001",
+     "text": "Brutal. Pirates thick as flies past the jump point."
+    },
+    {
+     "faction": "merchant",
+     "voice_id": "PrivFlightV1401",
+     "text": "Tell me about it. Lost a cousin on the Palan route last week."
+    },
+    {
+     "faction": "merchant",
+     "voice_id": "PrivFlightV0001",
+     "text": "Stay sharp, friend. Fair winds and full holds."
+    }
+   ]
+  },
+  {
+   "id": "conv_09",
+   "title": "Thieves and law",
+   "participants": [
+    "militia",
+    "pirate"
+   ],
+   "turns": [
+    {
+     "faction": "pirate",
+     "voice_id": "PrivFlightV1501",
+     "text": "Militia patrol, eh? Bit far from your little checkpoint."
+    },
+    {
+     "faction": "militia",
+     "voice_id": "PrivFlightV0101",
+     "text": "Far enough to put you down with no witnesses, scum."
+    },
+    {
+     "faction": "pirate",
+     "voice_id": "PrivFlightV1501",
+     "text": "Big talk for a rent-a-cop. Let's see if your aim matches."
+    },
+    {
+     "faction": "militia",
+     "voice_id": "PrivFlightV0101",
+     "text": "Gladly. Militia to base, engaging a hostile."
+    }
+   ]
+  },
+  {
+   "id": "conv_10",
+   "title": "The guardians",
+   "participants": [
+    "player",
+    "steltek"
+   ],
+   "turns": [
+    {
+     "faction": "steltek",
+     "voice_id": "PrivFlightV1001",
+     "text": "Primitive vessel. You carry a fragment of the old ones."
+    },
+    {
+     "faction": "player",
+     "voice_id": "PrivBarPc01",
+     "text": "The... what? I don't understand you."
+    },
+    {
+     "faction": "steltek",
+     "voice_id": "PrivFlightV1001",
+     "text": "You would not. Surrender the relic, or be unmade."
+    },
+    {
+     "faction": "player",
+     "voice_id": "PrivBarPc01",
+     "text": "That's not an answer I can live with."
+    },
+    {
+     "faction": "steltek",
+     "voice_id": "PrivFlightV1001",
+     "text": "Then you have chosen. We are sorry. We are thorough."
+    }
+   ]
+  }
+ ]
+}

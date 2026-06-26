@@ -1,0 +1,4898 @@
+{
+ "speech_0000.wav": {
+  "disposition": "other",
+  "faction": "flight_controller",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V14_M_merchant",
+  "text": "Now entering an automatic landing zone.",
+  "voice_id": "V14"
+ },
+ "speech_0001.wav": {
+  "disposition": "friendly",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V05_M_bounty_hunter",
+  "text": "Welcome to the happy hunting grounds.",
+  "voice_id": "V05"
+ },
+ "speech_0002.wav": {
+  "disposition": "friendly",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V05_M_bounty_hunter",
+  "text": "If you're smart, you'll watch your back.",
+  "voice_id": "V05"
+ },
+ "speech_0003.wav": {
+  "disposition": "friendly",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V05_M_bounty_hunter",
+  "text": "Better clear out, trouble's brewing.",
+  "voice_id": "V05"
+ },
+ "speech_0004.wav": {
+  "disposition": "friendly",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V05_M_bounty_hunter",
+  "text": "You're not on my list, this time.",
+  "voice_id": "V05"
+ },
+ "speech_0005.wav": {
+  "disposition": "friendly",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V05_M_bounty_hunter",
+  "text": "Just smoking out a little game, flyboy.",
+  "voice_id": "V05"
+ },
+ "speech_0006.wav": {
+  "disposition": "friendly",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V05_M_bounty_hunter",
+  "text": "Don't worry, I only kill for a fee.",
+  "voice_id": "V05"
+ },
+ "speech_0007.wav": {
+  "disposition": "hostile",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V05_M_bounty_hunter",
+  "text": "The advantage is mine. Now you die.",
+  "voice_id": "V05"
+ },
+ "speech_0008.wav": {
+  "disposition": "hostile",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V05_M_bounty_hunter",
+  "text": "Nothing personal, but your death is my gain.",
+  "voice_id": "V05"
+ },
+ "speech_0009.wav": {
+  "disposition": "hostile",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V05_M_bounty_hunter",
+  "text": "Killing you will put me in the black, fly boy.",
+  "voice_id": "V05"
+ },
+ "speech_0010.wav": {
+  "disposition": "low_hp",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V05_M_bounty_hunter",
+  "text": "It can't end like this.",
+  "voice_id": "V05"
+ },
+ "speech_0011.wav": {
+  "disposition": "low_hp",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V05_M_bounty_hunter",
+  "text": "Oh, this is not good.",
+  "voice_id": "V05"
+ },
+ "speech_0012.wav": {
+  "disposition": "hostile",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V05_M_bounty_hunter",
+  "text": "Hey, what can I say? I'm a professional.",
+  "voice_id": "V05"
+ },
+ "speech_0013.wav": {
+  "disposition": "hostile",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V05_M_bounty_hunter",
+  "text": "Your death is my living, buddy.",
+  "voice_id": "V05"
+ },
+ "speech_0014.wav": {
+  "disposition": "kill",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V05_M_bounty_hunter",
+  "text": "Another day, another kill.",
+  "voice_id": "V05"
+ },
+ "speech_0015.wav": {
+  "disposition": "kill",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V05_M_bounty_hunter",
+  "text": "One more for the resume.",
+  "voice_id": "V05"
+ },
+ "speech_0016.wav": {
+  "disposition": "other",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V05_M_bounty_hunter",
+  "text": "Those books go in my hold or up in flames.",
+  "voice_id": "V05"
+ },
+ "speech_0017.wav": {
+  "disposition": "hostile",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V05_M_bounty_hunter",
+  "text": "Nothing personal, but your death is my gain.",
+  "voice_id": "V05"
+ },
+ "speech_0018.wav": {
+  "disposition": "hostile",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V05_M_bounty_hunter",
+  "text": "Killing you will put me in the black, fly boy.",
+  "voice_id": "V05"
+ },
+ "speech_0019.wav": {
+  "disposition": "low_hp",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V05_M_bounty_hunter",
+  "text": "It can't end like this.",
+  "voice_id": "V05"
+ },
+ "speech_0020.wav": {
+  "disposition": "low_hp",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V05_M_bounty_hunter",
+  "text": "Oh, this is not good.",
+  "voice_id": "V05"
+ },
+ "speech_0021.wav": {
+  "disposition": "hostile",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V05_M_bounty_hunter",
+  "text": "Hey, what can I say? I'm a professional.",
+  "voice_id": "V05"
+ },
+ "speech_0022.wav": {
+  "disposition": "hostile",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V05_M_bounty_hunter",
+  "text": "Your death is my living, buddy.",
+  "voice_id": "V05"
+ },
+ "speech_0023.wav": {
+  "disposition": "kill",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V05_M_bounty_hunter",
+  "text": "Another day, another kill.",
+  "voice_id": "V05"
+ },
+ "speech_0024.wav": {
+  "disposition": "kill",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V05_M_bounty_hunter",
+  "text": "One more for the resume.",
+  "voice_id": "V05"
+ },
+ "speech_0025.wav": {
+  "disposition": "hostile",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V05_M_bounty_hunter",
+  "text": "The advantage is mine. Now you die.",
+  "voice_id": "V05"
+ },
+ "speech_0026.wav": {
+  "disposition": "other",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V05_M_bounty_hunter",
+  "text": "You'll have to go through us to get the Palin.",
+  "voice_id": "V05"
+ },
+ "speech_0027.wav": {
+  "disposition": "kill",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V05_M_bounty_hunter",
+  "text": "Killing you will put me in the black, fly boy.",
+  "voice_id": "V05"
+ },
+ "speech_0028.wav": {
+  "disposition": "low_hp",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V05_M_bounty_hunter",
+  "text": "It can't end like this.",
+  "voice_id": "V05"
+ },
+ "speech_0029.wav": {
+  "disposition": "low_hp",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V05_M_bounty_hunter",
+  "text": "Oh, this is not good.",
+  "voice_id": "V05"
+ },
+ "speech_0030.wav": {
+  "disposition": "other",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V05_M_bounty_hunter",
+  "text": "Hey, what can I say? I'm a professional.",
+  "voice_id": "V05"
+ },
+ "speech_0031.wav": {
+  "disposition": "kill",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V05_M_bounty_hunter",
+  "text": "Your death is my living, buddy.",
+  "voice_id": "V05"
+ },
+ "speech_0032.wav": {
+  "disposition": "kill",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V05_M_bounty_hunter",
+  "text": "Another day, another kill.",
+  "voice_id": "V05"
+ },
+ "speech_0033.wav": {
+  "disposition": "kill",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V05_M_bounty_hunter",
+  "text": "One more for the resume.",
+  "voice_id": "V05"
+ },
+ "speech_0034.wav": {
+  "disposition": "hostile",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V04_M_retro",
+  "text": "Die by the very weapons you adore!",
+  "voice_id": "V04"
+ },
+ "speech_0035.wav": {
+  "disposition": "hostile",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V04_M_retro",
+  "text": "Train our to humanity. Feel our wrath.",
+  "voice_id": "V04"
+ },
+ "speech_0036.wav": {
+  "disposition": "hostile",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V04_M_retro",
+  "text": "Repent and accept our righteous judgment.",
+  "voice_id": "V04"
+ },
+ "speech_0037.wav": {
+  "disposition": "low_hp",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V04_M_retro",
+  "text": "Can it be? Has the God of man abandoned us?",
+  "voice_id": "V04"
+ },
+ "speech_0038.wav": {
+  "disposition": "low_hp",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V04_M_retro",
+  "text": "Deliver us, O Lord, for we are in need.",
+  "voice_id": "V04"
+ },
+ "speech_0039.wav": {
+  "disposition": "hostile",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V04_M_retro",
+  "text": "Your destruction is the will of God!",
+  "voice_id": "V04"
+ },
+ "speech_0040.wav": {
+  "disposition": "hostile",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V04_M_retro",
+  "text": "He then taste a purifying fire of the Lord.",
+  "voice_id": "V04"
+ },
+ "speech_0041.wav": {
+  "disposition": "kill",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V04_M_retro",
+  "text": "Death to heat and glory be unto the Most High!",
+  "voice_id": "V04"
+ },
+ "speech_0042.wav": {
+  "disposition": "kill",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V04_M_retro",
+  "text": "The piety has prevailed again!Die, devil!",
+  "voice_id": "V04"
+ },
+ "speech_0043.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V04_M_retro",
+  "text": "Die by the very weapons you adore!",
+  "voice_id": "V04"
+ },
+ "speech_0044.wav": {
+  "disposition": "hostile",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V04_M_retro",
+  "text": "Train our to humanity. Feel our wrath.",
+  "voice_id": "V04"
+ },
+ "speech_0045.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V04_M_retro",
+  "text": "Toth, forget Oxford! Your next stop is hell!",
+  "voice_id": "V04"
+ },
+ "speech_0046.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V04_M_retro",
+  "text": "Can it be? Has the God of man abandoned us?",
+  "voice_id": "V04"
+ },
+ "speech_0047.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V04_M_retro",
+  "text": "Deliver us, O Lord, for we are in need.",
+  "voice_id": "V04"
+ },
+ "speech_0048.wav": {
+  "disposition": "hostile",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V04_M_retro",
+  "text": "Your destruction is the will of God!",
+  "voice_id": "V04"
+ },
+ "speech_0049.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V04_M_retro",
+  "text": "He then taste a purifying fire of the Lord.",
+  "voice_id": "V04"
+ },
+ "speech_0050.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V04_M_retro",
+  "text": "Death to heat and glory be unto the Most High!",
+  "voice_id": "V04"
+ },
+ "speech_0051.wav": {
+  "disposition": "hostile",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V04_M_retro",
+  "text": "The piety has prevailed again!Die, devil!",
+  "voice_id": "V04"
+ },
+ "speech_0052.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V27_M_retro",
+  "text": "Hunt it off.",
+  "voice_id": "V27"
+ },
+ "speech_0053.wav": {
+  "disposition": "hostile",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V04_M_retro",
+  "text": "You are hereby sentenced to death for your heresy.",
+  "voice_id": "V04"
+ },
+ "speech_0054.wav": {
+  "disposition": "hostile",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V04_M_retro",
+  "text": "The execution shall commence now.",
+  "voice_id": "V04"
+ },
+ "speech_0055.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V04_M_retro",
+  "text": "Die by the very weapons you adore!",
+  "voice_id": "V04"
+ },
+ "speech_0056.wav": {
+  "disposition": "hostile",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V04_M_retro",
+  "text": "Train our to humanity. Feel our wrath.",
+  "voice_id": "V04"
+ },
+ "speech_0057.wav": {
+  "disposition": "hostile",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V04_M_retro",
+  "text": "Repent and accept our righteous judgment.",
+  "voice_id": "V04"
+ },
+ "speech_0058.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V04_M_retro",
+  "text": "Can it be? Has the God of man abandoned us?",
+  "voice_id": "V04"
+ },
+ "speech_0059.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V04_M_retro",
+  "text": "Deliver us, O Lord, for we are in need.",
+  "voice_id": "V04"
+ },
+ "speech_0060.wav": {
+  "disposition": "hostile",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V04_M_retro",
+  "text": "Your destruction is the will of God!",
+  "voice_id": "V04"
+ },
+ "speech_0061.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V04_M_retro",
+  "text": "He then taste a purifying fire of the Lord.",
+  "voice_id": "V04"
+ },
+ "speech_0062.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V04_M_retro",
+  "text": "Death to heat and glory be unto the Most High!",
+  "voice_id": "V04"
+ },
+ "speech_0063.wav": {
+  "disposition": "hostile",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V04_M_retro",
+  "text": "The piety has prevailed again!Die, devil!",
+  "voice_id": "V04"
+ },
+ "speech_0064.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V04_M_retro",
+  "text": "Sinner, ready thyself for righteous retribution.",
+  "voice_id": "V04"
+ },
+ "speech_0065.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V04_M_retro",
+  "text": "We know you possess high-level alien devices.",
+  "voice_id": "V04"
+ },
+ "speech_0066.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V04_M_retro",
+  "text": "Machines of damnable intent!",
+  "voice_id": "V04"
+ },
+ "speech_0067.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V04_M_retro",
+  "text": "for adding to the technological burden of mankind.",
+  "voice_id": "V04"
+ },
+ "speech_0068.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V04_M_retro",
+  "text": "The Church of Man condemns you!",
+  "voice_id": "V04"
+ },
+ "speech_0069.wav": {
+  "disposition": "hostile",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V04_M_retro",
+  "text": "In the moments, you have left to you.Repent.",
+  "voice_id": "V04"
+ },
+ "speech_0070.wav": {
+  "disposition": "friendly",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V08_M_confed",
+  "text": "Your profile is clear to sector's edge.",
+  "voice_id": "V08"
+ },
+ "speech_0071.wav": {
+  "disposition": "friendly",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V08_M_confed",
+  "text": "Stick to establish lanes for your own good.",
+  "voice_id": "V08"
+ },
+ "speech_0072.wav": {
+  "disposition": "friendly",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V08_M_confed",
+  "text": "Patrol to civilian craft, keep your distance.",
+  "voice_id": "V08"
+ },
+ "speech_0073.wav": {
+  "disposition": "friendly",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V08_M_confed",
+  "text": "Flying in shared airspace, keep your Vidcom open.",
+  "voice_id": "V08"
+ },
+ "speech_0074.wav": {
+  "disposition": "other",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V08_M_confed",
+  "text": "Entering disputed space, report any disturbances.",
+  "voice_id": "V08"
+ },
+ "speech_0075.wav": {
+  "disposition": "friendly",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V08_M_confed",
+  "text": "We have you on our screens.Continue on course.",
+  "voice_id": "V08"
+ },
+ "speech_0076.wav": {
+  "disposition": "hostile",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V08_M_confed",
+  "text": "You've got quite a record pal, but it ends here.",
+  "voice_id": "V08"
+ },
+ "speech_0077.wav": {
+  "disposition": "other",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V08_M_confed",
+  "text": "We've accessed your fire pirate, your dead.",
+  "voice_id": "V08"
+ },
+ "speech_0078.wav": {
+  "disposition": "other",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V08_M_confed",
+  "text": "Hey, give me a call when you get the hell.",
+  "voice_id": "V08"
+ },
+ "speech_0079.wav": {
+  "disposition": "low_hp",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V08_M_confed",
+  "text": "Mayday, we've sustained massive damage.",
+  "voice_id": "V08"
+ },
+ "speech_0080.wav": {
+  "disposition": "low_hp",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V08_M_confed",
+  "text": "Unless we get some help, we're finished.",
+  "voice_id": "V08"
+ },
+ "speech_0081.wav": {
+  "disposition": "hostile",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V08_M_confed",
+  "text": "I use smuggling scum.",
+  "voice_id": "V08"
+ },
+ "speech_0082.wav": {
+  "disposition": "other",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V08_M_confed",
+  "text": "You're beaten.Want us a render?",
+  "voice_id": "V08"
+ },
+ "speech_0083.wav": {
+  "disposition": "kill",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V08_M_confed",
+  "text": "One bogey terminated.",
+  "voice_id": "V08"
+ },
+ "speech_0084.wav": {
+  "disposition": "kill",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V08_M_confed",
+  "text": "enemy target destroyed",
+  "voice_id": "V08"
+ },
+ "speech_0085.wav": {
+  "disposition": "contraband",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V08_M_confed",
+  "text": "Maintain speed and course for contraband search.",
+  "voice_id": "V08"
+ },
+ "speech_0086.wav": {
+  "disposition": "contraband",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V08_M_confed",
+  "text": "contact main detected, target offender and fire at will.",
+  "voice_id": "V08"
+ },
+ "speech_0087.wav": {
+  "disposition": "contraband",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V08_M_confed",
+  "text": "No contraband detected, you may proceed.",
+  "voice_id": "V08"
+ },
+ "speech_0088.wav": {
+  "disposition": "hostile",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V08_M_confed",
+  "text": "You've got quite a record pal, but it ends here.",
+  "voice_id": "V08"
+ },
+ "speech_0089.wav": {
+  "disposition": "other",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V08_M_confed",
+  "text": "We've accessed your fire pirate, your dead.",
+  "voice_id": "V08"
+ },
+ "speech_0090.wav": {
+  "disposition": "other",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V08_M_confed",
+  "text": "Hey, give me a call when you get the hell.",
+  "voice_id": "V08"
+ },
+ "speech_0091.wav": {
+  "disposition": "low_hp",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V08_M_confed",
+  "text": "Mayday, we've sustained massive damage.",
+  "voice_id": "V08"
+ },
+ "speech_0092.wav": {
+  "disposition": "low_hp",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V08_M_confed",
+  "text": "Unless we get some help, we're finished.",
+  "voice_id": "V08"
+ },
+ "speech_0093.wav": {
+  "disposition": "other",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V08_M_confed",
+  "text": "A life sentence doesn't look so bad now, Avery, just...",
+  "voice_id": "V08"
+ },
+ "speech_0094.wav": {
+  "disposition": "other",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V08_M_confed",
+  "text": "You're beaten.Want us a render?",
+  "voice_id": "V08"
+ },
+ "speech_0095.wav": {
+  "disposition": "kill",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V08_M_confed",
+  "text": "One bogey terminated.",
+  "voice_id": "V08"
+ },
+ "speech_0096.wav": {
+  "disposition": "kill",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V08_M_confed",
+  "text": "enemy target destroyed",
+  "voice_id": "V08"
+ },
+ "speech_0097.wav": {
+  "disposition": "other",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V08_M_confed",
+  "text": "We know you are transporting a known felon.",
+  "voice_id": "V08"
+ },
+ "speech_0098.wav": {
+  "disposition": "hostile",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V08_M_confed",
+  "text": "Prepare to die, criminal scum.",
+  "voice_id": "V08"
+ },
+ "speech_0099.wav": {
+  "disposition": "friendly",
+  "faction": "kilrathi",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V09_M_kilrathi",
+  "text": "Do not, my claws are sheathed, my belly full.",
+  "voice_id": "V09"
+ },
+ "speech_0100.wav": {
+  "disposition": "other",
+  "faction": "kilrathi",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V09_M_kilrathi",
+  "text": "I grant you passage today, looking ape.",
+  "voice_id": "V09"
+ },
+ "speech_0101.wav": {
+  "disposition": "other",
+  "faction": "kilrathi",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V09_M_kilrathi",
+  "text": "Pointy boy, you make me laugh.",
+  "voice_id": "V09"
+ },
+ "speech_0102.wav": {
+  "disposition": "other",
+  "faction": "kilrathi",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V09_M_kilrathi",
+  "text": "I have no time to die with you, monkey boy!",
+  "voice_id": "V09"
+ },
+ "speech_0103.wav": {
+  "disposition": "other",
+  "faction": "kilrathi",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V09_M_kilrathi",
+  "text": "We are tracking your deeper distance.",
+  "voice_id": "V09"
+ },
+ "speech_0104.wav": {
+  "disposition": "other",
+  "faction": "kilrathi",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V09_M_kilrathi",
+  "text": "for my brothers to kill.",
+  "voice_id": "V09"
+ },
+ "speech_0105.wav": {
+  "disposition": "hostile",
+  "faction": "kilrathi",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V09_M_kilrathi",
+  "text": "As you mount your bones in my hall.",
+  "voice_id": "V09"
+ },
+ "speech_0106.wav": {
+  "disposition": "other",
+  "faction": "kilrathi",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V09_M_kilrathi",
+  "text": "Your death will honor my name.",
+  "voice_id": "V09"
+ },
+ "speech_0107.wav": {
+  "disposition": "other",
+  "faction": "kilrathi",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V09_M_kilrathi",
+  "text": "I make power before the claws of a warrior!",
+  "voice_id": "V09"
+ },
+ "speech_0108.wav": {
+  "disposition": "low_hp",
+  "faction": "kilrathi",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V09_M_kilrathi",
+  "text": "I salute you.",
+  "voice_id": "V09"
+ },
+ "speech_0109.wav": {
+  "disposition": "low_hp",
+  "faction": "kilrathi",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V09_M_kilrathi",
+  "text": "better to human, yet unbeaton.",
+  "voice_id": "V09"
+ },
+ "speech_0110.wav": {
+  "disposition": "hostile",
+  "faction": "kilrathi",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V09_M_kilrathi",
+  "text": "Fight back! There is no honor in slaughter!",
+  "voice_id": "V09"
+ },
+ "speech_0111.wav": {
+  "disposition": "other",
+  "faction": "kilrathi",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V09_M_kilrathi",
+  "text": "You are hardly worthy of my fire.",
+  "voice_id": "V09"
+ },
+ "speech_0112.wav": {
+  "disposition": "kill",
+  "faction": "kilrathi",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V09_M_kilrathi",
+  "text": "I have gained another slave in the afterworld.",
+  "voice_id": "V09"
+ },
+ "speech_0113.wav": {
+  "disposition": "other",
+  "faction": "kilrathi",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V09_M_kilrathi",
+  "text": "lead another enemy to the void.",
+  "voice_id": "V09"
+ },
+ "speech_0114.wav": {
+  "disposition": "other",
+  "faction": "kilrathi",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V09_M_kilrathi",
+  "text": "Funkos, Surrender, and Be Spared.",
+  "voice_id": "V09"
+ },
+ "speech_0115.wav": {
+  "disposition": "other",
+  "faction": "kilrathi",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V09_M_kilrathi",
+  "text": "Your death will honor my name.",
+  "voice_id": "V09"
+ },
+ "speech_0116.wav": {
+  "disposition": "other",
+  "faction": "kilrathi",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V09_M_kilrathi",
+  "text": "I make power before the claws of a warrior!",
+  "voice_id": "V09"
+ },
+ "speech_0117.wav": {
+  "disposition": "other",
+  "faction": "kilrathi",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V09_M_kilrathi",
+  "text": "I salute you.",
+  "voice_id": "V09"
+ },
+ "speech_0118.wav": {
+  "disposition": "other",
+  "faction": "kilrathi",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V09_M_kilrathi",
+  "text": "better to human, yet unbeaton.",
+  "voice_id": "V09"
+ },
+ "speech_0119.wav": {
+  "disposition": "other",
+  "faction": "kilrathi",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V09_M_kilrathi",
+  "text": "Fight back! There is no honor in slaughter!",
+  "voice_id": "V09"
+ },
+ "speech_0120.wav": {
+  "disposition": "other",
+  "faction": "kilrathi",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V09_M_kilrathi",
+  "text": "You are hardly worthy of my fire.",
+  "voice_id": "V09"
+ },
+ "speech_0121.wav": {
+  "disposition": "other",
+  "faction": "kilrathi",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V09_M_kilrathi",
+  "text": "I have gained another slave in the afterworld.",
+  "voice_id": "V09"
+ },
+ "speech_0122.wav": {
+  "disposition": "other",
+  "faction": "kilrathi",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V09_M_kilrathi",
+  "text": "lead another enemy to the void.",
+  "voice_id": "V09"
+ },
+ "speech_0123.wav": {
+  "disposition": "other",
+  "faction": "kilrathi",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V09_M_kilrathi",
+  "text": "",
+  "voice_id": "V09"
+ },
+ "speech_0124.wav": {
+  "disposition": "other",
+  "faction": "kilrathi",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V09_M_kilrathi",
+  "text": "",
+  "voice_id": "V09"
+ },
+ "speech_0125.wav": {
+  "disposition": "other",
+  "faction": "kilrathi",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V09_M_kilrathi",
+  "text": "You will surrender him to us immediately.",
+  "voice_id": "V09"
+ },
+ "speech_0126.wav": {
+  "disposition": "other",
+  "faction": "kilrathi",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V09_M_kilrathi",
+  "text": "",
+  "voice_id": "V09"
+ },
+ "speech_0127.wav": {
+  "disposition": "friendly",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V14_M_merchant",
+  "text": "How's it going friend?",
+  "voice_id": "V14"
+ },
+ "speech_0128.wav": {
+  "disposition": "friendly",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V14_M_merchant",
+  "text": "good to see a friendly ship.",
+  "voice_id": "V14"
+ },
+ "speech_0129.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V14_M_merchant",
+  "text": "business treating you well",
+  "voice_id": "V14"
+ },
+ "speech_0130.wav": {
+  "disposition": "friendly",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V14_M_merchant",
+  "text": "Just a passing merchant, don't get jumpy.",
+  "voice_id": "V14"
+ },
+ "speech_0131.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V14_M_merchant",
+  "text": "I'm not looking for any trouble.",
+  "voice_id": "V14"
+ },
+ "speech_0132.wav": {
+  "disposition": "friendly",
+  "faction": "merchant",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Maybe we can do business sometime.",
+  "voice_id": "V00"
+ },
+ "speech_0133.wav": {
+  "disposition": "hostile",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V14_M_merchant",
+  "text": "Come eat some slack, will you?",
+  "voice_id": "V14"
+ },
+ "speech_0134.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V14_M_merchant",
+  "text": "You're scaring away my business.",
+  "voice_id": "V14"
+ },
+ "speech_0135.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V14_M_merchant",
+  "text": "Please don't trash me, man!",
+  "voice_id": "V14"
+ },
+ "speech_0136.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V25_M_merchant",
+  "text": "You maniac! The guild will hear about this!",
+  "voice_id": "V25"
+ },
+ "speech_0137.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V24_M_merchant",
+  "text": "my poor ship. I'll have to sell it for scrap.",
+  "voice_id": "V24"
+ },
+ "speech_0138.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V14_M_merchant",
+  "text": "Not bad for a lowly merchant, a pirate.",
+  "voice_id": "V14"
+ },
+ "speech_0139.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V14_M_merchant",
+  "text": "serves you right attacking an honest dealer",
+  "voice_id": "V14"
+ },
+ "speech_0140.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V14_M_merchant",
+  "text": "Ah, another dissatisfied customer.",
+  "voice_id": "V14"
+ },
+ "speech_0141.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V14_M_merchant",
+  "text": "And one more loser, cash is in his chips.",
+  "voice_id": "V14"
+ },
+ "speech_0142.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "Keep your eyes peeled for trouble, Ace.",
+  "voice_id": "V01"
+ },
+ "speech_0143.wav": {
+  "disposition": "other",
+  "faction": "militia",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "Let me know if you hit trouble in my quad.",
+  "voice_id": "V01"
+ },
+ "speech_0144.wav": {
+  "disposition": "other",
+  "faction": "militia",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "We got this sector bottle tight friend.",
+  "voice_id": "V01"
+ },
+ "speech_0145.wav": {
+  "disposition": "friendly",
+  "faction": "militia",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "Militia here, stick to your flight path.",
+  "voice_id": "V01"
+ },
+ "speech_0146.wav": {
+  "disposition": "friendly",
+  "faction": "militia",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "Keep your nose clean in our sector.",
+  "voice_id": "V01"
+ },
+ "speech_0147.wav": {
+  "disposition": "friendly",
+  "faction": "militia",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V34_M_militia",
+  "text": "You're clear to pass.",
+  "voice_id": "V34"
+ },
+ "speech_0148.wav": {
+  "disposition": "hostile",
+  "faction": "militia",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "You're not leaving this quad alive, pirate.",
+  "voice_id": "V01"
+ },
+ "speech_0149.wav": {
+  "disposition": "hostile",
+  "faction": "militia",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "This is your last run.",
+  "voice_id": "V01"
+ },
+ "speech_0150.wav": {
+  "disposition": "hostile",
+  "faction": "militia",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "Your luck is run out, along with my patience.",
+  "voice_id": "V01"
+ },
+ "speech_0151.wav": {
+  "disposition": "low_hp",
+  "faction": "militia",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "Malaysia forces in need of assistance.",
+  "voice_id": "V01"
+ },
+ "speech_0152.wav": {
+  "disposition": "low_hp",
+  "faction": "militia",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "We're in trouble.",
+  "voice_id": "V01"
+ },
+ "speech_0153.wav": {
+  "disposition": "other",
+  "faction": "militia",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "You cannot win with draw or be destroyed.",
+  "voice_id": "V01"
+ },
+ "speech_0154.wav": {
+  "disposition": "low_hp",
+  "faction": "militia",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "Dancers show you are breaking up. Retreat.",
+  "voice_id": "V01"
+ },
+ "speech_0155.wav": {
+  "disposition": "kill",
+  "faction": "militia",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "Target eliminated command.",
+  "voice_id": "V01"
+ },
+ "speech_0156.wav": {
+  "disposition": "kill",
+  "faction": "militia",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "militia to base, enemy dispatched.",
+  "voice_id": "V01"
+ },
+ "speech_0157.wav": {
+  "disposition": "contraband",
+  "faction": "militia",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "Prepare to be searched, maintain speed and course.",
+  "voice_id": "V01"
+ },
+ "speech_0158.wav": {
+  "disposition": "contraband",
+  "faction": "militia",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "Contraband detected. All units close and terminate.",
+  "voice_id": "V01"
+ },
+ "speech_0159.wav": {
+  "disposition": "contraband",
+  "faction": "militia",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "No contraband detected, you may proceed.",
+  "voice_id": "V01"
+ },
+ "speech_0160.wav": {
+  "disposition": "hostile",
+  "faction": "militia",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "Filthy little brilliance runner, you're busted!",
+  "voice_id": "V01"
+ },
+ "speech_0161.wav": {
+  "disposition": "hostile",
+  "faction": "militia",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "This is your last run!",
+  "voice_id": "V01"
+ },
+ "speech_0162.wav": {
+  "disposition": "hostile",
+  "faction": "militia",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "Filthy little brilliance runner, you're busted!",
+  "voice_id": "V01"
+ },
+ "speech_0163.wav": {
+  "disposition": "low_hp",
+  "faction": "militia",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "Malaysia forces in need of assistance.",
+  "voice_id": "V01"
+ },
+ "speech_0164.wav": {
+  "disposition": "low_hp",
+  "faction": "militia",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "We're in trouble.",
+  "voice_id": "V01"
+ },
+ "speech_0165.wav": {
+  "disposition": "other",
+  "faction": "militia",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "You cannot win with draw or be destroyed.",
+  "voice_id": "V01"
+ },
+ "speech_0166.wav": {
+  "disposition": "low_hp",
+  "faction": "militia",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "Dancers show you are breaking up. Retreat.",
+  "voice_id": "V01"
+ },
+ "speech_0167.wav": {
+  "disposition": "kill",
+  "faction": "militia",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "Target eliminated command.",
+  "voice_id": "V01"
+ },
+ "speech_0168.wav": {
+  "disposition": "kill",
+  "faction": "militia",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "militia to base, enemy dispatched.",
+  "voice_id": "V01"
+ },
+ "speech_0169.wav": {
+  "disposition": "contraband",
+  "faction": "militia",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "Prepare to be searched, maintain speed and course.",
+  "voice_id": "V01"
+ },
+ "speech_0170.wav": {
+  "disposition": "contraband",
+  "faction": "militia",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "Contraband detected. All units close and terminate.",
+  "voice_id": "V01"
+ },
+ "speech_0171.wav": {
+  "disposition": "contraband",
+  "faction": "militia",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "No contraband detected, you may proceed.",
+  "voice_id": "V01"
+ },
+ "speech_0172.wav": {
+  "disposition": "friendly",
+  "faction": "militia",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V02_M_pirate",
+  "text": "Looking sharp, Ace.",
+  "voice_id": "V02"
+ },
+ "speech_0173.wav": {
+  "disposition": "friendly",
+  "faction": "militia",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V02_M_pirate",
+  "text": "You're clear for clicks.",
+  "voice_id": "V02"
+ },
+ "speech_0174.wav": {
+  "disposition": "friendly",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V02_M_pirate",
+  "text": "Catch you on the next run.",
+  "voice_id": "V02"
+ },
+ "speech_0175.wav": {
+  "disposition": "friendly",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V02_M_pirate",
+  "text": "Not looking for trouble, Ace.",
+  "voice_id": "V02"
+ },
+ "speech_0176.wav": {
+  "disposition": "other",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V02_M_pirate",
+  "text": "Forget this meat happened. We got no problem.",
+  "voice_id": "V02"
+ },
+ "speech_0177.wav": {
+  "disposition": "other",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V02_M_pirate",
+  "text": "I didn't see you and your blind, got it?",
+  "voice_id": "V02"
+ },
+ "speech_0178.wav": {
+  "disposition": "hostile",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V02_M_pirate",
+  "text": "You're about to suck void, buddy.",
+  "voice_id": "V02"
+ },
+ "speech_0179.wav": {
+  "disposition": "hostile",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V02_M_pirate",
+  "text": "You're finished, fly boy.",
+  "voice_id": "V02"
+ },
+ "speech_0180.wav": {
+  "disposition": "hostile",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V02_M_pirate",
+  "text": "You're about to suck void, buddy.",
+  "voice_id": "V02"
+ },
+ "speech_0181.wav": {
+  "disposition": "low_hp",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V02_M_pirate",
+  "text": "Damn, you're ripping me apart!",
+  "voice_id": "V02"
+ },
+ "speech_0182.wav": {
+  "disposition": "low_hp",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V02_M_pirate",
+  "text": "This crate's about to explode!",
+  "voice_id": "V02"
+ },
+ "speech_0183.wav": {
+  "disposition": "hostile",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V02_M_pirate",
+  "text": "Just dump your cargo before you blow, will ya?",
+  "voice_id": "V02"
+ },
+ "speech_0184.wav": {
+  "disposition": "kill",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V02_M_pirate",
+  "text": "Yeah, you're nailed, pal.",
+  "voice_id": "V02"
+ },
+ "speech_0185.wav": {
+  "disposition": "kill",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V02_M_pirate",
+  "text": "A clean kill should have been a bounty hunter.",
+  "voice_id": "V02"
+ },
+ "speech_0186.wav": {
+  "disposition": "kill",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V02_M_pirate",
+  "text": "You're dead, chump.",
+  "voice_id": "V02"
+ },
+ "speech_0187.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V02_M_pirate",
+  "text": "Knowledge belongs to the galaxy, you fashists!",
+  "voice_id": "V02"
+ },
+ "speech_0188.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V02_M_pirate",
+  "text": "Oxford has no right to hoard data.Access is ours.",
+  "voice_id": "V02"
+ },
+ "speech_0189.wav": {
+  "disposition": "hostile",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V02_M_pirate",
+  "text": "You're about to suck void, buddy.",
+  "voice_id": "V02"
+ },
+ "speech_0190.wav": {
+  "disposition": "low_hp",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V02_M_pirate",
+  "text": "Damn, you're ripping me apart!",
+  "voice_id": "V02"
+ },
+ "speech_0191.wav": {
+  "disposition": "low_hp",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V02_M_pirate",
+  "text": "This crate's about to explode!",
+  "voice_id": "V02"
+ },
+ "speech_0192.wav": {
+  "disposition": "hostile",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V02_M_pirate",
+  "text": "Just dump your cargo before you blow, will ya?",
+  "voice_id": "V02"
+ },
+ "speech_0193.wav": {
+  "disposition": "kill",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V02_M_pirate",
+  "text": "Yeah, you're nailed, pal.",
+  "voice_id": "V02"
+ },
+ "speech_0194.wav": {
+  "disposition": "kill",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V02_M_pirate",
+  "text": "A clean kill should have been a bounty hunter.",
+  "voice_id": "V02"
+ },
+ "speech_0195.wav": {
+  "disposition": "kill",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V02_M_pirate",
+  "text": "You're dead, chump.",
+  "voice_id": "V02"
+ },
+ "speech_0196.wav": {
+  "disposition": "other",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V02_M_pirate",
+  "text": "Should have stepped to your charts. It's dangerous out here.",
+  "voice_id": "V02"
+ },
+ "speech_0197.wav": {
+  "disposition": "hostile",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V02_M_pirate",
+  "text": "You're finished, fly boy.",
+  "voice_id": "V02"
+ },
+ "speech_0198.wav": {
+  "disposition": "hostile",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V02_M_pirate",
+  "text": "You're about to suck void, buddy.",
+  "voice_id": "V02"
+ },
+ "speech_0199.wav": {
+  "disposition": "low_hp",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V02_M_pirate",
+  "text": "Damn, you're ripping me apart!",
+  "voice_id": "V02"
+ },
+ "speech_0200.wav": {
+  "disposition": "low_hp",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V02_M_pirate",
+  "text": "This crate's about to explode!",
+  "voice_id": "V02"
+ },
+ "speech_0201.wav": {
+  "disposition": "hostile",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V02_M_pirate",
+  "text": "Just dump your cargo before you blow, will ya?",
+  "voice_id": "V02"
+ },
+ "speech_0202.wav": {
+  "disposition": "kill",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V02_M_pirate",
+  "text": "Yeah, you're nailed, pal.",
+  "voice_id": "V02"
+ },
+ "speech_0203.wav": {
+  "disposition": "kill",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V02_M_pirate",
+  "text": "A clean kill should have been a bounty hunter.",
+  "voice_id": "V02"
+ },
+ "speech_0204.wav": {
+  "disposition": "kill",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V02_M_pirate",
+  "text": "You're dead, chump.",
+  "voice_id": "V02"
+ },
+ "speech_0205.wav": {
+  "disposition": "friendly",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V16_M_bounty_hunter",
+  "text": "Welcome to the Happy Hunting Ground!",
+  "voice_id": "V16"
+ },
+ "speech_0206.wav": {
+  "disposition": "hostile",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V30_M_bounty_hunter",
+  "text": "If you're smart, you'll watch your back.",
+  "voice_id": "V30"
+ },
+ "speech_0207.wav": {
+  "disposition": "other",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V19_M_bounty_hunter",
+  "text": "Better clear out.There could be trouble soon.",
+  "voice_id": "V19"
+ },
+ "speech_0208.wav": {
+  "disposition": "other",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V16_M_bounty_hunter",
+  "text": "This is bastard murderer, I'll show you!",
+  "voice_id": "V16"
+ },
+ "speech_0209.wav": {
+  "disposition": "other",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V16_M_bounty_hunter",
+  "text": "This is bastard murderer, I'll show you!",
+  "voice_id": "V16"
+ },
+ "speech_0210.wav": {
+  "disposition": "other",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V16_M_bounty_hunter",
+  "text": "This is bastard murderer, I'll show you!",
+  "voice_id": "V16"
+ },
+ "speech_0211.wav": {
+  "disposition": "low_hp",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V16_M_bounty_hunter",
+  "text": "No! It can't end like this!",
+  "voice_id": "V16"
+ },
+ "speech_0212.wav": {
+  "disposition": "low_hp",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V16_M_bounty_hunter",
+  "text": "Oh, this is not good!",
+  "voice_id": "V16"
+ },
+ "speech_0213.wav": {
+  "disposition": "other",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V19_M_bounty_hunter",
+  "text": "Hey, what can I say?I'm a professional.",
+  "voice_id": "V19"
+ },
+ "speech_0214.wav": {
+  "disposition": "kill",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V19_M_bounty_hunter",
+  "text": "Your death is my living, buddy.",
+  "voice_id": "V19"
+ },
+ "speech_0215.wav": {
+  "disposition": "kill",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V19_M_bounty_hunter",
+  "text": "Another day, another kill.",
+  "voice_id": "V19"
+ },
+ "speech_0216.wav": {
+  "disposition": "kill",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V19_M_bounty_hunter",
+  "text": "One more for the resume.",
+  "voice_id": "V19"
+ },
+ "speech_0217.wav": {
+  "disposition": "other",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V16_M_bounty_hunter",
+  "text": "Tell me you'll keep back!",
+  "voice_id": "V16"
+ },
+ "speech_0218.wav": {
+  "disposition": "low_hp",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V32_M_bounty_hunter",
+  "text": "No, no!",
+  "voice_id": "V32"
+ },
+ "speech_0219.wav": {
+  "disposition": "low_hp",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V16_M_bounty_hunter",
+  "text": "Stay away! You hear me? Back off!",
+  "voice_id": "V16"
+ },
+ "speech_0220.wav": {
+  "disposition": "other",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V16_M_bounty_hunter",
+  "text": "All right, you asked for it.",
+  "voice_id": "V16"
+ },
+ "speech_0221.wav": {
+  "disposition": "other",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V11_M_bounty_hunter",
+  "text": "Oh, this is most distasteful, I must say.",
+  "voice_id": "V11"
+ },
+ "speech_0222.wav": {
+  "disposition": "hostile",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V11_M_bounty_hunter",
+  "text": "If you're smart, you'll watch your back.",
+  "voice_id": "V11"
+ },
+ "speech_0223.wav": {
+  "disposition": "other",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V11_M_bounty_hunter",
+  "text": "Oh, this is most distasteful, I must say.",
+  "voice_id": "V11"
+ },
+ "speech_0224.wav": {
+  "disposition": "hostile",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V11_M_bounty_hunter",
+  "text": "The advantage is mine. Now you die.",
+  "voice_id": "V11"
+ },
+ "speech_0225.wav": {
+  "disposition": "kill",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V11_M_bounty_hunter",
+  "text": "Nothing personal, but your death is my game.",
+  "voice_id": "V11"
+ },
+ "speech_0226.wav": {
+  "disposition": "kill",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V11_M_bounty_hunter",
+  "text": "Killing you will put me in the black flyboy.",
+  "voice_id": "V11"
+ },
+ "speech_0227.wav": {
+  "disposition": "other",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V11_M_bounty_hunter",
+  "text": "No! It can't! And like this...",
+  "voice_id": "V11"
+ },
+ "speech_0228.wav": {
+  "disposition": "low_hp",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V11_M_bounty_hunter",
+  "text": "Oh, this is not good.",
+  "voice_id": "V11"
+ },
+ "speech_0229.wav": {
+  "disposition": "other",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V11_M_bounty_hunter",
+  "text": "Hey, what can I say?I'm a professional.",
+  "voice_id": "V11"
+ },
+ "speech_0230.wav": {
+  "disposition": "kill",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V11_M_bounty_hunter",
+  "text": "Your death is my living, old boy.",
+  "voice_id": "V11"
+ },
+ "speech_0231.wav": {
+  "disposition": "kill",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V11_M_bounty_hunter",
+  "text": "Another day, another kill.",
+  "voice_id": "V11"
+ },
+ "speech_0232.wav": {
+  "disposition": "kill",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V11_M_bounty_hunter",
+  "text": "One more for the resume.",
+  "voice_id": "V11"
+ },
+ "speech_0233.wav": {
+  "disposition": "other",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V11_M_bounty_hunter",
+  "text": "I say, would you kindly identify yourself?",
+  "voice_id": "V11"
+ },
+ "speech_0234.wav": {
+  "disposition": "other",
+  "faction": "salman_kreitz",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V11_M_bounty_hunter",
+  "text": "I am Salman Kreitz, Privateer extraordinaire.",
+  "voice_id": "V11"
+ },
+ "speech_0235.wav": {
+  "disposition": "other",
+  "faction": "salman_kreitz",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V11_M_bounty_hunter",
+  "text": "terribly sorry to interrupt your flight, but...",
+  "voice_id": "V11"
+ },
+ "speech_0236.wav": {
+  "disposition": "other",
+  "faction": "salman_kreitz",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V11_M_bounty_hunter",
+  "text": "It seems as we're a bit at odds here.",
+  "voice_id": "V11"
+ },
+ "speech_0237.wav": {
+  "disposition": "other",
+  "faction": "salman_kreitz",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V11_M_bounty_hunter",
+  "text": "I'm to prevent you from delivering those weapons.",
+  "voice_id": "V11"
+ },
+ "speech_0238.wav": {
+  "disposition": "other",
+  "faction": "salman_kreitz",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V11_M_bounty_hunter",
+  "text": "Since we both cannot fulfill our contracts...",
+  "voice_id": "V11"
+ },
+ "speech_0239.wav": {
+  "disposition": "other",
+  "faction": "salman_kreitz",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V11_M_bounty_hunter",
+  "text": "It seems we'll need to settle this ourselves.",
+  "voice_id": "V11"
+ },
+ "speech_0240.wav": {
+  "disposition": "other",
+  "faction": "salman_kreitz",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V29_M_salman_kreitz",
+  "text": "Would you consider dumping your cargo?",
+  "voice_id": "V29"
+ },
+ "speech_0241.wav": {
+  "disposition": "other",
+  "faction": "salman_kreitz",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V11_M_bounty_hunter",
+  "text": "Alas, we'll have to settle this by violent means.",
+  "voice_id": "V11"
+ },
+ "speech_0242.wav": {
+  "disposition": "other",
+  "faction": "salman_kreitz",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V11_M_bounty_hunter",
+  "text": "So sorry, but I'm afraid I cannot let you pass.",
+  "voice_id": "V11"
+ },
+ "speech_0243.wav": {
+  "disposition": "kill",
+  "faction": "salman_kreitz",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V11_M_bounty_hunter",
+  "text": "Now my operatives and I will end your career.",
+  "voice_id": "V11"
+ },
+ "speech_0244.wav": {
+  "disposition": "other",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V11_M_bounty_hunter",
+  "text": "and bolster our resumes in the process.Cheers!",
+  "voice_id": "V11"
+ },
+ "speech_0245.wav": {
+  "disposition": "other",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V12_M_pirate",
+  "text": "What can sharp base?",
+  "voice_id": "V12"
+ },
+ "speech_0246.wav": {
+  "disposition": "friendly",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V25_M_merchant",
+  "text": "You're clear for clicks.",
+  "voice_id": "V25"
+ },
+ "speech_0247.wav": {
+  "disposition": "friendly",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V12_M_pirate",
+  "text": "Catch you on the next run.",
+  "voice_id": "V12"
+ },
+ "speech_0248.wav": {
+  "disposition": "friendly",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V12_M_pirate",
+  "text": "Not looking for trouble, Ace.",
+  "voice_id": "V12"
+ },
+ "speech_0249.wav": {
+  "disposition": "other",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V12_M_pirate",
+  "text": "Forget this meat happened. We got no problem.",
+  "voice_id": "V12"
+ },
+ "speech_0250.wav": {
+  "disposition": "other",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V12_M_pirate",
+  "text": "I didn't see you and you blind, got it.",
+  "voice_id": "V12"
+ },
+ "speech_0251.wav": {
+  "disposition": "hostile",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V12_M_pirate",
+  "text": "you'll loose end looking to be tied pal.",
+  "voice_id": "V12"
+ },
+ "speech_0252.wav": {
+  "disposition": "hostile",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V12_M_pirate",
+  "text": "You're finished, Flyboy.",
+  "voice_id": "V12"
+ },
+ "speech_0253.wav": {
+  "disposition": "hostile",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V12_M_pirate",
+  "text": "You're about to suck void, buddy.",
+  "voice_id": "V12"
+ },
+ "speech_0254.wav": {
+  "disposition": "other",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V12_M_pirate",
+  "text": "Why's Guy thinks he's winning?",
+  "voice_id": "V12"
+ },
+ "speech_0255.wav": {
+  "disposition": "other",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V36_M_pirate",
+  "text": "Uh, run button.",
+  "voice_id": "V36"
+ },
+ "speech_0256.wav": {
+  "disposition": "other",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V12_M_pirate",
+  "text": "come to your cargo before you blow, will ya?",
+  "voice_id": "V12"
+ },
+ "speech_0257.wav": {
+  "disposition": "other",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V15_M_pirate",
+  "text": "Yeah, you were nailed, Paolo.",
+  "voice_id": "V15"
+ },
+ "speech_0258.wav": {
+  "disposition": "other",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V12_M_pirate",
+  "text": "A cream kill should have been a bounty hunter.",
+  "voice_id": "V12"
+ },
+ "speech_0259.wav": {
+  "disposition": "kill",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V12_M_pirate",
+  "text": "You were dead, jump.",
+  "voice_id": "V12"
+ },
+ "speech_0260.wav": {
+  "disposition": "other",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V12_M_pirate",
+  "text": "A bright boy, guess who's in deep trouble?",
+  "voice_id": "V12"
+ },
+ "speech_0261.wav": {
+  "disposition": "other",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V12_M_pirate",
+  "text": "Mr. Lynch wants that artifact.",
+  "voice_id": "V12"
+ },
+ "speech_0262.wav": {
+  "disposition": "other",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V12_M_pirate",
+  "text": "I'm gonna count to 10, then I start shooting.",
+  "voice_id": "V12"
+ },
+ "speech_0263.wav": {
+  "disposition": "other",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V12_M_pirate",
+  "text": "One, two, uh...",
+  "voice_id": "V12"
+ },
+ "speech_0264.wav": {
+  "disposition": "other",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V12_M_pirate",
+  "text": "Forget this, start shooting boys!",
+  "voice_id": "V12"
+ },
+ "speech_0265.wav": {
+  "disposition": "friendly",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "Continue on course.",
+  "voice_id": "V01"
+ },
+ "speech_0266.wav": {
+  "disposition": "friendly",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "Continue on course.",
+  "voice_id": "V01"
+ },
+ "speech_0267.wav": {
+  "disposition": "friendly",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "Continue on course.",
+  "voice_id": "V01"
+ },
+ "speech_0268.wav": {
+  "disposition": "friendly",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "Continue on course.",
+  "voice_id": "V01"
+ },
+ "speech_0269.wav": {
+  "disposition": "friendly",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "Continue on course.",
+  "voice_id": "V01"
+ },
+ "speech_0270.wav": {
+  "disposition": "friendly",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "Continue on course.",
+  "voice_id": "V01"
+ },
+ "speech_0271.wav": {
+  "disposition": "friendly",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "Continue on course.",
+  "voice_id": "V01"
+ },
+ "speech_0272.wav": {
+  "disposition": "friendly",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "Continue on course.",
+  "voice_id": "V01"
+ },
+ "speech_0273.wav": {
+  "disposition": "friendly",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "Continue on course.",
+  "voice_id": "V01"
+ },
+ "speech_0274.wav": {
+  "disposition": "low_hp",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "Mayday, we've sustained massive damage.",
+  "voice_id": "V01"
+ },
+ "speech_0275.wav": {
+  "disposition": "low_hp",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "Unless we get some help, we're finished.",
+  "voice_id": "V01"
+ },
+ "speech_0276.wav": {
+  "disposition": "hostile",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "Die, you smuggling scum.",
+  "voice_id": "V01"
+ },
+ "speech_0277.wav": {
+  "disposition": "other",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "You are beaten. Want a surrender?",
+  "voice_id": "V01"
+ },
+ "speech_0278.wav": {
+  "disposition": "kill",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "One bogey terminated.",
+  "voice_id": "V01"
+ },
+ "speech_0279.wav": {
+  "disposition": "kill",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V01_M_militia",
+  "text": "enemy target destroyed.",
+  "voice_id": "V01"
+ },
+ "speech_0280.wav": {
+  "disposition": "kill",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V12_M_pirate",
+  "text": "You are just in time for the massacre.",
+  "voice_id": "V12"
+ },
+ "speech_0281.wav": {
+  "disposition": "other",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V12_M_pirate",
+  "text": "Cut the chatter and listen.",
+  "voice_id": "V12"
+ },
+ "speech_0282.wav": {
+  "disposition": "other",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V12_M_pirate",
+  "text": "This is Admiral Riceman.",
+  "voice_id": "V12"
+ },
+ "speech_0283.wav": {
+  "disposition": "other",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V12_M_pirate",
+  "text": "We'll hit the thing as soon as it arrives.",
+  "voice_id": "V12"
+ },
+ "speech_0284.wav": {
+  "disposition": "other",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V12_M_pirate",
+  "text": "Hold your position until it does.",
+  "voice_id": "V12"
+ },
+ "speech_0285.wav": {
+  "disposition": "other",
+  "faction": "confed",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V12_M_pirate",
+  "text": "and feel free to join in.Riceman out.",
+  "voice_id": "V12"
+ },
+ "speech_0286.wav": {
+  "disposition": "hostile",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V13_M_bounty_hunter",
+  "text": "The advantage is mine. Now you die.",
+  "voice_id": "V13"
+ },
+ "speech_0287.wav": {
+  "disposition": "kill",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V13_M_bounty_hunter",
+  "text": "Nothing personal, but your death is my game.",
+  "voice_id": "V13"
+ },
+ "speech_0288.wav": {
+  "disposition": "kill",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V13_M_bounty_hunter",
+  "text": "Killing you will put me in the black fly, boy.",
+  "voice_id": "V13"
+ },
+ "speech_0289.wav": {
+  "disposition": "low_hp",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V13_M_bounty_hunter",
+  "text": "No, it can't end like this.",
+  "voice_id": "V13"
+ },
+ "speech_0290.wav": {
+  "disposition": "low_hp",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V33_M_bounty_hunter",
+  "text": "Oh, this is not good.",
+  "voice_id": "V33"
+ },
+ "speech_0291.wav": {
+  "disposition": "other",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V13_M_bounty_hunter",
+  "text": "I'll show Taylor what a real man can do.",
+  "voice_id": "V13"
+ },
+ "speech_0292.wav": {
+  "disposition": "kill",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V13_M_bounty_hunter",
+  "text": "Your death is my living, buddy.",
+  "voice_id": "V13"
+ },
+ "speech_0293.wav": {
+  "disposition": "kill",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V13_M_bounty_hunter",
+  "text": "another day, another kill.",
+  "voice_id": "V13"
+ },
+ "speech_0294.wav": {
+  "disposition": "kill",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V24_M_merchant",
+  "text": "One more for the resume.",
+  "voice_id": "V24"
+ },
+ "speech_0295.wav": {
+  "disposition": "other",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V13_M_bounty_hunter",
+  "text": "Where the hell do you think you're going?",
+  "voice_id": "V13"
+ },
+ "speech_0296.wav": {
+  "disposition": "other",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V13_M_bounty_hunter",
+  "text": "You don't recognize me, do you?",
+  "voice_id": "V13"
+ },
+ "speech_0297.wav": {
+  "disposition": "other",
+  "faction": "bounty_hunter",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V13_M_bounty_hunter",
+  "text": "Hold on, Mr.",
+  "voice_id": "V13"
+ },
+ "speech_0298.wav": {
+  "disposition": "other",
+  "faction": "william_reordion",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V13_M_bounty_hunter",
+  "text": "I think it's high time we were introduced.",
+  "voice_id": "V13"
+ },
+ "speech_0299.wav": {
+  "disposition": "other",
+  "faction": "william_reordion",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V35_M_william_reordion",
+  "text": "Don't you?",
+  "voice_id": "V35"
+ },
+ "speech_0300.wav": {
+  "disposition": "other",
+  "faction": "william_reordion",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V13_M_bounty_hunter",
+  "text": "Come on, you steal a man's business.",
+  "voice_id": "V13"
+ },
+ "speech_0301.wav": {
+  "disposition": "other",
+  "faction": "william_reordion",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V13_M_bounty_hunter",
+  "text": "you ought to at least know his name.",
+  "voice_id": "V13"
+ },
+ "speech_0302.wav": {
+  "disposition": "other",
+  "faction": "william_reordion",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V13_M_bounty_hunter",
+  "text": "My name is William Reordion.",
+  "voice_id": "V13"
+ },
+ "speech_0303.wav": {
+  "disposition": "other",
+  "faction": "william_reordion",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V13_M_bounty_hunter",
+  "text": "My name is William Reordion.",
+  "voice_id": "V13"
+ },
+ "speech_0304.wav": {
+  "disposition": "other",
+  "faction": "william_reordion",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V13_M_bounty_hunter",
+  "text": "You take over my route, fly for Taylor.",
+  "voice_id": "V13"
+ },
+ "speech_0305.wav": {
+  "disposition": "other",
+  "faction": "william_reordion",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V13_M_bounty_hunter",
+  "text": "and then have a God to insult me.",
+  "voice_id": "V13"
+ },
+ "speech_0306.wav": {
+  "disposition": "other",
+  "faction": "william_reordion",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V13_M_bounty_hunter",
+  "text": "There's not enough work for two private tiers.",
+  "voice_id": "V13"
+ },
+ "speech_0307.wav": {
+  "disposition": "other",
+  "faction": "william_reordion",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V13_M_bounty_hunter",
+  "text": "I'll teach you to steal my business.",
+  "voice_id": "V13"
+ },
+ "speech_0308.wav": {
+  "disposition": "hostile",
+  "faction": "william_reordion",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V13_M_bounty_hunter",
+  "text": "You're a dead man.",
+  "voice_id": "V13"
+ },
+ "speech_0309.wav": {
+  "disposition": "friendly",
+  "faction": "william_reordion",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V18_M_pirate",
+  "text": "Looking sharp, Ace!",
+  "voice_id": "V18"
+ },
+ "speech_0310.wav": {
+  "disposition": "friendly",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V18_M_pirate",
+  "text": "You are clear for clicks.",
+  "voice_id": "V18"
+ },
+ "speech_0311.wav": {
+  "disposition": "friendly",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V18_M_pirate",
+  "text": "Catch you on the next run.",
+  "voice_id": "V18"
+ },
+ "speech_0312.wav": {
+  "disposition": "hostile",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V15_M_pirate",
+  "text": "You're a loose end looking to be tied, pal.",
+  "voice_id": "V15"
+ },
+ "speech_0313.wav": {
+  "disposition": "hostile",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V15_M_pirate",
+  "text": "You're finished, fly boy!",
+  "voice_id": "V15"
+ },
+ "speech_0314.wav": {
+  "disposition": "hostile",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V15_M_pirate",
+  "text": "You're about to suck void, buddy.",
+  "voice_id": "V15"
+ },
+ "speech_0315.wav": {
+  "disposition": "low_hp",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V15_M_pirate",
+  "text": "Damn, you're ripping me apart!",
+  "voice_id": "V15"
+ },
+ "speech_0316.wav": {
+  "disposition": "low_hp",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V15_M_pirate",
+  "text": "This creates about to explode.",
+  "voice_id": "V15"
+ },
+ "speech_0317.wav": {
+  "disposition": "other",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V15_M_pirate",
+  "text": "How's that from, message, errand boy?",
+  "voice_id": "V15"
+ },
+ "speech_0318.wav": {
+  "disposition": "kill",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V15_M_pirate",
+  "text": "Yeah, you're nailed, pal.",
+  "voice_id": "V15"
+ },
+ "speech_0319.wav": {
+  "disposition": "kill",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V15_M_pirate",
+  "text": "A clean kill should have been a bounty hunter.",
+  "voice_id": "V15"
+ },
+ "speech_0320.wav": {
+  "disposition": "kill",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V15_M_pirate",
+  "text": "You're dead, chump!",
+  "voice_id": "V15"
+ },
+ "speech_0321.wav": {
+  "disposition": "other",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V18_M_pirate",
+  "text": "Nice ship, Captain. How about a little tour?",
+  "voice_id": "V18"
+ },
+ "speech_0322.wav": {
+  "disposition": "other",
+  "faction": "steltek",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V18_M_pirate",
+  "text": "Okay, you've got my attention. What do you want?",
+  "voice_id": "V18"
+ },
+ "speech_0323.wav": {
+  "disposition": "other",
+  "faction": "steltek",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V18_M_pirate",
+  "text": "He is easy.What a hero response.",
+  "voice_id": "V18"
+ },
+ "speech_0324.wav": {
+  "disposition": "other",
+  "faction": "steltek",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V18_M_pirate",
+  "text": "Well, here it comes!",
+  "voice_id": "V18"
+ },
+ "speech_0325.wav": {
+  "disposition": "other",
+  "faction": "steltek",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V10_M_steltek",
+  "text": "",
+  "voice_id": "V10"
+ },
+ "speech_0326.wav": {
+  "disposition": "other",
+  "faction": "steltek",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V10_M_steltek",
+  "text": "",
+  "voice_id": "V10"
+ },
+ "speech_0327.wav": {
+  "disposition": "other",
+  "faction": "steltek",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V10_M_steltek",
+  "text": "We are Delta!",
+  "voice_id": "V10"
+ },
+ "speech_0328.wav": {
+  "disposition": "other",
+  "faction": "steltek",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V10_M_steltek",
+  "text": "",
+  "voice_id": "V10"
+ },
+ "speech_0329.wav": {
+  "disposition": "other",
+  "faction": "steltek",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V10_M_steltek",
+  "text": "You will tell us what...",
+  "voice_id": "V10"
+ },
+ "speech_0330.wav": {
+  "disposition": "other",
+  "faction": "steltek",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V10_M_steltek",
+  "text": "Hunters to it.",
+  "voice_id": "V10"
+ },
+ "speech_0331.wav": {
+  "disposition": "other",
+  "faction": "steltek",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V10_M_steltek",
+  "text": "",
+  "voice_id": "V10"
+ },
+ "speech_0332.wav": {
+  "disposition": "other",
+  "faction": "steltek",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V10_M_steltek",
+  "text": "",
+  "voice_id": "V10"
+ },
+ "speech_0333.wav": {
+  "disposition": "other",
+  "faction": "steltek",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V10_M_steltek",
+  "text": "",
+  "voice_id": "V10"
+ },
+ "speech_0334.wav": {
+  "disposition": "other",
+  "faction": "steltek",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V10_M_steltek",
+  "text": "We lemonade out.",
+  "voice_id": "V10"
+ },
+ "speech_0335.wav": {
+  "disposition": "other",
+  "faction": "steltek",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V10_M_steltek",
+  "text": "",
+  "voice_id": "V10"
+ },
+ "speech_0336.wav": {
+  "disposition": "other",
+  "faction": "steltek",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V10_M_steltek",
+  "text": "",
+  "voice_id": "V10"
+ },
+ "speech_0337.wav": {
+  "disposition": "other",
+  "faction": "steltek",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V10_M_steltek",
+  "text": "",
+  "voice_id": "V10"
+ },
+ "speech_0338.wav": {
+  "disposition": "other",
+  "faction": "steltek",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V10_M_steltek",
+  "text": "",
+  "voice_id": "V10"
+ },
+ "speech_0339.wav": {
+  "disposition": "friendly",
+  "faction": "steltek",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V10_M_steltek",
+  "text": "Thank you very much.",
+  "voice_id": "V10"
+ },
+ "speech_0340.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V10_M_steltek",
+  "text": "Again.",
+  "voice_id": "V10"
+ },
+ "speech_0341.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V10_M_steltek",
+  "text": "Again.",
+  "voice_id": "V10"
+ },
+ "speech_0342.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V10_M_steltek",
+  "text": "Economic",
+  "voice_id": "V10"
+ },
+ "speech_0343.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V10_M_steltek",
+  "text": "We call it.",
+  "voice_id": "V10"
+ },
+ "speech_0344.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V10_M_steltek",
+  "text": "",
+  "voice_id": "V10"
+ },
+ "speech_0345.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V10_M_steltek",
+  "text": "",
+  "voice_id": "V10"
+ },
+ "speech_0346.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V10_M_steltek",
+  "text": "",
+  "voice_id": "V10"
+ },
+ "speech_0347.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V10_M_steltek",
+  "text": "",
+  "voice_id": "V10"
+ },
+ "speech_0348.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V10_M_steltek",
+  "text": "I agree.",
+  "voice_id": "V10"
+ },
+ "speech_0349.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V10_M_steltek",
+  "text": "Sir, will.",
+  "voice_id": "V10"
+ },
+ "speech_0350.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V10_M_steltek",
+  "text": "to destroy Iran.Underneath.",
+  "voice_id": "V10"
+ },
+ "speech_0351.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V10_M_steltek",
+  "text": "",
+  "voice_id": "V10"
+ },
+ "speech_0352.wav": {
+  "disposition": "friendly",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V17_M_merchant",
+  "text": "How's the going friend?",
+  "voice_id": "V17"
+ },
+ "speech_0353.wav": {
+  "disposition": "friendly",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V17_M_merchant",
+  "text": "Good to see a friendly ship.",
+  "voice_id": "V17"
+ },
+ "speech_0354.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V17_M_merchant",
+  "text": "Isn't this treating you well?",
+  "voice_id": "V17"
+ },
+ "speech_0355.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V17_M_merchant",
+  "text": "You maniac, the guild will hear about this.",
+  "voice_id": "V17"
+ },
+ "speech_0356.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V02_M_pirate",
+  "text": "My poor ship, I'll have to sell it for scrap.",
+  "voice_id": "V02"
+ },
+ "speech_0357.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V02_M_pirate",
+  "text": "Not bad for a lowly merchant, a pirate.",
+  "voice_id": "V02"
+ },
+ "speech_0358.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V02_M_pirate",
+  "text": "serves you right, attacking an honest dealer.",
+  "voice_id": "V02"
+ },
+ "speech_0359.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V02_M_pirate",
+  "text": "Ah, another dissatisfied customer.",
+  "voice_id": "V02"
+ },
+ "speech_0360.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V02_M_pirate",
+  "text": "and one more loser caches in their chips",
+  "voice_id": "V02"
+ },
+ "speech_0361.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V17_M_merchant",
+  "text": "Oh dear, are you one of those dreadful retros?",
+  "voice_id": "V17"
+ },
+ "speech_0362.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V17_M_merchant",
+  "text": "Please tell me you're not here to kill me.",
+  "voice_id": "V17"
+ },
+ "speech_0363.wav": {
+  "disposition": "friendly",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V17_M_merchant",
+  "text": "Thank you, young man.",
+  "voice_id": "V17"
+ },
+ "speech_0364.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V17_M_merchant",
+  "text": "I just hope we don't encounter any retros.",
+  "voice_id": "V17"
+ },
+ "speech_0365.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "M",
+  "gender_conf": "high",
+  "speaker": "V17_M_merchant",
+  "text": "Of that, I'm sure.",
+  "voice_id": "V17"
+ },
+ "speech_0366.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V31_F_merchant",
+  "text": "Oh, gracious me.",
+  "voice_id": "V31"
+ },
+ "speech_0367.wav": {
+  "disposition": "other",
+  "faction": "flight_controller",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Now entering an automatic landing zone.",
+  "voice_id": "V00"
+ },
+ "speech_0368.wav": {
+  "disposition": "friendly",
+  "faction": "bounty_hunter",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Welcome to the Happy Hunting Ground!",
+  "voice_id": "V00"
+ },
+ "speech_0369.wav": {
+  "disposition": "hostile",
+  "faction": "bounty_hunter",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "If you're smart, you'll watch your back.",
+  "voice_id": "V00"
+ },
+ "speech_0370.wav": {
+  "disposition": "other",
+  "faction": "bounty_hunter",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Better clear out, troubles brewing.",
+  "voice_id": "V00"
+ },
+ "speech_0371.wav": {
+  "disposition": "other",
+  "faction": "bounty_hunter",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "You're not on my list, this time.",
+  "voice_id": "V00"
+ },
+ "speech_0372.wav": {
+  "disposition": "other",
+  "faction": "bounty_hunter",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Just smoking out a little game, flyboy.",
+  "voice_id": "V00"
+ },
+ "speech_0373.wav": {
+  "disposition": "other",
+  "faction": "bounty_hunter",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Don't worry, I only kill for a fee.",
+  "voice_id": "V00"
+ },
+ "speech_0374.wav": {
+  "disposition": "hostile",
+  "faction": "bounty_hunter",
+  "gender": "F",
+  "gender_conf": "low",
+  "speaker": "V20_F_bounty_hunter",
+  "text": "The advantage is mine, now you die!",
+  "voice_id": "V20"
+ },
+ "speech_0375.wav": {
+  "disposition": "kill",
+  "faction": "bounty_hunter",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Nothing personal, but your death is my gain.",
+  "voice_id": "V00"
+ },
+ "speech_0376.wav": {
+  "disposition": "kill",
+  "faction": "bounty_hunter",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Killing you will put me in the black fly, boy.",
+  "voice_id": "V00"
+ },
+ "speech_0377.wav": {
+  "disposition": "low_hp",
+  "faction": "bounty_hunter",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "No, it can't end like this.",
+  "voice_id": "V00"
+ },
+ "speech_0378.wav": {
+  "disposition": "low_hp",
+  "faction": "bounty_hunter",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V23_F_bounty_hunter",
+  "text": "This is not good.",
+  "voice_id": "V23"
+ },
+ "speech_0379.wav": {
+  "disposition": "other",
+  "faction": "bounty_hunter",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Hey, what can I say? I'm a professional.",
+  "voice_id": "V00"
+ },
+ "speech_0380.wav": {
+  "disposition": "kill",
+  "faction": "bounty_hunter",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Your death is my living, buddy.",
+  "voice_id": "V00"
+ },
+ "speech_0381.wav": {
+  "disposition": "kill",
+  "faction": "bounty_hunter",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Another day, another kill.",
+  "voice_id": "V00"
+ },
+ "speech_0382.wav": {
+  "disposition": "kill",
+  "faction": "bounty_hunter",
+  "gender": "F",
+  "gender_conf": "low",
+  "speaker": "V21_F_bounty_hunter",
+  "text": "One more for the resume.",
+  "voice_id": "V21"
+ },
+ "speech_0383.wav": {
+  "disposition": "other",
+  "faction": "bounty_hunter",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Those books go in my hold or up in flames.",
+  "voice_id": "V00"
+ },
+ "speech_0384.wav": {
+  "disposition": "kill",
+  "faction": "bounty_hunter",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Nothing personal, but your death is my gain.",
+  "voice_id": "V00"
+ },
+ "speech_0385.wav": {
+  "disposition": "kill",
+  "faction": "bounty_hunter",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Killing you will put me in the black fly, boy.",
+  "voice_id": "V00"
+ },
+ "speech_0386.wav": {
+  "disposition": "low_hp",
+  "faction": "bounty_hunter",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "No, it can't end like this.",
+  "voice_id": "V00"
+ },
+ "speech_0387.wav": {
+  "disposition": "low_hp",
+  "faction": "bounty_hunter",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V23_F_bounty_hunter",
+  "text": "This is not good.",
+  "voice_id": "V23"
+ },
+ "speech_0388.wav": {
+  "disposition": "other",
+  "faction": "bounty_hunter",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Hey, what can I say? I'm a professional.",
+  "voice_id": "V00"
+ },
+ "speech_0389.wav": {
+  "disposition": "kill",
+  "faction": "bounty_hunter",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Your death is my living, buddy.",
+  "voice_id": "V00"
+ },
+ "speech_0390.wav": {
+  "disposition": "kill",
+  "faction": "bounty_hunter",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Another day, another kill.",
+  "voice_id": "V00"
+ },
+ "speech_0391.wav": {
+  "disposition": "kill",
+  "faction": "bounty_hunter",
+  "gender": "F",
+  "gender_conf": "low",
+  "speaker": "V21_F_bounty_hunter",
+  "text": "One more for the resume.",
+  "voice_id": "V21"
+ },
+ "speech_0392.wav": {
+  "disposition": "hostile",
+  "faction": "bounty_hunter",
+  "gender": "F",
+  "gender_conf": "low",
+  "speaker": "V20_F_bounty_hunter",
+  "text": "The advantage is mine, now you die!",
+  "voice_id": "V20"
+ },
+ "speech_0393.wav": {
+  "disposition": "other",
+  "faction": "bounty_hunter",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "You'll have to go through us to get to Palin.",
+  "voice_id": "V00"
+ },
+ "speech_0394.wav": {
+  "disposition": "kill",
+  "faction": "bounty_hunter",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Killing you will put me in the black fly, boy.",
+  "voice_id": "V00"
+ },
+ "speech_0395.wav": {
+  "disposition": "low_hp",
+  "faction": "bounty_hunter",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "No, it can't end like this.",
+  "voice_id": "V00"
+ },
+ "speech_0396.wav": {
+  "disposition": "low_hp",
+  "faction": "bounty_hunter",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V23_F_bounty_hunter",
+  "text": "This is not good.",
+  "voice_id": "V23"
+ },
+ "speech_0397.wav": {
+  "disposition": "other",
+  "faction": "bounty_hunter",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Hey, what can I say? I'm a professional.",
+  "voice_id": "V00"
+ },
+ "speech_0398.wav": {
+  "disposition": "kill",
+  "faction": "bounty_hunter",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Your death is my living, buddy.",
+  "voice_id": "V00"
+ },
+ "speech_0399.wav": {
+  "disposition": "kill",
+  "faction": "bounty_hunter",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Another day, another kill.",
+  "voice_id": "V00"
+ },
+ "speech_0400.wav": {
+  "disposition": "kill",
+  "faction": "bounty_hunter",
+  "gender": "F",
+  "gender_conf": "low",
+  "speaker": "V21_F_bounty_hunter",
+  "text": "One more for the resume.",
+  "voice_id": "V21"
+ },
+ "speech_0401.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V03_F_retro",
+  "text": "weapons you adore!",
+  "voice_id": "V03"
+ },
+ "speech_0402.wav": {
+  "disposition": "hostile",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V03_F_retro",
+  "text": "Greater to humanity, we are wrath.",
+  "voice_id": "V03"
+ },
+ "speech_0403.wav": {
+  "disposition": "hostile",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V03_F_retro",
+  "text": "Repent! And accept our righteous judgment!",
+  "voice_id": "V03"
+ },
+ "speech_0404.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V03_F_retro",
+  "text": "Can it be as the god of man abandoned us?",
+  "voice_id": "V03"
+ },
+ "speech_0405.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V03_F_retro",
+  "text": "",
+  "voice_id": "V03"
+ },
+ "speech_0406.wav": {
+  "disposition": "hostile",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V03_F_retro",
+  "text": "Your destruction is the will of God!",
+  "voice_id": "V03"
+ },
+ "speech_0407.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V03_F_retro",
+  "text": "the purifying fire of the Lord!",
+  "voice_id": "V03"
+ },
+ "speech_0408.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V03_F_retro",
+  "text": "You heathen's lorry be unto the most high!",
+  "voice_id": "V03"
+ },
+ "speech_0409.wav": {
+  "disposition": "hostile",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V03_F_retro",
+  "text": "Hyattie has prevailed again, die devil!",
+  "voice_id": "V03"
+ },
+ "speech_0410.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V03_F_retro",
+  "text": "weapons you adore!",
+  "voice_id": "V03"
+ },
+ "speech_0411.wav": {
+  "disposition": "hostile",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V03_F_retro",
+  "text": "Greater to humanity, we are wrath.",
+  "voice_id": "V03"
+ },
+ "speech_0412.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V03_F_retro",
+  "text": "Oh, forget Oxford, your next stop is hell.",
+  "voice_id": "V03"
+ },
+ "speech_0413.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V03_F_retro",
+  "text": "Can it be as the god of man abandoned us?",
+  "voice_id": "V03"
+ },
+ "speech_0414.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V03_F_retro",
+  "text": "",
+  "voice_id": "V03"
+ },
+ "speech_0415.wav": {
+  "disposition": "hostile",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V03_F_retro",
+  "text": "Your destruction is the will of God!",
+  "voice_id": "V03"
+ },
+ "speech_0416.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V03_F_retro",
+  "text": "the purifying fire of the Lord!",
+  "voice_id": "V03"
+ },
+ "speech_0417.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V03_F_retro",
+  "text": "You heathen's lorry be unto the most high!",
+  "voice_id": "V03"
+ },
+ "speech_0418.wav": {
+  "disposition": "hostile",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V03_F_retro",
+  "text": "Hyattie has prevailed again, die devil!",
+  "voice_id": "V03"
+ },
+ "speech_0419.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V26_F_retro",
+  "text": "Hunter Tom?",
+  "voice_id": "V26"
+ },
+ "speech_0420.wav": {
+  "disposition": "hostile",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V03_F_retro",
+  "text": "That's for your heresy!",
+  "voice_id": "V03"
+ },
+ "speech_0421.wav": {
+  "disposition": "hostile",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V03_F_retro",
+  "text": "Execution cell commence now",
+  "voice_id": "V03"
+ },
+ "speech_0422.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V03_F_retro",
+  "text": "weapons you adore!",
+  "voice_id": "V03"
+ },
+ "speech_0423.wav": {
+  "disposition": "hostile",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V03_F_retro",
+  "text": "Greater to humanity, we are wrath.",
+  "voice_id": "V03"
+ },
+ "speech_0424.wav": {
+  "disposition": "hostile",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V03_F_retro",
+  "text": "Repent! And accept our righteous judgment!",
+  "voice_id": "V03"
+ },
+ "speech_0425.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V03_F_retro",
+  "text": "Can it be as the god of man abandoned us?",
+  "voice_id": "V03"
+ },
+ "speech_0426.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V03_F_retro",
+  "text": "",
+  "voice_id": "V03"
+ },
+ "speech_0427.wav": {
+  "disposition": "hostile",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V03_F_retro",
+  "text": "Your destruction is the will of God!",
+  "voice_id": "V03"
+ },
+ "speech_0428.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V03_F_retro",
+  "text": "the purifying fire of the Lord!",
+  "voice_id": "V03"
+ },
+ "speech_0429.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V03_F_retro",
+  "text": "You heathen's lorry be unto the most high!",
+  "voice_id": "V03"
+ },
+ "speech_0430.wav": {
+  "disposition": "hostile",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V03_F_retro",
+  "text": "Hyattie has prevailed again, die devil!",
+  "voice_id": "V03"
+ },
+ "speech_0431.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V03_F_retro",
+  "text": "Sinner, ready myself for righteous retribution.",
+  "voice_id": "V03"
+ },
+ "speech_0432.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V03_F_retro",
+  "text": "We know you possess high-level alien devices!",
+  "voice_id": "V03"
+ },
+ "speech_0433.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V03_F_retro",
+  "text": "of damnable intent.",
+  "voice_id": "V03"
+ },
+ "speech_0434.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V03_F_retro",
+  "text": "for adding to the technological burden of mankind.",
+  "voice_id": "V03"
+ },
+ "speech_0435.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V03_F_retro",
+  "text": "The Church of Man condemns you!",
+  "voice_id": "V03"
+ },
+ "speech_0436.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V03_F_retro",
+  "text": "",
+  "voice_id": "V03"
+ },
+ "speech_0437.wav": {
+  "disposition": "friendly",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Your profile is clear to sector's edge.",
+  "voice_id": "V00"
+ },
+ "speech_0438.wav": {
+  "disposition": "friendly",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Stick to established lanes for your own good.",
+  "voice_id": "V00"
+ },
+ "speech_0439.wav": {
+  "disposition": "friendly",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Patrol to civilian craft. Keep your distance.",
+  "voice_id": "V00"
+ },
+ "speech_0440.wav": {
+  "disposition": "friendly",
+  "faction": "confed",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Flying in shared air space. Keep your Vidcom open.",
+  "voice_id": "V00"
+ },
+ "speech_0441.wav": {
+  "disposition": "other",
+  "faction": "confed",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Entering disputed space, report any disturbances.",
+  "voice_id": "V00"
+ },
+ "speech_0442.wav": {
+  "disposition": "friendly",
+  "faction": "confed",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "We have you on our screens. Continue on course.",
+  "voice_id": "V00"
+ },
+ "speech_0443.wav": {
+  "disposition": "hostile",
+  "faction": "confed",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "You've got quite a record pal, but it ends here.",
+  "voice_id": "V00"
+ },
+ "speech_0444.wav": {
+  "disposition": "kill",
+  "faction": "confed",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "We've accessed your file, pirate.You're dead.",
+  "voice_id": "V00"
+ },
+ "speech_0445.wav": {
+  "disposition": "other",
+  "faction": "confed",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Hey, give me a call when you get the hell.",
+  "voice_id": "V00"
+ },
+ "speech_0446.wav": {
+  "disposition": "low_hp",
+  "faction": "confed",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Mayday, we've sustained massive damage.",
+  "voice_id": "V00"
+ },
+ "speech_0447.wav": {
+  "disposition": "low_hp",
+  "faction": "confed",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Unless we get some help, we're finished.",
+  "voice_id": "V00"
+ },
+ "speech_0448.wav": {
+  "disposition": "hostile",
+  "faction": "confed",
+  "gender": "F",
+  "gender_conf": "low",
+  "speaker": "V20_F_bounty_hunter",
+  "text": "Dive smuggling scum!",
+  "voice_id": "V20"
+ },
+ "speech_0449.wav": {
+  "disposition": "other",
+  "faction": "confed",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "You're beaten. Want us to render?",
+  "voice_id": "V00"
+ },
+ "speech_0450.wav": {
+  "disposition": "kill",
+  "faction": "confed",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "One bogey terminated.",
+  "voice_id": "V00"
+ },
+ "speech_0451.wav": {
+  "disposition": "kill",
+  "faction": "confed",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Enemy target destroyed.",
+  "voice_id": "V00"
+ },
+ "speech_0452.wav": {
+  "disposition": "contraband",
+  "faction": "confed",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Maintain speed and course for contraband search.",
+  "voice_id": "V00"
+ },
+ "speech_0453.wav": {
+  "disposition": "contraband",
+  "faction": "confed",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Contraband Detective Target Offender and fire at will.",
+  "voice_id": "V00"
+ },
+ "speech_0454.wav": {
+  "disposition": "contraband",
+  "faction": "confed",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "No contraband detected. You may proceed.",
+  "voice_id": "V00"
+ },
+ "speech_0455.wav": {
+  "disposition": "hostile",
+  "faction": "confed",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "You've got quite a record pal, but it ends here.",
+  "voice_id": "V00"
+ },
+ "speech_0456.wav": {
+  "disposition": "kill",
+  "faction": "confed",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "We've accessed your file, pirate.You're dead.",
+  "voice_id": "V00"
+ },
+ "speech_0457.wav": {
+  "disposition": "other",
+  "faction": "confed",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Hey, give me a call when you get the hell.",
+  "voice_id": "V00"
+ },
+ "speech_0458.wav": {
+  "disposition": "low_hp",
+  "faction": "confed",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Mayday, we've sustained massive damage.",
+  "voice_id": "V00"
+ },
+ "speech_0459.wav": {
+  "disposition": "low_hp",
+  "faction": "confed",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Unless we get some help, we're finished.",
+  "voice_id": "V00"
+ },
+ "speech_0460.wav": {
+  "disposition": "other",
+  "faction": "confed",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "A life sentence doesn't look so bad now, a-rejust?",
+  "voice_id": "V00"
+ },
+ "speech_0461.wav": {
+  "disposition": "other",
+  "faction": "confed",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "You're beaten. Want us to render?",
+  "voice_id": "V00"
+ },
+ "speech_0462.wav": {
+  "disposition": "kill",
+  "faction": "confed",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "One bogey terminated.",
+  "voice_id": "V00"
+ },
+ "speech_0463.wav": {
+  "disposition": "kill",
+  "faction": "confed",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Enemy target destroyed.",
+  "voice_id": "V00"
+ },
+ "speech_0464.wav": {
+  "disposition": "other",
+  "faction": "confed",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "We know you are transporting and known fellan.",
+  "voice_id": "V00"
+ },
+ "speech_0465.wav": {
+  "disposition": "hostile",
+  "faction": "confed",
+  "gender": "F",
+  "gender_conf": "low",
+  "speaker": "V20_F_bounty_hunter",
+  "text": "Prepare to die criminal scum.",
+  "voice_id": "V20"
+ },
+ "speech_0466.wav": {
+  "disposition": "friendly",
+  "faction": "confed",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "How's it going, friend?",
+  "voice_id": "V00"
+ },
+ "speech_0467.wav": {
+  "disposition": "friendly",
+  "faction": "merchant",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Good to see a friendly ship.",
+  "voice_id": "V00"
+ },
+ "speech_0468.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "business treating you well?",
+  "voice_id": "V00"
+ },
+ "speech_0469.wav": {
+  "disposition": "friendly",
+  "faction": "merchant",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Just a passing merchant.Don't get jumpy.",
+  "voice_id": "V00"
+ },
+ "speech_0470.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "I'm not looking for any trouble.",
+  "voice_id": "V00"
+ },
+ "speech_0471.wav": {
+  "disposition": "friendly",
+  "faction": "merchant",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Maybe we can do business sometime.",
+  "voice_id": "V00"
+ },
+ "speech_0472.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Cut me some slack, will ya?",
+  "voice_id": "V00"
+ },
+ "speech_0473.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "You're scaring away my business.",
+  "voice_id": "V00"
+ },
+ "speech_0474.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Hey, don't trash me, man!",
+  "voice_id": "V00"
+ },
+ "speech_0475.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "You maniac! The guild will hear about this!",
+  "voice_id": "V00"
+ },
+ "speech_0476.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V03_F_retro",
+  "text": "my poor ship. I'll have to sell it for scrap.",
+  "voice_id": "V03"
+ },
+ "speech_0477.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Not bad for a lowly merchant, hey, pirate.",
+  "voice_id": "V00"
+ },
+ "speech_0478.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "serves you right attacking an honest dealer.",
+  "voice_id": "V00"
+ },
+ "speech_0479.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "Another dissatisfied customer.",
+  "voice_id": "V00"
+ },
+ "speech_0480.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "F",
+  "gender_conf": "high",
+  "speaker": "V00_F_bounty_hunter",
+  "text": "and one more loser cash is in its chips.",
+  "voice_id": "V00"
+ },
+ "speech_0481.wav": {
+  "disposition": "other",
+  "faction": "merchant",
+  "gender": "F",
+  "gender_conf": "med",
+  "speaker": "V06_F_militia",
+  "text": "Keep your eyes peeled for trouble, Ace.",
+  "voice_id": "V06"
+ },
+ "speech_0482.wav": {
+  "disposition": "other",
+  "faction": "militia",
+  "gender": "F",
+  "gender_conf": "med",
+  "speaker": "V06_F_militia",
+  "text": "Let me know if you hit trouble in my quad.",
+  "voice_id": "V06"
+ },
+ "speech_0483.wav": {
+  "disposition": "other",
+  "faction": "militia",
+  "gender": "F",
+  "gender_conf": "med",
+  "speaker": "V06_F_militia",
+  "text": "We've got this sector-bottled tight friend.",
+  "voice_id": "V06"
+ },
+ "speech_0484.wav": {
+  "disposition": "friendly",
+  "faction": "militia",
+  "gender": "F",
+  "gender_conf": "med",
+  "speaker": "V06_F_militia",
+  "text": "Malisha here, stick to your flight path.",
+  "voice_id": "V06"
+ },
+ "speech_0485.wav": {
+  "disposition": "friendly",
+  "faction": "militia",
+  "gender": "F",
+  "gender_conf": "med",
+  "speaker": "V06_F_militia",
+  "text": "Keep your nose clean in our sector.",
+  "voice_id": "V06"
+ },
+ "speech_0486.wav": {
+  "disposition": "friendly",
+  "faction": "militia",
+  "gender": "F",
+  "gender_conf": "med",
+  "speaker": "V06_F_militia",
+  "text": "You're clear to pass.",
+  "voice_id": "V06"
+ },
+ "speech_0487.wav": {
+  "disposition": "hostile",
+  "faction": "militia",
+  "gender": "F",
+  "gender_conf": "med",
+  "speaker": "V06_F_militia",
+  "text": "You're not leaving this quite a live pirate.",
+  "voice_id": "V06"
+ },
+ "speech_0488.wav": {
+  "disposition": "hostile",
+  "faction": "militia",
+  "gender": "F",
+  "gender_conf": "med",
+  "speaker": "V06_F_militia",
+  "text": "This is your last run.",
+  "voice_id": "V06"
+ },
+ "speech_0489.wav": {
+  "disposition": "hostile",
+  "faction": "militia",
+  "gender": "F",
+  "gender_conf": "med",
+  "speaker": "V06_F_militia",
+  "text": "your luck as run out, along with my patients.",
+  "voice_id": "V06"
+ },
+ "speech_0490.wav": {
+  "disposition": "low_hp",
+  "faction": "militia",
+  "gender": "F",
+  "gender_conf": "med",
+  "speaker": "V06_F_militia",
+  "text": "Militia forces in need of assistance.",
+  "voice_id": "V06"
+ },
+ "speech_0491.wav": {
+  "disposition": "low_hp",
+  "faction": "militia",
+  "gender": "F",
+  "gender_conf": "med",
+  "speaker": "V06_F_militia",
+  "text": "We're in trouble.",
+  "voice_id": "V06"
+ },
+ "speech_0492.wav": {
+  "disposition": "other",
+  "faction": "militia",
+  "gender": "F",
+  "gender_conf": "med",
+  "speaker": "V06_F_militia",
+  "text": "You cannot win with draw or be destroyed.",
+  "voice_id": "V06"
+ },
+ "speech_0493.wav": {
+  "disposition": "low_hp",
+  "faction": "militia",
+  "gender": "F",
+  "gender_conf": "med",
+  "speaker": "V06_F_militia",
+  "text": "Sensors show you are breaking up. Retreat.",
+  "voice_id": "V06"
+ },
+ "speech_0494.wav": {
+  "disposition": "kill",
+  "faction": "militia",
+  "gender": "F",
+  "gender_conf": "med",
+  "speaker": "V06_F_militia",
+  "text": "Target eliminated command.",
+  "voice_id": "V06"
+ },
+ "speech_0495.wav": {
+  "disposition": "kill",
+  "faction": "militia",
+  "gender": "F",
+  "gender_conf": "med",
+  "speaker": "V06_F_militia",
+  "text": "militia to base, enemy dispatched.",
+  "voice_id": "V06"
+ },
+ "speech_0496.wav": {
+  "disposition": "contraband",
+  "faction": "militia",
+  "gender": "F",
+  "gender_conf": "med",
+  "speaker": "V06_F_militia",
+  "text": "Prepare to be searched, maintained speed, and coarse.",
+  "voice_id": "V06"
+ },
+ "speech_0497.wav": {
+  "disposition": "contraband",
+  "faction": "militia",
+  "gender": "F",
+  "gender_conf": "med",
+  "speaker": "V06_F_militia",
+  "text": "Contraband detected all units close and terminate.",
+  "voice_id": "V06"
+ },
+ "speech_0498.wav": {
+  "disposition": "contraband",
+  "faction": "militia",
+  "gender": "F",
+  "gender_conf": "med",
+  "speaker": "V06_F_militia",
+  "text": "No contraband detected, you may proceed.",
+  "voice_id": "V06"
+ },
+ "speech_0499.wav": {
+  "disposition": "hostile",
+  "faction": "militia",
+  "gender": "F",
+  "gender_conf": "med",
+  "speaker": "V06_F_militia",
+  "text": "healthy little brilliance runner, you're busted.",
+  "voice_id": "V06"
+ },
+ "speech_0500.wav": {
+  "disposition": "hostile",
+  "faction": "militia",
+  "gender": "F",
+  "gender_conf": "med",
+  "speaker": "V06_F_militia",
+  "text": "This is your last run.",
+  "voice_id": "V06"
+ },
+ "speech_0501.wav": {
+  "disposition": "hostile",
+  "faction": "militia",
+  "gender": "F",
+  "gender_conf": "med",
+  "speaker": "V06_F_militia",
+  "text": "healthy little brilliance runner, you're busted.",
+  "voice_id": "V06"
+ },
+ "speech_0502.wav": {
+  "disposition": "low_hp",
+  "faction": "militia",
+  "gender": "F",
+  "gender_conf": "med",
+  "speaker": "V06_F_militia",
+  "text": "Militia forces in need of assistance.",
+  "voice_id": "V06"
+ },
+ "speech_0503.wav": {
+  "disposition": "low_hp",
+  "faction": "militia",
+  "gender": "F",
+  "gender_conf": "med",
+  "speaker": "V06_F_militia",
+  "text": "We're in trouble.",
+  "voice_id": "V06"
+ },
+ "speech_0504.wav": {
+  "disposition": "other",
+  "faction": "militia",
+  "gender": "F",
+  "gender_conf": "med",
+  "speaker": "V06_F_militia",
+  "text": "You cannot win with draw or be destroyed.",
+  "voice_id": "V06"
+ },
+ "speech_0505.wav": {
+  "disposition": "low_hp",
+  "faction": "militia",
+  "gender": "F",
+  "gender_conf": "med",
+  "speaker": "V06_F_militia",
+  "text": "Sensors show you are breaking up. Retreat.",
+  "voice_id": "V06"
+ },
+ "speech_0506.wav": {
+  "disposition": "kill",
+  "faction": "militia",
+  "gender": "F",
+  "gender_conf": "med",
+  "speaker": "V06_F_militia",
+  "text": "Target eliminated command.",
+  "voice_id": "V06"
+ },
+ "speech_0507.wav": {
+  "disposition": "kill",
+  "faction": "militia",
+  "gender": "F",
+  "gender_conf": "med",
+  "speaker": "V06_F_militia",
+  "text": "militia to base, enemy dispatched.",
+  "voice_id": "V06"
+ },
+ "speech_0508.wav": {
+  "disposition": "contraband",
+  "faction": "militia",
+  "gender": "F",
+  "gender_conf": "med",
+  "speaker": "V06_F_militia",
+  "text": "Prepare to be searched, maintained speed, and coarse.",
+  "voice_id": "V06"
+ },
+ "speech_0509.wav": {
+  "disposition": "contraband",
+  "faction": "militia",
+  "gender": "F",
+  "gender_conf": "med",
+  "speaker": "V06_F_militia",
+  "text": "Contraband detected all units close and terminate.",
+  "voice_id": "V06"
+ },
+ "speech_0510.wav": {
+  "disposition": "contraband",
+  "faction": "militia",
+  "gender": "F",
+  "gender_conf": "med",
+  "speaker": "V06_F_militia",
+  "text": "No contraband detected, you may proceed.",
+  "voice_id": "V06"
+ },
+ "speech_0511.wav": {
+  "disposition": "friendly",
+  "faction": "militia",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V07_M_pirate",
+  "text": "Looking sharp, Ace!",
+  "voice_id": "V07"
+ },
+ "speech_0512.wav": {
+  "disposition": "friendly",
+  "faction": "militia",
+  "gender": "F",
+  "gender_conf": "med",
+  "speaker": "V28_F_militia",
+  "text": "You're clear for clicks.",
+  "voice_id": "V28"
+ },
+ "speech_0513.wav": {
+  "disposition": "friendly",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V07_M_pirate",
+  "text": "Catch you on the next run.",
+  "voice_id": "V07"
+ },
+ "speech_0514.wav": {
+  "disposition": "other",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V07_M_pirate",
+  "text": "Now I'm looking for trouble, Ace.",
+  "voice_id": "V07"
+ },
+ "speech_0515.wav": {
+  "disposition": "other",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V07_M_pirate",
+  "text": "Forget this meat happened, we got no problem.",
+  "voice_id": "V07"
+ },
+ "speech_0516.wav": {
+  "disposition": "other",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V07_M_pirate",
+  "text": "I didn't see you, and you're blind.Got it?",
+  "voice_id": "V07"
+ },
+ "speech_0517.wav": {
+  "disposition": "hostile",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V07_M_pirate",
+  "text": "You're a loose end looking to be tied, pal.",
+  "voice_id": "V07"
+ },
+ "speech_0518.wav": {
+  "disposition": "hostile",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V07_M_pirate",
+  "text": "You're finished, fly, boy.",
+  "voice_id": "V07"
+ },
+ "speech_0519.wav": {
+  "disposition": "other",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V07_M_pirate",
+  "text": "You're about to suck, boy, buddy.",
+  "voice_id": "V07"
+ },
+ "speech_0520.wav": {
+  "disposition": "low_hp",
+  "faction": "pirate",
+  "gender": "F",
+  "gender_conf": "med",
+  "speaker": "V22_F_pirate",
+  "text": "Damn, you're ripping me apart!",
+  "voice_id": "V22"
+ },
+ "speech_0521.wav": {
+  "disposition": "low_hp",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V07_M_pirate",
+  "text": "This creates a bow to explode.",
+  "voice_id": "V07"
+ },
+ "speech_0522.wav": {
+  "disposition": "hostile",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V07_M_pirate",
+  "text": "Drop your cargo before you blow, will ya?",
+  "voice_id": "V07"
+ },
+ "speech_0523.wav": {
+  "disposition": "kill",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V07_M_pirate",
+  "text": "Yeah, you nailed, pal.",
+  "voice_id": "V07"
+ },
+ "speech_0524.wav": {
+  "disposition": "kill",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V07_M_pirate",
+  "text": "A clean kill, should have been a bounty hunter.",
+  "voice_id": "V07"
+ },
+ "speech_0525.wav": {
+  "disposition": "kill",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V07_M_pirate",
+  "text": "You're dead, jump.",
+  "voice_id": "V07"
+ },
+ "speech_0526.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V07_M_pirate",
+  "text": "Now let's blow us to the galaxy, you fashers.",
+  "voice_id": "V07"
+ },
+ "speech_0527.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V07_M_pirate",
+  "text": "Oxford has no right to hoard data.Access is ours.",
+  "voice_id": "V07"
+ },
+ "speech_0528.wav": {
+  "disposition": "other",
+  "faction": "retro",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V07_M_pirate",
+  "text": "Give out the such void, buddy.",
+  "voice_id": "V07"
+ },
+ "speech_0529.wav": {
+  "disposition": "low_hp",
+  "faction": "retro",
+  "gender": "F",
+  "gender_conf": "med",
+  "speaker": "V22_F_pirate",
+  "text": "Damn, you're ripping me apart!",
+  "voice_id": "V22"
+ },
+ "speech_0530.wav": {
+  "disposition": "low_hp",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V07_M_pirate",
+  "text": "This creates a bow to explode.",
+  "voice_id": "V07"
+ },
+ "speech_0531.wav": {
+  "disposition": "hostile",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V07_M_pirate",
+  "text": "Drop your cargo before you blow, will ya?",
+  "voice_id": "V07"
+ },
+ "speech_0532.wav": {
+  "disposition": "kill",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V07_M_pirate",
+  "text": "Yeah, you nailed, pal.",
+  "voice_id": "V07"
+ },
+ "speech_0533.wav": {
+  "disposition": "kill",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V07_M_pirate",
+  "text": "A clean kill, should have been a bounty hunter.",
+  "voice_id": "V07"
+ },
+ "speech_0534.wav": {
+  "disposition": "kill",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V07_M_pirate",
+  "text": "You're dead, jump.",
+  "voice_id": "V07"
+ },
+ "speech_0535.wav": {
+  "disposition": "other",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V07_M_pirate",
+  "text": "Should have stuck to your charts.It's dangerous out here.",
+  "voice_id": "V07"
+ },
+ "speech_0536.wav": {
+  "disposition": "hostile",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V07_M_pirate",
+  "text": "You're finished, fly, boy.",
+  "voice_id": "V07"
+ },
+ "speech_0537.wav": {
+  "disposition": "other",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V07_M_pirate",
+  "text": "You're about to suck, boy, buddy.",
+  "voice_id": "V07"
+ },
+ "speech_0538.wav": {
+  "disposition": "low_hp",
+  "faction": "pirate",
+  "gender": "F",
+  "gender_conf": "med",
+  "speaker": "V22_F_pirate",
+  "text": "Damn, you're ripping me apart!",
+  "voice_id": "V22"
+ },
+ "speech_0539.wav": {
+  "disposition": "low_hp",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V07_M_pirate",
+  "text": "This creates a bow to explode.",
+  "voice_id": "V07"
+ },
+ "speech_0540.wav": {
+  "disposition": "hostile",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V07_M_pirate",
+  "text": "Drop your cargo before you blow, will ya?",
+  "voice_id": "V07"
+ },
+ "speech_0541.wav": {
+  "disposition": "kill",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V07_M_pirate",
+  "text": "Yeah, you nailed, pal.",
+  "voice_id": "V07"
+ },
+ "speech_0542.wav": {
+  "disposition": "kill",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V07_M_pirate",
+  "text": "A clean kill, should have been a bounty hunter.",
+  "voice_id": "V07"
+ },
+ "speech_0543.wav": {
+  "disposition": "kill",
+  "faction": "pirate",
+  "gender": "M",
+  "gender_conf": "low",
+  "speaker": "V07_M_pirate",
+  "text": "You're dead, jump.",
+  "voice_id": "V07"
+ }
+}

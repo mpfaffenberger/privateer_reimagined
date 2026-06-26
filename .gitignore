@@ -157,3 +157,13 @@ CM32L_*.ROM
 !/re/dosbox/
 /re/dosbox/*
 !/re/dosbox/patch_cnst.py
+
+# --- Voice-line pipeline: generated/cloned audio is large + regenerable ---
+# (regenerate via .agents/commands/generate-voice-lines.md)
+assets/speech/generated/audio/
+assets/speech/generated/scenes/
+assets/speech/clone_tests/
+assets/speech/clone_refs/*.mp3
+assets/speech/flight_embeddings.npz
+assets/speech/flight_by_voice/
+assets/speech/bar_by_speaker/

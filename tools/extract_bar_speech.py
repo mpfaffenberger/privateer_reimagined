@@ -13,20 +13,15 @@ VPK format (reverse-engineered):
   dword[0]  total file size (LE uint32, == filesize)
   dword[1+]: index table, each entry 4 bytes (3-byte abs offset + 1-byte
              flag 0x20). Reads until first non-0x20 entry or EOF.
-  Each audio entry starts at the indexed offset.
-
-  !!! WARNING -- THE AUDIO PAYLOAD IS *NOT* RAW u8 PCM !!!
-  The original assumption (payload = raw 8-bit unsigned mono PCM, piped to
-  `ffmpeg -f u8`) is WRONG and produces pure static. The payload is a custom,
-  COMPRESSED Origin codec and must be DECOMPRESSED, not reinterpreted.
-  Confirmed entry layout:
-    bytes [0:2]   decompressed length, LE u16 (varies; ~1.2-1.7x payload size)
-    bytes [2:34]  32-byte static decode table, byte-identical across ALL
-                  entries in ALL VPKs (a baked-in codebook/dictionary)
-    bytes [34:]   compressed bitstream (the actual audio)
-  See docs/bar_speech_vpk_format.md for the full evidence + next steps.
-  The ffmpeg `-f u8` path below is LEFT IN PLACE only so the pipeline runs;
-  its output is static until the real decompressor is implemented.
+  Each audio entry starts at the indexed offset and is an **LZW-compressed
+  Creative VOC file** (per the WC Encyclopedia + confirmed by decode):
+    bytes [0:2]   decompressed length, LE u16
+    bytes [2:4]   zero (high word of the length / reserved)
+    bytes [4:]    LZW bitstream -> a standard `Creative Voice File` (.VOC)
+  LZW variant: LSB-first, 9-bit start growing to 12-bit max, clear code 256,
+  end code 257, first dict code 258, NO early width change. The decompressed
+  VOC is then handed to ffmpeg, which decodes it to PCM (8-bit u-PCM ~11kHz).
+  See docs/bar_speech_vpk_format.md for the full reverse-engineering story.
 
 PFC format (each dialog line is):
   NUL + 'rand_npc\0' (NPC class)
@@ -48,8 +43,73 @@ import sys
 from pathlib import Path
 
 
+def _lzw_decode_voc(entry: bytes) -> bytes | None:
+    """Decode one VPK entry (LZW-compressed VOC) -> raw VOC bytes, or None.
+
+    LZW variant (brute-forced against the 'Creative Voice File' magic +
+    the 2-byte decompressed-length oracle): LSB-first bit packing, 9-bit
+    codes growing to a 12-bit max, clear=256, end=257, first free code 258,
+    increment width when next_code == (1<<width) (no early change).
+    """
+    if len(entry) < 8:
+        return None
+    out_len = struct.unpack_from('<H', entry, 0)[0]
+    data = entry[4:]
+    START_W, MAX_W, CLEAR, END, FIRST = 9, 12, 256, 257, 258
+
+    bitbuf = bitcnt = pos = 0
+
+    def read(n):
+        nonlocal bitbuf, bitcnt, pos
+        while bitcnt < n:
+            if pos >= len(data):
+                return None
+            bitbuf |= data[pos] << bitcnt
+            pos += 1
+            bitcnt += 8
+        v = bitbuf & ((1 << n) - 1)
+        bitbuf >>= n
+        bitcnt -= n
+        return v
+
+    width = START_W
+    table = {i: bytes([i]) for i in range(256)}
+    next_code = FIRST
+    out = bytearray()
+    prev = None
+    while len(out) < out_len:
+        code = read(width)
+        if code is None:
+            break
+        if code == CLEAR:
+            table = {i: bytes([i]) for i in range(256)}
+            next_code = FIRST
+            width = START_W
+            prev = None
+            continue
+        if code == END:
+            break
+        if code in table:
+            piece = table[code]
+        elif code == next_code and prev is not None:
+            piece = prev + prev[:1]
+        else:
+            break  # corrupt stream
+        out += piece
+        if prev is not None:
+            table[next_code] = prev + piece[:1]
+            next_code += 1
+            if next_code >= (1 << width) and width < MAX_W:
+                width += 1
+        prev = piece
+
+    if out[:19] != b"Creative Voice File":
+        return None
+    return bytes(out)
+
+
 def parse_vpk(vpk_path: Path):
-    """Yield (index, audio_bytes) for each entry in a VPK file."""
+    """Yield (index, entry_bytes) for each entry in a VPK file."""
     data = vpk_path.read_bytes()
     if len(data) < 8:
         return
@@ -126,7 +186,11 @@ def main():
         stem = vpk.stem  # e.g., "BUYFIGHT"
         pfc = vpk.with_suffix(".PFC")
         lines = list(parse_pfc(pfc)) if pfc.exists() else []
-        for idx, audio in parse_vpk(vpk):
+        for idx, entry in parse_vpk(vpk):
+            voc = _lzw_decode_voc(entry)
+            if voc is None:
+                # Empty/terminator entry or undecodable -- skip quietly.
+                continue
             label = ""
             if idx < len(lines):
                 _, label = lines[idx]
@@ -134,11 +198,13 @@ def main():
             safe = "".join(c if c.isalnum() else "_" for c in label[:50]).strip("_")
             out_name = f"{stem}_{idx:03d}_{safe}.wav" if safe else f"{stem}_{idx:03d}.wav"
             wav_path = args.out_dir / out_name
+            # ffmpeg auto-detects the Creative VOC container; decode to mono
+            # 16-bit PCM at the requested rate.
             r = subprocess.run(
                 ["ffmpeg", "-y", "-loglevel", "error",
-                 "-f", "u8", "-ar", str(args.rate), "-ac", "1",
-                 "-i", "pipe:0", str(wav_path)],
-                input=audio,
+                 "-i", "pipe:0", "-ar", str(args.rate), "-ac", "1",
+                 "-c:a", "pcm_s16le", str(wav_path)],
+                input=voc,
                 capture_output=True,
             )
             if r.returncode != 0:
