@@ -44,7 +44,7 @@ inventory/salvage/rarity systems those rewards need.
 | NPC engage bark hook | `ai_brain.cpp:557` | fires when a hostile is in `comms_f1` range, rate-limited by `last_bark_at` |
 | Encounter director | `encounters.{h,cpp}` | `populate_on_entry`, `MissionForce`, `SpawnRequest{faction,AIState,civ_role}` |
 | Factions / stance / rep | `faction.{h,cpp}` | 8 factions, runtime-mutable stance matrix, `stance_npc_vs_player`, `apply_player_kill` |
-| Audio mixer | `audio.{h,cpp}` | 24-voice 3D mixer, `play()`/`play_world()` — **PCM16 WAV only, MP3 rejected** |
+| Audio mixer | `audio.{h,cpp}` | 24-voice 3D mixer, `play()`/`play_world()`; WAV today — **Phase 0.1 adds MP3 decode at load (minimp3)** |
 | Player state | `player.{h,cpp}` | credits, rep, equipment flags, `cargo` (commodity stacks), missions, `faction_kills` |
 | Commodities | `commodity.{h,cpp}` | 50 goods incl. SLAVES/MAGIC — **no contraband flag yet** |
 | Nav points | `system_def.h NavPointDef`, `system.nav_points` | static per-system; autopilot/jump/navmap consume them |
@@ -58,16 +58,21 @@ inventory/salvage/rarity systems those rewards need.
 
 Make the comm lines we already author *audible* in the cloned voices.
 
-- **0.1 Voice-bank build tool.** `tools/build_voice_bank.py`: ffmpeg-convert
-  `assets/speech/generated/audio/*.mp3` (+ `scenes/*.mp3`) to **PCM16 mono WAV**
-  under `assets/audio/voice/`, and emit `assets/data/voice_bank.json` mapping
-  `voice_id -> {faction, category, [wav paths]}` derived from `comms.json`. Map
-  a female clip as `confed_f`.
-- **0.2 `voice.{h,cpp}` module.** `load()` + `say(faction|voice_id, category,
+- **0.1 MP3 decode at load (owner call — replaces the earlier MP3->WAV bake).**
+  Add MP3 support to `audio::load()` via a vendored single-header decoder
+  (**minimp3**): decode to PCM16 **once at load**, the same place the WAV path
+  already resamples. Runtime/hot-path cost is **zero** (the mixer reads the same
+  in-memory PCM16 either way); keeps the generated MP3s as the single source of
+  truth — no derived WAV copies, ~10x smaller on disk.
+- **0.2 Voice-bank manifest.** `tools/build_voice_bank.py` emits
+  `assets/data/voice_bank.json` mapping `voice_id -> {faction, category, [mp3
+  paths]}` derived from `comms.json`, pointing **directly at the existing MP3s**
+  (no conversion). Map a female clip as `confed_f`.
+- **0.3 `voice.{h,cpp}` module.** `load()` + `say(faction|voice_id, category,
   world_pos, bool to_player)` over the `audio` mixer; 2D for player-directed
   hails (radio feel), `play_world` for ambient NPC-to-NPC; **one-voice-at-a-time**
   for player-directed lines (queue/duck).
-- **0.3 Wire into comm.** In `comm::npc_engage_bark` + `comm::report_player_kill`,
+- **0.4 Wire into comm.** In `comm::npc_engage_bark` + `comm::report_player_kill`,
   when a feed line is pushed *for the player*, also call `voice::say(...)`; the
   HUD feed text is the subtitle. Add a debug-panel "force bark" button.
 
