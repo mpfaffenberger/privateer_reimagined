@@ -62,6 +62,7 @@
 #include "threat.h"
 #include "jump.h"
 #include "encounters.h"
+#include "hailing.h"
 #include "dust.h"
 #include "warp_streaks.h"
 #include "jump_gate.h"
@@ -1534,6 +1535,8 @@ void build_system_scene(bool first_time) {
     // threat::hostiles_near() (autopilot gate) queries the real world.
     encounters::init(g.system);   // legacy rule director (inert for nav-table systems)
     threat::set_world(&g.ships, &g.player.rep);
+    // Reset per-system director state (Phase 1 contraband search).
+    hailing::reset();
 
     // Hand the civilian AI the nav-point lattice it travels between (lane
     // traffic) and flees toward (gates/bases). Bases + jump points are
@@ -3023,6 +3026,7 @@ void frame_cb() {
             encounters::init(g.system);
             encounters::populate_on_entry(g.system, g.camera.position,
                                           g.sun.position, encounter_spawn);
+            hailing::reset();   // clear any per-NPC search state from the old encounter
             std::printf("[encounter] base launch -> cleared old wave + re-rolled\n");
         }
     }
@@ -3448,6 +3452,11 @@ void frame_cb() {
     {
         const float t_now = (float)stm_sec(stm_now());   // process uptime
         for (Ship& s : g.ships) ship_ai::tick(s, g.ships, t_now, g.system, g.sun.position);
+        // Contraband search director (Phase 1). Runs AFTER perception +
+        // AI so any aggro override we set is read on the next frame.
+        if (Ship* pl = g.ships.player()) {
+            hailing::tick(g.ships, *pl, g.player, t_now);
+        }
     }
 
     // Encounters are no longer maintained continuously: the wcnews model

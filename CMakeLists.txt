@@ -192,6 +192,7 @@ add_executable(new_privateer
     src/faction.cpp
     src/comm.cpp
     src/voice.cpp
+    src/hailing.cpp
     src/game_state.cpp
     src/docking.cpp
     src/autopilot.cpp
