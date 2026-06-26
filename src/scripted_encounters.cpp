@@ -6,6 +6,7 @@
 #include "scripted_encounters.h"
 
 #include "comm.h"            // comm::push
+#include "audio.h"           // audio::load / play, SampleId
 #include "faction.h"         // faction::from_name / to_name
 #include "json.h"            // json::parse_file + Value
 #include "player.h"          // PlayerState, PlayerReputation, player::add_credits
@@ -18,6 +19,7 @@
 #include <cstring>
 #include <random>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -97,6 +99,14 @@ struct Scenario {
 std::vector<Scenario>       g_scenarios;
 std::vector<ScenarioState>  g_state;
 
+// Wave C (audio): scenario_id -> [clip paths], one entry per turn. Missing
+// id or OOB turn means "no audio for this turn" and the text still prints.
+std::unordered_map<std::string, std::vector<std::string>> g_voice_clips;
+
+// Wave C (audio): path -> resolved SampleId. Caches 0 too so we don't
+// retry a missing-file path every tick. Session-scoped (no unload).
+std::unordered_map<std::string, SampleId> g_clip_cache;
+
 // Active playback (one scenario at a time). All fields are only
 // meaningful while `active_idx >= 0`. Wave B splits the old monolithic
 // "dialogue loop" into a three-phase machine.
@@ -157,6 +167,33 @@ std::string format_feed(const std::string& speaker, const std::string& line) {
     out.append(": ");
     out.append(line);
     return out;
+}
+
+// Wave C (audio): resolve a clip path to a SampleId via a lazy cache.
+// First call hits audio::load(); subsequent calls reuse the cached id.
+// Caches 0 too so we don't retry a missing-file path every tick.
+SampleId resolve_clip(const std::string& path) {
+    auto it = g_clip_cache.find(path);
+    if (it != g_clip_cache.end()) return it->second;
+    const SampleId sid = audio::load(path);
+    g_clip_cache.emplace(path, sid);
+    return sid;
+}
+
+// Wave C (audio): play the clip for one dialogue turn if the manifest
+// has one. Resolves + caches via resolve_clip(); skips silently when
+// the scenario has no clip for this turn or load() returned 0. 2D
+// player-directed gain matches the comm chatter convention.
+void play_turn_clip(const std::string& scenario_id, int turn_index) {
+    auto it = g_voice_clips.find(scenario_id);
+    if (it == g_voice_clips.end()) return;
+    const std::vector<std::string>& clips = it->second;
+    if (turn_index < 0 || turn_index >= static_cast<int>(clips.size())) return;
+    const std::string& path = clips[turn_index];
+    if (path.empty()) return;
+    if (SampleId sid = resolve_clip(path); sid != 0) {
+        audio::play(sid, /*gain=*/1.0f);
+    }
 }
 
 // ---- parsing --------------------------------------------------------------
@@ -248,6 +285,30 @@ void parse_scenario(const json::Value& v, Scenario& s) {
         s.has_reward = true;
         parse_reward(*rw, s);
     }
+}
+
+// Wave C (audio): load the scenario-id -> [clip paths] manifest.
+// Missing file = silent no-op (text still prints, player just doesn't
+// hear it).
+void load_voice_clips(const std::string& path) {
+    g_voice_clips.clear();
+    json::Value root = json::parse_file(path);
+    if (!root.is_object()) {
+        std::fprintf(stderr, "[scripted] no voice manifest at '%s' — text-only\n",
+                     path.c_str());
+        return;
+    }
+    for (const auto& kv : root.as_object()) {
+        const json::Value& v = kv.second;
+        if (!v.is_array()) continue;
+        std::vector<std::string> clips;
+        for (const json::Value& c : v.as_array()) {
+            if (c.is_string()) clips.push_back(c.as_string());
+        }
+        g_voice_clips.emplace(kv.first, std::move(clips));
+    }
+    std::printf("[scripted] loaded voice clips for %zu scenarios from '%s'\n",
+                g_voice_clips.size(), path.c_str());
 }
 
 // ---- playback helpers ----------------------------------------------------
@@ -350,6 +411,10 @@ void load(const std::string& path) {
 
     std::printf("[scripted] loaded %zu scenarios from '%s'\n",
                 g_scenarios.size(), path.c_str());
+
+    // Wave C (audio): also load the per-scenario dialogue clip map.
+    // Non-fatal on missing/unparseable — dialogue falls back to text.
+    load_voice_clips("assets/data/scenario_voice.json");
 }
 
 void reset() {
@@ -390,6 +455,7 @@ void tick(ShipRegistry& ships, const Ship& player_ship, PlayerState& player,
             comm::push(format_feed(disp, turn.line), /*taunt=*/true);
             std::printf("[scenario] %s turn %d: %s\n",
                         sc.id.c_str(), active_turn, turn.line.c_str());
+            play_turn_clip(sc.id, active_turn);
 
             ++active_turn;
 
