@@ -32,6 +32,7 @@
 // -----------------------------------------------------------------------------
 
 #include "faction.h"
+#include "inventory.h"
 
 #include <cstdint>
 #include <string>
@@ -151,6 +152,15 @@ struct PlayerState {
 
     // ---- cargo hold -------------------------------------------------------
     std::vector<CargoEntry> cargo;
+
+    // ---- unified-hold items (Phase 4 Wave 1, #80 + #81) ------------------
+    // Discrete things dropped, bought, or salvaged into the hold. Each
+    // InventoryItem contributes qty cargo spaces to the unified capacity
+    // (see cargo_units_used), on top of the commodity stacks in `cargo`
+    // above. Weapons and upgrades carry their rarity + per-shot mods
+    // through mounting; salvage/commodity-kind items MAY stack when their
+    // id+rarity+kind matches an existing entry (add_item merges those).
+    std::vector<inventory::InventoryItem> items;
 
     // ---- ordnance: finite missile ammo (np-zte.2) -------------------------
     // Unlike guns (energy-limited but never "out"), missiles are consumable.
@@ -287,6 +297,15 @@ int cargo_capacity(const PlayerState& p, const ShipClass* klass);
 bool add_cargo(PlayerState& p, const std::string& commodity_id,
                int units, int price_per_unit, int capacity);
 bool remove_cargo(PlayerState& p, const std::string& commodity_id, int units);
+
+// add_item for the unified hold (#80 + #81). Refuses (false, no
+// mutation) when it.qty <= 0 OR the unified hold (cargo + items) would
+// overflow `capacity` -- callers pass cargo_capacity(p, klass) as today.
+// On success: a Weapon- or Upgrade-kind item always appends (no stack
+// merge); a Salvage- or Commodity-kind item merges into an existing
+// stack of the SAME id + kind + rarity by adding qty, or appends if no
+// match is found. Each merged/appended qty counts toward capacity.
+bool add_item(PlayerState& p, const inventory::InventoryItem& it, int capacity);
 
 // True iff ANY cargo stack is a contraband commodity (Phase 1.1). The
 // search director (hailing.{h,cpp}) uses this to decide whether to

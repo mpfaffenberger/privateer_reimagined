@@ -77,6 +77,11 @@ void add_credits(PlayerState& p, int64_t amount) {
 int cargo_units_used(const PlayerState& p) {
     int used = 0;
     for (const CargoEntry& e : p.cargo) used += e.units;
+    // Phase 4 Wave 1 (#81): unified-hold accounting. Each item's qty
+    // contributes to capacity. A Weapon/Upgrade item has qty=1 (one
+    // cargo space each); a Salvage/Commodity-kind stack counts as
+    // `qty` cargo spaces.
+    for (const inventory::InventoryItem& it : p.items) used += it.qty;
     return used;
 }
 
@@ -163,6 +168,38 @@ bool remove_cargo(PlayerState& p, const std::string& commodity_id, int units) {
         return true;
     }
     return false;   // commodity not in hold at all
+}
+
+// add_item for the unified hold (Phase 4 Wave 1, #80 + #81). Refuses
+// (false, no mutation) when qty <= 0 or the unified hold (cargo +
+// items) would overflow `capacity`. Capacity is passed in by the caller
+// (same convention as add_cargo) — pass cargo_capacity(p, klass).
+// On success, a Weapon/Upgrade item always appends a fresh entry;
+// a Salvage- or Commodity-kind item merges into an existing stack of
+// the SAME id + kind + rarity by adding qty, or appends if no match.
+bool add_item(PlayerState& p, const inventory::InventoryItem& it, int capacity) {
+    if (it.qty <= 0) return false;
+    // Refuse overflow up-front. Use cargo_units_used (which now includes
+    // items) so capacity is the unified-hold cap from #81, not a
+    // separate "items" cap.
+    if (cargo_units_used(p) + it.qty > capacity) return false;
+
+    // Only Salvage- and Commodity-kind items are eligible for stack-
+    // merging; Weapons and Upgrades always get a fresh entry.
+    const bool stackable =
+        it.kind == inventory::ItemKind::Salvage ||
+        it.kind == inventory::ItemKind::Commodity;
+    if (stackable) {
+        for (inventory::InventoryItem& ex : p.items) {
+            if (ex.kind  != it.kind)  continue;
+            if (ex.id    != it.id)    continue;
+            if (ex.rarity != it.rarity) continue;
+            ex.qty += it.qty;
+            return true;
+        }
+    }
+    p.items.push_back(it);
+    return true;
 }
 
 bool carrying_contraband(const PlayerState& p) {

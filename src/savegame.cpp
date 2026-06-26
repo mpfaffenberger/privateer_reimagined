@@ -22,6 +22,7 @@
 #include "savegame.h"
 
 #include "faction.h"
+#include "inventory.h"
 #include "json.h"
 #include "player.h"
 #include "repair.h"
@@ -220,6 +221,25 @@ static std::string serialize_player(const PlayerState& p) {
                 w.key("commodity_id");    w.value_string(e.commodity_id);
                 w.key("units");           w.value_int(e.units);
                 w.key("bought_at_price"); w.value_int(e.bought_at_price);
+              w.end_object();
+          }
+        w.end_array();
+
+        // unified-hold items (Phase 4 Wave 1, #80 + #81). Discrete
+        // things dropped, bought, or salvaged into the hold. Stable
+        // string keys for every field; enums are written as ints so a
+        // reorder of the ItemKind / Rarity enum values can't scramble
+        // old saves. Float mods use the same std::to_string form as
+        // ship_health below (default precision; 1.0 round-trips fine).
+        w.key("items"); w.member_array_begin();
+          for (const inventory::InventoryItem& it : p.items) {
+              w.begin_object();
+                w.key("id");              w.value_string(it.id);
+                w.key("kind");            w.value_int((int)it.kind);
+                w.key("rarity");          w.value_int((int)it.rarity);
+                w.key("qty");             w.value_int(it.qty);
+                w.key("fire_rate_mult");  w.value_raw(std::to_string(it.mods.fire_rate_mult));
+                w.key("energy_mult");     w.value_raw(std::to_string(it.mods.energy_mult));
               w.end_object();
           }
         w.end_array();
@@ -484,6 +504,26 @@ bool load(PlayerState& p, const std::string& path) {
                 ce.units           = e.contains("units")           ? (int)e["units"].number_or(0)           : 0;
                 ce.bought_at_price = e.contains("bought_at_price") ? (int)e["bought_at_price"].number_or(0) : 0;
                 if (!ce.commodity_id.empty() && ce.units > 0) out.cargo.push_back(std::move(ce));
+            }
+        }
+
+        // unified-hold items (Phase 4 Wave 1, #80 + #81). Absent on
+        // older saves -> empty list (back-compat with no-items era).
+        // Enums read back as int via static_cast; mirrors the per-
+        // faction int-key pattern already used here.
+        if (const json::Value* it = pl.find("items"); it && it->is_array()) {
+            for (const json::Value& e : it->as_array()) {
+                if (!e.is_object()) continue;
+                inventory::InventoryItem im;
+                im.id     = e.contains("id")     ? e["id"].string_or("")  : "";
+                im.kind   = e.contains("kind")   ? (inventory::ItemKind)(int)e["kind"].number_or(0)   : inventory::ItemKind::Salvage;
+                im.rarity = e.contains("rarity") ? (inventory::Rarity)(int)e["rarity"].number_or(0)   : inventory::Rarity::Basic;
+                im.qty    = e.contains("qty")    ? (int)e["qty"].number_or(0) : 0;
+                im.mods.fire_rate_mult = e.contains("fire_rate_mult") ? (float)e["fire_rate_mult"].number_or(1.0) : 1.0f;
+                im.mods.energy_mult    = e.contains("energy_mult")    ? (float)e["energy_mult"].number_or(1.0)    : 1.0f;
+                // Skip defensive: empty id or non-positive qty means a
+                // hand-edited or corrupt entry -- drop instead of push.
+                if (!im.id.empty() && im.qty > 0) out.items.push_back(std::move(im));
             }
         }
 
