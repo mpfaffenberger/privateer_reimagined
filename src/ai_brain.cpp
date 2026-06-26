@@ -555,7 +555,7 @@ void maybe_bark(Ctx& c) {
     Ship& s = *c.self;
     const float f1 = (s.klass ? s.klass->comms_f1 : 1500.0f) * kPvtScale;
     if (c.dist < f1 && (c.t_now - s.ai.last_bark_at) > k_bark_cooldown_s) {
-        comm::npc_engage_bark(s.faction, c.target->is_player);
+        comm::npc_engage_bark(s.faction, c.target->is_player, s.id);
         s.ai.last_bark_at = c.t_now;
     }
 }

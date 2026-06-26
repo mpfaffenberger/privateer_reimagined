@@ -456,6 +456,13 @@ void tick(ShipRegistry& ships, const Ship& player_ship, PlayerState& player,
             std::printf("[scenario] %s turn %d: %s\n",
                         sc.id.c_str(), active_turn, turn.line.c_str());
             play_turn_clip(sc.id, active_turn);
+            // HUD speaker indicator: resolve the turn's voice string to a
+            // faction and mark the anchor ship as the speaker. Unknown
+            // voices (e.g. an aliased id) skip cleanly.
+            if (const Faction vf = faction::from_name(turn.voice);
+                vf != Faction::Count) {
+                comm::set_speaker(active_anchor_id, vf);
+            }
 
             ++active_turn;
 

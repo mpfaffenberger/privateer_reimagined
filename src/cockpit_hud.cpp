@@ -20,6 +20,8 @@
 
 #include "armor.h"
 #include "camera.h"
+#include "comm.h"
+#include "faction.h"
 #include "firing.h"
 #include "galaxy.h"
 #include "hazards.h"
@@ -1058,6 +1060,52 @@ void draw_objective_marker(const Camera& cam, HMM_Vec3 world,
     }
 }
 
+// ---- speaker indicator --------------------------------------------------
+// "Who's talking to me" HUD marker. When comm::speaker_id() is non-zero
+// we draw four amber corner-brackets framing that ship plus a labelled
+// glyph "((  )) FACTION" just above it. No-op when no speaker is set,
+// the ship isn't in the registry any more, or the camera can't project
+// the position (behind us / off-screen). Caller (build()) gates on
+// draw_world normally — autopilot/navmap will hide it via the gate.
+void draw_speaker_indicator(const Camera& cam, const ShipRegistry& ships) {
+    if (comm::speaker_id() == 0) return;
+    const Ship* s = ships.find_by_id(comm::speaker_id());
+    if (!s || !s->alive) return;
+    float sx, sy;
+    if (!project_world_point(cam, s->position, sx, sy)) return;
+    auto* dl = ImGui::GetForegroundDrawList();
+    // Amber matches the comm feed taunt colour (comm.cpp DRAW, IM_COL32
+    // 255,217,77,...) and the rest of the HUD accent palette.
+    const ImU32 col = kAmber;
+    // Four corner brackets framing a ~22 px box. Each is an "L" of two
+    // short lines. arm = 5 px so the brackets read clearly even at the
+    // default Retina scale.
+    constexpr float r   = 11.0f;
+    constexpr float arm = 5.0f;
+    // top-left
+    dl->AddLine(ImVec2(sx - r, sy - r), ImVec2(sx - r + arm, sy - r), col, 1.5f);
+    dl->AddLine(ImVec2(sx - r, sy - r), ImVec2(sx - r,       sy - r + arm), col, 1.5f);
+    // top-right
+    dl->AddLine(ImVec2(sx + r, sy - r), ImVec2(sx + r - arm, sy - r), col, 1.5f);
+    dl->AddLine(ImVec2(sx + r, sy - r), ImVec2(sx + r,       sy - r + arm), col, 1.5f);
+    // bottom-left
+    dl->AddLine(ImVec2(sx - r, sy + r), ImVec2(sx - r + arm, sy + r), col, 1.5f);
+    dl->AddLine(ImVec2(sx - r, sy + r), ImVec2(sx - r,       sy + r - arm), col, 1.5f);
+    // bottom-right
+    dl->AddLine(ImVec2(sx + r, sy + r), ImVec2(sx + r - arm, sy + r), col, 1.5f);
+    dl->AddLine(ImVec2(sx + r, sy + r), ImVec2(sx + r,       sy + r - arm), col, 1.5f);
+    // Label "((  )) CONFED" — the comm glyph + uppercased faction name.
+    // We assemble into one buffer so it's a single AddText call (one
+    // string -> one draw call vs two).
+    const char* fname = faction::to_name(comm::speaker_faction());
+    char        label[64];
+    std::snprintf(label, sizeof(label), "((  )) %s", fname);
+    for (char* p = label; *p; ++p) *p = (char)std::toupper((unsigned char)*p);
+    const ImVec2 ts = ImGui::CalcTextSize(label);
+    // Sit just above the top bracket with a 4 px gap; centre on the ship.
+    dl->AddText(ImVec2(sx - ts.x * 0.5f, sy - r - ts.y - 4.0f), col, label);
+}
+
 // Find a nav point in this system by its display name (Patrol/Scout/Attack
 // store nav-point NAMES in nav_targets). nullptr = not in this system.
 const NavPointDef* nav_by_name(const StarSystem& sys, const std::string& name) {
@@ -1227,6 +1275,11 @@ void build(const Camera& cam, const StarSystem& system, int selected_nav,
     draw_nav_mfd   (cam, system, selected_nav, dock_prompt, dock_ready);
     draw_target_mfd(cam, ships, target_ship_id);
     draw_radar_mfd (cam, system, selected_nav, ships, target_ship_id);
+    // "Who's speaking" speaker marker. Always on when set — it's the
+    // HUD's only way to anchor a comm-bark ship visually, so even when
+    // the world is hidden (autopilot / navmap) we still want to see
+    // which ship is talking at us.
+    draw_speaker_indicator(cam, ships);
 }
 
 void build_mission_objectives(const Camera& cam, const StarSystem& system,

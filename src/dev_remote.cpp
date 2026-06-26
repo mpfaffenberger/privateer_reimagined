@@ -742,7 +742,8 @@ void drain_commands(Camera& cam) {
         case Command::Kind::CommBark:
             // Dev barks are always treated as aimed at the player so they
             // surface on the HUD comm feed.
-            comm::npc_engage_bark(c.faction, /*target_is_player=*/true);
+            comm::npc_engage_bark(c.faction, /*target_is_player=*/true,
+                                  /*speaker_id=*/0);
             break;
         case Command::Kind::CargoGive: {
             // Run the host's registered cargo hook on the main thread.

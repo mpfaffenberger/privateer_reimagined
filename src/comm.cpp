@@ -64,6 +64,17 @@ constexpr size_t k_max_lines       = 6;
 
 std::vector<FeedLine> g_feed;
 
+// ---- speaker indicator ---------------------------------------------------
+// "Who's talking to me" HUD state. g_speaker_id is the active speaker's
+// monotonic id (0 when none/expired); g_speaker_age_s ticks down in the
+// shared tick(dt) so we don't need a separate aging callback. k_speaker_
+// show_s is the dwell time — long enough that a final line still has a
+// visible marker, short enough that a stale speaker doesn't linger.
+uint32_t g_speaker_id        = 0;
+Faction  g_speaker_faction   = Faction::Civilian;
+float    g_speaker_age_s     = 0.0f;
+constexpr float k_speaker_show_s = 4.0f;
+
 } // namespace
 
 bool load(const std::string& path) {
@@ -135,6 +146,14 @@ void tick(float dt) {
         }
     }
     g_feed.resize(write);
+
+    // Age out the speaker indicator. When the timer expires we retire
+    // the id so the HUD gates out cleanly; the faction stays as-is but
+    // no one queries it (speaker_id() == 0 short-circuits the draw).
+    if (g_speaker_id != 0) {
+        g_speaker_age_s -= dt;
+        if (g_speaker_age_s <= 0.0f) g_speaker_id = 0;
+    }
 }
 
 const std::vector<FeedLine>& feed() { return g_feed; }
@@ -225,7 +244,7 @@ void report_player_kill(PlayerState& player, Faction victim) {
     }
 }
 
-void npc_engage_bark(Faction speaker, bool target_is_player) {
+void npc_engage_bark(Faction speaker, bool target_is_player, uint32_t speaker_id) {
     // Only the player's HUD gets the line; NPC-on-NPC chatter is
     // cosmetic and would just spam the feed with fights we're not in.
     if (!target_is_player) return;
@@ -236,6 +255,23 @@ void npc_engage_bark(Faction speaker, bool target_is_player) {
     // job (ShipAIState::last_bark_at) so this stays unconditional.
     voice::say(speaker, event_to_category(Event::KilledByPlayerCrime),
                HMM_Vec3{0,0,0}, /*to_player=*/true);
+    // Mark the speaker for the on-ship HUD indicator. 0 means "no ship
+    // context" (dev panel); skip the marker in that case.
+    if (speaker_id != 0) set_speaker(speaker_id, speaker);
+}
+
+void set_speaker(uint32_t ship_id, Faction faction) {
+    g_speaker_id      = ship_id;
+    g_speaker_faction = faction;
+    g_speaker_age_s   = k_speaker_show_s;
+}
+
+uint32_t speaker_id() {
+    return g_speaker_id;
+}
+
+Faction speaker_faction() {
+    return g_speaker_faction;
 }
 
 #ifndef COMM_HEADLESS

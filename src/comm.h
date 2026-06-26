@@ -27,6 +27,7 @@
 
 #include "faction.h"
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -60,7 +61,23 @@ void report_player_kill(PlayerState& player, Faction victim);
 // Only surfaces on the HUD feed when `target_is_player` (the player can
 // only "hear" barks aimed at them); NPC-vs-NPC barks are silent flavour.
 // The CALLER owns rate-limiting (ship_ai stamps ShipAIState::last_bark_at).
-void npc_engage_bark(Faction speaker, bool target_is_player);
+// `speaker_id` is the barking ship's monotonic id (so the HUD can mark
+// it on-screen) — pass 0 when no ship context is available (e.g. the
+// dev panel's manual bark). When `target_is_player` and `speaker_id`
+// is non-zero, the indicator automatically points at that ship.
+void npc_engage_bark(Faction speaker, bool target_is_player, uint32_t speaker_id);
+
+// ---- "who's speaking" HUD indicator -------------------------------------
+// The cockpit_hud draws a corner-bracket marker over whichever ship is
+// currently barking / talking at the player. set_speaker() installs the
+// id+faction for the speaker; the age ticks down in tick() so the marker
+// disappears a few seconds after the last line. speaker_id() returns 0
+// when no speaker is active or the timer has expired; the HUD gates on
+// that before drawing. speaker_faction() is only meaningful when
+// speaker_id() is non-zero (callers don't have to defend against stale).
+void    set_speaker(uint32_t ship_id, Faction faction);
+uint32_t speaker_id();
+Faction  speaker_faction();
 
 // ---- HUD comm feed -------------------------------------------------------
 struct FeedLine {
