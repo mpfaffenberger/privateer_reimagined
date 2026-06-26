@@ -1,0 +1,29 @@
+{
+  "tables": {
+    "pirate": {
+      "drops": [
+        { "item": "scrap_metal", "kind": "salvage", "weight": 60 },
+        { "item": "liquor", "kind": "cargo", "weight": 20 },
+        { "item": "brilliance", "kind": "contraband", "weight": 8 },
+        { "item": "laser_cannon", "kind": "weapon", "weight": 5, "rarity_chance": { "basic": 0.8, "rare": 0.18, "legendary": 0.02 } },
+        { "item": "missile_pack", "kind": "weapon", "weight": 7, "rarity_chance": { "basic": 0.85, "rare": 0.14, "legendary": 0.01 } }
+      ]
+    },
+    "militia": {
+      "drops": [
+        { "item": "scrap_metal", "kind": "salvage", "weight": 50 },
+        { "item": "medical_eqpmnt", "kind": "cargo", "weight": 25 },
+        { "item": "computers", "kind": "cargo", "weight": 15 },
+        { "item": "laser_cannon", "kind": "weapon", "weight": 10, "rarity_chance": { "basic": 0.9, "rare": 0.09, "legendary": 0.01 } }
+      ]
+    },
+    "ace": {
+      "drops": [
+        { "item": "alien_metal", "kind": "salvage", "weight": 30 },
+        { "item": "ancient_gun", "kind": "weapon", "weight": 20, "rarity_chance": { "basic": 0.4, "rare": 0.45, "legendary": 0.15 } },
+        { "item": "tachyon_cannon", "kind": "weapon", "weight": 15, "rarity_chance": { "basic": 0.5, "rare": 0.4, "legendary": 0.1 } }
+      ]
+    }
+  },
+  "ace_bonus": { "legendary_chance": 0.03 }
+}

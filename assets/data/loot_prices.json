@@ -1,0 +1,15 @@
+{
+  "rarity_multiplier": { "basic": 1.0, "rare": 2.5, "legendary": 6.0 },
+  "base_value": {
+    "scrap_metal": 50,
+    "alien_metal": 1200,
+    "laser_cannon": 3000,
+    "missile_pack": 1500,
+    "tachyon_cannon": 5500,
+    "ancient_gun": 12000,
+    "liquor": 250,
+    "brilliance": 900,
+    "medical_eqpmnt": 600,
+    "computers": 800
+  }
+}

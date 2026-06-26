@@ -1,0 +1,10 @@
+{
+  "contraband": [
+    { "id": "brilliance", "severity": 3 },
+    { "id": "slaves", "severity": 3 },
+    { "id": "ultimate", "severity": 2 },
+    { "id": "weaponry", "severity": 2 },
+    { "id": "ancient_gun", "severity": 2 },
+    { "id": "pornochips", "severity": 1 }
+  ]
+}

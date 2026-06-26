@@ -1,0 +1,31 @@
+{
+  "scenarios": [
+    {
+      "id": "confed_distress_kilrathi_ambush",
+      "trigger": {
+        "near_classes": ["stiletto"],
+        "near_faction": "confed",
+        "max_count": 1,
+        "chance": 0.15,
+        "cooldown_s": 600,
+        "once_per_system": true,
+        "ignore_player_rep": true
+      },
+      "dialogue": [
+        { "voice": "confed", "line": "Mayday, mayday! This is Confed patrol Stiletto-Two, we're being torn apart by Kilrathi!" },
+        { "voice": "confed", "line": "Any friendly in range, we need guns on these cats NOW!" }
+      ],
+      "spawn_on_accept": {
+        "faction": "kilrathi",
+        "class": "dralthi",
+        "count": 3,
+        "delay_s": 4
+      },
+      "reward": {
+        "credits": 8000,
+        "rep": { "confed": 15 },
+        "loot_roll": "confed_thanks"
+      }
+    }
+  ]
+}
