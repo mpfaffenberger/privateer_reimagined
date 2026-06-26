@@ -1,0 +1,73 @@
+speech_0070.wav	[friendly] Your profile is clear to sector's edge.
+speech_0071.wav	[friendly] Stick to establish lanes for your own good.
+speech_0072.wav	[friendly] Patrol to civilian craft, keep your distance.
+speech_0073.wav	[friendly] Flying in shared airspace, keep your Vidcom open.
+speech_0074.wav	[other] Entering disputed space, report any disturbances.
+speech_0075.wav	[friendly] We have you on our screens.Continue on course.
+speech_0076.wav	[hostile] You've got quite a record pal, but it ends here.
+speech_0077.wav	[other] We've accessed your fire pirate, your dead.
+speech_0078.wav	[other] Hey, give me a call when you get the hell.
+speech_0079.wav	[low_hp] Mayday, we've sustained massive damage.
+speech_0080.wav	[low_hp] Unless we get some help, we're finished.
+speech_0081.wav	[hostile] I use smuggling scum.
+speech_0082.wav	[other] You're beaten.Want us a render?
+speech_0083.wav	[kill] One bogey terminated.
+speech_0084.wav	[kill] enemy target destroyed
+speech_0085.wav	[contraband] Maintain speed and course for contraband search.
+speech_0086.wav	[contraband] contact main detected, target offender and fire at will.
+speech_0087.wav	[contraband] No contraband detected, you may proceed.
+speech_0088.wav	[hostile] You've got quite a record pal, but it ends here.
+speech_0089.wav	[other] We've accessed your fire pirate, your dead.
+speech_0090.wav	[other] Hey, give me a call when you get the hell.
+speech_0091.wav	[low_hp] Mayday, we've sustained massive damage.
+speech_0092.wav	[low_hp] Unless we get some help, we're finished.
+speech_0093.wav	[other] A life sentence doesn't look so bad now, Avery, just...
+speech_0094.wav	[other] You're beaten.Want us a render?
+speech_0095.wav	[kill] One bogey terminated.
+speech_0096.wav	[kill] enemy target destroyed
+speech_0097.wav	[other] We know you are transporting a known felon.
+speech_0098.wav	[hostile] Prepare to die, criminal scum.
+speech_0269.wav	[friendly] Continue on course.
+speech_0270.wav	[friendly] Continue on course.
+speech_0271.wav	[friendly] Continue on course.
+speech_0272.wav	[friendly] Continue on course.
+speech_0273.wav	[friendly] Continue on course.
+speech_0274.wav	[low_hp] Mayday, we've sustained massive damage.
+speech_0275.wav	[low_hp] Unless we get some help, we're finished.
+speech_0276.wav	[hostile] Die, you smuggling scum.
+speech_0277.wav	[other] You are beaten. Want a surrender?
+speech_0278.wav	[kill] One bogey terminated.
+speech_0279.wav	[kill] enemy target destroyed.
+speech_0280.wav	[kill] You are just in time for the massacre.
+speech_0281.wav	[other] Cut the chatter and listen.
+speech_0282.wav	[other] This is Admiral Riceman.
+speech_0283.wav	[other] We'll hit the thing as soon as it arrives.
+speech_0284.wav	[other] Hold your position until it does.
+speech_0285.wav	[other] and feel free to join in.Riceman out.
+speech_0440.wav	[friendly] Flying in shared air space. Keep your Vidcom open.
+speech_0441.wav	[other] Entering disputed space, report any disturbances.
+speech_0442.wav	[friendly] We have you on our screens. Continue on course.
+speech_0443.wav	[hostile] You've got quite a record pal, but it ends here.
+speech_0444.wav	[kill] We've accessed your file, pirate.You're dead.
+speech_0445.wav	[other] Hey, give me a call when you get the hell.
+speech_0446.wav	[low_hp] Mayday, we've sustained massive damage.
+speech_0447.wav	[low_hp] Unless we get some help, we're finished.
+speech_0448.wav	[hostile] Dive smuggling scum!
+speech_0449.wav	[other] You're beaten. Want us to render?
+speech_0450.wav	[kill] One bogey terminated.
+speech_0451.wav	[kill] Enemy target destroyed.
+speech_0452.wav	[contraband] Maintain speed and course for contraband search.
+speech_0453.wav	[contraband] Contraband Detective Target Offender and fire at will.
+speech_0454.wav	[contraband] No contraband detected. You may proceed.
+speech_0455.wav	[hostile] You've got quite a record pal, but it ends here.
+speech_0456.wav	[kill] We've accessed your file, pirate.You're dead.
+speech_0457.wav	[other] Hey, give me a call when you get the hell.
+speech_0458.wav	[low_hp] Mayday, we've sustained massive damage.
+speech_0459.wav	[low_hp] Unless we get some help, we're finished.
+speech_0460.wav	[other] A life sentence doesn't look so bad now, a-rejust?
+speech_0461.wav	[other] You're beaten. Want us to render?
+speech_0462.wav	[kill] One bogey terminated.
+speech_0463.wav	[kill] Enemy target destroyed.
+speech_0464.wav	[other] We know you are transporting and known fellan.
+speech_0465.wav	[hostile] Prepare to die criminal scum.
+speech_0466.wav	[friendly] How's it going, friend?

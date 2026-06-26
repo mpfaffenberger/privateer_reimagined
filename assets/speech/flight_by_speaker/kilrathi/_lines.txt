@@ -1,0 +1,28 @@
+speech_0099.wav	[friendly] Do not, my claws are sheathed, my belly full.
+speech_0100.wav	[other] I grant you passage today, looking ape.
+speech_0101.wav	[other] Pointy boy, you make me laugh.
+speech_0102.wav	[other] I have no time to die with you, monkey boy!
+speech_0103.wav	[other] We are tracking your deeper distance.
+speech_0104.wav	[other] for my brothers to kill.
+speech_0105.wav	[hostile] As you mount your bones in my hall.
+speech_0106.wav	[other] Your death will honor my name.
+speech_0107.wav	[other] I make power before the claws of a warrior!
+speech_0108.wav	[low_hp] I salute you.
+speech_0109.wav	[low_hp] better to human, yet unbeaton.
+speech_0110.wav	[hostile] Fight back! There is no honor in slaughter!
+speech_0111.wav	[other] You are hardly worthy of my fire.
+speech_0112.wav	[kill] I have gained another slave in the afterworld.
+speech_0113.wav	[other] lead another enemy to the void.
+speech_0114.wav	[other] Funkos, Surrender, and Be Spared.
+speech_0115.wav	[other] Your death will honor my name.
+speech_0116.wav	[other] I make power before the claws of a warrior!
+speech_0117.wav	[other] I salute you.
+speech_0118.wav	[other] better to human, yet unbeaton.
+speech_0119.wav	[other] Fight back! There is no honor in slaughter!
+speech_0120.wav	[other] You are hardly worthy of my fire.
+speech_0121.wav	[other] I have gained another slave in the afterworld.
+speech_0122.wav	[other] lead another enemy to the void.
+speech_0123.wav	[other] 
+speech_0124.wav	[other] 
+speech_0125.wav	[other] You will surrender him to us immediately.
+speech_0126.wav	[other] 

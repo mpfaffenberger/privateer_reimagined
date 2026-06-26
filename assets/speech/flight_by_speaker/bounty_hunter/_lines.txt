@@ -1,0 +1,112 @@
+speech_0001.wav	[friendly] Welcome to the happy hunting grounds.
+speech_0002.wav	[friendly] If you're smart, you'll watch your back.
+speech_0003.wav	[friendly] Better clear out, trouble's brewing.
+speech_0004.wav	[friendly] You're not on my list, this time.
+speech_0005.wav	[friendly] Just smoking out a little game, flyboy.
+speech_0006.wav	[friendly] Don't worry, I only kill for a fee.
+speech_0007.wav	[hostile] The advantage is mine. Now you die.
+speech_0008.wav	[hostile] Nothing personal, but your death is my gain.
+speech_0009.wav	[hostile] Killing you will put me in the black, fly boy.
+speech_0010.wav	[low_hp] It can't end like this.
+speech_0011.wav	[low_hp] Oh, this is not good.
+speech_0012.wav	[hostile] Hey, what can I say? I'm a professional.
+speech_0013.wav	[hostile] Your death is my living, buddy.
+speech_0014.wav	[kill] Another day, another kill.
+speech_0015.wav	[kill] One more for the resume.
+speech_0016.wav	[other] Those books go in my hold or up in flames.
+speech_0017.wav	[hostile] Nothing personal, but your death is my gain.
+speech_0018.wav	[hostile] Killing you will put me in the black, fly boy.
+speech_0019.wav	[low_hp] It can't end like this.
+speech_0020.wav	[low_hp] Oh, this is not good.
+speech_0021.wav	[hostile] Hey, what can I say? I'm a professional.
+speech_0022.wav	[hostile] Your death is my living, buddy.
+speech_0023.wav	[kill] Another day, another kill.
+speech_0024.wav	[kill] One more for the resume.
+speech_0025.wav	[hostile] The advantage is mine. Now you die.
+speech_0026.wav	[other] You'll have to go through us to get the Palin.
+speech_0027.wav	[kill] Killing you will put me in the black, fly boy.
+speech_0028.wav	[low_hp] It can't end like this.
+speech_0029.wav	[low_hp] Oh, this is not good.
+speech_0030.wav	[other] Hey, what can I say? I'm a professional.
+speech_0031.wav	[kill] Your death is my living, buddy.
+speech_0032.wav	[kill] Another day, another kill.
+speech_0033.wav	[kill] One more for the resume.
+speech_0204.wav	[kill] You're dead, chump.
+speech_0205.wav	[friendly] Welcome to the Happy Hunting Ground!
+speech_0206.wav	[hostile] If you're smart, you'll watch your back.
+speech_0207.wav	[other] Better clear out.There could be trouble soon.
+speech_0208.wav	[other] This is bastard murderer, I'll show you!
+speech_0209.wav	[other] This is bastard murderer, I'll show you!
+speech_0210.wav	[other] This is bastard murderer, I'll show you!
+speech_0211.wav	[low_hp] No! It can't end like this!
+speech_0212.wav	[low_hp] Oh, this is not good!
+speech_0213.wav	[other] Hey, what can I say?I'm a professional.
+speech_0214.wav	[kill] Your death is my living, buddy.
+speech_0215.wav	[kill] Another day, another kill.
+speech_0216.wav	[kill] One more for the resume.
+speech_0217.wav	[other] Tell me you'll keep back!
+speech_0218.wav	[low_hp] No, no!
+speech_0219.wav	[low_hp] Stay away! You hear me? Back off!
+speech_0220.wav	[other] All right, you asked for it.
+speech_0221.wav	[other] Oh, this is most distasteful, I must say.
+speech_0222.wav	[hostile] If you're smart, you'll watch your back.
+speech_0223.wav	[other] Oh, this is most distasteful, I must say.
+speech_0224.wav	[hostile] The advantage is mine. Now you die.
+speech_0225.wav	[kill] Nothing personal, but your death is my game.
+speech_0226.wav	[kill] Killing you will put me in the black flyboy.
+speech_0227.wav	[other] No! It can't! And like this...
+speech_0228.wav	[low_hp] Oh, this is not good.
+speech_0229.wav	[other] Hey, what can I say?I'm a professional.
+speech_0230.wav	[kill] Your death is my living, old boy.
+speech_0231.wav	[kill] Another day, another kill.
+speech_0232.wav	[kill] One more for the resume.
+speech_0233.wav	[other] I say, would you kindly identify yourself?
+speech_0244.wav	[other] and bolster our resumes in the process.Cheers!
+speech_0245.wav	[other] What can sharp base?
+speech_0246.wav	[friendly] You're clear for clicks.
+speech_0247.wav	[friendly] Catch you on the next run.
+speech_0286.wav	[hostile] The advantage is mine. Now you die.
+speech_0287.wav	[kill] Nothing personal, but your death is my game.
+speech_0288.wav	[kill] Killing you will put me in the black fly, boy.
+speech_0289.wav	[low_hp] No, it can't end like this.
+speech_0290.wav	[low_hp] Oh, this is not good.
+speech_0291.wav	[other] I'll show Taylor what a real man can do.
+speech_0292.wav	[kill] Your death is my living, buddy.
+speech_0293.wav	[kill] another day, another kill.
+speech_0294.wav	[kill] One more for the resume.
+speech_0295.wav	[other] Where the hell do you think you're going?
+speech_0296.wav	[other] You don't recognize me, do you?
+speech_0297.wav	[other] Hold on, Mr.
+speech_0368.wav	[friendly] Welcome to the Happy Hunting Ground!
+speech_0369.wav	[hostile] If you're smart, you'll watch your back.
+speech_0370.wav	[other] Better clear out, troubles brewing.
+speech_0371.wav	[other] You're not on my list, this time.
+speech_0372.wav	[other] Just smoking out a little game, flyboy.
+speech_0373.wav	[other] Don't worry, I only kill for a fee.
+speech_0374.wav	[hostile] The advantage is mine, now you die!
+speech_0375.wav	[kill] Nothing personal, but your death is my gain.
+speech_0376.wav	[kill] Killing you will put me in the black fly, boy.
+speech_0377.wav	[low_hp] No, it can't end like this.
+speech_0378.wav	[low_hp] This is not good.
+speech_0379.wav	[other] Hey, what can I say? I'm a professional.
+speech_0380.wav	[kill] Your death is my living, buddy.
+speech_0381.wav	[kill] Another day, another kill.
+speech_0382.wav	[kill] One more for the resume.
+speech_0383.wav	[other] Those books go in my hold or up in flames.
+speech_0384.wav	[kill] Nothing personal, but your death is my gain.
+speech_0385.wav	[kill] Killing you will put me in the black fly, boy.
+speech_0386.wav	[low_hp] No, it can't end like this.
+speech_0387.wav	[low_hp] This is not good.
+speech_0388.wav	[other] Hey, what can I say? I'm a professional.
+speech_0389.wav	[kill] Your death is my living, buddy.
+speech_0390.wav	[kill] Another day, another kill.
+speech_0391.wav	[kill] One more for the resume.
+speech_0392.wav	[hostile] The advantage is mine, now you die!
+speech_0393.wav	[other] You'll have to go through us to get to Palin.
+speech_0394.wav	[kill] Killing you will put me in the black fly, boy.
+speech_0395.wav	[low_hp] No, it can't end like this.
+speech_0396.wav	[low_hp] This is not good.
+speech_0397.wav	[other] Hey, what can I say? I'm a professional.
+speech_0398.wav	[kill] Your death is my living, buddy.
+speech_0399.wav	[kill] Another day, another kill.
+speech_0400.wav	[kill] One more for the resume.

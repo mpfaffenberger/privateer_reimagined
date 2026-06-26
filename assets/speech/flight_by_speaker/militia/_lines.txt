@@ -1,0 +1,62 @@
+speech_0143.wav	[other] Let me know if you hit trouble in my quad.
+speech_0144.wav	[other] We got this sector bottle tight friend.
+speech_0145.wav	[friendly] Militia here, stick to your flight path.
+speech_0146.wav	[friendly] Keep your nose clean in our sector.
+speech_0147.wav	[friendly] You're clear to pass.
+speech_0148.wav	[hostile] You're not leaving this quad alive, pirate.
+speech_0149.wav	[hostile] This is your last run.
+speech_0150.wav	[hostile] Your luck is run out, along with my patience.
+speech_0151.wav	[low_hp] Malaysia forces in need of assistance.
+speech_0152.wav	[low_hp] We're in trouble.
+speech_0153.wav	[other] You cannot win with draw or be destroyed.
+speech_0154.wav	[low_hp] Dancers show you are breaking up. Retreat.
+speech_0155.wav	[kill] Target eliminated command.
+speech_0156.wav	[kill] militia to base, enemy dispatched.
+speech_0157.wav	[contraband] Prepare to be searched, maintain speed and course.
+speech_0158.wav	[contraband] Contraband detected. All units close and terminate.
+speech_0159.wav	[contraband] No contraband detected, you may proceed.
+speech_0160.wav	[hostile] Filthy little brilliance runner, you're busted!
+speech_0161.wav	[hostile] This is your last run!
+speech_0162.wav	[hostile] Filthy little brilliance runner, you're busted!
+speech_0163.wav	[low_hp] Malaysia forces in need of assistance.
+speech_0164.wav	[low_hp] We're in trouble.
+speech_0165.wav	[other] You cannot win with draw or be destroyed.
+speech_0166.wav	[low_hp] Dancers show you are breaking up. Retreat.
+speech_0167.wav	[kill] Target eliminated command.
+speech_0168.wav	[kill] militia to base, enemy dispatched.
+speech_0169.wav	[contraband] Prepare to be searched, maintain speed and course.
+speech_0170.wav	[contraband] Contraband detected. All units close and terminate.
+speech_0171.wav	[contraband] No contraband detected, you may proceed.
+speech_0172.wav	[friendly] Looking sharp, Ace.
+speech_0173.wav	[friendly] You're clear for clicks.
+speech_0482.wav	[other] Let me know if you hit trouble in my quad.
+speech_0483.wav	[other] We've got this sector-bottled tight friend.
+speech_0484.wav	[friendly] Malisha here, stick to your flight path.
+speech_0485.wav	[friendly] Keep your nose clean in our sector.
+speech_0486.wav	[friendly] You're clear to pass.
+speech_0487.wav	[hostile] You're not leaving this quite a live pirate.
+speech_0488.wav	[hostile] This is your last run.
+speech_0489.wav	[hostile] your luck as run out, along with my patients.
+speech_0490.wav	[low_hp] Militia forces in need of assistance.
+speech_0491.wav	[low_hp] We're in trouble.
+speech_0492.wav	[other] You cannot win with draw or be destroyed.
+speech_0493.wav	[low_hp] Sensors show you are breaking up. Retreat.
+speech_0494.wav	[kill] Target eliminated command.
+speech_0495.wav	[kill] militia to base, enemy dispatched.
+speech_0496.wav	[contraband] Prepare to be searched, maintained speed, and coarse.
+speech_0497.wav	[contraband] Contraband detected all units close and terminate.
+speech_0498.wav	[contraband] No contraband detected, you may proceed.
+speech_0499.wav	[hostile] healthy little brilliance runner, you're busted.
+speech_0500.wav	[hostile] This is your last run.
+speech_0501.wav	[hostile] healthy little brilliance runner, you're busted.
+speech_0502.wav	[low_hp] Militia forces in need of assistance.
+speech_0503.wav	[low_hp] We're in trouble.
+speech_0504.wav	[other] You cannot win with draw or be destroyed.
+speech_0505.wav	[low_hp] Sensors show you are breaking up. Retreat.
+speech_0506.wav	[kill] Target eliminated command.
+speech_0507.wav	[kill] militia to base, enemy dispatched.
+speech_0508.wav	[contraband] Prepare to be searched, maintained speed, and coarse.
+speech_0509.wav	[contraband] Contraband detected all units close and terminate.
+speech_0510.wav	[contraband] No contraband detected, you may proceed.
+speech_0511.wav	[friendly] Looking sharp, Ace!
+speech_0512.wav	[friendly] You're clear for clicks.

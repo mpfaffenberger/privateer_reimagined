@@ -1,0 +1,10 @@
+speech_0234.wav	[other] I am Salman Kreitz, Privateer extraordinaire.
+speech_0235.wav	[other] terribly sorry to interrupt your flight, but...
+speech_0236.wav	[other] It seems as we're a bit at odds here.
+speech_0237.wav	[other] I'm to prevent you from delivering those weapons.
+speech_0238.wav	[other] Since we both cannot fulfill our contracts...
+speech_0239.wav	[other] It seems we'll need to settle this ourselves.
+speech_0240.wav	[other] Would you consider dumping your cargo?
+speech_0241.wav	[other] Alas, we'll have to settle this by violent means.
+speech_0242.wav	[other] So sorry, but I'm afraid I cannot let you pass.
+speech_0243.wav	[kill] Now my operatives and I will end your career.

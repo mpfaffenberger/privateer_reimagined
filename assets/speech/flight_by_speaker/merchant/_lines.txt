@@ -1,0 +1,58 @@
+speech_0127.wav	[friendly] How's it going friend?
+speech_0128.wav	[friendly] good to see a friendly ship.
+speech_0129.wav	[other] business treating you well
+speech_0130.wav	[friendly] Just a passing merchant, don't get jumpy.
+speech_0131.wav	[other] I'm not looking for any trouble.
+speech_0132.wav	[friendly] Maybe we can do business sometime.
+speech_0133.wav	[hostile] Come eat some slack, will you?
+speech_0134.wav	[other] You're scaring away my business.
+speech_0135.wav	[other] Please don't trash me, man!
+speech_0136.wav	[other] You maniac! The guild will hear about this!
+speech_0137.wav	[other] my poor ship. I'll have to sell it for scrap.
+speech_0138.wav	[other] Not bad for a lowly merchant, a pirate.
+speech_0139.wav	[other] serves you right attacking an honest dealer
+speech_0140.wav	[other] Ah, another dissatisfied customer.
+speech_0141.wav	[other] And one more loser, cash is in his chips.
+speech_0142.wav	[other] Keep your eyes peeled for trouble, Ace.
+speech_0340.wav	[other] Again.
+speech_0341.wav	[other] Again.
+speech_0342.wav	[other] Economic
+speech_0343.wav	[other] We call it.
+speech_0344.wav	[other] 
+speech_0345.wav	[other] 
+speech_0346.wav	[other] 
+speech_0347.wav	[other] 
+speech_0348.wav	[other] I agree.
+speech_0349.wav	[other] Sir, will.
+speech_0350.wav	[other] to destroy Iran.Underneath.
+speech_0351.wav	[other] 
+speech_0352.wav	[friendly] How's the going friend?
+speech_0353.wav	[friendly] Good to see a friendly ship.
+speech_0354.wav	[other] Isn't this treating you well?
+speech_0355.wav	[other] You maniac, the guild will hear about this.
+speech_0356.wav	[other] My poor ship, I'll have to sell it for scrap.
+speech_0357.wav	[other] Not bad for a lowly merchant, a pirate.
+speech_0358.wav	[other] serves you right, attacking an honest dealer.
+speech_0359.wav	[other] Ah, another dissatisfied customer.
+speech_0360.wav	[other] and one more loser caches in their chips
+speech_0361.wav	[other] Oh dear, are you one of those dreadful retros?
+speech_0362.wav	[other] Please tell me you're not here to kill me.
+speech_0363.wav	[friendly] Thank you, young man.
+speech_0364.wav	[other] I just hope we don't encounter any retros.
+speech_0365.wav	[other] Of that, I'm sure.
+speech_0366.wav	[other] Oh, gracious me.
+speech_0467.wav	[friendly] Good to see a friendly ship.
+speech_0468.wav	[other] business treating you well?
+speech_0469.wav	[friendly] Just a passing merchant.Don't get jumpy.
+speech_0470.wav	[other] I'm not looking for any trouble.
+speech_0471.wav	[friendly] Maybe we can do business sometime.
+speech_0472.wav	[other] Cut me some slack, will ya?
+speech_0473.wav	[other] You're scaring away my business.
+speech_0474.wav	[other] Hey, don't trash me, man!
+speech_0475.wav	[other] You maniac! The guild will hear about this!
+speech_0476.wav	[other] my poor ship. I'll have to sell it for scrap.
+speech_0477.wav	[other] Not bad for a lowly merchant, hey, pirate.
+speech_0478.wav	[other] serves you right attacking an honest dealer.
+speech_0479.wav	[other] Another dissatisfied customer.
+speech_0480.wav	[other] and one more loser cash is in its chips.
+speech_0481.wav	[other] Keep your eyes peeled for trouble, Ace.

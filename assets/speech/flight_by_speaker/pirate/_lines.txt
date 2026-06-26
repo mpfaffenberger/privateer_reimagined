@@ -1,0 +1,86 @@
+speech_0174.wav	[friendly] Catch you on the next run.
+speech_0175.wav	[friendly] Not looking for trouble, Ace.
+speech_0176.wav	[other] Forget this meat happened. We got no problem.
+speech_0177.wav	[other] I didn't see you and your blind, got it?
+speech_0178.wav	[hostile] You're about to suck void, buddy.
+speech_0179.wav	[hostile] You're finished, fly boy.
+speech_0180.wav	[hostile] You're about to suck void, buddy.
+speech_0181.wav	[low_hp] Damn, you're ripping me apart!
+speech_0182.wav	[low_hp] This crate's about to explode!
+speech_0183.wav	[hostile] Just dump your cargo before you blow, will ya?
+speech_0184.wav	[kill] Yeah, you're nailed, pal.
+speech_0185.wav	[kill] A clean kill should have been a bounty hunter.
+speech_0189.wav	[hostile] You're about to suck void, buddy.
+speech_0190.wav	[low_hp] Damn, you're ripping me apart!
+speech_0191.wav	[low_hp] This crate's about to explode!
+speech_0192.wav	[hostile] Just dump your cargo before you blow, will ya?
+speech_0193.wav	[kill] Yeah, you're nailed, pal.
+speech_0194.wav	[kill] A clean kill should have been a bounty hunter.
+speech_0195.wav	[kill] You're dead, chump.
+speech_0196.wav	[other] Should have stepped to your charts. It's dangerous out here.
+speech_0197.wav	[hostile] You're finished, fly boy.
+speech_0198.wav	[hostile] You're about to suck void, buddy.
+speech_0199.wav	[low_hp] Damn, you're ripping me apart!
+speech_0200.wav	[low_hp] This crate's about to explode!
+speech_0201.wav	[hostile] Just dump your cargo before you blow, will ya?
+speech_0202.wav	[kill] Yeah, you're nailed, pal.
+speech_0203.wav	[kill] A clean kill should have been a bounty hunter.
+speech_0248.wav	[friendly] Not looking for trouble, Ace.
+speech_0249.wav	[other] Forget this meat happened. We got no problem.
+speech_0250.wav	[other] I didn't see you and you blind, got it.
+speech_0251.wav	[hostile] you'll loose end looking to be tied pal.
+speech_0252.wav	[hostile] You're finished, Flyboy.
+speech_0253.wav	[hostile] You're about to suck void, buddy.
+speech_0254.wav	[other] Why's Guy thinks he's winning?
+speech_0255.wav	[other] Uh, run button.
+speech_0256.wav	[other] come to your cargo before you blow, will ya?
+speech_0257.wav	[other] Yeah, you were nailed, Paolo.
+speech_0258.wav	[other] A cream kill should have been a bounty hunter.
+speech_0259.wav	[kill] You were dead, jump.
+speech_0260.wav	[other] A bright boy, guess who's in deep trouble?
+speech_0261.wav	[other] Mr. Lynch wants that artifact.
+speech_0262.wav	[other] I'm gonna count to 10, then I start shooting.
+speech_0263.wav	[other] One, two, uh...
+speech_0264.wav	[other] Forget this, start shooting boys!
+speech_0265.wav	[friendly] Continue on course.
+speech_0266.wav	[friendly] Continue on course.
+speech_0267.wav	[friendly] Continue on course.
+speech_0268.wav	[friendly] Continue on course.
+speech_0310.wav	[friendly] You are clear for clicks.
+speech_0311.wav	[friendly] Catch you on the next run.
+speech_0312.wav	[hostile] You're a loose end looking to be tied, pal.
+speech_0313.wav	[hostile] You're finished, fly boy!
+speech_0314.wav	[hostile] You're about to suck void, buddy.
+speech_0315.wav	[low_hp] Damn, you're ripping me apart!
+speech_0316.wav	[low_hp] This creates about to explode.
+speech_0317.wav	[other] How's that from, message, errand boy?
+speech_0318.wav	[kill] Yeah, you're nailed, pal.
+speech_0319.wav	[kill] A clean kill should have been a bounty hunter.
+speech_0320.wav	[kill] You're dead, chump!
+speech_0321.wav	[other] Nice ship, Captain. How about a little tour?
+speech_0513.wav	[friendly] Catch you on the next run.
+speech_0514.wav	[other] Now I'm looking for trouble, Ace.
+speech_0515.wav	[other] Forget this meat happened, we got no problem.
+speech_0516.wav	[other] I didn't see you, and you're blind.Got it?
+speech_0517.wav	[hostile] You're a loose end looking to be tied, pal.
+speech_0518.wav	[hostile] You're finished, fly, boy.
+speech_0519.wav	[other] You're about to suck, boy, buddy.
+speech_0520.wav	[low_hp] Damn, you're ripping me apart!
+speech_0521.wav	[low_hp] This creates a bow to explode.
+speech_0522.wav	[hostile] Drop your cargo before you blow, will ya?
+speech_0523.wav	[kill] Yeah, you nailed, pal.
+speech_0524.wav	[kill] A clean kill, should have been a bounty hunter.
+speech_0530.wav	[low_hp] This creates a bow to explode.
+speech_0531.wav	[hostile] Drop your cargo before you blow, will ya?
+speech_0532.wav	[kill] Yeah, you nailed, pal.
+speech_0533.wav	[kill] A clean kill, should have been a bounty hunter.
+speech_0534.wav	[kill] You're dead, jump.
+speech_0535.wav	[other] Should have stuck to your charts.It's dangerous out here.
+speech_0536.wav	[hostile] You're finished, fly, boy.
+speech_0537.wav	[other] You're about to suck, boy, buddy.
+speech_0538.wav	[low_hp] Damn, you're ripping me apart!
+speech_0539.wav	[low_hp] This creates a bow to explode.
+speech_0540.wav	[hostile] Drop your cargo before you blow, will ya?
+speech_0541.wav	[kill] Yeah, you nailed, pal.
+speech_0542.wav	[kill] A clean kill, should have been a bounty hunter.
+speech_0543.wav	[kill] You're dead, jump.

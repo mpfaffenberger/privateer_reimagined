@@ -1,0 +1,12 @@
+speech_0298.wav	[other] I think it's high time we were introduced.
+speech_0299.wav	[other] Don't you?
+speech_0300.wav	[other] Come on, you steal a man's business.
+speech_0301.wav	[other] you ought to at least know his name.
+speech_0302.wav	[other] My name is William Reordion.
+speech_0303.wav	[other] My name is William Reordion.
+speech_0304.wav	[other] You take over my route, fly for Taylor.
+speech_0305.wav	[other] and then have a God to insult me.
+speech_0306.wav	[other] There's not enough work for two private tiers.
+speech_0307.wav	[other] I'll teach you to steal my business.
+speech_0308.wav	[hostile] You're a dead man.
+speech_0309.wav	[friendly] Looking sharp, Ace!

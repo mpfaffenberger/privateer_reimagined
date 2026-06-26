@@ -1,0 +1,2 @@
+speech_0000.wav	[other] Now entering an automatic landing zone.
+speech_0367.wav	[other] Now entering an automatic landing zone.

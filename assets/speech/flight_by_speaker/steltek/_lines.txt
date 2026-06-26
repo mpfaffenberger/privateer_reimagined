@@ -1,0 +1,18 @@
+speech_0322.wav	[other] Okay, you've got my attention. What do you want?
+speech_0323.wav	[other] He is easy.What a hero response.
+speech_0324.wav	[other] Well, here it comes!
+speech_0325.wav	[other] 
+speech_0326.wav	[other] 
+speech_0327.wav	[other] We are Delta!
+speech_0328.wav	[other] 
+speech_0329.wav	[other] You will tell us what...
+speech_0330.wav	[other] Hunters to it.
+speech_0331.wav	[other] 
+speech_0332.wav	[other] 
+speech_0333.wav	[other] 
+speech_0334.wav	[other] We lemonade out.
+speech_0335.wav	[other] 
+speech_0336.wav	[other] 
+speech_0337.wav	[other] 
+speech_0338.wav	[other] 
+speech_0339.wav	[friendly] Thank you very much.

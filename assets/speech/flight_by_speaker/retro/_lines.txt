@@ -1,0 +1,83 @@
+speech_0034.wav	[hostile] Die by the very weapons you adore!
+speech_0035.wav	[hostile] Train our to humanity. Feel our wrath.
+speech_0036.wav	[hostile] Repent and accept our righteous judgment.
+speech_0037.wav	[low_hp] Can it be? Has the God of man abandoned us?
+speech_0038.wav	[low_hp] Deliver us, O Lord, for we are in need.
+speech_0039.wav	[hostile] Your destruction is the will of God!
+speech_0040.wav	[hostile] He then taste a purifying fire of the Lord.
+speech_0041.wav	[kill] Death to heat and glory be unto the Most High!
+speech_0042.wav	[kill] The piety has prevailed again!Die, devil!
+speech_0043.wav	[other] Die by the very weapons you adore!
+speech_0044.wav	[hostile] Train our to humanity. Feel our wrath.
+speech_0045.wav	[other] Toth, forget Oxford! Your next stop is hell!
+speech_0046.wav	[other] Can it be? Has the God of man abandoned us?
+speech_0047.wav	[other] Deliver us, O Lord, for we are in need.
+speech_0048.wav	[hostile] Your destruction is the will of God!
+speech_0049.wav	[other] He then taste a purifying fire of the Lord.
+speech_0050.wav	[other] Death to heat and glory be unto the Most High!
+speech_0051.wav	[hostile] The piety has prevailed again!Die, devil!
+speech_0052.wav	[other] Hunt it off.
+speech_0053.wav	[hostile] You are hereby sentenced to death for your heresy.
+speech_0054.wav	[hostile] The execution shall commence now.
+speech_0055.wav	[other] Die by the very weapons you adore!
+speech_0056.wav	[hostile] Train our to humanity. Feel our wrath.
+speech_0057.wav	[hostile] Repent and accept our righteous judgment.
+speech_0058.wav	[other] Can it be? Has the God of man abandoned us?
+speech_0059.wav	[other] Deliver us, O Lord, for we are in need.
+speech_0060.wav	[hostile] Your destruction is the will of God!
+speech_0061.wav	[other] He then taste a purifying fire of the Lord.
+speech_0062.wav	[other] Death to heat and glory be unto the Most High!
+speech_0063.wav	[hostile] The piety has prevailed again!Die, devil!
+speech_0064.wav	[other] Sinner, ready thyself for righteous retribution.
+speech_0065.wav	[other] We know you possess high-level alien devices.
+speech_0066.wav	[other] Machines of damnable intent!
+speech_0067.wav	[other] for adding to the technological burden of mankind.
+speech_0068.wav	[other] The Church of Man condemns you!
+speech_0069.wav	[hostile] In the moments, you have left to you.Repent.
+speech_0186.wav	[kill] You're dead, chump.
+speech_0187.wav	[other] Knowledge belongs to the galaxy, you fashists!
+speech_0188.wav	[other] Oxford has no right to hoard data.Access is ours.
+speech_0401.wav	[other] weapons you adore!
+speech_0402.wav	[hostile] Greater to humanity, we are wrath.
+speech_0403.wav	[hostile] Repent! And accept our righteous judgment!
+speech_0404.wav	[other] Can it be as the god of man abandoned us?
+speech_0405.wav	[other] 
+speech_0406.wav	[hostile] Your destruction is the will of God!
+speech_0407.wav	[other] the purifying fire of the Lord!
+speech_0408.wav	[other] You heathen's lorry be unto the most high!
+speech_0409.wav	[hostile] Hyattie has prevailed again, die devil!
+speech_0410.wav	[other] weapons you adore!
+speech_0411.wav	[hostile] Greater to humanity, we are wrath.
+speech_0412.wav	[other] Oh, forget Oxford, your next stop is hell.
+speech_0413.wav	[other] Can it be as the god of man abandoned us?
+speech_0414.wav	[other] 
+speech_0415.wav	[hostile] Your destruction is the will of God!
+speech_0416.wav	[other] the purifying fire of the Lord!
+speech_0417.wav	[other] You heathen's lorry be unto the most high!
+speech_0418.wav	[hostile] Hyattie has prevailed again, die devil!
+speech_0419.wav	[other] Hunter Tom?
+speech_0420.wav	[hostile] That's for your heresy!
+speech_0421.wav	[hostile] Execution cell commence now
+speech_0422.wav	[other] weapons you adore!
+speech_0423.wav	[hostile] Greater to humanity, we are wrath.
+speech_0424.wav	[hostile] Repent! And accept our righteous judgment!
+speech_0425.wav	[other] Can it be as the god of man abandoned us?
+speech_0426.wav	[other] 
+speech_0427.wav	[hostile] Your destruction is the will of God!
+speech_0428.wav	[other] the purifying fire of the Lord!
+speech_0429.wav	[other] You heathen's lorry be unto the most high!
+speech_0430.wav	[hostile] Hyattie has prevailed again, die devil!
+speech_0431.wav	[other] Sinner, ready myself for righteous retribution.
+speech_0432.wav	[other] We know you possess high-level alien devices!
+speech_0433.wav	[other] of damnable intent.
+speech_0434.wav	[other] for adding to the technological burden of mankind.
+speech_0435.wav	[other] The Church of Man condemns you!
+speech_0436.wav	[other] 
+speech_0437.wav	[friendly] Your profile is clear to sector's edge.
+speech_0438.wav	[friendly] Stick to established lanes for your own good.
+speech_0439.wav	[friendly] Patrol to civilian craft. Keep your distance.
+speech_0525.wav	[kill] You're dead, jump.
+speech_0526.wav	[other] Now let's blow us to the galaxy, you fashers.
+speech_0527.wav	[other] Oxford has no right to hoard data.Access is ours.
+speech_0528.wav	[other] Give out the such void, buddy.
+speech_0529.wav	[low_hp] Damn, you're ripping me apart!
