@@ -1,10 +1,12 @@
 // -----------------------------------------------------------------------------
-// audio.cpp — voice pool, WAV loader, stream-callback mixer.
+// audio.cpp — voice pool, sample loader, stream-callback mixer.
 //
 // Read the THREADING CONTRACT block in audio.h first; every design
 // decision below follows from "the callback never locks". Layout:
 //
-//   1. WAV loader — RIFF/WAVE PCM16 parser + linear resampler.
+//   1. Sample loader — WAV (RIFF/WAVE PCM16) or MP3 (minimp3). Both
+//      decode into PCM16 + source rate/channel count, then share the
+//      same linear resample-to-device-rate + Sample store path.
 //   2. Voice pool + spatialization math (main thread).
 //   3. stream_cb mixer (audio thread).
 // -----------------------------------------------------------------------------
@@ -12,6 +14,13 @@
 #include "audio.h"
 
 #include "sokol_audio.h"
+
+// minimp3 (https://github.com/lieff/minimp3, public-domain). Single-
+// header MP3 decoder; defining MINIMP3_IMPLEMENTATION pulls the
+// function bodies into THIS TU. Only audio.cpp consumes minimp3 in
+// the project, so the impl macro can live here without a wrapper.
+#define MINIMP3_IMPLEMENTATION
+#include "minimp3.h"
 
 #include <atomic>
 #include <chrono>
@@ -233,6 +242,101 @@ bool load_wav_pcm16(const std::string& path,
     }
     out_channels = channels;
     out_rate     = (int)rate;
+    return true;
+}
+
+// ---- MP3 loader ---------------------------------------------------------------
+// minimp3 frame decoder. The decoder consumes the raw MP3 bitstream
+// frame-by-frame (no header chunk to parse up front); we feed it the
+// whole file and append decoded int16 samples into `out_pcm`. We read
+// the whole file into memory because MP3 needs random frame access for
+// its bit reservoir — true streaming would need a much bigger state
+// machine and the SFX set is a few MB.
+//
+// Mixed channel count / sample rate across frames isn't supported:
+// real-world MP3s hold one stream at one rate, so we latch the first
+// frame's metadata and reject any later disagreement.
+
+bool load_mp3_pcm16(const std::string& path,
+                    std::vector<int16_t>& out_pcm,
+                    int& out_channels, int& out_rate) {
+    std::ifstream in(path, std::ios::binary);
+    if (!in) {
+        std::fprintf(stderr, "[audio] cannot open '%s'\n", path.c_str());
+        return false;
+    }
+    in.seekg(0, std::ios::end);
+    const std::streamoff file_size = in.tellg();
+    in.seekg(0, std::ios::beg);
+    if (file_size <= 0) {
+        std::fprintf(stderr, "[audio] '%s': empty file\n", path.c_str());
+        return false;
+    }
+    std::vector<uint8_t> data((size_t)file_size);
+    if (!in.read(reinterpret_cast<char*>(data.data()), file_size)) {
+        std::fprintf(stderr, "[audio] '%s': short read\n", path.c_str());
+        return false;
+    }
+
+    mp3dec_t dec;
+    mp3dec_init(&dec);
+
+    int      got_channels = 0;
+    int      got_rate     = 0;
+    size_t   total_decoded = 0;   // samples per channel
+
+    // MINIMP3_MAX_SAMPLES_PER_FRAME is the upper bound per call (stereo
+    // 1152-sample frames); cheap on the stack.
+    mp3d_sample_t      frame_buf[MINIMP3_MAX_SAMPLES_PER_FRAME];
+    mp3dec_frame_info_t info{};
+
+    size_t pos = 0;
+    while (pos < data.size()) {
+        const size_t remaining = data.size() - pos;
+        const int    bytes_left = (remaining > (size_t)INT_MAX) ? INT_MAX : (int)remaining;
+        const int    samples = mp3dec_decode_frame(&dec, data.data() + pos, bytes_left,
+                                                   frame_buf, &info);
+        // Advance by what the decoder actually consumed (info.frame_bytes
+        // includes any bytes it skipped looking for the next sync word).
+        // A zero/negative value means "nothing usable here"; nudge by 1
+        // so a single bad run can't deadlock the loop.
+        const size_t advance = (info.frame_bytes > 0) ? (size_t)info.frame_bytes : 1;
+        pos += advance;
+        if (pos > data.size()) break;   // overflow guard
+
+        // info.channels and info.hz are populated by the first real
+        // frame (zero on a no-op call). Latch them and fail loud on
+        // any disagreement (a corrupt mixed-rate file is a bug, not
+        // data we want to silently swallow).
+        if (info.channels > 0 && info.hz > 0) {
+            if (got_channels == 0) {
+                got_channels = info.channels;
+                got_rate     = info.hz;
+            } else if (info.channels != got_channels || info.hz != got_rate) {
+                std::fprintf(stderr,
+                             "[audio] '%s': MP3 stream changes mid-file (%dch/%dHz -> "
+                             "%dch/%dHz) — corrupt\n",
+                             path.c_str(), got_channels, got_rate,
+                             info.channels, info.hz);
+                return false;
+            }
+        }
+
+        if (samples > 0) {
+            // `samples` is per-channel; total interleaved = samples * channels.
+            out_pcm.insert(out_pcm.end(),
+                           frame_buf, frame_buf + (size_t)samples * (size_t)info.channels);
+            total_decoded += (size_t)samples;
+        }
+    }
+
+    if (got_channels == 0 || got_rate == 0 || total_decoded == 0) {
+        std::fprintf(stderr, "[audio] '%s': no decodable MP3 frames\n", path.c_str());
+        return false;
+    }
+
+    out_channels = got_channels;
+    out_rate     = got_rate;
     return true;
 }
 
@@ -501,13 +605,12 @@ void shutdown() {
     g_ready = false;
 }
 
-SampleId load(const std::string& path) {
-    if (!g_ready) return 0;
-
-    std::vector<int16_t> pcm;
-    int channels = 0, rate = 0;
-    if (!load_wav_pcm16(path, pcm, channels, rate)) return 0;
-
+// Shared tail: convert the decoder's PCM16 + rate/channel-count into a
+// stored Sample, returning its id (or 0 on failure). Keeps the WAV and
+// MP3 loaders thin while the resample-and-store path stays single-
+// sourced.
+SampleId store_pcm16(const std::string& path,
+                     const std::vector<int16_t>& pcm, int channels, int rate) {
     Sample s;
     s.path = path;
     convert_to_device(pcm, channels, rate, saudio_sample_rate(), s.frames);
@@ -516,13 +619,39 @@ SampleId load(const std::string& path) {
         std::fprintf(stderr, "[audio] '%s': empty after conversion\n", path.c_str());
         return 0;
     }
-
     g_samples.push_back(std::move(s));
     const SampleId id = (SampleId)(g_samples.size() - 1);
     std::printf("[audio] loaded '%s' (%zu frames @ %dHz, src %dHz %dch)\n",
                 path.c_str(), g_samples[id].frame_count,
                 saudio_sample_rate(), rate, channels);
     return id;
+}
+
+// Case-insensitive check that `path` ends in ".<ext>" (e.g. ".mp3").
+// Tiny inline helper — avoids a locale-dependent tolower in a hot path.
+static bool ends_with_ext_ci(const std::string& path, const char* ext) {
+    const size_t n = std::strlen(ext);
+    if (path.size() <= n) return false;                // need '.' + ext
+    if (path[path.size() - n - 1] != '.') return false;
+    for (size_t i = 0; i < n; ++i) {
+        char c = path[path.size() - n + i];
+        if (c >= 'A' && c <= 'Z') c = (char)(c + 32);
+        if (c != ext[i]) return false;
+    }
+    return true;
+}
+
+SampleId load(const std::string& path) {
+    if (!g_ready) return 0;
+
+    std::vector<int16_t> pcm;
+    int channels = 0, rate = 0;
+    if (ends_with_ext_ci(path, "mp3")) {
+        if (!load_mp3_pcm16(path, pcm, channels, rate)) return 0;
+    } else {
+        if (!load_wav_pcm16(path, pcm, channels, rate)) return 0;
+    }
+    return store_pcm16(path, pcm, channels, rate);
 }
 
 VoiceId play(SampleId s, float gain) {

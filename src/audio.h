@@ -78,11 +78,14 @@
 // frame in audio.cpp) caps NEW world one-shot starts so a single furball
 // frame can't flood the mixer.
 //
-// WAV loading: hand-rolled RIFF/WAVE PCM16 parser (audio.cpp), mono or
-// stereo, resampled to the device rate at load time via linear
-// interpolation. Same no-third-party-deps ethos as the project's JSON
-// and TOML readers. Float32/ADPCM/24-bit files are rejected loudly —
-// re-export as PCM16, it's 2026, every tool can.
+// Sample loading: hand-rolled RIFF/WAVE PCM16 parser for .wav (mono or
+// stereo), and MP3 via the vendored single-header minimp3 decoder
+// (third_party/minimp3.h). Both decode to interleaved PCM16 and resample
+// to the device rate at load time via linear interpolation through one
+// shared tail (store_pcm16). MP3 is the one third-party dep we don't
+// hand-roll (nobody hand-rolls an MP3 decoder); it keeps the generated
+// voice MP3s as the single source of truth with no WAV pre-bake. Float32/
+// ADPCM/24-bit WAVs are still rejected loudly — re-export as PCM16.
 // -----------------------------------------------------------------------------
 
 #include <HandmadeMath.h>
