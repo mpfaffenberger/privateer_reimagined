@@ -859,6 +859,9 @@ void build_system_scene(bool first_time) {
     // Trading screens (np-9cu.2) consume it; today it just proves the
     // canonical 1995 cargo list round-trips into the engine.
     commodity::load("assets/data/privateer_db/cargo.toml");
+    // Contraband sidecar (Phase 1.1): ids + severity the search director
+    // reads. Missing/unparseable is non-fatal — logs one line and runs on.
+    commodity::load_contraband("assets/data/contraband.json");
     // Per-base commodity pricing (np-9cu.2). Reads canonical category prices
     // + archetypes from assets/data, and each base's market archetype. Then
     // register the Commodity Exchange screen body via the np-9cu.4 hook seam.

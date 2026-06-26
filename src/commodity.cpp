@@ -19,6 +19,8 @@
 
 #include "commodity.h"
 
+#include "json.h"
+
 #include <cctype>
 #include <cstdio>
 #include <fstream>
@@ -31,6 +33,13 @@ std::vector<Commodity> g_catalog;
 // id -> index into g_catalog. Rebuilt by load(); indices stay valid
 // because the catalog is never resized after load() returns.
 std::unordered_map<std::string, size_t> g_by_id;
+
+// ---- contraband (Phase 1) ---------------------------------------------
+// id -> severity. Rebuilt by load_contraband(); not serialized. Severity
+// is a gameplay knob the search director reads to decide "smuggler" vs
+// "pirate" vs "traced" — a hailing Militia will tolerate severity 1 with
+// a fine, but severity 3 lights you up.
+std::unordered_map<std::string, int> g_contraband;
 
 // Trim leading/trailing whitespace. The extractor doesn't emit stray
 // spaces today; this guards against a hand-edited file.
@@ -141,6 +150,51 @@ const Commodity* find(std::string_view id) {
 
 const std::vector<Commodity>& all() {
     return g_catalog;
+}
+
+// ---- contraband (Phase 1) ---------------------------------------------
+// Parse assets/data/contraband.json:
+//   { "contraband": [ { "id": "brilliance", "severity": 3 }, ... ] }
+// Missing/unparseable file is non-fatal: the game runs with an empty
+// contraband set and every check degrades to "not contraband". The log
+// line makes the failure mode obvious (vs a silent default-true).
+int load_contraband(const std::string& path) {
+    g_contraband.clear();
+
+    json::Value root = json::parse_file(path);
+    if (!root.is_object()) {
+        std::fprintf(stderr, "[commodity] no contraband table at '%s'\n", path.c_str());
+        return 0;
+    }
+    const json::Value* arr = root.find("contraband");
+    if (!arr || !arr->is_array()) {
+        std::fprintf(stderr, "[commodity] '%s' missing 'contraband' array\n", path.c_str());
+        return 0;
+    }
+
+    int loaded = 0;
+    for (const json::Value& e : arr->as_array()) {
+        if (!e.is_object()) continue;
+        const json::Value* id_p  = e.find("id");
+        const json::Value* sev_p = e.find("severity");
+        if (!id_p || !id_p->is_string()) continue;
+        const std::string id = id_p->as_string();
+        int sev = (sev_p && sev_p->is_number()) ? sev_p->as_int() : 1;
+        g_contraband[id] = sev;
+        ++loaded;
+    }
+
+    std::printf("[commodity] %d contraband ids\n", loaded);
+    return loaded;
+}
+
+bool is_contraband(std::string_view id) {
+    return g_contraband.find(std::string(id)) != g_contraband.end();
+}
+
+int contraband_severity(std::string_view id) {
+    const auto it = g_contraband.find(std::string(id));
+    return (it == g_contraband.end()) ? 0 : it->second;
 }
 
 } // namespace commodity

@@ -38,7 +38,7 @@ const PlayerReputation* g_rep   = nullptr;
 // g_rep is non-null.
 bool is_live_threat(const Ship& s) {
     if (s.is_player || !s.alive) return false;
-    return faction::stance_npc_vs_player(s.faction, *g_rep) == Stance::Hostile;
+    return s.ai.aggro_player || faction::stance_npc_vs_player(s.faction, *g_rep) == Stance::Hostile;
 }
 } // namespace
 

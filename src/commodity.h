@@ -34,6 +34,7 @@
 
 #include <string>
 #include <string_view>
+#include <unordered_map>
 #include <vector>
 
 struct Commodity {
@@ -61,5 +62,21 @@ const std::vector<Commodity>& all();
 // price-table loader when bases land) derive ids the exact same way
 // instead of re-implementing the rule and drifting.
 std::string id_from_label(std::string_view label);
+
+// ---- contraband (Phase 1) ---------------------------------------------
+// The contraband catalog is loaded separately from assets/data/contraband.json
+// (a small JSON sidecar). Missing/unparseable file = non-fatal, returns 0;
+// the game runs normally and every commodity just reports as non-contraband.
+// Logs one summary line: `[commodity] N contraband ids`.
+int load_contraband(const std::string& path);
+
+// True iff the given catalog id is in the contraband set (loaded via
+// load_contraband). False for unknown ids and before load_contraband runs.
+bool is_contraband(std::string_view id);
+
+// Severity (1..N) for a contraband id; 0 if not contraband (or before
+// load_contraband). Severity is informational for the search director —
+// hailing.{h,cpp} reads it to decide how aggressive the response is.
+int contraband_severity(std::string_view id);
 
 } // namespace commodity

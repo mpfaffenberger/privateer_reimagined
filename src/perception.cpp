@@ -18,7 +18,7 @@ static Stance classify_pair(const Ship& observer, const Ship& other,
         // "How does this NPC observer feel about the player?" A ship the
         // player has shot enough to provoke bears a personal grudge and
         // treats the player as hostile regardless of faction/rep.
-        if (observer.provoked_by_player) return Stance::Hostile;
+        if (observer.provoked_by_player || observer.ai.aggro_player) return Stance::Hostile;
         return faction::stance_npc_vs_player(observer.faction, rep);
     }
     if (observer.is_player) {
@@ -26,7 +26,7 @@ static Stance classify_pair(const Ship& observer, const Ship& other,
         // lookup, just inverted, so the player's perception list
         // colours hostiles/allies the way the NPC's AI sees the player.
         // A provoked ship reads back as hostile (red) on the player's HUD.
-        if (other.provoked_by_player) return Stance::Hostile;
+        if (other.provoked_by_player || other.ai.aggro_player) return Stance::Hostile;
         return faction::stance_npc_vs_player(other.faction, rep);
     }
     return faction::stance_npc_vs_npc(observer.faction, other.faction);

@@ -9,6 +9,7 @@
 
 #include "player.h"
 
+#include "commodity.h"   // is_contraband (Phase 1.1) — only needed by .cpp body
 #include "missile.h"
 #include "ship_class.h"
 
@@ -162,6 +163,15 @@ bool remove_cargo(PlayerState& p, const std::string& commodity_id, int units) {
         return true;
     }
     return false;   // commodity not in hold at all
+}
+
+bool carrying_contraband(const PlayerState& p) {
+    // Empty stacks contribute nothing — skip cheaply.
+    for (const CargoEntry& e : p.cargo) {
+        if (e.units <= 0) continue;
+        if (commodity::is_contraband(e.commodity_id)) return true;
+    }
+    return false;
 }
 
 } // namespace player

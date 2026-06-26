@@ -288,6 +288,12 @@ bool add_cargo(PlayerState& p, const std::string& commodity_id,
                int units, int price_per_unit, int capacity);
 bool remove_cargo(PlayerState& p, const std::string& commodity_id, int units);
 
+// True iff ANY cargo stack is a contraband commodity (Phase 1.1). The
+// search director (hailing.{h,cpp}) uses this to decide whether to
+// roll the contraband branch on a hail. Cheap (one unordered_map probe
+// per non-zero stack).
+bool carrying_contraband(const PlayerState& p);
+
 // ---- ordnance (np-zte.2) ----------------------------------------------------
 // type_index is a MissileType (0=DF,1=HS,2=IR); out-of-range is a no-op.
 // missile_count reads the stock; consume_missile decrements one and returns
