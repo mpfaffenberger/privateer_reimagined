@@ -1,0 +1,90 @@
+#pragma once
+// -----------------------------------------------------------------------------
+// voice.h — voiced comm line playback over the audio mixer (np-ma3).
+//
+// A thin voice-playback layer that sits OVER the generic audio mixer
+// (audio.h) and is driven by the comm system (comm.h). Same pattern as
+// sfx.h and music.h: gameplay code stays one-liners
+// (`voice::say(faction, Category::Hostile, pos, true)`), all policy
+// lives HERE — which voice_id to play for a given (faction, category),
+// whether a line is player-directed or world, and the one-voice-at-a-time
+// contract below.
+//
+// Loads a voice-bank manifest (default: `assets/data/voice_bank.json`,
+// built by tools/build_voice_bank.py) that maps (faction, category) ->
+// a list of voice_ids for that line. Each voice_id resolves through the
+// bank to a list of MP3 paths in `assets/voice/...` that audio::load
+// pulls once at boot — so runtime playback is a mixer play() /
+// play_world(), no I/O on the hot path.
+//
+// ----- playback path (the 2D-vs-3D policy this module owns) -----
+// Player-directed lines (`to_player == true`, i.e. anyone hailing the
+// player) play 2D via audio::play() — the "radio" feel: the player
+// hears the line centered in their head, immune to the degenerate 3D
+// case where the source IS the listener, and the gain is stable no
+// matter where the speaker is relative to the cockpit.
+//
+// Ambient lines (`to_player == false`, NPC-to-NPC chatter in earshot)
+// play 3D via audio::play_world() at `world_pos` against the listener
+// pose — properly attenuated and panned so a Talon behind the player
+// hails from behind, and a distant NPC fades with range.
+//
+// ----- one-voice-at-a-time (player-directed lines only) -----
+// Player-directed hails are queued: when a new player-directed line is
+// requested while a previous one is still playing, the new line waits
+// behind it rather than stacking on top. NPC-to-NPC world voices are
+// independent and never interrupted; they're cheap ambient flavor, not
+// radio.
+//
+// Phase 0 keeps the contract small: load() + two say() overloads.
+// The .cpp will land in a follow-up issue (the impl isn't done here;
+// this is the API surface the comm layer wires against).
+// -----------------------------------------------------------------------------
+
+#include "faction.h"
+
+#include <HandmadeMath.h>
+#include <cstdint>
+#include <string>
+
+namespace voice {
+
+// The voice category — the gameplay meaning of a line. Drives which
+// pool of (faction, category) -> voice_ids we pick from, and lets the
+// debug panel force-trigger a specific category for testing.
+enum class Category : uint8_t {
+    Greeting,   // friendly hail ("Confed: 'Nice shooting, civilian.'")
+    Hostile,    // aggressive bark ("Pirate: 'You're flying Confed colors...'")
+    LowHp,      // hull critical ("Militia: 'We're taking damage!'")
+    Kill,       // kill confirmation ("Pirate: 'Target down.'")
+    Demand,     // surrender / dock demand ("Confed: 'Heave to, civilian.'")
+    Rumor,      // bar-patron/merchant rumor line
+    Search,     // contraband search ("Militia: 'Stand by, we need a scan.'")
+    Clear,      // clean scan / search passed ("Militia: 'You're clear, proceed.'")
+};
+
+// Load the voice-bank manifest from `path` (default
+// `assets/data/voice_bank.json`). Idempotent — replaces any prior table.
+// Missing/unparseable file is NON-fatal: say() then degrades to a silent
+// no-op (one log line) so the rest of the game keeps running without
+// voice. Mirrors the comm::load() policy on missing lines.
+bool load(const std::string& path);
+
+// Play the next voice line for (speaker, cat), at `world_pos`, addressed
+// to the player when `to_player` is true (radio/2D path) or as ambient
+// NPC flavor when false (positional/play_world). Selects a voice_id
+// deterministically-ish from the bank (random within the pool) so
+// repeated calls of the same (speaker, cat) don't always play the same
+// clip. Falls back to a silent no-op if no (speaker, cat) entry exists
+// in the bank.
+void say(Faction speaker, Category cat, HMM_Vec3 world_pos, bool to_player);
+
+// Overload for callers that already have a concrete voice_id (e.g. the
+// scripted-encounter / scenario engine from Phase 2 — see the plan —
+// which authors a specific voice_id for a given line). Same 2D / 3D
+// rule via `to_player`. Used today by the debug panel's "force bark"
+// button.
+void say(const std::string& voice_id, Category cat,
+         HMM_Vec3 world_pos, bool to_player);
+
+} // namespace voice

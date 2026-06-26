@@ -162,6 +162,8 @@ struct ShipAIState {
     // firing every frame the target sits inside comms_f1.
     float     last_bark_at = -1000.0f;
 
+    bool      aggro_player = false;   // hailing/search override: treat the player as hostile regardless of reputation (transient, not serialized)
+
     // ---- data-driven brain runtime (src/ai_maneuver.h, ai_brain.cpp) ---
     // The combat brain is now a condition->maneuver table evaluator. The
     // STATIC table (3 morale tiers of logic+interrupt rules) is shared and
