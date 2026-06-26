@@ -63,6 +63,7 @@
 #include "jump.h"
 #include "encounters.h"
 #include "hailing.h"
+#include "scripted_encounters.h"
 #include "dust.h"
 #include "warp_streaks.h"
 #include "jump_gate.h"
@@ -1193,6 +1194,11 @@ void build_system_scene(bool first_time) {
         // (gitignored, clean clones run silent). update() below drives the
         // state->track selection every frame.
         music::load_all();
+        // Scripted scenario director (Phase 2): trigger list for the data-
+        // driven Confed-distress set (issue #59). Missing file is non-fatal;
+        // the director becomes a silent no-op. Runs at startup so the table
+        // is available before any system-load / tick happens.
+        scripted::load("assets/data/scripted_encounters.json");
     }
     for (const auto& pm_def : g.system.placed_meshes) {
         PlacedMesh pm;
@@ -1587,6 +1593,9 @@ void build_system_scene(bool first_time) {
     threat::set_world(&g.ships, &g.player.rep);
     // Reset per-system director state (Phase 1 contraband search).
     hailing::reset();
+    // Reset the Phase 2 scripted-encounter director too: a fresh system
+    // gets fresh scenario cooldowns + cleared once-per-system flags.
+    scripted::reset();
 
     // Hand the civilian AI the nav-point lattice it travels between (lane
     // traffic) and flees toward (gates/bases). Bases + jump points are
@@ -3077,6 +3086,7 @@ void frame_cb() {
             encounters::populate_on_entry(g.system, g.camera.position,
                                           g.sun.position, encounter_spawn);
             hailing::reset();   // clear any per-NPC search state from the old encounter
+            scripted::reset();  // fresh launch = fresh scenario director
             std::printf("[encounter] base launch -> cleared old wave + re-rolled\n");
         }
     }
@@ -3526,6 +3536,10 @@ void frame_cb() {
         // AI so any aggro override we set is read on the next frame.
         if (Ship* pl = g.ships.player()) {
             hailing::tick(g.ships, *pl, g.player, t_now);
+            // Scripted scenario director (Phase 2). Runs AFTER hailing so
+            // any aggro override hailing set is read by the AI on the next
+            // frame; scenario triggers care about faction stance state too.
+            scripted::tick(g.ships, *pl, t_now);
         }
     }
 
