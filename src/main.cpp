@@ -46,6 +46,7 @@
 #include "camera.h"
 #include "cockpit_hud.h"
 #include "comm.h"
+#include "voice.h"
 #include "commodity.h"
 #include "economy.h"
 #include "outfitting.h"
@@ -876,6 +877,10 @@ void build_system_scene(bool first_time) {
     // Faction comm chatter table (np-ma2.1) — flavour lines surfaced on
     // the HUD when a kill moves reputation. Missing file is non-fatal.
     comm::load("assets/data/comm_lines.json");
+    // Voice-bank manifest (np-ma3 / #37): player-directed + ambient NPC
+    // voice playback over the audio mixer. Missing file is non-fatal —
+    // voice::say() then no-ops silently.
+    voice::load("assets/data/voice_bank.json");
 
     // Fresh-start player state. --system override flows through so the
     // recorded location matches the world we actually loaded. A --load

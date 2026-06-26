@@ -191,6 +191,7 @@ add_executable(new_privateer
     src/mission_tracker.cpp
     src/faction.cpp
     src/comm.cpp
+    src/voice.cpp
     src/game_state.cpp
     src/docking.cpp
     src/autopilot.cpp
