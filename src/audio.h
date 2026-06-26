@@ -108,7 +108,9 @@ void shutdown();
 
 // Load a WAV from disk, resampling to the device rate if needed.
 // Returns 0 on failure (logged). Sample data lives until shutdown —
-// no unload in v1 (the whole SFX set is a few MB).
+// no unload in v1 (the whole SFX set is a few MB). Loads are deduped
+// by path: requesting an already-loaded path returns the cached
+// SampleId without decoding or storing it a second time.
 SampleId load(const std::string& path);
 
 // 2D playback: fixed gain, centered. For UI clicks, comm chatter,

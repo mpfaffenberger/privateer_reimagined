@@ -29,6 +29,7 @@
 #include <cstring>
 #include <deque>
 #include <fstream>
+#include <unordered_map>
 #include <vector>
 
 namespace {
@@ -54,6 +55,15 @@ struct Sample {
 // stays valid. (Index addressing is unchanged — same stable scheme as
 // placed_ship_sprites in main.cpp.)
 std::deque<Sample> g_samples;
+
+// Path -> SampleId dedupe cache (np-101). voice::load() asks for the
+// same mp3 several times (a clip shows up under by_faction_category +
+// by_voice + aliases); without this we'd decode + store the file once
+// per alias (~2x RAM for the voice set). Checked at the TOP of load()
+// before any decode, populated only on a SUCCESSFUL store (id != 0) so
+// a transient failure can still be retried later. Main-thread only —
+// load() is never called from the audio callback.
+std::unordered_map<std::string, SampleId> g_path_cache;
 
 // ---- voices -----------------------------------------------------------------
 
@@ -593,6 +603,7 @@ void init() {
     // Reserve sample index 0 as the "invalid" sentinel so SampleId 0
     // can mean "no sample" without an offset dance at every lookup.
     g_samples.clear();
+    g_path_cache.clear();   // ids are indices into g_samples — reset together
     g_samples.push_back(Sample{});
     std::printf("[audio] device %dHz %dch, %d voices, buffer %d frames\n",
                 saudio_sample_rate(), saudio_channels(),
@@ -644,6 +655,14 @@ static bool ends_with_ext_ci(const std::string& path, const char* ext) {
 SampleId load(const std::string& path) {
     if (!g_ready) return 0;
 
+    // Dedupe by path (np-101): the same clip is requested under several
+    // aliases. A cache hit returns the already-decoded SampleId with no
+    // re-decode and no second Sample stored. Check is BEFORE the wav/mp3
+    // dispatch so both formats dedupe.
+    if (auto it = g_path_cache.find(path); it != g_path_cache.end()) {
+        return it->second;
+    }
+
     std::vector<int16_t> pcm;
     int channels = 0, rate = 0;
     if (ends_with_ext_ci(path, "mp3")) {
@@ -651,7 +670,9 @@ SampleId load(const std::string& path) {
     } else {
         if (!load_wav_pcm16(path, pcm, channels, rate)) return 0;
     }
-    return store_pcm16(path, pcm, channels, rate);
+    const SampleId id = store_pcm16(path, pcm, channels, rate);
+    if (id != 0) g_path_cache.emplace(path, id);   // cache successes only
+    return id;
 }
 
 VoiceId play(SampleId s, float gain) {
