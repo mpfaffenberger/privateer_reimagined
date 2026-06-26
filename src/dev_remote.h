@@ -32,6 +32,12 @@
 //                          u,v are 0..1 image-space (0,0 = top-left),
 //                          `front` = in front of camera, `facing` =
 //                          normal points toward camera (rough visibility).
+//   POST /voice/say      → enqueue a voiced comm line. Body:
+//                          { faction, category, to_player? } where
+//                          to_player defaults true. Returns { ok } or
+//                          { ok:false, error } on a bad faction/category.
+//   POST /comm/bark      → enqueue a hostile comm bark. Body { faction }.
+//                          Returns { ok } or { ok:false, error }.
 //
 // Everything else 404s.
 // -----------------------------------------------------------------------------

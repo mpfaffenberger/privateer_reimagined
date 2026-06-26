@@ -10,6 +10,9 @@
 
 #include "dev_remote.h"
 #include "camera.h"
+#include "comm.h"
+#include "faction.h"
+#include "voice.h"
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -49,7 +52,7 @@ struct ScreenshotWaiter {
 };
 
 struct Command {
-    enum class Kind { SetCamera, Screenshot };
+    enum class Kind { SetCamera, Screenshot, VoiceSay, CommBark };
     Kind kind;
 
     // SetCamera — any optional field is encoded with `has_*`.
@@ -60,6 +63,13 @@ struct Command {
     // Screenshot — the waiter is owned by the HTTP thread; the main
     // thread only sets fields on it and notifies.
     ScreenshotWaiter* waiter = nullptr;
+
+    // VoiceSay / CommBark — parsed + validated on the HTTP thread, the
+    // actual voice::say / comm::npc_engage_bark runs on the main thread
+    // in drain_commands (game code never touches the HTTP thread).
+    Faction         faction   = Faction::Count;
+    voice::Category category  = voice::Category::Greeting;
+    bool            to_player = true;
 };
 
 std::mutex          g_queue_mu;
@@ -111,6 +121,54 @@ bool extract_float(const std::string& body, const char* key, float* out) {
     pos = body.find(':', pos);
     if (pos == std::string::npos) return false;
     *out = std::strtof(body.c_str() + pos + 1, nullptr);
+    return true;
+}
+
+// Extract a string value: "key":"value". Returns false if the key is
+// absent or not a quoted string. No escape handling — our dev payloads
+// are flat ASCII faction/category names.
+bool extract_string(const std::string& body, const char* key, std::string* out) {
+    std::string needle = std::string("\"") + key + "\"";
+    auto pos = body.find(needle);
+    if (pos == std::string::npos) return false;
+    pos = body.find(':', pos);
+    if (pos == std::string::npos) return false;
+    auto open = body.find('"', pos);
+    if (open == std::string::npos) return false;
+    auto close = body.find('"', open + 1);
+    if (close == std::string::npos) return false;
+    *out = body.substr(open + 1, close - open - 1);
+    return true;
+}
+
+// Extract a JSON bool: "key":true / "key":false. Returns false if the
+// key is absent (caller keeps its default); on presence, *out is set.
+bool extract_bool(const std::string& body, const char* key, bool* out) {
+    std::string needle = std::string("\"") + key + "\"";
+    auto pos = body.find(needle);
+    if (pos == std::string::npos) return false;
+    pos = body.find(':', pos);
+    if (pos == std::string::npos) return false;
+    auto t = body.find("true", pos);
+    auto f = body.find("false", pos);
+    // Whichever literal appears first after the colon wins.
+    if (t != std::string::npos && (f == std::string::npos || t < f)) { *out = true;  return true; }
+    if (f != std::string::npos) { *out = false; return true; }
+    return false;
+}
+
+// Map a category name to voice::Category. Returns false on an unknown
+// string so the handler can answer with a clean JSON error.
+bool category_from_name(const std::string& s, voice::Category* out) {
+    if      (s == "greeting") *out = voice::Category::Greeting;
+    else if (s == "hostile")  *out = voice::Category::Hostile;
+    else if (s == "low_hp")   *out = voice::Category::LowHp;
+    else if (s == "kill")     *out = voice::Category::Kill;
+    else if (s == "demand")   *out = voice::Category::Demand;
+    else if (s == "rumor")    *out = voice::Category::Rumor;
+    else if (s == "search")   *out = voice::Category::Search;
+    else if (s == "clear")    *out = voice::Category::Clear;
+    else return false;
     return true;
 }
 
@@ -231,6 +289,67 @@ void handle_camera_set(int fd, const std::string& body) {
         c.euler = eul;
     }
 
+    {
+        std::lock_guard lk(g_queue_mu);
+        g_queue.push_back(c);
+    }
+    send_json(fd, "{\"ok\":true}");
+}
+
+// POST /voice/say — enqueue a voiced comm line. Body:
+//   {"faction":"pirate","category":"hostile","to_player":true}
+// to_player is optional (default true). Parse + validate here on the
+// HTTP thread; the actual voice::say runs on the main thread.
+void handle_voice_say(int fd, const std::string& body) {
+    std::string fac_s, cat_s;
+    if (!extract_string(body, "faction", &fac_s)) {
+        send_json(fd, "{\"ok\":false,\"error\":\"missing faction\"}");
+        return;
+    }
+    if (!extract_string(body, "category", &cat_s)) {
+        send_json(fd, "{\"ok\":false,\"error\":\"missing category\"}");
+        return;
+    }
+    const Faction fac = faction::from_name(fac_s);
+    if (fac == Faction::Count) {
+        send_json(fd, "{\"ok\":false,\"error\":\"unknown faction\"}");
+        return;
+    }
+    voice::Category cat;
+    if (!category_from_name(cat_s, &cat)) {
+        send_json(fd, "{\"ok\":false,\"error\":\"unknown category\"}");
+        return;
+    }
+
+    Command c;
+    c.kind      = Command::Kind::VoiceSay;
+    c.faction   = fac;
+    c.category  = cat;
+    c.to_player = true;
+    extract_bool(body, "to_player", &c.to_player);   // optional override
+    {
+        std::lock_guard lk(g_queue_mu);
+        g_queue.push_back(c);
+    }
+    send_json(fd, "{\"ok\":true}");
+}
+
+// POST /comm/bark — enqueue a hostile comm bark. Body: {"faction":"confed"}.
+void handle_comm_bark(int fd, const std::string& body) {
+    std::string fac_s;
+    if (!extract_string(body, "faction", &fac_s)) {
+        send_json(fd, "{\"ok\":false,\"error\":\"missing faction\"}");
+        return;
+    }
+    const Faction fac = faction::from_name(fac_s);
+    if (fac == Faction::Count) {
+        send_json(fd, "{\"ok\":false,\"error\":\"unknown faction\"}");
+        return;
+    }
+
+    Command c;
+    c.kind    = Command::Kind::CommBark;
+    c.faction = fac;
     {
         std::lock_guard lk(g_queue_mu);
         g_queue.push_back(c);
@@ -382,6 +501,8 @@ void handle_connection(int fd) {
     else if (method == "POST" && path == "/camera/set") handle_camera_set(fd, body);
     else if (method == "POST" && path == "/screenshot") handle_screenshot(fd);
     else if (method == "POST" && path == "/project")    handle_project(fd, body);
+    else if (method == "POST" && path == "/voice/say")  handle_voice_say(fd, body);
+    else if (method == "POST" && path == "/comm/bark")  handle_comm_bark(fd, body);
     else                                                send_404(fd);
 
     ::close(fd);
@@ -494,6 +615,16 @@ void drain_commands(Camera& cam) {
                 g_pending_shot->cv.notify_all();
             }
             g_pending_shot = c.waiter;
+            break;
+        case Command::Kind::VoiceSay:
+            // Voiced comm line at the origin; 2D radio vs 3D ambient is
+            // decided inside voice::say by to_player.
+            voice::say(c.faction, c.category, HMM_Vec3{0, 0, 0}, c.to_player);
+            break;
+        case Command::Kind::CommBark:
+            // Dev barks are always treated as aimed at the player so they
+            // surface on the HUD comm feed.
+            comm::npc_engage_bark(c.faction, /*target_is_player=*/true);
             break;
         }
     }
