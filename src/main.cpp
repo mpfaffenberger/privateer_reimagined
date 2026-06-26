@@ -65,6 +65,7 @@
 #include "hailing.h"
 #include "scripted_encounters.h"
 #include "dust.h"
+#include "loot.h"
 #include "warp_streaks.h"
 #include "jump_gate.h"
 #include "faction.h"
@@ -882,6 +883,10 @@ void build_system_scene(bool first_time) {
     // Faction comm chatter table (np-ma2.1) — flavour lines surfaced on
     // the HUD when a kill moves reputation. Missing file is non-fatal.
     comm::load("assets/data/comm_lines.json");
+    // Loot tables (Phase 4c, np-#86): faction-keyed drop definitions.
+    // Missing/unparseable file is non-fatal — the loader logs one line and
+    // spawn_for() becomes a no-op.
+    loot::load("assets/data/loot_tables.json");
     // NOTE: voice::load() is intentionally NOT here — it resolves every
     // clip through audio::load(), so it must run AFTER audio::init().
     // It lives in the audio-init block below.
@@ -1596,6 +1601,10 @@ void build_system_scene(bool first_time) {
     // Reset the Phase 2 scripted-encounter director too: a fresh system
     // gets fresh scenario cooldowns + cleared once-per-system flags.
     scripted::reset();
+    // Loot drops (Phase 4c, np-#86): a fresh system starts with no
+    // floating loot. Drops are world-state, not save state, so they
+    // don't outlive a system switch.
+    loot::clear();
 
     // Hand the civilian AI the nav-point lattice it travels between (lane
     // traffic) and flees toward (gates/bases). Bases + jump points are
@@ -3087,6 +3096,7 @@ void frame_cb() {
                                           g.sun.position, encounter_spawn);
             hailing::reset();   // clear any per-NPC search state from the old encounter
             scripted::reset();  // fresh launch = fresh scenario director
+            loot::clear();      // drop any stale loot markers from the previous wave
             std::printf("[encounter] base launch -> cleared old wave + re-rolled\n");
         }
     }
@@ -3885,6 +3895,10 @@ void frame_cb() {
                     // victim's faction so the save records lifetime kills.
                     if ((int)s->faction >= 0 && (int)s->faction < kFactionCount)
                         g.player.faction_kills[(int)s->faction]++;
+                    // Loot drop (Phase 4c, np-#86): one weighted drop at
+                    // the wreck position. is_ace=false here; the ace-bonus
+                    // hook is reserved for future named NPC kills.
+                    loot::spawn_for(s->faction, s->position, /*is_ace=*/false);
                 }
                 // Mission progress: any killer counts (see above).
                 missions::on_target_destroyed(g.player, s->faction,
@@ -3944,6 +3958,7 @@ void frame_cb() {
     }
     explosion::tick(g.explosions, dt);
     comm::tick(dt);   // age the reputation/taunt HUD feed (np-ma2.1)
+    loot::tick(dt);   // age out drops past k_loot_ttl_s (Phase 4c, np-#86)
 
     // In-flight mission progress (#13): after perception/threat + the
     // kill-attribution hooks above, flip nav-reach / clear state on active
@@ -5010,6 +5025,12 @@ void frame_cb() {
             cockpit_hud::build_mission_objectives(
                 g.camera, g.system, g.player.current_system, g.player,
                 draw_world);
+
+            // Loot drops (Phase 4c, np-#86): float a small diamond + tiny
+            // label at each live drop position so the player can see loot
+            // exists out there before the tractor phase lands. Gated on
+            // `draw_world` so autopilot/navmap hide it the same way.
+            loot::render(g.camera, draw_world);
 
             // Sun-proximity warning overlay (np-3dp). Centre-screen banner
             // when inside the 20k avoid bubble; big red "DESTRUCTION
