@@ -877,10 +877,9 @@ void build_system_scene(bool first_time) {
     // Faction comm chatter table (np-ma2.1) — flavour lines surfaced on
     // the HUD when a kill moves reputation. Missing file is non-fatal.
     comm::load("assets/data/comm_lines.json");
-    // Voice-bank manifest (np-ma3 / #37): player-directed + ambient NPC
-    // voice playback over the audio mixer. Missing file is non-fatal —
-    // voice::say() then no-ops silently.
-    voice::load("assets/data/voice_bank.json");
+    // NOTE: voice::load() is intentionally NOT here — it resolves every
+    // clip through audio::load(), so it must run AFTER audio::init().
+    // It lives in the audio-init block below.
 
     // Fresh-start player state. --system override flows through so the
     // recorded location matches the world we actually loaded. A --load
@@ -1132,6 +1131,10 @@ void build_system_scene(bool first_time) {
         g.sfx_hum   = audio::load("assets/sfx/hum.wav");
         // Gameplay SFX table + the (silent until throttled) engine-hum loop.
         sfx::load_all();
+        // Voice-bank manifest (np-ma3): player-directed + ambient NPC voice
+        // playback. MUST be after audio::init() — it resolves every clip via
+        // audio::load(). Missing file is non-fatal (voice::say() no-ops).
+        voice::load("assets/data/voice_bank.json");
         // Dynamic music layer (np-m96): loads the rendered AdLib tracks
         // (gitignored, clean clones run silent). update() below drives the
         // state->track selection every frame.
