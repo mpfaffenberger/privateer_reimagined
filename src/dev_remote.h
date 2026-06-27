@@ -56,6 +56,8 @@
 //   GET  /inventory      → { items: [...], cargo_used, cargo_cap }
 //   POST /kill           → kill a ship. Body { id? } (0/missing = nearest).
 //   POST /tractor/pull   → pull in-range loot into the hold.
+//   POST /inventory/sell → sell the unified-hold item at { index:N }.
+//                          Returns { ok:true }.
 //
 // Everything else 404s.
 // -----------------------------------------------------------------------------
@@ -187,5 +189,10 @@ void set_kill_hook(std::function<void(uint32_t id)> hook);
 // POST /tractor/pull enqueues a command; drain_commands invokes this hook
 // on the main thread. The host wires it to loot::try_pull.
 void set_tractor_pull_hook(std::function<void()> hook);
+
+// POST /inventory/sell enqueues a command; drain_commands invokes this hook
+// on the main thread with the requested item index. The host wires it to
+// inventory::sell_item(g.player, index).
+void set_inventory_sell_hook(std::function<void(int index)> hook);
 
 } // namespace dev_remote

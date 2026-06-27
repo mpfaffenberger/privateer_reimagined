@@ -63,6 +63,7 @@ enum class BaseScreen {
     MissionComputer,
     MercenariesGuild,   // #16 — paid combat-mission board
     MerchantsGuild,     // #16 — paid trade-mission board
+    CargoHold,          // Phase 4f — sell loot/salvage from the unified hold
     Launch,
 };
 

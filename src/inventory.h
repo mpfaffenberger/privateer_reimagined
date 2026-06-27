@@ -42,6 +42,13 @@
 #include <cstdint>
 #include <string>
 
+// Forward decls keep this header's "shapes only, no heavy deps" discipline
+// (it's pulled in by player.h, which everything includes). The pricing +
+// sell helpers below take PlayerState&; the CargoHold screen body takes the
+// base_screens BaseContext& — both defined elsewhere, only referenced here.
+struct PlayerState;
+struct BaseContext;
+
 namespace inventory {
 
 // What an InventoryItem IS. Drives both UI grouping (Commodities tab vs
@@ -91,5 +98,35 @@ struct InventoryItem {
     int         qty   = 1;                         // stack size (see note)
     WeaponMods  mods;                               // weapon-kind only
 };
+
+// ----- loot pricing + the CargoHold sell screen (Phase 4f, #95/96/97) -----
+//
+// The sell side of the unified hold: load the hand-authored value table
+// (loot_prices.json), price an InventoryItem, and let the CargoHold base
+// screen liquidate loot for credits. Pricing is pure data (no ImGui); the
+// screen body mirrors outfitting.cpp's hook+ImGui pattern.
+
+// Parse loot_prices.json into a base-value map + rarity multipliers.
+// Missing / unparseable file is NON-FATAL: sane defaults stand in
+// (rare 2.5x, legendary 6x, unknown id 50 cr). Returns the number of
+// base-value entries loaded. Logs a one-line summary.
+int load_prices(const std::string& path);
+
+// Sale value of an item: base_value(id, default 50) * rarity multiplier
+// * qty, floored to whole credits.
+int64_t item_value(const InventoryItem& it);
+
+// Sell the item at p.items[index]: credit item_value to the player and
+// erase the stack. Returns false (no mutation) on an out-of-range index.
+bool sell_item(PlayerState& p, int index);
+
+// CargoHold base-screen body (registered via base_screens::register_screen).
+// Draws cargo usage, the read-only commodity manifest, and the sellable
+// items list. Defined under !INVENTORY_HEADLESS (drags in ImGui).
+void cargohold_screen(BaseContext& ctx);
+
+// Register the CargoHold screen body with base_screens. Called once at
+// startup from main.cpp, beside outfitting::register_screens().
+void register_screens();
 
 } // namespace inventory

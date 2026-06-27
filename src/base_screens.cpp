@@ -65,7 +65,7 @@ struct BaseDef {
 BaseDef                  g_def;
 TextureSlot              g_art;            // concourse PNG; valid==false if missing
 std::vector<BaseScreen>  g_stack;          // Concourse always sits at index 0
-std::array<ScreenHook, 9> g_hooks{};       // index by (int)BaseScreen
+std::array<ScreenHook, 10> g_hooks{};      // index by (int)BaseScreen
 bool                     g_launch_pending = false;
 // Player's in-flight Ship for this Landed session (np-zte.2). Set by build()
 // each frame, handed to the screen hooks via BaseContext so the Repair
@@ -84,6 +84,7 @@ const char* screen_name(BaseScreen s) {
         case BaseScreen::MissionComputer:  return "Mission Computer";
         case BaseScreen::MercenariesGuild: return "Mercenaries' Guild";
         case BaseScreen::MerchantsGuild:   return "Merchants' Guild";
+        case BaseScreen::CargoHold:        return "Cargo Hold";
         case BaseScreen::Launch:           return "Launch";
         default:                           return "?";
     }
@@ -99,6 +100,7 @@ bool parse_target(const std::string& s, BaseScreen& out) {
     if (s == "MissionComputer")   { out = BaseScreen::MissionComputer;   return true; }
     if (s == "MercenariesGuild")  { out = BaseScreen::MercenariesGuild;  return true; }
     if (s == "MerchantsGuild")    { out = BaseScreen::MerchantsGuild;    return true; }
+    if (s == "CargoHold")         { out = BaseScreen::CargoHold;         return true; }
     if (s == "Launch")            { out = BaseScreen::Launch;            return true; }
     if (s == "Concourse")         { out = BaseScreen::Concourse;         return true; }
     return false;

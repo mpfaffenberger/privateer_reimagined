@@ -50,6 +50,7 @@
 #include "commodity.h"
 #include "economy.h"
 #include "outfitting.h"
+#include "inventory.h"
 #include "missions.h"
 #include "mission_tracker.h"
 #include "player.h"
@@ -875,6 +876,11 @@ void build_system_scene(bool first_time) {
     outfitting::load("assets/data/ship_prices.json",
                      "assets/data/equipment_prices.json");
     outfitting::register_screens();
+    // Loot pricing + the Cargo Hold sell screen (Phase 4f, #95/96/97):
+    // value table for salvage/loot, and the CargoHold screen body registered
+    // via the same np-9cu.4 hook seam. Missing prices file is non-fatal.
+    inventory::load_prices("assets/data/loot_prices.json");
+    inventory::register_screens();
     // Mission computer (np-zte.1): generated cargo-delivery + bounty jobs.
     // No data file to load (missions are generated from the commodity catalog
     // + galaxy graph); just register the screen body via the np-9cu.4 seam.
@@ -1223,6 +1229,16 @@ void build_system_scene(bool first_time) {
                 const int pulled = loot::try_pull(pl->position, 2500.0f,
                                                   g.player, capacity);
                 std::printf("[dev_remote] tractor/pull: %d drop(s)\n", pulled);
+            });
+
+        // POST /inventory/sell — sell the unified-hold item at the given
+        // index, routing through the SAME inventory::sell_item the Cargo
+        // Hold screen uses (one enforcement path; it bounds-checks).
+        dev_remote::set_inventory_sell_hook(
+            [](int index) {
+                const bool ok = inventory::sell_item(g.player, index);
+                std::printf("[dev_remote] inventory/sell: index=%d ok=%s\n",
+                            index, ok ? "true" : "false");
             });
     }
     dev_remote::publish_system_name(g.system.name.c_str());

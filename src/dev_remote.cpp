@@ -53,7 +53,7 @@ struct ScreenshotWaiter {
 
 struct Command {
     enum class Kind { SetCamera, Screenshot, VoiceSay, CommBark, CargoGive, Spawn,
-                      Kill, TractorPull };
+                      Kill, TractorPull, InventorySell };
     Kind kind;
 
     // SetCamera — any optional field is encoded with `has_*`.
@@ -80,6 +80,7 @@ struct Command {
     int             int_arg = 0;      // units (CargoGive)
     float           dist    = 0.0f;   // spawn distance (Spawn)
     uint32_t        kill_id = 0;      // target ship id (Kill; 0 = nearest)
+    int             sell_index = 0;   // unified-hold item index (InventorySell)
 };
 
 std::mutex          g_queue_mu;
@@ -139,6 +140,7 @@ std::function<void(std::string, int)>                       g_cargo_give_hook;
 std::function<void(std::string, std::string, float)>        g_spawn_hook;
 std::function<void(uint32_t)>                               g_kill_hook;
 std::function<void()>                                       g_tractor_pull_hook;
+std::function<void(int)>                                    g_inventory_sell_hook;
 
 std::thread       g_thread;
 std::atomic<bool> g_running{false};
@@ -575,6 +577,23 @@ void handle_tractor_pull(int fd) {
     send_json(fd, "{\"ok\":true}");
 }
 
+// POST /inventory/sell — sell the unified-hold item at {"index":N}. Index
+// defaults to 0 if missing. Enqueued and run on the main thread by the
+// registered hook (inventory::sell_item), which bounds-checks for us.
+void handle_inventory_sell(int fd, const std::string& body) {
+    float idx_f = 0.0f;
+    extract_float(body, "index", &idx_f);   // optional; default 0
+
+    Command c;
+    c.kind       = Command::Kind::InventorySell;
+    c.sell_index = (int)idx_f;
+    {
+        std::lock_guard lk(g_queue_mu);
+        g_queue.push_back(c);
+    }
+    send_json(fd, "{\"ok\":true}");
+}
+
 // Project mesh-local 3D points into screen UV using the published render
 // matrices. Body is a flat float array [x,y,z,nx,ny,nz, ...]; we read 6
 // floats per point (position + outward normal). Pure read of the snapshot
@@ -728,6 +747,7 @@ void handle_connection(int fd) {
     else if (method == "GET"  && path == "/inventory")  handle_inventory(fd);
     else if (method == "POST" && path == "/kill")       handle_kill(fd, body);
     else if (method == "POST" && path == "/tractor/pull") handle_tractor_pull(fd);
+    else if (method == "POST" && path == "/inventory/sell") handle_inventory_sell(fd, body);
     else                                                send_404(fd);
 
     ::close(fd);
@@ -895,6 +915,17 @@ void drain_commands(Camera& cam) {
             if (hook) hook();
             break;
         }
+        case Command::Kind::InventorySell: {
+            // Run the host's registered inventory-sell hook on the main
+            // thread; it routes to inventory::sell_item (bounds-checked).
+            std::function<void(int)> hook;
+            {
+                std::lock_guard lk(g_hooks_mu);
+                hook = g_inventory_sell_hook;
+            }
+            if (hook) hook(c.sell_index);
+            break;
+        }
         }
     }
 
@@ -979,6 +1010,11 @@ void set_kill_hook(std::function<void(uint32_t)> hook) {
 void set_tractor_pull_hook(std::function<void()> hook) {
     std::lock_guard lk(g_hooks_mu);
     g_tractor_pull_hook = std::move(hook);
+}
+
+void set_inventory_sell_hook(std::function<void(int)> hook) {
+    std::lock_guard lk(g_hooks_mu);
+    g_inventory_sell_hook = std::move(hook);
 }
 
 } // namespace dev_remote
