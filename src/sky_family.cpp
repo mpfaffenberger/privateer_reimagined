@@ -1,5 +1,7 @@
 #include "sky_family.h"
 
+#include <algorithm>
+#include <cctype>
 #include <cstdint>
 
 // Canonical skybox-colour family catalog. Each entry pairs a skybox
@@ -82,6 +84,18 @@ const char* sky_family_pick_sun(SkyFamily fam, uint64_t h) {
 
 float sky_family_warmth(SkyFamily fam) {
     return k_sky_families[(int)fam].warmth;
+}
+
+bool sky_family_from_name(const std::string& name, SkyFamily& out) {
+    std::string key = name;
+    std::transform(key.begin(), key.end(), key.begin(),
+                   [](unsigned char c) { return (char)std::tolower(c); });
+    if (key == "warm")   { out = SkyFamily::Warm;   return true; }
+    if (key == "yellow") { out = SkyFamily::Yellow; return true; }
+    if (key == "green")  { out = SkyFamily::Green;  return true; }
+    if (key == "blue")   { out = SkyFamily::Blue;   return true; }
+    if (key == "purple") { out = SkyFamily::Purple; return true; }
+    return false;
 }
 
 uint64_t sky_family_hash(const std::string& s) {

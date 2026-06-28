@@ -231,11 +231,19 @@ std::optional<StarSystem> load_system(const std::string& name_or_path) {
     s.skybox_seed = root.find("skybox_seed") ? root["skybox_seed"].string_or(s.skybox_seed) : s.skybox_seed;
 
     if (auto* star = root.find("star")) {
-        if (auto* p = star->find("preset")) s.star_preset = p->as_string();
+        if (auto* p = star->find("preset")) { s.star_preset = p->as_string(); s.star_preset_set = true; }
         if (auto* pos = star->find("position")) {
             s.star_position     = vec3_or(pos, s.star_position);
             s.star_position_set = true;
         }
+        if (auto* p = star->find("radius"))             s.star_radius             = p->as_float();
+        if (auto* p = star->find("gas_strength"))       s.star_gas_strength       = p->as_float();
+        if (auto* p = star->find("gas_radius_mult"))    s.star_gas_radius_mult    = p->as_float();
+        if (auto* p = star->find("corona_alpha"))       s.star_corona_alpha       = p->as_float();
+        if (auto* p = star->find("corona_radius_mult")) s.star_corona_radius_mult = p->as_float();
+    }
+    if (auto* sky = root.find("sky")) {
+        if (auto* p = sky->find("family")) s.sky_family = p->as_string();
     }
 
     if (auto* p = root.find("studio_lighting")) s.studio_lighting = p->as_bool();

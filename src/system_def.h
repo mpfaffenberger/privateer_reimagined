@@ -304,6 +304,19 @@ struct StarSystem {
     HMM_Vec3    star_position     = { 0.0f, 0.0f, 0.0f };
     bool        star_position_set = false;
 
+    // Optional per-system star/sky LOOK overrides (art direction). A value
+    // of -1 (or empty sky_family) means "unset" -> fall back to the preset /
+    // seed-derived auto-pick. When star_preset_set is true the JSON's
+    // star.preset wins over the sky-family's sun pick. star_* tune the
+    // sun's brightness + fog; sky_family overrides the nebula palette.
+    bool        star_preset_set         = false;
+    float       star_radius             = -1.0f;
+    float       star_gas_strength       = -1.0f;
+    float       star_gas_radius_mult    = -1.0f;
+    float       star_corona_alpha       = -1.0f;
+    float       star_corona_radius_mult = -1.0f;
+    std::string sky_family;   // "" = auto; else warm/yellow/green/blue/purple
+
     // Studio-lighting flag for debug/inspection scenes. When true, main.cpp
     // dims the sun and parks it off-axis (same effect as --capture-clean's
     // sun setup) so bloom/lens-flare don't whitewash the scene. Unlike

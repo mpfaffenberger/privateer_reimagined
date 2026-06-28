@@ -3,12 +3,20 @@
   "description": "Humboldt Quadrant / Gemini Sector. Jump links: Junction , Troy. Random mission opponents: 2/3 Pirate, 1/3 Retro. (Generated from wcpedia by tools/build_system_from_wcpedia.py.)",
   "skybox_seed": "penders_star",
   "star": {
-    "preset": "green",
+    "preset": "blue",
     "position": [
       -2233,
       14434,
       -2233
-    ]
+    ],
+    "radius": 3500,
+    "gas_strength": 1.8,
+    "gas_radius_mult": 4.5,
+    "corona_alpha": 0.85,
+    "corona_radius_mult": 16
+  },
+  "sky": {
+    "family": "purple"
   },
   "asteroid_fields": [
     {

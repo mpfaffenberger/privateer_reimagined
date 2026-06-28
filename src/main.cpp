@@ -1001,12 +1001,21 @@ void build_system_scene(bool first_time) {
     // purple/blue/yellow sun, not a red one) AND the skybox tint targets
     // (so the same family also leans purple instead of orange).
     const uint64_t seed_hash = sky_family_hash(g.system.skybox_seed);
-    const SkyFamily family    = sky_family_for_hash(seed_hash);
+    SkyFamily family = sky_family_for_hash(seed_hash);
+    // Per-system art direction: an explicit "sky":{"family":"purple"} overrides
+    // the seed-derived nebula palette.
+    if (!g.system.sky_family.empty()) {
+        if (!sky_family_from_name(g.system.sky_family, family))
+            std::fprintf(stderr, "[main] unknown sky.family '%s' — using seed default\n",
+                         g.system.sky_family.c_str());
+    }
     const SkyFamilyConfig& cfg = k_sky_families[(int)family];
-    // The JSON's preset is overridden by the family pick so the pairing
-    // is canonical. The warn/fallback path still runs so unknown names
-    // surface in stderr (logs stay useful for debugging).
-    const std::string sun_name = sky_family_pick_sun(family, seed_hash);
+    // Sun preset: an explicit star.preset wins; otherwise the family picks a
+    // canonical sun for the nebula. The warn/fallback path still runs so
+    // unknown names surface in stderr (logs stay useful for debugging).
+    const std::string sun_name = g.system.star_preset_set
+                                     ? g.system.star_preset
+                                     : sky_family_pick_sun(family, seed_hash);
     if (const StarPreset* sp = find_star_preset(sun_name)) {
         apply_star_preset(g.sun, *sp);
         g.system.star_preset = sun_name;
@@ -1017,6 +1026,12 @@ void build_system_scene(bool first_time) {
         std::fprintf(stderr, "[main] sky family picked unknown preset '%s'\n",
                      sun_name.c_str());
     }
+    // Per-system star brightness/fog overrides, applied over the preset.
+    if (g.system.star_radius > 0.0f)             g.sun.radius             = g.system.star_radius;
+    if (g.system.star_gas_strength >= 0.0f)      g.sun.gas_strength       = g.system.star_gas_strength;
+    if (g.system.star_gas_radius_mult > 0.0f)    g.sun.gas_radius_mult    = g.system.star_gas_radius_mult;
+    if (g.system.star_corona_alpha >= 0.0f)      g.sun.corona_alpha       = g.system.star_corona_alpha;
+    if (g.system.star_corona_radius_mult > 0.0f) g.sun.corona_radius_mult = g.system.star_corona_radius_mult;
     if (!g.skybox.init(g.system.skybox_seed, /*face_res=*/4096, cfg.warmth,
                        cfg.target_a, cfg.target_b)) {
         std::fprintf(stderr, "[main] skybox init failed for seed '%s'\n",

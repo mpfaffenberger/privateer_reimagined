@@ -50,6 +50,11 @@ const char* sky_family_pick_sun(SkyFamily fam, uint64_t h);
 // Convenience for callers that need the warmth alone.
 float sky_family_warmth(SkyFamily fam);
 
+// Map a family name ("warm"/"yellow"/"green"/"blue"/"purple", case-
+// insensitive) to a SkyFamily. Returns false if unknown so the caller can
+// keep its seed-derived default. Used for per-system art-direction overrides.
+bool sky_family_from_name(const std::string& name, SkyFamily& out);
+
 // FNV-1a string hash. Same algorithm skybox_gen uses for its seed,
 // so re-hashing the same skybox_seed gives the same value here.
 uint64_t sky_family_hash(const std::string& s);
