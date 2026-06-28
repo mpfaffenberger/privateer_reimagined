@@ -1,0 +1,13 @@
+{
+ "no_news": [
+  "Haven't heard anything worth chasing out here lately.",
+  "Quiet skies, friend. Nothing to report.",
+  "Wish I had something for you. Try the bars, maybe.",
+  "Nope, nothing on the wire today."
+ ],
+ "lead": [
+  "Word is there's salvage worth grabbing out in the deep black. I've marked it on your nav.",
+  "Funny you should ask, there's a signal worth investigating. It's on your map now.",
+  "Heard a hauler went down past the lanes. Could be loot out there, check your nav."
+ ]
+}

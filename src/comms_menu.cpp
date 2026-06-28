@@ -118,6 +118,16 @@ using CategoryBank = std::unordered_map<std::string, std::vector<Response>>;
 std::unordered_map<std::string, CategoryBank> g_resp_by_faction;
 std::unordered_map<std::string, CategoryBank> g_resp_by_voice;
 
+// ---- rumor response bank (data-driven) -----------------------------------
+// Loaded from rumor_responses.json, shaped as:
+//   voice_id -> bucket("no_news"/"lead") -> [{text,clip}]
+// When the player ASKS a non-hostile recipient for rumors, the recipient
+// replies in its OWN voice with a "no_news" line (usual) or a "lead" line
+// (when the rumor roll actually surfaced a fresh nav lead). Same CategoryBank
+// shape as above, just keyed by bucket instead of stance category. Missing
+// file is non-fatal: the map stays empty and the rumor reply silently drops.
+std::unordered_map<std::string, CategoryBank> g_rumor_resp;
+
 // RNG for picking a random reply line. Module-static, seeded once.
 std::mt19937 g_rng{ std::random_device{}() };
 
@@ -157,6 +167,10 @@ struct PendingReply {
     std::string bank_faction;   // key into g_resp_by_faction (e.g. "pirate") — fallback
     std::string reply_voice;    // recipient's stable voice_id (key into g_resp_by_voice)
     std::string category;       // "hostile" or "greeting"
+    bool        is_rumor = false; // true => fire from g_rumor_resp, not the
+                                  // greeting/hostile banks (rumor ask path)
+    bool        got_lead = false; // rumor only: true => "lead" bucket, else
+                                  // "no_news" (mirrors the k_rumor_chance roll)
     float       play_at  = 0.f; // process-uptime seconds
 };
 PendingReply g_pending;
@@ -418,6 +432,44 @@ void load(const std::string& path) {
         std::printf("[comms_menu] no %s — hailed parties stay silent\n",
                     kRespPath);
     }
+
+    // Rumor response bank: voice_id -> bucket("no_news"/"lead") -> [{text,clip}].
+    // Sibling file, same non-fatal contract: a missing/unparseable bank leaves
+    // g_rumor_resp empty so the rumor reply just goes unanswered. The shape is
+    // a plain { voice -> { bucket -> [...] } } (no by_faction/by_voice split),
+    // which is structurally a single CategoryBank section — so we parse it the
+    // same way, treating the bucket name as the "category".
+    constexpr const char* kRumorPath = "assets/data/rumor_responses.json";
+    g_rumor_resp.clear();
+    json::Value rumor_root = json::parse_file(kRumorPath);
+    if (rumor_root.is_object()) {
+        size_t lines = 0;
+        for (const auto& [voice, buckets] : rumor_root.as_object()) {
+            if (!buckets.is_object()) continue;
+            CategoryBank bank;
+            for (const auto& [bucket, arr] : buckets.as_object()) {
+                if (!arr.is_array()) continue;
+                std::vector<Response> vec;
+                for (const json::Value& v : arr.as_array()) {
+                    if (!v.is_object()) continue;
+                    const json::Value* text = v.find("text");
+                    const json::Value* clip = v.find("clip");
+                    if (!text || !text->is_string()) continue;
+                    Response r;
+                    r.text = text->as_string();
+                    if (clip && clip->is_string()) r.clip = clip->as_string();
+                    vec.push_back(std::move(r));
+                }
+                if (!vec.empty()) { lines += vec.size(); bank.emplace(bucket, std::move(vec)); }
+            }
+            if (!bank.empty()) g_rumor_resp.emplace(voice, std::move(bank));
+        }
+        std::printf("[comms_menu] loaded %s — %zu voices/%zu lines\n",
+                    kRumorPath, g_rumor_resp.size(), lines);
+    } else {
+        std::printf("[comms_menu] no %s — rumor asks go unanswered\n",
+                    kRumorPath);
+    }
 }
 
 void open() {
@@ -489,10 +541,16 @@ void select(int n) {
     // Rumor roll (np-comms "ask for rumors"): an Ask at a non-hostile
     // recipient has a small chance (k_rumor_chance) to surface a fresh nav
     // lead. Hostiles don't share tips. main.cpp drains the latch and drops
-    // the actual lead marker + HUD line.
-    if (intent == Intent::Ask && g_chosen_stance != Stance::Hostile) {
+    // the actual lead marker + HUD line. We roll ONCE here and reuse the
+    // result for both the lead latch (g_rumor_pending) and the reply bucket
+    // (got_lead below) so the spoken reply matches what main.cpp does.
+    const bool is_rumor_ask = (intent == Intent::Ask &&
+                               g_chosen_stance != Stance::Hostile);
+    bool rumor_got_lead = false;
+    if (is_rumor_ask) {
         std::uniform_real_distribution<float> roll(0.0f, 1.0f);
-        if (roll(g_rng) < k_rumor_chance) g_rumor_pending = true;
+        rumor_got_lead = roll(g_rng) < k_rumor_chance;
+        g_rumor_pending = rumor_got_lead;
     }
 
     // Arm the hailed party's reply. Resolve the recipient's STABLE voice so it
@@ -514,11 +572,18 @@ void select(int n) {
         const bool has_voice = !reply_voice.empty() &&
                                g_resp_by_voice.count(reply_voice);
         const bool has_faction = bank && g_resp_by_faction.count(bank);
-        if (has_voice || has_faction) {
+        // A rumor ask fires from g_rumor_resp instead of the greeting/hostile
+        // banks, so it arms whenever we have ANY rumor pool to draw from
+        // (the recipient's own voice, or — via tick()'s fallback — any voice).
+        const bool has_rumor = is_rumor_ask &&
+                               (!reply_voice.empty() || !g_rumor_resp.empty());
+        if (has_voice || has_faction || has_rumor) {
             g_pending.active       = true;
             g_pending.bank_faction = bank ? bank : "";
             g_pending.reply_voice  = reply_voice;
             g_pending.category     = category;
+            g_pending.is_rumor     = is_rumor_ask;
+            g_pending.got_lead     = rumor_got_lead;
             g_pending.play_at      = g_now + 3.5f;
         }
     }
@@ -589,18 +654,39 @@ void tick(float now_s) {
     // when the key/category is absent or the pool is empty.
     auto find_pool =
         [&](const std::unordered_map<std::string, CategoryBank>& m,
-            const std::string& key) -> const std::vector<Response>* {
+            const std::string& key,
+            const std::string& category) -> const std::vector<Response>* {
         if (key.empty()) return nullptr;
         auto kit = m.find(key);
         if (kit == m.end()) return nullptr;
-        auto cit = kit->second.find(p.category);
+        auto cit = kit->second.find(category);
         if (cit == kit->second.end() || cit->second.empty()) return nullptr;
         return &cit->second;
     };
 
-    const std::vector<Response>* pool_ptr =
-        find_pool(g_resp_by_voice, p.reply_voice);
-    if (!pool_ptr) pool_ptr = find_pool(g_resp_by_faction, p.bank_faction);
+    const std::vector<Response>* pool_ptr = nullptr;
+    if (p.is_rumor) {
+        // Rumor reply: speak in the recipient's OWN voice from the matching
+        // bucket ("lead" when the roll surfaced a lead, else "no_news"). If
+        // that voice has no rumor pool, fall back to ANY voice's same bucket
+        // so the player still gets an in-character answer.
+        const std::string bucket = p.got_lead ? "lead" : "no_news";
+        pool_ptr = find_pool(g_rumor_resp, p.reply_voice, bucket);
+        if (!pool_ptr) {
+            for (const auto& [voice, bank] : g_rumor_resp) {
+                (void)voice;
+                auto cit = bank.find(bucket);
+                if (cit != bank.end() && !cit->second.empty()) {
+                    pool_ptr = &cit->second;
+                    break;
+                }
+            }
+        }
+    } else {
+        pool_ptr = find_pool(g_resp_by_voice, p.reply_voice, p.category);
+        if (!pool_ptr)
+            pool_ptr = find_pool(g_resp_by_faction, p.bank_faction, p.category);
+    }
     if (!pool_ptr) return;
 
     const std::vector<Response>& pool = *pool_ptr;

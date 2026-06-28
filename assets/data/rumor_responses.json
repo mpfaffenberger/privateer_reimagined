@@ -1,0 +1,478 @@
+{
+ "PrivFlightV0101": {
+  "no_news": [
+   {
+    "text": "Haven't heard anything worth chasing out here lately.",
+    "clip": "assets/speech/rumors/PrivFlightV0101_no_news0.mp3"
+   },
+   {
+    "text": "Quiet skies, friend. Nothing to report.",
+    "clip": "assets/speech/rumors/PrivFlightV0101_no_news1.mp3"
+   },
+   {
+    "text": "Wish I had something for you. Try the bars, maybe.",
+    "clip": "assets/speech/rumors/PrivFlightV0101_no_news2.mp3"
+   },
+   {
+    "text": "Nope, nothing on the wire today.",
+    "clip": "assets/speech/rumors/PrivFlightV0101_no_news3.mp3"
+   }
+  ],
+  "lead": [
+   {
+    "text": "Word is there's salvage worth grabbing out in the deep black. I've marked it on your nav.",
+    "clip": "assets/speech/rumors/PrivFlightV0101_lead0.mp3"
+   },
+   {
+    "text": "Funny you should ask, there's a signal worth investigating. It's on your map now.",
+    "clip": "assets/speech/rumors/PrivFlightV0101_lead1.mp3"
+   },
+   {
+    "text": "Heard a hauler went down past the lanes. Could be loot out there, check your nav.",
+    "clip": "assets/speech/rumors/PrivFlightV0101_lead2.mp3"
+   }
+  ]
+ },
+ "PrivFlightV0201": {
+  "no_news": [
+   {
+    "text": "Haven't heard anything worth chasing out here lately.",
+    "clip": "assets/speech/rumors/PrivFlightV0201_no_news0.mp3"
+   },
+   {
+    "text": "Quiet skies, friend. Nothing to report.",
+    "clip": "assets/speech/rumors/PrivFlightV0201_no_news1.mp3"
+   },
+   {
+    "text": "Wish I had something for you. Try the bars, maybe.",
+    "clip": "assets/speech/rumors/PrivFlightV0201_no_news2.mp3"
+   },
+   {
+    "text": "Nope, nothing on the wire today.",
+    "clip": "assets/speech/rumors/PrivFlightV0201_no_news3.mp3"
+   }
+  ],
+  "lead": [
+   {
+    "text": "Word is there's salvage worth grabbing out in the deep black. I've marked it on your nav.",
+    "clip": "assets/speech/rumors/PrivFlightV0201_lead0.mp3"
+   },
+   {
+    "text": "Funny you should ask, there's a signal worth investigating. It's on your map now.",
+    "clip": "assets/speech/rumors/PrivFlightV0201_lead1.mp3"
+   },
+   {
+    "text": "Heard a hauler went down past the lanes. Could be loot out there, check your nav.",
+    "clip": "assets/speech/rumors/PrivFlightV0201_lead2.mp3"
+   }
+  ]
+ },
+ "PrivFlightV0401": {
+  "no_news": [
+   {
+    "text": "Haven't heard anything worth chasing out here lately.",
+    "clip": "assets/speech/rumors/PrivFlightV0401_no_news0.mp3"
+   },
+   {
+    "text": "Quiet skies, friend. Nothing to report.",
+    "clip": "assets/speech/rumors/PrivFlightV0401_no_news1.mp3"
+   },
+   {
+    "text": "Wish I had something for you. Try the bars, maybe.",
+    "clip": "assets/speech/rumors/PrivFlightV0401_no_news2.mp3"
+   },
+   {
+    "text": "Nope, nothing on the wire today.",
+    "clip": "assets/speech/rumors/PrivFlightV0401_no_news3.mp3"
+   }
+  ],
+  "lead": [
+   {
+    "text": "Word is there's salvage worth grabbing out in the deep black. I've marked it on your nav.",
+    "clip": "assets/speech/rumors/PrivFlightV0401_lead0.mp3"
+   },
+   {
+    "text": "Funny you should ask, there's a signal worth investigating. It's on your map now.",
+    "clip": "assets/speech/rumors/PrivFlightV0401_lead1.mp3"
+   },
+   {
+    "text": "Heard a hauler went down past the lanes. Could be loot out there, check your nav.",
+    "clip": "assets/speech/rumors/PrivFlightV0401_lead2.mp3"
+   }
+  ]
+ },
+ "PrivFlightV0501": {
+  "no_news": [
+   {
+    "text": "Haven't heard anything worth chasing out here lately.",
+    "clip": "assets/speech/rumors/PrivFlightV0501_no_news0.mp3"
+   },
+   {
+    "text": "Quiet skies, friend. Nothing to report.",
+    "clip": "assets/speech/rumors/PrivFlightV0501_no_news1.mp3"
+   },
+   {
+    "text": "Wish I had something for you. Try the bars, maybe.",
+    "clip": "assets/speech/rumors/PrivFlightV0501_no_news2.mp3"
+   },
+   {
+    "text": "Nope, nothing on the wire today.",
+    "clip": "assets/speech/rumors/PrivFlightV0501_no_news3.mp3"
+   }
+  ],
+  "lead": [
+   {
+    "text": "Word is there's salvage worth grabbing out in the deep black. I've marked it on your nav.",
+    "clip": "assets/speech/rumors/PrivFlightV0501_lead0.mp3"
+   },
+   {
+    "text": "Funny you should ask, there's a signal worth investigating. It's on your map now.",
+    "clip": "assets/speech/rumors/PrivFlightV0501_lead1.mp3"
+   },
+   {
+    "text": "Heard a hauler went down past the lanes. Could be loot out there, check your nav.",
+    "clip": "assets/speech/rumors/PrivFlightV0501_lead2.mp3"
+   }
+  ]
+ },
+ "PrivFlightV0701": {
+  "no_news": [
+   {
+    "text": "Haven't heard anything worth chasing out here lately.",
+    "clip": "assets/speech/rumors/PrivFlightV0701_no_news0.mp3"
+   },
+   {
+    "text": "Quiet skies, friend. Nothing to report.",
+    "clip": "assets/speech/rumors/PrivFlightV0701_no_news1.mp3"
+   },
+   {
+    "text": "Wish I had something for you. Try the bars, maybe.",
+    "clip": "assets/speech/rumors/PrivFlightV0701_no_news2.mp3"
+   },
+   {
+    "text": "Nope, nothing on the wire today.",
+    "clip": "assets/speech/rumors/PrivFlightV0701_no_news3.mp3"
+   }
+  ],
+  "lead": [
+   {
+    "text": "Word is there's salvage worth grabbing out in the deep black. I've marked it on your nav.",
+    "clip": "assets/speech/rumors/PrivFlightV0701_lead0.mp3"
+   },
+   {
+    "text": "Funny you should ask, there's a signal worth investigating. It's on your map now.",
+    "clip": "assets/speech/rumors/PrivFlightV0701_lead1.mp3"
+   },
+   {
+    "text": "Heard a hauler went down past the lanes. Could be loot out there, check your nav.",
+    "clip": "assets/speech/rumors/PrivFlightV0701_lead2.mp3"
+   }
+  ]
+ },
+ "PrivFlightV0801": {
+  "no_news": [
+   {
+    "text": "Haven't heard anything worth chasing out here lately.",
+    "clip": "assets/speech/rumors/PrivFlightV0801_no_news0.mp3"
+   },
+   {
+    "text": "Quiet skies, friend. Nothing to report.",
+    "clip": "assets/speech/rumors/PrivFlightV0801_no_news1.mp3"
+   },
+   {
+    "text": "Wish I had something for you. Try the bars, maybe.",
+    "clip": "assets/speech/rumors/PrivFlightV0801_no_news2.mp3"
+   },
+   {
+    "text": "Nope, nothing on the wire today.",
+    "clip": "assets/speech/rumors/PrivFlightV0801_no_news3.mp3"
+   }
+  ],
+  "lead": [
+   {
+    "text": "Word is there's salvage worth grabbing out in the deep black. I've marked it on your nav.",
+    "clip": "assets/speech/rumors/PrivFlightV0801_lead0.mp3"
+   },
+   {
+    "text": "Funny you should ask, there's a signal worth investigating. It's on your map now.",
+    "clip": "assets/speech/rumors/PrivFlightV0801_lead1.mp3"
+   },
+   {
+    "text": "Heard a hauler went down past the lanes. Could be loot out there, check your nav.",
+    "clip": "assets/speech/rumors/PrivFlightV0801_lead2.mp3"
+   }
+  ]
+ },
+ "PrivFlightV0901": {
+  "no_news": [
+   {
+    "text": "Haven't heard anything worth chasing out here lately.",
+    "clip": "assets/speech/rumors/PrivFlightV0901_no_news0.mp3"
+   },
+   {
+    "text": "Quiet skies, friend. Nothing to report.",
+    "clip": "assets/speech/rumors/PrivFlightV0901_no_news1.mp3"
+   },
+   {
+    "text": "Wish I had something for you. Try the bars, maybe.",
+    "clip": "assets/speech/rumors/PrivFlightV0901_no_news2.mp3"
+   },
+   {
+    "text": "Nope, nothing on the wire today.",
+    "clip": "assets/speech/rumors/PrivFlightV0901_no_news3.mp3"
+   }
+  ],
+  "lead": [
+   {
+    "text": "Word is there's salvage worth grabbing out in the deep black. I've marked it on your nav.",
+    "clip": "assets/speech/rumors/PrivFlightV0901_lead0.mp3"
+   },
+   {
+    "text": "Funny you should ask, there's a signal worth investigating. It's on your map now.",
+    "clip": "assets/speech/rumors/PrivFlightV0901_lead1.mp3"
+   },
+   {
+    "text": "Heard a hauler went down past the lanes. Could be loot out there, check your nav.",
+    "clip": "assets/speech/rumors/PrivFlightV0901_lead2.mp3"
+   }
+  ]
+ },
+ "PrivFlightV1001": {
+  "no_news": [
+   {
+    "text": "Haven't heard anything worth chasing out here lately.",
+    "clip": "assets/speech/rumors/PrivFlightV1001_no_news0.mp3"
+   },
+   {
+    "text": "Quiet skies, friend. Nothing to report.",
+    "clip": "assets/speech/rumors/PrivFlightV1001_no_news1.mp3"
+   },
+   {
+    "text": "Wish I had something for you. Try the bars, maybe.",
+    "clip": "assets/speech/rumors/PrivFlightV1001_no_news2.mp3"
+   },
+   {
+    "text": "Nope, nothing on the wire today.",
+    "clip": "assets/speech/rumors/PrivFlightV1001_no_news3.mp3"
+   }
+  ],
+  "lead": [
+   {
+    "text": "Word is there's salvage worth grabbing out in the deep black. I've marked it on your nav.",
+    "clip": "assets/speech/rumors/PrivFlightV1001_lead0.mp3"
+   },
+   {
+    "text": "Funny you should ask, there's a signal worth investigating. It's on your map now.",
+    "clip": "assets/speech/rumors/PrivFlightV1001_lead1.mp3"
+   },
+   {
+    "text": "Heard a hauler went down past the lanes. Could be loot out there, check your nav.",
+    "clip": "assets/speech/rumors/PrivFlightV1001_lead2.mp3"
+   }
+  ]
+ },
+ "PrivFlightV1101": {
+  "no_news": [
+   {
+    "text": "Haven't heard anything worth chasing out here lately.",
+    "clip": "assets/speech/rumors/PrivFlightV1101_no_news0.mp3"
+   },
+   {
+    "text": "Quiet skies, friend. Nothing to report.",
+    "clip": "assets/speech/rumors/PrivFlightV1101_no_news1.mp3"
+   },
+   {
+    "text": "Wish I had something for you. Try the bars, maybe.",
+    "clip": "assets/speech/rumors/PrivFlightV1101_no_news2.mp3"
+   },
+   {
+    "text": "Nope, nothing on the wire today.",
+    "clip": "assets/speech/rumors/PrivFlightV1101_no_news3.mp3"
+   }
+  ],
+  "lead": [
+   {
+    "text": "Word is there's salvage worth grabbing out in the deep black. I've marked it on your nav.",
+    "clip": "assets/speech/rumors/PrivFlightV1101_lead0.mp3"
+   },
+   {
+    "text": "Funny you should ask, there's a signal worth investigating. It's on your map now.",
+    "clip": "assets/speech/rumors/PrivFlightV1101_lead1.mp3"
+   },
+   {
+    "text": "Heard a hauler went down past the lanes. Could be loot out there, check your nav.",
+    "clip": "assets/speech/rumors/PrivFlightV1101_lead2.mp3"
+   }
+  ]
+ },
+ "PrivFlightV1201": {
+  "no_news": [
+   {
+    "text": "Haven't heard anything worth chasing out here lately.",
+    "clip": "assets/speech/rumors/PrivFlightV1201_no_news0.mp3"
+   },
+   {
+    "text": "Quiet skies, friend. Nothing to report.",
+    "clip": "assets/speech/rumors/PrivFlightV1201_no_news1.mp3"
+   },
+   {
+    "text": "Wish I had something for you. Try the bars, maybe.",
+    "clip": "assets/speech/rumors/PrivFlightV1201_no_news2.mp3"
+   },
+   {
+    "text": "Nope, nothing on the wire today.",
+    "clip": "assets/speech/rumors/PrivFlightV1201_no_news3.mp3"
+   }
+  ],
+  "lead": [
+   {
+    "text": "Word is there's salvage worth grabbing out in the deep black. I've marked it on your nav.",
+    "clip": "assets/speech/rumors/PrivFlightV1201_lead0.mp3"
+   },
+   {
+    "text": "Funny you should ask, there's a signal worth investigating. It's on your map now.",
+    "clip": "assets/speech/rumors/PrivFlightV1201_lead1.mp3"
+   },
+   {
+    "text": "Heard a hauler went down past the lanes. Could be loot out there, check your nav.",
+    "clip": "assets/speech/rumors/PrivFlightV1201_lead2.mp3"
+   }
+  ]
+ },
+ "PrivFlightV1301": {
+  "no_news": [
+   {
+    "text": "Haven't heard anything worth chasing out here lately.",
+    "clip": "assets/speech/rumors/PrivFlightV1301_no_news0.mp3"
+   },
+   {
+    "text": "Quiet skies, friend. Nothing to report.",
+    "clip": "assets/speech/rumors/PrivFlightV1301_no_news1.mp3"
+   },
+   {
+    "text": "Wish I had something for you. Try the bars, maybe.",
+    "clip": "assets/speech/rumors/PrivFlightV1301_no_news2.mp3"
+   },
+   {
+    "text": "Nope, nothing on the wire today.",
+    "clip": "assets/speech/rumors/PrivFlightV1301_no_news3.mp3"
+   }
+  ],
+  "lead": [
+   {
+    "text": "Word is there's salvage worth grabbing out in the deep black. I've marked it on your nav.",
+    "clip": "assets/speech/rumors/PrivFlightV1301_lead0.mp3"
+   },
+   {
+    "text": "Funny you should ask, there's a signal worth investigating. It's on your map now.",
+    "clip": "assets/speech/rumors/PrivFlightV1301_lead1.mp3"
+   },
+   {
+    "text": "Heard a hauler went down past the lanes. Could be loot out there, check your nav.",
+    "clip": "assets/speech/rumors/PrivFlightV1301_lead2.mp3"
+   }
+  ]
+ },
+ "PrivFlightV1401": {
+  "no_news": [
+   {
+    "text": "Haven't heard anything worth chasing out here lately.",
+    "clip": "assets/speech/rumors/PrivFlightV1401_no_news0.mp3"
+   },
+   {
+    "text": "Quiet skies, friend. Nothing to report.",
+    "clip": "assets/speech/rumors/PrivFlightV1401_no_news1.mp3"
+   },
+   {
+    "text": "Wish I had something for you. Try the bars, maybe.",
+    "clip": "assets/speech/rumors/PrivFlightV1401_no_news2.mp3"
+   },
+   {
+    "text": "Nope, nothing on the wire today.",
+    "clip": "assets/speech/rumors/PrivFlightV1401_no_news3.mp3"
+   }
+  ],
+  "lead": [
+   {
+    "text": "Word is there's salvage worth grabbing out in the deep black. I've marked it on your nav.",
+    "clip": "assets/speech/rumors/PrivFlightV1401_lead0.mp3"
+   },
+   {
+    "text": "Funny you should ask, there's a signal worth investigating. It's on your map now.",
+    "clip": "assets/speech/rumors/PrivFlightV1401_lead1.mp3"
+   },
+   {
+    "text": "Heard a hauler went down past the lanes. Could be loot out there, check your nav.",
+    "clip": "assets/speech/rumors/PrivFlightV1401_lead2.mp3"
+   }
+  ]
+ },
+ "PrivFlightV1501": {
+  "no_news": [
+   {
+    "text": "Haven't heard anything worth chasing out here lately.",
+    "clip": "assets/speech/rumors/PrivFlightV1501_no_news0.mp3"
+   },
+   {
+    "text": "Quiet skies, friend. Nothing to report.",
+    "clip": "assets/speech/rumors/PrivFlightV1501_no_news1.mp3"
+   },
+   {
+    "text": "Wish I had something for you. Try the bars, maybe.",
+    "clip": "assets/speech/rumors/PrivFlightV1501_no_news2.mp3"
+   },
+   {
+    "text": "Nope, nothing on the wire today.",
+    "clip": "assets/speech/rumors/PrivFlightV1501_no_news3.mp3"
+   }
+  ],
+  "lead": [
+   {
+    "text": "Word is there's salvage worth grabbing out in the deep black. I've marked it on your nav.",
+    "clip": "assets/speech/rumors/PrivFlightV1501_lead0.mp3"
+   },
+   {
+    "text": "Funny you should ask, there's a signal worth investigating. It's on your map now.",
+    "clip": "assets/speech/rumors/PrivFlightV1501_lead1.mp3"
+   },
+   {
+    "text": "Heard a hauler went down past the lanes. Could be loot out there, check your nav.",
+    "clip": "assets/speech/rumors/PrivFlightV1501_lead2.mp3"
+   }
+  ]
+ },
+ "PrivMerchantFem01": {
+  "no_news": [
+   {
+    "text": "Haven't heard anything worth chasing out here lately.",
+    "clip": "assets/speech/rumors/PrivMerchantFem01_no_news0.mp3"
+   },
+   {
+    "text": "Quiet skies, friend. Nothing to report.",
+    "clip": "assets/speech/rumors/PrivMerchantFem01_no_news1.mp3"
+   },
+   {
+    "text": "Wish I had something for you. Try the bars, maybe.",
+    "clip": "assets/speech/rumors/PrivMerchantFem01_no_news2.mp3"
+   },
+   {
+    "text": "Nope, nothing on the wire today.",
+    "clip": "assets/speech/rumors/PrivMerchantFem01_no_news3.mp3"
+   }
+  ],
+  "lead": [
+   {
+    "text": "Word is there's salvage worth grabbing out in the deep black. I've marked it on your nav.",
+    "clip": "assets/speech/rumors/PrivMerchantFem01_lead0.mp3"
+   },
+   {
+    "text": "Funny you should ask, there's a signal worth investigating. It's on your map now.",
+    "clip": "assets/speech/rumors/PrivMerchantFem01_lead1.mp3"
+   },
+   {
+    "text": "Heard a hauler went down past the lanes. Could be loot out there, check your nav.",
+    "clip": "assets/speech/rumors/PrivMerchantFem01_lead2.mp3"
+   }
+  ]
+ }
+}
