@@ -39,18 +39,19 @@ const ImU32 kDim      = IM_COL32(150, 160, 170, 200);
 const ImU32 kRed      = IM_COL32(255, 110,  90, 240);
 
 // ---- player comm intents -------------------------------------------------
-// The player can say one of three KINDS of thing to ANY destination now
-// (greet, taunt, or plead) — the recipient's stance no longer gates which
-// pool is offered (np-comms enhancement #1). Each shown line remembers its
-// intent so send-time can pick the right reply category (#2) and so a taunt
-// can provoke (#4).
-enum class Intent { Greet, Taunt, Plea };
+// The player can say one of four KINDS of thing to ANY destination now
+// (greet, taunt, plead, or ask) — the recipient's stance no longer gates
+// which pool is offered (np-comms enhancement #1). Each shown line remembers
+// its intent so send-time can pick the right reply category (#2), so a taunt
+// can provoke (#4), and so an ask can roll for a rumor.
+enum class Intent { Greet, Taunt, Plea, Ask };
 
 const char* intent_tag(Intent i) {
     switch (i) {
         case Intent::Greet: return "Greet";
         case Intent::Taunt: return "Taunt";
         case Intent::Plea:  return "Plea";
+        case Intent::Ask:   return "Ask";
     }
     return "?";
 }
@@ -73,6 +74,11 @@ std::vector<std::string> g_plea = {
     "Please, I don't want any trouble!",
     "I'm unarmed, just let me pass!",
     "Have mercy, I've got a family waiting!",
+};
+std::vector<std::string> g_ask = {
+    "Heard anything interesting out here?",
+    "Any word on good salvage lately?",
+    "Picked up any rumors worth chasing?",
 };
 
 // ---- per-line voice manifest (data-driven) -------------------------------
@@ -182,6 +188,12 @@ uint32_t g_chosen_ship_id = 0;
 // non-hostile target ship; drained ONCE by take_provoke_target().
 uint32_t g_provoke_id = 0;
 
+// Rumor latch (np-comms "ask for rumors"). Set in select() when an Ask at a
+// non-hostile recipient rolls success; drained ONCE by take_rumor_pending(),
+// which dispatches a fresh nav lead in main.cpp. Hostiles never share tips.
+constexpr float k_rumor_chance = 0.04f;
+bool g_rumor_pending = false;
+
 // base_id -> resolved Faction cache (#3). Resolved lazily from
 // assets/bases/<base_id>/base.json. Civilian == "couldn't resolve" (stays
 // silent: no reply bank). Cached so each base.json is read at most once.
@@ -224,16 +236,17 @@ Faction resolve_base_faction(const std::string& base_id) {
     return resolved;
 }
 
-// Build the FLAT shown-line list (cap 9) across all three intent buckets,
-// round-robin so greet/taunt/plea are all represented regardless of who the
-// player is hailing. Called when a destination is chosen.
+// Build the FLAT shown-line list (cap 9) across all four intent buckets,
+// round-robin so greet/taunt/plea/ask are all represented regardless of who
+// the player is hailing. Called when a destination is chosen.
 void build_shown_lines() {
     g_shown.clear();
     struct Bucket { Intent intent; const std::vector<std::string>* lines; };
-    const Bucket buckets[3] = {
+    const Bucket buckets[4] = {
         { Intent::Greet, &g_greeting },
         { Intent::Taunt, &g_taunt },
         { Intent::Plea,  &g_plea },
+        { Intent::Ask,   &g_ask },
     };
     size_t row = 0;
     bool added = true;
@@ -315,8 +328,10 @@ void load(const std::string& path) {
     read_pool("greeting", g_greeting);
     read_pool("taunt",    g_taunt);
     read_pool("plea",     g_plea);
-    std::printf("[comms_menu] loaded %s — %zu greeting, %zu taunt, %zu plea lines\n",
-                path.c_str(), g_greeting.size(), g_taunt.size(), g_plea.size());
+    read_pool("ask",      g_ask);
+    std::printf("[comms_menu] loaded %s — %zu greeting, %zu taunt, %zu plea, %zu ask lines\n",
+                path.c_str(), g_greeting.size(), g_taunt.size(), g_plea.size(),
+                g_ask.size());
 
     // Also pull in the per-line voice manifest (line text -> mp3 path). This
     // is a sibling file, NOT a key inside `path`, so it's loaded separately
@@ -436,6 +451,15 @@ void select(int n) {
         if (roll(g_rng) < 0.60f) g_provoke_id = g_chosen_ship_id;
     }
 
+    // Rumor roll (np-comms "ask for rumors"): an Ask at a non-hostile
+    // recipient has a small chance (k_rumor_chance) to surface a fresh nav
+    // lead. Hostiles don't share tips. main.cpp drains the latch and drops
+    // the actual lead marker + HUD line.
+    if (intent == Intent::Ask && g_chosen_stance != Stance::Hostile) {
+        std::uniform_real_distribution<float> roll(0.0f, 1.0f);
+        if (roll(g_rng) < k_rumor_chance) g_rumor_pending = true;
+    }
+
     // Arm the hailed party's reply. Only factions with a bank entry talk
     // back — Civilian (unresolved bases) and anyone the bank doesn't know
     // stay silent. The reply is delayed ~3.5s so it doesn't step on the
@@ -531,6 +555,12 @@ uint32_t take_provoke_target() {
     const uint32_t id = g_provoke_id;
     g_provoke_id = 0;
     return id;
+}
+
+bool take_rumor_pending() {
+    const bool pending = g_rumor_pending;
+    g_rumor_pending = false;
+    return pending;
 }
 
 } // namespace comms_menu

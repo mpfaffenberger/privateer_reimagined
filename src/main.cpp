@@ -3827,6 +3827,15 @@ void frame_cb() {
         if (uint32_t pv = comms_menu::take_provoke_target(); pv) {
             if (Ship* victim = g.ships.find_by_id(pv)) victim->ai.aggro_player = true;
         }
+        // Rumor-via-comms (np-comms "ask for rumors"): if the player just
+        // asked a non-hostile party for news and it paid off, drop a fresh
+        // nav lead and announce it on the comm feed. Drained once per frame.
+        if (comms_menu::take_rumor_pending()) {
+            objectives::add_lead(g.system,
+                                 objectives::pick_lead_pos(g.system, g.sun.position),
+                                 "Unknown Signal");
+            comm::push("Lead acquired -- new signal on your nav map.", true);
+        }
         for (Ship& s : g.ships) ship_ai::tick(s, g.ships, t_now, g.system, g.sun.position);
         // Contraband search director (Phase 1). Runs AFTER perception +
         // AI so any aggro override we set is read on the next frame.

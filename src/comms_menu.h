@@ -70,4 +70,12 @@ void tick(float now_s);
 // at most one ship, once.
 uint32_t take_provoke_target();
 
+// Rumor hand-off (np-comms "ask for rumors"). When the player ASKS a
+// non-hostile recipient for news there's a small chance (~4%) the comms
+// layer flags a rumor here. main.cpp drains it ONCE per frame (near
+// take_provoke_target()) and, on success, drops a fresh nav lead. Returns
+// false when nothing is pending; reading it resets the latch so one ask
+// yields at most one lead.
+bool take_rumor_pending();
+
 } // namespace comms_menu

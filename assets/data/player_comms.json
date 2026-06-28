@@ -16,5 +16,11 @@
   "I'm unarmed, just let me pass!",
   "I'll pay you to leave me alone, name your price!",
   "Have mercy, I've got a family waiting!"
+ ],
+ "ask": [
+  "Heard anything interesting out here?",
+  "Any word on good salvage lately?",
+  "What's the news, friend?",
+  "Picked up any rumors worth chasing?"
  ]
 }
