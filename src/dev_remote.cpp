@@ -54,7 +54,8 @@ struct ScreenshotWaiter {
 struct Command {
     enum class Kind { SetCamera, Screenshot, VoiceSay, CommBark, CargoGive, Spawn,
                       Kill, SetTarget, TractorPull, InventorySell, InventoryGive,
-                      InventoryInstall, InventoryEquip, SetPanel, CommsSelect };
+                      InventoryInstall, InventoryEquip, SetPanel, CommsSelect,
+                      Rumor };
     Kind kind;
 
     // SetCamera — any optional field is encoded with `has_*`.
@@ -129,6 +130,12 @@ std::vector<ShipInfo>  g_ships;
 std::mutex             g_loot_mu;
 std::vector<LootInfo>  g_loot;
 
+// Latest leads snapshot for GET /objectives, published once per Flight
+// frame by the main thread (publish_objectives). Guarded so a serialise
+// never races a mid-frame rebuild.
+std::mutex             g_objectives_mu;
+std::vector<LeadInfo>  g_objectives;
+
 // Latest inventory snapshot for GET /inventory, published once per Flight
 // frame by the main thread (publish_inventory). The cargo usage/cap pair
 // rides under the same lock so the three values stay consistent.
@@ -150,6 +157,7 @@ std::function<void(std::string, std::string, float)>        g_spawn_hook;
 std::function<void(uint32_t)>                               g_kill_hook;
 std::function<void(uint32_t)>                               g_set_target_hook;
 std::function<void()>                                       g_tractor_pull_hook;
+std::function<void()>                                       g_rumor_hook;
 std::function<void(int)>                                    g_inventory_sell_hook;
 std::function<void(std::string, std::string, std::string, int)> g_inventory_give_hook;
 std::function<void(int)>                                    g_inventory_install_hook;
@@ -681,6 +689,41 @@ void handle_tractor_pull(int fd) {
     send_json(fd, "{\"ok\":true}");
 }
 
+// GET /objectives — serialise the latest leads snapshot. Pure read of the
+// published vector; the host publishes it every Flight frame from
+// objectives::all().
+void handle_objectives(int fd) {
+    std::vector<LeadInfo> objs;
+    {
+        std::lock_guard lk(g_objectives_mu);
+        objs = g_objectives;
+    }
+    std::string out = "{\"objectives\":[";
+    for (size_t i = 0; i < objs.size(); ++i) {
+        const LeadInfo& o = objs[i];
+        char buf[256];
+        std::snprintf(buf, sizeof(buf),
+            "%s{\"label\":\"%s\",\"dist\":%.1f}",
+            i ? "," : "", o.label.c_str(), o.dist);
+        out += buf;
+    }
+    out += "]}";
+    send_json(fd, out);
+}
+
+// POST /rumor — register a dynamic-objective lead in the current system.
+// No body. Enqueued and run on the main thread by the registered rumor
+// hook (objectives::add_lead + pick_lead_pos).
+void handle_rumor(int fd) {
+    Command c;
+    c.kind = Command::Kind::Rumor;
+    {
+        std::lock_guard lk(g_queue_mu);
+        g_queue.push_back(c);
+    }
+    send_json(fd, "{\"ok\":true}");
+}
+
 // POST /inventory/sell — sell the unified-hold item at {"index":N}. Index
 // defaults to 0 if missing. Enqueued and run on the main thread by the
 // registered hook (inventory::sell_item), which bounds-checks for us.
@@ -920,6 +963,8 @@ void handle_connection(int fd) {
     else if (method == "POST" && path == "/cargo/give") handle_cargo_give(fd, body);
     else if (method == "POST" && path == "/spawn")      handle_spawn(fd, body);
     else if (method == "GET"  && path == "/loot")       handle_loot(fd);
+    else if (method == "GET"  && path == "/objectives") handle_objectives(fd);
+    else if (method == "POST" && path == "/rumor")      handle_rumor(fd);
     else if (method == "GET"  && path == "/inventory")  handle_inventory(fd);
     else if (method == "POST" && path == "/kill")       handle_kill(fd, body);
     else if (method == "POST" && path == "/target")     handle_target(fd, body);
@@ -1107,6 +1152,17 @@ void drain_commands(Camera& cam) {
             if (hook) hook();
             break;
         }
+        case Command::Kind::Rumor: {
+            // Run the host's registered rumor hook on the main thread; it
+            // registers a new lead via objectives::add_lead + pick_lead_pos.
+            std::function<void()> hook;
+            {
+                std::lock_guard lk(g_hooks_mu);
+                hook = g_rumor_hook;
+            }
+            if (hook) hook();
+            break;
+        }
         case Command::Kind::InventorySell: {
             // Run the host's registered inventory-sell hook on the main
             // thread; it routes to inventory::sell_item (bounds-checked).
@@ -1234,6 +1290,11 @@ void publish_loot(const std::vector<LootInfo>& loot) {
     g_loot = loot;
 }
 
+void publish_objectives(const std::vector<LeadInfo>& objectives) {
+    std::lock_guard lk(g_objectives_mu);
+    g_objectives = objectives;
+}
+
 void publish_inventory(const std::vector<ItemInfo>& items, int used, int cap,
                        const std::vector<ModInfo>& mods,
                        const std::vector<MountInfo>& mounts) {
@@ -1268,6 +1329,11 @@ void set_target_hook(std::function<void(uint32_t)> hook) {
 void set_tractor_pull_hook(std::function<void()> hook) {
     std::lock_guard lk(g_hooks_mu);
     g_tractor_pull_hook = std::move(hook);
+}
+
+void set_rumor_hook(std::function<void()> hook) {
+    std::lock_guard lk(g_hooks_mu);
+    g_rumor_hook = std::move(hook);
 }
 
 void set_inventory_sell_hook(std::function<void(int)> hook) {

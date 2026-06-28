@@ -68,6 +68,7 @@
 #include "scripted_encounters.h"
 #include "dust.h"
 #include "loot.h"
+#include "objectives.h"
 #include "warp_streaks.h"
 #include "jump_gate.h"
 #include "faction.h"
@@ -1283,6 +1284,17 @@ void build_system_scene(bool first_time) {
                 std::printf("[dev_remote] tractor/pull: %d drop(s)\n", pulled);
             });
 
+        // POST /rumor — register a dynamic-objective "lead" in the current
+        // system: pick a placement (lane-midpoint or deep-space) and drop a
+        // transient nav marker the player can fly to for a loot payoff.
+        dev_remote::set_rumor_hook(
+            []() {
+                objectives::add_lead(
+                    g.system,
+                    objectives::pick_lead_pos(g.system, g.sun.position),
+                    "Unknown Signal");
+            });
+
         // POST /inventory/sell — sell the unified-hold item at the given
         // index, routing through the SAME inventory::sell_item the Cargo
         // Hold screen uses (one enforcement path; it bounds-checks).
@@ -1804,6 +1816,9 @@ void build_system_scene(bool first_time) {
     // floating loot. Drops are world-state, not save state, so they
     // don't outlive a system switch.
     loot::clear();
+    // Dynamic-objective leads (Phase 3 Wave 1) are current-system world-
+    // state too: a freshly (re)loaded system starts with no rumor markers.
+    objectives::clear(g.system);
 
     // Hand the civilian AI the nav-point lattice it travels between (lane
     // traffic) and flees toward (gates/bases). Bases + jump points are
@@ -3211,6 +3226,9 @@ void frame_cb() {
         // concourse art + hotspot JSON when we land; exit frees the GPU
         // texture when we leave Landed (launch, or any other exit).
         if (g.game.mode == GameMode::Landed) {
+            // Leads are current-system world-state: landing clears every
+            // rumor marker (Phase 3 Wave 1). Mirrors loot::clear's lifecycle.
+            objectives::clear(g.system);
             base_screens::enter(g.player.last_docked_base);
             // Base screens always need the cursor (np-3dp.29). If the player
             // pressed SPACE during flight to drop fly-by-wire, the OS cursor
@@ -3296,6 +3314,7 @@ void frame_cb() {
             hailing::reset();   // clear any per-NPC search state from the old encounter
             scripted::reset();  // fresh launch = fresh scenario director
             loot::clear();      // drop any stale loot markers from the previous wave
+            objectives::clear(g.system);  // and any stale rumor leads
             std::printf("[encounter] base launch -> cleared old wave + re-rolled\n");
         }
     }
@@ -3420,6 +3439,18 @@ void frame_cb() {
             loot_infos.push_back(std::move(li));
         }
         dev_remote::publish_loot(loot_infos);
+
+        // dynamic-objective harness: publish the live leads (GET /objectives)
+        // each Flight frame. Flat label+distance PODs built from
+        // objectives::all() — dev_remote never sees the Lead/StarSystem types.
+        std::vector<dev_remote::LeadInfo> lead_infos;
+        for (const objectives::Lead& ld : objectives::all()) {
+            dev_remote::LeadInfo li;
+            li.label = ld.label;
+            li.dist  = HMM_LenV3(HMM_SubV3(ld.pos, pl->position));
+            lead_infos.push_back(std::move(li));
+        }
+        dev_remote::publish_objectives(lead_infos);
 
         std::vector<dev_remote::ItemInfo> item_infos;
         for (const inventory::InventoryItem& it : g.player.items) {
@@ -3801,6 +3832,10 @@ void frame_cb() {
         // AI so any aggro override we set is read on the next frame.
         if (Ship* pl = g.ships.player()) {
             hailing::tick(g.ships, *pl, g.player, t_now);
+            // Dynamic-objective (lead) arrival check (Phase 3 Wave 1).
+            // Reaching a lead marker spawns its loot payoff + clears the
+            // marker; leads otherwise live until landing / system change.
+            objectives::tick(g.system, pl->position);
             // Scripted scenario director (Phase 2). Runs AFTER hailing so
             // any aggro override hailing set is read by the AI on the next
             // frame; scenario triggers care about faction stance state too.

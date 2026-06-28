@@ -53,6 +53,11 @@
 //                          main thread by the registered spawn hook.
 //                          Returns { ok } or { ok:false, error }.
 //   GET  /loot           → { loot: [ { dist, id, kind, rarity }, ... ] }
+//   POST /rumor          → register a dynamic-objective "lead" in the
+//                          current system (a transient nav marking a loot
+//                          payoff). No body. Returns { ok:true }.
+//   GET  /objectives     → { objectives: [ { label, dist }, ... ] } — the
+//                          live leads + each one's distance from the player.
 //   GET  /inventory      → { items: [...], cargo_used, cargo_cap }
 //   POST /kill           → kill a ship. Body { id? } (0/missing = nearest).
 //   POST /tractor/pull   → pull in-range loot into the hold.
@@ -173,6 +178,22 @@ struct LootInfo {
 void publish_loot(const std::vector<LootInfo>& loot);
 
 // ---------------------------------------------------------------------------
+// /objectives snapshot — live dynamic-objective "leads" (Phase 3 Wave 1).
+// ---------------------------------------------------------------------------
+// A flat view of one live lead. The host builds a vector of these from
+// objectives::all() each Flight frame and hands it to publish_objectives();
+// the HTTP thread serves the latest copy to GET /objectives. Same
+// decoupling trick as LootInfo — dev_remote never sees the real Lead type.
+struct LeadInfo {
+    std::string label;
+    float       dist;
+};
+
+// Publish the latest leads snapshot for GET /objectives. Called once per
+// Flight frame from the main thread; stored mutex-guarded.
+void publish_objectives(const std::vector<LeadInfo>& objectives);
+
+// ---------------------------------------------------------------------------
 // /inventory snapshot — the player's unified-hold items + cargo usage.
 // ---------------------------------------------------------------------------
 // A flat view of one unified-hold item. The host builds these from
@@ -224,6 +245,11 @@ void set_target_hook(std::function<void(uint32_t id)> hook);
 // POST /tractor/pull enqueues a command; drain_commands invokes this hook
 // on the main thread. The host wires it to loot::try_pull.
 void set_tractor_pull_hook(std::function<void()> hook);
+
+// POST /rumor enqueues a command; drain_commands invokes this hook on the
+// main thread. The host wires it to objectives::add_lead(g.system,
+// objectives::pick_lead_pos(g.system, g.sun.position), "Unknown Signal").
+void set_rumor_hook(std::function<void()> hook);
 
 // POST /inventory/sell enqueues a command; drain_commands invokes this hook
 // on the main thread with the requested item index. The host wires it to

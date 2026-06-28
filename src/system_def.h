@@ -240,6 +240,15 @@ struct NavPointDef {
     // unsurveyed / dangling gate (e.g. Troy's "War Jump").
     std::string links_to;                   // galaxy system id, e.g. "pyrenees"
     std::string links_to_nav;               // arrival nav name on the far side
+
+    // Runtime-injected lead marker (objectives.{h,cpp}, Phase 3 Wave 1).
+    // A "lead" is a transient nav point dropped into the CURRENT system to
+    // mark a rumored loot payoff. Set true ONLY by objectives::add_lead so
+    // the existing nav-map / HUD / autopilot pick it up for free, and so
+    // objectives::clear can find + erase every lead on landing / system
+    // change. NEVER serialized — system JSON is read-only — so the loader
+    // always leaves this false. One bool, no other coupling.
+    bool        dynamic = false;
 };
 
 // ---- encounter director spawn tables (np-ma2.3) -----------------------------
