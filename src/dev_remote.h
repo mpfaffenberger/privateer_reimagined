@@ -62,6 +62,10 @@
 //                          { id, kind, rarity, qty }. Returns { ok:true }.
 //   POST /inventory/install → install the Upgrade-kind item at { index:N }
 //                          into permanent_mods. Returns { ok:true }.
+//   POST /inventory/equip → equip the Weapon-kind item at { item_index:N }
+//                          into gun mount { mount_index:N } (mount_index
+//                          optional; -1/missing = first empty mount, else
+//                          0). Returns { ok:true }.
 //
 // Everything else 404s.
 // -----------------------------------------------------------------------------
@@ -181,6 +185,14 @@ struct ItemInfo {
     int         qty;
 };
 
+// A flat view of one fitted gun mount (#98), built from g.player.gun_mounts.
+// An empty gun_id means the slot is unfitted. Surfaced under the inventory
+// snapshot lock so GET /inventory reports items + mounts consistently.
+struct MountInfo {
+    std::string gun_id;
+    int         rarity;
+};
+
 // A flat view of one installed permanent_mod (#92/#93). Mirrors
 // PermanentMod (player.h) without dev_remote depending on the real type;
 // the host builds these from g.player.permanent_mods each Flight frame.
@@ -195,7 +207,8 @@ struct ModInfo {
 // the player's installed permanent_mods, surfaced under the same lock so
 // the snapshot stays internally consistent.
 void publish_inventory(const std::vector<ItemInfo>& items, int used, int cap,
-                       const std::vector<ModInfo>& mods);
+                       const std::vector<ModInfo>& mods,
+                       const std::vector<MountInfo>& mounts);
 
 // POST /kill enqueues a command; drain_commands invokes this hook on the
 // main thread with the requested ship id (0 = "nearest alive non-player").
@@ -223,5 +236,11 @@ void set_inventory_give_hook(
 // hook on the main thread with the requested item index. The host wires it
 // to inventory::install_upgrade(g.player, index).
 void set_inventory_install_hook(std::function<void(int index)> hook);
+
+// POST /inventory/equip enqueues a command; drain_commands invokes this hook
+// on the main thread with (item_index, mount_index). A negative mount_index
+// means "host picks the first empty mount (else 0)". The host wires it to
+// inventory::equip_weapon(g.player, item_index, mount_index).
+void set_inventory_equip_hook(std::function<void(int item_index, int mount_index)> hook);
 
 } // namespace dev_remote

@@ -129,6 +129,16 @@ bool sell_item(PlayerState& p, int index);
 // (main.cpp) re-applies installed mods to the live Ship each launch.
 bool install_upgrade(PlayerState& p, int index);
 
+// Equip the Weapon-kind item at p.items[item_index] into gun mount
+// `mount_index` (#98): ensure p.gun_mounts has that slot (resize with
+// empty MountSlot{} if short), overwrite it with a MountSlot carrying the
+// item's id + rarity (so its WeaponMods follow the gun onto the hull),
+// then erase the consumed item. Returns false (no mutation) on an
+// out-of-range item_index, a negative mount_index, or a non-Weapon item.
+// apply_player_loadout (main.cpp) re-applies gun_mounts to the live Ship
+// each launch, so the fitted weapon takes effect on the next spawn.
+bool equip_weapon(PlayerState& p, int item_index, int mount_index);
+
 // CargoHold base-screen body (registered via base_screens::register_screen).
 // Draws cargo usage, the read-only commodity manifest, and the sellable
 // items list. Defined under !INVENTORY_HEADLESS (drags in ImGui).

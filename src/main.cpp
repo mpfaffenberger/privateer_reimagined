@@ -801,6 +801,13 @@ static void apply_player_loadout(Ship& pl, const PlayerState& p, bool heal = tru
     }
     pl.gun_cooldowns.assign(pl.mounts.size(), 0.0f);
     pl.gun_armed.assign(pl.mounts.size(), true);
+    // Carry per-mount weapon mods (#90) onto the live ship, parallel to
+    // mounts. Default WeaponMods{} (1.0/1.0) is a no-op; we overwrite the
+    // entries the player has actually fitted from their MountSlot::mods so
+    // firing::tick applies the rarity fire-rate / energy deltas per shot.
+    pl.mount_mods.assign(pl.mounts.size(), inventory::WeaponMods{});
+    for (size_t i = 0; i < pl.mount_mods.size() && i < p.gun_mounts.size(); ++i)
+        pl.mount_mods[i] = p.gun_mounts[i].mods;
 }
 
 static void apply_pending_player_health_snapshot(Ship& player) {
@@ -1284,6 +1291,28 @@ void build_system_scene(bool first_time) {
                 const bool ok = inventory::install_upgrade(g.player, index);
                 std::printf("[dev_remote] inventory/install: index=%d ok=%s\n",
                             index, ok ? "true" : "false");
+            });
+
+        // POST /inventory/equip — fit the Weapon-kind item at item_index
+        // into a gun mount, routing through the SAME inventory::equip_weapon
+        // the Cargo Hold screen uses. A negative mount_index means "first
+        // empty mount (else 0)" — resolved here so the screen + dev path
+        // share one fitting policy. Takes effect on the next launch when
+        // apply_player_loadout re-reads gun_mounts onto the live ship.
+        dev_remote::set_inventory_equip_hook(
+            [](int item_index, int mount_index) {
+                if (mount_index < 0) {
+                    mount_index = 0;
+                    for (int mi = 0; mi < (int)g.player.gun_mounts.size(); ++mi) {
+                        if (g.player.gun_mounts[(size_t)mi].gun_id.empty()) {
+                            mount_index = mi;
+                            break;
+                        }
+                    }
+                }
+                const bool ok = inventory::equip_weapon(g.player, item_index, mount_index);
+                std::printf("[dev_remote] inventory/equip: item=%d mount=%d ok=%s\n",
+                            item_index, mount_index, ok ? "true" : "false");
             });
     }
     dev_remote::publish_system_name(g.system.name.c_str());
@@ -3346,11 +3375,19 @@ void frame_cb() {
             mi.value  = m.value;
             mod_infos.push_back(std::move(mi));
         }
+        std::vector<dev_remote::MountInfo> mount_infos;
+        for (const MountSlot& ms : g.player.gun_mounts) {
+            dev_remote::MountInfo mt;
+            mt.gun_id = ms.gun_id;
+            mt.rarity = (int)ms.rarity;
+            mount_infos.push_back(std::move(mt));
+        }
         const ShipClass* pk = ship_class::find(g.player.ship_class_name);
         dev_remote::publish_inventory(item_infos,
                                       player::cargo_units_used(g.player),
                                       player::cargo_capacity(g.player, pk),
-                                      mod_infos);
+                                      mod_infos,
+                                      mount_infos);
     }
 
     // --- physics ------------------------------------------------------------

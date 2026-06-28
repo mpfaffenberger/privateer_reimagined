@@ -85,6 +85,18 @@ PermanentMod resolve_mod(const std::string& id) {
     return PermanentMod{ id, "shield_pct", 0.05f };
 }
 
+// Human-readable rarity label. Lives in the model (always-compiled) half
+// so both the EQUIP log line and the headless build can name a rarity
+// without dragging in the UI block; the CargoHold screen reuses it too.
+const char* rarity_name(Rarity r) {
+    switch (r) {
+        case Rarity::Rare:      return "Rare";
+        case Rarity::Legendary: return "Legendary";
+        case Rarity::Basic:
+        default:                return "Basic";
+    }
+}
+
 } // namespace
 
 int load_prices(const std::string& path) {
@@ -171,6 +183,36 @@ bool install_upgrade(PlayerState& p, int index) {
     return true;
 }
 
+bool equip_weapon(PlayerState& p, int item_index, int mount_index) {
+    if (item_index < 0 || item_index >= (int)p.items.size()) {
+        std::printf("[inventory] EQUIP refused: item index %d out of range (have %zu)\n",
+                    item_index, p.items.size());
+        return false;
+    }
+    if (mount_index < 0) {
+        std::printf("[inventory] EQUIP refused: bad mount index %d\n", mount_index);
+        return false;
+    }
+    // Copy by value first: the erase below invalidates the reference, and we
+    // still want the id/rarity for the new MountSlot + the log line.
+    const InventoryItem it = p.items[(size_t)item_index];
+    if (it.kind != ItemKind::Weapon) {
+        std::printf("[inventory] EQUIP refused: '%s' is not a Weapon\n", it.id.c_str());
+        return false;
+    }
+    // Grow gun_mounts with empty slots so the requested mount exists; the
+    // MountSlot default ctor leaves "" = empty for any gap we just opened.
+    if ((int)p.gun_mounts.size() <= mount_index)
+        p.gun_mounts.resize((size_t)mount_index + 1);
+    // The MountSlot(id, rarity) ctor derives the WeaponMods from rarity, so
+    // the rarity tuning rides onto the hull at the next apply_player_loadout.
+    p.gun_mounts[(size_t)mount_index] = MountSlot{ it.id, it.rarity };
+    p.items.erase(p.items.begin() + item_index);
+    std::printf("[inventory] EQUIP '%s' (%s) -> mount %d\n",
+                it.id.c_str(), rarity_name(it.rarity), mount_index);
+    return true;
+}
+
 #ifndef INVENTORY_HEADLESS
 
 namespace {
@@ -184,15 +226,6 @@ struct ScreenWH { float w, h; };
 ScreenWH screen_wh() {
     const float dpi = sapp_dpi_scale();
     return { (float)sapp_width() / dpi, (float)sapp_height() / dpi };
-}
-
-const char* rarity_name(Rarity r) {
-    switch (r) {
-        case Rarity::Rare:      return "Rare";
-        case Rarity::Legendary: return "Legendary";
-        case Rarity::Basic:
-        default:                return "Basic";
-    }
 }
 
 const char* kind_name(ItemKind k) {
@@ -296,6 +329,7 @@ void cargohold_screen(BaseContext& ctx) {
             // ImGui redraws next frame against the shrunken vector.
             int sell_index    = -1;
             int install_index = -1;
+            int equip_index   = -1;
             for (int i = 0; i < (int)p.items.size(); ++i) {
                 const InventoryItem& it = p.items[(size_t)i];
                 const int64_t value = item_value(it);
@@ -313,10 +347,13 @@ void cargohold_screen(BaseContext& ctx) {
                 ImGui::Text("%lld", (long long)value);
                 ImGui::PopStyleColor();
                 ImGui::TableNextColumn();
-                // Upgrade-kind items install into permanent_mods (#99); every
-                // other kind keeps the Sell-for-credits path.
+                // Upgrade-kind items install into permanent_mods (#99);
+                // Weapon-kind items get a Fit button that equips them into
+                // a gun mount (#98); every other kind keeps Sell-for-credits.
                 if (it.kind == ItemKind::Upgrade) {
                     if (ImGui::SmallButton("Install")) install_index = i;
+                } else if (it.kind == ItemKind::Weapon) {
+                    if (ImGui::SmallButton("Fit")) equip_index = i;
                 } else {
                     char b[48];
                     std::snprintf(b, sizeof(b), "Sell (+%lld)", (long long)value);
@@ -326,6 +363,15 @@ void cargohold_screen(BaseContext& ctx) {
             }
             if (install_index >= 0) {
                 if (install_upgrade(p, install_index)) sfx::ui_click();
+            } else if (equip_index >= 0) {
+                // Fit into the FIRST empty mount (gun_id == ""); if every
+                // mount is occupied, overwrite mount 0.
+                int mount = -1;
+                for (int mi = 0; mi < (int)p.gun_mounts.size(); ++mi) {
+                    if (p.gun_mounts[(size_t)mi].gun_id.empty()) { mount = mi; break; }
+                }
+                if (mount < 0) mount = 0;
+                if (equip_weapon(p, equip_index, mount)) sfx::ui_click();
             } else if (sell_index >= 0) {
                 if (sell_item(p, sell_index)) sfx::ui_click();
             }

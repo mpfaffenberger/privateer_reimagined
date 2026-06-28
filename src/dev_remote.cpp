@@ -54,7 +54,7 @@ struct ScreenshotWaiter {
 struct Command {
     enum class Kind { SetCamera, Screenshot, VoiceSay, CommBark, CargoGive, Spawn,
                       Kill, TractorPull, InventorySell, InventoryGive,
-                      InventoryInstall };
+                      InventoryInstall, InventoryEquip };
     Kind kind;
 
     // SetCamera — any optional field is encoded with `has_*`.
@@ -81,7 +81,8 @@ struct Command {
     int             int_arg = 0;      // units (CargoGive)
     float           dist    = 0.0f;   // spawn distance (Spawn)
     uint32_t        kill_id = 0;      // target ship id (Kill; 0 = nearest)
-    int             sell_index = 0;   // unified-hold item index (InventorySell/Install)
+    int             sell_index = 0;   // unified-hold item index (InventorySell/Install/Equip)
+    int             mount_index = -1;  // gun mount index (InventoryEquip; <0 = first empty)
     // InventoryGive — item id reuses str_arg, qty reuses int_arg; the
     // kind/rarity strings ride on these dedicated fields.
     std::string     give_kind;        // "weapon"|"upgrade"|"salvage"|"commodity"
@@ -133,6 +134,7 @@ std::vector<LootInfo>  g_loot;
 std::mutex             g_inventory_mu;
 std::vector<ItemInfo>  g_inventory;
 std::vector<ModInfo>   g_permanent_mods;   // installed permanent_mods (#92/#93)
+std::vector<MountInfo> g_mounts;           // fitted gun mounts (#98)
 int                    g_cargo_used = 0;
 int                    g_cargo_cap  = 0;
 
@@ -149,6 +151,7 @@ std::function<void()>                                       g_tractor_pull_hook;
 std::function<void(int)>                                    g_inventory_sell_hook;
 std::function<void(std::string, std::string, std::string, int)> g_inventory_give_hook;
 std::function<void(int)>                                    g_inventory_install_hook;
+std::function<void(int, int)>                               g_inventory_equip_hook;
 
 std::thread       g_thread;
 std::atomic<bool> g_running{false};
@@ -526,15 +529,17 @@ void handle_loot(int fd) {
 // Pure read of the published snapshot; the host rebuilds it each Flight
 // frame from g.player.items + cargo_units_used + cargo_capacity.
 void handle_inventory(int fd) {
-    std::vector<ItemInfo> items;
-    std::vector<ModInfo>  mods;
+    std::vector<ItemInfo>  items;
+    std::vector<ModInfo>   mods;
+    std::vector<MountInfo> mounts;
     int used, cap;
     {
         std::lock_guard lk(g_inventory_mu);
-        items = g_inventory;
-        mods  = g_permanent_mods;
-        used  = g_cargo_used;
-        cap   = g_cargo_cap;
+        items  = g_inventory;
+        mods   = g_permanent_mods;
+        mounts = g_mounts;
+        used   = g_cargo_used;
+        cap    = g_cargo_cap;
     }
     std::string out = "{\"items\":[";
     for (size_t i = 0; i < items.size(); ++i) {
@@ -552,6 +557,15 @@ void handle_inventory(int fd) {
         std::snprintf(buf, sizeof(buf),
             "%s{\"id\":\"%s\",\"effect\":\"%s\",\"value\":%g}",
             i ? "," : "", m.id.c_str(), m.effect.c_str(), m.value);
+        out += buf;
+    }
+    out += "],\"mounts\":[";
+    for (size_t i = 0; i < mounts.size(); ++i) {
+        const MountInfo& mt = mounts[i];
+        char buf[256];
+        std::snprintf(buf, sizeof(buf),
+            "%s{\"gun_id\":\"%s\",\"rarity\":%d}",
+            i ? "," : "", mt.gun_id.c_str(), mt.rarity);
         out += buf;
     }
     char tail[64];
@@ -655,6 +669,27 @@ void handle_inventory_install(int fd, const std::string& body) {
     Command c;
     c.kind       = Command::Kind::InventoryInstall;
     c.sell_index = (int)idx_f;
+    {
+        std::lock_guard lk(g_queue_mu);
+        g_queue.push_back(c);
+    }
+    send_json(fd, "{\"ok\":true}");
+}
+
+// POST /inventory/equip — equip the Weapon-kind item at {"item_index":N}
+// into gun mount {"mount_index":N}. item_index defaults to 0; mount_index
+// is OPTIONAL and defaults to -1, which the host resolves to the first
+// empty mount (else 0). Enqueued + run on the main thread by the
+// registered hook (inventory::equip_weapon), which bounds-checks for us.
+void handle_inventory_equip(int fd, const std::string& body) {
+    float item_f = 0.0f, mount_f = -1.0f;
+    extract_float(body, "item_index",  &item_f);   // optional; default 0
+    extract_float(body, "mount_index", &mount_f);  // optional; default -1
+
+    Command c;
+    c.kind        = Command::Kind::InventoryEquip;
+    c.sell_index  = (int)item_f;
+    c.mount_index = (int)mount_f;
     {
         std::lock_guard lk(g_queue_mu);
         g_queue.push_back(c);
@@ -818,6 +853,7 @@ void handle_connection(int fd) {
     else if (method == "POST" && path == "/inventory/sell") handle_inventory_sell(fd, body);
     else if (method == "POST" && path == "/inventory/give-item") handle_inventory_give(fd, body);
     else if (method == "POST" && path == "/inventory/install") handle_inventory_install(fd, body);
+    else if (method == "POST" && path == "/inventory/equip") handle_inventory_equip(fd, body);
     else                                                send_404(fd);
 
     ::close(fd);
@@ -1018,6 +1054,18 @@ void drain_commands(Camera& cam) {
             if (hook) hook(c.sell_index);
             break;
         }
+        case Command::Kind::InventoryEquip: {
+            // Run the host's registered equip hook on the main thread; it
+            // routes to inventory::equip_weapon (bounds-checked). A negative
+            // mount_index tells the host to pick the first empty mount.
+            std::function<void(int, int)> hook;
+            {
+                std::lock_guard lk(g_hooks_mu);
+                hook = g_inventory_equip_hook;
+            }
+            if (hook) hook(c.sell_index, c.mount_index);
+            break;
+        }
         }
     }
 
@@ -1078,10 +1126,12 @@ void publish_loot(const std::vector<LootInfo>& loot) {
 }
 
 void publish_inventory(const std::vector<ItemInfo>& items, int used, int cap,
-                       const std::vector<ModInfo>& mods) {
+                       const std::vector<ModInfo>& mods,
+                       const std::vector<MountInfo>& mounts) {
     std::lock_guard lk(g_inventory_mu);
     g_inventory      = items;
     g_permanent_mods = mods;
+    g_mounts         = mounts;
     g_cargo_used     = used;
     g_cargo_cap      = cap;
 }
@@ -1120,6 +1170,11 @@ void set_inventory_give_hook(
 void set_inventory_install_hook(std::function<void(int)> hook) {
     std::lock_guard lk(g_hooks_mu);
     g_inventory_install_hook = std::move(hook);
+}
+
+void set_inventory_equip_hook(std::function<void(int, int)> hook) {
+    std::lock_guard lk(g_hooks_mu);
+    g_inventory_equip_hook = std::move(hook);
 }
 
 } // namespace dev_remote

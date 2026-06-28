@@ -35,6 +35,7 @@
 
 #include "faction.h"
 #include "gun.h"
+#include "inventory.h"
 #include "perception.h"
 #include "ship_ai.h"
 
@@ -231,6 +232,14 @@ struct Ship {
     // every tick. Vector instead of fixed array because Privateer's
     // capships have up to 8 mounts plus turrets.
     std::vector<float>    gun_cooldowns;
+
+    // Per-mount weapon mods (Phase 4d Wave 2, #90). Parallel to mounts;
+    // carries the rarity-driven fire-rate / energy deltas (WeaponMods)
+    // from the player's MountSlot onto the live ship so firing::tick can
+    // apply them per shot. EMPTY / default-constructed entries are a
+    // no-op (1.0/1.0), so NPC spawns — which never populate this — are
+    // wholly unaffected. Only apply_player_loadout (main.cpp) fills it.
+    std::vector<inventory::WeaponMods> mount_mods;
 
     // Per-mount "armed" gate (np-3dp). Parallel to mounts/gun_cooldowns.
     // Default-on so the existing fire_guns flow keeps working; the G

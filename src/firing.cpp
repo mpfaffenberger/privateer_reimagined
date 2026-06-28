@@ -145,6 +145,15 @@ void firing::tick(ShipRegistry& ships,
             const GunStats& gs = g_gun_stats[(int)m.type];
             if (!gs.complete)                          continue;   // null-data gun
 
+            // Per-mount rarity mods (#90). Parallel to mounts; absent /
+            // default = no change (1.0/1.0), so NPCs (empty mount_mods)
+            // and Basic player guns behave exactly as before. fire_rate
+            // shortens the cooldown; energy scales the per-shot cost.
+            const inventory::WeaponMods wm =
+                (i < s.mount_mods.size()) ? s.mount_mods[i] : inventory::WeaponMods{};
+            const float fire_rate_mult = (wm.fire_rate_mult > 0.0f) ? wm.fire_rate_mult : 1.0f;
+            const float shot_energy_cost = gs.energy_cost_gj * wm.energy_mult;
+
             // gun_armed (np-3dp): G-key cycle gates which mounts fire.
             // NPCs leave gun_armed empty (treated as armed). Cooldown
             // applies to every mount, fixed and turret alike.
@@ -195,7 +204,7 @@ void firing::tick(ShipRegistry& ships,
             } else {
                 // ---- Fixed forward gun (legacy path, unchanged) -------
                 if (!s.controller.fire_guns)         continue;
-                if (s.energy_gj < gs.energy_cost_gj) continue;   // dry
+                if (s.energy_gj < shot_energy_cost)  continue;   // dry
                 aim_dir = fwd_world;
             }
 
@@ -211,9 +220,11 @@ void firing::tick(ShipRegistry& ships,
             p.alive            = true;
             projectiles.push_back(p);
 
-            // Fixed guns drain the shared pool; turrets fire free.
-            if (!m.is_turret) s.energy_gj -= gs.energy_cost_gj;
-            s.gun_cooldowns[i] = gs.refire_delay_s;
+            // Fixed guns drain the shared pool (scaled by the mount's
+            // rarity energy mult); turrets fire free.
+            if (!m.is_turret) s.energy_gj -= shot_energy_cost;
+            // Faster fire rate => shorter cooldown (guarded mult>0 above).
+            s.gun_cooldowns[i] = gs.refire_delay_s / fire_rate_mult;
 
             // One shot fired -> one sound. The gun type selects the
             // sample (per-gun originals, laser_fire fallback); player
