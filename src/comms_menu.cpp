@@ -11,6 +11,7 @@
 //     player is looking at without recomputing system geometry.
 #include "comms_menu.h"
 
+#include "audio.h"
 #include "faction.h"
 #include "json.h"
 #include "ship.h"
@@ -23,6 +24,7 @@
 #include <cstdio>
 #include <deque>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace comms_menu {
@@ -49,6 +51,27 @@ std::vector<std::string> g_hostile = {
     "Back off or I'll scatter you across the void!",
     "Please, I don't want any trouble!",
 };
+
+// ---- per-line voice manifest (data-driven) -------------------------------
+// Maps a comm line's EXACT text -> its mp3 path (loaded from
+// player_comms_voice.json). Empty/missing manifest => every line falls back
+// to the placeholder pilot voice. Populated in load(), read in select().
+std::unordered_map<std::string, std::string> g_line_voice;
+
+// Lazy path -> SampleId cache so each clip is decoded at most once (same
+// trick as scripted_encounters.cpp / loot.cpp). Caches 0 too, so a
+// missing/failed-to-load path doesn't get retried on every pick.
+std::unordered_map<std::string, SampleId> g_clip_cache;
+
+// Resolve a clip path to a SampleId via the lazy cache. First call hits
+// audio::load(); subsequent calls reuse the cached id (0 included).
+SampleId resolve_clip(const std::string& path) {
+    auto it = g_clip_cache.find(path);
+    if (it != g_clip_cache.end()) return it->second;
+    const SampleId sid = audio::load(path);
+    g_clip_cache.emplace(path, sid);
+    return sid;
+}
 
 // ---- interaction state ---------------------------------------------------
 enum class Step { DestSelect, LineSelect };
@@ -126,6 +149,23 @@ void load(const std::string& path) {
     read_pool("hostile",  g_hostile);
     std::printf("[comms_menu] loaded %s — %zu friendly, %zu hostile lines\n",
                 path.c_str(), g_friendly.size(), g_hostile.size());
+
+    // Also pull in the per-line voice manifest (line text -> mp3 path). This
+    // is a sibling file, NOT a key inside `path`, so it's loaded separately
+    // and is just as non-fatal: a missing/unparseable manifest leaves
+    // g_line_voice empty and every pick falls back to the placeholder voice.
+    constexpr const char* kVoicePath = "assets/data/player_comms_voice.json";
+    g_line_voice.clear();
+    json::Value voice_root = json::parse_file(kVoicePath);
+    if (voice_root.is_object()) {
+        for (const auto& [text, val] : voice_root.as_object())
+            if (val.is_string()) g_line_voice.emplace(text, val.as_string());
+        std::printf("[comms_menu] loaded %s — %zu line-voice mappings\n",
+                    kVoicePath, g_line_voice.size());
+    } else {
+        std::printf("[comms_menu] no %s — comm lines use placeholder voice\n",
+                    kVoicePath);
+    }
 }
 
 void open() {
@@ -152,11 +192,26 @@ void select(int n) {
         g_chosen_hostile ? g_hostile : g_friendly;
     if (idx >= pool.size()) return;
 
-    push_log(pool[idx]);
-    // Placeholder pilot voice — the player's bar-patron voice id stands in
-    // until a dedicated comms VO bank lands. 2D radio playback (to_player).
-    voice::say("PrivBarPc01", voice::Category::Greeting,
-               HMM_Vec3{ 0, 0, 0 }, true);
+    const std::string& line = pool[idx];
+    push_log(line);
+
+    // Speak the EXACT chosen line if the manifest has a clip for it: lazy-load
+    // (cached) and play it 2D, same player-directed gain as the rest of the
+    // comm chatter. No mapping or a failed load() falls back to the
+    // placeholder pilot voice so the menu always says *something*.
+    bool spoke = false;
+    if (auto it = g_line_voice.find(line); it != g_line_voice.end()) {
+        if (const SampleId sid = resolve_clip(it->second); sid != 0) {
+            audio::play(sid, 1.0f);
+            spoke = true;
+        }
+    }
+    if (!spoke) {
+        // Placeholder pilot voice — the player's bar-patron voice id stands in
+        // until a dedicated comms VO bank lands. 2D radio playback (to_player).
+        voice::say("PrivBarPc01", voice::Category::Greeting,
+                   HMM_Vec3{ 0, 0, 0 }, true);
+    }
     g_step = Step::DestSelect;
 }
 

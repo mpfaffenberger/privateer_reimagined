@@ -168,3 +168,4 @@ assets/speech/flight_embeddings.npz
 assets/speech/flight_by_voice/
 assets/speech/bar_by_speaker/
 assets/speech/scenarios/
+assets/speech/player_comms/
