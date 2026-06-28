@@ -59,7 +59,9 @@ def main():
         else:
             skipped += 1
         manifest[line] = str(out)
-    MANIFEST.write_text(json.dumps(manifest, indent=1))
+    # ensure_ascii=False: the engine's hand-rolled json.h reader does NOT decode
+    # \uXXXX escapes, so non-ASCII (em-dash, smart quotes) must be raw UTF-8.
+    MANIFEST.write_text(json.dumps(manifest, indent=1, ensure_ascii=False))
     print(f"[player-comms] {len(manifest)} lines ({made} new, {skipped} cached) -> {MANIFEST}")
 
 
