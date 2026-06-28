@@ -1089,12 +1089,33 @@ void draw_speaker_indicator(const Camera& cam, const ShipRegistry& ships) {
     if (comm::speaker_id() == 0) return;
     const Ship* s = ships.find_by_id(comm::speaker_id());
     if (!s || !s->alive) return;
+    auto* dl = ImGui::GetForegroundDrawList();
+    const ImU32 col = kAmber;
+
+    // Always-visible "who is talking" banner. The on-ship brackets below only
+    // show when the speaker is in front of us and on-screen; this fixed pill
+    // guarantees the player always sees an incoming-transmission cue (and the
+    // faction) even when the speaker is off to the side or behind.
+    {
+        const char* fn = faction::to_name(comm::speaker_faction());
+        char banner[80];
+        std::snprintf(banner, sizeof(banner), "(( o )) INCOMING  -  %s", fn);
+        for (char* p = banner; *p; ++p) *p = (char)std::toupper((unsigned char)*p);
+        const auto  sz = screen_size();
+        const ImVec2 ts = ImGui::CalcTextSize(banner);
+        const float  bx = sz.w * 0.5f - ts.x * 0.5f;
+        const float  by = sz.h * 0.215f;
+        dl->AddRectFilled(ImVec2(bx - 8, by - 4), ImVec2(bx + ts.x + 8, by + ts.y + 4),
+                          IM_COL32(0, 0, 0, 150), 3.0f);
+        dl->AddRect(ImVec2(bx - 8, by - 4), ImVec2(bx + ts.x + 8, by + ts.y + 4),
+                    col, 3.0f);
+        dl->AddText(ImVec2(bx, by), col, banner);
+    }
+
     float sx, sy;
     if (!project_world_point(cam, s->position, sx, sy)) return;
-    auto* dl = ImGui::GetForegroundDrawList();
-    // Amber matches the comm feed taunt colour (comm.cpp DRAW, IM_COL32
-    // 255,217,77,...) and the rest of the HUD accent palette.
-    const ImU32 col = kAmber;
+    const auto ss = screen_size();
+    if (sx < 0 || sx > ss.w || sy < 0 || sy > ss.h) return;  // off-screen: banner only
     // Four corner brackets framing a ~22 px box. Each is an "L" of two
     // short lines. arm = 5 px so the brackets read clearly even at the
     // default Retina scale.

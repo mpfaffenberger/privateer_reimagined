@@ -12,6 +12,7 @@
 #include "comms_menu.h"
 
 #include "audio.h"
+#include "comm.h"
 #include "faction.h"
 #include "json.h"
 #include "ship.h"
@@ -171,6 +172,8 @@ struct PendingReply {
                                   // greeting/hostile banks (rumor ask path)
     bool        got_lead = false; // rumor only: true => "lead" bucket, else
                                   // "no_news" (mirrors the k_rumor_chance roll)
+    uint32_t    speaker_ship_id = 0;        // replying ship's id (0 = base/none)
+    Faction     speaker_faction = Faction::Civilian; // for the HUD indicator
     float       play_at  = 0.f; // process-uptime seconds
 };
 PendingReply g_pending;
@@ -584,6 +587,10 @@ void select(int n) {
             g_pending.category     = category;
             g_pending.is_rumor     = is_rumor_ask;
             g_pending.got_lead     = rumor_got_lead;
+            // Mark the replier for the "who's talking" HUD indicator. Bases
+            // aren't ships, so they carry id 0 (no on-ship marker).
+            g_pending.speaker_ship_id = g_chosen_is_ship ? g_chosen_ship_id : 0;
+            g_pending.speaker_faction = g_chosen_faction;
             g_pending.play_at      = g_now + 3.5f;
         }
     }
@@ -699,6 +706,12 @@ void tick(float now_s) {
         if (const SampleId sid = resolve_clip(r.clip); sid != 0)
             audio::play(sid, 1.0f);
     }
+
+    // Light the "who's talking to me" HUD indicator on the replying ship so
+    // hailed/taunted/provoked ships show a comms marker, not just hostile
+    // engage-barks. (Bases carry id 0 and aren't in the ship registry.)
+    if (p.speaker_ship_id != 0)
+        comm::set_speaker(p.speaker_ship_id, p.speaker_faction);
 }
 
 uint32_t take_provoke_target() {
