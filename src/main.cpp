@@ -1059,6 +1059,10 @@ void build_system_scene(bool first_time) {
     } else if (g.system.studio_lighting) {
         apply_studio_sun(g.sun);
         std::printf("[main] system studio_lighting=true: dim sun enabled\n");
+    } else if (g.system.star_position_set) {
+        g.sun.position = g.system.star_position;
+        std::printf("[main] sun at explicit star.position (%.0f, %.0f, %.0f)\n",
+                    g.sun.position.X, g.sun.position.Y, g.sun.position.Z);
     } else if (!g.system.nav_points.empty()) {
         HMM_Vec3 sum{0.0f, 0.0f, 0.0f};
         for (const auto& nav : g.system.nav_points) {

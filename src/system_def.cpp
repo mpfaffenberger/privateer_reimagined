@@ -232,6 +232,10 @@ std::optional<StarSystem> load_system(const std::string& name_or_path) {
 
     if (auto* star = root.find("star")) {
         if (auto* p = star->find("preset")) s.star_preset = p->as_string();
+        if (auto* pos = star->find("position")) {
+            s.star_position     = vec3_or(pos, s.star_position);
+            s.star_position_set = true;
+        }
     }
 
     if (auto* p = root.find("studio_lighting")) s.studio_lighting = p->as_bool();

@@ -297,6 +297,13 @@ struct StarSystem {
     std::string skybox_seed  = "troy";
     std::string star_preset  = "yellow";
 
+    // Optional explicit star position. When `star_position_set` is true,
+    // main.cpp parks the sun here instead of auto-deriving it from the
+    // nav-point centroid -- use it when a system wants the star a specific
+    // distance from a feature (e.g. lighting an asteroid field).
+    HMM_Vec3    star_position     = { 0.0f, 0.0f, 0.0f };
+    bool        star_position_set = false;
+
     // Studio-lighting flag for debug/inspection scenes. When true, main.cpp
     // dims the sun and parks it off-axis (same effect as --capture-clean's
     // sun setup) so bloom/lens-flare don't whitewash the scene. Unlike
