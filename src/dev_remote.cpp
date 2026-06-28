@@ -53,7 +53,8 @@ struct ScreenshotWaiter {
 
 struct Command {
     enum class Kind { SetCamera, Screenshot, VoiceSay, CommBark, CargoGive, Spawn,
-                      Kill, TractorPull, InventorySell };
+                      Kill, TractorPull, InventorySell, InventoryGive,
+                      InventoryInstall };
     Kind kind;
 
     // SetCamera — any optional field is encoded with `has_*`.
@@ -80,7 +81,11 @@ struct Command {
     int             int_arg = 0;      // units (CargoGive)
     float           dist    = 0.0f;   // spawn distance (Spawn)
     uint32_t        kill_id = 0;      // target ship id (Kill; 0 = nearest)
-    int             sell_index = 0;   // unified-hold item index (InventorySell)
+    int             sell_index = 0;   // unified-hold item index (InventorySell/Install)
+    // InventoryGive — item id reuses str_arg, qty reuses int_arg; the
+    // kind/rarity strings ride on these dedicated fields.
+    std::string     give_kind;        // "weapon"|"upgrade"|"salvage"|"commodity"
+    std::string     give_rarity;      // "basic"|"rare"|"legendary"
 };
 
 std::mutex          g_queue_mu;
@@ -127,6 +132,7 @@ std::vector<LootInfo>  g_loot;
 // rides under the same lock so the three values stay consistent.
 std::mutex             g_inventory_mu;
 std::vector<ItemInfo>  g_inventory;
+std::vector<ModInfo>   g_permanent_mods;   // installed permanent_mods (#92/#93)
 int                    g_cargo_used = 0;
 int                    g_cargo_cap  = 0;
 
@@ -141,6 +147,8 @@ std::function<void(std::string, std::string, float)>        g_spawn_hook;
 std::function<void(uint32_t)>                               g_kill_hook;
 std::function<void()>                                       g_tractor_pull_hook;
 std::function<void(int)>                                    g_inventory_sell_hook;
+std::function<void(std::string, std::string, std::string, int)> g_inventory_give_hook;
+std::function<void(int)>                                    g_inventory_install_hook;
 
 std::thread       g_thread;
 std::atomic<bool> g_running{false};
@@ -519,10 +527,12 @@ void handle_loot(int fd) {
 // frame from g.player.items + cargo_units_used + cargo_capacity.
 void handle_inventory(int fd) {
     std::vector<ItemInfo> items;
+    std::vector<ModInfo>  mods;
     int used, cap;
     {
         std::lock_guard lk(g_inventory_mu);
         items = g_inventory;
+        mods  = g_permanent_mods;
         used  = g_cargo_used;
         cap   = g_cargo_cap;
     }
@@ -533,6 +543,15 @@ void handle_inventory(int fd) {
         std::snprintf(buf, sizeof(buf),
             "%s{\"id\":\"%s\",\"kind\":%d,\"rarity\":%d,\"qty\":%d}",
             i ? "," : "", it.id.c_str(), it.kind, it.rarity, it.qty);
+        out += buf;
+    }
+    out += "],\"permanent_mods\":[";
+    for (size_t i = 0; i < mods.size(); ++i) {
+        const ModInfo& m = mods[i];
+        char buf[256];
+        std::snprintf(buf, sizeof(buf),
+            "%s{\"id\":\"%s\",\"effect\":\"%s\",\"value\":%g}",
+            i ? "," : "", m.id.c_str(), m.effect.c_str(), m.value);
         out += buf;
     }
     char tail[64];
@@ -586,6 +605,55 @@ void handle_inventory_sell(int fd, const std::string& body) {
 
     Command c;
     c.kind       = Command::Kind::InventorySell;
+    c.sell_index = (int)idx_f;
+    {
+        std::lock_guard lk(g_queue_mu);
+        g_queue.push_back(c);
+    }
+    send_json(fd, "{\"ok\":true}");
+}
+
+// POST /inventory/give-item — add an item to the player's hold. Body:
+//   {"id":"shield_matrix","kind":"upgrade","rarity":"basic","qty":1}
+// kind/rarity default to "salvage"/"basic"; qty defaults to 1. The id is
+// required. Enqueued and run on the main thread by the registered hook,
+// which builds an InventoryItem + player::add_item.
+void handle_inventory_give(int fd, const std::string& body) {
+    std::string id;
+    if (!extract_string(body, "id", &id)) {
+        send_json(fd, "{\"ok\":false,\"error\":\"missing id\"}");
+        return;
+    }
+    std::string kind = "salvage", rarity = "basic";
+    extract_string(body, "kind",   &kind);     // optional
+    extract_string(body, "rarity", &rarity);   // optional
+    float qty_f = 1.0f;
+    extract_float(body, "qty", &qty_f);        // optional; default 1
+    const int qty = (qty_f >= 1.0f) ? (int)qty_f : 1;
+
+    Command c;
+    c.kind        = Command::Kind::InventoryGive;
+    c.str_arg     = id;
+    c.give_kind   = kind;
+    c.give_rarity = rarity;
+    c.int_arg     = qty;
+    {
+        std::lock_guard lk(g_queue_mu);
+        g_queue.push_back(c);
+    }
+    send_json(fd, "{\"ok\":true}");
+}
+
+// POST /inventory/install — install the Upgrade-kind item at {"index":N}
+// into permanent_mods. Index defaults to 0. Enqueued and run on the main
+// thread by the registered hook (inventory::install_upgrade), which
+// bounds-checks + refuses non-Upgrade items and duplicates.
+void handle_inventory_install(int fd, const std::string& body) {
+    float idx_f = 0.0f;
+    extract_float(body, "index", &idx_f);   // optional; default 0
+
+    Command c;
+    c.kind       = Command::Kind::InventoryInstall;
     c.sell_index = (int)idx_f;
     {
         std::lock_guard lk(g_queue_mu);
@@ -748,6 +816,8 @@ void handle_connection(int fd) {
     else if (method == "POST" && path == "/kill")       handle_kill(fd, body);
     else if (method == "POST" && path == "/tractor/pull") handle_tractor_pull(fd);
     else if (method == "POST" && path == "/inventory/sell") handle_inventory_sell(fd, body);
+    else if (method == "POST" && path == "/inventory/give-item") handle_inventory_give(fd, body);
+    else if (method == "POST" && path == "/inventory/install") handle_inventory_install(fd, body);
     else                                                send_404(fd);
 
     ::close(fd);
@@ -926,6 +996,28 @@ void drain_commands(Camera& cam) {
             if (hook) hook(c.sell_index);
             break;
         }
+        case Command::Kind::InventoryGive: {
+            // Run the host's registered give-item hook on the main thread;
+            // it builds an InventoryItem + player::add_item.
+            std::function<void(std::string, std::string, std::string, int)> hook;
+            {
+                std::lock_guard lk(g_hooks_mu);
+                hook = g_inventory_give_hook;
+            }
+            if (hook) hook(c.str_arg, c.give_kind, c.give_rarity, c.int_arg);
+            break;
+        }
+        case Command::Kind::InventoryInstall: {
+            // Run the host's registered install hook on the main thread; it
+            // routes to inventory::install_upgrade (bounds-checked).
+            std::function<void(int)> hook;
+            {
+                std::lock_guard lk(g_hooks_mu);
+                hook = g_inventory_install_hook;
+            }
+            if (hook) hook(c.sell_index);
+            break;
+        }
         }
     }
 
@@ -985,11 +1077,13 @@ void publish_loot(const std::vector<LootInfo>& loot) {
     g_loot = loot;
 }
 
-void publish_inventory(const std::vector<ItemInfo>& items, int used, int cap) {
+void publish_inventory(const std::vector<ItemInfo>& items, int used, int cap,
+                       const std::vector<ModInfo>& mods) {
     std::lock_guard lk(g_inventory_mu);
-    g_inventory  = items;
-    g_cargo_used = used;
-    g_cargo_cap  = cap;
+    g_inventory      = items;
+    g_permanent_mods = mods;
+    g_cargo_used     = used;
+    g_cargo_cap      = cap;
 }
 
 void set_cargo_give_hook(std::function<void(std::string, int)> hook) {
@@ -1015,6 +1109,17 @@ void set_tractor_pull_hook(std::function<void()> hook) {
 void set_inventory_sell_hook(std::function<void(int)> hook) {
     std::lock_guard lk(g_hooks_mu);
     g_inventory_sell_hook = std::move(hook);
+}
+
+void set_inventory_give_hook(
+    std::function<void(std::string, std::string, std::string, int)> hook) {
+    std::lock_guard lk(g_hooks_mu);
+    g_inventory_give_hook = std::move(hook);
+}
+
+void set_inventory_install_hook(std::function<void(int)> hook) {
+    std::lock_guard lk(g_hooks_mu);
+    g_inventory_install_hook = std::move(hook);
 }
 
 } // namespace dev_remote

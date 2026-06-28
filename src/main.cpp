@@ -751,6 +751,18 @@ static void apply_player_loadout(Ship& pl, const PlayerState& p, bool heal = tru
     // the class default. Set BEFORE heal so heal_to_full fills to the
     // upgraded max (and doesn't leave phantom shield on a sold shield gen).
     pl.shield_mult = (float)p.shield_level;
+    // Permanent upgrades (#92/#93): per-facing shield maxima derive linearly
+    // from shield_mult (ship.cpp shield_max_cm), so a shield_pct mod scales
+    // ALL four facings at once by folding (1+value) into shield_mult here,
+    // right after the dealer level sets it. Reapplied every launch off the
+    // player's installed mods; buy_hull leaves the mods alone (#94).
+    for (const PermanentMod& m : p.permanent_mods) {
+        if (m.effect == "shield_pct") {
+            pl.shield_mult *= (1.0f + m.value);
+            std::printf("[loadout] permanent_mod %s shield +%.0f%%\n",
+                        m.id.c_str(), m.value * 100.0f);
+        }
+    }
     pl.fitted_armor = p.armor_name.empty() ? nullptr : armor::find(p.armor_name);
     if (!p.armor_name.empty() && !pl.fitted_armor) {
         std::printf("[outfit] WARN: armor '%s' not found; using hull default\n",
@@ -1238,6 +1250,39 @@ void build_system_scene(bool first_time) {
             [](int index) {
                 const bool ok = inventory::sell_item(g.player, index);
                 std::printf("[dev_remote] inventory/sell: index=%d ok=%s\n",
+                            index, ok ? "true" : "false");
+            });
+
+        // POST /inventory/give-item — drop an arbitrary item into the hold
+        // for testing. Maps the loose kind/rarity strings to the inventory
+        // enums, then routes through player::add_item with the same
+        // capacity resolution as cargo/give above.
+        dev_remote::set_inventory_give_hook(
+            [](std::string id, std::string kind, std::string rarity, int qty) {
+                inventory::InventoryItem it;
+                it.id  = id;
+                it.qty = qty > 0 ? qty : 1;
+                it.kind = (kind == "weapon")    ? inventory::ItemKind::Weapon
+                        : (kind == "upgrade")   ? inventory::ItemKind::Upgrade
+                        : (kind == "commodity") ? inventory::ItemKind::Commodity
+                                                : inventory::ItemKind::Salvage;
+                it.rarity = (rarity == "rare")      ? inventory::Rarity::Rare
+                          : (rarity == "legendary") ? inventory::Rarity::Legendary
+                                                    : inventory::Rarity::Basic;
+                const ShipClass* klass = ship_class::find(g.player.ship_class_name);
+                const int capacity = player::cargo_capacity(g.player, klass);
+                const bool ok = player::add_item(g.player, it, capacity);
+                std::printf("[dev_remote] inventory/give-item: '%s' x%d kind=%s ok=%s\n",
+                            id.c_str(), it.qty, kind.c_str(), ok ? "true" : "false");
+            });
+
+        // POST /inventory/install — install the Upgrade-kind item at the
+        // given index, routing through the SAME inventory::install_upgrade
+        // the Cargo Hold screen uses (one enforcement path).
+        dev_remote::set_inventory_install_hook(
+            [](int index) {
+                const bool ok = inventory::install_upgrade(g.player, index);
+                std::printf("[dev_remote] inventory/install: index=%d ok=%s\n",
                             index, ok ? "true" : "false");
             });
     }
@@ -3293,10 +3338,19 @@ void frame_cb() {
             ii.qty    = it.qty;
             item_infos.push_back(std::move(ii));
         }
+        std::vector<dev_remote::ModInfo> mod_infos;
+        for (const PermanentMod& m : g.player.permanent_mods) {
+            dev_remote::ModInfo mi;
+            mi.id     = m.id;
+            mi.effect = m.effect;
+            mi.value  = m.value;
+            mod_infos.push_back(std::move(mi));
+        }
         const ShipClass* pk = ship_class::find(g.player.ship_class_name);
         dev_remote::publish_inventory(item_infos,
                                       player::cargo_units_used(g.player),
-                                      player::cargo_capacity(g.player, pk));
+                                      player::cargo_capacity(g.player, pk),
+                                      mod_infos);
     }
 
     // --- physics ------------------------------------------------------------

@@ -103,6 +103,20 @@ struct ActiveMission {
     std::vector<uint8_t>      nav_done;
 };
 
+// One permanently-installed upgrade (Phase 4e, #92). Distinct from a
+// fitted gun or a buy-once equipment flag: an Upgrade-kind InventoryItem
+// is consumed (erased) by install_upgrade and reborn here as a permanent
+// effect that apply_player_loadout re-applies to the live Ship every
+// session. Flat strings + a float so it serializes clean (savegame.cpp)
+// and never stacks (install_upgrade refuses a duplicate `id`). `effect`
+// is a stable string key (e.g. "shield_pct") interpreted at apply time;
+// `value` is the magnitude (0.05 = +5%).
+struct PermanentMod {
+    std::string id;
+    std::string effect;
+    float       value = 0.0f;
+};
+
 struct PlayerState {
     // ---- wealth ---------------------------------------------------------
     // int64 on purpose: a Galaxy hold (225 units) of high-value goods
@@ -161,6 +175,14 @@ struct PlayerState {
     // through mounting; salvage/commodity-kind items MAY stack when their
     // id+rarity+kind matches an existing entry (add_item merges those).
     std::vector<inventory::InventoryItem> items;
+
+    // ---- permanent upgrades (Phase 4e, #92) ------------------------------
+    // Installed Upgrade-kind items, reborn as permanent effects (see
+    // PermanentMod above). apply_player_loadout (main.cpp) walks this list
+    // each session and boosts the live Ship accordingly; buy_hull leaves it
+    // untouched (upgrades live on the player, not the hull). No stacking:
+    // install_upgrade refuses a second mod with an id already present.
+    std::vector<PermanentMod> permanent_mods;
 
     // ---- ordnance: finite missile ammo (np-zte.2) -------------------------
     // Unlike guns (energy-limited but never "out"), missiles are consumable.

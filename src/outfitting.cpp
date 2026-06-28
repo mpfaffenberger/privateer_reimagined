@@ -293,6 +293,8 @@ bool buy_hull(PlayerState& p, const std::string& target) {
     p.armor_name      = "";
     p.cargo_expansion = false;
     p.gun_mounts.clear();
+    // NOTE: permanent_mods are deliberately NOT cleared — installed upgrades
+    // live on the player and persist across hull swaps (#92/#94).
     if (const ShipClass* k = ship_class::find(target))
         for (const GunMount& m : k->default_guns) p.gun_mounts.push_back(gun::to_name(m.type));
 

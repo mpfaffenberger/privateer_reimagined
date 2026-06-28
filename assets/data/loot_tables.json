@@ -23,6 +23,13 @@
         { "item": "ancient_gun", "kind": "weapon", "weight": 20, "rarity_chance": { "basic": 0.4, "rare": 0.45, "legendary": 0.15 } },
         { "item": "tachyon_cannon", "kind": "weapon", "weight": 15, "rarity_chance": { "basic": 0.5, "rare": 0.4, "legendary": 0.1 } }
       ]
+    },
+    "hunter": {
+      "drops": [
+        { "item": "scrap_metal", "kind": "salvage", "weight": 50 },
+        { "item": "laser_cannon", "kind": "weapon", "weight": 12, "rarity_chance": { "basic": 0.7, "rare": 0.27, "legendary": 0.03 } },
+        { "item": "shield_matrix", "kind": "upgrade", "weight": 2 }
+      ]
     }
   },
   "ace_bonus": { "legendary_chance": 0.03 }

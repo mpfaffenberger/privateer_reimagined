@@ -244,6 +244,20 @@ static std::string serialize_player(const PlayerState& p) {
           }
         w.end_array();
 
+        // permanent upgrades (Phase 4e, #92). Installed Upgrade items reborn
+        // as permanent effects. Stable string keys for id/effect; value is a
+        // float written with the same std::to_string form as ship_health
+        // below. Absent on older saves -> empty list (back-compat).
+        w.key("permanent_mods"); w.member_array_begin();
+          for (const PermanentMod& pm : p.permanent_mods) {
+              w.begin_object();
+                w.key("id");     w.value_string(pm.id);
+                w.key("effect"); w.value_string(pm.effect);
+                w.key("value");  w.value_raw(std::to_string(pm.value));
+              w.end_object();
+          }
+        w.end_array();
+
         // accepted missions (np-zte.1, format v2). Stable string keys; reward
         // as a STRING for the same int64 bit-exactness reason as credits.
         // Only the fields meaningful to each `type` are populated, but we
@@ -524,6 +538,20 @@ bool load(PlayerState& p, const std::string& path) {
                 // Skip defensive: empty id or non-positive qty means a
                 // hand-edited or corrupt entry -- drop instead of push.
                 if (!im.id.empty() && im.qty > 0) out.items.push_back(std::move(im));
+            }
+        }
+
+        // permanent upgrades (Phase 4e, #92). Absent on older saves ->
+        // empty list (back-compat with the pre-upgrade era). id/effect as
+        // strings, value as a float; an entry with no id is skipped.
+        if (const json::Value* pm = pl.find("permanent_mods"); pm && pm->is_array()) {
+            for (const json::Value& e : pm->as_array()) {
+                if (!e.is_object()) continue;
+                PermanentMod m;
+                m.id     = e.contains("id")     ? e["id"].string_or("")     : "";
+                m.effect = e.contains("effect") ? e["effect"].string_or("") : "";
+                m.value  = e.contains("value")  ? (float)e["value"].number_or(0.0) : 0.0f;
+                if (!m.id.empty()) out.permanent_mods.push_back(std::move(m));
             }
         }
 

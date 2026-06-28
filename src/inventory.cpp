@@ -63,6 +63,28 @@ int64_t base_value_of(const std::string& id) {
     return (it == g_base_value.end()) ? k_default_base_value : it->second;
 }
 
+// ---- upgrade -> PermanentMod registry (#99) ---------------------------------
+// Maps an Upgrade-kind item id to the permanent effect it installs into.
+// Hand-authored: shipping upgrade ids get a tuned effect here; anything
+// not listed falls back to a conservative shield_pct +5% (install_upgrade's
+// default) so a new/loot-only upgrade still does SOMETHING without a code
+// change. Keep effect strings in sync with apply_player_loadout (main.cpp).
+const std::unordered_map<std::string, PermanentMod>& upgrade_mods() {
+    static const std::unordered_map<std::string, PermanentMod> m = {
+        { "shield_matrix", { "shield_matrix", "shield_pct", 0.05f } },
+    };
+    return m;
+}
+
+// Resolve the PermanentMod an upgrade item installs. Known id -> its tuned
+// entry; unknown id -> default shield_pct +0.05 carrying the item's own id.
+PermanentMod resolve_mod(const std::string& id) {
+    const auto& m = upgrade_mods();
+    const auto it = m.find(id);
+    if (it != m.end()) return it->second;
+    return PermanentMod{ id, "shield_pct", 0.05f };
+}
+
 } // namespace
 
 int load_prices(const std::string& path) {
@@ -118,6 +140,34 @@ bool sell_item(PlayerState& p, int index) {
     std::printf("[inventory] SELL '%s' x%d @ %lld | credits %lld\n",
                 it.id.c_str(), it.qty, (long long)value, (long long)p.credits);
     p.items.erase(p.items.begin() + index);
+    return true;
+}
+
+bool install_upgrade(PlayerState& p, int index) {
+    if (index < 0 || index >= (int)p.items.size()) {
+        std::printf("[inventory] INSTALL refused: index %d out of range (have %zu)\n",
+                    index, p.items.size());
+        return false;
+    }
+    const InventoryItem& it = p.items[(size_t)index];
+    if (it.kind != ItemKind::Upgrade) {
+        std::printf("[inventory] INSTALL refused: '%s' is not an Upgrade\n",
+                    it.id.c_str());
+        return false;
+    }
+    const PermanentMod mod = resolve_mod(it.id);
+    // No stacking: a second mod with an id already present is refused so the
+    // same buff can't be doubled up (mirrors PermanentMod's contract).
+    for (const PermanentMod& existing : p.permanent_mods) {
+        if (existing.id == mod.id) {
+            std::printf("[inventory] INSTALL refused: '%s' already installed\n",
+                        mod.id.c_str());
+            return false;
+        }
+    }
+    p.permanent_mods.push_back(mod);
+    p.items.erase(p.items.begin() + index);
+    std::printf("[inventory] INSTALL '%s'\n", mod.id.c_str());
     return true;
 }
 
@@ -241,10 +291,11 @@ void cargohold_screen(BaseContext& ctx) {
             ImGui::PopStyleColor();
             for (int c = 0; c < 5; ++c) ImGui::TableNextColumn();
         } else {
-            // Iterate by index. A successful sell erases p.items[i], so capture
-            // the index to act on and break out of the loop that frame; ImGui
-            // redraws next frame against the shrunken vector.
-            int sell_index = -1;
+            // Iterate by index. A successful sell/install erases p.items[i], so
+            // capture the index to act on and apply it AFTER the loop that frame;
+            // ImGui redraws next frame against the shrunken vector.
+            int sell_index    = -1;
+            int install_index = -1;
             for (int i = 0; i < (int)p.items.size(); ++i) {
                 const InventoryItem& it = p.items[(size_t)i];
                 const int64_t value = item_value(it);
@@ -262,12 +313,20 @@ void cargohold_screen(BaseContext& ctx) {
                 ImGui::Text("%lld", (long long)value);
                 ImGui::PopStyleColor();
                 ImGui::TableNextColumn();
-                char b[48];
-                std::snprintf(b, sizeof(b), "Sell (+%lld)", (long long)value);
-                if (ImGui::SmallButton(b)) sell_index = i;
+                // Upgrade-kind items install into permanent_mods (#99); every
+                // other kind keeps the Sell-for-credits path.
+                if (it.kind == ItemKind::Upgrade) {
+                    if (ImGui::SmallButton("Install")) install_index = i;
+                } else {
+                    char b[48];
+                    std::snprintf(b, sizeof(b), "Sell (+%lld)", (long long)value);
+                    if (ImGui::SmallButton(b)) sell_index = i;
+                }
                 ImGui::PopID();
             }
-            if (sell_index >= 0) {
+            if (install_index >= 0) {
+                if (install_upgrade(p, install_index)) sfx::ui_click();
+            } else if (sell_index >= 0) {
                 if (sell_item(p, sell_index)) sfx::ui_click();
             }
         }

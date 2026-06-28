@@ -58,6 +58,10 @@
 //   POST /tractor/pull   → pull in-range loot into the hold.
 //   POST /inventory/sell → sell the unified-hold item at { index:N }.
 //                          Returns { ok:true }.
+//   POST /inventory/give-item → add an item to the hold. Body
+//                          { id, kind, rarity, qty }. Returns { ok:true }.
+//   POST /inventory/install → install the Upgrade-kind item at { index:N }
+//                          into permanent_mods. Returns { ok:true }.
 //
 // Everything else 404s.
 // -----------------------------------------------------------------------------
@@ -177,9 +181,21 @@ struct ItemInfo {
     int         qty;
 };
 
+// A flat view of one installed permanent_mod (#92/#93). Mirrors
+// PermanentMod (player.h) without dev_remote depending on the real type;
+// the host builds these from g.player.permanent_mods each Flight frame.
+struct ModInfo {
+    std::string id;
+    std::string effect;
+    float       value;
+};
+
 // Publish the latest inventory snapshot for GET /inventory. Called once
-// per Flight frame from the main thread; stored mutex-guarded.
-void publish_inventory(const std::vector<ItemInfo>& items, int used, int cap);
+// per Flight frame from the main thread; stored mutex-guarded. `mods` is
+// the player's installed permanent_mods, surfaced under the same lock so
+// the snapshot stays internally consistent.
+void publish_inventory(const std::vector<ItemInfo>& items, int used, int cap,
+                       const std::vector<ModInfo>& mods);
 
 // POST /kill enqueues a command; drain_commands invokes this hook on the
 // main thread with the requested ship id (0 = "nearest alive non-player").
@@ -194,5 +210,18 @@ void set_tractor_pull_hook(std::function<void()> hook);
 // on the main thread with the requested item index. The host wires it to
 // inventory::sell_item(g.player, index).
 void set_inventory_sell_hook(std::function<void(int index)> hook);
+
+// POST /inventory/give-item enqueues a command; drain_commands invokes this
+// hook on the main thread with (id, kind, rarity, qty). The host builds an
+// InventoryItem (mapping the kind/rarity strings to the enums) and routes
+// it through player::add_item.
+void set_inventory_give_hook(
+    std::function<void(std::string id, std::string kind,
+                       std::string rarity, int qty)> hook);
+
+// POST /inventory/install enqueues a command; drain_commands invokes this
+// hook on the main thread with the requested item index. The host wires it
+// to inventory::install_upgrade(g.player, index).
+void set_inventory_install_hook(std::function<void(int index)> hook);
 
 } // namespace dev_remote

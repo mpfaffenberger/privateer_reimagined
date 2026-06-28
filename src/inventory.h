@@ -120,6 +120,15 @@ int64_t item_value(const InventoryItem& it);
 // erase the stack. Returns false (no mutation) on an out-of-range index.
 bool sell_item(PlayerState& p, int index);
 
+// Install the Upgrade-kind item at p.items[index] (#99): resolve its
+// PermanentMod (known upgrade ids carry a tuned effect; unknown ids
+// default to shield_pct +0.05), refuse if an id-equal mod is ALREADY in
+// p.permanent_mods (no stacking — see PermanentMod in player.h), else
+// append the mod and erase the consumed item. Returns false (no mutation)
+// on a bad index, a non-Upgrade item, or a duplicate. apply_player_loadout
+// (main.cpp) re-applies installed mods to the live Ship each launch.
+bool install_upgrade(PlayerState& p, int index);
+
 // CargoHold base-screen body (registered via base_screens::register_screen).
 // Draws cargo usage, the read-only commodity manifest, and the sellable
 // items list. Defined under !INVENTORY_HEADLESS (drags in ImGui).
