@@ -53,4 +53,12 @@ void close();
 // reputation — the stance lookup that picks friendly vs hostile lines.
 void draw(const StarSystem& sys, const Ship* target, const PlayerReputation& rep);
 
+// Per-frame pump (call once each Flight frame with the process-uptime clock
+// in seconds). Two jobs: (1) stash `now_s` so select() — which has no clock
+// of its own — can schedule a hailed party's delayed reply; (2) when a
+// pending reply comes due, pick a random response line from the recipient
+// faction's bank, push it to the comm log, and voice it. Cheap no-op when
+// nothing is pending.
+void tick(float now_s);
+
 } // namespace comms_menu

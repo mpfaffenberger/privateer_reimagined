@@ -53,7 +53,7 @@ struct ScreenshotWaiter {
 
 struct Command {
     enum class Kind { SetCamera, Screenshot, VoiceSay, CommBark, CargoGive, Spawn,
-                      Kill, TractorPull, InventorySell, InventoryGive,
+                      Kill, SetTarget, TractorPull, InventorySell, InventoryGive,
                       InventoryInstall, InventoryEquip, SetPanel, CommsSelect };
     Kind kind;
 
@@ -81,6 +81,7 @@ struct Command {
     int             int_arg = 0;      // units (CargoGive)
     float           dist    = 0.0f;   // spawn distance (Spawn)
     uint32_t        kill_id = 0;      // target ship id (Kill; 0 = nearest)
+    uint32_t        target_id = 0;    // target ship id (SetTarget; 0 = nearest)
     int             sell_index = 0;   // unified-hold item index (InventorySell/Install/Equip)
     int             mount_index = -1;  // gun mount index (InventoryEquip; <0 = first empty)
     // InventoryGive — item id reuses str_arg, qty reuses int_arg; the
@@ -147,6 +148,7 @@ std::mutex                                                  g_hooks_mu;
 std::function<void(std::string, int)>                       g_cargo_give_hook;
 std::function<void(std::string, std::string, float)>        g_spawn_hook;
 std::function<void(uint32_t)>                               g_kill_hook;
+std::function<void(uint32_t)>                               g_set_target_hook;
 std::function<void()>                                       g_tractor_pull_hook;
 std::function<void(int)>                                    g_inventory_sell_hook;
 std::function<void(std::string, std::string, std::string, int)> g_inventory_give_hook;
@@ -644,6 +646,28 @@ void handle_kill(int fd, const std::string& body) {
     send_json(fd, buf);
 }
 
+// POST /target — set the player's current target. Body {"id":N} is optional;
+// a missing/zero id means "nearest alive non-player ship to the player". Like
+// /kill, validation is trivial (any uint), so we enqueue and reply
+// optimistically with the requested id; the registered target hook resolves
+// the actual target (and writes g.player_target_id) on the main thread.
+void handle_target(int fd, const std::string& body) {
+    float id_f = 0.0f;
+    extract_float(body, "id", &id_f);   // optional; 0 → nearest
+    const uint32_t id = (uint32_t)(id_f < 0.0f ? 0.0f : id_f);
+
+    Command c;
+    c.kind      = Command::Kind::SetTarget;
+    c.target_id = id;
+    {
+        std::lock_guard lk(g_queue_mu);
+        g_queue.push_back(c);
+    }
+    char buf[64];
+    std::snprintf(buf, sizeof(buf), "{\"ok\":true,\"target\":%u}", id);
+    send_json(fd, buf);
+}
+
 // POST /tractor/pull — pull every in-range loot drop into the player's
 // hold. No body. Enqueued and run on the main thread by the registered
 // tractor hook (loot::try_pull).
@@ -898,6 +922,7 @@ void handle_connection(int fd) {
     else if (method == "GET"  && path == "/loot")       handle_loot(fd);
     else if (method == "GET"  && path == "/inventory")  handle_inventory(fd);
     else if (method == "POST" && path == "/kill")       handle_kill(fd, body);
+    else if (method == "POST" && path == "/target")     handle_target(fd, body);
     else if (method == "POST" && path == "/tractor/pull") handle_tractor_pull(fd);
     else if (method == "POST" && path == "/inventory/sell") handle_inventory_sell(fd, body);
     else if (method == "POST" && path == "/inventory/give-item") handle_inventory_give(fd, body);
@@ -1057,6 +1082,18 @@ void drain_commands(Camera& cam) {
                 hook = g_kill_hook;
             }
             if (hook) hook(c.kill_id);
+            break;
+        }
+        case Command::Kind::SetTarget: {
+            // Run the host's registered set-target hook on the main thread;
+            // it resolves the target (explicit id or nearest) and writes
+            // g.player_target_id (the T-key targeting field).
+            std::function<void(uint32_t)> hook;
+            {
+                std::lock_guard lk(g_hooks_mu);
+                hook = g_set_target_hook;
+            }
+            if (hook) hook(c.target_id);
             break;
         }
         case Command::Kind::TractorPull: {
@@ -1221,6 +1258,11 @@ void set_spawn_hook(std::function<void(std::string, std::string, float)> hook) {
 void set_kill_hook(std::function<void(uint32_t)> hook) {
     std::lock_guard lk(g_hooks_mu);
     g_kill_hook = std::move(hook);
+}
+
+void set_target_hook(std::function<void(uint32_t)> hook) {
+    std::lock_guard lk(g_hooks_mu);
+    g_set_target_hook = std::move(hook);
 }
 
 void set_tractor_pull_hook(std::function<void()> hook) {

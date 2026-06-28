@@ -1240,6 +1240,34 @@ void build_system_scene(bool first_time) {
                 std::printf("[dev_remote] kill: id=%u\n", target->id);
             });
 
+        // POST /target — set the player's current target (the same field the
+        // T-key cycle drives), so the Comms menu can hail it. id==0/missing
+        // resolves to the NEAREST alive non-player ship, mirroring the kill
+        // hook's target-resolution exactly.
+        dev_remote::set_target_hook(
+            [](uint32_t id) {
+                const Ship* pl = g.ships.player();
+                if (!pl) return;
+                Ship* target = nullptr;
+                if (id != 0) {
+                    for (Ship& s : g.ships)
+                        if (s.id == id && s.alive && !s.is_player) { target = &s; break; }
+                } else {
+                    float best = 0.0f;
+                    for (Ship& s : g.ships) {
+                        if (!s.alive || s.is_player || s.id == 0) continue;
+                        const float d = HMM_LenV3(HMM_SubV3(s.position, pl->position));
+                        if (!target || d < best) { best = d; target = &s; }
+                    }
+                }
+                if (!target) {
+                    std::fprintf(stderr, "[dev_remote] target: no target (id=%u)\n", id);
+                    return;
+                }
+                g.player_target_id = target->id;
+                std::printf("[dev_remote] target: id=%u\n", target->id);
+            });
+
         // POST /tractor/pull — vacuum every in-range loot drop into the
         // hold, reusing the SAME loot::try_pull the in-flight tractor uses.
         // Capacity is resolved exactly like the trading screen / cargo/give
@@ -3758,6 +3786,10 @@ void frame_cb() {
     // came from JSON or stays at None for legacy motion.
     {
         const float t_now = (float)stm_sec(stm_now());   // process uptime
+        // Pump the Comms menu so a hailed party's delayed reply fires once
+        // due (np-comms). Also keeps comms_menu's shared clock fresh so
+        // select() can schedule replies. Cheap no-op when nothing pending.
+        comms_menu::tick(t_now);
         for (Ship& s : g.ships) ship_ai::tick(s, g.ships, t_now, g.system, g.sun.position);
         // Contraband search director (Phase 1). Runs AFTER perception +
         // AI so any aggro override we set is read on the next frame.

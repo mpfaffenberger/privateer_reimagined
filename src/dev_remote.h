@@ -215,6 +215,12 @@ void publish_inventory(const std::vector<ItemInfo>& items, int used, int cap,
 // The host wires it to its kill-processing path.
 void set_kill_hook(std::function<void(uint32_t id)> hook);
 
+// POST /target enqueues a command; drain_commands invokes this hook on the
+// main thread with the requested ship id (0 = "nearest alive non-player").
+// The host wires it to set g.player_target_id (the same field the T-key
+// targeting cycle drives), so the Comms menu can hail the chosen ship.
+void set_target_hook(std::function<void(uint32_t id)> hook);
+
 // POST /tractor/pull enqueues a command; drain_commands invokes this hook
 // on the main thread. The host wires it to loot::try_pull.
 void set_tractor_pull_hook(std::function<void()> hook);
