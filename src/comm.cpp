@@ -251,10 +251,13 @@ void npc_engage_bark(Faction speaker, bool target_is_player, uint32_t speaker_id
     std::string line = pick_line(speaker, Event::KilledByPlayerCrime);
     if (line.empty()) return;
     push(line, /*taunt=*/true);
-    // Voice the bark (radio path, 2D). Rate-limiting is the caller's
-    // job (ShipAIState::last_bark_at) so this stays unconditional.
-    voice::say(speaker, event_to_category(Event::KilledByPlayerCrime),
-               HMM_Vec3{0,0,0}, /*to_player=*/true);
+    // Voice the bark in this NPC's OWN stable voice (radio path, 2D).
+    // say_ship resolves speaker_id -> a consistent voice so each ship
+    // sounds like itself; rate-limiting is the caller's job
+    // (ShipAIState::last_bark_at) so this stays unconditional.
+    voice::say_ship(speaker, speaker_id,
+                    event_to_category(Event::KilledByPlayerCrime),
+                    HMM_Vec3{0,0,0}, /*to_player=*/true);
     // Mark the speaker for the on-ship HUD indicator. 0 means "no ship
     // context" (dev panel); skip the marker in that case.
     if (speaker_id != 0) set_speaker(speaker_id, speaker);

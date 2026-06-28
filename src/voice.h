@@ -84,7 +84,27 @@ void say(Faction speaker, Category cat, HMM_Vec3 world_pos, bool to_player);
 // which authors a specific voice_id for a given line). Same 2D / 3D
 // rule via `to_player`. Used today by the debug panel's "force bark"
 // button.
+//
+// Resolution order: alias (e.g. confed_f) -> by_voice_category[voice_id]
+// [cat] (a category-appropriate line in THIS voice) -> by_voice[voice_id]
+// (any line in this voice) -> silent no-op.
 void say(const std::string& voice_id, Category cat,
          HMM_Vec3 world_pos, bool to_player);
+
+// Resolve the STABLE voice_id a given entity speaks with. Maps `f` to its
+// bank faction name (Hunter -> "bounty_hunter", Civilian -> "" i.e. no
+// voice, else faction::to_name) and, if that faction has a non-empty
+// `faction_voices` list, returns the `entity_id % size`-th id — so a
+// given ship/base ALWAYS speaks with the same voice across its lifetime.
+// Returns "" when the faction has no voices (caller falls back to the
+// faction-level say()).
+std::string voice_for(Faction f, uint32_t entity_id);
+
+// Per-entity voiced line: speak `cat` in `entity_id`'s OWN stable voice
+// (via voice_for). Falls back to the faction-level say() when the entity
+// has no resolved voice. This is the entry point gameplay should use so
+// each NPC barks consistently in its own voice.
+void say_ship(Faction f, uint32_t entity_id, Category cat,
+              HMM_Vec3 world_pos, bool to_player);
 
 } // namespace voice

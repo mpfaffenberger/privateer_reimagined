@@ -103,17 +103,20 @@ SampleId resolve_clip(const std::string& path) {
 }
 
 // ---- hailed-party response bank (data-driven) ----------------------------
-// Loaded from comm_responses.json: faction -> category -> list of canned
-// reply lines, each with its own pre-generated voice clip. When the player
-// hails someone, the recipient barks back one of these a beat later (see the
-// pending-reply machinery + tick()). Missing file is non-fatal: the bank
-// stays empty and nobody talks back.
+// Loaded from comm_responses.json, now shaped as TWO top-level objects:
+//   by_faction: faction-key -> category -> [{text,clip}]  (faction fallback)
+//   by_voice:   voice_id    -> category -> [{text,clip}]  (recipient's OWN voice)
+// When the player hails someone, the recipient barks back one of these a beat
+// later (see the pending-reply machinery + tick()), preferring a line in its
+// OWN stable voice and only falling back to the faction pool. Missing file is
+// non-fatal: the banks stay empty and nobody talks back.
 struct Response {
     std::string text;
     std::string clip;
 };
 using CategoryBank = std::unordered_map<std::string, std::vector<Response>>;
-std::unordered_map<std::string, CategoryBank> g_responses;
+std::unordered_map<std::string, CategoryBank> g_resp_by_faction;
+std::unordered_map<std::string, CategoryBank> g_resp_by_voice;
 
 // RNG for picking a random reply line. Module-static, seeded once.
 std::mt19937 g_rng{ std::random_device{}() };
@@ -136,12 +139,23 @@ const char* faction_to_bank_name(Faction f) {
     }
 }
 
+// Stable 32-bit hash of a base_id string (FNV-1a). Bases have no numeric
+// entity id of their own, so we synthesize one here to feed voice::voice_for
+// — same base_id always hashes to the same id, so a base ALWAYS speaks with
+// the same voice across its lifetime.
+uint32_t hash_base_id(const std::string& s) {
+    uint32_t h = 2166136261u;
+    for (const unsigned char c : s) { h ^= c; h *= 16777619u; }
+    return h;
+}
+
 // A scheduled reply from a hailed party. Armed in select() on SEND, fired by
 // tick() once `play_at` is reached so the reply doesn't talk over the
 // player's own outgoing line.
 struct PendingReply {
     bool        active   = false;
-    std::string bank_faction;   // key into g_responses (e.g. "pirate")
+    std::string bank_faction;   // key into g_resp_by_faction (e.g. "pirate") — fallback
+    std::string reply_voice;    // recipient's stable voice_id (key into g_resp_by_voice)
     std::string category;       // "hostile" or "greeting"
     float       play_at  = 0.f; // process-uptime seconds
 };
@@ -179,10 +193,11 @@ std::vector<ShownLine> g_shown;
 
 // The destination the player chose in DestSelect — drives logging and (via
 // faction/stance/intent) which reply bank+category fires, plus provoke.
-Faction  g_chosen_faction = Faction::Civilian;
-Stance   g_chosen_stance  = Stance::Neutral;
-bool     g_chosen_is_ship = false;
-uint32_t g_chosen_ship_id = 0;
+Faction     g_chosen_faction = Faction::Civilian;
+Stance      g_chosen_stance  = Stance::Neutral;
+bool        g_chosen_is_ship = false;
+uint32_t    g_chosen_ship_id = 0;
+std::string g_chosen_base_id;        // bases: the nav's base_id ("" = ship/none)
 
 // Provoke latch (#4). Set in select() when a taunt rolls success against a
 // non-hostile target ship; drained ONCE by take_provoke_target().
@@ -350,36 +365,55 @@ void load(const std::string& path) {
                     kVoicePath);
     }
 
-    // Hailed-party response bank (faction -> category -> [{text,clip}]). Like
-    // the voice manifest it's a sibling file and just as non-fatal: a
-    // missing/unparseable bank leaves g_responses empty and nobody replies.
+    // Hailed-party response bank. Now shaped with TWO top-level objects:
+    //   by_faction: faction-key -> category -> [{text,clip}]
+    //   by_voice:   voice_id    -> category -> [{text,clip}]
+    // Each parses into its own CategoryBank map. Like the voice manifest it's
+    // a sibling file and just as non-fatal: a missing/unparseable bank leaves
+    // both maps empty and nobody replies.
     constexpr const char* kRespPath = "assets/data/comm_responses.json";
-    g_responses.clear();
+    g_resp_by_faction.clear();
+    g_resp_by_voice.clear();
     json::Value resp_root = json::parse_file(kRespPath);
     if (resp_root.is_object()) {
-        size_t lines = 0;
-        for (const auto& [fac, cats] : resp_root.as_object()) {
-            if (!cats.is_object()) continue;
-            CategoryBank bank;
-            for (const auto& [cat, arr] : cats.as_object()) {
-                if (!arr.is_array()) continue;
-                std::vector<Response> vec;
-                for (const json::Value& v : arr.as_array()) {
-                    if (!v.is_object()) continue;
-                    const json::Value* text = v.find("text");
-                    const json::Value* clip = v.find("clip");
-                    if (!text || !text->is_string()) continue;
-                    Response r;
-                    r.text = text->as_string();
-                    if (clip && clip->is_string()) r.clip = clip->as_string();
-                    vec.push_back(std::move(r));
+        // Parse one top-level object ({ key -> { cat -> [{text,clip}] } }) into
+        // `out`, accumulating the total line count. Shared by by_faction and
+        // by_voice since they're structurally identical.
+        auto parse_section =
+            [](const json::Value* section,
+               std::unordered_map<std::string, CategoryBank>& out) -> size_t {
+            size_t lines = 0;
+            if (!section || !section->is_object()) return 0;
+            for (const auto& [key, cats] : section->as_object()) {
+                if (!cats.is_object()) continue;
+                CategoryBank bank;
+                for (const auto& [cat, arr] : cats.as_object()) {
+                    if (!arr.is_array()) continue;
+                    std::vector<Response> vec;
+                    for (const json::Value& v : arr.as_array()) {
+                        if (!v.is_object()) continue;
+                        const json::Value* text = v.find("text");
+                        const json::Value* clip = v.find("clip");
+                        if (!text || !text->is_string()) continue;
+                        Response r;
+                        r.text = text->as_string();
+                        if (clip && clip->is_string()) r.clip = clip->as_string();
+                        vec.push_back(std::move(r));
+                    }
+                    if (!vec.empty()) { lines += vec.size(); bank.emplace(cat, std::move(vec)); }
                 }
-                if (!vec.empty()) { lines += vec.size(); bank.emplace(cat, std::move(vec)); }
+                if (!bank.empty()) out.emplace(key, std::move(bank));
             }
-            if (!bank.empty()) g_responses.emplace(fac, std::move(bank));
-        }
-        std::printf("[comms_menu] loaded %s — %zu factions, %zu response lines\n",
-                    kRespPath, g_responses.size(), lines);
+            return lines;
+        };
+        const size_t fac_lines =
+            parse_section(resp_root.find("by_faction"), g_resp_by_faction);
+        const size_t voice_lines =
+            parse_section(resp_root.find("by_voice"), g_resp_by_voice);
+        std::printf("[comms_menu] loaded %s — by_faction: %zu factions/%zu lines, "
+                    "by_voice: %zu voices/%zu lines\n",
+                    kRespPath, g_resp_by_faction.size(), fac_lines,
+                    g_resp_by_voice.size(), voice_lines);
     } else {
         std::printf("[comms_menu] no %s — hailed parties stay silent\n",
                     kRespPath);
@@ -404,6 +438,7 @@ void select(int n) {
         g_chosen_stance  = g_dests[idx].stance;
         g_chosen_is_ship = g_dests[idx].is_ship;
         g_chosen_ship_id = g_dests[idx].ship_id;
+        g_chosen_base_id = g_dests[idx].base_id;
         build_shown_lines();
         g_step = Step::LineSelect;
         return;
@@ -460,15 +495,29 @@ void select(int n) {
         if (roll(g_rng) < k_rumor_chance) g_rumor_pending = true;
     }
 
-    // Arm the hailed party's reply. Only factions with a bank entry talk
-    // back — Civilian (unresolved bases) and anyone the bank doesn't know
-    // stay silent. The reply is delayed ~3.5s so it doesn't step on the
-    // player's own line (tick() fires it once g_now reaches play_at).
+    // Arm the hailed party's reply. Resolve the recipient's STABLE voice so it
+    // replies in its OWN voice (with matching text) where possible, falling
+    // back to the faction pool. The recipient's entity id is the target ship's
+    // id for ships, or a stable hash of the base_id for bases. Only recipients
+    // with either a known voice pool OR a faction bank entry talk back —
+    // Civilian (unresolved bases) and anyone neither map knows stay silent.
+    // The reply is delayed ~3.5s so it doesn't step on the player's own line
+    // (tick() fires it once g_now reaches play_at).
     g_pending.active = false;
-    if (const char* bank = faction_to_bank_name(g_chosen_faction)) {
-        if (g_responses.count(bank)) {
+    {
+        const uint32_t entity_id = g_chosen_is_ship
+                                       ? g_chosen_ship_id
+                                       : hash_base_id(g_chosen_base_id);
+        const std::string reply_voice =
+            voice::voice_for(g_chosen_faction, entity_id);
+        const char* bank = faction_to_bank_name(g_chosen_faction);
+        const bool has_voice = !reply_voice.empty() &&
+                               g_resp_by_voice.count(reply_voice);
+        const bool has_faction = bank && g_resp_by_faction.count(bank);
+        if (has_voice || has_faction) {
             g_pending.active       = true;
-            g_pending.bank_faction = bank;
+            g_pending.bank_faction = bank ? bank : "";
+            g_pending.reply_voice  = reply_voice;
             g_pending.category     = category;
             g_pending.play_at      = g_now + 3.5f;
         }
@@ -528,23 +577,38 @@ void tick(float now_s) {
     g_now = now_s;
     if (!g_pending.active || now_s < g_pending.play_at) return;
 
-    // Due: resolve the recipient's response bank/category and fire one random
-    // line. Anything missing (no bank, no category, empty pool) silently
-    // drops the pending reply — the hail just goes unanswered.
+    // Due: resolve the recipient's response pool and fire one random line.
+    // Pool precedence: the recipient's OWN voice (so it speaks consistently
+    // in-character) if that voice has a non-empty pool for this category,
+    // else the faction-level bank. Anything missing (no pool, empty pool)
+    // silently drops the pending reply — the hail just goes unanswered.
     PendingReply p = g_pending;
     g_pending.active = false;
 
-    auto fac_it = g_responses.find(p.bank_faction);
-    if (fac_it == g_responses.end()) return;
-    auto cat_it = fac_it->second.find(p.category);
-    if (cat_it == fac_it->second.end() || cat_it->second.empty()) return;
+    // Look up `category` in a CategoryBank-map under `key`; returns nullptr
+    // when the key/category is absent or the pool is empty.
+    auto find_pool =
+        [&](const std::unordered_map<std::string, CategoryBank>& m,
+            const std::string& key) -> const std::vector<Response>* {
+        if (key.empty()) return nullptr;
+        auto kit = m.find(key);
+        if (kit == m.end()) return nullptr;
+        auto cit = kit->second.find(p.category);
+        if (cit == kit->second.end() || cit->second.empty()) return nullptr;
+        return &cit->second;
+    };
 
-    const std::vector<Response>& pool = cat_it->second;
+    const std::vector<Response>* pool_ptr =
+        find_pool(g_resp_by_voice, p.reply_voice);
+    if (!pool_ptr) pool_ptr = find_pool(g_resp_by_faction, p.bank_faction);
+    if (!pool_ptr) return;
+
+    const std::vector<Response>& pool = *pool_ptr;
     std::uniform_int_distribution<size_t> pick(0, pool.size() - 1);
     const Response& r = pool[pick(g_rng)];
 
     // Voice the reply via the shared lazy clip cache (0 = missing/failed,
-    // which we just skip — the log line still lands).
+    // which we just skip — the hail simply goes unanswered).
     if (!r.clip.empty()) {
         if (const SampleId sid = resolve_clip(r.clip); sid != 0)
             audio::play(sid, 1.0f);

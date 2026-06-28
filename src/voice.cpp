@@ -77,6 +77,15 @@ std::map<std::string,
 // by_voice: voice_id -> [SampleId]
 std::unordered_map<std::string, std::vector<SampleId>> g_by_voice;
 
+// by_voice_category: voice_id -> category -> [SampleId]. Lets a specific
+// voice play a category-appropriate line IN ITS OWN voice.
+std::unordered_map<std::string,
+        std::map<std::string, std::vector<SampleId>>> g_by_voice_cat;
+
+// faction_voices: bank_faction -> [voice_id]. The stable per-entity voice
+// pool a ship/base picks its voice from (entity_id % size).
+std::map<std::string, std::vector<std::string>> g_faction_voices;
+
 // aliases: alias -> [SampleId] (kept separate so aliases win at lookup
 // time even if a future build also adds the alias name as a real voice_id).
 std::unordered_map<std::string, std::vector<SampleId>> g_aliases;
@@ -141,6 +150,8 @@ bool load(const std::string& path) {
     g_by_faction_cat.clear();
     g_by_voice.clear();
     g_aliases.clear();
+    g_by_voice_cat.clear();
+    g_faction_voices.clear();
     g_player_voice = 0;
     g_loaded = false;
 
@@ -152,9 +163,11 @@ bool load(const std::string& path) {
         return false;
     }
 
-    int n_faction_pools = 0;
-    int n_voice_pools   = 0;
-    int n_alias_pools   = 0;
+    int n_faction_pools  = 0;
+    int n_voice_pools    = 0;
+    int n_alias_pools    = 0;
+    int n_voicecat_pools = 0;
+    int n_faction_voices = 0;
 
     // by_faction_category: bank_faction -> category -> [paths]
     if (const json::Value* by_fc = root.find("by_faction_category");
@@ -202,7 +215,42 @@ bool load(const std::string& path) {
         }
     }
 
-    if (n_faction_pools == 0 && n_voice_pools == 0 && n_alias_pools == 0) {
+    // by_voice_category: voice_id -> category -> [paths]
+    if (const json::Value* by_vc = root.find("by_voice_category");
+        by_vc && by_vc->is_object()) {
+        for (const auto& [vk, vv] : by_vc->as_object()) {
+            if (!vv.is_object()) continue;
+            for (const auto& [ck, cv] : vv.as_object()) {
+                if (!cv.is_array()) continue;
+                std::vector<SampleId> ids;
+                collect_paths(cv, ids);
+                if (!ids.empty()) {
+                    g_by_voice_cat[vk][ck] = std::move(ids);
+                    ++n_voicecat_pools;
+                }
+            }
+        }
+    }
+
+    // faction_voices: bank_faction -> [voice_id]. Pure string lists — no
+    // audio to preload; these index INTO by_voice_category / by_voice.
+    if (const json::Value* fv = root.find("faction_voices");
+        fv && fv->is_object()) {
+        for (const auto& [fk, arr] : fv->as_object()) {
+            if (!arr.is_array()) continue;
+            std::vector<std::string> ids;
+            for (const json::Value& v : arr.as_array()) {
+                if (v.is_string()) ids.push_back(v.as_string());
+            }
+            if (!ids.empty()) {
+                g_faction_voices[fk] = std::move(ids);
+                ++n_faction_voices;
+            }
+        }
+    }
+
+    if (n_faction_pools == 0 && n_voice_pools == 0 && n_alias_pools == 0 &&
+        n_voicecat_pools == 0) {
         std::fprintf(stderr,
                      "[voice] '%s': no usable pools — voice disabled\n",
                      path.c_str());
@@ -211,8 +259,9 @@ bool load(const std::string& path) {
 
     g_loaded = true;
     std::printf("[voice] loaded %d faction-category + %d voice + %d alias "
-                "pools from %s\n",
-                n_faction_pools, n_voice_pools, n_alias_pools, path.c_str());
+                "+ %d voice-category pools, %d faction-voice lists from %s\n",
+                n_faction_pools, n_voice_pools, n_alias_pools,
+                n_voicecat_pools, n_faction_voices, path.c_str());
     return true;
 }
 
@@ -236,24 +285,69 @@ void say(Faction speaker, Category cat,
     play_sample(s, world_pos, to_player);
 }
 
-void say(const std::string& voice_id, Category /*cat*/,
+void say(const std::string& voice_id, Category cat,
          HMM_Vec3 world_pos, bool to_player) {
     if (!g_loaded || !audio::ready()) return;
 
-    // Aliases first ("confed_f" -> placeholder pool), then by_voice.
-    // Category is best-effort for Phase 0 and ignored in this overload.
-    const std::vector<SampleId>* pool = nullptr;
+    // 1. Aliases first ("confed_f" -> placeholder pool). An alias is a flat
+    //    pool with no per-category split, so it short-circuits here.
     if (auto it = g_aliases.find(voice_id); it != g_aliases.end()) {
-        pool = &it->second;
-    } else if (auto it = g_by_voice.find(voice_id); it != g_by_voice.end()) {
-        pool = &it->second;
+        if (SampleId s = pick_random(&it->second); s != 0) {
+            play_sample(s, world_pos, to_player);
+        }
+        return;
     }
-    if (!pool) return;
 
-    SampleId s = pick_random(pool);
-    if (s == 0) return;
+    // 2. A category-appropriate line in THIS voice.
+    if (const char* catstr = category_to_bank_name(cat)) {
+        if (auto v_it = g_by_voice_cat.find(voice_id);
+            v_it != g_by_voice_cat.end()) {
+            if (auto c_it = v_it->second.find(catstr);
+                c_it != v_it->second.end()) {
+                if (SampleId s = pick_random(&c_it->second); s != 0) {
+                    play_sample(s, world_pos, to_player);
+                    return;
+                }
+            }
+        }
+    }
 
-    play_sample(s, world_pos, to_player);
+    // 3. Fall back to ANY line in this voice; else silent no-op.
+    if (auto it = g_by_voice.find(voice_id); it != g_by_voice.end()) {
+        if (SampleId s = pick_random(&it->second); s != 0) {
+            play_sample(s, world_pos, to_player);
+        }
+    }
+}
+
+std::string voice_for(Faction f, uint32_t entity_id) {
+    // Map faction -> bank faction name. Hunter is the one outlier vs
+    // faction::to_name(); Civilian has no voice bank at all.
+    std::string bankname;
+    if (f == Faction::Hunter) {
+        bankname = "bounty_hunter";
+    } else if (f == Faction::Civilian) {
+        return "";
+    } else {
+        bankname = faction::to_name(f);
+    }
+
+    auto it = g_faction_voices.find(bankname);
+    if (it == g_faction_voices.end() || it->second.empty()) return "";
+
+    // STABLE per entity: same id -> same slot for the entity's lifetime.
+    return it->second[entity_id % it->second.size()];
+}
+
+void say_ship(Faction f, uint32_t entity_id, Category cat,
+              HMM_Vec3 world_pos, bool to_player) {
+    std::string vid = voice_for(f, entity_id);
+    if (!vid.empty()) {
+        say(vid, cat, world_pos, to_player);
+    } else {
+        // No dedicated voice for this entity -> faction-level pool.
+        say(f, cat, world_pos, to_player);
+    }
 }
 
 } // namespace voice

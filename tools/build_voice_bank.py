@@ -61,6 +61,8 @@ def build_manifest(comms: dict) -> dict:
     """Derive the voice_bank manifest from parsed comms.json data."""
     by_faction_category: dict[str, dict[str, list[str]]] = {}
     by_voice: dict[str, list[str]] = {}
+    by_voice_category: dict[str, dict[str, list[str]]] = {}
+    faction_voices: dict[str, set] = {}
     female_voice_paths: dict[str, list[str]] = {}
 
     kept = 0
@@ -88,6 +90,15 @@ def build_manifest(comms: dict) -> dict:
             by_voice.setdefault(voice_id, []).append(path)
             if voice_id in KNOWN_FEMALE_VOICES:
                 female_voice_paths.setdefault(voice_id, []).append(path)
+        # Per-ship voices: which clips a SPECIFIC voice has in each category,
+        # and which voice_ids speak for each faction (for stable per-ship
+        # assignment in the engine).
+        if voice_id and category:
+            by_voice_category.setdefault(voice_id, {}).setdefault(
+                category, []
+            ).append(path)
+        if faction and voice_id:
+            faction_voices.setdefault(faction, set()).add(voice_id)
 
     aliases = {"confed_f": resolve_confed_f(by_voice, female_voice_paths)}
 
@@ -95,6 +106,8 @@ def build_manifest(comms: dict) -> dict:
         "_note": CONFED_F_NOTE,
         "by_faction_category": by_faction_category,
         "by_voice": by_voice,
+        "by_voice_category": by_voice_category,
+        "faction_voices": {f: sorted(v) for f, v in faction_voices.items()},
         "aliases": aliases,
     }
     return manifest, kept, skipped

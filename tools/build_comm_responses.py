@@ -29,7 +29,8 @@ KEEP = {"greeting", "hostile", "low_hp", "kill", "demand"}
 
 def main():
     corpus = json.loads(COMMS.read_text())
-    bank = collections.defaultdict(lambda: collections.defaultdict(list))
+    by_faction = collections.defaultdict(lambda: collections.defaultdict(list))
+    by_voice = collections.defaultdict(lambda: collections.defaultdict(list))
     for l in corpus["lines"]:
         cat = l["category"]
         if cat not in KEEP:
@@ -37,14 +38,20 @@ def main():
         clip = f"{AUDIO_DIR}/{l['id']}.mp3"
         if not os.path.exists(clip):
             continue
-        bank[l["faction"]][cat].append({"text": l["text"].strip(), "clip": clip})
-    # plain dict for json
-    out = {f: {c: v for c, v in cats.items()} for f, cats in bank.items()}
+        entry = {"text": l["text"].strip(), "clip": clip}
+        by_faction[l["faction"]][cat].append(entry)
+        if l.get("voice_id"):
+            by_voice[l["voice_id"]][cat].append(entry)
+    # The engine keys replies by the speaker's voice_id (per-ship voice), with
+    # by_faction as a fallback when a voice has no line in a category.
+    out = {
+        "by_faction": {f: dict(cats) for f, cats in by_faction.items()},
+        "by_voice": {v: dict(cats) for v, cats in by_voice.items()},
+    }
     OUT.write_text(json.dumps(out, indent=1, ensure_ascii=False))
-    total = sum(len(v) for cats in out.values() for v in cats.values())
-    print(f"[comm-responses] {len(out)} factions, {total} response lines -> {OUT}")
-    for f, cats in out.items():
-        print(f"  {f:14} " + ", ".join(f"{c}:{len(v)}" for c, v in cats.items()))
+    nf = sum(len(v) for cats in out["by_faction"].values() for v in cats.values())
+    print(f"[comm-responses] {len(out['by_faction'])} factions, "
+          f"{len(out['by_voice'])} voices, {nf} lines -> {OUT}")
 
 
 if __name__ == "__main__":
