@@ -54,7 +54,7 @@ struct ScreenshotWaiter {
 struct Command {
     enum class Kind { SetCamera, Screenshot, VoiceSay, CommBark, CargoGive, Spawn,
                       Kill, TractorPull, InventorySell, InventoryGive,
-                      InventoryInstall, InventoryEquip };
+                      InventoryInstall, InventoryEquip, SetPanel, CommsSelect };
     Kind kind;
 
     // SetCamera — any optional field is encoded with `has_*`.
@@ -152,6 +152,8 @@ std::function<void(int)>                                    g_inventory_sell_hoo
 std::function<void(std::string, std::string, std::string, int)> g_inventory_give_hook;
 std::function<void(int)>                                    g_inventory_install_hook;
 std::function<void(int, int)>                               g_inventory_equip_hook;
+std::function<void(std::string)>                            g_panel_hook;
+std::function<void(int)>                                    g_comms_select_hook;
 
 std::thread       g_thread;
 std::atomic<bool> g_running{false};
@@ -404,6 +406,51 @@ void handle_comm_bark(int fd, const std::string& body) {
     Command c;
     c.kind    = Command::Kind::CommBark;
     c.faction = fac;
+    {
+        std::lock_guard lk(g_queue_mu);
+        g_queue.push_back(c);
+    }
+    send_json(fd, "{\"ok\":true}");
+}
+
+// POST /panel — set the STATUS panel sub-screen. Body:
+//   {"screen":"comms|ship|damage|weapons"}
+// Validated here (HTTP thread); the host's panel hook flips
+// cockpit_hud::set_status_screen on the main thread.
+void handle_panel(int fd, const std::string& body) {
+    std::string screen;
+    if (!extract_string(body, "screen", &screen)) {
+        send_json(fd, "{\"ok\":false,\"error\":\"missing screen\"}");
+        return;
+    }
+    if (screen != "comms" && screen != "ship" &&
+        screen != "damage" && screen != "weapons") {
+        send_json(fd, "{\"ok\":false,\"error\":\"unknown screen\"}");
+        return;
+    }
+    Command c;
+    c.kind    = Command::Kind::SetPanel;
+    c.str_arg = screen;
+    {
+        std::lock_guard lk(g_queue_mu);
+        g_queue.push_back(c);
+    }
+    send_json(fd, "{\"ok\":true}");
+}
+
+// POST /comms/select — pick a numbered entry in the Comms menu. Body:
+//   {"n":N}
+// The host hook ensures the Comms screen is active + opened, then routes to
+// comms_menu::select(N) on the main thread.
+void handle_comms_select(int fd, const std::string& body) {
+    float n_f = 0.0f;
+    if (!extract_float(body, "n", &n_f)) {
+        send_json(fd, "{\"ok\":false,\"error\":\"missing n\"}");
+        return;
+    }
+    Command c;
+    c.kind    = Command::Kind::CommsSelect;
+    c.int_arg = (int)n_f;
     {
         std::lock_guard lk(g_queue_mu);
         g_queue.push_back(c);
@@ -843,6 +890,8 @@ void handle_connection(int fd) {
     else if (method == "POST" && path == "/project")    handle_project(fd, body);
     else if (method == "POST" && path == "/voice/say")  handle_voice_say(fd, body);
     else if (method == "POST" && path == "/comm/bark")  handle_comm_bark(fd, body);
+    else if (method == "POST" && path == "/panel")       handle_panel(fd, body);
+    else if (method == "POST" && path == "/comms/select") handle_comms_select(fd, body);
     else if (method == "GET"  && path == "/ships")      handle_ships(fd);
     else if (method == "POST" && path == "/cargo/give") handle_cargo_give(fd, body);
     else if (method == "POST" && path == "/spawn")      handle_spawn(fd, body);
@@ -1066,6 +1115,29 @@ void drain_commands(Camera& cam) {
             if (hook) hook(c.sell_index, c.mount_index);
             break;
         }
+        case Command::Kind::SetPanel: {
+            // Run the host's registered panel hook on the main thread; it
+            // flips cockpit_hud::set_status_screen to the named screen.
+            std::function<void(std::string)> hook;
+            {
+                std::lock_guard lk(g_hooks_mu);
+                hook = g_panel_hook;
+            }
+            if (hook) hook(c.str_arg);
+            break;
+        }
+        case Command::Kind::CommsSelect: {
+            // Run the host's registered comms-select hook on the main
+            // thread; it ensures the Comms screen is up + opened, then
+            // routes to comms_menu::select.
+            std::function<void(int)> hook;
+            {
+                std::lock_guard lk(g_hooks_mu);
+                hook = g_comms_select_hook;
+            }
+            if (hook) hook(c.int_arg);
+            break;
+        }
         }
     }
 
@@ -1175,6 +1247,16 @@ void set_inventory_install_hook(std::function<void(int)> hook) {
 void set_inventory_equip_hook(std::function<void(int, int)> hook) {
     std::lock_guard lk(g_hooks_mu);
     g_inventory_equip_hook = std::move(hook);
+}
+
+void set_panel_hook(std::function<void(std::string)> hook) {
+    std::lock_guard lk(g_hooks_mu);
+    g_panel_hook = std::move(hook);
+}
+
+void set_comms_select_hook(std::function<void(int)> hook) {
+    std::lock_guard lk(g_hooks_mu);
+    g_comms_select_hook = std::move(hook);
 }
 
 } // namespace dev_remote

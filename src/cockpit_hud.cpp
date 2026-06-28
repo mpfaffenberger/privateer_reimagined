@@ -16,6 +16,7 @@
 //           (no NDC Y-flip), so target projection skips the
 //           textbook (1 - ndc_y) inversion.
 #include "cockpit_hud.h"
+#include "comms_menu.h"
 #include "navmap_projection.h"
 
 #include "armor.h"
@@ -111,6 +112,23 @@ void push_hud_style() {
 void pop_hud_style() {
     ImGui::PopStyleVar(2);
     ImGui::PopStyleColor(2);
+}
+
+// Which sub-screen the STATUS panel is showing. Defaults to the hull
+// diagram (Ship). Mutated only on the main thread via set_status_screen.
+StatusScreen g_status_screen = StatusScreen::Ship;
+
+// A bare stub sub-panel: an amber title + a dim "not yet modeled" line.
+// Shared by the Damage / Weapons screens so the two read identically until
+// their real content lands (DRY — one helper, two callers).
+void draw_status_stub(const char* title, const char* body) {
+    ImGui::PushStyleColor(ImGuiCol_Text, kAmber);
+    ImGui::TextUnformatted(title);
+    ImGui::PopStyleColor();
+    ImGui::Separator();
+    ImGui::PushStyleColor(ImGuiCol_Text, kHudWhite);
+    ImGui::TextUnformatted(body);
+    ImGui::PopStyleColor();
 }
 
 constexpr float kShipDiagramIconScale = 4.15f;
@@ -633,7 +651,9 @@ void draw_target_mfd(const Camera& cam, const ShipRegistry& ships,
 // numeric current/max instead of a bar — energy ticks fast enough
 // during sustained fire that a bar would just look noisy.
 void draw_player_status(const ShipRegistry& ships,
-                        const ShipSpriteAtlas* player_preview_atlas) {
+                        const ShipSpriteAtlas* player_preview_atlas,
+                        const StarSystem& system, const Ship* target,
+                        const PlayerReputation* rep) {
     const Ship* player_p = ships.player();
     if (!player_p) return;
     const Ship& player = *player_p;
@@ -650,6 +670,23 @@ void draw_player_status(const ShipRegistry& ships,
         ImGui::PopStyleColor();
         ImGui::Separator();
 
+      // Dispatch the STATUS window to its active sub-screen. Ship keeps the
+      // canonical hull diagram; Comms hosts the data-driven hail menu;
+      // Damage / Weapons are stubs until their systems land.
+      switch (g_status_screen) {
+      case StatusScreen::Comms: {
+        static const PlayerReputation kNoRep{};
+        comms_menu::draw(system, target, rep ? *rep : kNoRep);
+        break;
+      }
+      case StatusScreen::Damage:
+        draw_status_stub("DAMAGE CONTROL", "system damage not yet modeled");
+        break;
+      case StatusScreen::Weapons:
+        draw_status_stub("WEAPONS", "loadout screen TBD");
+        break;
+      case StatusScreen::Ship:
+      default:
         if (!player.alive) {
             ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 80, 80, 255));
             ImGui::TextUnformatted("*** DESTROYED ***");
@@ -812,6 +849,8 @@ void draw_player_status(const ShipRegistry& ships,
                                            k_ship_col, k_ship_outline);
 
         }
+        break;
+      }   // end switch(g_status_screen)
     }
     ImGui::End();
     pop_hud_style();
@@ -1176,6 +1215,12 @@ std::string base_label(const StarSystem& sys, const std::string& base_id) {
 
 } // anonymous namespace
 
+// STATUS sub-screen accessors. File-static g_status_screen lives in the
+// anonymous namespace above; these are the public seam main.cpp + the
+// dev_remote /panel endpoint poke.
+void set_status_screen(StatusScreen s) { g_status_screen = s; }
+StatusScreen status_screen()           { return g_status_screen; }
+
 // Camera-relative world->screen projection (same engine quirk as the nav
 // reticle: NO ndc-Y flip). Returns false when the point is behind the
 // camera so the caller can simply skip drawing rather than smear a marker
@@ -1260,7 +1305,8 @@ void build(const Camera& cam, const StarSystem& system, int selected_nav,
            float mouse_x, float mouse_y, bool fly_by_wire,
            const ShipRegistry& ships, uint32_t target_ship_id,
            const ShipSpriteAtlas* player_preview_atlas,
-           const char* dock_prompt, bool dock_ready, bool draw_world) {
+           const char* dock_prompt, bool dock_ready, bool draw_world,
+           const PlayerReputation* player_rep) {
     // Crosshair + aim cursor are HUD overlays that distract or fight input
     // when the navmap is up (it covers the screen centre) or autopilot owns
     // the ship (the camera is on rails, no manual aiming to assist).
@@ -1273,7 +1319,12 @@ void build(const Camera& cam, const StarSystem& system, int selected_nav,
     // navmap overlay is up (where the same info is rendered textually).
     if (draw_world)
         draw_nav_reticle(cam, system, selected_nav);
-    draw_player_status(ships, player_preview_atlas);
+    // The STATUS panel's Comms sub-screen needs the current target ship and
+    // the player's reputation to resolve friendly-vs-hostile hail lines.
+    const Ship* status_target = target_ship_id
+        ? ships.find_by_id(target_ship_id) : nullptr;
+    draw_player_status(ships, player_preview_atlas, system, status_target,
+                       player_rep);
     draw_nav_mfd   (cam, system, selected_nav, dock_prompt, dock_ready);
     draw_target_mfd(cam, ships, target_ship_id);
     draw_radar_mfd (cam, system, selected_nav, ships, target_ship_id);

@@ -31,12 +31,25 @@ struct Camera;
 struct StarSystem;
 struct Ship;
 struct PlayerState;
+struct PlayerReputation;
 struct ShipSpriteAtlas;
 class ShipRegistry;
 
 namespace galaxy { struct Galaxy; }
 
 namespace cockpit_hud {
+
+// Which screen the top-left STATUS panel is currently showing. The canonical
+// Privateer cockpit cycles a single MFD frame between sub-displays — here the
+// STATUS window flips between the hull diagram (Ship), the Comms menu, and
+// stub Damage / Weapons panels. main.cpp's key handler drives the cycle
+// (C/R/W toggles); draw_player_status dispatches on the current value.
+enum class StatusScreen { Ship, Comms, Damage, Weapons };
+
+// Set / query the active STATUS sub-screen. File-static inside cockpit_hud;
+// the dev_remote /panel endpoint and the flight key handler both poke it.
+void        set_status_screen(StatusScreen s);
+StatusScreen status_screen();
 
 // World->screen projection (shared between cockpit HUD overlays and the
 // loot marker renderer, #84 + DRY). Camera-relative: returns false when
@@ -66,12 +79,16 @@ bool project_world_point(const Camera& cam, HMM_Vec3 world,
 //                  nullptr/"" draws nothing; otherwise the string is
 //                  shown under the nav data. `dock_ready` tints it
 //                  green ("PRESS D TO DOCK") vs amber ("DOCK: TOO FAST").
+//   player_rep     player reputation, forwarded to the STATUS panel's Comms
+//                  sub-screen so it can resolve friendly-vs-hostile hail
+//                  lines. nullptr = no rep available (Comms shows friendly).
 void build(const Camera& cam, const StarSystem& system, int selected_nav,
            float mouse_x, float mouse_y, bool fly_by_wire,
            const ShipRegistry& ships, uint32_t target_ship_id,
            const ShipSpriteAtlas* player_preview_atlas = nullptr,
            const char* dock_prompt = nullptr, bool dock_ready = false,
-           bool draw_world = true);   // false hides nav-reticle + mission glyphs
+           bool draw_world = true,    // false hides nav-reticle + mission glyphs
+           const PlayerReputation* player_rep = nullptr);
 
 // Mission objective markers + per-type progress readout (#18). Read-only
 // over PlayerState::missions + the current system's nav set: floats a cyan

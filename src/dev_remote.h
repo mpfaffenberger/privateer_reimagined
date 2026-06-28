@@ -243,4 +243,15 @@ void set_inventory_install_hook(std::function<void(int index)> hook);
 // inventory::equip_weapon(g.player, item_index, mount_index).
 void set_inventory_equip_hook(std::function<void(int item_index, int mount_index)> hook);
 
+// POST /panel enqueues a command; drain_commands invokes this hook on the
+// main thread with the screen name ("comms"|"ship"|"damage"|"weapons"). The
+// host wires it to cockpit_hud::set_status_screen (and comms_menu::open when
+// switching to Comms).
+void set_panel_hook(std::function<void(std::string screen)> hook);
+
+// POST /comms/select enqueues a command; drain_commands invokes this hook on
+// the main thread with the 1-based pick. The host ensures the Comms screen is
+// active + opened, then routes to comms_menu::select(n).
+void set_comms_select_hook(std::function<void(int n)> hook);
+
 } // namespace dev_remote

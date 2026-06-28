@@ -45,6 +45,7 @@
 #include "speech_labeler.h"
 #include "camera.h"
 #include "cockpit_hud.h"
+#include "comms_menu.h"
 #include "comm.h"
 #include "voice.h"
 #include "commodity.h"
@@ -908,6 +909,10 @@ void build_system_scene(bool first_time) {
     // Faction comm chatter table (np-ma2.1) — flavour lines surfaced on
     // the HUD when a kill moves reputation. Missing file is non-fatal.
     comm::load("assets/data/comm_lines.json");
+    // Player comms menu lines (np-comms) — the friendly/hostile hail pools
+    // the STATUS panel's Comms sub-screen offers. Missing file is non-fatal
+    // (the menu falls back to a built-in minimal set).
+    comms_menu::load("assets/data/player_comms.json");
     // Loot tables (Phase 4c, np-#86): faction-keyed drop definitions.
     // Missing/unparseable file is non-fatal — the loader logs one line and
     // spawn_for() becomes a no-op.
@@ -1313,6 +1318,36 @@ void build_system_scene(bool first_time) {
                 const bool ok = inventory::equip_weapon(g.player, item_index, mount_index);
                 std::printf("[dev_remote] inventory/equip: item=%d mount=%d ok=%s\n",
                             item_index, mount_index, ok ? "true" : "false");
+            });
+
+        // POST /panel — flip the STATUS panel sub-screen (testing parity
+        // with the C/R/W flight keys, which the API can't press). Switching
+        // to Comms also opens its menu (reset to destination-select).
+        dev_remote::set_panel_hook(
+            [](std::string screen) {
+                using SS = cockpit_hud::StatusScreen;
+                SS s = SS::Ship;
+                if      (screen == "comms")   s = SS::Comms;
+                else if (screen == "damage")  s = SS::Damage;
+                else if (screen == "weapons") s = SS::Weapons;
+                else                          s = SS::Ship;
+                cockpit_hud::set_status_screen(s);
+                if (s == SS::Comms) comms_menu::open();
+                std::printf("[dev_remote] panel: screen=%s\n", screen.c_str());
+            });
+
+        // POST /comms/select — drive the Comms menu by number (the API
+        // can't press 1-9). Ensure the Comms screen is up + opened so a
+        // bare /comms/select works without a prior /panel call.
+        dev_remote::set_comms_select_hook(
+            [](int n) {
+                using SS = cockpit_hud::StatusScreen;
+                if (cockpit_hud::status_screen() != SS::Comms) {
+                    cockpit_hud::set_status_screen(SS::Comms);
+                    comms_menu::open();
+                }
+                comms_menu::select(n);
+                std::printf("[dev_remote] comms/select: n=%d\n", n);
             });
     }
     dev_remote::publish_system_name(g.system.name.c_str());
@@ -5200,7 +5235,7 @@ void frame_cb() {
                                g.ships, g.player_target_id,
                                g.player_atlas,
                                dock_prompt, dock_ready,
-                               draw_world);
+                               draw_world, &g.player.rep);
 
             // Mission objective markers + progress readout (#18). Read-only
             // over the player's accepted missions + this system's nav set.
@@ -5933,6 +5968,50 @@ void event_cb(const sapp_event* ev) {
             std::printf("[guns] mode=%u (%s) -- %zu mount(s)\n",
                         p.gun_mode_idx, lbl, p.mounts.size());
             sfx::ui_click();
+        }
+        // C / R / W — cycle the STATUS panel sub-screen (canonical Privateer
+        // MFD flip). Each is a TOGGLE: pressing the key for the screen you're
+        // already on flips back to the hull diagram (Ship); otherwise it
+        // switches to that screen. Opening Comms also resets its menu to the
+        // destination-select step. G and M are untouched.
+        if (ev->key_code == SAPP_KEYCODE_C && !ev->key_repeat) {
+            const bool on = cockpit_hud::status_screen()
+                            == cockpit_hud::StatusScreen::Comms;
+            cockpit_hud::set_status_screen(
+                on ? cockpit_hud::StatusScreen::Ship
+                   : cockpit_hud::StatusScreen::Comms);
+            if (!on) comms_menu::open();
+            sfx::ui_click();
+        }
+        if (ev->key_code == SAPP_KEYCODE_R && !ev->key_repeat) {
+            const bool on = cockpit_hud::status_screen()
+                            == cockpit_hud::StatusScreen::Damage;
+            cockpit_hud::set_status_screen(
+                on ? cockpit_hud::StatusScreen::Ship
+                   : cockpit_hud::StatusScreen::Damage);
+            sfx::ui_click();
+        }
+        if (ev->key_code == SAPP_KEYCODE_W && !ev->key_repeat) {
+            const bool on = cockpit_hud::status_screen()
+                            == cockpit_hud::StatusScreen::Weapons;
+            cockpit_hud::set_status_screen(
+                on ? cockpit_hud::StatusScreen::Ship
+                   : cockpit_hud::StatusScreen::Weapons);
+            sfx::ui_click();
+        }
+        // 1-9 — drive the Comms menu (np-comms) when its screen is up. The
+        // number routes to comms_menu::select (1-based); a no-op pick is
+        // harmless. Only meaningful on the Comms screen so the keys stay
+        // free for other uses elsewhere.
+        if (!ev->key_repeat &&
+            cockpit_hud::status_screen() == cockpit_hud::StatusScreen::Comms) {
+            int picked = 0;
+            if (ev->key_code >= SAPP_KEYCODE_1 && ev->key_code <= SAPP_KEYCODE_9)
+                picked = (int)(ev->key_code - SAPP_KEYCODE_1) + 1;
+            if (picked > 0) {
+                comms_menu::select(picked);
+                sfx::ui_click();
+            }
         }
         // D — request docking at the selected nav point (np-9cu.1).
         // Strafe moved off D to Q/E (np-opa.3), so D is now a clean

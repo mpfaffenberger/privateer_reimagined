@@ -1,0 +1,14 @@
+{
+    "friendly": [
+        "Greetings, this is a peaceful trader.",
+        "Good hunting out there.",
+        "Safe travels, friend.",
+        "Fly safe — the void's a hungry place."
+    ],
+    "hostile": [
+        "You picked the wrong target, pal.",
+        "Back off or I'll scatter you across the void!",
+        "Please, I don't want any trouble!",
+        "Last warning — break off now."
+    ]
+}

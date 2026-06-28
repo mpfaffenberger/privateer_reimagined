@@ -237,6 +237,7 @@ src/bolt_art.cpp
     src/music_labeler.cpp
     src/speech_labeler.cpp
     src/cockpit_hud.cpp
+    src/comms_menu.cpp
     ${DEV_REMOTE_SRC}
     ${IMGUI_SRC}
     ${SOKOL_IMPL_SRC}
