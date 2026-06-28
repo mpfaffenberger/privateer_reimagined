@@ -27,7 +27,7 @@ PlayerState new_game(const std::string& start_system) {
     // main.cpp fits these onto the live ship via apply_player_loadout, so
     // the data here is the single source of truth for the starting hull.
     p.ship_class_name = "tarsus";
-    p.gun_mounts      = { "laser" };          // one laser, one muzzle
+    p.gun_mounts      = { MountSlot{"laser"} }; // one laser, one muzzle
     p.current_system  = start_system;
     // Start docked at Achilles Mining Base (Troy) — you begin in the
     // concourse, the way the 1995 game drops you on a base.

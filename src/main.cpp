@@ -792,8 +792,8 @@ static void apply_player_loadout(Ship& pl, const PlayerState& p, bool heal = tru
                        : std::min(p.gun_mounts.size(), slots);
     for (size_t i = 0; i < n; ++i) {
         GunMount m = k->default_guns[i];   // position + default type from ship.json
-        if (i < p.gun_mounts.size() && !p.gun_mounts[i].empty()) {
-            const GunType t = gun::from_name(p.gun_mounts[i]);
+        if (i < p.gun_mounts.size() && !p.gun_mounts[i].gun_id.empty()) {
+            const GunType t = gun::from_name(p.gun_mounts[i].gun_id);
             m.type = (t == GunType::Count) ? GunType::Laser : t;   // player gun overrides type only
         }
         m.cone_half_angle_deg = 1.0f;
@@ -956,7 +956,7 @@ void build_system_scene(bool first_time) {
             g.player.ship_class_name = g_player_ship_override;
             g.player.gun_mounts.clear();
             for (const GunMount& m : k->default_guns)
-                g.player.gun_mounts.push_back(gun::to_name(m.type));
+                g.player.gun_mounts.push_back(MountSlot{gun::to_name(m.type)});
             std::printf("[player] --ship override: flying '%s' with %zu stock guns\n",
                         g_player_ship_override.c_str(), g.player.gun_mounts.size());
         } else {

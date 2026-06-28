@@ -198,8 +198,19 @@ static std::string serialize_player(const PlayerState& p) {
 
         w.key("ship_class_name"); w.value_string(p.ship_class_name);
 
+        // gun_mounts (Phase 4d Wave 1, #88/#89). Each mount is now an OBJECT
+        // carrying gun_id + rarity + per-shot mods, mirroring the items array
+        // above. Old saves wrote bare strings; the loader still accepts those
+        // (is_string -> Basic) for back-compat.
         w.key("gun_mounts"); w.member_array_begin();
-          for (const std::string& g : p.gun_mounts) w.value_string(g);
+          for (const MountSlot& m : p.gun_mounts) {
+              w.begin_object();
+                w.key("gun_id");          w.value_string(m.gun_id);
+                w.key("rarity");          w.value_int((int)m.rarity);
+                w.key("fire_rate_mult");  w.value_raw(std::to_string(m.mods.fire_rate_mult));
+                w.key("energy_mult");     w.value_raw(std::to_string(m.mods.energy_mult));
+              w.end_object();
+          }
         w.end_array();
 
         w.key("shield_level");    w.value_int(p.shield_level);
@@ -492,9 +503,26 @@ bool load(PlayerState& p, const std::string& path) {
         out.ship_class_name = pl.contains("ship_class_name")
             ? pl["ship_class_name"].string_or("") : "";
 
+        // gun_mounts (Phase 4d Wave 1, #88/#89). Back-compat: old saves
+        // stored bare strings (-> Basic rarity, 1.0/1.0 mods); new saves
+        // store objects with gun_id/rarity/mods. Empty/missing -> skip.
         if (const json::Value* gm = pl.find("gun_mounts"); gm && gm->is_array()) {
-            for (const json::Value& g : gm->as_array())
-                if (g.is_string()) out.gun_mounts.push_back(g.as_string());
+            for (const json::Value& g : gm->as_array()) {
+                if (g.is_string()) {
+                    out.gun_mounts.push_back(MountSlot{g.as_string(), inventory::Rarity::Basic});
+                } else if (g.is_object()) {
+                    MountSlot m;
+                    m.gun_id = g.contains("gun_id") ? g["gun_id"].string_or("") : "";
+                    m.rarity = g.contains("rarity")
+                        ? (inventory::Rarity)(int)g["rarity"].number_or(0)
+                        : inventory::Rarity::Basic;
+                    m.mods.fire_rate_mult = g.contains("fire_rate_mult")
+                        ? (float)g["fire_rate_mult"].number_or(1.0) : 1.0f;
+                    m.mods.energy_mult = g.contains("energy_mult")
+                        ? (float)g["energy_mult"].number_or(1.0) : 1.0f;
+                    out.gun_mounts.push_back(std::move(m));
+                }
+            }
         }
 
         out.shield_level    = pl.contains("shield_level")    ? (int)pl["shield_level"].number_or(0)  : 0;

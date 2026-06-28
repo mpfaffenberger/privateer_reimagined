@@ -325,8 +325,8 @@ static void build_player_section(const PlayerState& player) {
                 player.cargo_expansion ? " (+cargo expansion)" : "");
     for (size_t i = 0; i < player.gun_mounts.size(); ++i) {
         ImGui::BulletText("mount %zu: %s", i,
-                          player.gun_mounts[i].empty()
-                              ? "<empty>" : player.gun_mounts[i].c_str());
+                          player.gun_mounts[i].gun_id.empty()
+                              ? "<empty>" : player.gun_mounts[i].gun_id.c_str());
     }
     ImGui::Text("shield lvl %d   engine lvl %d",
                 player.shield_level, player.engine_level);

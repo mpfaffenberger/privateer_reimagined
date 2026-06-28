@@ -296,7 +296,7 @@ bool buy_hull(PlayerState& p, const std::string& target) {
     // NOTE: permanent_mods are deliberately NOT cleared — installed upgrades
     // live on the player and persist across hull swaps (#92/#94).
     if (const ShipClass* k = ship_class::find(target))
-        for (const GunMount& m : k->default_guns) p.gun_mounts.push_back(gun::to_name(m.type));
+        for (const GunMount& m : k->default_guns) p.gun_mounts.push_back(MountSlot{gun::to_name(m.type)});
 
     std::printf("[outfit] BUY HULL %s -> %s | net %lld | credits %lld | %zu default mounts\n",
                 old.c_str(), target.c_str(), (long long)net, (long long)p.credits,
@@ -327,8 +327,8 @@ bool buy_gun(PlayerState& p, const std::string& gun_short_name,
         return false;
     }
     player::spend_credits(p, price);
-    if ((int)p.gun_mounts.size() < mounts) p.gun_mounts.resize(mounts, "");
-    p.gun_mounts[mount_index] = gun_short_name;
+    if ((int)p.gun_mounts.size() < mounts) p.gun_mounts.resize(mounts, MountSlot{});
+    p.gun_mounts[mount_index] = MountSlot{gun_short_name};
     std::printf("[outfit] BUY GUN %s -> mount %d @ %lld | credits %lld\n",
                 gun_short_name.c_str(), mount_index, (long long)price, (long long)p.credits);
     return true;
@@ -341,8 +341,8 @@ bool sell_gun(PlayerState& p, int mount_index, const ShipClass* klass) {
                     mount_index, mounts);
         return false;
     }
-    if ((int)p.gun_mounts.size() < mounts) p.gun_mounts.resize(mounts, "");
-    const std::string& name = p.gun_mounts[(size_t)mount_index];
+    if ((int)p.gun_mounts.size() < mounts) p.gun_mounts.resize(mounts, MountSlot{});
+    const std::string& name = p.gun_mounts[(size_t)mount_index].gun_id;
     if (name.empty()) {
         std::printf("[outfit] SELL GUN refused: mount %d is empty\n", mount_index);
         return false;
@@ -352,7 +352,7 @@ bool sell_gun(PlayerState& p, int mount_index, const ShipClass* klass) {
         std::printf("[outfit] SELL GUN refused: '%s' has no price\n", name.c_str());
         return false;
     }
-    p.gun_mounts[(size_t)mount_index] = "";
+    p.gun_mounts[(size_t)mount_index] = MountSlot{};
     player::add_credits(p, refund);
     std::printf("[outfit] SELL GUN %s <- mount %d refund %lld | credits %lld\n",
                 name.c_str(), mount_index, (long long)refund, (long long)p.credits);
@@ -622,7 +622,7 @@ void draw_equipment(BaseContext& ctx) {
     const ShipClass* klass = ship_class::find(p.ship_class_name);
     const ScreenWH ss = screen_wh();
     const int mounts = klass ? (int)klass->default_guns.size() : (int)p.gun_mounts.size();
-    if ((int)p.gun_mounts.size() < mounts) p.gun_mounts.resize(mounts, "");
+    if ((int)p.gun_mounts.size() < mounts) p.gun_mounts.resize(mounts, MountSlot{});
     if (g_sel_mount >= mounts) g_sel_mount = 0;
 
     // Summary strip.
@@ -643,7 +643,7 @@ void draw_equipment(BaseContext& ctx) {
     ImGui::SetCursorScreenPos(ImVec2(28, 112));
     for (int i = 0; i < mounts; ++i) {
         if (i) ImGui::SameLine();
-        const std::string& g = p.gun_mounts[(size_t)i];
+        const std::string& g = p.gun_mounts[(size_t)i].gun_id;
         char lbl[64];
         std::snprintf(lbl, sizeof(lbl), "[%d] %s", i, g.empty() ? "empty" : g.c_str());
         const bool sel = (i == g_sel_mount);
@@ -658,14 +658,14 @@ void draw_equipment(BaseContext& ctx) {
     ImGui::PushID("sell_selected_weapon");
     const bool can_sell_gun = g_sel_mount < mounts &&
                               (int)p.gun_mounts.size() > g_sel_mount &&
-                              !p.gun_mounts[(size_t)g_sel_mount].empty();
+                              !p.gun_mounts[(size_t)g_sel_mount].gun_id.empty();
     ImGui::BeginDisabled(!can_sell_gun);
     if (ImGui::SmallButton("Sell weapon")) {
         if (outfitting::sell_gun(p, g_sel_mount, klass)) sfx::ui_click();
     }
     ImGui::EndDisabled();
     if (ImGui::IsItemHovered() && can_sell_gun) {
-        const int64_t refund = gun_price(p.gun_mounts[(size_t)g_sel_mount].c_str());
+        const int64_t refund = gun_price(p.gun_mounts[(size_t)g_sel_mount].gun_id.c_str());
         ImGui::SetTooltip("Sell the weapon at mount %d (+%lld)",
                           g_sel_mount, (long long)refund);
     }

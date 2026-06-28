@@ -40,6 +40,24 @@
 
 struct ShipClass;
 
+// One fitted gun mount slot (Phase 4d Wave 1, #88). Promoted from a bare
+// std::string gun name so a mounted weapon can carry its rarity + per-shot
+// WeaponMods through the loadout — exactly like an InventoryItem does in
+// the hold. An empty gun_id ("") still means "empty slot", and the string
+// ctor keeps every old write-site (gun_mounts[i] = "laser") compiling with
+// Basic rarity + 1.0/1.0 mods, so this is a zero-behavior-change promotion.
+struct MountSlot {
+    std::string         gun_id;                         // "" = empty slot
+    inventory::Rarity   rarity = inventory::Rarity::Basic;
+    inventory::WeaponMods mods;                         // 1.0/1.0 default
+    MountSlot() = default;
+    MountSlot(std::string g, inventory::Rarity r = inventory::Rarity::Basic)
+        : gun_id(std::move(g)), rarity(r) {
+        if (r == inventory::Rarity::Rare)      mods = { 1.1f, 0.9f };
+        else if (r == inventory::Rarity::Legendary) mods = { 1.2f, 0.8f };
+    }
+};
+
 // One stack of one commodity in the hold.
 struct CargoEntry {
     std::string commodity_id;        // catalog id, e.g. "iron" (commodity.h)
@@ -133,7 +151,7 @@ struct PlayerState {
     // empty slot. Levels are 0-based shop tiers the equipment dealer
     // will define; 0 = stock.
     std::string              ship_class_name;       // "tarsus"
-    std::vector<std::string> gun_mounts;
+    std::vector<MountSlot>   gun_mounts;
     int                      shield_level    = 0;
     int                      engine_level    = 0;
     // Name from armor::find(), e.g. "Plasteel Armor" / "Tungsten Armor".
