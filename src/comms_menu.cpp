@@ -22,7 +22,6 @@
 #include "imgui.h"
 
 #include <cstdio>
-#include <deque>
 #include <random>
 #include <string>
 #include <unordered_map>
@@ -129,14 +128,6 @@ const char* faction_to_bank_name(Faction f) {
         case Faction::Civilian: return nullptr;   // bases stay silent
         default:                return nullptr;
     }
-}
-
-// Capitalize a lowercase bank key for the comm-log display name, e.g.
-// "pirate" -> "Pirate", "bounty_hunter" -> "Bounty_hunter". Cheap ASCII.
-std::string display_name(const std::string& bank) {
-    std::string s = bank;
-    if (!s.empty() && s[0] >= 'a' && s[0] <= 'z') s[0] = (char)(s[0] - 'a' + 'A');
-    return s;
 }
 
 // A scheduled reply from a hailed party. Armed in select() on SEND, fired by
@@ -259,26 +250,9 @@ void build_shown_lines() {
     }
 }
 
-// Rolling comm log — last few lines the player has sent. Shown at the
-// bottom of the panel as "You: <line>".
-constexpr size_t kLogMax = 4;
-std::deque<std::string> g_log;
-
 // True iff a base/station/planet nav point is a hailable comms destination.
 bool is_base_kind(const std::string& kind) {
     return kind == "station" || kind == "planet" || kind == "base";
-}
-
-void push_log(const std::string& line) {
-    g_log.push_back("You: " + line);
-    while (g_log.size() > kLogMax) g_log.pop_front();
-}
-
-// Push an already-formatted line (e.g. a hailed party's reply) verbatim,
-// without the "You: " prefix push_log() adds.
-void push_log_raw(const std::string& line) {
-    g_log.push_back(line);
-    while (g_log.size() > kLogMax) g_log.pop_front();
 }
 
 // Rebuild the cached destination list from the live system + target. Called
@@ -425,7 +399,6 @@ void select(int n) {
 
     const Intent       intent = g_shown[idx].intent;
     const std::string& line   = g_shown[idx].text;
-    push_log(line);
 
     // Speak the EXACT chosen line if the manifest has a clip for it: lazy-load
     // (cached) and play it 2D, same player-directed gain as the rest of the
@@ -517,18 +490,12 @@ void draw(const StarSystem& sys, const Ship* target,
         }
     }
 
-    // Footer hint + rolling comm log.
+    // Footer hint. (No text log: the panel is too narrow to render comm
+    // lines without truncating mid-word — the exchange is conveyed by voice.)
     ImGui::Separator();
     ImGui::PushStyleColor(ImGuiCol_Text, kDim);
     ImGui::TextUnformatted("press 1-9");
     ImGui::PopStyleColor();
-    if (!g_log.empty()) {
-        for (const std::string& line : g_log) {
-            ImGui::PushStyleColor(ImGuiCol_Text, kDim);
-            ImGui::TextUnformatted(line.c_str());
-            ImGui::PopStyleColor();
-        }
-    }
 }
 
 void tick(float now_s) {
@@ -551,8 +518,6 @@ void tick(float now_s) {
     const std::vector<Response>& pool = cat_it->second;
     std::uniform_int_distribution<size_t> pick(0, pool.size() - 1);
     const Response& r = pool[pick(g_rng)];
-
-    push_log_raw(display_name(p.bank_faction) + ": " + r.text);
 
     // Voice the reply via the shared lazy clip cache (0 = missing/failed,
     // which we just skip — the log line still lands).
