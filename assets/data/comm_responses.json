@@ -95,32 +95,12 @@
      "clip": "assets/speech/generated/audio/comm_0022.mp3"
     },
     {
-     "text": "Fly safe out in the Oxford run, the void's hungry today.",
-     "clip": "assets/speech/generated/audio/comm_0023.mp3"
-    },
-    {
-     "text": "Fly safe out in Pleiades, the void's hungry today.",
-     "clip": "assets/speech/generated/audio/comm_0024.mp3"
-    },
-    {
      "text": "Fly safe out in my quad, the void's hungry today.",
      "clip": "assets/speech/generated/audio/comm_0025.mp3"
     },
     {
      "text": "Fly safe out in these lanes, the void's hungry today.",
      "clip": "assets/speech/generated/audio/comm_0026.mp3"
-    },
-    {
-     "text": "Fly safe out in the Palan blockade, the void's hungry today.",
-     "clip": "assets/speech/generated/audio/comm_0027.mp3"
-    },
-    {
-     "text": "Fly safe out in the Troy system, the void's hungry today.",
-     "clip": "assets/speech/generated/audio/comm_0028.mp3"
-    },
-    {
-     "text": "Fly safe out in the Humboldt quad, the void's hungry today.",
-     "clip": "assets/speech/generated/audio/comm_0029.mp3"
     },
     {
      "text": "Fly safe out in Confed space, the void's hungry today.",
@@ -167,36 +147,12 @@
      "clip": "assets/speech/generated/audio/comm_0040.mp3"
     },
     {
-     "text": "Cargo hauler coming through the Humboldt quad, no trouble here.",
-     "clip": "assets/speech/generated/audio/comm_0041.mp3"
-    },
-    {
      "text": "Cargo hauler coming through this sector, no trouble here.",
      "clip": "assets/speech/generated/audio/comm_0042.mp3"
     },
     {
      "text": "Cargo hauler coming through the asteroid fields, no trouble here.",
      "clip": "assets/speech/generated/audio/comm_0043.mp3"
-    },
-    {
-     "text": "Cargo hauler coming through the New Detroit run, no trouble here.",
-     "clip": "assets/speech/generated/audio/comm_0044.mp3"
-    },
-    {
-     "text": "Cargo hauler coming through the Palan blockade, no trouble here.",
-     "clip": "assets/speech/generated/audio/comm_0045.mp3"
-    },
-    {
-     "text": "Cargo hauler coming through the Oxford run, no trouble here.",
-     "clip": "assets/speech/generated/audio/comm_0046.mp3"
-    },
-    {
-     "text": "Cargo hauler coming through Pleiades, no trouble here.",
-     "clip": "assets/speech/generated/audio/comm_0047.mp3"
-    },
-    {
-     "text": "Cargo hauler coming through the Troy system, no trouble here.",
-     "clip": "assets/speech/generated/audio/comm_0048.mp3"
     },
     {
      "text": "Cargo hauler coming through Confed space, no trouble here.",
@@ -471,28 +427,8 @@
      "clip": "assets/speech/generated/audio/comm_0115.mp3"
     },
     {
-     "text": "Twenty years building this business, gone in the New Detroit run...",
-     "clip": "assets/speech/generated/audio/comm_0116.mp3"
-    },
-    {
-     "text": "Twenty years building this business, gone in the Troy system...",
-     "clip": "assets/speech/generated/audio/comm_0117.mp3"
-    },
-    {
      "text": "Twenty years building this business, gone in Confed space...",
      "clip": "assets/speech/generated/audio/comm_0118.mp3"
-    },
-    {
-     "text": "Twenty years building this business, gone in the Palan blockade...",
-     "clip": "assets/speech/generated/audio/comm_0119.mp3"
-    },
-    {
-     "text": "Twenty years building this business, gone in the Oxford run...",
-     "clip": "assets/speech/generated/audio/comm_0120.mp3"
-    },
-    {
-     "text": "Twenty years building this business, gone in the Humboldt quad...",
-     "clip": "assets/speech/generated/audio/comm_0121.mp3"
     },
     {
      "text": "Twenty years building this business, gone in these lanes...",
@@ -581,32 +517,12 @@
      "clip": "assets/speech/generated/audio/comm_0145.mp3"
     },
     {
-     "text": "We've got the Oxford run bottled up tight, keep it clean.",
-     "clip": "assets/speech/generated/audio/comm_0146.mp3"
-    },
-    {
      "text": "We've got the asteroid fields bottled up tight, keep it clean.",
      "clip": "assets/speech/generated/audio/comm_0147.mp3"
     },
     {
-     "text": "We've got the New Detroit run bottled up tight, keep it clean.",
-     "clip": "assets/speech/generated/audio/comm_0148.mp3"
-    },
-    {
-     "text": "We've got the Troy system bottled up tight, keep it clean.",
-     "clip": "assets/speech/generated/audio/comm_0149.mp3"
-    },
-    {
-     "text": "We've got the Palan blockade bottled up tight, keep it clean.",
-     "clip": "assets/speech/generated/audio/comm_0150.mp3"
-    },
-    {
      "text": "We've got Confed space bottled up tight, keep it clean.",
      "clip": "assets/speech/generated/audio/comm_0151.mp3"
-    },
-    {
-     "text": "We've got Pleiades bottled up tight, keep it clean.",
-     "clip": "assets/speech/generated/audio/comm_0152.mp3"
     },
     {
      "text": "We've got this sector bottled up tight, keep it clean.",
@@ -621,10 +537,6 @@
      "clip": "assets/speech/generated/audio/comm_0155.mp3"
     },
     {
-     "text": "Welcome to the New Detroit run, sport. We run a tight ship here.",
-     "clip": "assets/speech/generated/audio/comm_0156.mp3"
-    },
-    {
      "text": "Welcome to this quadrant, sport. We run a tight ship here.",
      "clip": "assets/speech/generated/audio/comm_0157.mp3"
     },
@@ -635,18 +547,6 @@
     {
      "text": "Welcome to these lanes, flyboy. We run a tight ship here.",
      "clip": "assets/speech/generated/audio/comm_0159.mp3"
-    },
-    {
-     "text": "Welcome to the Oxford run, Captain. We run a tight ship here.",
-     "clip": "assets/speech/generated/audio/comm_0160.mp3"
-    },
-    {
-     "text": "Welcome to the New Detroit run, Ace. We run a tight ship here.",
-     "clip": "assets/speech/generated/audio/comm_0161.mp3"
-    },
-    {
-     "text": "Welcome to Pleiades, mister. We run a tight ship here.",
-     "clip": "assets/speech/generated/audio/comm_0162.mp3"
     },
     {
      "text": "Welcome to this dead end of space, Captain. We run a tight ship here.",
@@ -723,20 +623,8 @@
      "clip": "assets/speech/generated/audio/comm_0180.mp3"
     },
     {
-     "text": "You're not leaving the Troy system alive, smuggler.",
-     "clip": "assets/speech/generated/audio/comm_0181.mp3"
-    },
-    {
-     "text": "You're not leaving Pleiades alive, smuggler.",
-     "clip": "assets/speech/generated/audio/comm_0182.mp3"
-    },
-    {
      "text": "You're not leaving the asteroid fields alive, smuggler.",
      "clip": "assets/speech/generated/audio/comm_0183.mp3"
-    },
-    {
-     "text": "You're not leaving the New Detroit run alive, smuggler.",
-     "clip": "assets/speech/generated/audio/comm_0184.mp3"
     },
     {
      "text": "You're not leaving my quad alive, smuggler.",
@@ -827,10 +715,6 @@
      "clip": "assets/speech/generated/audio/comm_0205.mp3"
     },
     {
-     "text": "Threat neutralized. the Oxford run is secure once more.",
-     "clip": "assets/speech/generated/audio/comm_0206.mp3"
-    },
-    {
      "text": "Threat neutralized. the asteroid fields is secure once more.",
      "clip": "assets/speech/generated/audio/comm_0207.mp3"
     },
@@ -843,20 +727,8 @@
      "clip": "assets/speech/generated/audio/comm_0209.mp3"
     },
     {
-     "text": "Threat neutralized. the Palan blockade is secure once more.",
-     "clip": "assets/speech/generated/audio/comm_0210.mp3"
-    },
-    {
-     "text": "Threat neutralized. the Troy system is secure once more.",
-     "clip": "assets/speech/generated/audio/comm_0211.mp3"
-    },
-    {
      "text": "Threat neutralized. Confed space is secure once more.",
      "clip": "assets/speech/generated/audio/comm_0212.mp3"
-    },
-    {
-     "text": "Threat neutralized. the Humboldt quad is secure once more.",
-     "clip": "assets/speech/generated/audio/comm_0213.mp3"
     },
     {
      "text": "Threat neutralized. this quadrant is secure once more.",
@@ -957,24 +829,8 @@
   "pirate": {
    "greeting": [
     {
-     "text": "Well, well, fresh meat drifts into the Palan blockade.",
-     "clip": "assets/speech/generated/audio/comm_0241.mp3"
-    },
-    {
      "text": "Well, well, fresh meat drifts into this quadrant.",
      "clip": "assets/speech/generated/audio/comm_0242.mp3"
-    },
-    {
-     "text": "Well, well, fresh meat drifts into the New Detroit run.",
-     "clip": "assets/speech/generated/audio/comm_0243.mp3"
-    },
-    {
-     "text": "Well, well, fresh meat drifts into the Oxford run.",
-     "clip": "assets/speech/generated/audio/comm_0244.mp3"
-    },
-    {
-     "text": "Well, well, fresh meat drifts into the Humboldt quad.",
-     "clip": "assets/speech/generated/audio/comm_0245.mp3"
     },
     {
      "text": "Well, well, fresh meat drifts into the asteroid fields.",
@@ -987,10 +843,6 @@
     {
      "text": "Well, well, fresh meat drifts into this sector.",
      "clip": "assets/speech/generated/audio/comm_0248.mp3"
-    },
-    {
-     "text": "Well, well, fresh meat drifts into Pleiades.",
-     "clip": "assets/speech/generated/audio/comm_0249.mp3"
     },
     {
      "text": "Well, well, fresh meat drifts into my quad.",
@@ -1119,30 +971,6 @@
      "clip": "assets/speech/generated/audio/comm_0280.mp3"
     },
     {
-     "text": "Drop your cargo or I scatter you across Pleiades!",
-     "clip": "assets/speech/generated/audio/comm_0281.mp3"
-    },
-    {
-     "text": "Drop your hold or I scatter you across Pleiades!",
-     "clip": "assets/speech/generated/audio/comm_0282.mp3"
-    },
-    {
-     "text": "Drop your precious freight or I scatter you across the Troy system!",
-     "clip": "assets/speech/generated/audio/comm_0283.mp3"
-    },
-    {
-     "text": "Drop your shipment or I scatter you across the Troy system!",
-     "clip": "assets/speech/generated/audio/comm_0284.mp3"
-    },
-    {
-     "text": "Drop your hold or I scatter you across the Troy system!",
-     "clip": "assets/speech/generated/audio/comm_0285.mp3"
-    },
-    {
-     "text": "Drop those crates or I scatter you across the Oxford run!",
-     "clip": "assets/speech/generated/audio/comm_0286.mp3"
-    },
-    {
      "text": "You're a loose end looking to be tied, friend.",
      "clip": "assets/speech/generated/audio/comm_0287.mp3"
     },
@@ -1191,30 +1019,6 @@
      "clip": "assets/speech/generated/audio/comm_0298.mp3"
     },
     {
-     "text": "Hand over that contraband or I paint the Oxford run with your guts!",
-     "clip": "assets/speech/generated/audio/comm_0299.mp3"
-    },
-    {
-     "text": "Hand over that hot merchandise or I paint Pleiades with your guts!",
-     "clip": "assets/speech/generated/audio/comm_0300.mp3"
-    },
-    {
-     "text": "Hand over your cargo or I paint the Palan blockade with your guts!",
-     "clip": "assets/speech/generated/audio/comm_0301.mp3"
-    },
-    {
-     "text": "Hand over your cargo or I paint the Humboldt quad with your guts!",
-     "clip": "assets/speech/generated/audio/comm_0302.mp3"
-    },
-    {
-     "text": "Hand over your shipment or I paint the Troy system with your guts!",
-     "clip": "assets/speech/generated/audio/comm_0303.mp3"
-    },
-    {
-     "text": "Hand over your cargo or I paint the Troy system with your guts!",
-     "clip": "assets/speech/generated/audio/comm_0304.mp3"
-    },
-    {
      "text": "Hand over that hot merchandise or I paint my quad with your guts!",
      "clip": "assets/speech/generated/audio/comm_0305.mp3"
     },
@@ -1235,10 +1039,6 @@
      "clip": "assets/speech/generated/audio/comm_0309.mp3"
     },
     {
-     "text": "You picked the wrong shortcut through Pleiades, tin can.",
-     "clip": "assets/speech/generated/audio/comm_0310.mp3"
-    },
-    {
      "text": "You picked the wrong shortcut through this sector, chum.",
      "clip": "assets/speech/generated/audio/comm_0311.mp3"
     },
@@ -1253,10 +1053,6 @@
     {
      "text": "You picked the wrong shortcut through this dead end of space, Captain.",
      "clip": "assets/speech/generated/audio/comm_0314.mp3"
-    },
-    {
-     "text": "You picked the wrong shortcut through the Humboldt quad, tin can.",
-     "clip": "assets/speech/generated/audio/comm_0315.mp3"
     },
     {
      "text": "You picked the wrong shortcut through this dead end of space, sport.",
@@ -2011,20 +1807,8 @@
   "confed": {
    "greeting": [
     {
-     "text": "Confederation patrol. State your business in Pleiades.",
-     "clip": "assets/speech/generated/audio/comm_0505.mp3"
-    },
-    {
-     "text": "Confederation patrol. State your business in the Humboldt quad.",
-     "clip": "assets/speech/generated/audio/comm_0506.mp3"
-    },
-    {
      "text": "Confederation patrol. State your business in this quadrant.",
      "clip": "assets/speech/generated/audio/comm_0507.mp3"
-    },
-    {
-     "text": "Confederation patrol. State your business in the New Detroit run.",
-     "clip": "assets/speech/generated/audio/comm_0508.mp3"
     },
     {
      "text": "Confederation patrol. State your business in this dead end of space.",
@@ -2039,16 +1823,8 @@
      "clip": "assets/speech/generated/audio/comm_0511.mp3"
     },
     {
-     "text": "Confederation patrol. State your business in the Palan blockade.",
-     "clip": "assets/speech/generated/audio/comm_0512.mp3"
-    },
-    {
      "text": "Confederation patrol. State your business in the asteroid fields.",
      "clip": "assets/speech/generated/audio/comm_0513.mp3"
-    },
-    {
-     "text": "Confederation patrol. State your business in the Troy system.",
-     "clip": "assets/speech/generated/audio/comm_0514.mp3"
     },
     {
      "text": "We have you on our screens, mister. Continue on course.",
@@ -2273,32 +2049,12 @@
      "clip": "assets/speech/generated/audio/comm_0569.mp3"
     },
     {
-     "text": "You're a wanted criminal in the New Detroit run. Surrender now.",
-     "clip": "assets/speech/generated/audio/comm_0570.mp3"
-    },
-    {
      "text": "You're a wanted criminal in this sector. Surrender now.",
      "clip": "assets/speech/generated/audio/comm_0571.mp3"
     },
     {
      "text": "You're a wanted criminal in this quadrant. Surrender now.",
      "clip": "assets/speech/generated/audio/comm_0572.mp3"
-    },
-    {
-     "text": "You're a wanted criminal in the Troy system. Surrender now.",
-     "clip": "assets/speech/generated/audio/comm_0573.mp3"
-    },
-    {
-     "text": "You're a wanted criminal in the Humboldt quad. Surrender now.",
-     "clip": "assets/speech/generated/audio/comm_0574.mp3"
-    },
-    {
-     "text": "You're a wanted criminal in the Oxford run. Surrender now.",
-     "clip": "assets/speech/generated/audio/comm_0575.mp3"
-    },
-    {
-     "text": "You're a wanted criminal in Pleiades. Surrender now.",
-     "clip": "assets/speech/generated/audio/comm_0576.mp3"
     }
    ],
    "low_hp": [
@@ -2321,10 +2077,6 @@
      "clip": "assets/speech/generated/audio/comm_0580.mp3"
     },
     {
-     "text": "Fugitive neutralized. Logging the kill, the Humboldt quad, Confed out.",
-     "clip": "assets/speech/generated/audio/comm_0581.mp3"
-    },
-    {
      "text": "Fugitive neutralized. Logging the kill, my quad, Confed out.",
      "clip": "assets/speech/generated/audio/comm_0582.mp3"
     },
@@ -2341,20 +2093,8 @@
      "clip": "assets/speech/generated/audio/comm_0585.mp3"
     },
     {
-     "text": "Fugitive neutralized. Logging the kill, the Palan blockade, Confed out.",
-     "clip": "assets/speech/generated/audio/comm_0586.mp3"
-    },
-    {
-     "text": "Fugitive neutralized. Logging the kill, the Troy system, Confed out.",
-     "clip": "assets/speech/generated/audio/comm_0587.mp3"
-    },
-    {
      "text": "Fugitive neutralized. Logging the kill, Confed space, Confed out.",
      "clip": "assets/speech/generated/audio/comm_0588.mp3"
-    },
-    {
-     "text": "Fugitive neutralized. Logging the kill, the Oxford run, Confed out.",
-     "clip": "assets/speech/generated/audio/comm_0589.mp3"
     },
     {
      "text": "Fugitive neutralized. Logging the kill, this sector, Confed out.",
@@ -2485,14 +2225,6 @@
      "clip": "assets/speech/generated/audio/comm_0619.mp3"
     },
     {
-     "text": "Repent, sinner, the Church of Man watches the Palan blockade.",
-     "clip": "assets/speech/generated/audio/comm_0620.mp3"
-    },
-    {
-     "text": "Repent, sinner, the Church of Man watches the Troy system.",
-     "clip": "assets/speech/generated/audio/comm_0621.mp3"
-    },
-    {
      "text": "Repent, sinner, the Church of Man watches these lanes.",
      "clip": "assets/speech/generated/audio/comm_0622.mp3"
     },
@@ -2501,20 +2233,12 @@
      "clip": "assets/speech/generated/audio/comm_0623.mp3"
     },
     {
-     "text": "Repent, sinner, the Church of Man watches Pleiades.",
-     "clip": "assets/speech/generated/audio/comm_0624.mp3"
-    },
-    {
      "text": "Repent, sinner, the Church of Man watches Confed space.",
      "clip": "assets/speech/generated/audio/comm_0625.mp3"
     },
     {
      "text": "Repent, sinner, the Church of Man watches the asteroid fields.",
      "clip": "assets/speech/generated/audio/comm_0626.mp3"
-    },
-    {
-     "text": "Repent, sinner, the Church of Man watches the New Detroit run.",
-     "clip": "assets/speech/generated/audio/comm_0627.mp3"
     },
     {
      "text": "Repent, sinner, the Church of Man watches this sector.",
@@ -2705,10 +2429,6 @@
      "clip": "assets/speech/generated/audio/comm_0025.mp3"
     },
     {
-     "text": "Fly safe out in the Palan blockade, the void's hungry today.",
-     "clip": "assets/speech/generated/audio/comm_0027.mp3"
-    },
-    {
      "text": "Don't mind me, big shot, just making an honest living.",
      "clip": "assets/speech/generated/audio/comm_0032.mp3"
     },
@@ -2731,22 +2451,6 @@
     {
      "text": "Don't mind me, Captain, just making an honest living.",
      "clip": "assets/speech/generated/audio/comm_0040.mp3"
-    },
-    {
-     "text": "Cargo hauler coming through the Humboldt quad, no trouble here.",
-     "clip": "assets/speech/generated/audio/comm_0041.mp3"
-    },
-    {
-     "text": "Cargo hauler coming through the New Detroit run, no trouble here.",
-     "clip": "assets/speech/generated/audio/comm_0044.mp3"
-    },
-    {
-     "text": "Cargo hauler coming through the Palan blockade, no trouble here.",
-     "clip": "assets/speech/generated/audio/comm_0045.mp3"
-    },
-    {
-     "text": "Cargo hauler coming through the Troy system, no trouble here.",
-     "clip": "assets/speech/generated/audio/comm_0048.mp3"
     },
     {
      "text": "Cargo hauler coming through my quad, no trouble here.",
@@ -2853,10 +2557,6 @@
      "clip": "assets/speech/generated/audio/comm_0115.mp3"
     },
     {
-     "text": "Twenty years building this business, gone in the New Detroit run...",
-     "clip": "assets/speech/generated/audio/comm_0116.mp3"
-    },
-    {
      "text": "Twenty years building this business, gone in these lanes...",
      "clip": "assets/speech/generated/audio/comm_0122.mp3"
     },
@@ -2931,24 +2631,8 @@
      "clip": "assets/speech/generated/audio/comm_0022.mp3"
     },
     {
-     "text": "Fly safe out in the Oxford run, the void's hungry today.",
-     "clip": "assets/speech/generated/audio/comm_0023.mp3"
-    },
-    {
-     "text": "Fly safe out in Pleiades, the void's hungry today.",
-     "clip": "assets/speech/generated/audio/comm_0024.mp3"
-    },
-    {
      "text": "Fly safe out in these lanes, the void's hungry today.",
      "clip": "assets/speech/generated/audio/comm_0026.mp3"
-    },
-    {
-     "text": "Fly safe out in the Troy system, the void's hungry today.",
-     "clip": "assets/speech/generated/audio/comm_0028.mp3"
-    },
-    {
-     "text": "Fly safe out in the Humboldt quad, the void's hungry today.",
-     "clip": "assets/speech/generated/audio/comm_0029.mp3"
     },
     {
      "text": "Fly safe out in Confed space, the void's hungry today.",
@@ -2977,14 +2661,6 @@
     {
      "text": "Cargo hauler coming through the asteroid fields, no trouble here.",
      "clip": "assets/speech/generated/audio/comm_0043.mp3"
-    },
-    {
-     "text": "Cargo hauler coming through the Oxford run, no trouble here.",
-     "clip": "assets/speech/generated/audio/comm_0046.mp3"
-    },
-    {
-     "text": "Cargo hauler coming through Pleiades, no trouble here.",
-     "clip": "assets/speech/generated/audio/comm_0047.mp3"
     },
     {
      "text": "Cargo hauler coming through Confed space, no trouble here.",
@@ -3159,24 +2835,8 @@
      "clip": "assets/speech/generated/audio/comm_0111.mp3"
     },
     {
-     "text": "Twenty years building this business, gone in the Troy system...",
-     "clip": "assets/speech/generated/audio/comm_0117.mp3"
-    },
-    {
      "text": "Twenty years building this business, gone in Confed space...",
      "clip": "assets/speech/generated/audio/comm_0118.mp3"
-    },
-    {
-     "text": "Twenty years building this business, gone in the Palan blockade...",
-     "clip": "assets/speech/generated/audio/comm_0119.mp3"
-    },
-    {
-     "text": "Twenty years building this business, gone in the Oxford run...",
-     "clip": "assets/speech/generated/audio/comm_0120.mp3"
-    },
-    {
-     "text": "Twenty years building this business, gone in the Humboldt quad...",
-     "clip": "assets/speech/generated/audio/comm_0121.mp3"
     },
     {
      "text": "Twenty years building this business, gone in my quad...",
@@ -3259,14 +2919,6 @@
     {
      "text": "Welcome to these lanes, flyboy. We run a tight ship here.",
      "clip": "assets/speech/generated/audio/comm_0159.mp3"
-    },
-    {
-     "text": "Welcome to the Oxford run, Captain. We run a tight ship here.",
-     "clip": "assets/speech/generated/audio/comm_0160.mp3"
-    },
-    {
-     "text": "Welcome to Pleiades, mister. We run a tight ship here.",
-     "clip": "assets/speech/generated/audio/comm_0162.mp3"
     },
     {
      "text": "Welcome to this dead end of space, Captain. We run a tight ship here.",
@@ -3365,14 +3017,6 @@
      "clip": "assets/speech/generated/audio/comm_0209.mp3"
     },
     {
-     "text": "Threat neutralized. the Palan blockade is secure once more.",
-     "clip": "assets/speech/generated/audio/comm_0210.mp3"
-    },
-    {
-     "text": "Threat neutralized. the Troy system is secure once more.",
-     "clip": "assets/speech/generated/audio/comm_0211.mp3"
-    },
-    {
      "text": "Threat neutralized. this quadrant is secure once more.",
      "clip": "assets/speech/generated/audio/comm_0214.mp3"
     }
@@ -3427,40 +3071,12 @@
      "clip": "assets/speech/generated/audio/comm_0141.mp3"
     },
     {
-     "text": "We've got the Oxford run bottled up tight, keep it clean.",
-     "clip": "assets/speech/generated/audio/comm_0146.mp3"
-    },
-    {
      "text": "We've got the asteroid fields bottled up tight, keep it clean.",
      "clip": "assets/speech/generated/audio/comm_0147.mp3"
     },
     {
-     "text": "We've got the New Detroit run bottled up tight, keep it clean.",
-     "clip": "assets/speech/generated/audio/comm_0148.mp3"
-    },
-    {
-     "text": "We've got the Troy system bottled up tight, keep it clean.",
-     "clip": "assets/speech/generated/audio/comm_0149.mp3"
-    },
-    {
-     "text": "We've got the Palan blockade bottled up tight, keep it clean.",
-     "clip": "assets/speech/generated/audio/comm_0150.mp3"
-    },
-    {
-     "text": "We've got Pleiades bottled up tight, keep it clean.",
-     "clip": "assets/speech/generated/audio/comm_0152.mp3"
-    },
-    {
      "text": "You're clear to pass. Keep your nose clean.",
      "clip": "assets/speech/generated/audio/comm_0155.mp3"
-    },
-    {
-     "text": "Welcome to the New Detroit run, sport. We run a tight ship here.",
-     "clip": "assets/speech/generated/audio/comm_0156.mp3"
-    },
-    {
-     "text": "Welcome to the New Detroit run, Ace. We run a tight ship here.",
-     "clip": "assets/speech/generated/audio/comm_0161.mp3"
     },
     {
      "text": "Welcome to my quad, stranger. We run a tight ship here.",
@@ -3505,18 +3121,6 @@
      "clip": "assets/speech/generated/audio/comm_0179.mp3"
     },
     {
-     "text": "You're not leaving the Troy system alive, smuggler.",
-     "clip": "assets/speech/generated/audio/comm_0181.mp3"
-    },
-    {
-     "text": "You're not leaving Pleiades alive, smuggler.",
-     "clip": "assets/speech/generated/audio/comm_0182.mp3"
-    },
-    {
-     "text": "You're not leaving the New Detroit run alive, smuggler.",
-     "clip": "assets/speech/generated/audio/comm_0184.mp3"
-    },
-    {
      "text": "Contraband detected. All units, close and terminate.",
      "clip": "assets/speech/generated/audio/comm_0188.mp3"
     },
@@ -3553,10 +3157,6 @@
      "clip": "assets/speech/generated/audio/comm_0205.mp3"
     },
     {
-     "text": "Threat neutralized. the Oxford run is secure once more.",
-     "clip": "assets/speech/generated/audio/comm_0206.mp3"
-    },
-    {
      "text": "Threat neutralized. the asteroid fields is secure once more.",
      "clip": "assets/speech/generated/audio/comm_0207.mp3"
     },
@@ -3567,10 +3167,6 @@
     {
      "text": "Threat neutralized. Confed space is secure once more.",
      "clip": "assets/speech/generated/audio/comm_0212.mp3"
-    },
-    {
-     "text": "Threat neutralized. the Humboldt quad is secure once more.",
-     "clip": "assets/speech/generated/audio/comm_0213.mp3"
     }
    ],
    "demand": [
@@ -3632,16 +3228,444 @@
     }
    ]
   },
-  "PrivFlightV1201": {
+  "PrivFlightV1501": {
    "greeting": [
     {
-     "text": "Well, well, fresh meat drifts into the Palan blockade.",
-     "clip": "assets/speech/generated/audio/comm_0241.mp3"
+     "text": "Well, well, fresh meat drifts into this quadrant.",
+     "clip": "assets/speech/generated/audio/comm_0242.mp3"
     },
     {
-     "text": "Well, well, fresh meat drifts into Pleiades.",
-     "clip": "assets/speech/generated/audio/comm_0249.mp3"
+     "text": "Looking sharp, chum. Shame about what's coming.",
+     "clip": "assets/speech/generated/audio/comm_0252.mp3"
     },
+    {
+     "text": "Looking sharp, flyboy. Shame about what's coming.",
+     "clip": "assets/speech/generated/audio/comm_0256.mp3"
+    },
+    {
+     "text": "Looking sharp, rookie. Shame about what's coming.",
+     "clip": "assets/speech/generated/audio/comm_0259.mp3"
+    },
+    {
+     "text": "Lost, little friend? Let me take that burden off your hands.",
+     "clip": "assets/speech/generated/audio/comm_0261.mp3"
+    },
+    {
+     "text": "Lost, little rookie? Let me take that burden off your hands.",
+     "clip": "assets/speech/generated/audio/comm_0262.mp3"
+    },
+    {
+     "text": "Lost, little sport? Let me take that burden off your hands.",
+     "clip": "assets/speech/generated/audio/comm_0264.mp3"
+    },
+    {
+     "text": "Lost, little old-timer? Let me take that burden off your hands.",
+     "clip": "assets/speech/generated/audio/comm_0266.mp3"
+    },
+    {
+     "text": "Lost, little Ace? Let me take that burden off your hands.",
+     "clip": "assets/speech/generated/audio/comm_0270.mp3"
+    },
+    {
+     "text": "Pretty your bucket you got there. Be a shame if I kept it.",
+     "clip": "assets/speech/generated/audio/comm_0272.mp3"
+    }
+   ],
+   "hostile": [
+    {
+     "text": "Drop your cargo or I scatter you across my quad!",
+     "clip": "assets/speech/generated/audio/comm_0277.mp3"
+    },
+    {
+     "text": "You're a loose end looking to be tied, friend.",
+     "clip": "assets/speech/generated/audio/comm_0287.mp3"
+    },
+    {
+     "text": "You're a loose end looking to be tied, flyboy.",
+     "clip": "assets/speech/generated/audio/comm_0292.mp3"
+    },
+    {
+     "text": "You're a loose end looking to be tied, big shot.",
+     "clip": "assets/speech/generated/audio/comm_0295.mp3"
+    },
+    {
+     "text": "Hand over your precious freight or I paint this quadrant with your guts!",
+     "clip": "assets/speech/generated/audio/comm_0298.mp3"
+    },
+    {
+     "text": "Hand over that hot merchandise or I paint my quad with your guts!",
+     "clip": "assets/speech/generated/audio/comm_0305.mp3"
+    },
+    {
+     "text": "You picked the wrong shortcut through Confed space, chum.",
+     "clip": "assets/speech/generated/audio/comm_0308.mp3"
+    },
+    {
+     "text": "You picked the wrong shortcut through these lanes, tin can.",
+     "clip": "assets/speech/generated/audio/comm_0317.mp3"
+    },
+    {
+     "text": "Nothing personal, sunshine. Okay, maybe a little personal.",
+     "clip": "assets/speech/generated/audio/comm_0319.mp3"
+    },
+    {
+     "text": "Nothing personal, sweetheart. Okay, maybe a little personal.",
+     "clip": "assets/speech/generated/audio/comm_0324.mp3"
+    }
+   ],
+   "low_hp": [
+    {
+     "text": "Damn, you're ripping me apart!",
+     "clip": "assets/speech/generated/audio/comm_0328.mp3"
+    },
+    {
+     "text": "Alright, alright, take those crates, just stop shooting!",
+     "clip": "assets/speech/generated/audio/comm_0331.mp3"
+    },
+    {
+     "text": "Not like this! the guild promised me an easy mark!",
+     "clip": "assets/speech/generated/audio/comm_0342.mp3"
+    },
+    {
+     "text": "Not like this! the boss promised me an easy mark!",
+     "clip": "assets/speech/generated/audio/comm_0345.mp3"
+    }
+   ],
+   "kill": [
+    {
+     "text": "You're nailed, big shot. Easy money.",
+     "clip": "assets/speech/generated/audio/comm_0349.mp3"
+    },
+    {
+     "text": "You're nailed, Ace. Easy money.",
+     "clip": "assets/speech/generated/audio/comm_0352.mp3"
+    },
+    {
+     "text": "You're nailed, mister. Easy money.",
+     "clip": "assets/speech/generated/audio/comm_0355.mp3"
+    },
+    {
+     "text": "You're nailed, pilot. Easy money.",
+     "clip": "assets/speech/generated/audio/comm_0356.mp3"
+    },
+    {
+     "text": "Should've paid the toll, friend.",
+     "clip": "assets/speech/generated/audio/comm_0359.mp3"
+    },
+    {
+     "text": "Should've paid the toll, rookie.",
+     "clip": "assets/speech/generated/audio/comm_0363.mp3"
+    },
+    {
+     "text": "Should've paid the toll, sweetheart.",
+     "clip": "assets/speech/generated/audio/comm_0365.mp3"
+    },
+    {
+     "text": "Should've paid the toll, flyboy.",
+     "clip": "assets/speech/generated/audio/comm_0366.mp3"
+    },
+    {
+     "text": "Ha! the Admiral'll pay extra for that that crate of yours.",
+     "clip": "assets/speech/generated/audio/comm_0369.mp3"
+    },
+    {
+     "text": "Ha! the boss'll pay extra for that that crate of yours.",
+     "clip": "assets/speech/generated/audio/comm_0370.mp3"
+    },
+    {
+     "text": "Ha! my employer'll pay extra for that that scrap heap of yours.",
+     "clip": "assets/speech/generated/audio/comm_0374.mp3"
+    },
+    {
+     "text": "Ha! Lynch'll pay extra for that your tin can of yours.",
+     "clip": "assets/speech/generated/audio/comm_0376.mp3"
+    },
+    {
+     "text": "Ha! my employer'll pay extra for that your tin can of yours.",
+     "clip": "assets/speech/generated/audio/comm_0377.mp3"
+    },
+    {
+     "text": "Sleep tight in the void, old-timer.",
+     "clip": "assets/speech/generated/audio/comm_0378.mp3"
+    },
+    {
+     "text": "Sleep tight in the void, chum.",
+     "clip": "assets/speech/generated/audio/comm_0380.mp3"
+    },
+    {
+     "text": "Sleep tight in the void, Ace.",
+     "clip": "assets/speech/generated/audio/comm_0387.mp3"
+    }
+   ],
+   "demand": [
+    {
+     "text": "Jettison that hot merchandise now and maybe you live.",
+     "clip": "assets/speech/generated/audio/comm_0390.mp3"
+    },
+    {
+     "text": "Jettison your shipment now and maybe you live.",
+     "clip": "assets/speech/generated/audio/comm_0394.mp3"
+    },
+    {
+     "text": "Jettison your manifest now and maybe you live.",
+     "clip": "assets/speech/generated/audio/comm_0396.mp3"
+    },
+    {
+     "text": "This is a toll road, mister. Pay up.",
+     "clip": "assets/speech/generated/audio/comm_0398.mp3"
+    },
+    {
+     "text": "This is a toll road, sunshine. Pay up.",
+     "clip": "assets/speech/generated/audio/comm_0399.mp3"
+    },
+    {
+     "text": "This is a toll road, tin can. Pay up.",
+     "clip": "assets/speech/generated/audio/comm_0402.mp3"
+    },
+    {
+     "text": "This is a toll road, hotshot. Pay up.",
+     "clip": "assets/speech/generated/audio/comm_0403.mp3"
+    },
+    {
+     "text": "This is a toll road, friend. Pay up.",
+     "clip": "assets/speech/generated/audio/comm_0404.mp3"
+    },
+    {
+     "text": "This is the guild's space now. Toll's everything you got.",
+     "clip": "assets/speech/generated/audio/comm_0408.mp3"
+    },
+    {
+     "text": "This is command's space now. Toll's everything you got.",
+     "clip": "assets/speech/generated/audio/comm_0409.mp3"
+    },
+    {
+     "text": "This is Lynch's space now. Toll's everything you got.",
+     "clip": "assets/speech/generated/audio/comm_0410.mp3"
+    },
+    {
+     "text": "This is the boss's space now. Toll's everything you got.",
+     "clip": "assets/speech/generated/audio/comm_0411.mp3"
+    }
+   ]
+  },
+  "PrivFlightV0201": {
+   "greeting": [
+    {
+     "text": "Well, well, fresh meat drifts into the asteroid fields.",
+     "clip": "assets/speech/generated/audio/comm_0246.mp3"
+    },
+    {
+     "text": "Well, well, fresh meat drifts into these lanes.",
+     "clip": "assets/speech/generated/audio/comm_0247.mp3"
+    },
+    {
+     "text": "Well, well, fresh meat drifts into this sector.",
+     "clip": "assets/speech/generated/audio/comm_0248.mp3"
+    },
+    {
+     "text": "Well, well, fresh meat drifts into my quad.",
+     "clip": "assets/speech/generated/audio/comm_0250.mp3"
+    },
+    {
+     "text": "Looking sharp, Captain. Shame about what's coming.",
+     "clip": "assets/speech/generated/audio/comm_0251.mp3"
+    },
+    {
+     "text": "Looking sharp, stranger. Shame about what's coming.",
+     "clip": "assets/speech/generated/audio/comm_0253.mp3"
+    },
+    {
+     "text": "Looking sharp, friend. Shame about what's coming.",
+     "clip": "assets/speech/generated/audio/comm_0257.mp3"
+    },
+    {
+     "text": "Looking sharp, pilot. Shame about what's coming.",
+     "clip": "assets/speech/generated/audio/comm_0260.mp3"
+    },
+    {
+     "text": "Lost, little stranger? Let me take that burden off your hands.",
+     "clip": "assets/speech/generated/audio/comm_0263.mp3"
+    },
+    {
+     "text": "Lost, little sweetheart? Let me take that burden off your hands.",
+     "clip": "assets/speech/generated/audio/comm_0265.mp3"
+    },
+    {
+     "text": "Lost, little sunshine? Let me take that burden off your hands.",
+     "clip": "assets/speech/generated/audio/comm_0267.mp3"
+    },
+    {
+     "text": "Lost, little flyboy? Let me take that burden off your hands.",
+     "clip": "assets/speech/generated/audio/comm_0268.mp3"
+    },
+    {
+     "text": "Lost, little mister? Let me take that burden off your hands.",
+     "clip": "assets/speech/generated/audio/comm_0269.mp3"
+    },
+    {
+     "text": "Pretty that crate you got there. Be a shame if I kept it.",
+     "clip": "assets/speech/generated/audio/comm_0271.mp3"
+    },
+    {
+     "text": "Pretty your tin can you got there. Be a shame if I kept it.",
+     "clip": "assets/speech/generated/audio/comm_0273.mp3"
+    }
+   ],
+   "hostile": [
+    {
+     "text": "Drop your shipment or I scatter you across Confed space!",
+     "clip": "assets/speech/generated/audio/comm_0279.mp3"
+    },
+    {
+     "text": "Drop your cargo or I scatter you across this sector!",
+     "clip": "assets/speech/generated/audio/comm_0280.mp3"
+    },
+    {
+     "text": "You're a loose end looking to be tied, Ace.",
+     "clip": "assets/speech/generated/audio/comm_0291.mp3"
+    },
+    {
+     "text": "You're a loose end looking to be tied, chum.",
+     "clip": "assets/speech/generated/audio/comm_0294.mp3"
+    },
+    {
+     "text": "You're a loose end looking to be tied, sweetheart.",
+     "clip": "assets/speech/generated/audio/comm_0296.mp3"
+    },
+    {
+     "text": "You picked the wrong shortcut through this dead end of space, pilot.",
+     "clip": "assets/speech/generated/audio/comm_0309.mp3"
+    },
+    {
+     "text": "You picked the wrong shortcut through Confed space, mister.",
+     "clip": "assets/speech/generated/audio/comm_0312.mp3"
+    },
+    {
+     "text": "Nothing personal, hotshot. Okay, maybe a little personal.",
+     "clip": "assets/speech/generated/audio/comm_0323.mp3"
+    },
+    {
+     "text": "Nothing personal, buddy. Okay, maybe a little personal.",
+     "clip": "assets/speech/generated/audio/comm_0326.mp3"
+    },
+    {
+     "text": "Nothing personal, mister. Okay, maybe a little personal.",
+     "clip": "assets/speech/generated/audio/comm_0327.mp3"
+    }
+   ],
+   "low_hp": [
+    {
+     "text": "Alright, alright, take your hold, just stop shooting!",
+     "clip": "assets/speech/generated/audio/comm_0333.mp3"
+    },
+    {
+     "text": "Alright, alright, take your manifest, just stop shooting!",
+     "clip": "assets/speech/generated/audio/comm_0338.mp3"
+    },
+    {
+     "text": "Not like this! Lynch promised me an easy mark!",
+     "clip": "assets/speech/generated/audio/comm_0340.mp3"
+    },
+    {
+     "text": "Not like this! command promised me an easy mark!",
+     "clip": "assets/speech/generated/audio/comm_0341.mp3"
+    },
+    {
+     "text": "Not like this! the Admiral promised me an easy mark!",
+     "clip": "assets/speech/generated/audio/comm_0343.mp3"
+    },
+    {
+     "text": "Not like this! my employer promised me an easy mark!",
+     "clip": "assets/speech/generated/audio/comm_0344.mp3"
+    }
+   ],
+   "kill": [
+    {
+     "text": "You're nailed, tin can. Easy money.",
+     "clip": "assets/speech/generated/audio/comm_0353.mp3"
+    },
+    {
+     "text": "Should've paid the toll, sunshine.",
+     "clip": "assets/speech/generated/audio/comm_0364.mp3"
+    },
+    {
+     "text": "Ha! the boss'll pay extra for that that scrap heap of yours.",
+     "clip": "assets/speech/generated/audio/comm_0368.mp3"
+    },
+    {
+     "text": "Sleep tight in the void, mister.",
+     "clip": "assets/speech/generated/audio/comm_0384.mp3"
+    },
+    {
+     "text": "Sleep tight in the void, flyboy.",
+     "clip": "assets/speech/generated/audio/comm_0385.mp3"
+    },
+    {
+     "text": "Sleep tight in the void, sunshine.",
+     "clip": "assets/speech/generated/audio/comm_0386.mp3"
+    }
+   ],
+   "demand": [
+    {
+     "text": "Jettison your cargo now and maybe you live.",
+     "clip": "assets/speech/generated/audio/comm_0388.mp3"
+    },
+    {
+     "text": "Jettison your hold now and maybe you live.",
+     "clip": "assets/speech/generated/audio/comm_0389.mp3"
+    },
+    {
+     "text": "Jettison those crates now and maybe you live.",
+     "clip": "assets/speech/generated/audio/comm_0391.mp3"
+    },
+    {
+     "text": "This is a toll road, stranger. Pay up.",
+     "clip": "assets/speech/generated/audio/comm_0397.mp3"
+    },
+    {
+     "text": "This is a toll road, Ace. Pay up.",
+     "clip": "assets/speech/generated/audio/comm_0401.mp3"
+    },
+    {
+     "text": "This is a toll road, Captain. Pay up.",
+     "clip": "assets/speech/generated/audio/comm_0405.mp3"
+    },
+    {
+     "text": "This is a toll road, chum. Pay up.",
+     "clip": "assets/speech/generated/audio/comm_0406.mp3"
+    },
+    {
+     "text": "This is the Admiral's space now. Toll's everything you got.",
+     "clip": "assets/speech/generated/audio/comm_0407.mp3"
+    },
+    {
+     "text": "This is Sandoval's space now. Toll's everything you got.",
+     "clip": "assets/speech/generated/audio/comm_0413.mp3"
+    },
+    {
+     "text": "Cut engines and prepare to be relieved of your hold.",
+     "clip": "assets/speech/generated/audio/comm_0415.mp3"
+    },
+    {
+     "text": "Cut engines and prepare to be relieved of that hot merchandise.",
+     "clip": "assets/speech/generated/audio/comm_0417.mp3"
+    },
+    {
+     "text": "Cut engines and prepare to be relieved of your cargo.",
+     "clip": "assets/speech/generated/audio/comm_0420.mp3"
+    },
+    {
+     "text": "Cut engines and prepare to be relieved of those crates.",
+     "clip": "assets/speech/generated/audio/comm_0421.mp3"
+    },
+    {
+     "text": "Cut engines and prepare to be relieved of that contraband.",
+     "clip": "assets/speech/generated/audio/comm_0422.mp3"
+    }
+   ]
+  },
+  "PrivFlightV1201": {
+   "greeting": [
     {
      "text": "Looking sharp, big shot. Shame about what's coming.",
      "clip": "assets/speech/generated/audio/comm_0254.mp3"
@@ -3673,10 +3697,6 @@
      "clip": "assets/speech/generated/audio/comm_0278.mp3"
     },
     {
-     "text": "Drop your shipment or I scatter you across the Troy system!",
-     "clip": "assets/speech/generated/audio/comm_0284.mp3"
-    },
-    {
      "text": "You're a loose end looking to be tied, hotshot.",
      "clip": "assets/speech/generated/audio/comm_0288.mp3"
     },
@@ -3697,20 +3717,12 @@
      "clip": "assets/speech/generated/audio/comm_0297.mp3"
     },
     {
-     "text": "Hand over that hot merchandise or I paint Pleiades with your guts!",
-     "clip": "assets/speech/generated/audio/comm_0300.mp3"
-    },
-    {
      "text": "Hand over those goods or I paint this sector with your guts!",
      "clip": "assets/speech/generated/audio/comm_0306.mp3"
     },
     {
      "text": "Hand over those crates or I paint this dead end of space with your guts!",
      "clip": "assets/speech/generated/audio/comm_0307.mp3"
-    },
-    {
-     "text": "You picked the wrong shortcut through Pleiades, tin can.",
-     "clip": "assets/speech/generated/audio/comm_0310.mp3"
     },
     {
      "text": "You picked the wrong shortcut through this sector, chum.",
@@ -3723,10 +3735,6 @@
     {
      "text": "You picked the wrong shortcut through this dead end of space, Captain.",
      "clip": "assets/speech/generated/audio/comm_0314.mp3"
-    },
-    {
-     "text": "You picked the wrong shortcut through the Humboldt quad, tin can.",
-     "clip": "assets/speech/generated/audio/comm_0315.mp3"
     },
     {
      "text": "You picked the wrong shortcut through this dead end of space, sport.",
@@ -3905,494 +3913,6 @@
     {
      "text": "Cut engines and prepare to be relieved of your shipment.",
      "clip": "assets/speech/generated/audio/comm_0419.mp3"
-    }
-   ]
-  },
-  "PrivFlightV1501": {
-   "greeting": [
-    {
-     "text": "Well, well, fresh meat drifts into this quadrant.",
-     "clip": "assets/speech/generated/audio/comm_0242.mp3"
-    },
-    {
-     "text": "Looking sharp, chum. Shame about what's coming.",
-     "clip": "assets/speech/generated/audio/comm_0252.mp3"
-    },
-    {
-     "text": "Looking sharp, flyboy. Shame about what's coming.",
-     "clip": "assets/speech/generated/audio/comm_0256.mp3"
-    },
-    {
-     "text": "Looking sharp, rookie. Shame about what's coming.",
-     "clip": "assets/speech/generated/audio/comm_0259.mp3"
-    },
-    {
-     "text": "Lost, little friend? Let me take that burden off your hands.",
-     "clip": "assets/speech/generated/audio/comm_0261.mp3"
-    },
-    {
-     "text": "Lost, little rookie? Let me take that burden off your hands.",
-     "clip": "assets/speech/generated/audio/comm_0262.mp3"
-    },
-    {
-     "text": "Lost, little sport? Let me take that burden off your hands.",
-     "clip": "assets/speech/generated/audio/comm_0264.mp3"
-    },
-    {
-     "text": "Lost, little old-timer? Let me take that burden off your hands.",
-     "clip": "assets/speech/generated/audio/comm_0266.mp3"
-    },
-    {
-     "text": "Lost, little Ace? Let me take that burden off your hands.",
-     "clip": "assets/speech/generated/audio/comm_0270.mp3"
-    },
-    {
-     "text": "Pretty your bucket you got there. Be a shame if I kept it.",
-     "clip": "assets/speech/generated/audio/comm_0272.mp3"
-    }
-   ],
-   "hostile": [
-    {
-     "text": "Drop your cargo or I scatter you across my quad!",
-     "clip": "assets/speech/generated/audio/comm_0277.mp3"
-    },
-    {
-     "text": "Drop your cargo or I scatter you across Pleiades!",
-     "clip": "assets/speech/generated/audio/comm_0281.mp3"
-    },
-    {
-     "text": "You're a loose end looking to be tied, friend.",
-     "clip": "assets/speech/generated/audio/comm_0287.mp3"
-    },
-    {
-     "text": "You're a loose end looking to be tied, flyboy.",
-     "clip": "assets/speech/generated/audio/comm_0292.mp3"
-    },
-    {
-     "text": "You're a loose end looking to be tied, big shot.",
-     "clip": "assets/speech/generated/audio/comm_0295.mp3"
-    },
-    {
-     "text": "Hand over your precious freight or I paint this quadrant with your guts!",
-     "clip": "assets/speech/generated/audio/comm_0298.mp3"
-    },
-    {
-     "text": "Hand over your shipment or I paint the Troy system with your guts!",
-     "clip": "assets/speech/generated/audio/comm_0303.mp3"
-    },
-    {
-     "text": "Hand over your cargo or I paint the Troy system with your guts!",
-     "clip": "assets/speech/generated/audio/comm_0304.mp3"
-    },
-    {
-     "text": "Hand over that hot merchandise or I paint my quad with your guts!",
-     "clip": "assets/speech/generated/audio/comm_0305.mp3"
-    },
-    {
-     "text": "You picked the wrong shortcut through Confed space, chum.",
-     "clip": "assets/speech/generated/audio/comm_0308.mp3"
-    },
-    {
-     "text": "You picked the wrong shortcut through these lanes, tin can.",
-     "clip": "assets/speech/generated/audio/comm_0317.mp3"
-    },
-    {
-     "text": "Nothing personal, sunshine. Okay, maybe a little personal.",
-     "clip": "assets/speech/generated/audio/comm_0319.mp3"
-    },
-    {
-     "text": "Nothing personal, sweetheart. Okay, maybe a little personal.",
-     "clip": "assets/speech/generated/audio/comm_0324.mp3"
-    }
-   ],
-   "low_hp": [
-    {
-     "text": "Damn, you're ripping me apart!",
-     "clip": "assets/speech/generated/audio/comm_0328.mp3"
-    },
-    {
-     "text": "Alright, alright, take those crates, just stop shooting!",
-     "clip": "assets/speech/generated/audio/comm_0331.mp3"
-    },
-    {
-     "text": "Not like this! the guild promised me an easy mark!",
-     "clip": "assets/speech/generated/audio/comm_0342.mp3"
-    },
-    {
-     "text": "Not like this! the boss promised me an easy mark!",
-     "clip": "assets/speech/generated/audio/comm_0345.mp3"
-    }
-   ],
-   "kill": [
-    {
-     "text": "You're nailed, big shot. Easy money.",
-     "clip": "assets/speech/generated/audio/comm_0349.mp3"
-    },
-    {
-     "text": "You're nailed, Ace. Easy money.",
-     "clip": "assets/speech/generated/audio/comm_0352.mp3"
-    },
-    {
-     "text": "You're nailed, mister. Easy money.",
-     "clip": "assets/speech/generated/audio/comm_0355.mp3"
-    },
-    {
-     "text": "You're nailed, pilot. Easy money.",
-     "clip": "assets/speech/generated/audio/comm_0356.mp3"
-    },
-    {
-     "text": "Should've paid the toll, friend.",
-     "clip": "assets/speech/generated/audio/comm_0359.mp3"
-    },
-    {
-     "text": "Should've paid the toll, rookie.",
-     "clip": "assets/speech/generated/audio/comm_0363.mp3"
-    },
-    {
-     "text": "Should've paid the toll, sweetheart.",
-     "clip": "assets/speech/generated/audio/comm_0365.mp3"
-    },
-    {
-     "text": "Should've paid the toll, flyboy.",
-     "clip": "assets/speech/generated/audio/comm_0366.mp3"
-    },
-    {
-     "text": "Ha! the Admiral'll pay extra for that that crate of yours.",
-     "clip": "assets/speech/generated/audio/comm_0369.mp3"
-    },
-    {
-     "text": "Ha! the boss'll pay extra for that that crate of yours.",
-     "clip": "assets/speech/generated/audio/comm_0370.mp3"
-    },
-    {
-     "text": "Ha! my employer'll pay extra for that that scrap heap of yours.",
-     "clip": "assets/speech/generated/audio/comm_0374.mp3"
-    },
-    {
-     "text": "Ha! Lynch'll pay extra for that your tin can of yours.",
-     "clip": "assets/speech/generated/audio/comm_0376.mp3"
-    },
-    {
-     "text": "Ha! my employer'll pay extra for that your tin can of yours.",
-     "clip": "assets/speech/generated/audio/comm_0377.mp3"
-    },
-    {
-     "text": "Sleep tight in the void, old-timer.",
-     "clip": "assets/speech/generated/audio/comm_0378.mp3"
-    },
-    {
-     "text": "Sleep tight in the void, chum.",
-     "clip": "assets/speech/generated/audio/comm_0380.mp3"
-    },
-    {
-     "text": "Sleep tight in the void, Ace.",
-     "clip": "assets/speech/generated/audio/comm_0387.mp3"
-    }
-   ],
-   "demand": [
-    {
-     "text": "Jettison that hot merchandise now and maybe you live.",
-     "clip": "assets/speech/generated/audio/comm_0390.mp3"
-    },
-    {
-     "text": "Jettison your shipment now and maybe you live.",
-     "clip": "assets/speech/generated/audio/comm_0394.mp3"
-    },
-    {
-     "text": "Jettison your manifest now and maybe you live.",
-     "clip": "assets/speech/generated/audio/comm_0396.mp3"
-    },
-    {
-     "text": "This is a toll road, mister. Pay up.",
-     "clip": "assets/speech/generated/audio/comm_0398.mp3"
-    },
-    {
-     "text": "This is a toll road, sunshine. Pay up.",
-     "clip": "assets/speech/generated/audio/comm_0399.mp3"
-    },
-    {
-     "text": "This is a toll road, tin can. Pay up.",
-     "clip": "assets/speech/generated/audio/comm_0402.mp3"
-    },
-    {
-     "text": "This is a toll road, hotshot. Pay up.",
-     "clip": "assets/speech/generated/audio/comm_0403.mp3"
-    },
-    {
-     "text": "This is a toll road, friend. Pay up.",
-     "clip": "assets/speech/generated/audio/comm_0404.mp3"
-    },
-    {
-     "text": "This is the guild's space now. Toll's everything you got.",
-     "clip": "assets/speech/generated/audio/comm_0408.mp3"
-    },
-    {
-     "text": "This is command's space now. Toll's everything you got.",
-     "clip": "assets/speech/generated/audio/comm_0409.mp3"
-    },
-    {
-     "text": "This is Lynch's space now. Toll's everything you got.",
-     "clip": "assets/speech/generated/audio/comm_0410.mp3"
-    },
-    {
-     "text": "This is the boss's space now. Toll's everything you got.",
-     "clip": "assets/speech/generated/audio/comm_0411.mp3"
-    }
-   ]
-  },
-  "PrivFlightV0201": {
-   "greeting": [
-    {
-     "text": "Well, well, fresh meat drifts into the New Detroit run.",
-     "clip": "assets/speech/generated/audio/comm_0243.mp3"
-    },
-    {
-     "text": "Well, well, fresh meat drifts into the Oxford run.",
-     "clip": "assets/speech/generated/audio/comm_0244.mp3"
-    },
-    {
-     "text": "Well, well, fresh meat drifts into the Humboldt quad.",
-     "clip": "assets/speech/generated/audio/comm_0245.mp3"
-    },
-    {
-     "text": "Well, well, fresh meat drifts into the asteroid fields.",
-     "clip": "assets/speech/generated/audio/comm_0246.mp3"
-    },
-    {
-     "text": "Well, well, fresh meat drifts into these lanes.",
-     "clip": "assets/speech/generated/audio/comm_0247.mp3"
-    },
-    {
-     "text": "Well, well, fresh meat drifts into this sector.",
-     "clip": "assets/speech/generated/audio/comm_0248.mp3"
-    },
-    {
-     "text": "Well, well, fresh meat drifts into my quad.",
-     "clip": "assets/speech/generated/audio/comm_0250.mp3"
-    },
-    {
-     "text": "Looking sharp, Captain. Shame about what's coming.",
-     "clip": "assets/speech/generated/audio/comm_0251.mp3"
-    },
-    {
-     "text": "Looking sharp, stranger. Shame about what's coming.",
-     "clip": "assets/speech/generated/audio/comm_0253.mp3"
-    },
-    {
-     "text": "Looking sharp, friend. Shame about what's coming.",
-     "clip": "assets/speech/generated/audio/comm_0257.mp3"
-    },
-    {
-     "text": "Looking sharp, pilot. Shame about what's coming.",
-     "clip": "assets/speech/generated/audio/comm_0260.mp3"
-    },
-    {
-     "text": "Lost, little stranger? Let me take that burden off your hands.",
-     "clip": "assets/speech/generated/audio/comm_0263.mp3"
-    },
-    {
-     "text": "Lost, little sweetheart? Let me take that burden off your hands.",
-     "clip": "assets/speech/generated/audio/comm_0265.mp3"
-    },
-    {
-     "text": "Lost, little sunshine? Let me take that burden off your hands.",
-     "clip": "assets/speech/generated/audio/comm_0267.mp3"
-    },
-    {
-     "text": "Lost, little flyboy? Let me take that burden off your hands.",
-     "clip": "assets/speech/generated/audio/comm_0268.mp3"
-    },
-    {
-     "text": "Lost, little mister? Let me take that burden off your hands.",
-     "clip": "assets/speech/generated/audio/comm_0269.mp3"
-    },
-    {
-     "text": "Pretty that crate you got there. Be a shame if I kept it.",
-     "clip": "assets/speech/generated/audio/comm_0271.mp3"
-    },
-    {
-     "text": "Pretty your tin can you got there. Be a shame if I kept it.",
-     "clip": "assets/speech/generated/audio/comm_0273.mp3"
-    }
-   ],
-   "hostile": [
-    {
-     "text": "Drop your shipment or I scatter you across Confed space!",
-     "clip": "assets/speech/generated/audio/comm_0279.mp3"
-    },
-    {
-     "text": "Drop your cargo or I scatter you across this sector!",
-     "clip": "assets/speech/generated/audio/comm_0280.mp3"
-    },
-    {
-     "text": "Drop your hold or I scatter you across Pleiades!",
-     "clip": "assets/speech/generated/audio/comm_0282.mp3"
-    },
-    {
-     "text": "Drop your precious freight or I scatter you across the Troy system!",
-     "clip": "assets/speech/generated/audio/comm_0283.mp3"
-    },
-    {
-     "text": "Drop your hold or I scatter you across the Troy system!",
-     "clip": "assets/speech/generated/audio/comm_0285.mp3"
-    },
-    {
-     "text": "Drop those crates or I scatter you across the Oxford run!",
-     "clip": "assets/speech/generated/audio/comm_0286.mp3"
-    },
-    {
-     "text": "You're a loose end looking to be tied, Ace.",
-     "clip": "assets/speech/generated/audio/comm_0291.mp3"
-    },
-    {
-     "text": "You're a loose end looking to be tied, chum.",
-     "clip": "assets/speech/generated/audio/comm_0294.mp3"
-    },
-    {
-     "text": "You're a loose end looking to be tied, sweetheart.",
-     "clip": "assets/speech/generated/audio/comm_0296.mp3"
-    },
-    {
-     "text": "Hand over that contraband or I paint the Oxford run with your guts!",
-     "clip": "assets/speech/generated/audio/comm_0299.mp3"
-    },
-    {
-     "text": "Hand over your cargo or I paint the Palan blockade with your guts!",
-     "clip": "assets/speech/generated/audio/comm_0301.mp3"
-    },
-    {
-     "text": "Hand over your cargo or I paint the Humboldt quad with your guts!",
-     "clip": "assets/speech/generated/audio/comm_0302.mp3"
-    },
-    {
-     "text": "You picked the wrong shortcut through this dead end of space, pilot.",
-     "clip": "assets/speech/generated/audio/comm_0309.mp3"
-    },
-    {
-     "text": "You picked the wrong shortcut through Confed space, mister.",
-     "clip": "assets/speech/generated/audio/comm_0312.mp3"
-    },
-    {
-     "text": "Nothing personal, hotshot. Okay, maybe a little personal.",
-     "clip": "assets/speech/generated/audio/comm_0323.mp3"
-    },
-    {
-     "text": "Nothing personal, buddy. Okay, maybe a little personal.",
-     "clip": "assets/speech/generated/audio/comm_0326.mp3"
-    },
-    {
-     "text": "Nothing personal, mister. Okay, maybe a little personal.",
-     "clip": "assets/speech/generated/audio/comm_0327.mp3"
-    }
-   ],
-   "low_hp": [
-    {
-     "text": "Alright, alright, take your hold, just stop shooting!",
-     "clip": "assets/speech/generated/audio/comm_0333.mp3"
-    },
-    {
-     "text": "Alright, alright, take your manifest, just stop shooting!",
-     "clip": "assets/speech/generated/audio/comm_0338.mp3"
-    },
-    {
-     "text": "Not like this! Lynch promised me an easy mark!",
-     "clip": "assets/speech/generated/audio/comm_0340.mp3"
-    },
-    {
-     "text": "Not like this! command promised me an easy mark!",
-     "clip": "assets/speech/generated/audio/comm_0341.mp3"
-    },
-    {
-     "text": "Not like this! the Admiral promised me an easy mark!",
-     "clip": "assets/speech/generated/audio/comm_0343.mp3"
-    },
-    {
-     "text": "Not like this! my employer promised me an easy mark!",
-     "clip": "assets/speech/generated/audio/comm_0344.mp3"
-    }
-   ],
-   "kill": [
-    {
-     "text": "You're nailed, tin can. Easy money.",
-     "clip": "assets/speech/generated/audio/comm_0353.mp3"
-    },
-    {
-     "text": "Should've paid the toll, sunshine.",
-     "clip": "assets/speech/generated/audio/comm_0364.mp3"
-    },
-    {
-     "text": "Ha! the boss'll pay extra for that that scrap heap of yours.",
-     "clip": "assets/speech/generated/audio/comm_0368.mp3"
-    },
-    {
-     "text": "Sleep tight in the void, mister.",
-     "clip": "assets/speech/generated/audio/comm_0384.mp3"
-    },
-    {
-     "text": "Sleep tight in the void, flyboy.",
-     "clip": "assets/speech/generated/audio/comm_0385.mp3"
-    },
-    {
-     "text": "Sleep tight in the void, sunshine.",
-     "clip": "assets/speech/generated/audio/comm_0386.mp3"
-    }
-   ],
-   "demand": [
-    {
-     "text": "Jettison your cargo now and maybe you live.",
-     "clip": "assets/speech/generated/audio/comm_0388.mp3"
-    },
-    {
-     "text": "Jettison your hold now and maybe you live.",
-     "clip": "assets/speech/generated/audio/comm_0389.mp3"
-    },
-    {
-     "text": "Jettison those crates now and maybe you live.",
-     "clip": "assets/speech/generated/audio/comm_0391.mp3"
-    },
-    {
-     "text": "This is a toll road, stranger. Pay up.",
-     "clip": "assets/speech/generated/audio/comm_0397.mp3"
-    },
-    {
-     "text": "This is a toll road, Ace. Pay up.",
-     "clip": "assets/speech/generated/audio/comm_0401.mp3"
-    },
-    {
-     "text": "This is a toll road, Captain. Pay up.",
-     "clip": "assets/speech/generated/audio/comm_0405.mp3"
-    },
-    {
-     "text": "This is a toll road, chum. Pay up.",
-     "clip": "assets/speech/generated/audio/comm_0406.mp3"
-    },
-    {
-     "text": "This is the Admiral's space now. Toll's everything you got.",
-     "clip": "assets/speech/generated/audio/comm_0407.mp3"
-    },
-    {
-     "text": "This is Sandoval's space now. Toll's everything you got.",
-     "clip": "assets/speech/generated/audio/comm_0413.mp3"
-    },
-    {
-     "text": "Cut engines and prepare to be relieved of your hold.",
-     "clip": "assets/speech/generated/audio/comm_0415.mp3"
-    },
-    {
-     "text": "Cut engines and prepare to be relieved of that hot merchandise.",
-     "clip": "assets/speech/generated/audio/comm_0417.mp3"
-    },
-    {
-     "text": "Cut engines and prepare to be relieved of your cargo.",
-     "clip": "assets/speech/generated/audio/comm_0420.mp3"
-    },
-    {
-     "text": "Cut engines and prepare to be relieved of those crates.",
-     "clip": "assets/speech/generated/audio/comm_0421.mp3"
-    },
-    {
-     "text": "Cut engines and prepare to be relieved of that contraband.",
-     "clip": "assets/speech/generated/audio/comm_0422.mp3"
     }
    ]
   },
@@ -4731,20 +4251,8 @@
   "PrivFlightV0801": {
    "greeting": [
     {
-     "text": "Confederation patrol. State your business in Pleiades.",
-     "clip": "assets/speech/generated/audio/comm_0505.mp3"
-    },
-    {
-     "text": "Confederation patrol. State your business in the Humboldt quad.",
-     "clip": "assets/speech/generated/audio/comm_0506.mp3"
-    },
-    {
      "text": "Confederation patrol. State your business in this quadrant.",
      "clip": "assets/speech/generated/audio/comm_0507.mp3"
-    },
-    {
-     "text": "Confederation patrol. State your business in the New Detroit run.",
-     "clip": "assets/speech/generated/audio/comm_0508.mp3"
     },
     {
      "text": "Confederation patrol. State your business in this dead end of space.",
@@ -4759,16 +4267,8 @@
      "clip": "assets/speech/generated/audio/comm_0511.mp3"
     },
     {
-     "text": "Confederation patrol. State your business in the Palan blockade.",
-     "clip": "assets/speech/generated/audio/comm_0512.mp3"
-    },
-    {
      "text": "Confederation patrol. State your business in the asteroid fields.",
      "clip": "assets/speech/generated/audio/comm_0513.mp3"
-    },
-    {
-     "text": "Confederation patrol. State your business in the Troy system.",
-     "clip": "assets/speech/generated/audio/comm_0514.mp3"
     },
     {
      "text": "We have you on our screens, mister. Continue on course.",
@@ -4993,32 +4493,12 @@
      "clip": "assets/speech/generated/audio/comm_0569.mp3"
     },
     {
-     "text": "You're a wanted criminal in the New Detroit run. Surrender now.",
-     "clip": "assets/speech/generated/audio/comm_0570.mp3"
-    },
-    {
      "text": "You're a wanted criminal in this sector. Surrender now.",
      "clip": "assets/speech/generated/audio/comm_0571.mp3"
     },
     {
      "text": "You're a wanted criminal in this quadrant. Surrender now.",
      "clip": "assets/speech/generated/audio/comm_0572.mp3"
-    },
-    {
-     "text": "You're a wanted criminal in the Troy system. Surrender now.",
-     "clip": "assets/speech/generated/audio/comm_0573.mp3"
-    },
-    {
-     "text": "You're a wanted criminal in the Humboldt quad. Surrender now.",
-     "clip": "assets/speech/generated/audio/comm_0574.mp3"
-    },
-    {
-     "text": "You're a wanted criminal in the Oxford run. Surrender now.",
-     "clip": "assets/speech/generated/audio/comm_0575.mp3"
-    },
-    {
-     "text": "You're a wanted criminal in Pleiades. Surrender now.",
-     "clip": "assets/speech/generated/audio/comm_0576.mp3"
     }
    ],
    "low_hp": [
@@ -5041,10 +4521,6 @@
      "clip": "assets/speech/generated/audio/comm_0580.mp3"
     },
     {
-     "text": "Fugitive neutralized. Logging the kill, the Humboldt quad, Confed out.",
-     "clip": "assets/speech/generated/audio/comm_0581.mp3"
-    },
-    {
      "text": "Fugitive neutralized. Logging the kill, my quad, Confed out.",
      "clip": "assets/speech/generated/audio/comm_0582.mp3"
     },
@@ -5061,20 +4537,8 @@
      "clip": "assets/speech/generated/audio/comm_0585.mp3"
     },
     {
-     "text": "Fugitive neutralized. Logging the kill, the Palan blockade, Confed out.",
-     "clip": "assets/speech/generated/audio/comm_0586.mp3"
-    },
-    {
-     "text": "Fugitive neutralized. Logging the kill, the Troy system, Confed out.",
-     "clip": "assets/speech/generated/audio/comm_0587.mp3"
-    },
-    {
      "text": "Fugitive neutralized. Logging the kill, Confed space, Confed out.",
      "clip": "assets/speech/generated/audio/comm_0588.mp3"
-    },
-    {
-     "text": "Fugitive neutralized. Logging the kill, the Oxford run, Confed out.",
-     "clip": "assets/speech/generated/audio/comm_0589.mp3"
     },
     {
      "text": "Fugitive neutralized. Logging the kill, this sector, Confed out.",
@@ -5205,14 +4669,6 @@
      "clip": "assets/speech/generated/audio/comm_0619.mp3"
     },
     {
-     "text": "Repent, sinner, the Church of Man watches the Palan blockade.",
-     "clip": "assets/speech/generated/audio/comm_0620.mp3"
-    },
-    {
-     "text": "Repent, sinner, the Church of Man watches the Troy system.",
-     "clip": "assets/speech/generated/audio/comm_0621.mp3"
-    },
-    {
      "text": "Repent, sinner, the Church of Man watches these lanes.",
      "clip": "assets/speech/generated/audio/comm_0622.mp3"
     },
@@ -5221,20 +4677,12 @@
      "clip": "assets/speech/generated/audio/comm_0623.mp3"
     },
     {
-     "text": "Repent, sinner, the Church of Man watches Pleiades.",
-     "clip": "assets/speech/generated/audio/comm_0624.mp3"
-    },
-    {
      "text": "Repent, sinner, the Church of Man watches Confed space.",
      "clip": "assets/speech/generated/audio/comm_0625.mp3"
     },
     {
      "text": "Repent, sinner, the Church of Man watches the asteroid fields.",
      "clip": "assets/speech/generated/audio/comm_0626.mp3"
-    },
-    {
-     "text": "Repent, sinner, the Church of Man watches the New Detroit run.",
-     "clip": "assets/speech/generated/audio/comm_0627.mp3"
     },
     {
      "text": "Repent, sinner, the Church of Man watches this sector.",

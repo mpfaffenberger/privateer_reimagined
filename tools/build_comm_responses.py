@@ -17,7 +17,11 @@ from __future__ import annotations
 import collections
 import json
 import os
+import sys
 from pathlib import Path
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from place_filter import is_location_specific  # noqa: E402
 
 COMMS = Path("assets/speech/generated/comms.json")
 AUDIO_DIR = "assets/speech/generated/audio"
@@ -35,6 +39,8 @@ def main():
         cat = l["category"]
         if cat not in KEEP:
             continue
+        if is_location_specific(l["text"]):
+            continue  # skip lines naming a specific place (wrong system)
         clip = f"{AUDIO_DIR}/{l['id']}.mp3"
         if not os.path.exists(clip):
             continue

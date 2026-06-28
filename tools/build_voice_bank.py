@@ -20,6 +20,8 @@ import sys
 # --- Paths (resolved relative to the repo root, not the cwd) -----------------
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(THIS_DIR)
+sys.path.insert(0, THIS_DIR)
+from place_filter import is_location_specific  # noqa: E402
 
 COMMS_JSON = os.path.join(REPO_ROOT, "assets", "speech", "generated", "comms.json")
 AUDIO_DIR = os.path.join(REPO_ROOT, "assets", "speech", "generated", "audio")
@@ -75,6 +77,13 @@ def build_manifest(comms: dict) -> dict:
         voice_id = line.get("voice_id")
 
         if not line_id or not audio_exists(line_id):
+            skipped += 1
+            continue
+
+        # Drop lines that name a specific place (e.g. "the Troy system") -- the
+        # static clip can't match the player's actual system. Generic variants
+        # ("this sector") survive.
+        if is_location_specific(line.get("text", "")):
             skipped += 1
             continue
 
