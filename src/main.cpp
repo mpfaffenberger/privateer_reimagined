@@ -3790,6 +3790,12 @@ void frame_cb() {
         // due (np-comms). Also keeps comms_menu's shared clock fresh so
         // select() can schedule replies. Cheap no-op when nothing pending.
         comms_menu::tick(t_now);
+        // Provoke-via-comms (np-comms #4): if the player just taunted a
+        // target ship into aggression, flip its AI override here. Drained
+        // once per frame so a single taunt provokes at most one ship.
+        if (uint32_t pv = comms_menu::take_provoke_target(); pv) {
+            if (Ship* victim = g.ships.find_by_id(pv)) victim->ai.aggro_player = true;
+        }
         for (Ship& s : g.ships) ship_ai::tick(s, g.ships, t_now, g.system, g.sun.position);
         // Contraband search director (Phase 1). Runs AFTER perception +
         // AI so any aggro override we set is read on the next frame.

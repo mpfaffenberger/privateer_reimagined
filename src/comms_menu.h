@@ -23,6 +23,7 @@
 // main.cpp key handler (and the dev_remote /comms/select endpoint).
 // -----------------------------------------------------------------------------
 
+#include <cstdint>
 #include <string>
 
 struct StarSystem;
@@ -60,5 +61,13 @@ void draw(const StarSystem& sys, const Ship* target, const PlayerReputation& rep
 // faction's bank, push it to the comm log, and voice it. Cheap no-op when
 // nothing is pending.
 void tick(float now_s);
+
+// Provoke-via-comms hand-off (see #4). When the player TAUNTS a target ship
+// that isn't already hostile, there's a ~60% chance the comms layer flags
+// that ship's id here. main.cpp drains it ONCE per frame (near tick()) and,
+// if the ship is still around, flips its AI to aggro_player. Returns 0 when
+// nothing is pending; reading it resets the latch so a single taunt provokes
+// at most one ship, once.
+uint32_t take_provoke_target();
 
 } // namespace comms_menu

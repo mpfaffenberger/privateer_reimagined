@@ -2,9 +2,13 @@
  "Greetings, this is a peaceful trader.": "assets/speech/player_comms/83fed9611415.mp3",
  "Good hunting out there.": "assets/speech/player_comms/7180b5efcd1b.mp3",
  "Safe travels, friend.": "assets/speech/player_comms/a01697d152a3.mp3",
- "Fly safe — the void's a hungry place.": "assets/speech/player_comms/369329c0e8eb.mp3",
+ "Fly safe, the void's a hungry place.": "assets/speech/player_comms/1069a5c210d5.mp3",
  "You picked the wrong target, pal.": "assets/speech/player_comms/ad5ea463f137.mp3",
  "Back off or I'll scatter you across the void!": "assets/speech/player_comms/d5196b36b909.mp3",
+ "I'm gonna enjoy turning you into scrap.": "assets/speech/player_comms/21b151e1793f.mp3",
+ "Last warning, break off now.": "assets/speech/player_comms/39977d25e37e.mp3",
  "Please, I don't want any trouble!": "assets/speech/player_comms/95df385ddb58.mp3",
- "Last warning — break off now.": "assets/speech/player_comms/3b484e14576d.mp3"
+ "I'm unarmed, just let me pass!": "assets/speech/player_comms/4ad136e9f698.mp3",
+ "I'll pay you to leave me alone, name your price!": "assets/speech/player_comms/3d858b69dd6a.mp3",
+ "Have mercy, I've got a family waiting!": "assets/speech/player_comms/453661e2cdce.mp3"
 }

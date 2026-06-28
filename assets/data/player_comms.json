@@ -1,14 +1,20 @@
 {
-    "friendly": [
-        "Greetings, this is a peaceful trader.",
-        "Good hunting out there.",
-        "Safe travels, friend.",
-        "Fly safe — the void's a hungry place."
-    ],
-    "hostile": [
-        "You picked the wrong target, pal.",
-        "Back off or I'll scatter you across the void!",
-        "Please, I don't want any trouble!",
-        "Last warning — break off now."
-    ]
+ "greeting": [
+  "Greetings, this is a peaceful trader.",
+  "Good hunting out there.",
+  "Safe travels, friend.",
+  "Fly safe, the void's a hungry place."
+ ],
+ "taunt": [
+  "You picked the wrong target, pal.",
+  "Back off or I'll scatter you across the void!",
+  "I'm gonna enjoy turning you into scrap.",
+  "Last warning, break off now."
+ ],
+ "plea": [
+  "Please, I don't want any trouble!",
+  "I'm unarmed, just let me pass!",
+  "I'll pay you to leave me alone, name your price!",
+  "Have mercy, I've got a family waiting!"
+ ]
 }

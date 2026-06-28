@@ -43,8 +43,9 @@ def main():
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     data = json.loads(SRC.read_text())
     lines = []
-    for bucket in ("friendly", "hostile"):
-        lines += data.get(bucket, [])
+    for bucket in data.values():          # greeting / taunt / plea (any buckets)
+        if isinstance(bucket, list):
+            lines += bucket
     manifest = {}
     made = skipped = 0
     for line in lines:

@@ -39,18 +39,41 @@ const ImU32 kHudWhite = IM_COL32(220, 230, 235, 220);
 const ImU32 kDim      = IM_COL32(150, 160, 170, 200);
 const ImU32 kRed      = IM_COL32(255, 110,  90, 240);
 
+// ---- player comm intents -------------------------------------------------
+// The player can say one of three KINDS of thing to ANY destination now
+// (greet, taunt, or plead) — the recipient's stance no longer gates which
+// pool is offered (np-comms enhancement #1). Each shown line remembers its
+// intent so send-time can pick the right reply category (#2) and so a taunt
+// can provoke (#4).
+enum class Intent { Greet, Taunt, Plea };
+
+const char* intent_tag(Intent i) {
+    switch (i) {
+        case Intent::Greet: return "Greet";
+        case Intent::Taunt: return "Taunt";
+        case Intent::Plea:  return "Plea";
+    }
+    return "?";
+}
+
 // ---- line pools (data-driven) -------------------------------------------
-// Loaded from player_comms.json. If the file is missing we fall back to a
-// minimal built-in set so the screen is never empty.
-std::vector<std::string> g_friendly = {
+// Loaded from player_comms.json's { greeting, taunt, plea } buckets. If the
+// file is missing we fall back to a minimal built-in set per bucket so the
+// screen is never empty.
+std::vector<std::string> g_greeting = {
     "Greetings, this is a peaceful trader.",
     "Good hunting out there.",
     "Safe travels, friend.",
 };
-std::vector<std::string> g_hostile = {
+std::vector<std::string> g_taunt = {
     "You picked the wrong target, pal.",
     "Back off or I'll scatter you across the void!",
+    "I'm gonna enjoy turning you into scrap.",
+};
+std::vector<std::string> g_plea = {
     "Please, I don't want any trouble!",
+    "I'm unarmed, just let me pass!",
+    "Have mercy, I've got a family waiting!",
 };
 
 // ---- per-line voice manifest (data-driven) -------------------------------
@@ -139,17 +162,102 @@ Step g_step = Step::DestSelect;
 // select() (a separate callsite) can resolve a 1-based pick.
 struct Dest {
     std::string label;       // shown in the menu
-    bool        hostile;     // resolved stance → which line pool to offer
-    Faction     faction;     // recipient's engine faction (bases: Civilian)
+    Faction     faction;     // recipient's engine faction (bases: resolved)
     Stance      stance;      // recipient's stance toward the player
+    bool        is_ship = false;  // true = target ship (provoke candidate)
+    uint32_t    ship_id = 0;      // ships: their Ship::id (0 = n/a)
+    std::string base_id;          // bases: the nav's base_id ("" = none)
 };
 std::vector<Dest> g_dests;
 
-// The destination the player chose in DestSelect — drives which pool
-// LineSelect shows + logs, and (via faction/stance) which reply bank fires.
-bool    g_chosen_hostile = false;
-Faction g_chosen_faction = Faction::Civilian;
-Stance  g_chosen_stance  = Stance::Neutral;
+// One row in the FLAT line list shown in LineSelect — intent + the text.
+// Built when a destination is chosen (across all three buckets, cap 9), read
+// by both draw() and select().
+struct ShownLine {
+    Intent      intent;
+    std::string text;
+};
+constexpr size_t kShownMax = 9;
+std::vector<ShownLine> g_shown;
+
+// The destination the player chose in DestSelect — drives logging and (via
+// faction/stance/intent) which reply bank+category fires, plus provoke.
+Faction  g_chosen_faction = Faction::Civilian;
+Stance   g_chosen_stance  = Stance::Neutral;
+bool     g_chosen_is_ship = false;
+uint32_t g_chosen_ship_id = 0;
+
+// Provoke latch (#4). Set in select() when a taunt rolls success against a
+// non-hostile target ship; drained ONCE by take_provoke_target().
+uint32_t g_provoke_id = 0;
+
+// base_id -> resolved Faction cache (#3). Resolved lazily from
+// assets/bases/<base_id>/base.json. Civilian == "couldn't resolve" (stays
+// silent: no reply bank). Cached so each base.json is read at most once.
+std::unordered_map<std::string, Faction> g_base_faction;
+
+// Map a base.json "faction" display string to the engine enum. The match is
+// SUBSTRING-based (on a lowercased copy) so real-world display variants land
+// on the right enum: "Confederation Navy" -> confed, "Merchant Guild" ->
+// merchant, "Pirates" -> pirate, etc. Falls back to faction::from_name for a
+// canonical key. Returns Faction::Count when nothing matches (caller treats
+// that as "silent").
+Faction map_base_faction(std::string s) {
+    for (char& c : s) if (c >= 'A' && c <= 'Z') c = (char)(c - 'A' + 'a');
+    auto has = [&](const char* kw) { return s.find(kw) != std::string::npos; };
+    if (has("confederation")) return Faction::Confed;
+    if (has("kilrathi"))      return Faction::Kilrathi;
+    if (has("militia"))       return Faction::Militia;
+    if (has("merchant"))      return Faction::Merchant;
+    if (has("pirate"))        return Faction::Pirate;
+    if (has("retro"))         return Faction::Retro;
+    return faction::from_name(s);   // canonical keys ("confed", ...); Count if unknown
+}
+
+// Resolve (and cache) a base's faction from assets/bases/<base_id>/base.json.
+// Any failure (missing file, no "faction", unmapped name) caches + returns
+// Civilian so the base stays silent and we don't re-read on every frame.
+Faction resolve_base_faction(const std::string& base_id) {
+    if (auto it = g_base_faction.find(base_id); it != g_base_faction.end())
+        return it->second;
+    Faction resolved = Faction::Civilian;
+    const std::string path = "assets/bases/" + base_id + "/base.json";
+    json::Value root = json::parse_file(path);
+    if (root.is_object()) {
+        if (const json::Value* f = root.find("faction"); f && f->is_string()) {
+            const Faction mapped = map_base_faction(f->as_string());
+            if (mapped != Faction::Count) resolved = mapped;
+        }
+    }
+    g_base_faction.emplace(base_id, resolved);
+    return resolved;
+}
+
+// Build the FLAT shown-line list (cap 9) across all three intent buckets,
+// round-robin so greet/taunt/plea are all represented regardless of who the
+// player is hailing. Called when a destination is chosen.
+void build_shown_lines() {
+    g_shown.clear();
+    struct Bucket { Intent intent; const std::vector<std::string>* lines; };
+    const Bucket buckets[3] = {
+        { Intent::Greet, &g_greeting },
+        { Intent::Taunt, &g_taunt },
+        { Intent::Plea,  &g_plea },
+    };
+    size_t row = 0;
+    bool added = true;
+    while (added && g_shown.size() < kShownMax) {
+        added = false;
+        for (const Bucket& b : buckets) {
+            if (row < b.lines->size()) {
+                g_shown.push_back({ b.intent, (*b.lines)[row] });
+                added = true;
+                if (g_shown.size() >= kShownMax) break;
+            }
+        }
+        ++row;
+    }
+}
 
 // Rolling comm log — last few lines the player has sent. Shown at the
 // bottom of the panel as "You: <line>".
@@ -183,11 +291,18 @@ void rebuild_dests(const StarSystem& sys, const Ship* target,
     g_dests.clear();
     for (const NavPointDef& nav : sys.nav_points) {
         if (!is_base_kind(nav.kind)) continue;
-        // Bases carry no faction of their own — store Civilian so no reply
-        // bank entry exists and they stay silent for now.
-        const Stance st = faction::stance_npc_vs_player(Faction::Civilian, rep);
-        g_dests.push_back({ nav.name, st == Stance::Hostile,
-                            Faction::Civilian, st });
+        // Resolve the base's real faction from its base.json so it can talk
+        // back (#3). Civilian == unresolved/no base_id == stays silent.
+        const Faction fac = nav.base_id.empty() ? Faction::Civilian
+                                                : resolve_base_faction(nav.base_id);
+        const Stance st = faction::stance_npc_vs_player(fac, rep);
+        Dest d;
+        d.label   = nav.name;
+        d.faction = fac;
+        d.stance  = st;
+        d.is_ship = false;
+        d.base_id = nav.base_id;
+        g_dests.push_back(std::move(d));
     }
     if (target) {
         const char* cls = target->klass ? target->klass->display_name.c_str()
@@ -196,8 +311,13 @@ void rebuild_dests(const StarSystem& sys, const Ship* target,
         char buf[160];
         std::snprintf(buf, sizeof(buf), "Target: %s / %s", cls, fac);
         const Stance st = faction::stance_npc_vs_player(target->faction, rep);
-        g_dests.push_back({ buf, st == Stance::Hostile,
-                            target->faction, st });
+        Dest d;
+        d.label   = buf;
+        d.faction = target->faction;
+        d.stance  = st;
+        d.is_ship = true;
+        d.ship_id = target->id;
+        g_dests.push_back(std::move(d));
     }
 }
 
@@ -218,10 +338,11 @@ void load(const std::string& path) {
             if (v.is_string()) tmp.push_back(v.as_string());
         if (!tmp.empty()) out.swap(tmp);
     };
-    read_pool("friendly", g_friendly);
-    read_pool("hostile",  g_hostile);
-    std::printf("[comms_menu] loaded %s — %zu friendly, %zu hostile lines\n",
-                path.c_str(), g_friendly.size(), g_hostile.size());
+    read_pool("greeting", g_greeting);
+    read_pool("taunt",    g_taunt);
+    read_pool("plea",     g_plea);
+    std::printf("[comms_menu] loaded %s — %zu greeting, %zu taunt, %zu plea lines\n",
+                path.c_str(), g_greeting.size(), g_taunt.size(), g_plea.size());
 
     // Also pull in the per-line voice manifest (line text -> mp3 path). This
     // is a sibling file, NOT a key inside `path`, so it's loaded separately
@@ -290,19 +411,20 @@ void select(int n) {
 
     if (g_step == Step::DestSelect) {
         if (idx >= g_dests.size()) return;
-        g_chosen_hostile = g_dests[idx].hostile;
         g_chosen_faction = g_dests[idx].faction;
         g_chosen_stance  = g_dests[idx].stance;
+        g_chosen_is_ship = g_dests[idx].is_ship;
+        g_chosen_ship_id = g_dests[idx].ship_id;
+        build_shown_lines();
         g_step = Step::LineSelect;
         return;
     }
 
-    // LineSelect — resolve the pick against the chosen pool.
-    const std::vector<std::string>& pool =
-        g_chosen_hostile ? g_hostile : g_friendly;
-    if (idx >= pool.size()) return;
+    // LineSelect — resolve the pick against the flat shown list.
+    if (idx >= g_shown.size()) return;
 
-    const std::string& line = pool[idx];
+    const Intent       intent = g_shown[idx].intent;
+    const std::string& line   = g_shown[idx].text;
     push_log(line);
 
     // Speak the EXACT chosen line if the manifest has a clip for it: lazy-load
@@ -323,17 +445,34 @@ void select(int n) {
                    HMM_Vec3{ 0, 0, 0 }, true);
     }
 
+    // Reply category depends on WHAT was said + the recipient's stance (#2):
+    //   * a Taunt always draws a "hostile" reply.
+    //   * a Greet/Plea draws "hostile" only if the recipient already hates
+    //     the player, else "greeting".
+    const char* category = (intent == Intent::Taunt ||
+                            g_chosen_stance == Stance::Hostile)
+                               ? "hostile" : "greeting";
+
+    // Provoke-via-comms (#4): a Taunt at a target SHIP that isn't already
+    // hostile has a ~60% chance to flip it aggressive. main.cpp drains the
+    // latch and sets the AI override; the "hostile" reply above already
+    // delivers the snarl ("...you're dead!") with its voice.
+    if (intent == Intent::Taunt && g_chosen_is_ship &&
+        g_chosen_stance != Stance::Hostile && g_chosen_ship_id != 0) {
+        std::uniform_real_distribution<float> roll(0.0f, 1.0f);
+        if (roll(g_rng) < 0.60f) g_provoke_id = g_chosen_ship_id;
+    }
+
     // Arm the hailed party's reply. Only factions with a bank entry talk
-    // back — Civilian (bases) and anyone the bank doesn't know stay silent.
-    // The reply is delayed ~3.5s so it doesn't step on the player's own line
-    // (tick() fires it once g_now reaches play_at).
+    // back — Civilian (unresolved bases) and anyone the bank doesn't know
+    // stay silent. The reply is delayed ~3.5s so it doesn't step on the
+    // player's own line (tick() fires it once g_now reaches play_at).
     g_pending.active = false;
     if (const char* bank = faction_to_bank_name(g_chosen_faction)) {
         if (g_responses.count(bank)) {
             g_pending.active       = true;
             g_pending.bank_faction = bank;
-            g_pending.category     = (g_chosen_stance == Stance::Hostile)
-                                         ? "hostile" : "greeting";
+            g_pending.category     = category;
             g_pending.play_at      = g_now + 3.5f;
         }
     }
@@ -362,14 +501,18 @@ void draw(const StarSystem& sys, const Ship* target,
             }
         }
     } else {
-        const std::vector<std::string>& pool =
-            g_chosen_hostile ? g_hostile : g_friendly;
-        ImGui::PushStyleColor(ImGuiCol_Text, g_chosen_hostile ? kRed : kAmber);
-        ImGui::TextUnformatted(g_chosen_hostile ? "HOSTILE HAIL" : "FRIENDLY HAIL");
+        // FLAT line list — every intent offered to anyone (#1). Each row is
+        // tagged with its intent so the player knows a taunt is a taunt
+        // (and may provoke). Taunts paint red, the rest amber.
+        ImGui::PushStyleColor(ImGuiCol_Text, kAmber);
+        ImGui::TextUnformatted("HAIL");
         ImGui::PopStyleColor();
-        for (size_t i = 0; i < pool.size(); ++i) {
-            ImGui::PushStyleColor(ImGuiCol_Text, kHudWhite);
-            ImGui::Text("%zu. %s", i + 1, pool[i].c_str());
+        for (size_t i = 0; i < g_shown.size(); ++i) {
+            const ShownLine& sl = g_shown[i];
+            const ImU32 col = (sl.intent == Intent::Taunt) ? kRed : kHudWhite;
+            ImGui::PushStyleColor(ImGuiCol_Text, col);
+            ImGui::Text("%zu. [%s] %s", i + 1, intent_tag(sl.intent),
+                        sl.text.c_str());
             ImGui::PopStyleColor();
         }
     }
@@ -417,6 +560,12 @@ void tick(float now_s) {
         if (const SampleId sid = resolve_clip(r.clip); sid != 0)
             audio::play(sid, 1.0f);
     }
+}
+
+uint32_t take_provoke_target() {
+    const uint32_t id = g_provoke_id;
+    g_provoke_id = 0;
+    return id;
 }
 
 } // namespace comms_menu
