@@ -2930,16 +2930,16 @@ void update_orbit_camera(float dt) {
     // the mouse simply stops affecting it.
     g.orbit_dist = std::clamp(g.orbit_dist, 80.0f, 1500.0f);
 
-    // cam orientation = ship * yaw(body+Y) * pitch(body+X) * roll(180 about
-    // forward). The roll flips the view upright (the ship was rendering
-    // upside-down without it). Roll is a fixed constant -> never changes
-    // with mouse, so the camera stays roll-locked to the ship. Position
+    // cam orientation = ship * yaw(body+Y) * pitch(body+X). The camera
+    // shares the ship's roll (no extra constant roll) so the chase view is
+    // upright. (A historical fixed 180-deg roll-about-forward was removed:
+    // the ship/orientation convention flipped since it was added, so it had
+    // started rolling the autopilot/death chase view upside-down.) Position
     // keeps the ship centred: cam = ship - forward*dist.
-    const HMM_Quat cam_o = HMM_NormQ(HMM_MulQ(HMM_MulQ(HMM_MulQ(
+    const HMM_Quat cam_o = HMM_NormQ(HMM_MulQ(HMM_MulQ(
         g.camera.orientation,
         HMM_QFromAxisAngle_RH(HMM_V3(0.0f, 1.0f, 0.0f), g.orbit_yaw)),
-        HMM_QFromAxisAngle_RH(HMM_V3(1.0f, 0.0f, 0.0f), g.orbit_pitch)),
-        HMM_QFromAxisAngle_RH(HMM_V3(0.0f, 0.0f, 1.0f), 3.14159265358979f)));
+        HMM_QFromAxisAngle_RH(HMM_V3(1.0f, 0.0f, 0.0f), g.orbit_pitch)));
 
     Camera& oc = g.orbit_cam;
     oc = g.camera;   // inherit fov / near / far / cruise fov etc.
