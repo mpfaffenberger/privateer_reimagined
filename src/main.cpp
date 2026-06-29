@@ -2930,18 +2930,15 @@ void update_orbit_camera(float dt) {
     // the mouse simply stops affecting it.
     g.orbit_dist = std::clamp(g.orbit_dist, 80.0f, 1500.0f);
 
-    // cam orientation = ship * yaw(body+Y) * pitch(body+X) * roll(180 about
-    // forward). The 180-deg roll flips the chase view upright: the player
-    // sprite atlases are authored with the dorsal toward -Y in this camera
-    // basis, so without the roll the 3rd-person hull renders UPSIDE DOWN
-    // (verified across Tarsus + Centurion). Roll is a fixed constant, never
-    // changes with mouse, so the camera stays roll-locked to the ship.
+    // cam orientation = ship * yaw(body+Y) * pitch(body+X). Keep the chase
+    // CAMERA world-upright: rolling the camera by 180 fixed the player sprite
+    // but also rolled the whole universe during autopilot (oops). The sprite
+    // atlas correction belongs on the player ShipSpriteObject below instead.
     // Position keeps the ship centred: cam = ship - forward*dist.
-    const HMM_Quat cam_o = HMM_NormQ(HMM_MulQ(HMM_MulQ(HMM_MulQ(
+    const HMM_Quat cam_o = HMM_NormQ(HMM_MulQ(HMM_MulQ(
         g.camera.orientation,
         HMM_QFromAxisAngle_RH(HMM_V3(0.0f, 1.0f, 0.0f), g.orbit_yaw)),
-        HMM_QFromAxisAngle_RH(HMM_V3(1.0f, 0.0f, 0.0f), g.orbit_pitch)),
-        HMM_QFromAxisAngle_RH(HMM_V3(0.0f, 0.0f, 1.0f), 3.14159265358979f)));
+        HMM_QFromAxisAngle_RH(HMM_V3(1.0f, 0.0f, 0.0f), g.orbit_pitch)));
 
     Camera& oc = g.orbit_cam;
     oc = g.camera;   // inherit fov / near / far / cruise fov etc.
@@ -5007,17 +5004,22 @@ void frame_cb() {
         }
         // Player hull in 3rd-person: feed a one-shot ShipSpriteObject at the
         // ship's pose through the same frame-selection path. The camera uses
-        // -Z forward while the sprite atlas uses +Z nose, so rotate the
-        // orientation 180 deg around Y to match conventions. Skipped during
-        // title so the player ship doesn't show up in the title scene.
+        // -Z forward while the sprite atlas uses +Z nose, so rotate 180 deg
+        // around Y to match nose conventions. The authored player atlases also
+        // need a 180-deg roll-about-forward correction to render dorsal-up;
+        // IMPORTANT: apply that to the SPRITE orientation, not the chase camera,
+        // or autopilot rolls the whole world upside-down like a cursed pancake.
         if (!g.show_title && g.orbit_active && g.player_atlas) {
             ShipSpriteObject& ps = g.player_ship_sprite;
             ps.atlas       = g.player_atlas;
             ps.position    = g.camera.position;
             ps.world_size  = 100.0f * world_scale::k_ship_size_scale;
-            ps.orientation = HMM_NormQ(HMM_MulQ(
+            const HMM_Quat sprite_basis = HMM_MulQ(
                 g.camera.orientation,
-                HMM_QFromAxisAngle_RH(HMM_V3(0.0f, 1.0f, 0.0f), 3.14159265358979f)));
+                HMM_QFromAxisAngle_RH(HMM_V3(0.0f, 1.0f, 0.0f), 3.14159265358979f));
+            ps.orientation = HMM_NormQ(HMM_MulQ(
+                sprite_basis,
+                HMM_QFromAxisAngle_RH(HMM_V3(0.0f, 0.0f, 1.0f), 3.14159265358979f)));
             ps.angular_velocity = HMM_V3(0, 0, 0);
             ps.forward_speed    = 0.0f;
             g.player_sprite_scratch.clear();
