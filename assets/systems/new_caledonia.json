@@ -86,7 +86,7 @@
       ]
     },
     {
-      "name": "Glascow Refinery Base",
+      "name": "Glasgow Refinery Base",
       "kind": "station",
       "position": [
         100000,
@@ -94,7 +94,7 @@
         100000
       ],
       "dockable": true,
-      "base_id": "glascow_refinery",
+      "base_id": "glasgow_refinery",
       "encounters": [
         {
           "chance": 30,
