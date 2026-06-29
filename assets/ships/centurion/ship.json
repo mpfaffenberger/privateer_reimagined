@@ -28,14 +28,17 @@
   "max_shield_level": 3,
   "default_shield":   "Shield Generator 2",
 
+  // Mount offsets are in WORLD units (firing.cpp body_to_world applies no
+  // scale) and ships render ~140u, so guns sit on the wings: mass drivers
+  // out near the wingtips, tachyon/particle inboard, turrets at the tail.
   "default_guns": [
-    { "offset_body": [-3.0, 0.0, 3.0], "type": "mass_driver" },
-    { "offset_body": [ 3.0, 0.0, 3.0], "type": "mass_driver" },
-    { "offset_body": [-1.5, 0.0, 3.5], "type": "tachyon_cannon" },
-    { "offset_body": [ 1.5, 0.0, 3.5], "type": "particle_cannon" },
+    { "offset_body": [-34.0, 0.0, 28.0], "type": "mass_driver" },
+    { "offset_body": [ 34.0, 0.0, 28.0], "type": "mass_driver" },
+    { "offset_body": [-16.0, 0.0, 36.0], "type": "tachyon_cannon" },
+    { "offset_body": [ 16.0, 0.0, 36.0], "type": "particle_cannon" },
 
-    { "offset_body": [-0.6, 0.0, -3.0], "forward_body": [0, 0, -1], "cone_half_angle_deg": 120, "type": "ionic_pulse_cannon", "turret": true },
-    { "offset_body": [ 0.6, 0.0, -3.0], "forward_body": [0, 0, -1], "cone_half_angle_deg": 120, "type": "ionic_pulse_cannon", "turret": true }
+    { "offset_body": [-7.0, 0.0, -30.0], "forward_body": [0, 0, -1], "cone_half_angle_deg": 120, "type": "ionic_pulse_cannon", "turret": true },
+    { "offset_body": [ 7.0, 0.0, -30.0], "forward_body": [0, 0, -1], "cone_half_angle_deg": 120, "type": "ionic_pulse_cannon", "turret": true }
   ],
 
   "energy_max":      250,

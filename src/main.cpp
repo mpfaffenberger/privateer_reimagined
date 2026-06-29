@@ -2930,16 +2930,18 @@ void update_orbit_camera(float dt) {
     // the mouse simply stops affecting it.
     g.orbit_dist = std::clamp(g.orbit_dist, 80.0f, 1500.0f);
 
-    // cam orientation = ship * yaw(body+Y) * pitch(body+X). The camera
-    // shares the ship's roll (no extra constant roll) so the chase view is
-    // upright. (A historical fixed 180-deg roll-about-forward was removed:
-    // the ship/orientation convention flipped since it was added, so it had
-    // started rolling the autopilot/death chase view upside-down.) Position
-    // keeps the ship centred: cam = ship - forward*dist.
-    const HMM_Quat cam_o = HMM_NormQ(HMM_MulQ(HMM_MulQ(
+    // cam orientation = ship * yaw(body+Y) * pitch(body+X) * roll(180 about
+    // forward). The 180-deg roll flips the chase view upright: the player
+    // sprite atlases are authored with the dorsal toward -Y in this camera
+    // basis, so without the roll the 3rd-person hull renders UPSIDE DOWN
+    // (verified across Tarsus + Centurion). Roll is a fixed constant, never
+    // changes with mouse, so the camera stays roll-locked to the ship.
+    // Position keeps the ship centred: cam = ship - forward*dist.
+    const HMM_Quat cam_o = HMM_NormQ(HMM_MulQ(HMM_MulQ(HMM_MulQ(
         g.camera.orientation,
         HMM_QFromAxisAngle_RH(HMM_V3(0.0f, 1.0f, 0.0f), g.orbit_yaw)),
-        HMM_QFromAxisAngle_RH(HMM_V3(1.0f, 0.0f, 0.0f), g.orbit_pitch)));
+        HMM_QFromAxisAngle_RH(HMM_V3(1.0f, 0.0f, 0.0f), g.orbit_pitch)),
+        HMM_QFromAxisAngle_RH(HMM_V3(0.0f, 0.0f, 1.0f), 3.14159265358979f)));
 
     Camera& oc = g.orbit_cam;
     oc = g.camera;   // inherit fov / near / far / cruise fov etc.
@@ -3304,6 +3306,25 @@ void frame_cb() {
                             pl->mounts.size(),
                             hull_changed ? " (new hull -> healed)" : "",
                             (!hull_changed && armor_changed) ? " (new armor -> healed)" : "");
+                // Re-resolve the 3rd-person hull atlas when the hull changed.
+                // Buying a ship at the dealer only swaps ship_class_name in
+                // PlayerState; without this the orbit/autopilot view keeps
+                // rendering the OLD sprite (e.g. a bought Centurion still
+                // looked like a Tarsus). Mirrors the system-load/respawn paths.
+                if (hull_changed) {
+                    const std::string pc = g.player.ship_class_name.empty()
+                                         ? std::string("tarsus") : g.player.ship_class_name;
+                    const std::string pstem = resolve_ship_atlas_stem("ships/" + pc + "/atlas_manifest");
+                    auto [it, inserted] = g.ship_sprite_atlases.try_emplace(pstem, ShipSpriteAtlas{});
+                    if (inserted && !load_ship_sprite_atlas(pstem, it->second, g.sprite_art)) {
+                        std::fprintf(stderr, "[orbit] player atlas '%s' failed to load\n", pstem.c_str());
+                        g.ship_sprite_atlases.erase(it);
+                        g.player_atlas = nullptr;
+                    } else {
+                        g.player_atlas = &it->second;
+                        std::printf("[orbit] launch hull atlas -> %s\n", pstem.c_str());
+                    }
+                }
             }
             // Outfitting (np-9cu.3): fold the player's hull + engine_level into
             // the camera's flight speed caps as we launch back into Flight.
