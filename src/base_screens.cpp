@@ -32,6 +32,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
+#include <filesystem>
+#include <string>
 #include <vector>
 
 namespace base_screens {
@@ -329,7 +331,29 @@ void enter(const std::string& base_id) {
     g_stack.assign(1, BaseScreen::Concourse);
     g_launch_pending = false;
 
-    const std::string path = "assets/bases/" + base_id + "/base.json";
+    // System nav data keys bases with a TYPE suffix (drake_pirate,
+    // anapolis_refinery, new_detroit_industrial, ...) but the base FOLDERS
+    // are bare names (drake, anapolis, new_detroit). If the exact folder is
+    // missing, strip trailing _<suffix> segments until a real base folder
+    // turns up, so landing resolves to the right concourse instead of the
+    // empty "BASE (no concourse art)" fallback.
+    namespace fs = std::filesystem;
+    auto has_base = [](const std::string& id) {
+        return fs::exists("assets/bases/" + id + "/base.json");
+    };
+    std::string resolved = base_id;
+    if (!has_base(resolved)) {
+        std::string t = resolved;
+        std::string::size_type pos;
+        while (!has_base(t) && (pos = t.rfind('_')) != std::string::npos)
+            t = t.substr(0, pos);
+        if (has_base(t)) {
+            std::printf("[base] base_id '%s' -> folder '%s' (stripped type suffix)\n",
+                        base_id.c_str(), t.c_str());
+            resolved = t;
+        }
+    }
+    const std::string path = "assets/bases/" + resolved + "/base.json";
     const json::Value root = json::parse_file(path);
     if (!root.is_object()) {
         std::fprintf(stderr, "[base] enter('%s'): no/invalid %s — fallback screen\n",
