@@ -9,7 +9,7 @@
   "5":  { "name": "Bodensee",           "system": "Tingerhoff",         "ship_dealer": true,  "merchant_guild": true,  "mercenary_guild": false },
   "6":  { "name": "Burton",             "system": "Junction",           "ship_dealer": false, "merchant_guild": true,  "mercenary_guild": true },
   "7":  { "name": "Charon",             "system": "Hyades",             "ship_dealer": false, "merchant_guild": false, "mercenary_guild": false },
-  "8":  { "name": "Drake",              "system": "Capella",            "ship_dealer": false, "merchant_guild": false, "mercenary_guild": false },
+  "8":  { "name": "Drake",              "system": "Capella",            "ship_dealer": true,  "merchant_guild": false, "mercenary_guild": false },
   "9":  { "name": "Edinburgh",          "system": "New Caledonia",      "ship_dealer": true,  "merchant_guild": false, "mercenary_guild": false },
   "10": { "name": "Edom",               "system": "New Constantinople", "ship_dealer": false, "merchant_guild": false, "mercenary_guild": false },
   "11": { "name": "Elysia",             "system": "Auriga",             "ship_dealer": false, "merchant_guild": true,  "mercenary_guild": false },
