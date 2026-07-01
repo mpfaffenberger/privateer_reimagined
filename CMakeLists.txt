@@ -208,6 +208,7 @@ add_executable(new_privateer
     src/savegame.cpp
     src/player.cpp
     src/plot.cpp
+    src/fixers.cpp
     src/mobility.cpp
     src/gun.cpp
     src/shield.cpp
@@ -485,6 +486,21 @@ target_include_directories(test_savegame PRIVATE
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/third_party
 )
+
+# Fixer framework proof (#137): placement (base + archetype predicate),
+# plot gating, action grammar, campaign-handler seam. FIXERS_HEADLESS
+# compiles out the ImGui bar body.
+#   cmake --build build --target test_fixers && ./build/test_fixers
+add_executable(test_fixers EXCLUDE_FROM_ALL
+    tools/test_fixers.cpp
+    src/fixers.cpp src/plot.cpp src/player.cpp src/json.cpp src/faction.cpp
+    src/commodity.cpp
+)
+target_include_directories(test_fixers PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/third_party
+)
+target_compile_definitions(test_fixers PRIVATE FIXERS_HEADLESS)
 
 # ---------------------------------------------------------------------------
 # `dist` — portable, relocatable game folder (build/dist/).

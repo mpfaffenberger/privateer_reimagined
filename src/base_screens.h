@@ -8,7 +8,7 @@
 // it, and let the player walk a tiny screen stack:
 //
 //   Concourse (the hub)
-//     ├─ Bar               — fixers / rumours          (stub for now)
+//     ├─ Bar               — fixers (fixers.cpp registers the body, #137)
 //     ├─ Commodity Exchange— buy/sell goods            (np-9cu.2 fills in)
 //     ├─ Ship Dealer       — hulls                     (np-9cu.3 fills in)
 //     ├─ Equipment         — guns/shields/engines      (np-9cu.3 fills in)
@@ -95,6 +95,10 @@ struct BaseContext {
     // transient state the Repair service restores. nullptr-safe: a screen
     // that needs it (Equipment's repair section) skips when absent.
     Ship*        player_ship = nullptr;
+    // Concourse/market archetype ("mining", "pirate", ...) from base.json.
+    // The fixer framework's predicate placement keys on this (#137: Goodin
+    // appears at ANY mining base — M22).
+    std::string  archetype;
 };
 
 namespace base_screens {
@@ -133,5 +137,20 @@ void exit();
 // Concourse it returns false — the caller decides what Escape does there
 // (today: launch, the intended exit).
 bool handle_escape();
+
+// ---- agentic-testing seams (dev_remote /base + POST /base/screen) ----------
+// Navigate the Landed screen stack by enum name ("Bar", "MissionComputer").
+// "Concourse" resets the stack to the hub; any other art screen pushes
+// (deduped — already-current is a no-op). Returns false when not landed,
+// the name is unknown, or the target isn't navigable (Launch/zones).
+bool dev_open(const std::string& screen_name);
+
+// Snapshot of where the player is in the base UI: the base id + the screen
+// stack as names, hub-first. Empty base_id == not currently entered.
+struct DevState {
+    std::string              base_id;
+    std::vector<std::string> stack;
+};
+DevState dev_state();
 
 } // namespace base_screens

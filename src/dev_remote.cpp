@@ -56,7 +56,7 @@ struct Command {
     enum class Kind { SetCamera, Screenshot, VoiceSay, CommBark, CargoGive, Spawn,
                       Kill, SetTarget, TractorPull, InventorySell, InventoryGive,
                       InventoryInstall, InventoryEquip, SetPanel, CommsSelect,
-                      Rumor, Plot };
+                      Rumor, Plot, BaseScreenNav };
     Kind kind;
 
     // SetCamera — any optional field is encoded with `has_*`.
@@ -160,6 +160,11 @@ PlayerInfo  g_player;
 std::mutex               g_missions_mu;
 std::vector<MissionInfo> g_missions;
 
+// Latest base-UI snapshot for GET /base, published once per frame (ALL
+// modes) by the main thread (publish_base).
+std::mutex  g_base_mu;
+BaseInfo    g_base;
+
 // Gameplay event ring buffer for GET /events. push_event may be called from
 // any main-thread system (in practice: the comm feed tap + mode-transition
 // detection in main.cpp); the HTTP thread reads under the same lock. Ring
@@ -195,6 +200,7 @@ std::function<void(int, int)>                               g_inventory_equip_ho
 std::function<void(std::string)>                            g_panel_hook;
 std::function<void(int)>                                    g_comms_select_hook;
 std::function<void(std::string, std::string)>               g_plot_hook;
+std::function<void(std::string)>                            g_base_screen_hook;
 
 std::thread       g_thread;
 std::atomic<bool> g_running{false};
@@ -630,6 +636,41 @@ void handle_missions(int fd) {
     }
     out += "]}";
     send_json(fd, out);
+}
+
+// GET /base — serialise the latest base-UI snapshot.
+void handle_base(int fd) {
+    BaseInfo b;
+    {
+        std::lock_guard lk(g_base_mu);
+        b = g_base;
+    }
+    std::string out = "{\"base_id\":\"" + json_escape(b.base_id) +
+                      "\",\"stack\":[";
+    for (size_t i = 0; i < b.stack.size(); ++i) {
+        out += (i ? ",\"" : "\"");
+        out += json_escape(b.stack[i]);
+        out += "\"";
+    }
+    out += "]}";
+    send_json(fd, out);
+}
+
+// POST /base/screen — navigate the Landed screen stack. Body { name }.
+void handle_base_screen(int fd, const std::string& body) {
+    std::string name;
+    if (!extract_string(body, "name", &name) || name.empty()) {
+        send_json(fd, "{\"ok\":false,\"error\":\"missing name\"}");
+        return;
+    }
+    Command c;
+    c.kind    = Command::Kind::BaseScreenNav;
+    c.str_arg = name;
+    {
+        std::lock_guard lk(g_queue_mu);
+        g_queue.push_back(c);
+    }
+    send_json(fd, "{\"ok\":true}");
 }
 
 // GET /events?since=N — serialise ring-buffer events with seq > N (all of
@@ -1180,6 +1221,8 @@ void handle_connection(int fd) {
     else if (method == "POST" && path == "/inventory/equip") handle_inventory_equip(fd, body);
     else if (method == "GET"  && path == "/player")     handle_player(fd);
     else if (method == "POST" && path == "/plot")       handle_plot(fd, body);
+    else if (method == "GET"  && path == "/base")       handle_base(fd);
+    else if (method == "POST" && path == "/base/screen") handle_base_screen(fd, body);
     else if (method == "GET"  && path == "/missions")   handle_missions(fd);
     else if (method == "GET"  && path == "/events")     handle_events(fd, query);
     else                                                send_404(fd);
@@ -1452,6 +1495,18 @@ void drain_commands(Camera& cam) {
             if (hook) hook(c.plot_action, c.str_arg);
             break;
         }
+        case Command::Kind::BaseScreenNav: {
+            // Navigate the Landed screen stack (base_screens::dev_open).
+            // Silently a no-op when not landed — the /base snapshot is the
+            // judge's confirmation channel.
+            std::function<void(std::string)> hook;
+            {
+                std::lock_guard lk(g_hooks_mu);
+                hook = g_base_screen_hook;
+            }
+            if (hook) hook(c.str_arg);
+            break;
+        }
         }
     }
 
@@ -1509,6 +1564,11 @@ void publish_player(const PlayerInfo& p) {
 void publish_missions(const std::vector<MissionInfo>& missions) {
     std::lock_guard lk(g_missions_mu);
     g_missions = missions;
+}
+
+void publish_base(const BaseInfo& b) {
+    std::lock_guard lk(g_base_mu);
+    g_base = b;
 }
 
 void push_event(const std::string& category, const std::string& text) {
@@ -1608,6 +1668,11 @@ void set_comms_select_hook(std::function<void(int)> hook) {
 void set_plot_hook(std::function<void(std::string, std::string)> hook) {
     std::lock_guard lk(g_hooks_mu);
     g_plot_hook = std::move(hook);
+}
+
+void set_base_screen_hook(std::function<void(std::string)> hook) {
+    std::lock_guard lk(g_hooks_mu);
+    g_base_screen_hook = std::move(hook);
 }
 
 } // namespace dev_remote

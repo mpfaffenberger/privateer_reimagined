@@ -1,0 +1,21 @@
+{
+  "_doc": [
+    "Fixer registry (#137, campaign epic #136). One entry == one gate-scoped",
+    "appearance; multi-stage conversations are separate entries whose",
+    "requires_flags/forbids_flags can't both pass. Fields:",
+    "  id             unique key, e.g. 'sandoval_offer'",
+    "  name           display name shown in the bar",
+    "  base           exact base id placement (optional)",
+    "  archetypes     [..] concourse-archetype placement (optional)",
+    "  exclude_bases  [..] subtracted from archetype placement",
+    "  requires_flags [..] ALL must be set (plot.h)",
+    "  forbids_flags  [..] NONE may be set",
+    "  dialogue       [..] linear paragraphs",
+    "  offer          offer line ('' / absent = pure dialogue)",
+    "  accept_actions [..] run on ACCEPT: set_flag:x clear_flag:x",
+    "                 give_item:x remove_item:x or campaign tokens",
+    "  refuse_actions [..] run on REFUSE",
+    "  done_actions   [..] run when a pure-dialogue conversation ends"
+  ],
+  "fixers": []
+}

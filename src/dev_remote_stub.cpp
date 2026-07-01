@@ -39,6 +39,7 @@ void publish_inventory(const std::vector<ItemInfo>& /*items*/,
                        const std::vector<MountInfo>& /*mounts*/)       {}
 void publish_player(const PlayerInfo& /*p*/)                           {}
 void publish_missions(const std::vector<MissionInfo>& /*missions*/)    {}
+void publish_base(const BaseInfo& /*b*/)                               {}
 void push_event(const std::string& /*category*/,
                 const std::string& /*text*/)                           {}
 
@@ -58,5 +59,6 @@ void set_inventory_equip_hook(std::function<void(int, int)> /*hook*/)  {}
 void set_panel_hook(std::function<void(std::string)> /*hook*/)         {}
 void set_comms_select_hook(std::function<void(int)> /*hook*/)          {}
 void set_plot_hook(std::function<void(std::string, std::string)> /*hook*/) {}
+void set_base_screen_hook(std::function<void(std::string)> /*hook*/)   {}
 
 } // namespace dev_remote

@@ -84,6 +84,7 @@
 HMM_Mat4 model_matrix(HMM_Vec3 pos, HMM_Vec3 euler_deg, float s);
 #include "perception.h"
 #include "plot.h"
+#include "fixers.h"
 #include "world_scale.h"
 #include "bolt_art.h"
 #include "projectile.h"
@@ -928,6 +929,13 @@ void build_system_scene(bool first_time) {
     // + galaxy graph); just register the screen body via the np-9cu.4 seam.
     // The per-base board is (re)generated on each dock, below.
     missions::register_screen();
+    // Fixers (#137, campaign epic #136): the bar's named characters. Loads
+    // the gate-scoped appearance table and registers the Bar screen body
+    // via the same np-9cu.4 hook seam. Missing file is non-fatal (empty
+    // bar). The action-handler + observer seams are wired with the other
+    // dev_remote hooks in init (first_time block).
+    fixers::load("assets/data/fixers.json");
+    fixers::register_bar_screen();
     // Faction comm chatter table (np-ma2.1) — flavour lines surfaced on
     // the HUD when a kill moves reputation. Missing file is non-fatal.
     comm::load("assets/data/comm_lines.json");
@@ -1218,11 +1226,18 @@ void build_system_scene(bool first_time) {
         plot::set_observer([](const std::string& what) {
             dev_remote::push_event("plot", what);
         });
+        fixers::set_observer([](const std::string& what) {
+            dev_remote::push_event("fixer", what);
+        });
         dev_remote::set_plot_hook([](std::string action, std::string id) {
             if      (action == "set_flag")    plot::set_flag(g.player, id);
             else if (action == "clear_flag")  plot::clear_flag(g.player, id);
             else if (action == "give_item")   plot::give_item(g.player, id);
             else if (action == "remove_item") plot::remove_item(g.player, id);
+        });
+        // POST /base/screen — navigate the Landed base UI (Bar, boards...).
+        dev_remote::set_base_screen_hook([](std::string name) {
+            base_screens::dev_open(name);
         });
 
         // issue #103: register the dev_remote host hooks (the decoupling
@@ -2881,6 +2896,15 @@ void publish_dev_remote_snapshots() {
         mis.push_back(std::move(mi));
     }
     dev_remote::publish_missions(mis);
+
+    // Base-UI position for GET /base (empty when not landed).
+    {
+        const base_screens::DevState bs = base_screens::dev_state();
+        dev_remote::BaseInfo bi;
+        bi.base_id = bs.base_id;
+        bi.stack   = bs.stack;
+        dev_remote::publish_base(bi);
+    }
 
     // Mode-transition events ("Flight -> Landed @ oakham_pirate"). Detected
     // here rather than at every transition site — one detector beats a

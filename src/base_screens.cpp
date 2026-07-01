@@ -415,7 +415,7 @@ void draw_guild(ImDrawList* dl, const ScreenSize& ss, BaseScreen cur,
     // below only runs in a partial build where #17 hasn't wired this screen.
     if (const ScreenHook& board_hook = g_hooks[(int)cur]) {
         BaseContext ctx{ g_def.id, g_def.display_name, g_def.faction,
-                         &player, g_player_ship };
+                         &player, g_player_ship, g_def.archetype };
         board_hook(ctx);
         return;
     }
@@ -461,7 +461,7 @@ void draw_guild(ImDrawList* dl, const ScreenSize& ss, BaseScreen cur,
     const ScreenHook& hook = g_hooks[(int)cur];
     if (hook) {
         BaseContext ctx{ g_def.id, g_def.display_name, g_def.faction,
-                         &player, g_player_ship };
+                         &player, g_player_ship, g_def.archetype };
         hook(ctx);
     } else {
         char msg[128];
@@ -499,11 +499,11 @@ void draw_subscreen(ImDrawList* dl, const ScreenSize& ss, BaseScreen cur,
         const ScreenHook& hook = g_hooks[(int)cur];
         if (hook) {
             BaseContext ctx{ g_def.id, g_def.display_name, g_def.faction,
-                             &player, g_player_ship };
+                             &player, g_player_ship, g_def.archetype };
             hook(ctx);
         } else {
             const char* msg = (cur == BaseScreen::Bar)
-                ? "BAR - fixers TBD"
+                ? "BAR - fixers::register_bar_screen() was not called (#137)"
                 : "screen stub - wired in by a later task";
             draw_centered(dl, msg, 0, 0, ss.w, ss.h, kWhite);
         }
@@ -1251,6 +1251,32 @@ void exit() {
     g_concourse = ConcourseSet{};
     g_stack.clear();
     std::printf("[base] exit '%s'\n", g_def.id.c_str());
+}
+
+bool dev_open(const std::string& screen_name) {
+    if (g_stack.empty()) return false;   // not landed / not entered
+    BaseScreen target;
+    if (!parse_target(screen_name, target)) return false;
+    // Only navigable art screens — Launch and the click-zone pseudo-targets
+    // aren't screens you can stand on.
+    if (target == BaseScreen::Launch || target == BaseScreen::OpenMenu ||
+        (int)target > (int)BaseScreen::LandingPad) return false;
+    if (target == BaseScreen::Concourse) {
+        g_stack.assign(1, BaseScreen::Concourse);
+    } else if (g_stack.back() != target) {
+        g_stack.push_back(target);
+    }
+    std::printf("[base] dev_open -> %s (stack depth %zu)\n",
+                screen_name.c_str(), g_stack.size());
+    return true;
+}
+
+DevState dev_state() {
+    DevState s;
+    if (g_stack.empty()) return s;
+    s.base_id = g_def.id;
+    for (BaseScreen sc : g_stack) s.stack.emplace_back(screen_name(sc));
+    return s;
 }
 
 bool handle_escape() {

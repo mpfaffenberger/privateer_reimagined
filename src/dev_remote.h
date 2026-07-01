@@ -91,6 +91,13 @@
 //                          via the registered hook; the resulting "plot"
 //                          event in /events confirms it landed (an
 //                          already-set flag emits nothing — idempotent).
+//   GET  /base           → { base_id, stack: ["Concourse","Bar",...] } —
+//                          where the player stands in the Landed base UI.
+//                          base_id "" == not landed.
+//   POST /base/screen    → navigate the Landed screen stack. Body
+//                          { name } ("Bar", "MissionComputer",
+//                          "Concourse" resets to the hub). The judge's
+//                          way into the bar/fixers without a mouse.
 //   GET  /events?since=N → { events: [ { seq, t, category, text }, ... ],
 //                          latest } — a monotonically-sequenced ring
 //                          buffer of gameplay events (comm feed lines,
@@ -370,6 +377,24 @@ struct MissionInfo {
 // Publish the latest accepted-missions snapshot for GET /missions. Called
 // once per frame from the main thread (every mode); stored mutex-guarded.
 void publish_missions(const std::vector<MissionInfo>& missions);
+
+// ---------------------------------------------------------------------------
+// /base snapshot — the Landed base-UI position (agentic testing).
+// ---------------------------------------------------------------------------
+struct BaseInfo {
+    std::string              base_id;   // "" == not landed / not entered
+    std::vector<std::string> stack;     // screen names, hub-first
+};
+
+// Publish the latest base-UI snapshot for GET /base. Called once per frame
+// from the main thread (every mode); stored mutex-guarded.
+void publish_base(const BaseInfo& b);
+
+// POST /base/screen enqueues a command; drain_commands invokes this hook on
+// the main thread with the screen name. The host wires it to
+// base_screens::dev_open (no-op when not landed; the /base snapshot tells
+// the judge whether it landed).
+void set_base_screen_hook(std::function<void(std::string name)> hook);
 
 // ---------------------------------------------------------------------------
 // /events — gameplay event ring buffer (agentic testing).
