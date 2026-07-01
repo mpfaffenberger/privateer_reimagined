@@ -80,7 +80,13 @@ std::vector<const FixerDef*> present_at(const std::string& base_id,
     std::vector<const FixerDef*> out;
     for (const FixerDef& f : g_fixers) {
         // ---- placement: exact base OR archetype-minus-exclusions ----
-        bool placed = (!f.base_id.empty() && f.base_id == base_id);
+        // Base match tolerates the nav-data type suffix: an entry authored
+        // "new_detroit" also matches "new_detroit_industrial" (same rule
+        // as base_screens' folder resolver, prefix + '_').
+        bool placed = !f.base_id.empty() &&
+                      (f.base_id == base_id ||
+                       (base_id.size() > f.base_id.size() &&
+                        base_id.rfind(f.base_id + "_", 0) == 0));
         if (!placed && !f.archetypes.empty()) {
             const bool arch_ok = std::find(f.archetypes.begin(),
                                            f.archetypes.end(),

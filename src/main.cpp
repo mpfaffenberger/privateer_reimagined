@@ -85,6 +85,7 @@ HMM_Mat4 model_matrix(HMM_Vec3 pos, HMM_Vec3 euler_deg, float s);
 #include "perception.h"
 #include "plot.h"
 #include "fixers.h"
+#include "campaign.h"
 #include "world_scale.h"
 #include "bolt_art.h"
 #include "projectile.h"
@@ -936,6 +937,9 @@ void build_system_scene(bool first_time) {
     // dev_remote hooks in init (first_time block).
     fixers::load("assets/data/fixers.json");
     fixers::register_bar_screen();
+    // Campaign mission logic (epic #136): registers the plot action
+    // handler that fixer accept_actions route through ("m01:accept").
+    campaign::init();
     // Faction comm chatter table (np-ma2.1) — flavour lines surfaced on
     // the HUD when a kill moves reputation. Missing file is non-fatal.
     comm::load("assets/data/comm_lines.json");
@@ -1234,6 +1238,9 @@ void build_system_scene(bool first_time) {
             else if (action == "clear_flag")  plot::clear_flag(g.player, id);
             else if (action == "give_item")   plot::give_item(g.player, id);
             else if (action == "remove_item") plot::remove_item(g.player, id);
+            // "run" executes ANY grammar token (campaign tokens included)
+            // — the judge's generic lever until #154's click endpoints.
+            else if (action == "run")         plot::run_action(g.player, id);
         });
         // POST /base/screen — navigate the Landed base UI (Bar, boards...).
         dev_remote::set_base_screen_hook([](std::string name) {
@@ -3808,6 +3815,9 @@ void frame_cb() {
         static std::string s_last_docked;
         if (s_last_docked != g.player.last_docked_base) {
             missions::fail_cargo_on_dock(g.player, g.player.last_docked_base);
+            // Campaign dock settles (epic #136): plot-cargo deliveries +
+            // failure detection, same once-per-dock-commit cadence.
+            campaign::on_dock(g.player, g.player.last_docked_base);
             s_last_docked = g.player.last_docked_base;
         }
     }

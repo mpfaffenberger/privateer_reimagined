@@ -592,7 +592,8 @@ void handle_plot(int fd, const std::string& body) {
         return;
     }
     if (action != "set_flag" && action != "clear_flag" &&
-        action != "give_item" && action != "remove_item") {
+        action != "give_item" && action != "remove_item" &&
+        action != "run") {   // "run" = any plot::run_action grammar token
         send_json(fd, "{\"ok\":false,\"error\":\"unknown action\"}");
         return;
     }

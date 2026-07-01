@@ -209,6 +209,7 @@ add_executable(new_privateer
     src/player.cpp
     src/plot.cpp
     src/fixers.cpp
+    src/campaign.cpp
     src/mobility.cpp
     src/gun.cpp
     src/shield.cpp
@@ -501,6 +502,24 @@ target_include_directories(test_fixers PRIVATE
     ${CMAKE_SOURCE_DIR}/third_party
 )
 target_compile_definitions(test_fixers PRIVATE FIXERS_HEADLESS)
+
+# Campaign mission-logic proof (epic #136): drives M01 (#113) headlessly
+# against the SHIPPED fixers.json + commodity catalog.
+#   cmake --build build --target test_campaign && ./build/test_campaign
+add_executable(test_campaign EXCLUDE_FROM_ALL
+    tools/test_campaign.cpp
+    src/campaign.cpp src/fixers.cpp src/plot.cpp src/player.cpp
+    src/faction.cpp src/json.cpp src/commodity.cpp src/comm.cpp
+    src/ship_class.cpp src/gun.cpp src/shield.cpp src/mobility.cpp
+)
+target_include_directories(test_campaign PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/third_party
+)
+target_compile_definitions(test_campaign PRIVATE FIXERS_HEADLESS COMM_HEADLESS)
+# Same trick as test_missions: comm.cpp's voice:: calls live in functions
+# this harness never references; dead-strip drops them at link time.
+target_link_options(test_campaign PRIVATE -Wl,-dead_strip)
 
 # ---------------------------------------------------------------------------
 # `dist` — portable, relocatable game folder (build/dist/).

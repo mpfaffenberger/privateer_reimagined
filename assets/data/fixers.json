@@ -5,17 +5,45 @@
     "requires_flags/forbids_flags can't both pass. Fields:",
     "  id             unique key, e.g. 'sandoval_offer'",
     "  name           display name shown in the bar",
-    "  base           exact base id placement (optional)",
+    "  base           base id placement; matches bare id or id_<suffix>",
     "  archetypes     [..] concourse-archetype placement (optional)",
     "  exclude_bases  [..] subtracted from archetype placement",
     "  requires_flags [..] ALL must be set (plot.h)",
     "  forbids_flags  [..] NONE may be set",
     "  dialogue       [..] linear paragraphs",
     "  offer          offer line ('' / absent = pure dialogue)",
-    "  accept_actions [..] run on ACCEPT: set_flag:x clear_flag:x",
-    "                 give_item:x remove_item:x or campaign tokens",
+    "  accept_actions [..] run on ACCEPT: plot verbs or campaign tokens",
     "  refuse_actions [..] run on REFUSE",
     "  done_actions   [..] run when a pure-dialogue conversation ends"
   ],
-  "fixers": []
+  "fixers": [
+    {
+      "id": "sandoval_offer",
+      "name": "Ernesto Sandoval",
+      "base": "new_detroit",
+      "forbids_flags": ["m01_active", "m01_delivered", "sandoval_done"],
+      "dialogue": [
+        "You look like a pilot who could use honest work. Ernesto Sandoval. I deal in... acquisitions.",
+        "I have a consignment of iron that needs to reach Liverpool, over in the Newcastle system. Forty units, no questions, no trouble.",
+        "Fifteen thousand credits. I don't have it on me - you'll be paid when you return to New Detroit. You have my word."
+      ],
+      "offer": "Haul 40 units of iron to Liverpool (Newcastle system), then return here for 15,000 credits. Deal?",
+      "accept_actions": ["m01:accept"],
+      "refuse_actions": []
+    },
+    {
+      "id": "tayla_artifact_handoff",
+      "name": "Tayla",
+      "base": "new_detroit",
+      "requires_flags": ["m01_delivered"],
+      "forbids_flags": ["sandoval_done"],
+      "dialogue": [
+        "Looking for Sandoval? Don't bother. He's dead. Word is it wasn't an accident.",
+        "Name's Tayla. Sandoval owed people, and now those people are curious about that trinket he handed you as collateral.",
+        "My advice? Keep the artifact. It's worth more than his fifteen grand ever was - and it's yours now, like it or not.",
+        "If you want to know what it IS, I can point you at people who find things out. But my help isn't free. Come see me when you're ready to work."
+      ],
+      "done_actions": ["give_item:steltek_artifact", "set_flag:sandoval_done"]
+    }
+  ]
 }
