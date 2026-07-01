@@ -226,6 +226,231 @@
           ]
         }
       ]
+    },
+    {
+      "id": "m06_seelig_delivery",
+      "trigger": {
+        "kind": "at_nav",
+        "system": "pentonville",
+        "nav": "Pentonville Nav 3",
+        "radius_m": 10000,
+        "requires_flags": [
+          "m06_active"
+        ],
+        "forbids_flags": [
+          "m06_message_delivered"
+        ],
+        "cooldown_s": 120
+      },
+      "dialogue": [
+        {
+          "voice": "Seelig",
+          "line": "You're broadcasting on my frequency, stranger. Talk fast."
+        },
+        {
+          "voice": "Seelig",
+          "line": "A message from LYNCH? Read it, then. ... 'Services no longer required.' That's it? THAT'S IT?"
+        },
+        {
+          "voice": "Seelig",
+          "line": "Ten years I ran his dirty errands! You tell that silk-suited snake - no. No, I'll send him a message of my own. Starting with the courier."
+        }
+      ],
+      "on_dialogue_done": [
+        "set_flag:m06_message_delivered"
+      ],
+      "waves": [
+        {
+          "delay_s": 1,
+          "spawns": [
+            {
+              "faction": "pirate",
+              "class": "talon",
+              "count": 1,
+              "name": "Seelig",
+              "unique": "seelig",
+              "hostile": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "m07_kroiz_rikel_entry",
+      "trigger": {
+        "kind": "in_system",
+        "system": "rikel",
+        "requires_flags": [
+          "m07_active"
+        ],
+        "forbids_flags": [
+          "killed:kroiz",
+          "m07_delivered"
+        ],
+        "cooldown_s": 300
+      },
+      "dialogue": [
+        {
+          "voice": "Salman Kroiz",
+          "line": "Lynch's new mule, right on schedule. This is MY route, friend. Those guns are MY guns."
+        },
+        {
+          "voice": "Salman Kroiz",
+          "line": "Dump the cargo and I only take your ship. Keep flying and I take everything."
+        }
+      ],
+      "waves": [
+        {
+          "delay_s": 1,
+          "spawns": [
+            {
+              "faction": "pirate",
+              "class": "demon",
+              "count": 1,
+              "name": "Salman Kroiz",
+              "unique": "kroiz",
+              "hostile": true
+            },
+            {
+              "faction": "pirate",
+              "class": "demon",
+              "count": 2,
+              "hostile": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "m07_kroiz_siva_reambush",
+      "trigger": {
+        "kind": "at_nav",
+        "system": "rikel",
+        "nav": "Siva Agricultural Planet",
+        "radius_m": 15000,
+        "requires_flags": [
+          "m07_active"
+        ],
+        "forbids_flags": [
+          "killed:kroiz"
+        ],
+        "cooldown_s": 300
+      },
+      "dialogue": [
+        {
+          "voice": "Salman Kroiz",
+          "line": "Almost made it. ALMOST. I brought the whole family this time."
+        }
+      ],
+      "waves": [
+        {
+          "delay_s": 1,
+          "spawns": [
+            {
+              "faction": "pirate",
+              "class": "demon",
+              "count": 1,
+              "name": "Salman Kroiz",
+              "unique": "kroiz",
+              "hostile": true
+            },
+            {
+              "faction": "pirate",
+              "class": "demon",
+              "count": 5,
+              "hostile": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "m08_castor_confed_pursuit",
+      "trigger": {
+        "kind": "in_system",
+        "system": "castor",
+        "requires_flags": [
+          "m08_active"
+        ],
+        "cooldown_s": 90
+      },
+      "dialogue": [
+        {
+          "voice": "confed",
+          "line": "All units: fugitive transport confirmed in Castor. Weapons free. Repeat: weapons free."
+        }
+      ],
+      "waves": [
+        {
+          "delay_s": 2,
+          "spawns": [
+            {
+              "faction": "confed",
+              "class": "stiletto",
+              "count": 2,
+              "hostile": true
+            },
+            {
+              "faction": "confed",
+              "class": "broadsword",
+              "count": 1,
+              "hostile": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "m09_miggs_newcastle_ambush",
+      "trigger": {
+        "kind": "in_system",
+        "system": "newcastle",
+        "requires_flags": [
+          "m09_active"
+        ],
+        "forbids_flags": [
+          "m09_reveal"
+        ],
+        "cooldown_s": 300
+      },
+      "dialogue": [
+        {
+          "voice": "Miggs",
+          "line": "Looking for Mr. Smythe? Funny thing about Smythe: I made him up. Mr. Lynch thought you'd like a personal send-off."
+        },
+        {
+          "voice": "Miggs",
+          "line": "You know too much about that artifact, see. Nothing personal. Actually - it's a little personal. I never liked your face."
+        },
+        {
+          "voice": "Miggs",
+          "line": "One tip, since you're dead anyway: the Oxford library. That's where the real answers are. Shame you'll never read them."
+        }
+      ],
+      "on_dialogue_done": [
+        "set_flag:m09_reveal"
+      ],
+      "waves": [
+        {
+          "delay_s": 1,
+          "spawns": [
+            {
+              "faction": "pirate",
+              "class": "talon",
+              "count": 1,
+              "name": "Miggs",
+              "unique": "miggs",
+              "hostile": true
+            },
+            {
+              "faction": "pirate",
+              "class": "talon",
+              "count": 3,
+              "hostile": true
+            }
+          ]
+        }
+      ]
     }
   ]
 }

@@ -276,6 +276,68 @@ int main() {
           !fixer_here("oakham_pirate", p, "tayla_m05_debrief"),
           "Tayla's Oakham entries retire after the chain");
 
+    // =======================================================================
+    // Phase 3: the Lynch arc (M06-M09, #118-#121)
+    // =======================================================================
+    std::printf("\n=== Lynch arc (M06-M09) ===\n\n");
+
+    const int64_t lynch_base = p.credits;
+
+    // ---- M06: the Seelig message (#118) ------------------------------------
+    check(fixer_here("new_constantinople", p, "lynch_m06_offer"),
+          "M06 offered at NC after tayla_done");
+    fixers::accept(*fixers::find("lynch_m06_offer"), p);
+    check(plot::has_flag(p, "m06_active"), "M06 active");
+    // The Seelig scenario's on_dialogue_done sets the delivered flag
+    // (director path is live-verified; this is the settle-logic proxy).
+    plot::set_flag(p, "m06_message_delivered");
+    check(fixer_here("new_constantinople", p, "lynch_m06_debrief"),
+          "M06 debrief waiting at NC");
+    fixers::dialogue_done(*fixers::find("lynch_m06_debrief"), p);
+    check(p.credits == lynch_base + 10000,  "M06 debrief pays 10,000 (pay: token)");
+    check(plot::has_flag(p, "lynch_1_done") && !plot::has_flag(p, "m06_active"),
+          "M06 settles: lynch_1_done, active cleared");
+
+    // ---- M07: weapons to Siva (#119) ---------------------------------------
+    check(fixer_here("new_constantinople", p, "lynch_m07_offer"),
+          "M07 offered after lynch_1_done");
+    fixers::accept(*fixers::find("lynch_m07_offer"), p);
+    check(cargo_units(p, "weaponry") == 20, "M07: 20 weaponry aboard");
+    campaign::on_dock(p, "siva");
+    check(p.credits == lynch_base + 25000,  "M07 pays 15,000 at Siva");
+    check(plot::has_flag(p, "lynch_2_done"), "M07 delivery sets lynch_2_done");
+
+    // ---- M08: the cousin (passenger, #120) ----------------------------------
+    check(fixer_here("new_constantinople", p, "lynch_m08_offer"),
+          "M08 offered after lynch_2_done");
+    fixers::accept(*fixers::find("lynch_m08_offer"), p);
+    check(plot::has_item(p, "lynch_cousin"), "M08 accept: cousin aboard (plot item)");
+    check(player::cargo_units_used(p) == 0,  "M08 passenger takes no hold space");
+    campaign::on_dock(p, "achilles");
+    check(plot::has_flag(p, "m08_active") && plot::has_item(p, "lynch_cousin"),
+          "M08 passenger can't be lost at a wrong dock");
+    campaign::on_dock(p, "romulus");
+    check(p.credits == lynch_base + 55000,  "M08 pays 30,000 on landing");
+    check(!plot::has_item(p, "lynch_cousin"), "M08 cousin disembarks at Romulus");
+    check(plot::has_flag(p, "lynch_3_done"), "M08 sets lynch_3_done");
+
+    // ---- M09: the Miggs betrayal (#121) -------------------------------------
+    check(fixer_here("new_constantinople", p, "lynch_m09_offer"),
+          "M09 offered after lynch_3_done");
+    fixers::accept(*fixers::find("lynch_m09_offer"), p);
+    check(plot::has_flag(p, "m09_active"), "M09 active (no payload)");
+    // Docking at Liverpool (the fake pickup) settles NOTHING.
+    campaign::on_dock(p, "liverpool_refinery");
+    check(plot::has_flag(p, "m09_active"), "M09 still active at Liverpool - no Smythe");
+    // The Miggs scenario's on_dialogue_done sets the reveal (proxy).
+    plot::set_flag(p, "m09_reveal");
+    campaign::on_dock(p, "oxford");
+    check(!plot::has_flag(p, "m09_active"), "M09 resolves on landing at Oxford");
+    check(plot::has_flag(p, "lynch_done"),  "M09 sets lynch_done");
+    check(p.credits == lynch_base + 55000,  "M09 pays NOTHING (the mob, folks)");
+    check(!fixer_here("new_constantinople", p, "lynch_m09_offer"),
+          "Lynch offers retire after lynch_done");
+
     std::printf("\n=== %s ===\n",
                 g_fail == 0 ? "ALL CHECKS PASSED" : "FAILURES DETECTED");
     return g_fail == 0 ? 0 : 1;

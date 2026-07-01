@@ -43,6 +43,14 @@
 // Riordian (M05) lives in assets/data/scripted_encounters.json (on_launch
 // ambush + at_nav re-ambush gated on the killed:riordian kill-memory).
 //
+// M06..M09 — the Lynch arc (#118-#121). M06 is pure data: the fixer sets
+// m06_active, the Seelig scenario's on_dialogue_done marks the message
+// delivered, and Lynch's debrief pays via the "pay:<credits>" token here.
+// M07 is a cargo row (Kroiz = scenario data); M08 is a PASSENGER row
+// (plot item lynch_cousin, completes on landing, can't be lost); M09 is a
+// bare go-to-Oxford row (the Miggs ambush + m09_reveal objective rewrite
+// are scenario data; landing at Oxford settles with lynch_done).
+//
 // The sandbox never calls in here; with no campaign flags set every
 // function is a no-op.
 // -----------------------------------------------------------------------------

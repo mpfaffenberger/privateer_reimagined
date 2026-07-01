@@ -139,6 +139,75 @@
         "That squares us. It's been profitable, pilot. Try not to die."
       ],
       "done_actions": ["set_flag:tayla_done", "clear_flag:tayla_employed"]
+    },
+    {
+      "id": "lynch_m06_offer",
+      "name": "Roman Lynch",
+      "base": "new_constantinople",
+      "requires_flags": ["tayla_done"],
+      "forbids_flags": ["m06_active", "m06_message_delivered", "lynch_1_done"],
+      "dialogue": [
+        "So you're Tayla's courier. Roman Lynch. The gentleman looming behind me is Miggs - pay him no mind.",
+        "Your artifact interests me. There's a hologram in it, did you know? My people will study it while you make yourself useful.",
+        "A man named Seelig is loitering at Nav 3 in Pentonville. Deliver a message: his services are no longer required. Verbatim, please.",
+        "Ten thousand when you get back. A simple courier run - what could go wrong?"
+      ],
+      "offer": "Deliver Lynch's message to Seelig at Pentonville Nav 3, then return to New Constantinople for 10,000 credits. Accept?",
+      "accept_actions": ["set_flag:m06_active"]
+    },
+    {
+      "id": "lynch_m06_debrief",
+      "name": "Roman Lynch",
+      "base": "new_constantinople",
+      "requires_flags": ["m06_message_delivered"],
+      "forbids_flags": ["lynch_1_done"],
+      "dialogue": [
+        "Seelig took it badly? Shocking. Some men simply cannot accept a severance package.",
+        "Your ten thousand, as agreed. The hologram is... resisting analysis. My people need more time - and I have more work."
+      ],
+      "done_actions": ["pay:10000", "set_flag:lynch_1_done", "clear_flag:m06_active", "clear_flag:m06_message_delivered"]
+    },
+    {
+      "id": "lynch_m07_offer",
+      "name": "Roman Lynch",
+      "base": "new_constantinople",
+      "requires_flags": ["lynch_1_done"],
+      "forbids_flags": ["m07_active", "m07_delivered", "lynch_2_done"],
+      "dialogue": [
+        "The artifact investigation has hit... complications. People keep dying around it. Fascinating, really.",
+        "Meanwhile: twenty units of weaponry to Siva, the agricultural base in Rikel. Fifteen thousand on delivery.",
+        "One wrinkle. Salman Kroiz runs guns on that route and considers it his. He flies a Demon. So do his friends."
+      ],
+      "offer": "Run 20 units of weaponry to Siva (Rikel system) for 15,000 credits, past Kroiz's gang. Accept?",
+      "accept_actions": ["m07:accept"]
+    },
+    {
+      "id": "lynch_m08_offer",
+      "name": "Roman Lynch",
+      "base": "new_constantinople",
+      "requires_flags": ["lynch_2_done"],
+      "forbids_flags": ["m08_active", "lynch_3_done"],
+      "dialogue": [
+        "Your trinket is confirmed alien. Not Kilrathi - OLD. That knowledge cost me three good analysts.",
+        "Before we discuss it further: my cousin needs to get out of town. Away from the heat. The heat being the entire Confederation navy.",
+        "Get him to Romulus, the mining base in Castor. Thirty thousand on landing. Do avoid the Stilettos - they are faster than you."
+      ],
+      "offer": "Smuggle Lynch's cousin to Romulus (Castor system) for 30,000 credits on landing. Take him aboard?",
+      "accept_actions": ["give_item:lynch_cousin", "set_flag:m08_active"]
+    },
+    {
+      "id": "lynch_m09_offer",
+      "name": "Roman Lynch",
+      "base": "new_constantinople",
+      "requires_flags": ["lynch_3_done"],
+      "forbids_flags": ["m09_active", "lynch_done"],
+      "dialogue": [
+        "One last job. A Mr. Smythe on Liverpool claims he found something about your artifact in the Oxford library archives.",
+        "Pick him up, bring him here. Thirty thousand for a taxi run. You may notice Miggs is elsewhere tonight - errands of his own.",
+        "Go on then. Liverpool. Newcastle system. Mr. Smythe is waiting."
+      ],
+      "offer": "Fly to Liverpool (Newcastle system) and collect Mr. Smythe for 30,000 credits. Accept?",
+      "accept_actions": ["set_flag:m09_active"]
     }
   ]
 }

@@ -38,6 +38,14 @@ constexpr float k_spawn_min_m     = 3000.0f;
 constexpr float k_spawn_max_m     = 5000.0f;
 constexpr float k_min_sep_m       = 600.0f;
 
+// Abandon rule (Phase 3, #119): while AwaitingResolution, if EVERY living
+// wing member is farther than this from the player, the scenario releases
+// the active slot WITHOUT reward/on_cleared — the player ran. Mirrors the
+// encounter director's "left behind" bookkeeping, and is what lets a
+// same-system re-ambush (Kroiz at Siva) trigger after the player fled the
+// first wave.
+constexpr float k_abandon_dist_m  = 25000.0f;
+
 // ---- per-scenario runtime state ------------------------------------------
 // One entry per loaded scenario. `triggered` short-circuits the trigger
 // loop on once-per-system scenarios; `last_fire_s` paces the
@@ -132,6 +140,11 @@ struct Scenario {
     // normalized into waves[0] at parse time so playback has ONE path.
     std::vector<WaveDef>     waves;
     std::vector<std::string> on_cleared;
+    // (Phase 3, #118) actions run the moment the DIALOGUE completes —
+    // before any wave spawns, regardless of whether the wave is ever
+    // cleared. The comm-interaction objective ("message delivered") in
+    // one grammar token; also fires for dialogue-less scenarios.
+    std::vector<std::string> on_dialogue_done;
 };
 
 // ---- module state ---------------------------------------------------------
@@ -401,6 +414,10 @@ void parse_scenario(const json::Value& v, Scenario& s) {
         for (const json::Value& g : oc->as_array())
             if (g.is_string()) s.on_cleared.push_back(g.as_string());
     }
+    if (const json::Value* od = v.find("on_dialogue_done"); od && od->is_array()) {
+        for (const json::Value& g : od->as_array())
+            if (g.is_string()) s.on_dialogue_done.push_back(g.as_string());
+    }
 }
 
 // Wave C (audio): load the scenario-id -> [clip paths] manifest.
@@ -583,6 +600,10 @@ void tick(ShipRegistry& ships, const Ship& player_ship, PlayerState& player,
         if (active_phase == ActivePhase::Dialogue && sc.dialogue.empty()) {
             g_state[active_idx].triggered   = true;
             g_state[active_idx].last_fire_s = now_s;
+            // (Phase 3, #118) dialogue trivially complete — fire the
+            // dialogue-done actions before any wave spawns.
+            if (!sc.on_dialogue_done.empty())
+                plot::run_actions(player, sc.on_dialogue_done);
             if (!sc.waves.empty()) {
                 active_phase   = ActivePhase::Spawning;
                 active_next_at = now_s + sc.waves[0].delay_s;
@@ -615,6 +636,12 @@ void tick(ShipRegistry& ships, const Ship& player_ship, PlayerState& player,
                 std::printf("[scenario] %s complete\n", sc.id.c_str());
                 g_state[active_idx].triggered   = true;
                 g_state[active_idx].last_fire_s = now_s;
+
+                // (Phase 3, #118) the conversation IS the objective for
+                // comm-interaction missions ("message delivered") — run
+                // these now, independent of any wave's fate.
+                if (!sc.on_dialogue_done.empty())
+                    plot::run_actions(player, sc.on_dialogue_done);
 
                 // waves => Spawning (first wave's delay); reward/actions
                 // => straight to AwaitingResolution; neither => retire.
@@ -701,6 +728,37 @@ void tick(ShipRegistry& ships, const Ship& player_ship, PlayerState& player,
         // wing is empty. "Wing empty" works for the no-spawn path too
         // (wing was never populated, resolves on first tick of phase).
         if (active_phase == ActivePhase::AwaitingResolution) {
+            // Abandon rule (Phase 3, #119): the player ran — every living
+            // wing member is beyond k_abandon_dist_m. Release the slot
+            // WITHOUT reward or on_cleared so other scenarios (e.g. the
+            // same-system re-ambush) can trigger. The wing stays in the
+            // world; no kill-memory is written for survivors.
+            {
+                bool any_alive = false, any_near = false;
+                for (const WingMember& m : active_wing) {
+                    const Ship* s = ships.find_by_id(m.id);
+                    if (!s || !s->alive) continue;
+                    any_alive = true;
+                    const HMM_Vec3 d = HMM_SubV3(s->position,
+                                                 player_ship.position);
+                    if (HMM_DotV3(d, d) <
+                        k_abandon_dist_m * k_abandon_dist_m) {
+                        any_near = true;
+                        break;
+                    }
+                }
+                if (any_alive && !any_near) {
+                    std::printf("[scenario] %s abandoned (player left the "
+                                "wing behind)\n", sc.id.c_str());
+                    active_idx       = -1;
+                    active_phase     = ActivePhase::Dialogue;
+                    active_anchor_id = 0;
+                    active_wave      = 0;
+                    active_anchor_fixed = false;
+                    active_wing.clear();
+                    return;
+                }
+            }
             // Prune dead/gone members. A pruned member with a `unique` id
             // that we can SEE dead (not merely despawned) writes the
             // kill-memory flag conditional re-ambushes gate on (#139).

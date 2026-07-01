@@ -34,6 +34,14 @@
 //   * ACTIONS    — `on_cleared: ["set_flag:x", ...]` run through the
 //                   shared plot::run_action grammar when the scenario
 //                   resolves — how a scripted fight advances the campaign.
+//                   `on_dialogue_done: [...]` runs the moment the dialogue
+//                   completes, BEFORE any wave and regardless of its fate —
+//                   the comm-interaction objective (#118 Seelig message).
+//
+// ABANDON RULE: while a wave awaits resolution, if every living wing
+// member is > 25 km from the player the scenario releases the active slot
+// with NO reward/on_cleared (the player ran). Same-system re-ambushes
+// (#119 Kroiz) rely on this to get their turn.
 //
 // Runtime state is file-static: scenarios never change at runtime, so
 // the director is just a per-frame evaluation + playback loop with no
