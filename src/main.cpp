@@ -1246,6 +1246,72 @@ void build_system_scene(bool first_time) {
         dev_remote::set_base_screen_hook([](std::string name) {
             base_screens::dev_open(name);
         });
+        // POST /goto — dev warp (#154 subset): queue the SAME deferred
+        // system switch the debug dropdown uses. Flight-gated so the scene
+        // never tears down under a base screen; unknown ids just log.
+        dev_remote::set_goto_hook([](std::string system) {
+            if (g.game.mode != GameMode::Flight) {
+                std::fprintf(stderr, "[dev_remote] /goto refused: not in Flight\n");
+                return;
+            }
+            if (!g.galaxy.find(system)) {
+                std::fprintf(stderr, "[dev_remote] /goto refused: unknown system '%s'\n",
+                             system.c_str());
+                return;
+            }
+            std::printf("[dev_remote] /goto -> %s\n", system.c_str());
+            g.pending_goto = system;
+        });
+        // POST /dock — land at a dockable nav in the current system. The
+        // exact commit path the auto-land zone uses (docking::land_now):
+        // docked flags, Landed request, autosave, campaign::on_dock.
+        dev_remote::set_dock_hook([](std::string base) {
+            if (g.game.mode != GameMode::Flight) {
+                std::fprintf(stderr, "[dev_remote] /dock refused: not in Flight\n");
+                return;
+            }
+            for (const NavPointDef& n : g.system.nav_points) {
+                if (!n.dockable || n.base_id.empty()) continue;
+                // Accept the exact id or the bare-prefix form ("liverpool"
+                // matches "liverpool_refinery") — same tolerance as
+                // campaign::on_dock's base matcher.
+                const bool match = n.base_id == base ||
+                    (n.base_id.size() > base.size() &&
+                     n.base_id.rfind(base + "_", 0) == 0);
+                if (!match) continue;
+                g.camera.position = HMM_AddV3(n.position,
+                                              HMM_V3(0.0f, 0.0f, 400.0f));
+                g.camera.velocity = HMM_V3(0.0f, 0.0f, 0.0f);
+                std::printf("[dev_remote] /dock -> %s\n", n.base_id.c_str());
+                docking::land_now(g.docking, g.game, g.player, n);
+                return;
+            }
+            std::fprintf(stderr, "[dev_remote] /dock refused: no dockable nav '%s' in %s\n",
+                         base.c_str(), g.player.current_system.c_str());
+        });
+        // POST /fixer — drive a fixer conversation without a mouse. The
+        // presence gate re-runs present_at against the CURRENT base, so the
+        // judge can only do what a player in this bar could do.
+        dev_remote::set_fixer_hook([](std::string id, std::string verb) {
+            const base_screens::DevState bs = base_screens::dev_state();
+            if (bs.base_id.empty()) {
+                std::fprintf(stderr, "[dev_remote] /fixer refused: not landed\n");
+                return;
+            }
+            const fixers::FixerDef* f = fixers::find(id);
+            const auto present =
+                fixers::present_at(bs.base_id, bs.archetype, g.player);
+            if (!f || std::find(present.begin(), present.end(), f) ==
+                          present.end()) {
+                std::fprintf(stderr,
+                             "[dev_remote] /fixer refused: '%s' not present at %s\n",
+                             id.c_str(), bs.base_id.c_str());
+                return;
+            }
+            if      (verb == "accept") fixers::accept(*f, g.player);
+            else if (verb == "refuse") fixers::refuse(*f, g.player);
+            else if (verb == "done")   fixers::dialogue_done(*f, g.player);
+        });
 
         // issue #103: register the dev_remote host hooks (the decoupling
         // seam, mirroring encounters' SpawnFn). dev_remote validates +
@@ -1946,6 +2012,14 @@ void build_system_scene(bool first_time) {
     if (first_time && !g.dev_land_base.empty()) {
         g.player.last_docked_base = g.dev_land_base;
         g.player.docked           = true;
+        // Dismiss the title menu like --skip-title does. Leaving it "up"
+        // (merely hidden behind the Landed UI) meant the title SCENE
+        // lazily initialised on the first post-launch Flight frame and
+        // kept atlas pointers into g.sprite_art — which a runtime system
+        // switch (jump / --goto / POST /goto) destroys. Result: dangling
+        // atlas reads and a Metal encoder abort mid-render. Dev boots go
+        // straight into the game; no menu, no zombie title scene.
+        g.show_title = false;
         game_state::request_mode(g.game, GameMode::Landed);
         std::printf("[new_privateer] --dev-land '%s' — booting into Landed\n",
                     g.dev_land_base.c_str());
@@ -2904,12 +2978,20 @@ void publish_dev_remote_snapshots() {
     }
     dev_remote::publish_missions(mis);
 
-    // Base-UI position for GET /base (empty when not landed).
+    // Base-UI position for GET /base (empty when not landed). Includes
+    // the fixers passing their placement + plot gates at this base so the
+    // judge can see who is in the bar without screen-scraping (#137).
     {
         const base_screens::DevState bs = base_screens::dev_state();
         dev_remote::BaseInfo bi;
-        bi.base_id = bs.base_id;
-        bi.stack   = bs.stack;
+        bi.base_id   = bs.base_id;
+        bi.archetype = bs.archetype;
+        bi.stack     = bs.stack;
+        if (!bs.base_id.empty()) {
+            for (const fixers::FixerDef* f :
+                 fixers::present_at(bs.base_id, bs.archetype, g.player))
+                bi.fixers.push_back(f->id);
+        }
         dev_remote::publish_base(bi);
     }
 

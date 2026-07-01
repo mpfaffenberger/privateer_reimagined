@@ -56,7 +56,7 @@ struct Command {
     enum class Kind { SetCamera, Screenshot, VoiceSay, CommBark, CargoGive, Spawn,
                       Kill, SetTarget, TractorPull, InventorySell, InventoryGive,
                       InventoryInstall, InventoryEquip, SetPanel, CommsSelect,
-                      Rumor, Plot, BaseScreenNav };
+                      Rumor, Plot, BaseScreenNav, Goto, Dock, Fixer };
     Kind kind;
 
     // SetCamera — any optional field is encoded with `has_*`.
@@ -91,6 +91,8 @@ struct Command {
     std::string     give_kind;        // "weapon"|"upgrade"|"salvage"|"commodity"
     std::string     give_rarity;      // "basic"|"rare"|"legendary"
     // Plot — validated action verb; the flag/item id reuses str_arg.
+    // Fixer — the verb (accept|refuse|done) rides here too; the fixer id
+    // reuses str_arg. Goto/Dock reuse str_arg for the system/base id.
     std::string     plot_action;      // set_flag|clear_flag|give_item|remove_item
 };
 
@@ -201,6 +203,9 @@ std::function<void(std::string)>                            g_panel_hook;
 std::function<void(int)>                                    g_comms_select_hook;
 std::function<void(std::string, std::string)>               g_plot_hook;
 std::function<void(std::string)>                            g_base_screen_hook;
+std::function<void(std::string)>                            g_goto_hook;
+std::function<void(std::string)>                            g_dock_hook;
+std::function<void(std::string, std::string)>               g_fixer_hook;
 
 std::thread       g_thread;
 std::atomic<bool> g_running{false};
@@ -647,10 +652,17 @@ void handle_base(int fd) {
         b = g_base;
     }
     std::string out = "{\"base_id\":\"" + json_escape(b.base_id) +
+                      "\",\"archetype\":\"" + json_escape(b.archetype) +
                       "\",\"stack\":[";
     for (size_t i = 0; i < b.stack.size(); ++i) {
         out += (i ? ",\"" : "\"");
         out += json_escape(b.stack[i]);
+        out += "\"";
+    }
+    out += "],\"fixers\":[";
+    for (size_t i = 0; i < b.fixers.size(); ++i) {
+        out += (i ? ",\"" : "\"");
+        out += json_escape(b.fixers[i]);
         out += "\"";
     }
     out += "]}";
@@ -667,6 +679,70 @@ void handle_base_screen(int fd, const std::string& body) {
     Command c;
     c.kind    = Command::Kind::BaseScreenNav;
     c.str_arg = name;
+    {
+        std::lock_guard lk(g_queue_mu);
+        g_queue.push_back(c);
+    }
+    send_json(fd, "{\"ok\":true}");
+}
+
+// POST /goto — dev warp: queue a deferred system switch. Body { system }.
+// Flight-gated on the main thread (the host hook refuses while Landed so
+// the scene never tears down under a base screen).
+void handle_goto(int fd, const std::string& body) {
+    std::string system;
+    if (!extract_string(body, "system", &system) || system.empty()) {
+        send_json(fd, "{\"ok\":false,\"error\":\"missing system\"}");
+        return;
+    }
+    Command c;
+    c.kind    = Command::Kind::Goto;
+    c.str_arg = system;
+    {
+        std::lock_guard lk(g_queue_mu);
+        g_queue.push_back(c);
+    }
+    send_json(fd, "{\"ok\":true}");
+}
+
+// POST /dock — dock at a dockable nav in the CURRENT system. Body { base }.
+// The host hook teleports to the pad and runs docking::land_now — the same
+// commit path the auto-land zone uses (autosave + campaign::on_dock fire).
+void handle_dock(int fd, const std::string& body) {
+    std::string base;
+    if (!extract_string(body, "base", &base) || base.empty()) {
+        send_json(fd, "{\"ok\":false,\"error\":\"missing base\"}");
+        return;
+    }
+    Command c;
+    c.kind    = Command::Kind::Dock;
+    c.str_arg = base;
+    {
+        std::lock_guard lk(g_queue_mu);
+        g_queue.push_back(c);
+    }
+    send_json(fd, "{\"ok\":true}");
+}
+
+// POST /fixer — drive a bar-fixer conversation. Body { id, action } with
+// action = accept | refuse | done. Verb validated HERE; presence + plot
+// gating are enforced on the main thread (the hook re-runs present_at, so
+// a judge can't accept a fixer who isn't actually standing in this bar).
+void handle_fixer(int fd, const std::string& body) {
+    std::string id, action;
+    if (!extract_string(body, "id", &id) || id.empty()) {
+        send_json(fd, "{\"ok\":false,\"error\":\"missing id\"}");
+        return;
+    }
+    if (!extract_string(body, "action", &action) ||
+        (action != "accept" && action != "refuse" && action != "done")) {
+        send_json(fd, "{\"ok\":false,\"error\":\"action must be accept|refuse|done\"}");
+        return;
+    }
+    Command c;
+    c.kind        = Command::Kind::Fixer;
+    c.str_arg     = id;
+    c.plot_action = action;
     {
         std::lock_guard lk(g_queue_mu);
         g_queue.push_back(c);
@@ -1224,6 +1300,9 @@ void handle_connection(int fd) {
     else if (method == "POST" && path == "/plot")       handle_plot(fd, body);
     else if (method == "GET"  && path == "/base")       handle_base(fd);
     else if (method == "POST" && path == "/base/screen") handle_base_screen(fd, body);
+    else if (method == "POST" && path == "/goto")       handle_goto(fd, body);
+    else if (method == "POST" && path == "/dock")       handle_dock(fd, body);
+    else if (method == "POST" && path == "/fixer")      handle_fixer(fd, body);
     else if (method == "GET"  && path == "/missions")   handle_missions(fd);
     else if (method == "GET"  && path == "/events")     handle_events(fd, query);
     else                                                send_404(fd);
@@ -1508,6 +1587,38 @@ void drain_commands(Camera& cam) {
             if (hook) hook(c.str_arg);
             break;
         }
+        case Command::Kind::Goto: {
+            // Dev warp — the host queues its deferred system switch
+            // (g.pending_goto path). Flight-gated by the host hook.
+            std::function<void(std::string)> hook;
+            {
+                std::lock_guard lk(g_hooks_mu);
+                hook = g_goto_hook;
+            }
+            if (hook) hook(c.str_arg);
+            break;
+        }
+        case Command::Kind::Dock: {
+            // Dock at a nav in the current system via docking::land_now.
+            std::function<void(std::string)> hook;
+            {
+                std::lock_guard lk(g_hooks_mu);
+                hook = g_dock_hook;
+            }
+            if (hook) hook(c.str_arg);
+            break;
+        }
+        case Command::Kind::Fixer: {
+            // Drive a fixer conversation (accept/refuse/done); the host
+            // hook re-validates presence at the current bar.
+            std::function<void(std::string, std::string)> hook;
+            {
+                std::lock_guard lk(g_hooks_mu);
+                hook = g_fixer_hook;
+            }
+            if (hook) hook(c.str_arg, c.plot_action);
+            break;
+        }
         }
     }
 
@@ -1669,6 +1780,21 @@ void set_comms_select_hook(std::function<void(int)> hook) {
 void set_plot_hook(std::function<void(std::string, std::string)> hook) {
     std::lock_guard lk(g_hooks_mu);
     g_plot_hook = std::move(hook);
+}
+
+void set_goto_hook(std::function<void(std::string)> hook) {
+    std::lock_guard lk(g_hooks_mu);
+    g_goto_hook = std::move(hook);
+}
+
+void set_dock_hook(std::function<void(std::string)> hook) {
+    std::lock_guard lk(g_hooks_mu);
+    g_dock_hook = std::move(hook);
+}
+
+void set_fixer_hook(std::function<void(std::string, std::string)> hook) {
+    std::lock_guard lk(g_hooks_mu);
+    g_fixer_hook = std::move(hook);
 }
 
 void set_base_screen_hook(std::function<void(std::string)> hook) {

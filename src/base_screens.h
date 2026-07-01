@@ -149,6 +149,7 @@ bool dev_open(const std::string& screen_name);
 // stack as names, hub-first. Empty base_id == not currently entered.
 struct DevState {
     std::string              base_id;
+    std::string              archetype;   // concourse archetype ("mining", ...)
     std::vector<std::string> stack;
 };
 DevState dev_state();

@@ -1281,7 +1281,8 @@ bool dev_open(const std::string& screen_name) {
 DevState dev_state() {
     DevState s;
     if (g_stack.empty()) return s;
-    s.base_id = g_def.id;
+    s.base_id   = g_def.id;
+    s.archetype = g_def.archetype;
     for (BaseScreen sc : g_stack) s.stack.emplace_back(screen_name(sc));
     return s;
 }

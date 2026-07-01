@@ -91,13 +91,30 @@
 //                          via the registered hook; the resulting "plot"
 //                          event in /events confirms it landed (an
 //                          already-set flag emits nothing — idempotent).
-//   GET  /base           → { base_id, stack: ["Concourse","Bar",...] } —
-//                          where the player stands in the Landed base UI.
+//   GET  /base           → { base_id, archetype, stack: ["Concourse",...],
+//                          fixers: ["sandoval_offer", ...] } — where the
+//                          player stands in the Landed base UI plus which
+//                          fixers pass their placement + plot gates here.
 //                          base_id "" == not landed.
 //   POST /base/screen    → navigate the Landed screen stack. Body
 //                          { name } ("Bar", "MissionComputer",
-//                          "Concourse" resets to the hub). The judge's
-//                          way into the bar/fixers without a mouse.
+//                          "Concourse" resets to the hub; "Launch" arms
+//                          the deferred launch back to Flight). The
+//                          judge's way into the bar/fixers without a
+//                          mouse.
+//   POST /goto           → dev warp. Body { system }. Queues the same
+//                          deferred system switch the debug dropdown
+//                          uses; refused (logged) unless in Flight.
+//   POST /dock           → land at a base in the CURRENT system. Body
+//                          { base } (nav base_id, bare or suffixed).
+//                          Teleports to the pad and commits via
+//                          docking::land_now — autosave + campaign dock
+//                          settles fire exactly like a real landing.
+//   POST /fixer          → drive a bar-fixer conversation. Body
+//                          { id, action } with action accept|refuse|done.
+//                          Only works when the fixer is actually present
+//                          at the current base for this player (same
+//                          present_at gate the Bar screen renders from).
 //   GET  /events?since=N → { events: [ { seq, t, category, text }, ... ],
 //                          latest } — a monotonically-sequenced ring
 //                          buffer of gameplay events (comm feed lines,
@@ -383,7 +400,9 @@ void publish_missions(const std::vector<MissionInfo>& missions);
 // ---------------------------------------------------------------------------
 struct BaseInfo {
     std::string              base_id;   // "" == not landed / not entered
+    std::string              archetype; // concourse archetype ("mining", ...)
     std::vector<std::string> stack;     // screen names, hub-first
+    std::vector<std::string> fixers;    // fixer ids passing gates here (#137)
 };
 
 // Publish the latest base-UI snapshot for GET /base. Called once per frame
@@ -395,6 +414,21 @@ void publish_base(const BaseInfo& b);
 // base_screens::dev_open (no-op when not landed; the /base snapshot tells
 // the judge whether it landed).
 void set_base_screen_hook(std::function<void(std::string name)> hook);
+
+// POST /goto enqueues a command; drain_commands invokes this hook on the
+// main thread with the system id. The host queues its deferred switch
+// (Flight only — never tears the world down under a base screen).
+void set_goto_hook(std::function<void(std::string system)> hook);
+
+// POST /dock enqueues a command; drain_commands invokes this hook on the
+// main thread with the base id. The host teleports to the pad and commits
+// via docking::land_now (Flight only).
+void set_dock_hook(std::function<void(std::string base)> hook);
+
+// POST /fixer enqueues a command; drain_commands invokes this hook on the
+// main thread with (fixer id, verb). The host re-validates presence at the
+// current bar, then calls fixers::accept/refuse/dialogue_done.
+void set_fixer_hook(std::function<void(std::string id, std::string verb)> hook);
 
 // ---------------------------------------------------------------------------
 // /events — gameplay event ring buffer (agentic testing).

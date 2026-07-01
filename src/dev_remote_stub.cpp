@@ -60,5 +60,8 @@ void set_panel_hook(std::function<void(std::string)> /*hook*/)         {}
 void set_comms_select_hook(std::function<void(int)> /*hook*/)          {}
 void set_plot_hook(std::function<void(std::string, std::string)> /*hook*/) {}
 void set_base_screen_hook(std::function<void(std::string)> /*hook*/)   {}
+void set_goto_hook(std::function<void(std::string)> /*hook*/)          {}
+void set_dock_hook(std::function<void(std::string)> /*hook*/)          {}
+void set_fixer_hook(std::function<void(std::string, std::string)> /*hook*/) {}
 
 } // namespace dev_remote
