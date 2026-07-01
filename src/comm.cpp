@@ -128,11 +128,20 @@ std::string pick_line(Faction f, Event e) {
     return lines[pick(rng())];
 }
 
+// The dev_remote observation tap (see comm.h). Empty by default — push()
+// pays one branch when nothing is listening.
+namespace { std::function<void(const std::string&, bool)> g_feed_tap; }
+
+void set_feed_tap(std::function<void(const std::string& text, bool taunt)> tap) {
+    g_feed_tap = std::move(tap);
+}
+
 void push(const std::string& text, bool taunt) {
     g_feed.push_back(FeedLine{ text, 0.0f, taunt });
     // Cap the backlog — drop the oldest. erase-front on a tiny vector is
     // cheaper than the bookkeeping a ring buffer would need.
     while (g_feed.size() > k_max_lines) g_feed.erase(g_feed.begin());
+    if (g_feed_tap) g_feed_tap(text, taunt);
 }
 
 void tick(float dt) {

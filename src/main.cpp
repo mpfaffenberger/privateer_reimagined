@@ -1199,6 +1199,16 @@ void build_system_scene(bool first_time) {
     if (first_time) {
         dev_remote::start(47001);
 
+        // Agentic-testing event stream: every comm feed line (mission
+        // accept/complete, rep deltas, taunts) is mirrored into the
+        // GET /events ring buffer via the comm tap. One seam — no gameplay
+        // module ever learns dev_remote exists. Taunts land as "comm",
+        // status lines as "status", so a judge can filter chatter from
+        // state changes.
+        comm::set_feed_tap([](const std::string& text, bool taunt) {
+            dev_remote::push_event(taunt ? "comm" : "status", text);
+        });
+
         // issue #103: register the dev_remote host hooks (the decoupling
         // seam, mirroring encounters' SpawnFn). dev_remote validates +
         // enqueues; these run on the main thread inside drain_commands.
@@ -2811,6 +2821,65 @@ static void update_mission_forces() {
     }
 }
 
+// Publish the /player + /missions snapshots and emit mode-transition events
+// for the agentic-testing dev channel (dev_remote.h). Called once per frame
+// from BOTH frame paths — the Flight sim and frame_stub — so a judge can
+// assert against credits/rep/missions while flying, docked, dying, or
+// loading. Flat POD mirrors only; dev_remote never sees PlayerState.
+void publish_dev_remote_snapshots() {
+    dev_remote::PlayerInfo pi;
+    pi.credits        = g.player.credits;
+    pi.ship_class     = g.player.ship_class_name;
+    pi.system         = g.player.current_system;
+    pi.docked_base    = g.player.last_docked_base;
+    pi.mode           = game_state::to_name(g.game.mode);
+    pi.merc_guild     = g.player.merc_guild_member;
+    pi.merchant_guild = g.player.merchant_guild_member;
+    pi.factions.reserve(kFactionCount);
+    for (int i = 0; i < kFactionCount; ++i) {
+        dev_remote::FactionStanding fs;
+        fs.faction = faction::to_name((Faction)i);
+        fs.rep     = g.player.rep.rep[i];
+        fs.kills   = g.player.faction_kills[i];
+        pi.factions.push_back(std::move(fs));
+    }
+    dev_remote::publish_player(pi);
+
+    // Accepted missions with the SAME status strings the HUD shows
+    // (missions::mission_status) — one formatter, two readers, no drift.
+    std::vector<dev_remote::MissionInfo> mis;
+    mis.reserve(g.player.missions.size());
+    for (const ActiveMission& am : g.player.missions) {
+        dev_remote::MissionInfo mi;
+        mi.id     = am.id;
+        mi.type   = missions::type_label((missions::MissionType)am.type);
+        mi.source = missions::source_label((missions::MissionSource)am.source);
+        const missions::MissionStatus st =
+            missions::mission_status(am, g.system, g.player.current_system);
+        mi.status            = st.text;
+        mi.target_system     = st.target_system;
+        mi.in_current_system = st.in_current_system;
+        mi.reward            = am.reward;
+        mis.push_back(std::move(mi));
+    }
+    dev_remote::publish_missions(mis);
+
+    // Mode-transition events ("Flight -> Landed @ oakham_pirate"). Detected
+    // here rather than at every transition site — one detector beats a
+    // dozen push_event calls sprinkled through the mode machine.
+    static GameMode s_last_mode = GameMode::Flight;
+    if (g.game.mode != s_last_mode) {
+        std::string ev = std::string(game_state::to_name(s_last_mode)) +
+                         " -> " + game_state::to_name(g.game.mode);
+        if (g.game.mode == GameMode::Landed &&
+            !g.player.last_docked_base.empty()) {
+            ev += " @ " + g.player.last_docked_base;
+        }
+        dev_remote::push_event("mode", ev);
+        s_last_mode = g.game.mode;
+    }
+}
+
 // ---- non-Flight stub screens ------------------------------------------------
 //
 // Landed / Dying / Loading don't have real screens yet (np-eag.2 only adds
@@ -2822,8 +2891,10 @@ static void update_mission_forces() {
 // debugtext fonts have no glyphs past the 8-bit range.
 void frame_stub() {
     // Keep the dev channel responsive: queued commands (screenshot,
-    // camera pokes) still drain even though the sim is paused.
+    // camera pokes) still drain even though the sim is paused, and the
+    // /player + /missions snapshots stay fresh for the agentic judge.
     dev_remote::drain_commands(g.camera);
+    publish_dev_remote_snapshots();
 
     // Fade the engine hum out — landed/dying/loading ships don't thrum.
     // Uses the real frame dt is unavailable here (stub skips the
@@ -3494,6 +3565,7 @@ void frame_cb() {
     // physics / rendering — a /camera/set that arrived this frame
     // should be visible in the frame we're about to produce.
     dev_remote::drain_commands(g.camera);
+    publish_dev_remote_snapshots();
 
     // issue #103: publish a near-player ship snapshot for GET /ships. Built
     // fresh each Flight frame from the live registry; the player ship is

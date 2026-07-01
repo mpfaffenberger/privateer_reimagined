@@ -28,6 +28,7 @@
 #include "faction.h"
 
 #include <cstdint>
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -89,6 +90,13 @@ struct FeedLine {
 // Push a pre-formatted line into the rolling feed (oldest drop off the top
 // once the cap is hit). `taunt` selects the draw colour.
 void push(const std::string& text, bool taunt);
+
+// Observation tap: every push() also invokes this hook (when set) with the
+// same (text, taunt) pair. ONE consumer today: main.cpp wires it to
+// dev_remote::push_event so the agentic-testing /events endpoint sees every
+// feed line (mission accept/complete, rep deltas, taunts) without any
+// gameplay module knowing dev_remote exists. Main-thread only, like push().
+void set_feed_tap(std::function<void(const std::string& text, bool taunt)> tap);
 
 // Age every feed line by dt and drop expired ones. Call once per frame.
 void tick(float dt);

@@ -71,6 +71,27 @@
 //                          into gun mount { mount_index:N } (mount_index
 //                          optional; -1/missing = first empty mount, else
 //                          0). Returns { ok:true }.
+//   GET  /player         → { credits, ship_class, system, docked_base,
+//                          mode, merc_guild, merchant_guild,
+//                          factions: [ {faction, rep, kills}, ... ] } —
+//                          the persistent PlayerState surface a judge
+//                          asserts against (credits paid? rep moved?).
+//                          Published once per frame in EVERY mode, so it
+//                          works while docked, dying, or loading.
+//   GET  /missions       → { missions: [ { id, type, source, status,
+//                          reward, target_system, in_current_system },
+//                          ... ] } — the player's ACCEPTED missions with
+//                          the same status strings the HUD shows
+//                          (missions::mission_status), so a judge can
+//                          assert "PATROL 2/5" without screen-scraping.
+//   GET  /events?since=N → { events: [ { seq, t, category, text }, ... ],
+//                          latest } — a monotonically-sequenced ring
+//                          buffer of gameplay events (comm feed lines,
+//                          mode transitions; categories grow over time).
+//                          Pass the previous reply's `latest` as `since`
+//                          to poll incrementally. This is the assertion
+//                          stream for agentic testing: "mission_complete
+//                          event fired" beats screenshot divination.
 //
 // Everything else 404s.
 // -----------------------------------------------------------------------------
@@ -285,5 +306,69 @@ void set_panel_hook(std::function<void(std::string screen)> hook);
 // the main thread with the 1-based pick. The host ensures the Comms screen is
 // active + opened, then routes to comms_menu::select(n).
 void set_comms_select_hook(std::function<void(int n)> hook);
+
+// ---------------------------------------------------------------------------
+// /player snapshot — the persistent PlayerState surface (agentic testing).
+// ---------------------------------------------------------------------------
+// Flat mirror of the fields a test judge asserts against. Built by the host
+// once per frame (ALL modes — frame_stub too, so /player answers while
+// docked) and handed to publish_player(); dev_remote never sees PlayerState.
+struct FactionStanding {
+    std::string faction;   // "pirate", "confed", ... (faction::to_name)
+    int         rep;       // -100..100 player rep
+    int64_t     kills;     // career kills against this faction
+};
+
+struct PlayerInfo {
+    int64_t     credits = 0;
+    std::string ship_class;      // "tarsus"
+    std::string system;          // current_system id, e.g. "troy"
+    std::string docked_base;     // last_docked_base ("" until first landing)
+    std::string mode;            // game_state::to_name: "Flight"|"Landed"|...
+    bool        merc_guild     = false;
+    bool        merchant_guild = false;
+    std::vector<FactionStanding> factions;
+};
+
+// Publish the latest player snapshot for GET /player. Called once per frame
+// from the main thread (every mode); stored mutex-guarded.
+void publish_player(const PlayerInfo& p);
+
+// ---------------------------------------------------------------------------
+// /missions snapshot — the player's accepted missions (agentic testing).
+// ---------------------------------------------------------------------------
+// One row per ActiveMission, pre-formatted by the host with the SAME
+// missions::mission_status strings the HUD uses — one source of truth, so
+// the judge and the player literally read the same status line.
+struct MissionInfo {
+    std::string id;                 // ActiveMission::id
+    std::string type;               // "PATROL", "CARGO", ... (type_label)
+    std::string source;             // "Mission Computer", ... (source_label)
+    std::string status;             // "PATROL 2/5" (mission_status().text)
+    std::string target_system;      // display name when cross-system, else ""
+    int64_t     reward = 0;
+    bool        in_current_system = false;
+};
+
+// Publish the latest accepted-missions snapshot for GET /missions. Called
+// once per frame from the main thread (every mode); stored mutex-guarded.
+void publish_missions(const std::vector<MissionInfo>& missions);
+
+// ---------------------------------------------------------------------------
+// /events — gameplay event ring buffer (agentic testing).
+// ---------------------------------------------------------------------------
+// Thread-safe append of one gameplay event; each gets a monotonically
+// increasing seq + a unix timestamp. The buffer keeps the newest 512 — a
+// polling judge that passes `since=<last latest>` never misses one unless
+// it sleeps through 512 events (at which point it deserves to).
+//
+// Sources today (wired in main.cpp):
+//   "comm"   — every comm::push feed line (mission accept/complete, rep
+//              deltas, taunts) via comm::set_feed_tap. One tap, zero new
+//              call sites: any system that talks to the player feed is
+//              automatically visible to the judge.
+//   "mode"   — GameMode transitions ("Flight -> Landed @ oakham_pirate").
+// Categories grow as the campaign lands ("plot", "fixer", ...).
+void push_event(const std::string& category, const std::string& text);
 
 } // namespace dev_remote

@@ -26,6 +26,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <ctime>
 #include <deque>
 #include <mutex>
 #include <string>
@@ -145,6 +146,33 @@ std::vector<ModInfo>   g_permanent_mods;   // installed permanent_mods (#92/#93)
 std::vector<MountInfo> g_mounts;           // fitted gun mounts (#98)
 int                    g_cargo_used = 0;
 int                    g_cargo_cap  = 0;
+
+// Latest player snapshot for GET /player, published once per frame (ALL
+// modes) by the main thread (publish_player). Guarded so a serialise never
+// races a mid-frame rebuild.
+std::mutex  g_player_mu;
+PlayerInfo  g_player;
+
+// Latest accepted-missions snapshot for GET /missions, published once per
+// frame (ALL modes) by the main thread (publish_missions).
+std::mutex               g_missions_mu;
+std::vector<MissionInfo> g_missions;
+
+// Gameplay event ring buffer for GET /events. push_event may be called from
+// any main-thread system (in practice: the comm feed tap + mode-transition
+// detection in main.cpp); the HTTP thread reads under the same lock. Ring
+// capped at k_max_events — a polling judge passing since=<last latest>
+// only loses data if it sleeps through 512 events.
+struct Event {
+    uint64_t    seq;
+    int64_t     t;          // unix seconds
+    std::string category;   // "comm", "mode", ...
+    std::string text;
+};
+constexpr size_t   k_max_events = 512;
+std::mutex         g_events_mu;
+std::deque<Event>  g_events;
+uint64_t           g_event_seq = 0;
 
 // Registered host hooks (the decoupling seam). Set once at startup by the
 // host via set_*_hook; invoked only on the main thread inside
@@ -466,6 +494,131 @@ void handle_comms_select(int fd, const std::string& body) {
         g_queue.push_back(c);
     }
     send_json(fd, "{\"ok\":true}");
+}
+
+// Escape a string for embedding in a JSON literal. The snapshot strings
+// (faction names, class ids) are safe by construction, but comm feed lines
+// and mission titles are free text — quotes/backslashes/control chars must
+// not corrupt the reply a judge is parsing.
+std::string json_escape(const std::string& s) {
+    std::string out;
+    out.reserve(s.size() + 8);
+    for (char c : s) {
+        switch (c) {
+            case '"':  out += "\\\""; break;
+            case '\\': out += "\\\\"; break;
+            case '\n': out += "\\n";  break;
+            case '\r': out += "\\r";  break;
+            case '\t': out += "\\t";  break;
+            default:
+                if ((unsigned char)c < 0x20) {
+                    char buf[8];
+                    std::snprintf(buf, sizeof(buf), "\\u%04x", c);
+                    out += buf;
+                } else {
+                    out += c;
+                }
+        }
+    }
+    return out;
+}
+
+// GET /player — serialise the latest player snapshot. Pure read of the
+// published struct; the host publishes it every frame in every mode.
+void handle_player(int fd) {
+    PlayerInfo p;
+    {
+        std::lock_guard lk(g_player_mu);
+        p = g_player;
+    }
+    std::string out;
+    char buf[512];
+    std::snprintf(buf, sizeof(buf),
+        "{\"credits\":%lld,\"ship_class\":\"%s\",\"system\":\"%s\","
+        "\"docked_base\":\"%s\",\"mode\":\"%s\","
+        "\"merc_guild\":%s,\"merchant_guild\":%s,\"factions\":[",
+        (long long)p.credits,
+        json_escape(p.ship_class).c_str(),
+        json_escape(p.system).c_str(),
+        json_escape(p.docked_base).c_str(),
+        json_escape(p.mode).c_str(),
+        p.merc_guild ? "true" : "false",
+        p.merchant_guild ? "true" : "false");
+    out += buf;
+    for (size_t i = 0; i < p.factions.size(); ++i) {
+        const FactionStanding& f = p.factions[i];
+        std::snprintf(buf, sizeof(buf),
+            "%s{\"faction\":\"%s\",\"rep\":%d,\"kills\":%lld}",
+            i ? "," : "", json_escape(f.faction).c_str(), f.rep,
+            (long long)f.kills);
+        out += buf;
+    }
+    out += "]}";
+    send_json(fd, out);
+}
+
+// GET /missions — serialise the latest accepted-missions snapshot. The
+// status strings were pre-formatted by the host with the same
+// missions::mission_status the HUD uses — one truth, two readers.
+void handle_missions(int fd) {
+    std::vector<MissionInfo> ms;
+    {
+        std::lock_guard lk(g_missions_mu);
+        ms = g_missions;
+    }
+    std::string out = "{\"missions\":[";
+    for (size_t i = 0; i < ms.size(); ++i) {
+        const MissionInfo& m = ms[i];
+        char buf[768];
+        std::snprintf(buf, sizeof(buf),
+            "%s{\"id\":\"%s\",\"type\":\"%s\",\"source\":\"%s\","
+            "\"status\":\"%s\",\"reward\":%lld,\"target_system\":\"%s\","
+            "\"in_current_system\":%s}",
+            i ? "," : "",
+            json_escape(m.id).c_str(),
+            json_escape(m.type).c_str(),
+            json_escape(m.source).c_str(),
+            json_escape(m.status).c_str(),
+            (long long)m.reward,
+            json_escape(m.target_system).c_str(),
+            m.in_current_system ? "true" : "false");
+        out += buf;
+    }
+    out += "]}";
+    send_json(fd, out);
+}
+
+// GET /events?since=N — serialise ring-buffer events with seq > N (all of
+// them when `since` is absent/0). `latest` echoes the newest seq so the
+// caller can poll incrementally: next request passes since=<latest>.
+void handle_events(int fd, const std::string& query) {
+    uint64_t since = 0;
+    if (auto p = query.find("since="); p != std::string::npos) {
+        since = (uint64_t)std::strtoull(query.c_str() + p + 6, nullptr, 10);
+    }
+    std::string out = "{\"events\":[";
+    uint64_t latest = 0;
+    {
+        std::lock_guard lk(g_events_mu);
+        latest = g_event_seq;
+        bool first = true;
+        for (const Event& e : g_events) {
+            if (e.seq <= since) continue;
+            char buf[640];
+            std::snprintf(buf, sizeof(buf),
+                "%s{\"seq\":%llu,\"t\":%lld,\"category\":\"%s\","
+                "\"text\":\"%s\"}",
+                first ? "" : ",", (unsigned long long)e.seq, (long long)e.t,
+                json_escape(e.category).c_str(), json_escape(e.text).c_str());
+            out += buf;
+            first = false;
+        }
+    }
+    char tail[64];
+    std::snprintf(tail, sizeof(tail), "],\"latest\":%llu}",
+                  (unsigned long long)latest);
+    out += tail;
+    send_json(fd, out);
 }
 
 // GET /ships — serialise the latest near-player ship snapshot. Pure read
@@ -932,6 +1085,14 @@ void handle_connection(int fd) {
         path   = line.substr(sp1 + 1, sp2 - sp1 - 1);
     }
 
+    // Split "?query" off the path so parameterised GETs (/events?since=N)
+    // route on the bare path. Query stays raw — handlers parse their own.
+    std::string query;
+    if (auto q = path.find('?'); q != std::string::npos) {
+        query = path.substr(q + 1);
+        path.resize(q);
+    }
+
     // Extract body (after blank line).
     auto body_sep = req.find("\r\n\r\n");
     std::string body = (body_sep == std::string::npos)
@@ -973,6 +1134,9 @@ void handle_connection(int fd) {
     else if (method == "POST" && path == "/inventory/give-item") handle_inventory_give(fd, body);
     else if (method == "POST" && path == "/inventory/install") handle_inventory_install(fd, body);
     else if (method == "POST" && path == "/inventory/equip") handle_inventory_equip(fd, body);
+    else if (method == "GET"  && path == "/player")     handle_player(fd);
+    else if (method == "GET"  && path == "/missions")   handle_missions(fd);
+    else if (method == "GET"  && path == "/events")     handle_events(fd, query);
     else                                                send_404(fd);
 
     ::close(fd);
@@ -1278,6 +1442,23 @@ void publish_render_matrices(const HMM_Mat4& view_proj,
     g_model       = model;
     g_proj_cam_pos = cam_pos;
     g_proj_ready  = true;
+}
+
+void publish_player(const PlayerInfo& p) {
+    std::lock_guard lk(g_player_mu);
+    g_player = p;
+}
+
+void publish_missions(const std::vector<MissionInfo>& missions) {
+    std::lock_guard lk(g_missions_mu);
+    g_missions = missions;
+}
+
+void push_event(const std::string& category, const std::string& text) {
+    std::lock_guard lk(g_events_mu);
+    g_events.push_back(Event{ ++g_event_seq, (int64_t)::time(nullptr),
+                              category, text });
+    while (g_events.size() > k_max_events) g_events.pop_front();
 }
 
 void publish_ships(const std::vector<ShipInfo>& ships) {
