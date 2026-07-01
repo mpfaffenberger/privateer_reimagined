@@ -8,7 +8,7 @@
 
   // Economy archetype (np-9cu.2) -- drives prices in
   // assets/data/commodity_prices.json.
-  "market": { "archetype": "military" },
+  "market": { "archetype": "newcon" },
 
   "concourse_art": "bases/new_constantinople/concourse.png",
 

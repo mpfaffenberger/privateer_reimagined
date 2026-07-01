@@ -8,7 +8,7 @@
 
   // Economy archetype (np-9cu.2) -- drives prices in
   // assets/data/commodity_prices.json.
-  "market": { "archetype": "agricultural" },
+  "market": { "archetype": "pleasure" },
 
   "concourse_art": "bases/olympus/concourse.png",
 

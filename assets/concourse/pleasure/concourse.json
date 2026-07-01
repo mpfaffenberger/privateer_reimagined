@@ -1,0 +1,228 @@
+{
+  "type": "pleasure",
+  "rooms": {
+    "concourse": {
+      "background": "concourse_bg.png",
+      "bg_size": [
+        320,
+        200
+      ],
+      "overlays": [],
+      "links": [
+        {
+          "target": "Bar",
+          "rect": [
+            0.21563,
+            0.575,
+            0.12187,
+            0.29
+          ]
+        },
+        {
+          "target": "LandingPad",
+          "rect": [
+            0.80625,
+            0.67,
+            0.11875,
+            0.205
+          ]
+        },
+        {
+          "target": "CommodityExchange",
+          "rect": [
+            0.43438,
+            0.58,
+            0.17188,
+            0.255
+          ]
+        },
+        {
+          "target": "MissionComputer",
+          "rect": [
+            0.7125,
+            0.695,
+            0.0625,
+            0.14
+          ]
+        },
+        {
+          "target": "MerchantsGuild",
+          "rect": [
+            0.675,
+            0.68,
+            0.02187,
+            0.155
+          ]
+        },
+        {
+          "target": "MercenariesGuild",
+          "rect": [
+            0.64687,
+            0.68,
+            0.02187,
+            0.16
+          ]
+        },
+        {
+          "target": "ShipDealer",
+          "rect": [
+            0.93437,
+            0.0,
+            0.06563,
+            1.0
+          ]
+        }
+      ]
+    },
+    "landing": {
+      "background": "landing_bg.png",
+      "bg_size": [
+        1282,
+        1001
+      ],
+      "overlays": [
+        {
+          "name": "wtr",
+          "atlas": "landing_wtr.png",
+          "rect": [
+            0.25312,
+            0.54012,
+            0.4,
+            0.16
+          ],
+          "total_frames": 33,
+          "lead_blanks": 0,
+          "fps": 3.3333,
+          "frame_w": 256,
+          "frame_h": 64,
+          "cols": 16,
+          "rows": 3,
+          "atlas_w": 4096,
+          "atlas_h": 192,
+          "real_frames": 33
+        },
+        {
+          "name": "blt",
+          "atlas": "landing_blt.png",
+          "rect": [
+            0.48437,
+            0.19758,
+            0.4,
+            0.64
+          ],
+          "total_frames": 46,
+          "lead_blanks": 0,
+          "fps": 5.0,
+          "frame_w": 128,
+          "frame_h": 128,
+          "cols": 32,
+          "rows": 2,
+          "atlas_w": 4096,
+          "atlas_h": 256,
+          "real_frames": 46
+        }
+      ],
+      "links": [
+        {
+          "target": "Concourse",
+          "rect": [
+            0.65625,
+            0.415,
+            0.29,
+            0.63333
+          ]
+        },
+        {
+          "target": "Launch",
+          "rect": [
+            -0.105,
+            0.50167,
+            0.8975,
+            0.54
+          ]
+        }
+      ]
+    },
+    "bar": {
+      "background": "bar_bg.png",
+      "bg_size": [
+        320,
+        200
+      ],
+      "overlays": []
+    },
+    "commodity": {
+      "background": "commodity_bg.png",
+      "bg_size": [
+        320,
+        200
+      ],
+      "overlays": []
+    },
+    "shipdealer": {
+      "background": "shipdealer_bg.png",
+      "bg_size": [
+        320,
+        200
+      ],
+      "overlays": [],
+      "links": [
+        {
+          "target": "OpenMenu",
+          "rect": [
+            0.441,
+            0.44875,
+            0.12,
+            0.18
+          ]
+        }
+      ]
+    },
+    "equipment": {
+      "background": "equipment_bg.png",
+      "bg_size": [
+        1281,
+        1024
+      ],
+      "overlays": []
+    },
+    "mercguild": {
+      "background": "mercguild_bg.png",
+      "bg_size": [
+        320,
+        200
+      ],
+      "overlays": [],
+      "links": [
+        {
+          "target": "OpenMenu",
+          "rect": [
+            0.125,
+            0.46667,
+            0.335,
+            0.29333
+          ]
+        }
+      ]
+    },
+    "merchguild": {
+      "background": "merchguild_bg.png",
+      "bg_size": [
+        320,
+        200
+      ],
+      "overlays": [],
+      "links": [
+        {
+          "target": "OpenMenu",
+          "rect": [
+            0.24375,
+            0.44,
+            0.195,
+            0.22333
+          ]
+        }
+      ]
+    }
+  }
+}

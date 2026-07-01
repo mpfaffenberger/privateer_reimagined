@@ -75,9 +75,10 @@ enum class BaseScreen {
     CommoditySell,
     CommodityNext,
     CommodityPrev,
-    // Generic "talk to the NPC to open this room's shop menu" zone (placed
-    // over e.g. the ship dealer character). Rooms WITH this zone start on the
-    // art/character and reveal the shop UI only after a click.
+    // Generic "click to open this room's shop menu" zone (placed over e.g.
+    // the ship dealer's character, or a guild's mission-computer console).
+    // Rooms WITH this zone start on the art/character and reveal the shop
+    // UI (or mission board) only after a click.
     OpenMenu,
 };
 

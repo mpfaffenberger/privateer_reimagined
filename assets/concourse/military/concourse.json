@@ -1,0 +1,289 @@
+{
+  "type": "military",
+  "rooms": {
+    "concourse": {
+      "background": "concourse_bg.png",
+      "bg_size": [
+        1282,
+        1008
+      ],
+      "overlays": [
+        {
+          "name": "stt",
+          "atlas": "concourse_stt.png",
+          "rect": [
+            0.02187,
+            0.0,
+            0.8,
+            0.3125
+          ],
+          "total_frames": 31,
+          "lead_blanks": 0,
+          "fps": 6.25,
+          "frame_w": 256,
+          "frame_h": 64,
+          "cols": 16,
+          "rows": 2,
+          "atlas_w": 4096,
+          "atlas_h": 128,
+          "real_frames": 31
+        },
+        {
+          "name": "stb",
+          "atlas": "concourse_stb.png",
+          "rect": [
+            0.02187,
+            0.29785,
+            0.8,
+            0.3125
+          ],
+          "total_frames": 31,
+          "lead_blanks": 0,
+          "fps": 6.25,
+          "frame_w": 256,
+          "frame_h": 64,
+          "cols": 16,
+          "rows": 2,
+          "atlas_w": 4096,
+          "atlas_h": 128,
+          "real_frames": 31
+        },
+        {
+          "name": "sh0",
+          "atlas": "concourse_sh0.png",
+          "rect": [
+            0.02187,
+            0.10254,
+            0.8,
+            0.3125
+          ],
+          "total_frames": 27,
+          "lead_blanks": 0,
+          "fps": 7.1429,
+          "frame_w": 1024,
+          "frame_h": 256,
+          "cols": 4,
+          "rows": 7,
+          "atlas_w": 4096,
+          "atlas_h": 1792,
+          "real_frames": 27
+        },
+        {
+          "name": "car",
+          "atlas": "concourse_car.png",
+          "rect": [
+            0.0,
+            0.67875,
+            1.6,
+            0.3125
+          ],
+          "total_frames": 32,
+          "lead_blanks": 0,
+          "fps": 5.0,
+          "frame_w": 1024,
+          "frame_h": 128,
+          "cols": 4,
+          "rows": 8,
+          "atlas_w": 4096,
+          "atlas_h": 1024,
+          "real_frames": 32
+        }
+      ],
+      "links": [
+        {
+          "target": "LandingPad",
+          "rect": [
+            -0.125,
+            0.53333,
+            0.27,
+            0.85667
+          ]
+        },
+        {
+          "target": "CommodityExchange",
+          "rect": [
+            0.53,
+            0.58833,
+            0.245,
+            0.31333
+          ]
+        },
+        {
+          "target": "MissionComputer",
+          "rect": [
+            0.89125,
+            0.49,
+            0.075,
+            0.10667
+          ]
+        },
+        {
+          "target": "Bar",
+          "rect": [
+            0.8025,
+            0.43333,
+            0.105,
+            0.2
+          ]
+        },
+        {
+          "target": "MerchantsGuild",
+          "rect": [
+            0.73,
+            0.43167,
+            0.06,
+            0.14667
+          ]
+        },
+        {
+          "target": "MercenariesGuild",
+          "rect": [
+            0.76,
+            0.435,
+            0.0825,
+            0.16333
+          ]
+        },
+        {
+          "target": "ShipDealer",
+          "rect": [
+            0.655,
+            0.65333,
+            0.3275,
+            0.44667
+          ]
+        }
+      ]
+    },
+    "landing": {
+      "background": "landing_bg.png",
+      "bg_size": [
+        1282,
+        1008
+      ],
+      "overlays": [
+        {
+          "name": "lbl",
+          "atlas": "landing_lbl.png",
+          "rect": [
+            0.15625,
+            0.61035,
+            0.8,
+            0.3125
+          ],
+          "total_frames": 2,
+          "lead_blanks": 0,
+          "fps": 1.3333,
+          "frame_w": 1024,
+          "frame_h": 256,
+          "cols": 2,
+          "rows": 1,
+          "atlas_w": 2048,
+          "atlas_h": 256,
+          "real_frames": 2
+        }
+      ],
+      "links": [
+        {
+          "target": "Concourse",
+          "rect": [
+            0.14875,
+            0.37333,
+            0.2875,
+            0.38333
+          ]
+        },
+        {
+          "target": "Launch",
+          "rect": [
+            0.2725,
+            0.30667,
+            0.695,
+            0.52
+          ]
+        }
+      ]
+    },
+    "bar": {
+      "background": "bar_bg.png",
+      "bg_size": [
+        320,
+        200
+      ],
+      "overlays": []
+    },
+    "commodity": {
+      "background": "commodity_bg.png",
+      "bg_size": [
+        320,
+        200
+      ],
+      "overlays": []
+    },
+    "shipdealer": {
+      "background": "shipdealer_bg.png",
+      "bg_size": [
+        320,
+        200
+      ],
+      "overlays": [],
+      "links": [
+        {
+          "target": "OpenMenu",
+          "rect": [
+            0.441,
+            0.44875,
+            0.12,
+            0.18
+          ]
+        }
+      ]
+    },
+    "equipment": {
+      "background": "equipment_bg.png",
+      "bg_size": [
+        1281,
+        1024
+      ],
+      "overlays": []
+    },
+    "mercguild": {
+      "background": "mercguild_bg.png",
+      "bg_size": [
+        320,
+        200
+      ],
+      "overlays": [],
+      "links": [
+        {
+          "target": "OpenMenu",
+          "rect": [
+            0.125,
+            0.46667,
+            0.335,
+            0.29333
+          ]
+        }
+      ]
+    },
+    "merchguild": {
+      "background": "merchguild_bg.png",
+      "bg_size": [
+        320,
+        200
+      ],
+      "overlays": [],
+      "links": [
+        {
+          "target": "OpenMenu",
+          "rect": [
+            0.24375,
+            0.44,
+            0.195,
+            0.22333
+          ]
+        }
+      ]
+    }
+  }
+}

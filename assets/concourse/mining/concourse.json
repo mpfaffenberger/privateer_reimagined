@@ -122,128 +122,26 @@
     "bar": {
       "background": "bar_bg.png",
       "bg_size": [
-        1280,
-        1002
+        320,
+        200
       ],
-      "overlays": [
-        {
-          "name": "btr",
-          "atlas": "bar_btr.png",
-          "rect": [
-            0.7625,
-            0.31738,
-            0.4,
-            0.625
-          ],
-          "total_frames": 18,
-          "lead_blanks": 0,
-          "fps": 3.3333,
-          "frame_w": 256,
-          "frame_h": 256,
-          "cols": 16,
-          "rows": 2,
-          "atlas_w": 4096,
-          "atlas_h": 512,
-          "real_frames": 18
-        },
-        {
-          "name": "mb0",
-          "atlas": "bar_mb0.png",
-          "rect": [
-            0.04375,
-            0.43945,
-            0.1,
-            0.3125
-          ],
-          "total_frames": 30,
-          "lead_blanks": 0,
-          "fps": 5.0,
-          "frame_w": 64,
-          "frame_h": 128,
-          "cols": 30,
-          "rows": 1,
-          "atlas_w": 1920,
-          "atlas_h": 128,
-          "real_frames": 30
-        },
-        {
-          "name": "mb1",
-          "atlas": "bar_mb1.png",
-          "rect": [
-            0.21563,
-            0.44439,
-            0.1,
-            0.3125
-          ],
-          "total_frames": 25,
-          "lead_blanks": 0,
-          "fps": 5.0,
-          "frame_w": 64,
-          "frame_h": 128,
-          "cols": 25,
-          "rows": 1,
-          "atlas_w": 1600,
-          "atlas_h": 128,
-          "real_frames": 25
-        },
-        {
-          "name": "mb2",
-          "atlas": "bar_mb2.png",
-          "rect": [
-            0.35625,
-            0.43457,
-            0.1,
-            0.15625
-          ],
-          "total_frames": 33,
-          "lead_blanks": 0,
-          "fps": 5.0,
-          "frame_w": 64,
-          "frame_h": 64,
-          "cols": 33,
-          "rows": 1,
-          "atlas_w": 2112,
-          "atlas_h": 64,
-          "real_frames": 33
-        }
-      ]
+      "overlays": []
     },
     "commodity": {
       "background": "commodity_bg.png",
       "bg_size": [
-        1280,
-        1024
+        320,
+        200
       ],
       "overlays": []
     },
     "shipdealer": {
       "background": "shipdealer_bg.png",
       "bg_size": [
-        1280,
-        1024
+        320,
+        200
       ],
-      "overlays": [
-        {
-          "name": "sd",
-          "atlas": "shipdealer_sd.png",
-          "rect": [
-            0.451,
-            0.46062,
-            0.1,
-            0.15625
-          ],
-          "total_frames": 36,
-          "lead_blanks": 0,
-          "fps": 2.3256,
-          "frame_w": 128,
-          "frame_h": 128,
-          "cols": 32,
-          "rows": 2,
-          "atlas_w": 4096,
-          "atlas_h": 256,
-          "real_frames": 36
-        }
-      ],
+      "overlays": [],
       "links": [
         {
           "target": "OpenMenu",
@@ -267,18 +165,40 @@
     "mercguild": {
       "background": "mercguild_bg.png",
       "bg_size": [
-        1280,
-        1000
+        320,
+        200
       ],
-      "overlays": []
+      "overlays": [],
+      "links": [
+        {
+          "target": "OpenMenu",
+          "rect": [
+            0.125,
+            0.46667,
+            0.335,
+            0.29333
+          ]
+        }
+      ]
     },
     "merchguild": {
       "background": "merchguild_bg.png",
       "bg_size": [
-        1282,
-        1004
+        320,
+        200
       ],
-      "overlays": []
+      "overlays": [],
+      "links": [
+        {
+          "target": "OpenMenu",
+          "rect": [
+            0.24375,
+            0.44,
+            0.195,
+            0.22333
+          ]
+        }
+      ]
     }
   }
 }

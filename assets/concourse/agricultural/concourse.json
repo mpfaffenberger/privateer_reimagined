@@ -1,0 +1,309 @@
+{
+  "type": "agricultural",
+  "rooms": {
+    "concourse": {
+      "background": "concourse_bg.png",
+      "bg_size": [
+        1280,
+        1002
+      ],
+      "overlays": [
+        {
+          "name": "wtr",
+          "atlas": "concourse_wtr.png",
+          "rect": [
+            -0.3,
+            0.0,
+            1.6,
+            0.25
+          ],
+          "total_frames": 32,
+          "lead_blanks": 0,
+          "fps": 10.0,
+          "frame_w": 1024,
+          "frame_h": 128,
+          "cols": 4,
+          "rows": 8,
+          "atlas_w": 4096,
+          "atlas_h": 1024,
+          "real_frames": 32
+        },
+        {
+          "name": "wk0",
+          "atlas": "concourse_wk0.png",
+          "rect": [
+            0.44375,
+            0.755,
+            0.8,
+            0.32
+          ],
+          "total_frames": 135,
+          "lead_blanks": 20,
+          "fps": 5.0,
+          "frame_w": 512,
+          "frame_h": 128,
+          "cols": 8,
+          "rows": 15,
+          "atlas_w": 4096,
+          "atlas_h": 1920,
+          "real_frames": 115
+        },
+        {
+          "name": "wk1",
+          "atlas": "concourse_wk1.png",
+          "rect": [
+            0.08437,
+            0.85,
+            0.4,
+            0.16
+          ],
+          "total_frames": 72,
+          "lead_blanks": 12,
+          "fps": 5.0,
+          "frame_w": 256,
+          "frame_h": 64,
+          "cols": 16,
+          "rows": 4,
+          "atlas_w": 4096,
+          "atlas_h": 256,
+          "real_frames": 60
+        },
+        {
+          "name": "wk2",
+          "atlas": "concourse_wk2.png",
+          "rect": [
+            0.5875,
+            0.525,
+            0.1,
+            0.32
+          ],
+          "total_frames": 67,
+          "lead_blanks": 4,
+          "fps": 5.0,
+          "frame_w": 64,
+          "frame_h": 128,
+          "cols": 63,
+          "rows": 1,
+          "atlas_w": 4032,
+          "atlas_h": 128,
+          "real_frames": 63
+        }
+      ],
+      "links": [
+        {
+          "target": "LandingPad",
+          "rect": [
+            0.37625,
+            0.53833,
+            0.2825,
+            0.27
+          ]
+        },
+        {
+          "target": "CommodityExchange",
+          "rect": [
+            0.6425,
+            0.6,
+            0.3425,
+            0.17
+          ]
+        },
+        {
+          "target": "MissionComputer",
+          "rect": [
+            0.545,
+            0.71,
+            0.2825,
+            0.42333
+          ]
+        },
+        {
+          "target": "Bar",
+          "rect": [
+            0.09125,
+            0.43167,
+            0.2075,
+            0.25
+          ]
+        },
+        {
+          "target": "MerchantsGuild",
+          "rect": [
+            0.405,
+            0.365,
+            0.22,
+            0.17667
+          ]
+        },
+        {
+          "target": "MercenariesGuild",
+          "rect": [
+            0.775,
+            0.375,
+            0.22,
+            0.22667
+          ]
+        },
+        {
+          "target": "ShipDealer",
+          "rect": [
+            0.05625,
+            0.59833,
+            0.315,
+            0.38667
+          ]
+        }
+      ]
+    },
+    "landing": {
+      "background": "landing_bg.png",
+      "bg_size": [
+        1282,
+        1001
+      ],
+      "overlays": [
+        {
+          "name": "wtr",
+          "atlas": "landing_wtr.png",
+          "rect": [
+            0.25312,
+            0.54012,
+            0.4,
+            0.16
+          ],
+          "total_frames": 33,
+          "lead_blanks": 0,
+          "fps": 3.3333,
+          "frame_w": 256,
+          "frame_h": 64,
+          "cols": 16,
+          "rows": 3,
+          "atlas_w": 4096,
+          "atlas_h": 192,
+          "real_frames": 33
+        },
+        {
+          "name": "blt",
+          "atlas": "landing_blt.png",
+          "rect": [
+            0.48437,
+            0.19758,
+            0.4,
+            0.64
+          ],
+          "total_frames": 46,
+          "lead_blanks": 0,
+          "fps": 5.0,
+          "frame_w": 128,
+          "frame_h": 128,
+          "cols": 32,
+          "rows": 2,
+          "atlas_w": 4096,
+          "atlas_h": 256,
+          "real_frames": 46
+        }
+      ],
+      "links": [
+        {
+          "target": "Concourse",
+          "rect": [
+            0.65625,
+            0.415,
+            0.29,
+            0.63333
+          ]
+        },
+        {
+          "target": "Launch",
+          "rect": [
+            -0.105,
+            0.50167,
+            0.8975,
+            0.54
+          ]
+        }
+      ]
+    },
+    "bar": {
+      "background": "bar_bg.png",
+      "bg_size": [
+        320,
+        200
+      ],
+      "overlays": []
+    },
+    "commodity": {
+      "background": "commodity_bg.png",
+      "bg_size": [
+        320,
+        200
+      ],
+      "overlays": []
+    },
+    "shipdealer": {
+      "background": "shipdealer_bg.png",
+      "bg_size": [
+        320,
+        200
+      ],
+      "overlays": [],
+      "links": [
+        {
+          "target": "OpenMenu",
+          "rect": [
+            0.441,
+            0.44875,
+            0.12,
+            0.18
+          ]
+        }
+      ]
+    },
+    "equipment": {
+      "background": "equipment_bg.png",
+      "bg_size": [
+        1281,
+        1024
+      ],
+      "overlays": []
+    },
+    "mercguild": {
+      "background": "mercguild_bg.png",
+      "bg_size": [
+        320,
+        200
+      ],
+      "overlays": [],
+      "links": [
+        {
+          "target": "OpenMenu",
+          "rect": [
+            0.125,
+            0.46667,
+            0.335,
+            0.29333
+          ]
+        }
+      ]
+    },
+    "merchguild": {
+      "background": "merchguild_bg.png",
+      "bg_size": [
+        320,
+        200
+      ],
+      "overlays": [],
+      "links": [
+        {
+          "target": "OpenMenu",
+          "rect": [
+            0.24375,
+            0.44,
+            0.195,
+            0.22333
+          ]
+        }
+      ]
+    }
+  }
+}

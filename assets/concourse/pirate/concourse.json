@@ -1,0 +1,201 @@
+{
+  "type": "pirate",
+  "rooms": {
+    "concourse": {
+      "background": "concourse_bg.png",
+      "bg_size": [
+        1282,
+        1008
+      ],
+      "overlays": [],
+      "links": [
+        {
+          "target": "LandingPad",
+          "rect": [
+            0.1,
+            0.285,
+            0.3,
+            0.33
+          ]
+        },
+        {
+          "target": "CommodityExchange",
+          "rect": [
+            0.725,
+            0.59833,
+            0.255,
+            0.42333
+          ]
+        },
+        {
+          "target": "MissionComputer",
+          "rect": [
+            0.66875,
+            0.64,
+            0.1475,
+            0.16333
+          ]
+        },
+        {
+          "target": "Bar",
+          "rect": [
+            0.54125,
+            0.535,
+            0.205,
+            0.22
+          ]
+        }
+      ]
+    },
+    "landing": {
+      "background": "landing_bg.png",
+      "bg_size": [
+        1281,
+        1024
+      ],
+      "overlays": [
+        {
+          "name": "shp",
+          "atlas": "landing_shp.png",
+          "rect": [
+            0.50625,
+            0.0,
+            0.2,
+            0.3125
+          ],
+          "total_frames": 87,
+          "lead_blanks": 66,
+          "fps": 3.3333,
+          "frame_w": 128,
+          "frame_h": 128,
+          "cols": 21,
+          "rows": 1,
+          "atlas_w": 2688,
+          "atlas_h": 128,
+          "real_frames": 21
+        },
+        {
+          "name": "lgt",
+          "atlas": "landing_lgt.png",
+          "rect": [
+            0.6875,
+            0.0,
+            0.4,
+            0.625
+          ],
+          "total_frames": 31,
+          "lead_blanks": 0,
+          "fps": 5.0,
+          "frame_w": 256,
+          "frame_h": 256,
+          "cols": 16,
+          "rows": 2,
+          "atlas_w": 4096,
+          "atlas_h": 512,
+          "real_frames": 31
+        }
+      ],
+      "links": [
+        {
+          "target": "Concourse",
+          "rect": [
+            0.645,
+            0.39333,
+            0.2975,
+            0.57333
+          ]
+        },
+        {
+          "target": "Launch",
+          "rect": [
+            -0.155,
+            0.41,
+            0.8025,
+            0.76
+          ]
+        }
+      ]
+    },
+    "bar": {
+      "background": "bar_bg.png",
+      "bg_size": [
+        320,
+        200
+      ],
+      "overlays": []
+    },
+    "commodity": {
+      "background": "commodity_bg.png",
+      "bg_size": [
+        320,
+        200
+      ],
+      "overlays": []
+    },
+    "shipdealer": {
+      "background": "shipdealer_bg.png",
+      "bg_size": [
+        320,
+        200
+      ],
+      "overlays": [],
+      "links": [
+        {
+          "target": "OpenMenu",
+          "rect": [
+            0.441,
+            0.44875,
+            0.12,
+            0.18
+          ]
+        }
+      ]
+    },
+    "equipment": {
+      "background": "equipment_bg.png",
+      "bg_size": [
+        1281,
+        1024
+      ],
+      "overlays": []
+    },
+    "mercguild": {
+      "background": "mercguild_bg.png",
+      "bg_size": [
+        320,
+        200
+      ],
+      "overlays": [],
+      "links": [
+        {
+          "target": "OpenMenu",
+          "rect": [
+            0.125,
+            0.46667,
+            0.335,
+            0.29333
+          ]
+        }
+      ]
+    },
+    "merchguild": {
+      "background": "merchguild_bg.png",
+      "bg_size": [
+        320,
+        200
+      ],
+      "overlays": [],
+      "links": [
+        {
+          "target": "OpenMenu",
+          "rect": [
+            0.24375,
+            0.44,
+            0.195,
+            0.22333
+          ]
+        }
+      ]
+    }
+  }
+}

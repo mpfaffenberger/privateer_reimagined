@@ -68,6 +68,20 @@
         "RAWMAT":  { "price_mult": 1.50, "stock": 0   },
         "MICRO":   { "price_mult": 1.60, "stock": 0   }
       }
+    },
+    // Pleasure/civilian worlds (New Reno et al.) — cloned from agricultural
+    // so flipping those bases' art archetype to "pleasure" leaves their
+    // economy byte-identical to before. Tune later if pleasure worlds should
+    // trade differently (they'd plausibly pay more for LUXURY).
+    "pleasure": {
+      "default": { "price_mult": 1.25, "stock": 0 },
+      "categories": {
+        "FOOD":    { "price_mult": 0.55, "stock": 600 },
+        "PROCESS": { "price_mult": 1.10, "stock": 100 },
+        "LUXURY":  { "price_mult": 1.30, "stock": 40  },
+        "RAWMAT":  { "price_mult": 1.50, "stock": 0   },
+        "MICRO":   { "price_mult": 1.60, "stock": 0   }
+      }
     }
   }
 }

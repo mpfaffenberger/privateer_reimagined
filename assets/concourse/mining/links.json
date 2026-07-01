@@ -22,8 +22,12 @@
   ],
   "shipdealer": [],
   "equipment": [],
-  "mercguild": [],
-  "merchguild": [],
+  "mercguild": [
+    { "target": "OpenMenu", "rect": [0.12500, 0.46667, 0.33500, 0.29333] }
+  ],
+  "merchguild": [
+    { "target": "OpenMenu", "rect": [0.24375, 0.44000, 0.19500, 0.22333] }
+  ],
   "missions": [],
   "cargohold": [],
   "_ships": [

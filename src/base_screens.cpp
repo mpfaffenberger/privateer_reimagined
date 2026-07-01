@@ -97,7 +97,6 @@ struct Room {
     std::vector<Link>        links;
 };
 constexpr int kBaseScreenCount = (int)BaseScreen::OpenMenu + 1;
-struct ConcourseSet {
 // The parked ship shown on the landing pad: which hull, at what view-sphere
 // angle, drawn into what normalized rect. Authored with the F4 picker and
 // saved per base-type to links.json under "_ship".
@@ -123,6 +122,14 @@ struct ConcourseSet {
 BaseDef                  g_def;
 TextureSlot              g_art;            // concourse PNG; valid==false if missing
 ConcourseSet             g_concourse;      // animated WCU art set (optional, by archetype)
+
+// "Shop menu open" gate for rooms with an OpenMenu zone (ship dealer, guild
+// consoles). The room shows its art + NPC until the player clicks the zone,
+// then the shop UI draws over an opaque backdrop. Reset when the active
+// screen changes. Declared early — draw_subscreen()'s Back button and the
+// build() gating logic both read/write it.
+bool       g_menu_open = false;
+BaseScreen g_menu_screen = BaseScreen::Concourse;
 
 // ---- landing-pad ship preview (F4 picker) -----------------------------------
 // One atlas held at a time for the parked-ship preview, plus the shared art
@@ -312,6 +319,28 @@ void activate(BaseScreen target) {
 // types), but the concourse hub below needs it.
 void draw_links(ImDrawList* dl, const ScreenSize& ss, const Room& room, bool filter);
 
+// Pop one level off the screen stack (never below the Concourse at index 0).
+// Shared by every "<  BACK" affordance so the log line + guard rail live in
+// one place.
+void pop_screen_stack() {
+    if (g_stack.size() <= 1) return;
+    g_stack.pop_back();
+    std::printf("[base] pop -> %s (stack depth %zu)\n",
+                screen_name(g_stack.back()), g_stack.size());
+}
+
+// Draws a "<  BACK" button at the bottom-left, wired to pop_screen_stack().
+// Shared between draw_subscreen() and the OpenMenu-gated showroom state so
+// every screen — including the pre-click guild/ship-dealer rooms — has a
+// visible way back to the Concourse, not just Escape.
+void draw_back_to_concourse_button(const ScreenSize& ss) {
+    ImGui::SetCursorScreenPos(ImVec2(28, ss.h - 56));
+    if (ImGui::Button("<  BACK", ImVec2(120, 32))) {
+        sfx::ui_click();
+        pop_screen_stack();
+    }
+}
+
 // Draw the concourse hub. When the art set has placed transition links
 // (positioned on the real art by the F3 editor), use those — filtered to the
 // services THIS base offers. Otherwise fall back to base.json's grid hotspots.
@@ -480,13 +509,15 @@ void draw_subscreen(ImDrawList* dl, const ScreenSize& ss, BaseScreen cur,
         }
     }
 
-    // Back affordance — pops to the Concourse.
+    // Back affordance. On a gated room (ship dealer / guild consoles) with
+    // its menu open, Back closes the menu back to the art+NPC showroom —
+    // matching Escape's handle_escape() policy. Otherwise it pops the
+    // screen stack to the Concourse as before.
     ImGui::SetCursorScreenPos(ImVec2(28, ss.h - 56));
     if (ImGui::Button("<  BACK", ImVec2(120, 32))) {
         sfx::ui_click();
-        if (g_stack.size() > 1) g_stack.pop_back();
-        std::printf("[base] pop -> %s (stack depth %zu)\n",
-                    screen_name(g_stack.back()), g_stack.size());
+        if (g_menu_open && g_menu_screen == cur) g_menu_open = false;
+        else pop_screen_stack();
     }
 }
 
@@ -640,6 +671,19 @@ const char* link_label(BaseScreen t) {
     }
 }
 
+// OpenMenu's label depends on WHICH room it's gating — the ship dealer's
+// showroom reveals a ship list, a guild's console reveals its mission
+// board. Keyed on the current screen rather than hardcoded per-target so
+// new OpenMenu rooms just add a case here.
+const char* open_menu_label(BaseScreen cur) {
+    switch (cur) {
+        case BaseScreen::ShipDealer:        return "VIEW SHIPS";
+        case BaseScreen::MercenariesGuild:
+        case BaseScreen::MerchantsGuild:    return "VIEW MISSIONS";
+        default:                            return "OPEN";
+    }
+}
+
 // Does THIS base offer the service a concourse link points to? Reuses the
 // per-base facility list (base.json hotspots). Always-available rooms
 // (Launch, LandingPad, Concourse, CargoHold) pass unconditionally.
@@ -716,12 +760,6 @@ void draw_landing(ImDrawList* dl, const ScreenSize& ss) {
 // assets/concourse/<type>/links.json (preferred by the loader on next entry).
 struct EditState { bool on = false; int sel = -1; };
 EditState g_edit;
-
-// "Shop menu open" gate for rooms with an OpenMenu zone (ship dealer). The
-// room shows its art + NPC until the player clicks the zone, then the shop
-// UI draws over an opaque backdrop. Reset when the active screen changes.
-bool       g_menu_open = false;
-BaseScreen g_menu_screen = BaseScreen::Concourse;
 
 void save_links() {
     const std::string path = "assets/concourse/" + g_concourse.type + "/links.json";
@@ -1151,8 +1189,9 @@ void build(PlayerState& player, Ship* player_ship, Docking& d, Camera& cam, Game
         draw_concourse(dl, ss, player);
     } else {
         // Service screen. If the room has an OpenMenu zone (e.g. the ship
-        // dealer's character), show art + NPC first and reveal the shop UI
-        // only after the player clicks the zone — then over an opaque panel.
+        // dealer's character, or a guild's mission computer), show art + NPC
+        // first and reveal the shop UI only after the player clicks the
+        // zone — then over an opaque panel.
         float zr[4];
         const bool gated = current_room_zone(BaseScreen::OpenMenu, zr);
         if (gated && g_menu_screen != cur) g_menu_open = false;
@@ -1162,13 +1201,17 @@ void build(PlayerState& player, Ship* player_ship, Docking& d, Camera& cam, Game
             ImGui::InvisibleButton("##openmenu", ImVec2(pw, ph));
             if (ImGui::IsItemClicked()) { g_menu_open = true; g_menu_screen = cur; sfx::ui_click(); }
             if (ImGui::IsItemHovered())
-                draw_centered(dl, link_label(BaseScreen::OpenMenu), px, py, pw, ph, kWhite);
+                draw_centered(dl, open_menu_label(cur), px, py, pw, ph, kWhite);
             draw_links(dl, ss, g_concourse.rooms[(int)cur], /*filter=*/false);  // back door
+            draw_back_to_concourse_button(ss);  // visible affordance, not just Escape
         } else {
-            if (gated) {  // opaque backdrop so the shop table reads cleanly
-                g_menu_screen = cur;
-                dl->AddRectFilled(ImVec2(0, 0), ImVec2(ss.w, ss.h), IM_COL32(10, 12, 18, 255));
-            }
+            // No opaque backdrop here anymore — the room's real pre-rendered
+            // background (already blitted above via draw_room/has_room) stays
+            // visible behind the shop UI, same as Commodity Exchange/Bar
+            // already did. Matches the original game's look: the trading/
+            // dealer/guild computer is an overlay ON the scene, not a screen
+            // that replaces it.
+            if (gated) g_menu_screen = cur;
             draw_subscreen(dl, ss, cur, player);
         }
     }
