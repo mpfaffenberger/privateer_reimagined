@@ -22,8 +22,7 @@ namespace fixers {
 namespace {
 
 std::vector<FixerDef> g_fixers;
-std::function<bool(const std::string&, PlayerState&)> g_action_handler;
-std::function<void(const std::string&)>               g_observer;
+std::function<void(const std::string&)> g_observer;
 
 void notify(const std::string& what) {
     if (g_observer) g_observer(what);
@@ -36,29 +35,6 @@ void read_string_array(const json::Value& obj, const char* key,
         for (const json::Value& v : a->as_array())
             if (v.is_string()) out.push_back(v.as_string());
     }
-}
-
-// Execute one action token. Native plot verbs are handled here; anything
-// else goes to the campaign handler. Unknown + unhandled logs and no-ops.
-void run_action(const std::string& action, PlayerState& p) {
-    auto starts = [&](const char* pre) {
-        return action.rfind(pre, 0) == 0;
-    };
-    auto arg = [&](size_t n) { return action.substr(n); };
-
-    if      (starts("set_flag:"))    plot::set_flag(p, arg(9));
-    else if (starts("clear_flag:"))  plot::clear_flag(p, arg(11));
-    else if (starts("give_item:"))   plot::give_item(p, arg(10));
-    else if (starts("remove_item:")) plot::remove_item(p, arg(12));
-    else if (g_action_handler && g_action_handler(action, p)) { /* consumed */ }
-    else {
-        std::fprintf(stderr, "[fixers] unknown action '%s' (no handler took it)\n",
-                     action.c_str());
-    }
-}
-
-void run_actions(const std::vector<std::string>& actions, PlayerState& p) {
-    for (const std::string& a : actions) run_action(a, p);
 }
 
 } // namespace
@@ -136,25 +112,20 @@ const FixerDef* find(const std::string& id) {
 
 void accept(const FixerDef& f, PlayerState& player) {
     std::printf("[fixers] ACCEPT '%s'\n", f.id.c_str());
-    run_actions(f.accept_actions, player);
+    plot::run_actions(player, f.accept_actions);
     notify("accepted: " + f.id);
 }
 
 void refuse(const FixerDef& f, PlayerState& player) {
     std::printf("[fixers] REFUSE '%s'\n", f.id.c_str());
-    run_actions(f.refuse_actions, player);
+    plot::run_actions(player, f.refuse_actions);
     notify("refused: " + f.id);
 }
 
 void dialogue_done(const FixerDef& f, PlayerState& player) {
     std::printf("[fixers] dialogue done '%s'\n", f.id.c_str());
-    run_actions(f.done_actions, player);
+    plot::run_actions(player, f.done_actions);
     notify("dialogue_done: " + f.id);
-}
-
-void set_action_handler(
-    std::function<bool(const std::string&, PlayerState&)> handler) {
-    g_action_handler = std::move(handler);
 }
 
 void set_observer(std::function<void(const std::string&)> fn) {

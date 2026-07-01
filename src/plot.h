@@ -33,6 +33,7 @@
 #include <functional>
 #include <string>
 #include <string_view>
+#include <vector>
 
 struct PlayerState;
 
@@ -61,6 +62,21 @@ bool give_item(PlayerState& p, std::string_view id);
 
 // Take plot item `id` away. Returns true if it was held.
 bool remove_item(PlayerState& p, std::string_view id);
+
+// ---- data-driven action grammar -----------------------------------------
+// One token, executed against the player:
+//   "set_flag:<f>" / "clear_flag:<f>" / "give_item:<i>" / "remove_item:<i>"
+// Anything else routes to the registered campaign handler (below). Unknown
+// + unhandled logs and no-ops. Shared by fixers (accept/refuse/done) and
+// scripted encounters (on_cleared) — ONE grammar, one executor.
+void run_action(PlayerState& p, const std::string& action);
+void run_actions(PlayerState& p, const std::vector<std::string>& actions);
+
+// The campaign layer's seam: non-native tokens ("offer_mission:m01") land
+// here. Return true if consumed. One global handler — the campaign-mission
+// module owns it (registered once at startup).
+void set_action_handler(std::function<bool(const std::string& action,
+                                           PlayerState& player)> handler);
 
 // ---- observability (the dev_remote seam) --------------------------------
 

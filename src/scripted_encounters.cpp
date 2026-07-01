@@ -10,7 +10,9 @@
 #include "faction.h"         // faction::from_name / to_name
 #include "json.h"            // json::parse_file + Value
 #include "player.h"          // PlayerState, PlayerReputation, player::add_credits
+#include "plot.h"            // plot::has_flag / set_flag / run_actions (#139)
 #include "ship_class.h"      // ship_class::find (registry for class->name)
+#include "system_def.h"      // StarSystem / NavPointDef (at_nav triggers)
 
 #include <algorithm>
 #include <cctype>
@@ -61,6 +63,23 @@ struct SpawnPayload {
     float       delay_s  = 0.0f;
 };
 
+// (#139) One homogeneous group inside a wave: "3 pirate talons", or a
+// single named unique ("William Riordian", kill-memory id "riordian").
+struct SpawnGroup {
+    std::string faction;
+    std::string class_name;
+    int         count = 1;
+    std::string name;      // display name pushed to the feed ("" = silent)
+    std::string unique;    // kill-memory id -> plot flag "killed:<unique>"
+};
+
+// (#139) One sequential wave: all groups spawn together after delay_s;
+// the NEXT wave arms only once every ship in this one is dead.
+struct WaveDef {
+    float                   delay_s = 0.0f;
+    std::vector<SpawnGroup> groups;
+};
+
 struct RepDelta {
     std::string faction;  // faction::from_name key, e.g. "confed"
     int         delta  = 0;
@@ -84,6 +103,17 @@ struct Scenario {
     bool    once_per_system  = false;
     bool    ignore_player_rep = false;
 
+    // (#139) trigger kind + region + plot gates. "near_ships" preserves
+    // the original behavior; the campaign kinds are at_nav / in_system /
+    // on_launch. trigger_system also gates near_ships when non-empty.
+    std::string kind = "near_ships";
+    std::string trigger_system;   // galaxy id; "" = any (near_ships only)
+    std::string trigger_nav;      // at_nav: NavPointDef::name
+    std::string trigger_base;     // on_launch: base id ("" = any base)
+    float       radius_m = 8000.0f;
+    std::vector<std::string> requires_flags;
+    std::vector<std::string> forbids_flags;
+
     // dialogue
     std::vector<Turn> dialogue;
 
@@ -93,6 +123,11 @@ struct Scenario {
     SpawnPayload    spawn;
     bool            has_reward          = false;
     RewardPayload   reward;
+
+    // (#139) sequential waves + resolution actions. spawn_on_accept is
+    // normalized into waves[0] at parse time so playback has ONE path.
+    std::vector<WaveDef>     waves;
+    std::vector<std::string> on_cleared;
 };
 
 // ---- module state ---------------------------------------------------------
@@ -117,7 +152,21 @@ ActivePhase     active_phase     = ActivePhase::Dialogue;
 int             active_turn      = 0;    // next turn to emit (Dialogue only)
 float           active_next_at   = 0.0f; // wall-clock seconds
 uint32_t        active_anchor_id = 0;    // nearest matching ship's id
-std::vector<uint32_t> active_wing;       // spawned ship ids (Spawning/Awaiting)
+int             active_wave      = 0;    // (#139) index into sc.waves
+bool            active_anchor_fixed = false;   // (#139) anchor is a point
+HMM_Vec3        active_anchor_pos{};           // (#139) at_nav trigger point
+
+// (#139) one spawned wing member: registry id + optional kill-memory id.
+struct WingMember {
+    uint32_t    id = 0;
+    std::string unique;
+};
+std::vector<WingMember> active_wing;
+
+// (#139) on_launch latch — set by notify_launch, valid for a short window.
+std::string g_launch_base;
+float       g_launch_at = -1e9f;
+constexpr float k_launch_window_s = 8.0f;
 
 // Deterministic RNG (hailing.cpp pattern). Cosmetically seeded.
 std::mt19937& rng() {
@@ -248,6 +297,23 @@ void parse_scenario(const json::Value& v, Scenario& s) {
 
     if (const json::Value* tr = v.find("trigger"); tr && tr->is_object()) {
         parse_near_classes(*tr, s);
+        // (#139) trigger kind + region + plot gates.
+        if (const json::Value* k = tr->find("kind"); k && k->is_string())
+            s.kind = k->as_string();
+        if (const json::Value* ts = tr->find("system"); ts && ts->is_string())
+            s.trigger_system = ts->as_string();
+        if (const json::Value* tn = tr->find("nav"); tn && tn->is_string())
+            s.trigger_nav = tn->as_string();
+        if (const json::Value* tb = tr->find("base"); tb && tb->is_string())
+            s.trigger_base = tb->as_string();
+        if (const json::Value* rd = tr->find("radius_m"); rd && rd->is_number())
+            s.radius_m = (float)rd->as_number();
+        if (const json::Value* rf = tr->find("requires_flags"); rf && rf->is_array())
+            for (const json::Value& g : rf->as_array())
+                if (g.is_string()) s.requires_flags.push_back(g.as_string());
+        if (const json::Value* fb = tr->find("forbids_flags"); fb && fb->is_array())
+            for (const json::Value& g : fb->as_array())
+                if (g.is_string()) s.forbids_flags.push_back(g.as_string());
         if (const json::Value* nf = tr->find("near_faction"); nf && nf->is_string())
             s.near_faction = nf->as_string();
         if (const json::Value* mc = tr->find("max_count"); mc)
@@ -284,6 +350,50 @@ void parse_scenario(const json::Value& v, Scenario& s) {
     if (const json::Value* rw = v.find("reward"); rw && rw->is_object()) {
         s.has_reward = true;
         parse_reward(*rw, s);
+    }
+
+    // (#139) sequential waves. Each wave: { delay_s, spawns: [ {faction,
+    // class, count, name?, unique?} ] }. The legacy spawn_on_accept above
+    // is normalized into waves[0] so playback has exactly one path.
+    if (const json::Value* wv = v.find("waves"); wv && wv->is_array()) {
+        for (const json::Value& w : wv->as_array()) {
+            if (!w.is_object()) continue;
+            WaveDef wave;
+            if (const json::Value* d = w.find("delay_s"); d && d->is_number())
+                wave.delay_s = (float)d->as_number();
+            if (const json::Value* sp = w.find("spawns"); sp && sp->is_array()) {
+                for (const json::Value& gv : sp->as_array()) {
+                    if (!gv.is_object()) continue;
+                    SpawnGroup grp;
+                    if (const json::Value* f = gv.find("faction"); f && f->is_string())
+                        grp.faction = f->as_string();
+                    if (const json::Value* c = gv.find("class"); c && c->is_string())
+                        grp.class_name = c->as_string();
+                    if (const json::Value* n = gv.find("count"); n && n->is_number())
+                        grp.count = std::max(1, (int)n->as_number());
+                    if (const json::Value* nm = gv.find("name"); nm && nm->is_string())
+                        grp.name = nm->as_string();
+                    if (const json::Value* u = gv.find("unique"); u && u->is_string())
+                        grp.unique = u->as_string();
+                    if (!grp.class_name.empty()) wave.groups.push_back(std::move(grp));
+                }
+            }
+            if (!wave.groups.empty()) s.waves.push_back(std::move(wave));
+        }
+    }
+    if (s.waves.empty() && s.has_spawn_on_accept && s.spawn.count > 0) {
+        WaveDef wave;
+        wave.delay_s = s.spawn.delay_s;
+        SpawnGroup grp;
+        grp.faction    = s.spawn.faction;
+        grp.class_name = s.spawn.class_name;
+        grp.count      = s.spawn.count;
+        wave.groups.push_back(std::move(grp));
+        s.waves.push_back(std::move(wave));
+    }
+    if (const json::Value* oc = v.find("on_cleared"); oc && oc->is_array()) {
+        for (const json::Value& g : oc->as_array())
+            if (g.is_string()) s.on_cleared.push_back(g.as_string());
     }
 }
 
@@ -427,11 +537,24 @@ void reset() {
     active_turn      = 0;
     active_next_at   = 0.0f;
     active_anchor_id = 0;
+    active_wave      = 0;
+    active_anchor_fixed = false;
     active_wing.clear();
+    g_launch_base.clear();
+    g_launch_at = -1e9f;
+}
+
+void notify_launch(const std::string& base_id) {
+    g_launch_base = base_id;
+    g_launch_at   = -1.0f;   // armed; stamped with real time on first tick
+    std::printf("[scenario] launch latch armed for base '%s'\n", base_id.c_str());
 }
 
 void tick(ShipRegistry& ships, const Ship& player_ship, PlayerState& player,
-          float now_s, const encounters::SpawnFn& spawn) {
+          float now_s, const WorldCtx& world, const encounters::SpawnFn& spawn) {
+    // Stamp the launch latch with real wall-clock time on the first tick
+    // after notify_launch (the launch site doesn't know now_s).
+    if (g_launch_at == -1.0f) g_launch_at = now_s;
     // ---- active playback -----------------------------------------------
     // Only ONE scenario plays at a time. While one is mid-playback we
     // dispatch by phase and short-circuit out — the trigger loop runs
@@ -449,6 +572,20 @@ void tick(ShipRegistry& ships, const Ship& player_ship, PlayerState& player,
         const Scenario& sc = g_scenarios[active_idx];
 
         // ---- PHASE: DIALOGUE ------------------------------------------
+        // (#139) empty dialogue = pure combat scenario: fall straight
+        // through to the first wave (or resolution).
+        if (active_phase == ActivePhase::Dialogue && sc.dialogue.empty()) {
+            g_state[active_idx].triggered   = true;
+            g_state[active_idx].last_fire_s = now_s;
+            if (!sc.waves.empty()) {
+                active_phase   = ActivePhase::Spawning;
+                active_next_at = now_s + sc.waves[0].delay_s;
+            } else {
+                active_phase   = ActivePhase::AwaitingResolution;
+                active_next_at = now_s;
+            }
+            return;
+        }
         if (active_phase == ActivePhase::Dialogue) {
             const Turn& turn = sc.dialogue[active_turn];
             const std::string disp = speaker_display(turn.voice);
@@ -473,12 +610,12 @@ void tick(ShipRegistry& ships, const Ship& player_ship, PlayerState& player,
                 g_state[active_idx].triggered   = true;
                 g_state[active_idx].last_fire_s = now_s;
 
-                // spawn => Spawning (delay_s timer); reward-only =>
-                // straight to AwaitingResolution; neither => retire.
-                if (sc.has_spawn_on_accept && sc.spawn.count > 0) {
+                // waves => Spawning (first wave's delay); reward/actions
+                // => straight to AwaitingResolution; neither => retire.
+                if (!sc.waves.empty()) {
                     active_phase   = ActivePhase::Spawning;
-                    active_next_at = now_s + sc.spawn.delay_s;
-                } else if (sc.has_reward) {
+                    active_next_at = now_s + sc.waves[active_wave].delay_s;
+                } else if (sc.has_reward || !sc.on_cleared.empty()) {
                     active_phase   = ActivePhase::AwaitingResolution;
                     active_next_at = now_s;
                 } else {
@@ -500,35 +637,46 @@ void tick(ShipRegistry& ships, const Ship& player_ship, PlayerState& player,
         // dead". Kilrathi vs Confed is hostile by stance, so default
         // Patrol AI engages on its own — no special initial_ai_state.
         if (active_phase == ActivePhase::Spawning) {
-            const Faction fac = faction::from_name(sc.spawn.faction);
-            // Unknown faction: degrade to Pirate (safe "outlaw" stance)
-            // rather than refuse the spawn — JSON typo recovers gracefully.
-            const Faction effective_fac = (fac == Faction::Count)
-                ? Faction::Pirate : fac;
-
-            const HMM_Vec3 anchor_pos =
-                spawn_anchor_pos(ships, active_anchor_id, player_ship);
+            // (#139) spawn every group of the CURRENT wave. Anchor: the
+            // trigger nav point for at_nav scenarios (fixed), else the
+            // live anchor ship / player.
+            const WaveDef& wave = sc.waves[active_wave];
+            const HMM_Vec3 anchor_pos = active_anchor_fixed
+                ? active_anchor_pos
+                : spawn_anchor_pos(ships, active_anchor_id, player_ship);
 
             int spawned_count = 0;
             std::vector<HMM_Vec3> placed;
-            placed.reserve(sc.spawn.count);
-            for (int i = 0; i < sc.spawn.count; ++i) {
-                encounters::SpawnRequest req;
-                req.class_name      = sc.spawn.class_name;
-                req.faction         = effective_fac;
-                req.position        = pick_spawn_point(anchor_pos, rng(), placed);
-                req.initial_ai_state = AIState::Patrol;
-                req.patrol_anchor   = req.position;
-                const uint32_t id = spawn(req);
-                if (id != 0) {
-                    active_wing.push_back(id);
-                    ++spawned_count;
+            for (const SpawnGroup& grp : wave.groups) {
+                const Faction fac = faction::from_name(grp.faction);
+                // Unknown faction: degrade to Pirate (safe "outlaw"
+                // stance) rather than refuse — JSON typo recovers.
+                const Faction effective_fac = (fac == Faction::Count)
+                    ? Faction::Pirate : fac;
+                for (int i = 0; i < grp.count; ++i) {
+                    encounters::SpawnRequest req;
+                    req.class_name       = grp.class_name;
+                    req.faction          = effective_fac;
+                    req.position         = pick_spawn_point(anchor_pos, rng(), placed);
+                    req.initial_ai_state = AIState::Patrol;
+                    req.patrol_anchor    = req.position;
+                    const uint32_t id = spawn(req);
+                    if (id != 0) {
+                        active_wing.push_back(WingMember{ id, grp.unique });
+                        if (active_anchor_id == 0) active_anchor_id = id;
+                        ++spawned_count;
+                    }
                 }
+                // Named arrivals get a feed line ("William Riordian has
+                // found you") — the campaign's talk-happens-in-dialogue,
+                // this is just the contact ping.
+                if (!grp.name.empty())
+                    comm::push(grp.name + " is on your scanner.", true);
             }
 
-            std::printf("[scenario] %s spawned %d %s\n",
-                        sc.id.c_str(), spawned_count,
-                        sc.spawn.class_name.c_str());
+            std::printf("[scenario] %s wave %d/%zu spawned %d ships\n",
+                        sc.id.c_str(), active_wave + 1, sc.waves.size(),
+                        spawned_count);
 
             active_phase   = ActivePhase::AwaitingResolution;
             active_next_at = now_s;
@@ -540,13 +688,28 @@ void tick(ShipRegistry& ships, const Ship& player_ship, PlayerState& player,
         // wing is empty. "Wing empty" works for the no-spawn path too
         // (wing was never populated, resolves on first tick of phase).
         if (active_phase == ActivePhase::AwaitingResolution) {
+            // Prune dead/gone members. A pruned member with a `unique` id
+            // that we can SEE dead (not merely despawned) writes the
+            // kill-memory flag conditional re-ambushes gate on (#139).
             active_wing.erase(
                 std::remove_if(active_wing.begin(), active_wing.end(),
-                    [&](uint32_t id) {
-                        const Ship* s = ships.find_by_id(id);
-                        return !s || !s->alive;
+                    [&](const WingMember& m) {
+                        const Ship* s = ships.find_by_id(m.id);
+                        const bool gone = !s || !s->alive;
+                        if (gone && !m.unique.empty() && s && !s->alive)
+                            plot::set_flag(player, "killed:" + m.unique);
+                        return gone;
                     }),
                 active_wing.end());
+
+            // (#139) more waves queued? Arm the next one.
+            if (active_wing.empty() &&
+                active_wave + 1 < (int)sc.waves.size()) {
+                ++active_wave;
+                active_phase   = ActivePhase::Spawning;
+                active_next_at = now_s + sc.waves[active_wave].delay_s;
+                return;
+            }
 
             if (active_wing.empty()) {
                 if (sc.has_reward) {
@@ -585,10 +748,16 @@ void tick(ShipRegistry& ships, const Ship& player_ship, PlayerState& player,
                     std::printf("[scenario] %s complete\n", sc.id.c_str());
                 }
 
+                // (#139) resolution actions — the shared plot grammar.
+                if (!sc.on_cleared.empty())
+                    plot::run_actions(player, sc.on_cleared);
+
                 // Free the slot: trigger evaluation will resume next tick.
                 active_idx       = -1;
                 active_phase     = ActivePhase::Dialogue;
                 active_anchor_id = 0;
+                active_wave      = 0;
+                active_anchor_fixed = false;
                 active_wing.clear();
             }
             return;
@@ -611,6 +780,75 @@ void tick(ShipRegistry& ships, const Ship& player_ship, PlayerState& player,
         if (!sc.once_per_system) {
             if ((now_s - g_state[i].last_fire_s) < sc.cooldown_s) continue;
         }
+
+        // ---- plot gates (#139) ---------------------------------------
+        // Cheap flag checks before any world scan. Mission-scoped
+        // scenarios are exactly these gates over their mission's flags.
+        {
+            bool gate_ok = true;
+            for (const std::string& fl : sc.requires_flags)
+                if (!plot::has_flag(player, fl)) { gate_ok = false; break; }
+            if (gate_ok)
+                for (const std::string& fl : sc.forbids_flags)
+                    if (plot::has_flag(player, fl)) { gate_ok = false; break; }
+            if (!gate_ok) continue;
+        }
+        // System gate applies to every kind when authored.
+        if (!sc.trigger_system.empty() &&
+            sc.trigger_system != world.system_id) continue;
+
+        // ---- (#139) campaign trigger kinds ----------------------------
+        if (sc.kind == "in_system") {
+            // Region membership is the whole trigger (system gate above).
+            active_idx       = (int)i;
+            active_phase     = ActivePhase::Dialogue;
+            active_turn      = 0;
+            active_next_at   = now_s;
+            active_anchor_id = 0;
+            active_wave      = 0;
+            active_anchor_fixed = false;
+            std::printf("[scenario] %s triggered (in_system %s)\n",
+                        sc.id.c_str(), world.system_id.c_str());
+            break;
+        }
+        if (sc.kind == "at_nav") {
+            if (!world.system) continue;
+            const NavPointDef* nav = nullptr;
+            for (const NavPointDef& n : world.system->nav_points)
+                if (n.name == sc.trigger_nav) { nav = &n; break; }
+            if (!nav) continue;
+            const HMM_Vec3 d = HMM_SubV3(nav->position, player_ship.position);
+            if (HMM_DotV3(d, d) > sc.radius_m * sc.radius_m) continue;
+            active_idx       = (int)i;
+            active_phase     = ActivePhase::Dialogue;
+            active_turn      = 0;
+            active_next_at   = now_s;
+            active_anchor_id = 0;
+            active_wave      = 0;
+            active_anchor_fixed = true;
+            active_anchor_pos   = nav->position;
+            std::printf("[scenario] %s triggered (at_nav '%s')\n",
+                        sc.id.c_str(), sc.trigger_nav.c_str());
+            break;
+        }
+        if (sc.kind == "on_launch") {
+            if (g_launch_at < 0.0f ||
+                (now_s - g_launch_at) > k_launch_window_s) continue;
+            if (!sc.trigger_base.empty() &&
+                sc.trigger_base != g_launch_base) continue;
+            g_launch_at = -1e9f;   // consume the latch
+            active_idx       = (int)i;
+            active_phase     = ActivePhase::Dialogue;
+            active_turn      = 0;
+            active_next_at   = now_s;
+            active_anchor_id = 0;
+            active_wave      = 0;
+            active_anchor_fixed = false;
+            std::printf("[scenario] %s triggered (on_launch %s)\n",
+                        sc.id.c_str(), g_launch_base.c_str());
+            break;
+        }
+        if (sc.kind != "near_ships") continue;   // unknown kind: skip
 
         // ---- candidate scan ------------------------------------------
         // Resolved trigger faction. Unknown names skip silently — an
@@ -680,6 +918,8 @@ void tick(ShipRegistry& ships, const Ship& player_ship, PlayerState& player,
         active_turn      = 0;
         active_next_at   = now_s;
         active_anchor_id = nearest_id;
+        active_wave      = 0;
+        active_anchor_fixed = false;
         break;
     }
 }

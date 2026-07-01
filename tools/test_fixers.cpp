@@ -112,7 +112,7 @@ int main() {
 
     // ---- 4. action grammar -------------------------------------------------
     std::string handled;
-    fixers::set_action_handler(
+    plot::set_action_handler(
         [&](const std::string& action, PlayerState&) -> bool {
             if (action.rfind("offer_mission:", 0) == 0) {
                 handled = action.substr(14);

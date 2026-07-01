@@ -25,12 +25,10 @@
 // GATING — requires_flags (ALL must be set) + forbids_flags (NONE set),
 // evaluated against PlayerState::plot_flags via plot::has_flag.
 //
-// ACTIONS — strings, executed in order on accept/refuse:
-//   * "set_flag:<f>" / "clear_flag:<f>"   -> plot::set_flag / clear_flag
-//   * "give_item:<i>" / "remove_item:<i>" -> plot::give_item / remove_item
-//   * anything else -> forwarded to the registered action handler (the
-//     campaign-mission layer's seam; unknown tokens with no handler log
-//     and no-op, same log-and-carry-on policy as every loader).
+// ACTIONS — strings, executed in order on accept/refuse via the SHARED
+// plot::run_action grammar (plot.h): native plot verbs, else the global
+// campaign handler (plot::set_action_handler). One grammar for fixers AND
+// scripted encounters — they can never drift.
 //
 // HEADLESS SPLIT: the model (load / present_at / accept / refuse) is pure
 // logic; the ImGui bar body compiles only when FIXERS_HEADLESS is undefined
@@ -97,11 +95,6 @@ const FixerDef* find(const std::string& id);
 void accept(const FixerDef& f, PlayerState& player);
 void refuse(const FixerDef& f, PlayerState& player);
 void dialogue_done(const FixerDef& f, PlayerState& player);
-
-// Campaign seam: non-native action tokens ("offer_mission:m01") are handed
-// here. Return true if consumed; false logs the unknown token.
-void set_action_handler(std::function<bool(const std::string& action,
-                                           PlayerState& player)> handler);
 
 // Observability seam (main.cpp -> dev_remote /events, category "fixer"):
 // "offered: sandoval_offer @ new_detroit_industrial" / "accepted: ..." /

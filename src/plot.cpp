@@ -11,6 +11,7 @@
 #include "player.h"
 
 #include <algorithm>
+#include <cstdio>
 
 namespace plot {
 namespace {
@@ -71,6 +72,33 @@ bool give_item(PlayerState& p, std::string_view id) {
 
 bool remove_item(PlayerState& p, std::string_view id) {
     return erase_one(p.plot_items, id, "item removed: ");
+}
+
+namespace {
+std::function<bool(const std::string&, PlayerState&)> g_action_handler;
+} // namespace
+
+void run_action(PlayerState& p, const std::string& action) {
+    auto starts = [&](const char* pre) { return action.rfind(pre, 0) == 0; };
+    if      (starts("set_flag:"))    set_flag(p, action.substr(9));
+    else if (starts("clear_flag:"))  clear_flag(p, action.substr(11));
+    else if (starts("give_item:"))   give_item(p, action.substr(10));
+    else if (starts("remove_item:")) remove_item(p, action.substr(12));
+    else if (g_action_handler && g_action_handler(action, p)) { /* consumed */ }
+    else {
+        std::fprintf(stderr,
+                     "[plot] unknown action '%s' (no handler took it)\n",
+                     action.c_str());
+    }
+}
+
+void run_actions(PlayerState& p, const std::vector<std::string>& actions) {
+    for (const std::string& a : actions) run_action(p, a);
+}
+
+void set_action_handler(
+    std::function<bool(const std::string&, PlayerState&)> handler) {
+    g_action_handler = std::move(handler);
 }
 
 void set_observer(std::function<void(const std::string&)> fn) {

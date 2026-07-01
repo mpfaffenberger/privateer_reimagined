@@ -1257,9 +1257,16 @@ bool dev_open(const std::string& screen_name) {
     if (g_stack.empty()) return false;   // not landed / not entered
     BaseScreen target;
     if (!parse_target(screen_name, target)) return false;
-    // Only navigable art screens — Launch and the click-zone pseudo-targets
-    // aren't screens you can stand on.
-    if (target == BaseScreen::Launch || target == BaseScreen::OpenMenu ||
+    // "Launch" is an ACTION, not a screen: arm the same deferred-launch
+    // path the concourse hotspot uses (consumed by the next build()).
+    if (target == BaseScreen::Launch) {
+        g_launch_pending = true;
+        std::printf("[base] dev_open -> LAUNCH\n");
+        return true;
+    }
+    // Only navigable art screens — the click-zone pseudo-targets aren't
+    // screens you can stand on.
+    if (target == BaseScreen::OpenMenu ||
         (int)target > (int)BaseScreen::LandingPad) return false;
     if (target == BaseScreen::Concourse) {
         g_stack.assign(1, BaseScreen::Concourse);

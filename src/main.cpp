@@ -3515,6 +3515,7 @@ void frame_cb() {
                                           g.sun.position, encounter_spawn);
             hailing::reset();   // clear any per-NPC search state from the old encounter
             scripted::reset();  // fresh launch = fresh scenario director
+            scripted::notify_launch(g.player.last_docked_base);  // on_launch triggers (#139)
             loot::clear();      // drop any stale loot markers from the previous wave
             objectives::clear(g.system);  // and any stale rumor leads
             std::printf("[encounter] base launch -> cleared old wave + re-rolled\n");
@@ -4051,7 +4052,10 @@ void frame_cb() {
             // Scripted scenario director (Phase 2). Runs AFTER hailing so
             // any aggro override hailing set is read by the AI on the next
             // frame; scenario triggers care about faction stance state too.
-            scripted::tick(g.ships, *pl, g.player, t_now, encounter_spawn);
+            scripted::WorldCtx sw;
+            sw.system    = &g.system;
+            sw.system_id = g.player.current_system;
+            scripted::tick(g.ships, *pl, g.player, t_now, sw, encounter_spawn);
         }
     }
 
