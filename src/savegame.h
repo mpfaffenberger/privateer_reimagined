@@ -66,7 +66,11 @@ namespace savegame {
 // v6 (#16) added the two guild-membership bools (merc_guild_member,
 // merchant_guild_member). Older saves default both to false (non-member),
 // so a v5 save still loads cleanly.
-constexpr int k_format_version = 6;
+// v7 (#138, campaign epic #136) added the plot state: `plot_flags` +
+// `plot_items`, two flat string arrays (see plot.h). Older saves default
+// both to empty == campaign not started, so every pre-campaign save keeps
+// loading (and playing) exactly as before.
+constexpr int k_format_version = 7;
 
 // Slot 0 is the autosave; manual saves start at 1.
 constexpr int k_autosave_slot = 0;

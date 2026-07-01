@@ -182,6 +182,17 @@ struct PlayerState {
     bool                     merc_guild_member     = false;  // Mercenaries' Guild
     bool                     merchant_guild_member = false;  // Merchants' Guild
 
+    // ---- campaign plot state (#138, epic #136, save v7) -------------------
+    // The story campaign's durable memory: milestone flags
+    // ("sandoval_done", "drone_active") and carried story artifacts
+    // ("steltek_artifact"). Plot items are NOT cargo — no hold space, not
+    // sellable/scannable, survive hull swaps. plot.{h,cpp} owns the
+    // query/mutate helpers; nothing else should touch these directly.
+    // Both empty == campaign not started (fresh save or any pre-v7 save);
+    // the sandbox path never reads them.
+    std::vector<std::string> plot_flags;
+    std::vector<std::string> plot_items;
+
     // ---- cargo hold -------------------------------------------------------
     std::vector<CargoEntry> cargo;
 

@@ -83,6 +83,7 @@
 // real symbol instead of an anonymous-namespace ghost.
 HMM_Mat4 model_matrix(HMM_Vec3 pos, HMM_Vec3 euler_deg, float s);
 #include "perception.h"
+#include "plot.h"
 #include "world_scale.h"
 #include "bolt_art.h"
 #include "projectile.h"
@@ -1207,6 +1208,21 @@ void build_system_scene(bool first_time) {
         // state changes.
         comm::set_feed_tap([](const std::string& text, bool taunt) {
             dev_remote::push_event(taunt ? "comm" : "status", text);
+        });
+
+        // Campaign plot observability + remote mutation (#138). The
+        // observer mirrors every real plot change into /events; the hook
+        // lets the agentic judge drive plot::* over POST /plot. Both are
+        // main-thread only (observer fires inside plot::* calls; the hook
+        // runs inside drain_commands).
+        plot::set_observer([](const std::string& what) {
+            dev_remote::push_event("plot", what);
+        });
+        dev_remote::set_plot_hook([](std::string action, std::string id) {
+            if      (action == "set_flag")    plot::set_flag(g.player, id);
+            else if (action == "clear_flag")  plot::clear_flag(g.player, id);
+            else if (action == "give_item")   plot::give_item(g.player, id);
+            else if (action == "remove_item") plot::remove_item(g.player, id);
         });
 
         // issue #103: register the dev_remote host hooks (the decoupling
@@ -2835,6 +2851,8 @@ void publish_dev_remote_snapshots() {
     pi.mode           = game_state::to_name(g.game.mode);
     pi.merc_guild     = g.player.merc_guild_member;
     pi.merchant_guild = g.player.merchant_guild_member;
+    pi.plot_flags     = g.player.plot_flags;
+    pi.plot_items     = g.player.plot_items;
     pi.factions.reserve(kFactionCount);
     for (int i = 0; i < kFactionCount; ++i) {
         dev_remote::FactionStanding fs;

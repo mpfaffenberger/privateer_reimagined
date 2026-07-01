@@ -226,6 +226,16 @@ static std::string serialize_player(const PlayerState& p) {
         w.key("merc_guild_member");     w.value_bool(p.merc_guild_member);
         w.key("merchant_guild_member"); w.value_bool(p.merchant_guild_member);
 
+        // campaign plot state (#138, v7). Two flat string arrays — see
+        // plot.h for the naming conventions. Absent on older saves ->
+        // empty == campaign not started.
+        w.key("plot_flags"); w.member_array_begin();
+          for (const std::string& s : p.plot_flags) w.value_string(s);
+        w.end_array();
+        w.key("plot_items"); w.member_array_begin();
+          for (const std::string& s : p.plot_items) w.value_string(s);
+        w.end_array();
+
         w.key("cargo"); w.member_array_begin();
           for (const CargoEntry& e : p.cargo) {
               w.begin_object();
@@ -536,6 +546,18 @@ bool load(PlayerState& p, const std::string& path) {
         out.has_tractor_beam = pl.contains("has_tractor_beam") ? pl["has_tractor_beam"].bool_or(false) : false;
         // guild memberships (#16, v6). Older saves default to non-member.
         out.merc_guild_member     = pl.contains("merc_guild_member")     ? pl["merc_guild_member"].bool_or(false)     : false;
+
+    // campaign plot state (#138, v7). Missing on pre-v7 saves -> both
+    // lists stay empty (campaign not started). Non-string entries are
+    // skipped, same tolerance as nav_targets below.
+    if (const json::Value* pf = pl.find("plot_flags"); pf && pf->is_array()) {
+        for (const json::Value& g : pf->as_array())
+            if (g.is_string()) out.plot_flags.push_back(g.as_string());
+    }
+    if (const json::Value* pi = pl.find("plot_items"); pi && pi->is_array()) {
+        for (const json::Value& g : pi->as_array())
+            if (g.is_string()) out.plot_items.push_back(g.as_string());
+    }
         out.merchant_guild_member = pl.contains("merchant_guild_member") ? pl["merchant_guild_member"].bool_or(false) : false;
 
         if (const json::Value* cg = pl.find("cargo"); cg && cg->is_array()) {

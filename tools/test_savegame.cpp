@@ -21,6 +21,7 @@
 
 #include "faction.h"
 #include "player.h"
+#include "plot.h"
 #include "savegame.h"
 
 #include <cstdio>
@@ -65,13 +66,21 @@ PlayerState make_mutated() {
     p.rep.rep[(int)Faction::Merchant] = 13;
     p.rep.rep[(int)Faction::Kilrathi] = -100;
     p.ship_class_name = "centurion";
-    p.gun_mounts      = { "tachyon_cannon", "", "meson_blaster" };
+    // (#88/#89) mounts are MountSlot objects now, not bare strings — this
+    // assignment bit-rotted when the type changed; fixed with the v7 work.
+    p.gun_mounts      = { MountSlot{"tachyon_cannon"}, MountSlot{},
+                          MountSlot{"meson_blaster", inventory::Rarity::Rare} };
     p.shield_level    = 3;
     p.engine_level    = 2;
     p.cargo_expansion = true;
     // #16: guild memberships should survive the round-trip.
     p.merc_guild_member     = true;
     p.merchant_guild_member = true;
+    // #138 (v7): campaign plot state — set through the real plot:: API so
+    // the round-trip also exercises the mutators' invariants.
+    plot::set_flag(p, "sandoval_done");
+    plot::set_flag(p, "tayla_1_done");
+    plot::give_item(p, "steltek_artifact");
     p.cargo = {
         { "iron",   42, 35 },
         { "tungsten", 7, 410 },
@@ -177,8 +186,15 @@ bool cargo_equal(const std::vector<CargoEntry>& a, const std::vector<CargoEntry>
     return true;
 }
 
-bool guns_equal(const std::vector<std::string>& a, const std::vector<std::string>& b) {
-    return a == b;
+bool guns_equal(const std::vector<MountSlot>& a, const std::vector<MountSlot>& b) {
+    if (a.size() != b.size()) return false;
+    for (size_t i = 0; i < a.size(); ++i) {
+        if (a[i].gun_id != b[i].gun_id)  return false;
+        if (a[i].rarity != b[i].rarity)  return false;
+        if (a[i].mods.fire_rate_mult != b[i].mods.fire_rate_mult) return false;
+        if (a[i].mods.energy_mult    != b[i].mods.energy_mult)    return false;
+    }
+    return true;
 }
 
 // Field-by-field equality of the ActiveMission payload — covers BOTH the
@@ -260,6 +276,20 @@ int main() {
     CHECK_EQ("cargo_expansion", dst.cargo_expansion, src.cargo_expansion);
     CHECK_EQ("merc_guild_member",     dst.merc_guild_member,     src.merc_guild_member);
     CHECK_EQ("merchant_guild_member", dst.merchant_guild_member, src.merchant_guild_member);
+
+    // #138 (v7): plot flags + items survive the round-trip, in order.
+    std::printf("  plot_flags:       %zu vs %zu entries\n",
+                src.plot_flags.size(), dst.plot_flags.size());
+    { const bool ok = (dst.plot_flags == src.plot_flags); if (!ok) ++g_fail;
+      std::printf("  [%s] %-20s\n", ok ? "OK  " : "FAIL", "plot_flags (ordered)"); }
+    { const bool ok = (dst.plot_items == src.plot_items); if (!ok) ++g_fail;
+      std::printf("  [%s] %-20s\n", ok ? "OK  " : "FAIL", "plot_items (ordered)"); }
+    { const bool ok = plot::has_flag(dst, "sandoval_done") &&
+                      plot::has_flag(dst, "tayla_1_done") &&
+                      plot::has_item(dst, "steltek_artifact") &&
+                      !plot::has_flag(dst, "never_set");
+      if (!ok) ++g_fail;
+      std::printf("  [%s] %-20s\n", ok ? "OK  " : "FAIL", "plot:: queries on loaded state"); }
 
     std::printf("  cargo:            %zu vs %zu stacks\n", src.cargo.size(), dst.cargo.size());
     { const bool ok = cargo_equal(src.cargo, dst.cargo); if (!ok) ++g_fail;
@@ -447,6 +477,44 @@ int main() {
         const bool ok = r && p.missions.size() == 1 && p.missions[0].id == "good1";
         if (!ok) ++g_fail;
         std::printf("  [%s] out-of-range mission type (99) skipped, type=5 kept\n",
+                    ok ? "OK  " : "FAIL");
+    }
+
+    // 3f. (#138) a v6 save with NO plot keys loads with both plot lists
+    //     empty (campaign not started) and everything else intact — the
+    //     v6 -> v7 migration guarantee.
+    {
+        const std::string path = savegame::slot_path(kOldNoMissSlot);
+        { std::ofstream f(path, std::ios::trunc);
+          f << "{ \"version\": 6, \"label\": \"v6-pre-campaign\",\n"
+               "  \"player\": { \"credits\": \"777\", \"current_system\": \"troy\",\n"
+               "    \"last_docked_base\": \"achilles\",\n"
+               "    \"merc_guild_member\": true } }"; }
+        PlayerState p;
+        const bool r = savegame::load(p, kOldNoMissSlot);
+        const bool ok = r && p.credits == 777 && p.merc_guild_member &&
+                        p.plot_flags.empty() && p.plot_items.empty();
+        if (!ok) ++g_fail;
+        std::printf("  [%s] v6 save loads with plot_flags/items = [] (campaign off)\n",
+                    ok ? "OK  " : "FAIL");
+    }
+
+    // 3g. (#138) plot:: mutator invariants: idempotent set/give, clear/
+    //     remove report presence truthfully, empty ids refused.
+    {
+        PlayerState p = player::new_game("troy");
+        bool ok = plot::set_flag(p, "x");            // newly set -> true
+        ok = ok && !plot::set_flag(p, "x");          // duplicate  -> false
+        ok = ok && plot::has_flag(p, "x");
+        ok = ok && plot::clear_flag(p, "x");         // was set    -> true
+        ok = ok && !plot::clear_flag(p, "x");        // already gone -> false
+        ok = ok && !plot::set_flag(p, "");           // empty id refused
+        ok = ok && plot::give_item(p, "i") && !plot::give_item(p, "i") &&
+             plot::has_item(p, "i") && plot::remove_item(p, "i") &&
+             !plot::remove_item(p, "i");
+        ok = ok && p.plot_flags.empty() && p.plot_items.empty();
+        if (!ok) ++g_fail;
+        std::printf("  [%s] plot:: mutator invariants (idempotence, empty-id refusal)\n",
                     ok ? "OK  " : "FAIL");
     }
 

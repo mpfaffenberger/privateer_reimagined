@@ -207,6 +207,7 @@ add_executable(new_privateer
     src/base_screens.cpp
     src/savegame.cpp
     src/player.cpp
+    src/plot.cpp
     src/mobility.cpp
     src/gun.cpp
     src/shield.cpp
@@ -477,7 +478,8 @@ add_dependencies(test_mission_tracker mission_templates_gen)
 #   cmake --build build --target test_savegame && ./build/test_savegame
 add_executable(test_savegame EXCLUDE_FROM_ALL
     tools/test_savegame.cpp
-    src/savegame.cpp src/player.cpp src/json.cpp src/faction.cpp
+    src/savegame.cpp src/player.cpp src/plot.cpp src/json.cpp src/faction.cpp
+    src/commodity.cpp
 )
 target_include_directories(test_savegame PRIVATE
     ${CMAKE_SOURCE_DIR}/src

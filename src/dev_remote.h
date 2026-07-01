@@ -84,6 +84,13 @@
 //                          the same status strings the HUD shows
 //                          (missions::mission_status), so a judge can
 //                          assert "PATROL 2/5" without screen-scraping.
+//   POST /plot           → mutate campaign plot state (#138). Body
+//                          { action, id } where action is one of
+//                          set_flag | clear_flag | give_item |
+//                          remove_item. Runs plot::* on the main thread
+//                          via the registered hook; the resulting "plot"
+//                          event in /events confirms it landed (an
+//                          already-set flag emits nothing — idempotent).
 //   GET  /events?since=N → { events: [ { seq, t, category, text }, ... ],
 //                          latest } — a monotonically-sequenced ring
 //                          buffer of gameplay events (comm feed lines,
@@ -307,6 +314,12 @@ void set_panel_hook(std::function<void(std::string screen)> hook);
 // active + opened, then routes to comms_menu::select(n).
 void set_comms_select_hook(std::function<void(int n)> hook);
 
+// POST /plot enqueues a command; drain_commands invokes this hook on the
+// main thread with (action, id) where action was validated to one of
+// set_flag|clear_flag|give_item|remove_item. The host wires it to the
+// matching plot::* mutator on the live PlayerState (#138).
+void set_plot_hook(std::function<void(std::string action, std::string id)> hook);
+
 // ---------------------------------------------------------------------------
 // /player snapshot — the persistent PlayerState surface (agentic testing).
 // ---------------------------------------------------------------------------
@@ -328,6 +341,10 @@ struct PlayerInfo {
     bool        merc_guild     = false;
     bool        merchant_guild = false;
     std::vector<FactionStanding> factions;
+    // Campaign plot state (#138) — mirrors PlayerState::plot_flags/items
+    // so a judge can assert campaign progress from GET /player alone.
+    std::vector<std::string> plot_flags;
+    std::vector<std::string> plot_items;
 };
 
 // Publish the latest player snapshot for GET /player. Called once per frame

@@ -57,5 +57,6 @@ void set_inventory_install_hook(std::function<void(int)> /*hook*/)     {}
 void set_inventory_equip_hook(std::function<void(int, int)> /*hook*/)  {}
 void set_panel_hook(std::function<void(std::string)> /*hook*/)         {}
 void set_comms_select_hook(std::function<void(int)> /*hook*/)          {}
+void set_plot_hook(std::function<void(std::string, std::string)> /*hook*/) {}
 
 } // namespace dev_remote

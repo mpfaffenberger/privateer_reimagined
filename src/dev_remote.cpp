@@ -56,7 +56,7 @@ struct Command {
     enum class Kind { SetCamera, Screenshot, VoiceSay, CommBark, CargoGive, Spawn,
                       Kill, SetTarget, TractorPull, InventorySell, InventoryGive,
                       InventoryInstall, InventoryEquip, SetPanel, CommsSelect,
-                      Rumor };
+                      Rumor, Plot };
     Kind kind;
 
     // SetCamera — any optional field is encoded with `has_*`.
@@ -90,6 +90,8 @@ struct Command {
     // kind/rarity strings ride on these dedicated fields.
     std::string     give_kind;        // "weapon"|"upgrade"|"salvage"|"commodity"
     std::string     give_rarity;      // "basic"|"rare"|"legendary"
+    // Plot — validated action verb; the flag/item id reuses str_arg.
+    std::string     plot_action;      // set_flag|clear_flag|give_item|remove_item
 };
 
 std::mutex          g_queue_mu;
@@ -192,6 +194,7 @@ std::function<void(int)>                                    g_inventory_install_
 std::function<void(int, int)>                               g_inventory_equip_hook;
 std::function<void(std::string)>                            g_panel_hook;
 std::function<void(int)>                                    g_comms_select_hook;
+std::function<void(std::string, std::string)>               g_plot_hook;
 
 std::thread       g_thread;
 std::atomic<bool> g_running{false};
@@ -553,8 +556,49 @@ void handle_player(int fd) {
             (long long)f.kills);
         out += buf;
     }
+    out += "],\"plot_flags\":[";
+    for (size_t i = 0; i < p.plot_flags.size(); ++i) {
+        out += (i ? ",\"" : "\"");
+        out += json_escape(p.plot_flags[i]);
+        out += "\"";
+    }
+    out += "],\"plot_items\":[";
+    for (size_t i = 0; i < p.plot_items.size(); ++i) {
+        out += (i ? ",\"" : "\"");
+        out += json_escape(p.plot_items[i]);
+        out += "\"";
+    }
     out += "]}";
     send_json(fd, out);
+}
+
+// POST /plot — mutate campaign plot state (#138). Body { action, id }.
+// Action verb is validated HERE so a typo 400s before anything queues;
+// the real plot::* mutation runs on the main thread via the plot hook.
+void handle_plot(int fd, const std::string& body) {
+    std::string action, id;
+    if (!extract_string(body, "action", &action)) {
+        send_json(fd, "{\"ok\":false,\"error\":\"missing action\"}");
+        return;
+    }
+    if (!extract_string(body, "id", &id) || id.empty()) {
+        send_json(fd, "{\"ok\":false,\"error\":\"missing id\"}");
+        return;
+    }
+    if (action != "set_flag" && action != "clear_flag" &&
+        action != "give_item" && action != "remove_item") {
+        send_json(fd, "{\"ok\":false,\"error\":\"unknown action\"}");
+        return;
+    }
+    Command c;
+    c.kind        = Command::Kind::Plot;
+    c.plot_action = action;
+    c.str_arg     = id;
+    {
+        std::lock_guard lk(g_queue_mu);
+        g_queue.push_back(c);
+    }
+    send_json(fd, "{\"ok\":true}");
 }
 
 // GET /missions — serialise the latest accepted-missions snapshot. The
@@ -1135,6 +1179,7 @@ void handle_connection(int fd) {
     else if (method == "POST" && path == "/inventory/install") handle_inventory_install(fd, body);
     else if (method == "POST" && path == "/inventory/equip") handle_inventory_equip(fd, body);
     else if (method == "GET"  && path == "/player")     handle_player(fd);
+    else if (method == "POST" && path == "/plot")       handle_plot(fd, body);
     else if (method == "GET"  && path == "/missions")   handle_missions(fd);
     else if (method == "GET"  && path == "/events")     handle_events(fd, query);
     else                                                send_404(fd);
@@ -1395,6 +1440,18 @@ void drain_commands(Camera& cam) {
             if (hook) hook(c.int_arg);
             break;
         }
+        case Command::Kind::Plot: {
+            // Run the host's plot hook (plot::* on the live PlayerState).
+            // Action was validated on the HTTP thread; the plot observer
+            // mirrors any real change into /events as a "plot" event.
+            std::function<void(std::string, std::string)> hook;
+            {
+                std::lock_guard lk(g_hooks_mu);
+                hook = g_plot_hook;
+            }
+            if (hook) hook(c.plot_action, c.str_arg);
+            break;
+        }
         }
     }
 
@@ -1546,6 +1603,11 @@ void set_panel_hook(std::function<void(std::string)> hook) {
 void set_comms_select_hook(std::function<void(int)> hook) {
     std::lock_guard lk(g_hooks_mu);
     g_comms_select_hook = std::move(hook);
+}
+
+void set_plot_hook(std::function<void(std::string, std::string)> hook) {
+    std::lock_guard lk(g_hooks_mu);
+    g_plot_hook = std::move(hook);
 }
 
 } // namespace dev_remote
