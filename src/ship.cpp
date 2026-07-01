@@ -187,10 +187,24 @@ Ship ship::spawn(const ShipClass& klass) {
 
     // Health = full max. Base hull armor from class; shields from the
     // fitted shield generator if one is configured.
-    s.armor_fore_cm  = klass.armor_fore_cm;
-    s.armor_aft_cm   = klass.armor_aft_cm;
-    s.armor_port_cm  = klass.armor_port_cm;
-    s.armor_starboard_cm = klass.armor_starboard_cm;
+    //
+    // ENEMY SURVIVABILITY BUFF (world_scale.h): every ship spawned from a
+    // class here is an NPC (the player uses spawn_player + heal_to_full,
+    // which never call this), so scale armor + shields to lengthen fights
+    // without nerfing damage. Armor scales directly (no regen, set once);
+    // shields scale via shield_mult so the dynamically-recomputed per-facing
+    // max in regen_shields()/take_damage() stays consistent. Capitals use
+    // their own gentler knobs — they're already sponges via the +200cm
+    // capital shield bonus, so the full fighter buff over-tanked them.
+    const float enemy_armor_k  = klass.capital ? world_scale::k_enemy_armor_mult_capital
+                                               : world_scale::k_enemy_armor_mult;
+    const float enemy_shield_k = klass.capital ? world_scale::k_enemy_shield_mult_capital
+                                               : world_scale::k_enemy_shield_mult;
+    s.armor_fore_cm  = klass.armor_fore_cm      * enemy_armor_k;
+    s.armor_aft_cm   = klass.armor_aft_cm       * enemy_armor_k;
+    s.armor_port_cm  = klass.armor_port_cm      * enemy_armor_k;
+    s.armor_starboard_cm = klass.armor_starboard_cm * enemy_armor_k;
+    s.shield_mult   *= enemy_shield_k;
     // No armor package at spawn — armor is a purchasable upgrade only
     // (np armor). Every ship starts on its base hull cm; fitted armor is
     // attached later (the player buys it; NPCs never get any). When
@@ -218,6 +232,43 @@ Ship ship::spawn(const ShipClass& klass) {
     s.controller.desired_forward = HMM_V3(0.0f, 0.0f, 1.0f);
     s.controller.desired_speed   = 0.0f;
     return s;
+}
+
+void ship::make_ace(Ship& s) {
+    if (!s.klass) return;
+    // ---- 1) hot-rod the guns ------------------------------------------
+    // Swap every FIXED forward gun to a high-tier weapon and stamp it with
+    // legendary-grade mods (20% faster, 20% cheaper to fire — the
+    // inventory.h Legendary tier). Turrets keep their type; they're already
+    // a free-firing threat. Mounts are cycled through the elite pool so a
+    // multi-gun ace fields a varied, nasty loadout.
+    static const GunType kAceGuns[] = {
+        GunType::TachyonCannon, GunType::PlasmaGun,
+        GunType::IonicPulseCannon, GunType::ParticleCannon,
+    };
+    constexpr size_t kAceGunCount = sizeof(kAceGuns) / sizeof(kAceGuns[0]);
+    s.mount_mods.assign(s.mounts.size(), inventory::WeaponMods{});
+    size_t fixed_idx = 0;
+    for (size_t i = 0; i < s.mounts.size(); ++i) {
+        if (s.mounts[i].is_turret) continue;
+        s.mounts[i].type = kAceGuns[fixed_idx % kAceGunCount];
+        s.mount_mods[i].fire_rate_mult = 1.2f;   // Legendary tier
+        s.mount_mods[i].energy_mult    = 0.8f;
+        ++fixed_idx;
+    }
+    // ---- 2) bigger shields --------------------------------------------
+    // Bump shield_mult and refresh the live facings so the dynamically
+    // recomputed per-facing max (regen_shields / take_damage) stays in
+    // sync. Aces are fighters, so default_shield is set and capital==false.
+    constexpr float k_ace_shield_mult = 1.6f;
+    s.shield_mult *= k_ace_shield_mult;
+    if (s.klass->default_shield) {
+        const auto& sh = *s.klass->default_shield;
+        s.shield_fore_cm      = shield_max_cm(*s.klass, sh.front_cm,     s.shield_mult);
+        s.shield_aft_cm       = shield_max_cm(*s.klass, sh.back_cm,      s.shield_mult);
+        s.shield_port_cm      = shield_max_cm(*s.klass, sh.port_cm,      s.shield_mult);
+        s.shield_starboard_cm = shield_max_cm(*s.klass, sh.starboard_cm, s.shield_mult);
+    }
 }
 
 void ship::heal_to_full(Ship& s) {
@@ -386,14 +437,12 @@ void ship::take_damage(Ship& s, float damage_cm, HitFacing facing) {
 
 void ship::regen_shields(Ship& s, float dt) {
     if (!s.alive || !s.klass || !s.klass->default_shield) return;
-    // Scale regen by its dedicated knob (world_scale.h). Separate from
-    // the velocity scale because regen plays a different role: it sets
-    // attrition pacing, not movement feel. At 0.0167 a Shield
-    // Generator 1's canonical 4 cm/s becomes ~0.067 cm/s — ~15 seconds
-    // per cm, so damage actually accumulates between attack runs.
-    const float regen_rate = s.klass->default_shield->regen_cm_per_s
-                           * world_scale::k_shield_regen_scale;
-
+    // PERCENTAGE-based regen (world_scale.h): each facing recovers a fixed
+    // fraction of ITS OWN max per second, so every shield (small or huge)
+    // refills from empty in the same wall-clock (~25 s at 4%/s) and the
+    // rate auto-scales with shield_mult upgrades. The catalogue Regen field
+    // is intentionally no longer consulted. Separate from velocity scale —
+    // regen sets attrition pacing, not movement feel.
     auto tick_quad = [&](float& q, float& pause, float max_cm) {
         if (pause > 0.0f) {
             pause -= dt;
@@ -401,6 +450,7 @@ void ship::regen_shields(Ship& s, float dt) {
             return;          // suppressed this frame
         }
         if (q < max_cm) {
+            const float regen_rate = max_cm * world_scale::k_shield_regen_frac_per_s;
             q = std::min(q + regen_rate * dt, max_cm);
         }
     };

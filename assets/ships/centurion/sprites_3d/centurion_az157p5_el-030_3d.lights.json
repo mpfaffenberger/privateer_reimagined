@@ -1,6 +1,18 @@
 [
-  { "u": 0.610145, "v": 0.197101, "color": [51, 140, 255], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
-  { "u": 0.808696, "v": 0.247826, "color": [51, 140, 255], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
-  { "u": 0.814493, "v": 0.369565, "color": [51, 140, 255], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
-  { "u": 0.614493, "v": 0.307246, "color": [51, 140, 255], "size": 5, "hz": 0, "phase": 0, "kind": "steady" }
+  { "u": 0.59276, "v": 0.176471, "color": [51, 140, 255], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.606445, "v": 0.206055, "color": [51, 140, 255], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.82287, "v": 0.242327, "color": [51, 140, 255], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.631619, "v": 0.200738, "color": [51, 140, 255], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.811306, "v": 0.376085, "color": [51, 140, 255], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.794175, "v": 0.351735, "color": [51, 140, 255], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.796917, "v": 0.222444, "color": [51, 140, 255], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.834473, "v": 0.369019, "color": [51, 140, 255], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.78479, "v": 0.241455, "color": [51, 140, 255], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.636523, "v": 0.310612, "color": [51, 140, 255], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.623893, "v": 0.326237, "color": [51, 140, 255], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.80971, "v": 0.261021, "color": [51, 140, 255], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.599414, "v": 0.304883, "color": [51, 140, 255], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.618401, "v": 0.168929, "color": [51, 140, 255], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.61086, "v": 0.285068, "color": [51, 140, 255], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.815988, "v": 0.342383, "color": [51, 140, 255], "size": 5, "hz": 0, "phase": 0, "kind": "steady" }
 ]

@@ -499,6 +499,9 @@ struct AppState {
     // retarget, etc. The P handler is a KEY_DOWN edge trigger, so holding
     // the key can't strobe the state.
     bool paused       = false;
+    // #112: in-flight inventory window visibility. Toggled by `I` in Flight;
+    // drawn over the HUD when set, sells/equips/installs from the hold.
+    bool show_inventory = false;
     // Lazy-init latch for the title SCENE (patrol/chase ships, sky, music).
     // Reset to false whenever we (re)enter the title — at launch and again
     // when the player dies and we bounce back to the menu (np-3dp.18) — so
@@ -747,6 +750,19 @@ void init_cb() {
 // spawn AND the title NEW handler. Unknown / empty gun names fall back to a Laser.
 static void apply_player_loadout(Ship& pl, const PlayerState& p, bool heal = true) {
     if (const ShipClass* k = ship_class::find(p.ship_class_name)) pl.klass = k;
+    // Per-hull turn rate for the PLAYER. Unlike NPCs (which scale max_ypr by
+    // ypr_rate_multiplier in ship.cpp), the player turns via the CAMERA, so
+    // we fold the flown hull's ypr_rate_multiplier into the camera's base
+    // yaw/pitch rates here on every launch/refit. e.g. the Centurion's 1.4
+    // makes it feel 40% nimbler than a stock hull. Base rates mirror the
+    // camera.h defaults (1.4 yaw / 1.2 pitch).
+    {
+        constexpr float k_base_yaw_rate   = 1.4f;
+        constexpr float k_base_pitch_rate = 1.2f;
+        const float mult = pl.klass ? pl.klass->ypr_rate_multiplier : 1.0f;
+        g.camera.max_yaw_rate   = k_base_yaw_rate   * mult;
+        g.camera.max_pitch_rate = k_base_pitch_rate * mult;
+    }
     // Shield generator upgrade (np-3dp.26, np-3dp.28): each dealer shield
     // level adds the stock generator's cm again (Privateer's Shield
     // Generator 1/2/3 ladder). L0 = NO shields (mult 0); L1+ = scale of
@@ -884,6 +900,10 @@ void build_system_scene(bool first_time) {
     // Trading screens (np-9cu.2) consume it; today it just proves the
     // canonical 1995 cargo list round-trips into the engine.
     commodity::load("assets/data/privateer_db/cargo.toml");
+    // Authored salvage commodities (issue #87): scrap_metal & friends, kept
+    // out of the extracted cargo.toml so a re-extraction can't clobber them.
+    // Sellable through the existing Commodity Exchange (no new UI).
+    commodity::load_extra("assets/data/commodities_salvage.toml");
     // Contraband sidecar (Phase 1.1): ids + severity the search director
     // reads. Missing/unparseable is non-fatal — logs one line and runs on.
     commodity::load_contraband("assets/data/contraband.json");
@@ -2533,6 +2553,38 @@ static uint32_t encounter_spawn(const encounters::SpawnRequest& req) {
     Ship inst       = ship::spawn(*klass);
     inst.sprite     = &spr;
     inst.faction    = req.faction;
+
+    // Talon loadout rule (global): the ONLY Talons that keep the stock
+    // 2x laser + center mass driver (the ship.json default) are PIRATE
+    // Talons in Troy. Every other Talon — any non-pirate anywhere, plus
+    // pirate Talons outside Troy — upguns to 2x mass driver on the wings
+    // + a center particle cannon. We remap gun TYPES onto the existing
+    // mounts so the wing/center geometry (offsets, cone) is preserved, and
+    // the parallel cooldown/armed arrays already match this mount count.
+    if (req.class_name == "talon" && inst.mounts.size() == 3) {
+        const bool pirate_in_troy =
+            (g.system_name == "troy" && req.faction == Faction::Pirate);
+        if (!pirate_in_troy) {
+            inst.mounts[0].type = GunType::MassDriver;      // left wing
+            inst.mounts[1].type = GunType::MassDriver;      // right wing
+            inst.mounts[2].type = GunType::ParticleCannon;  // center
+        }
+    }
+    // Issue #91: a small fraction of COMBAT NPCs are "aces" — elite pilots
+    // that carry the legendary loot bonus on death (loot ace_bonus). Rolled
+    // deterministically from the freshly-minted entity id (stable per ship,
+    // ~k_ace_spawn_permille/1000 of spawns) so there's no RNG to thread.
+    // Gated to combat factions — merchants/civilians never drop weapons, so
+    // an "ace trader" would be meaningless.
+    constexpr uint32_t k_ace_spawn_permille = 50;   // 5.0% of combat NPCs
+    if (req.faction != Faction::Merchant && req.faction != Faction::Civilian) {
+        uint32_t h = inst.id * 2654435761u; h ^= h >> 15;
+        inst.is_ace = (h % 1000u) < k_ace_spawn_permille;
+    }
+    // Aces fly hot-rodded hulls: high-tier guns + legendary weapon mods +
+    // bigger shields (issue #91 follow-up). Done after the Talon loadout
+    // swap above so an ace's elite guns win over the per-system loadout.
+    if (inst.is_ace) ship::make_ace(inst);
     inst.ai.enabled = true;
     inst.ai.state   = req.initial_ai_state;
     inst.ai.patrol_anchor     = req.patrol_anchor;
@@ -4232,9 +4284,9 @@ void frame_cb() {
                     if ((int)s->faction >= 0 && (int)s->faction < kFactionCount)
                         g.player.faction_kills[(int)s->faction]++;
                     // Loot drop (Phase 4c, np-#86): one weighted drop at
-                    // the wreck position. is_ace=false here; the ace-bonus
-                    // hook is reserved for future named NPC kills.
-                    loot::spawn_for(s->faction, s->position, /*is_ace=*/false);
+                    // the wreck position. Issue #91: ace kills carry the
+                    // legendary-drop bonus (loot ace_bonus.legendary_chance).
+                    loot::spawn_for(s->faction, s->position, s->is_ace);
                 }
                 // Mission progress: any killer counts (see above).
                 missions::on_target_destroyed(g.player, s->faction,
@@ -4270,6 +4322,9 @@ void frame_cb() {
                 // respawn_player() once the cinematic completes.
                 g.player_atlas = nullptr;
                 g.player_ship_sprite.atlas = nullptr;
+                // Issue #105: also cut the player's own last bark before the
+                // Dying cinematic takes over the audio bed.
+                voice::stop_for(s->id);
                 game_state::request_mode(g.game, GameMode::Dying);
                 std::printf("[death] player ship destroyed — entering Dying\n");
             }
@@ -4287,6 +4342,9 @@ void frame_cb() {
             // managed id next tick (find_by_id -> nullptr); it never
             // double-despawns, so no stale-handle use.
             if (!s->is_player) {
+                // Issue #105: cut any voice line this ship was speaking so a
+                // dead ship can't keep yelling to the clip's natural end.
+                voice::stop_for(s->id);
                 free_sprite_slot(s->sprite);
                 g.ships.despawn(g.ships.find_handle_by_id(s->id));
             }
@@ -5361,6 +5419,11 @@ void frame_cb() {
                                dock_prompt, dock_ready,
                                draw_world, &g.player.rep);
 
+            // #112: in-flight inventory window (toggled by I). Reads + mutates
+            // the unified hold through the SAME model path as the LANDED
+            // CargoHold; early-returns when closed.
+            inventory::in_flight_panel(g.player, &g.show_inventory);
+
             // Mission objective markers + progress readout (#18). Read-only
             // over the player's accepted missions + this system's nav set.
             cockpit_hud::build_mission_objectives(
@@ -5696,11 +5759,26 @@ void frame_cb() {
                 dl->AddLine(ImVec2(sx+r, sy+r), ImVec2(sx+r-k, sy+r), color, th);
                 dl->AddLine(ImVec2(sx+r, sy+r), ImVec2(sx+r, sy+r-k), color, th);
 
-                // Label below the bracket.
+                // Ace pilots get a distinct PURPLE ring outside the FoF
+                // bracket so they read as elite at a glance (issue #91).
+                if (target->is_ace) {
+                    const ImU32 ace_purple = IM_COL32(200, 90, 255, 255);
+                    dl->AddCircle(ImVec2(sx, sy), r + 9.0f, ace_purple, 28, 2.5f);
+                }
+
+                // Label below the bracket. Aces read "<Faction> Ace"; every
+                // other target reads its hull class name.
                 char buf[96];
-                const char* tname = target->klass ? target->klass->name.c_str()
-                                  : target->is_player ? "player" : "?";
-                std::snprintf(buf, sizeof(buf), "%s   %.1f km", tname, distance_m * 0.001f);
+                if (target->is_ace) {
+                    char fac[24];
+                    std::snprintf(fac, sizeof(fac), "%s", faction::to_name(target->faction));
+                    if (fac[0] >= 'a' && fac[0] <= 'z') fac[0] -= 32;   // capitalise
+                    std::snprintf(buf, sizeof(buf), "%s Ace   %.1f km", fac, distance_m * 0.001f);
+                } else {
+                    const char* tname = target->klass ? target->klass->name.c_str()
+                                      : target->is_player ? "player" : "?";
+                    std::snprintf(buf, sizeof(buf), "%s   %.1f km", tname, distance_m * 0.001f);
+                }
                 dl->AddText(ImVec2(sx - r, sy + r + 6.0f), color, buf);
             } else {
                 // Off-screen: arrow on screen-edge box pointing in the
@@ -6301,6 +6379,14 @@ void event_cb(const sapp_event* ev) {
             g.game.mode == GameMode::Flight && !g.show_title) {
             g.paused = !g.paused;
             std::printf("[pause] sim %s\n", g.paused ? "PAUSED" : "RESUMED");
+        }
+        // I — toggle the in-flight inventory window (#112). Edge-triggered;
+        // Flight-only (the LANDED CargoHold owns the hold at a base).
+        if (ev->key_code == SAPP_KEYCODE_I && !ev->key_repeat &&
+            g.game.mode == GameMode::Flight && !g.show_title) {
+            g.show_inventory = !g.show_inventory;
+            std::printf("[inventory] in-flight panel %s\n",
+                        g.show_inventory ? "OPEN" : "CLOSED");
         }
         if ((size_t)ev->key_code < g.keys_down.size()) g.keys_down[ev->key_code] = true;
         break;

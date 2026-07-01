@@ -66,16 +66,20 @@ std::string id_from_label(std::string_view label) {
     return id;
 }
 
-int load(const std::string& toml_path) {
-    g_catalog.clear();
-    g_by_id.clear();
+namespace {
 
+// Parse a cargo.toml-format file, APPENDING each [[commodities]] entry to
+// g_catalog. Shared by load() (which clears first) and load_extra() (which
+// doesn't). Returns the number of entries appended; -1 if the file couldn't
+// be opened. Does NOT touch g_by_id — callers re-index once afterwards.
+int parse_into_catalog(const std::string& toml_path) {
     std::ifstream in(toml_path);
     if (!in) {
-        std::fprintf(stderr, "[commodity] cannot open '%s' — catalog empty\n",
-                     toml_path.c_str());
-        return 0;
+        std::fprintf(stderr, "[commodity] cannot open '%s'\n", toml_path.c_str());
+        return -1;
     }
+
+    const size_t start = g_catalog.size();
 
     // Parse state: are we inside a [[commodities]] entry? Entries are
     // flushed when the next header (or EOF) arrives, so a truncated
@@ -130,17 +134,38 @@ int load(const std::string& toml_path) {
         // Bare numbers (category_index) and arrays: nothing to do.
     }
     flush();
+    return (int)(g_catalog.size() - start);
+}
 
-    // Index by id + count distinct categories for the summary line.
+// Rebuild the id->index map from g_catalog and log a summary. Pointers into
+// g_catalog stay valid as long as nothing resizes it after the startup load
+// sequence (load + load_extra) completes.
+void reindex(const char* what) {
+    g_by_id.clear();
     std::set<std::string> categories;
     for (size_t i = 0; i < g_catalog.size(); ++i) {
         g_by_id[g_catalog[i].id] = i;
         categories.insert(g_catalog[i].category);
     }
+    std::printf("[commodity] %s: %zu commodities, %zu categories\n",
+                what, g_catalog.size(), categories.size());
+}
 
-    std::printf("[commodity] %zu commodities, %zu categories\n",
-                g_catalog.size(), categories.size());
+} // namespace
+
+int load(const std::string& toml_path) {
+    g_catalog.clear();
+    g_by_id.clear();
+    if (parse_into_catalog(toml_path) < 0) return 0;
+    reindex("loaded");
     return (int)g_catalog.size();
+}
+
+int load_extra(const std::string& toml_path) {
+    const int added = parse_into_catalog(toml_path);
+    if (added < 0) return 0;
+    reindex("with salvage");
+    return added;
 }
 
 const Commodity* find(std::string_view id) {

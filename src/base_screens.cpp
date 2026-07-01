@@ -23,6 +23,11 @@
 #include "json.h"
 #include "material.h"   // TextureSlot, load_texture_png
 #include "player.h"
+#include "ship.h"          // Ship (g_player_ship->klass) for the parked-ship pose
+#include "ship_class.h"    // ship_class::all() for the landing-pad ship picker
+#include "ship_sprite.h"   // atlas load + choose_ship_sprite_frame_by_angles
+#include "sprite.h"        // SpriteArt (per-frame hull texture)
+#include <unordered_map>
 
 #include "imgui.h"
 #include "sokol_app.h"
@@ -56,9 +61,60 @@ struct BaseDef {
     std::string          id;
     std::string          display_name;
     std::string          faction;
+    std::string          archetype;    // market archetype -> concourse art set
     std::string          art_path;     // resolved "assets/..." path to the PNG
     std::vector<Hotspot> hotspots;
     bool                 loaded = false;
+};
+
+// ---- animated concourse art (WCU import, tools/extract_wcu_concourse.py) ----
+// A flipbook overlay composited over the static background: a grid atlas of
+// `real_frames` packed cols x rows, played at `fps`. The animation has
+// `total_frames` timeline slots; the first `lead_blanks` draw NOTHING (the
+// car-absent gap), the rest index the atlas. `rect` is normalized 0..1
+// top-left, matching the hotspot convention.
+struct AnimOverlay {
+    TextureSlot tex;
+    float rect[4]      = {0, 0, 0, 0};
+    int   total_frames = 1, lead_blanks = 0;
+    int   cols = 1, rows = 1, frame_w = 0, frame_h = 0, atlas_w = 1, atlas_h = 1;
+    float fps = 5.0f;
+};
+// A placed transition: a clickable rect (normalized) that moves to `target`.
+// Authored per base-TYPE (positioned on the shared art) by the F3 editor;
+// at runtime a concourse link is only shown if THIS base actually offers
+// that service (intersected with base.json's hotspots).
+struct Link {
+    BaseScreen target = BaseScreen::Concourse;
+    float      rect[4] = {0, 0, 0, 0};
+};
+// One room of a base's art set: a static background + animated overlays +
+// the transition links placed on it (doors to other rooms / launch).
+struct Room {
+    bool                     valid = false;
+    TextureSlot              background;
+    std::vector<AnimOverlay> overlays;
+    std::vector<Link>        links;
+};
+constexpr int kBaseScreenCount = (int)BaseScreen::OpenMenu + 1;
+struct ConcourseSet {
+// The parked ship shown on the landing pad: which hull, at what view-sphere
+// angle, drawn into what normalized rect. Authored with the F4 picker and
+// saved per base-type to links.json under "_ship".
+struct ShipPose {
+    std::string cls;                         // ship class name ("" = none)
+    float az = 35.0f, el = -20.0f;           // view-sphere azimuth/elevation
+    float rect[4] = {0.34f, 0.42f, 0.32f, 0.34f};
+    bool  set = false;
+};
+struct ConcourseSet {
+    bool        valid = false;       // concourse room loaded
+    std::string type;
+    Room        rooms[kBaseScreenCount];   // indexed by (int)BaseScreen
+    // Per-ship-class parked poses for THIS base type's landing pad. Each
+    // ship you fly gets its own authored angle + size; runtime renders the
+    // pose matching the player's current hull.
+    std::vector<ShipPose> ship_poses;
 };
 
 // ---- module state -----------------------------------------------------------
@@ -66,8 +122,46 @@ struct BaseDef {
 // "active" at a time — you can only be landed at one place.
 BaseDef                  g_def;
 TextureSlot              g_art;            // concourse PNG; valid==false if missing
+ConcourseSet             g_concourse;      // animated WCU art set (optional, by archetype)
+
+// ---- landing-pad ship preview (F4 picker) -----------------------------------
+// One atlas held at a time for the parked-ship preview, plus the shared art
+// cache its frames point into. Persist across bases so re-entering is cheap.
+std::unordered_map<std::string, SpriteArt> g_ship_art;
+ShipSpriteAtlas g_pose_atlas;
+std::string     g_pose_atlas_cls;     // which class g_pose_atlas currently holds
+int             g_pose_class_idx = 0; // editor cursor into ship_class::all()
+bool            g_pose_edit = false;  // F4 editor active (landing room only)
+
+// Find the authored pose for a ship class in the active set (or null).
+ShipPose* find_pose(const std::string& cls) {
+    if (cls.empty()) return nullptr;
+    for (ShipPose& p : g_concourse.ship_poses) if (p.cls == cls) return &p;
+    return nullptr;
+}
+
+// Lazily (re)load the atlas for `cls`; returns null on miss/empty.
+ShipSpriteAtlas* pose_atlas_for(const std::string& cls) {
+    if (cls.empty()) return nullptr;
+    if (g_pose_atlas_cls != cls) {
+        g_pose_atlas = ShipSpriteAtlas{};
+        const std::string stem = resolve_ship_atlas_stem("ships/" + cls + "/atlas_manifest");
+        if (!load_ship_sprite_atlas(stem, g_pose_atlas, g_ship_art)) {
+            g_pose_atlas_cls = "!" + cls;   // mark failed so we don't retry every frame
+            return nullptr;
+        }
+        g_pose_atlas_cls = cls;
+    } else if (!g_pose_atlas_cls.empty() && g_pose_atlas_cls[0] == '!') {
+        return nullptr;
+    }
+    return g_pose_atlas.frames.empty() ? nullptr : &g_pose_atlas;
+}
+// draw_ship_pose is defined further down (needs ScreenSize); forward-declared
+// here so the early statics block stays together.
+struct ScreenSize;
+void draw_ship_pose(ImDrawList* dl, const ScreenSize& ss, const ShipPose& pose);
 std::vector<BaseScreen>  g_stack;          // Concourse always sits at index 0
-std::array<ScreenHook, 10> g_hooks{};      // index by (int)BaseScreen
+std::array<ScreenHook, kBaseScreenCount> g_hooks{};   // index by (int)BaseScreen
 bool                     g_launch_pending = false;
 // Player's in-flight Ship for this Landed session (np-zte.2). Set by build()
 // each frame, handed to the screen hooks via BaseContext so the Repair
@@ -88,9 +182,67 @@ const char* screen_name(BaseScreen s) {
         case BaseScreen::MerchantsGuild:   return "Merchants' Guild";
         case BaseScreen::CargoHold:        return "Cargo Hold";
         case BaseScreen::Launch:           return "Launch";
+        case BaseScreen::LandingPad:       return "Landing Pad";
         default:                           return "?";
     }
 }
+
+// The JSON enum token for a screen (matches parse_target). Used to serialize
+// placed links from the F3 transition editor.
+const char* target_token(BaseScreen s) {
+    switch (s) {
+        case BaseScreen::Bar:               return "Bar";
+        case BaseScreen::CommodityExchange: return "CommodityExchange";
+        case BaseScreen::ShipDealer:        return "ShipDealer";
+        case BaseScreen::Equipment:         return "Equipment";
+        case BaseScreen::MissionComputer:   return "MissionComputer";
+        case BaseScreen::MercenariesGuild:  return "MercenariesGuild";
+        case BaseScreen::MerchantsGuild:    return "MerchantsGuild";
+        case BaseScreen::CargoHold:         return "CargoHold";
+        case BaseScreen::Launch:            return "Launch";
+        case BaseScreen::Concourse:         return "Concourse";
+        case BaseScreen::LandingPad:         return "LandingPad";
+        case BaseScreen::CommodityDisplay:  return "CommodityDisplay";
+        case BaseScreen::CommodityBuy:      return "CommodityBuy";
+        case BaseScreen::CommoditySell:     return "CommoditySell";
+        case BaseScreen::CommodityNext:     return "CommodityNext";
+        case BaseScreen::CommodityPrev:     return "CommodityPrev";
+        case BaseScreen::OpenMenu:          return "OpenMenu";
+        default:                            return "Concourse";
+    }
+}
+
+// Action zones are editor-placeable but NOT navigable (handled in-room).
+bool is_action(BaseScreen s) {
+    return s == BaseScreen::CommodityDisplay || s == BaseScreen::CommodityBuy ||
+           s == BaseScreen::CommoditySell   || s == BaseScreen::CommodityNext ||
+           s == BaseScreen::CommodityPrev   || s == BaseScreen::OpenMenu;
+}
+
+// Stable short key for a room in the art manifest / links.json (lowercase,
+// distinct from the link target tokens). Only rooms that can carry art.
+const char* room_key(BaseScreen s) {
+    switch (s) {
+        case BaseScreen::Concourse:         return "concourse";
+        case BaseScreen::LandingPad:        return "landing";
+        case BaseScreen::Bar:               return "bar";
+        case BaseScreen::CommodityExchange: return "commodity";
+        case BaseScreen::ShipDealer:        return "shipdealer";
+        case BaseScreen::Equipment:         return "equipment";
+        case BaseScreen::MercenariesGuild:  return "mercguild";
+        case BaseScreen::MerchantsGuild:    return "merchguild";
+        case BaseScreen::MissionComputer:   return "missions";
+        case BaseScreen::CargoHold:         return "cargohold";
+        default:                            return "";
+    }
+}
+// The set of screens that can have an art room (drives load/save/free loops).
+constexpr BaseScreen kArtRooms[] = {
+    BaseScreen::Concourse, BaseScreen::LandingPad, BaseScreen::Bar,
+    BaseScreen::CommodityExchange, BaseScreen::ShipDealer, BaseScreen::Equipment,
+    BaseScreen::MercenariesGuild, BaseScreen::MerchantsGuild,
+    BaseScreen::MissionComputer, BaseScreen::CargoHold,
+};
 
 // Parse a base.json "target" enum-name into a BaseScreen. Returns false for
 // unknown names (a typo in data shouldn't crash — we skip the hotspot).
@@ -105,6 +257,13 @@ bool parse_target(const std::string& s, BaseScreen& out) {
     if (s == "CargoHold")         { out = BaseScreen::CargoHold;         return true; }
     if (s == "Launch")            { out = BaseScreen::Launch;            return true; }
     if (s == "Concourse")         { out = BaseScreen::Concourse;         return true; }
+    if (s == "LandingPad")        { out = BaseScreen::LandingPad;        return true; }
+    if (s == "CommodityDisplay")  { out = BaseScreen::CommodityDisplay;  return true; }
+    if (s == "CommodityBuy")      { out = BaseScreen::CommodityBuy;      return true; }
+    if (s == "CommoditySell")     { out = BaseScreen::CommoditySell;     return true; }
+    if (s == "CommodityNext")     { out = BaseScreen::CommodityNext;     return true; }
+    if (s == "CommodityPrev")     { out = BaseScreen::CommodityPrev;     return true; }
+    if (s == "OpenMenu")          { out = BaseScreen::OpenMenu;          return true; }
     return false;
 }
 
@@ -135,6 +294,7 @@ void draw_centered(ImDrawList* dl, const char* text, float x, float y,
 // is deferred to the end of build() so we don't mutate camera/mode while
 // still drawing this frame's screen.
 void activate(BaseScreen target) {
+    if (is_action(target)) return;   // action zones are handled in-room
     sfx::ui_click();
     if (target == BaseScreen::Launch) {
         g_launch_pending = true;
@@ -148,8 +308,18 @@ void activate(BaseScreen target) {
 
 // ---- concourse + sub-screen rendering ---------------------------------------
 
-// Draw the concourse hub: hotspot regions over the art + the context strip.
+// Forward decl: the link renderer lives further down (after the art-set
+// types), but the concourse hub below needs it.
+void draw_links(ImDrawList* dl, const ScreenSize& ss, const Room& room, bool filter);
+
+// Draw the concourse hub. When the art set has placed transition links
+// (positioned on the real art by the F3 editor), use those — filtered to the
+// services THIS base offers. Otherwise fall back to base.json's grid hotspots.
 void draw_concourse(ImDrawList* dl, const ScreenSize& ss, PlayerState& player) {
+    if (g_concourse.valid && !g_concourse.rooms[(int)BaseScreen::Concourse].links.empty()) {
+        draw_links(dl, ss, g_concourse.rooms[(int)BaseScreen::Concourse], /*filter=*/true);
+        return;
+    }
     for (const Hotspot& hs : g_def.hotspots) {
         const float px = hs.x * ss.w;
         const float py = hs.y * ss.h;
@@ -275,13 +445,19 @@ void draw_guild(ImDrawList* dl, const ScreenSize& ss, BaseScreen cur,
 // Draw a sub-screen: title + (hook body OR labelled stub) + Back affordance.
 void draw_subscreen(ImDrawList* dl, const ScreenSize& ss, BaseScreen cur,
                     PlayerState& player) {
-    // Title bar.
-    char title[96];
-    std::snprintf(title, sizeof(title), "%s  -  %s",
-                  g_def.display_name.empty() ? "Base" : g_def.display_name.c_str(),
-                  screen_name(cur));
-    dl->AddText(ImVec2(28, 24), kAmber, title);
-    dl->AddLine(ImVec2(28, 48), ImVec2(ss.w - 28, 48), kAmberDim, 1.0f);
+    // Title bar — only on screens WITHOUT painted room art. An art room (the
+    // commodity console, the bar, the guild offices) carries its own framing
+    // in the picture, so the overlaid "<base> - <screen>" title just clutters
+    // it; suppress it there.
+    const bool has_art = g_concourse.valid && g_concourse.rooms[(int)cur].valid;
+    if (!has_art) {
+        char title[96];
+        std::snprintf(title, sizeof(title), "%s  -  %s",
+                      g_def.display_name.empty() ? "Base" : g_def.display_name.c_str(),
+                      screen_name(cur));
+        dl->AddText(ImVec2(28, 24), kAmber, title);
+        dl->AddLine(ImVec2(28, 48), ImVec2(ss.w - 28, 48), kAmberDim, 1.0f);
+    }
 
     // Body: the integration hook owns it if one is registered; otherwise a
     // clearly-labelled stub so it's obvious the screen exists but isn't
@@ -314,6 +490,460 @@ void draw_subscreen(ImDrawList* dl, const ScreenSize& ss, BaseScreen cur,
     }
 }
 
+// Load an animated concourse set (assets/concourse/<type>/concourse.json) if
+// one exists for this base's archetype. Best-effort: any miss leaves
+// g_concourse.valid==false and the caller falls back to the static PNG.
+// Parse one room object (background + overlays [+ door/launch]) from JSON.
+bool load_room(const std::string& dir, const json::Value& r, Room& out) {
+    if (!r.is_object()) return false;
+    if (!load_texture_png(dir + r["background"].string_or(""), out.background))
+        return false;
+    if (const json::Value* ovs = r.find("overlays"); ovs && ovs->is_array()) {
+        for (const json::Value& o : ovs->as_array()) {
+            if (!o.is_object()) continue;
+            AnimOverlay ov;
+            if (const json::Value* rc = o.find("rect"); rc && rc->is_array() && rc->as_array().size() == 4)
+                for (int i = 0; i < 4; ++i) ov.rect[i] = (*rc)[(size_t)i].as_float();
+            ov.total_frames = (int)o["total_frames"].number_or(1);
+            ov.lead_blanks  = (int)o["lead_blanks"].number_or(0);
+            ov.cols = (int)o["cols"].number_or(1);  ov.rows = (int)o["rows"].number_or(1);
+            ov.frame_w = (int)o["frame_w"].number_or(0);  ov.frame_h = (int)o["frame_h"].number_or(0);
+            ov.atlas_w = (int)o["atlas_w"].number_or(1);  ov.atlas_h = (int)o["atlas_h"].number_or(1);
+            ov.fps = (float)o["fps"].number_or(5.0);
+            const std::string atlas = dir + o["atlas"].string_or("");
+            if (load_texture_png(atlas, ov.tex)) out.overlays.push_back(std::move(ov));
+        }
+    }
+    // Placed transition links: [{ "target": "Bar", "rect": [x,y,w,h] }, ...].
+    if (const json::Value* ls = r.find("links"); ls && ls->is_array()) {
+        for (const json::Value& l : ls->as_array()) {
+            if (!l.is_object()) continue;
+            BaseScreen tgt;
+            if (!parse_target(l["target"].string_or(""), tgt)) continue;
+            Link lk; lk.target = tgt;
+            if (const json::Value* rc = l.find("rect"); rc && rc->is_array() && rc->as_array().size() == 4)
+                for (int i = 0; i < 4; ++i) lk.rect[i] = (*rc)[(size_t)i].as_float();
+            out.links.push_back(lk);
+        }
+    }
+    out.valid = true;
+    return true;
+}
+
+// Load an animated concourse set (assets/concourse/<type>/concourse.json) with
+// its concourse room and optional landing-pad room.
+void load_concourse_set(const std::string& archetype) {
+    g_concourse = ConcourseSet{};
+    if (archetype.empty()) return;
+    const std::string dir  = "assets/concourse/" + archetype + "/";
+    const json::Value root = json::parse_file(dir + "concourse.json");
+    if (!root.is_object()) return;
+    const json::Value* rooms = root.find("rooms");
+    if (!rooms || !rooms->is_object()) return;
+    int loaded = 0;
+    for (BaseScreen s : kArtRooms) {
+        if (const json::Value* r = rooms->find(room_key(s)))
+            if (load_room(dir, *r, g_concourse.rooms[(int)s])) ++loaded;
+    }
+    if (!g_concourse.rooms[(int)BaseScreen::Concourse].valid) return;
+
+    // Editor overrides: links.json (authored by the F3 transition editor)
+    // replaces a room's link list when present, keyed by room_key.
+    const json::Value lj = json::parse_file(dir + "links.json");
+    if (lj.is_object()) {
+        for (BaseScreen s : kArtRooms) {
+            const json::Value* arr = lj.find(room_key(s));
+            if (!arr || !arr->is_array()) continue;
+            Room& rm = g_concourse.rooms[(int)s];
+            rm.links.clear();
+            for (const json::Value& l : arr->as_array()) {
+                if (!l.is_object()) continue;
+                BaseScreen tgt;
+                if (!parse_target(l["target"].string_or(""), tgt)) continue;
+                Link lk; lk.target = tgt;
+                if (const json::Value* rc = l.find("rect"); rc && rc->is_array() && rc->as_array().size() == 4)
+                    for (int i = 0; i < 4; ++i) lk.rect[i] = (*rc)[(size_t)i].as_float();
+                rm.links.push_back(lk);
+            }
+        }
+        // Per-ship landing-pad poses. Accepts the new "_ships" array and the
+        // legacy single "_ship" object.
+        auto load_pose = [&](const json::Value& sp) {
+            if (!sp.is_object()) return;
+            ShipPose pose;
+            pose.cls = sp["class"].string_or("");
+            if (pose.cls.empty()) return;
+            pose.az = (float)sp["az"].number_or(pose.az);
+            pose.el = (float)sp["el"].number_or(pose.el);
+            if (const json::Value* rc = sp.find("rect"); rc && rc->is_array() && rc->as_array().size() == 4)
+                for (int i = 0; i < 4; ++i) pose.rect[i] = (*rc)[(size_t)i].as_float();
+            pose.set = true;
+            g_concourse.ship_poses.push_back(pose);
+        };
+        if (const json::Value* arr = lj.find("_ships"); arr && arr->is_array())
+            for (const json::Value& sp : arr->as_array()) load_pose(sp);
+        if (const json::Value* sp = lj.find("_ship")) load_pose(*sp);
+    }
+    g_concourse.type  = archetype;
+    g_concourse.valid = true;
+    std::printf("[base] concourse set '%s': %d room(s) loaded\n",
+                archetype.c_str(), loaded);
+}
+
+// Draw one room: static background stretched to fill, then each flipbook
+// overlay's current frame composited on top (alpha from the atlas). A global
+// speed factor (>1) plays the canonical 5/10fps flipbooks a touch livelier.
+void draw_room(ImDrawList* dl, const ScreenSize& ss, const Room& room) {
+    constexpr float k_anim_speed = 1.6f;
+    if (room.background.valid)
+        dl->AddImage(simgui_imtextureid(room.background.view),
+                     ImVec2(0, 0), ImVec2(ss.w, ss.h));
+    const double t = ImGui::GetTime();
+    for (const AnimOverlay& ov : room.overlays) {
+        if (!ov.tex.valid || ov.total_frames <= 0) continue;
+        int f = (int)(t * (double)ov.fps * k_anim_speed) % ov.total_frames;
+        if (f < ov.lead_blanks) continue;          // blank timeline slot
+        const int rf  = f - ov.lead_blanks;        // index into packed atlas
+        const int col = rf % ov.cols, row = rf / ov.cols;
+        const ImVec2 uv0((float)(col * ov.frame_w) / ov.atlas_w,
+                         (float)(row * ov.frame_h) / ov.atlas_h);
+        const ImVec2 uv1((float)((col + 1) * ov.frame_w) / ov.atlas_w,
+                         (float)((row + 1) * ov.frame_h) / ov.atlas_h);
+        const ImVec2 pmin(ov.rect[0] * ss.w, ov.rect[1] * ss.h);
+        const ImVec2 pmax((ov.rect[0] + ov.rect[2]) * ss.w,
+                          (ov.rect[1] + ov.rect[3]) * ss.h);
+        dl->AddImage(simgui_imtextureid(ov.tex.view), pmin, pmax, uv0, uv1);
+    }
+}
+
+// Short label shown inside a transition box (the door's destination).
+const char* link_label(BaseScreen t) {
+    switch (t) {
+        case BaseScreen::Concourse:         return "ENTER";
+        case BaseScreen::LandingPad:        return "LANDING PAD";
+        case BaseScreen::Launch:            return "LAUNCH";
+        case BaseScreen::Bar:               return "BAR";
+        case BaseScreen::CommodityExchange: return "COMMODITIES";
+        case BaseScreen::ShipDealer:        return "SHIP DEALER";
+        case BaseScreen::Equipment:         return "EQUIPMENT";
+        case BaseScreen::MissionComputer:   return "MISSIONS";
+        case BaseScreen::MercenariesGuild:  return "MERCENARIES";
+        case BaseScreen::MerchantsGuild:    return "MERCHANTS";
+        case BaseScreen::CargoHold:         return "CARGO HOLD";
+        case BaseScreen::CommodityDisplay:  return "DISPLAY";
+        case BaseScreen::CommodityBuy:      return "BUY MODE";
+        case BaseScreen::CommoditySell:     return "SELL MODE";
+        case BaseScreen::CommodityNext:     return "NEXT";
+        case BaseScreen::CommodityPrev:     return "PREV";
+        case BaseScreen::OpenMenu:          return "VIEW SHIPS";
+        default:                            return "?";
+    }
+}
+
+// Does THIS base offer the service a concourse link points to? Reuses the
+// per-base facility list (base.json hotspots). Always-available rooms
+// (Launch, LandingPad, Concourse, CargoHold) pass unconditionally.
+bool base_offers(BaseScreen t) {
+    if (t == BaseScreen::Launch || t == BaseScreen::LandingPad ||
+        t == BaseScreen::Concourse || t == BaseScreen::CargoHold ||
+        t == BaseScreen::MissionComputer || t == BaseScreen::Bar)
+        return true;
+    for (const Hotspot& hs : g_def.hotspots) if (hs.target == t) return true;
+    return false;
+}
+
+// Draw + handle a room's transition links as clickable labelled boxes.
+// `filter` gates each link on base_offers() (used by the concourse so a
+// guild-less base doesn't show a guild door).
+void draw_links(ImDrawList* dl, const ScreenSize& ss, const Room& room, bool filter) {
+    for (const Link& lk : room.links) {
+        if (is_action(lk.target)) continue;   // handled inside the room, not nav
+        if (filter && !base_offers(lk.target)) continue;
+        const float px = lk.rect[0]*ss.w, py = lk.rect[1]*ss.h;
+        const float pw = lk.rect[2]*ss.w, ph = lk.rect[3]*ss.h;
+        ImGui::SetCursorScreenPos(ImVec2(px, py));
+        ImGui::InvisibleButton(link_label(lk.target), ImVec2(pw, ph));
+        const bool hovered = ImGui::IsItemHovered();
+        if (ImGui::IsItemClicked()) activate(lk.target);
+        // Outside edit mode the doorways are INVISIBLE — the painted art is
+        // the affordance. On hover we reveal ONLY the label text (no box).
+        if (hovered)
+            draw_centered(dl, link_label(lk.target), px, py, pw, ph, kWhite);
+    }
+}
+
+// Draw the parked ship: nearest authored frame to (az,el), aspect-fit +
+// centred inside the pose rect. (Defined here — ScreenSize is complete now.)
+void draw_ship_pose(ImDrawList* dl, const ScreenSize& ss, const ShipPose& pose) {
+    if (pose.cls.empty()) return;
+    ShipSpriteAtlas* atlas = pose_atlas_for(pose.cls);
+    if (!atlas) return;
+    const ShipSpriteFrame* f = choose_ship_sprite_frame_by_angles(*atlas, pose.az, pose.el);
+    if (!f || !f->art || !f->art->hull.valid) return;
+    const float rx = pose.rect[0]*ss.w, ry = pose.rect[1]*ss.h;
+    const float rw = pose.rect[2]*ss.w, rh = pose.rect[3]*ss.h;
+    float aw = rw, ah = rh;
+    if (f->art->hull_w > 0 && f->art->hull_h > 0) {
+        const float ar = (float)f->art->hull_w / (float)f->art->hull_h;
+        if (aw / ah > ar) aw = ah * ar; else ah = aw / ar;
+    }
+    const float cx = rx + rw*0.5f, cy = ry + rh*0.5f;
+    const ImVec2 pmin(cx - aw*0.5f, cy - ah*0.5f), pmax(cx + aw*0.5f, cy + ah*0.5f);
+    dl->AddImage(simgui_imtextureid(f->art->hull.view), pmin, pmax);
+    if (f->art->lights.valid)
+        dl->AddImage(simgui_imtextureid(f->art->lights.view), pmin, pmax);
+}
+
+// Draw the landing-pad room: art + its transition links (door -> Concourse,
+// Launch). No facility filter — every base can launch + enter.
+void draw_landing(ImDrawList* dl, const ScreenSize& ss) {
+    Room& lp = g_concourse.rooms[(int)BaseScreen::LandingPad];
+    draw_room(dl, ss, lp);
+    // Parked ship = the player's current hull, drawn with its authored pose
+    // for this base type (or a default angle/size if not posed yet).
+    const std::string pcls = (g_player_ship && g_player_ship->klass)
+                           ? g_player_ship->klass->name : std::string();
+    if (!pcls.empty()) {
+        if (const ShipPose* p = find_pose(pcls)) draw_ship_pose(dl, ss, *p);
+        else { ShipPose def; def.cls = pcls; draw_ship_pose(dl, ss, def); }
+    }
+    draw_links(dl, ss, lp, /*filter=*/false);
+}
+
+// ---- F3 transition editor ---------------------------------------------------
+// Author the placement of room transition links directly on the art. Edits
+// the CURRENT room's links in place; Cmd/Ctrl+S writes them to
+// assets/concourse/<type>/links.json (preferred by the loader on next entry).
+struct EditState { bool on = false; int sel = -1; };
+EditState g_edit;
+
+// "Shop menu open" gate for rooms with an OpenMenu zone (ship dealer). The
+// room shows its art + NPC until the player clicks the zone, then the shop
+// UI draws over an opaque backdrop. Reset when the active screen changes.
+bool       g_menu_open = false;
+BaseScreen g_menu_screen = BaseScreen::Concourse;
+
+void save_links() {
+    const std::string path = "assets/concourse/" + g_concourse.type + "/links.json";
+    FILE* f = std::fopen(path.c_str(), "w");
+    if (!f) { std::printf("[base] editor: cannot write %s\n", path.c_str()); return; }
+    std::fprintf(f, "{\n");
+    // One array per art room, keyed by room_key. Rooms with no links are
+    // still emitted (empty) so the file documents the full room set.
+    for (size_t ri = 0; ri < (sizeof(kArtRooms)/sizeof(kArtRooms[0])); ++ri) {
+        const Room& rm = g_concourse.rooms[(int)kArtRooms[ri]];
+        const bool last = (ri + 1 == sizeof(kArtRooms)/sizeof(kArtRooms[0]));
+        std::fprintf(f, "  \"%s\": [", room_key(kArtRooms[ri]));
+        for (size_t i = 0; i < rm.links.size(); ++i) {
+            const Link& lk = rm.links[i];
+            std::fprintf(f, "%s\n    { \"target\": \"%s\", \"rect\": [%.5f, %.5f, %.5f, %.5f] }",
+                         i ? "," : "", target_token(lk.target),
+                         lk.rect[0], lk.rect[1], lk.rect[2], lk.rect[3]);
+        }
+        (void)last;
+        std::fprintf(f, "%s],\n", rm.links.empty() ? "" : "\n  ");
+    }
+    // Per-ship landing-pad poses (P picker).
+    std::fprintf(f, "  \"_ships\": [");
+    for (size_t i = 0; i < g_concourse.ship_poses.size(); ++i) {
+        const ShipPose& sp = g_concourse.ship_poses[i];
+        std::fprintf(f,
+            "%s\n    { \"class\": \"%s\", \"az\": %.2f, \"el\": %.2f, "
+            "\"rect\": [%.5f, %.5f, %.5f, %.5f] }",
+            i ? "," : "", sp.cls.c_str(), sp.az, sp.el,
+            sp.rect[0], sp.rect[1], sp.rect[2], sp.rect[3]);
+    }
+    std::fprintf(f, "%s]\n", g_concourse.ship_poses.empty() ? "" : "\n  ");
+    std::fprintf(f, "}\n");
+    std::fclose(f);
+    std::printf("[base] editor: saved %s\n", path.c_str());
+}
+
+void draw_link_editor(ImDrawList* dl, const ScreenSize& ss, Room& room) {
+    ImGuiIO& io = ImGui::GetIO();
+    // --- hotkeys ---
+    if (ImGui::IsKeyPressed(ImGuiKey_A)) {
+        Link lk; lk.target = BaseScreen::Bar;
+        lk.rect[0] = 0.42f; lk.rect[1] = 0.42f; lk.rect[2] = 0.16f; lk.rect[3] = 0.14f;
+        room.links.push_back(lk); g_edit.sel = (int)room.links.size() - 1;
+    }
+    if (g_edit.sel >= (int)room.links.size()) g_edit.sel = -1;
+    if (g_edit.sel >= 0 && (ImGui::IsKeyPressed(ImGuiKey_Delete) || ImGui::IsKeyPressed(ImGuiKey_X))) {
+        room.links.erase(room.links.begin() + g_edit.sel); g_edit.sel = -1;
+    }
+    if (g_edit.sel >= 0) {
+        int d = ImGui::IsKeyPressed(ImGuiKey_RightBracket) ? 1
+              : ImGui::IsKeyPressed(ImGuiKey_LeftBracket)  ? -1 : 0;
+        if (d) {
+            int t = ((int)room.links[g_edit.sel].target + d + kBaseScreenCount) % kBaseScreenCount;
+            room.links[g_edit.sel].target = (BaseScreen)t;
+        }
+    }
+    if ((io.KeySuper || io.KeyCtrl) && ImGui::IsKeyPressed(ImGuiKey_S)) save_links();
+
+    // --- draggable boxes ---
+    for (int i = 0; i < (int)room.links.size(); ++i) {
+        Link& lk = room.links[i];
+        const float px = lk.rect[0]*ss.w, py = lk.rect[1]*ss.h;
+        const float pw = lk.rect[2]*ss.w, ph = lk.rect[3]*ss.h;
+        const float hsz = 22.0f;
+        ImGui::PushID(i);
+        // Submit the corner RESIZE handle FIRST so it wins hit-priority where
+        // it overlaps the body button (ImGui gives the earlier-submitted item
+        // precedence at overlapping pixels).
+        ImGui::SetCursorScreenPos(ImVec2(px + pw - hsz, py + ph - hsz));
+        ImGui::InvisibleButton("rs", ImVec2(hsz, hsz));
+        const bool resizing = ImGui::IsItemActive();
+        if (ImGui::IsItemActivated()) g_edit.sel = i;
+        if (resizing && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+            float nw = lk.rect[2] + io.MouseDelta.x / ss.w;
+            float nh = lk.rect[3] + io.MouseDelta.y / ss.h;
+            lk.rect[2] = nw > 0.03f ? nw : 0.03f;
+            lk.rect[3] = nh > 0.03f ? nh : 0.03f;
+        }
+        // Body button (move) — submitted after, so the corner above takes
+        // precedence; the body claims the rest of the rect.
+        ImGui::SetCursorScreenPos(ImVec2(px, py));
+        ImGui::InvisibleButton("body", ImVec2(pw > 8 ? pw : 8, ph > 8 ? ph : 8));
+        if (ImGui::IsItemActivated()) g_edit.sel = i;
+        if (!resizing && ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+            lk.rect[0] += io.MouseDelta.x / ss.w;
+            lk.rect[1] += io.MouseDelta.y / ss.h;
+        }
+        ImGui::PopID();
+        const bool seld = (i == g_edit.sel);
+        const ImU32 col = seld ? IM_COL32(120, 255, 160, 255) : IM_COL32(255, 210, 80, 220);
+        dl->AddRect(ImVec2(px, py), ImVec2(px + pw, py + ph), col, 3.0f, 0, seld ? 3.0f : 1.5f);
+        dl->AddRectFilled(ImVec2(px + pw - hsz, py + ph - hsz), ImVec2(px + pw, py + ph), col, 2.0f);
+        draw_centered(dl, target_token(lk.target), px, py, pw, ph, col);
+    }
+    // --- target palette: click a label to assign it to the selected box ---
+    if (g_edit.sel >= 0 && g_edit.sel < (int)room.links.size()) {
+        static const BaseScreen kOpts[] = {
+            BaseScreen::Bar, BaseScreen::CommodityExchange, BaseScreen::ShipDealer,
+            BaseScreen::Equipment, BaseScreen::MissionComputer,
+            BaseScreen::MercenariesGuild, BaseScreen::MerchantsGuild,
+            BaseScreen::CargoHold, BaseScreen::Concourse, BaseScreen::LandingPad,
+            BaseScreen::Launch,
+            // Commodity Exchange action zones:
+            BaseScreen::CommodityDisplay, BaseScreen::CommodityBuy,
+            BaseScreen::CommoditySell, BaseScreen::CommodityNext,
+            BaseScreen::CommodityPrev, BaseScreen::OpenMenu,
+        };
+        const float bx = 12.0f, bw = 210.0f, bh = 26.0f;
+        float by = 40.0f;
+        dl->AddText(ImVec2(bx, by - 18), IM_COL32(120, 255, 160, 255), "ASSIGN TARGET:");
+        for (BaseScreen opt : kOpts) {
+            ImGui::PushID((int)opt + 5000);
+            ImGui::SetCursorScreenPos(ImVec2(bx, by));
+            ImGui::InvisibleButton("opt", ImVec2(bw, bh));
+            const bool hov = ImGui::IsItemHovered();
+            if (ImGui::IsItemClicked()) room.links[g_edit.sel].target = opt;
+            ImGui::PopID();
+            const bool curr = (room.links[g_edit.sel].target == opt);
+            const ImU32 fill = curr ? IM_COL32(40, 110, 70, 230)
+                                    : hov ? IM_COL32(50, 60, 80, 230)
+                                          : IM_COL32(20, 26, 36, 220);
+            dl->AddRectFilled(ImVec2(bx, by), ImVec2(bx + bw, by + bh), fill, 4.0f);
+            dl->AddRect(ImVec2(bx, by), ImVec2(bx + bw, by + bh),
+                        curr ? IM_COL32(120, 255, 160, 255) : IM_COL32(90, 100, 120, 200), 4.0f);
+            dl->AddText(ImVec2(bx + 10, by + 5),
+                        curr ? IM_COL32(180, 255, 200, 255) : IM_COL32(210, 215, 225, 255),
+                        target_token(opt));
+            by += bh + 4.0f;
+        }
+    }
+
+    // --- help bar ---
+    dl->AddRectFilled(ImVec2(0, 0), ImVec2(ss.w, 30), IM_COL32(0, 0, 0, 190));
+    char help[220];
+    std::snprintf(help, sizeof(help),
+        "TRANSITION EDITOR  type=%s  room=%s   A:add  X:del  click box:select  click palette:set target  "
+        "[ ]:cycle  drag:move  corner:resize  Cmd/Ctrl+S:save  F3:exit",
+        g_concourse.type.c_str(),
+        (&room == &g_concourse.rooms[(int)BaseScreen::LandingPad]) ? "landing" : "concourse");
+    dl->AddText(ImVec2(12, 8), IM_COL32(120, 255, 160, 255), help);
+}
+
+// ---- F4 landing-pad ship picker --------------------------------------------
+// Cycle ships ( , / . ), scrub azimuth/elevation (arrows), drag/resize the
+// parked-ship rect, Cmd/Ctrl+S to save into links.json "_ship".
+void draw_ship_pose_editor(ImDrawList* dl, const ScreenSize& ss) {
+    const std::vector<ShipClass>& classes = ship_class::all();
+    ImGuiIO& io = ImGui::GetIO();
+    if (classes.empty()) return;
+
+    g_pose_class_idx = (g_pose_class_idx % (int)classes.size() + (int)classes.size()) % (int)classes.size();
+    if (ImGui::IsKeyPressed(ImGuiKey_Comma))
+        g_pose_class_idx = (g_pose_class_idx - 1 + (int)classes.size()) % (int)classes.size();
+    if (ImGui::IsKeyPressed(ImGuiKey_Period))
+        g_pose_class_idx = (g_pose_class_idx + 1) % (int)classes.size();
+    const std::string cls = classes[g_pose_class_idx].name;
+
+    // Edit the saved pose for THIS class if one exists; otherwise a transient
+    // default that we only COMMIT to the set once the user actually changes
+    // something (so merely browsing ships doesn't litter the file).
+    ShipPose* saved = find_pose(cls);
+    ShipPose  scratch;
+    if (!saved) scratch.cls = cls;
+    ShipPose& pose = saved ? *saved : scratch;
+    bool edited = false;
+
+    const float az_step = io.KeyShift ? 5.0f : 15.0f;
+    if (ImGui::IsKeyPressed(ImGuiKey_LeftArrow))  { pose.az -= az_step; edited = true; }
+    if (ImGui::IsKeyPressed(ImGuiKey_RightArrow)) { pose.az += az_step; edited = true; }
+    if (ImGui::IsKeyPressed(ImGuiKey_UpArrow))    { pose.el += az_step; edited = true; }
+    if (ImGui::IsKeyPressed(ImGuiKey_DownArrow))  { pose.el -= az_step; edited = true; }
+    if (pose.az > 180.0f)  pose.az -= 360.0f;
+    if (pose.az < -180.0f) pose.az += 360.0f;
+    if (pose.el >  89.0f)  pose.el =  89.0f;
+    if (pose.el < -89.0f)  pose.el = -89.0f;
+
+    // Render the parked ship at the current pose.
+    draw_ship_pose(dl, ss, pose);
+
+    // Move/resize handles on the pose rect (corner-first, like the link editor).
+    const float px = pose.rect[0]*ss.w, py = pose.rect[1]*ss.h;
+    const float pw = pose.rect[2]*ss.w, ph = pose.rect[3]*ss.h;
+    const float hsz = 22.0f;
+    ImGui::PushID("shippose");
+    ImGui::SetCursorScreenPos(ImVec2(px + pw - hsz, py + ph - hsz));
+    ImGui::InvisibleButton("rs", ImVec2(hsz, hsz));
+    const bool resizing = ImGui::IsItemActive();
+    if (resizing && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+        float nw = pose.rect[2] + io.MouseDelta.x / ss.w;
+        float nh = pose.rect[3] + io.MouseDelta.y / ss.h;
+        pose.rect[2] = nw > 0.05f ? nw : 0.05f;
+        pose.rect[3] = nh > 0.05f ? nh : 0.05f;
+        edited = true;
+    }
+    ImGui::SetCursorScreenPos(ImVec2(px, py));
+    ImGui::InvisibleButton("body", ImVec2(pw > 8 ? pw : 8, ph > 8 ? ph : 8));
+    if (!resizing && ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+        pose.rect[0] += io.MouseDelta.x / ss.w;
+        pose.rect[1] += io.MouseDelta.y / ss.h;
+        edited = true;
+    }
+    ImGui::PopID();
+    const ImU32 cyan = IM_COL32(120, 220, 255, 230);
+    dl->AddRect(ImVec2(px, py), ImVec2(px + pw, py + ph), cyan, 3.0f, 0, 2.0f);
+    dl->AddRectFilled(ImVec2(px + pw - hsz, py + ph - hsz), ImVec2(px + pw, py + ph), cyan, 2.0f);
+
+    // Commit a brand-new pose to the set the first time the user edits it.
+    if (edited) { pose.set = true; if (!saved) g_concourse.ship_poses.push_back(pose); }
+    if ((io.KeySuper || io.KeyCtrl) && ImGui::IsKeyPressed(ImGuiKey_S)) save_links();
+
+    // Help / status bar.
+    dl->AddRectFilled(ImVec2(0, 0), ImVec2(ss.w, 30), IM_COL32(0, 0, 0, 190));
+    char help[220];
+    std::snprintf(help, sizeof(help),
+        "SHIP PICKER  ship=%s (%d/%d)  az=%.0f  el=%.0f  saved=%zu   ,/.:ship  arrows:az/el "
+        "(Shift=fine)  drag:move  corner:resize  Cmd/Ctrl+S:save  P:exit",
+        cls.c_str(), g_pose_class_idx + 1, (int)classes.size(), pose.az, pose.el,
+        g_concourse.ship_poses.size());
+    dl->AddText(ImVec2(12, 8), IM_COL32(120, 220, 255, 255), help);
+}
+
 } // namespace
 
 // ---- public API -------------------------------------------------------------
@@ -323,6 +953,17 @@ void register_screen(BaseScreen screen, ScreenHook hook) {
     std::printf("[base] registered screen hook: %s\n", screen_name(screen));
 }
 
+bool current_room_zone(BaseScreen target, float out_xywh[4]) {
+    if (!g_concourse.valid || g_stack.empty()) return false;
+    const Room& rm = g_concourse.rooms[(int)g_stack.back()];
+    for (const Link& lk : rm.links) {
+        if (lk.target != target) continue;
+        for (int i = 0; i < 4; ++i) out_xywh[i] = lk.rect[i];
+        return true;
+    }
+    return false;
+}
+
 void enter(const std::string& base_id) {
     // Reset any prior base's GPU texture before loading the new one.
     if (g_art.valid) { /* slot reuse handled by load below via destroy */ }
@@ -330,6 +971,7 @@ void enter(const std::string& base_id) {
     g_def.id = base_id;
     g_stack.assign(1, BaseScreen::Concourse);
     g_launch_pending = false;
+    g_menu_open = false;
 
     // System nav data keys bases with a TYPE suffix (drake_pirate,
     // anapolis_refinery, new_detroit_industrial, ...) but the base FOLDERS
@@ -364,6 +1006,12 @@ void enter(const std::string& base_id) {
     g_def.display_name = root.contains("display_name")
         ? root["display_name"].string_or(base_id) : base_id;
     g_def.faction = root.contains("faction") ? root["faction"].string_or("") : "";
+
+    // Market archetype selects the animated concourse art set (if any).
+    g_def.archetype.clear();
+    if (const json::Value* mk = root.find("market"); mk && mk->is_object()) {
+        if (mk->contains("archetype")) g_def.archetype = (*mk)["archetype"].string_or("");
+    }
 
     // Concourse art path is stored relative to assets/; resolve it.
     std::string art_rel = root.contains("concourse_art")
@@ -410,6 +1058,13 @@ void enter(const std::string& base_id) {
         std::fprintf(stderr, "[base] enter('%s'): concourse art '%s' missing\n",
                      base_id.c_str(), g_def.art_path.c_str());
     }
+    // Prefer an animated WCU concourse set for this archetype if one exists;
+    // otherwise the static PNG above remains the background.
+    load_concourse_set(g_def.archetype);
+    // If the set has a hangar room, you arrive there first and click the
+    // door to enter the concourse (matches the original base flow).
+    if (g_concourse.valid && g_concourse.rooms[(int)BaseScreen::LandingPad].valid)
+        g_stack.assign(1, BaseScreen::LandingPad);
 
     std::printf("[base] enter '%s' (%s) — %zu hotspots, art=%s\n",
                 base_id.c_str(), g_def.display_name.c_str(),
@@ -450,10 +1105,13 @@ void build(PlayerState& player, Ship* player_ship, Docking& d, Camera& cam, Game
     ImDrawList* dl = ImGui::GetWindowDrawList();
     const BaseScreen cur = g_stack.empty() ? BaseScreen::Concourse : g_stack.back();
 
-    // Background. The concourse shows the full-screen base art; sub-screens
-    // get a plain dark gradient so the shop hooks (np-9cu.2/.3/zte.1) draw
-    // onto a clean canvas instead of fighting the concourse doorways.
-    if (cur == BaseScreen::Concourse && g_art.valid) {
+    // Background. Every room with art (concourse, landing, AND the service
+    // rooms) blits its art; the service shop hooks then draw their UI on top.
+    // Rooms without art fall back to the static PNG / dark gradient.
+    const bool has_room = g_concourse.valid && g_concourse.rooms[(int)cur].valid;
+    if (has_room) {
+        draw_room(dl, ss, g_concourse.rooms[(int)cur]);
+    } else if (cur == BaseScreen::Concourse && g_art.valid) {
         dl->AddImage(simgui_imtextureid(g_art.view), ImVec2(0, 0), ImVec2(ss.w, ss.h));
     } else {
         dl->AddRectFilledMultiColor(ImVec2(0, 0), ImVec2(ss.w, ss.h),
@@ -467,8 +1125,53 @@ void build(PlayerState& player, Ship* player_ship, Docking& d, Camera& cam, Game
         }
     }
 
-    if (cur == BaseScreen::Concourse) draw_concourse(dl, ss, player);
-    else                              draw_subscreen(dl, ss, cur, player);
+    // F3 toggles the transition editor on any art room; F4 toggles the
+    // landing-pad ship picker (landing room only). They're mutually exclusive.
+    const bool landing = (cur == BaseScreen::LandingPad) && g_concourse.valid;
+    if (ImGui::IsKeyPressed(ImGuiKey_F3) && has_room) { g_edit.on = !g_edit.on; g_pose_edit = false; }
+    // 'P' (not F4 — macOS eats F4 for Launchpad) toggles the ship picker.
+    if (ImGui::IsKeyPressed(ImGuiKey_P) && landing && !g_edit.on) {
+        g_pose_edit = !g_pose_edit;
+        if (g_pose_edit) {   // open the picker on the player's current hull
+            const std::string pcls = (g_player_ship && g_player_ship->klass)
+                                   ? g_player_ship->klass->name : std::string();
+            const std::vector<ShipClass>& cl = ship_class::all();
+            for (int i = 0; i < (int)cl.size(); ++i)
+                if (cl[i].name == pcls) { g_pose_class_idx = i; break; }
+        }
+    }
+
+    if (g_pose_edit && landing) {
+        draw_ship_pose_editor(dl, ss);
+    } else if (g_edit.on && has_room) {
+        draw_link_editor(dl, ss, g_concourse.rooms[(int)cur]);
+    } else if (cur == BaseScreen::LandingPad) {
+        draw_landing(dl, ss);
+    } else if (cur == BaseScreen::Concourse) {
+        draw_concourse(dl, ss, player);
+    } else {
+        // Service screen. If the room has an OpenMenu zone (e.g. the ship
+        // dealer's character), show art + NPC first and reveal the shop UI
+        // only after the player clicks the zone — then over an opaque panel.
+        float zr[4];
+        const bool gated = current_room_zone(BaseScreen::OpenMenu, zr);
+        if (gated && g_menu_screen != cur) g_menu_open = false;
+        if (gated && !g_menu_open) {
+            const float px = zr[0]*ss.w, py = zr[1]*ss.h, pw = zr[2]*ss.w, ph = zr[3]*ss.h;
+            ImGui::SetCursorScreenPos(ImVec2(px, py));
+            ImGui::InvisibleButton("##openmenu", ImVec2(pw, ph));
+            if (ImGui::IsItemClicked()) { g_menu_open = true; g_menu_screen = cur; sfx::ui_click(); }
+            if (ImGui::IsItemHovered())
+                draw_centered(dl, link_label(BaseScreen::OpenMenu), px, py, pw, ph, kWhite);
+            draw_links(dl, ss, g_concourse.rooms[(int)cur], /*filter=*/false);  // back door
+        } else {
+            if (gated) {  // opaque backdrop so the shop table reads cleanly
+                g_menu_screen = cur;
+                dl->AddRectFilled(ImVec2(0, 0), ImVec2(ss.w, ss.h), IM_COL32(10, 12, 18, 255));
+            }
+            draw_subscreen(dl, ss, cur, player);
+        }
+    }
 
     ImGui::End();
 
@@ -489,11 +1192,30 @@ void exit() {
         sg_destroy_image(g_art.image);
         g_art = TextureSlot{};
     }
+    // Release the animated concourse set's GPU textures (both rooms).
+    auto free_room = [](Room& rm) {
+        if (rm.background.valid) {
+            sg_destroy_view(rm.background.view);
+            sg_destroy_image(rm.background.image);
+        }
+        for (AnimOverlay& ov : rm.overlays) {
+            if (!ov.tex.valid) continue;
+            sg_destroy_view(ov.tex.view);
+            sg_destroy_image(ov.tex.image);
+        }
+    };
+    for (Room& rm : g_concourse.rooms) free_room(rm);
+    g_concourse = ConcourseSet{};
     g_stack.clear();
     std::printf("[base] exit '%s'\n", g_def.id.c_str());
 }
 
 bool handle_escape() {
+    if (g_menu_open) {   // close an open shop menu back to the showroom first
+        g_menu_open = false;
+        sfx::ui_click();
+        return true;
+    }
     if (g_stack.size() > 1) {
         g_stack.pop_back();
         sfx::ui_click();

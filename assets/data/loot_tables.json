@@ -3,6 +3,7 @@
     "pirate": {
       "drops": [
         { "item": "scrap_metal", "kind": "salvage", "weight": 60 },
+        { "kind": "commodity", "commodity_id": "grain", "qty_min": 2, "qty_max": 6, "rarity": "basic", "weight": 18 },
         { "item": "liquor", "kind": "cargo", "weight": 20 },
         { "item": "brilliance", "kind": "contraband", "weight": 8 },
         { "item": "laser_cannon", "kind": "weapon", "weight": 5, "rarity_chance": { "basic": 0.8, "rare": 0.18, "legendary": 0.02 } },
@@ -12,6 +13,7 @@
     "militia": {
       "drops": [
         { "item": "scrap_metal", "kind": "salvage", "weight": 50 },
+        { "kind": "commodity", "commodity_id": "communications", "qty_min": 1, "qty_max": 3, "rarity": "basic", "weight": 18 },
         { "item": "medical_eqpmnt", "kind": "cargo", "weight": 25 },
         { "item": "computers", "kind": "cargo", "weight": 15 },
         { "item": "laser_cannon", "kind": "weapon", "weight": 10, "rarity_chance": { "basic": 0.9, "rare": 0.09, "legendary": 0.01 } }
@@ -27,6 +29,7 @@
     "hunter": {
       "drops": [
         { "item": "scrap_metal", "kind": "salvage", "weight": 50 },
+        { "kind": "commodity", "commodity_id": "iron", "qty_min": 1, "qty_max": 4, "rarity": "basic", "weight": 15 },
         { "item": "laser_cannon", "kind": "weapon", "weight": 12, "rarity_chance": { "basic": 0.7, "rare": 0.27, "legendary": 0.03 } },
         { "item": "shield_matrix", "kind": "upgrade", "weight": 2 }
       ]

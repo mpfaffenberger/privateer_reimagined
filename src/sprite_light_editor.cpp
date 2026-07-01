@@ -12,11 +12,13 @@
 // -----------------------------------------------------------------------------
 
 #include "sprite_light_editor.h"
+#include "sprite_light_rec.h"
 #include "json.h"
 
 #include "imgui.h"
 #include "sokol_imgui.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <filesystem>
@@ -115,6 +117,41 @@ static HMM_Vec3  g_sticky_color = HMM_V3(1.00f, 0.10f, 0.10f);   // hot red
 static float     g_sticky_hz    = 0.0f;
 static float     g_sticky_phase = 0.0f;
 static LightKind g_sticky_kind  = LightKind::Steady;
+
+// ---- Recommender state (issue #111) --------------------------------------
+//
+// "Find more lights like the selected one." The author places one light on a
+// repeated hull feature, hits `R` (or the "recommend" button), and the tool
+// renders ghost circles over the top-K visually-similar spots on the SAME
+// sprite. From there:
+//   A      -> accept ALL ghosts as real lights
+//   P      -> enter pick mode; then 1..9 spawns that single ranked ghost
+//   Esc    -> clear the ghost set
+// Accepted ghosts inherit the QUERY light's colour/size/hz/phase/kind, so a
+// recommended starboard wingtip matches the port one the author placed.
+//
+// Ghosts auto-clear when the target sprite changes or the source light is
+// edited/deleted (stale suggestions around a moved light are worse than
+// none). `patch_px` is the descriptor window the author tunes for the ship's
+// feature scale; `k` is how many suggestions to surface.
+static std::vector<sprite_light_rec::Candidate> g_ghosts;
+static int  g_rec_color_tol = 30;    // segmentation merge threshold (RGB dist)
+static int  g_rec_patch_px  = 12;    // feature scale (blur + min size)
+static int  g_rec_k         = 8;     // how many suggestions to surface
+static int  g_rec_dedupe_px = 5;     // drop suggestions within this many
+                                     // SOURCE px of an existing light
+static bool g_rec_pick_mode = false; // P: pick individual ghosts by number
+static std::string g_ghosts_owner;   // sprite name the ghosts belong to
+static int  g_ghosts_src_light = -1; // light index the ghosts were seeded from
+static LightSpot g_ghosts_src_snapshot; // source light at seed time (staleness)
+static float g_ghosts_canvas_size = -1.0f; // image px size at seed (resize -> clear)
+
+static void clear_ghosts() {
+    g_ghosts.clear();
+    g_rec_pick_mode = false;
+    g_ghosts_owner.clear();
+    g_ghosts_src_light = -1;
+}
 
 // ---------------------------------------------------------------------------
 // Event handling
@@ -407,6 +444,170 @@ void build(std::vector<SpriteObject>& sprites,
     // operates ON TOP of the fit-size and triggers scrollbars when >1x.
     std::vector<LightSpot>& cur_lights = *sel_lights;
 
+    // ---- Recommender (issue #111): "find more lights like this one" ------
+    // Stale-ghost hygiene: drop suggestions when the target sprite changed,
+    // or when the source light was edited/moved/deleted (a suggestion set
+    // anchored to a light that no longer looks like its seed is misleading).
+    if (!g_ghosts.empty() && g_ghosts_owner != *sel_name) clear_ghosts();
+    if (!g_ghosts.empty()) {
+        const int s = g_ghosts_src_light;
+        if (s < 0 || s >= (int)cur_lights.size()) {
+            clear_ghosts();
+        } else {
+            const LightSpot& c = cur_lights[s];
+            const LightSpot& p = g_ghosts_src_snapshot;
+            const bool same = c.u == p.u && c.v == p.v && c.size == p.size &&
+                              c.hz == p.hz && c.phase == p.phase &&
+                              c.kind == p.kind && c.color.X == p.color.X &&
+                              c.color.Y == p.color.Y && c.color.Z == p.color.Z;
+            if (!same) clear_ghosts();
+        }
+    }
+
+    const std::string hull_png = *sel_name + ".png";
+    auto seed_recommend = [&]() {
+        clear_ghosts();
+        if (g_sel_light < 0 || g_sel_light >= (int)cur_lights.size()) return;
+        const LightSpot& q = cur_lights[g_sel_light];
+        g_ghosts = sprite_light_rec::find_candidates(
+            hull_png, q.u, q.v, g_rec_k, g_rec_color_tol, g_rec_patch_px);
+        // Dedupe (radius = g_rec_dedupe_px SOURCE pixels; 0 disables). UV
+        // distances are scaled back to pixels by the sprite's native dims so
+        // the threshold is resolution-independent. Two steps:
+        if (g_rec_dedupe_px > 0 && !g_ghosts.empty()) {
+            const float ex = (float)g_rec_dedupe_px;
+            const float ex2 = ex * ex;
+            const float W = (sel_art && sel_art->hull_w > 0) ? (float)sel_art->hull_w : 512.0f;
+            const float H = (sel_art && sel_art->hull_h > 0) ? (float)sel_art->hull_h : 512.0f;
+
+            // 1. Drop suggestions sitting on top of a light that already
+            //    exists (incl. the query + previously-accepted ghosts), so
+            //    re-running recommend never re-marks an already-lit feature.
+            g_ghosts.erase(std::remove_if(g_ghosts.begin(), g_ghosts.end(),
+                [&](const sprite_light_rec::Candidate& c) {
+                    for (const LightSpot& ls : cur_lights) {
+                        const float dx = (c.u - ls.u) * W, dy = (c.v - ls.v) * H;
+                        if (dx * dx + dy * dy < ex2) return true;
+                    }
+                    return false;
+                }), g_ghosts.end());
+
+            // 2. Collapse clusters of nearby suggestions into ONE marker at
+            //    the cluster CENTROID (best-first greedy: each unused ghost
+            //    seeds a cluster and absorbs any remaining ghost within ex px
+            //    of the running centroid; the merged score is the best in the
+            //    cluster).
+            std::vector<sprite_light_rec::Candidate> merged;
+            std::vector<bool> used(g_ghosts.size(), false);
+            for (size_t i = 0; i < g_ghosts.size(); ++i) {
+                if (used[i]) continue;
+                used[i] = true;
+                double su = g_ghosts[i].u, sv = g_ghosts[i].v;
+                float  best = g_ghosts[i].score;
+                int    n = 1;
+                for (size_t j = i + 1; j < g_ghosts.size(); ++j) {
+                    if (used[j]) continue;
+                    const float dx = (g_ghosts[j].u - (float)(su / n)) * W;
+                    const float dy = (g_ghosts[j].v - (float)(sv / n)) * H;
+                    if (dx * dx + dy * dy < ex2) {
+                        su += g_ghosts[j].u; sv += g_ghosts[j].v;
+                        best = std::max(best, g_ghosts[j].score);
+                        ++n; used[j] = true;
+                    }
+                }
+                merged.push_back({ (float)(su / n), (float)(sv / n), best });
+            }
+            g_ghosts.swap(merged);
+        }
+        g_ghosts_owner        = *sel_name;
+        g_ghosts_src_light    = g_sel_light;
+        g_ghosts_src_snapshot = q;
+        g_ghosts_canvas_size  = -1.0f;   // re-armed by the image pane below
+    };
+    auto accept_ghost = [&](int gi) {
+        if (gi < 0 || gi >= (int)g_ghosts.size()) return;
+        if (g_ghosts_src_light < 0 ||
+            g_ghosts_src_light >= (int)cur_lights.size()) return;
+        LightSpot ls = cur_lights[g_ghosts_src_light];   // inherit query props
+        ls.u = g_ghosts[gi].u;
+        ls.v = g_ghosts[gi].v;
+        cur_lights.push_back(ls);
+        g_ghosts.erase(g_ghosts.begin() + gi);           // consumed
+        if (g_ghosts.empty()) clear_ghosts();
+    };
+    auto accept_all = [&]() {
+        if (g_ghosts_src_light >= 0 &&
+            g_ghosts_src_light < (int)cur_lights.size()) {
+            const LightSpot proto = cur_lights[g_ghosts_src_light];
+            for (const sprite_light_rec::Candidate& g : g_ghosts) {
+                LightSpot ls = proto;
+                ls.u = g.u; ls.v = g.v;
+                cur_lights.push_back(ls);
+            }
+        }
+        clear_ghosts();
+    };
+
+    // Toolbar row: recommend button + author-tunable descriptor controls.
+    if (ImGui::Button("recommend (R)")) seed_recommend();
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Find up to K regions matching the SELECTED light's\n"
+                          "colour + size; marks each at its centre.\n"
+                          "A = accept all, P then 1-9 = pick one, Esc = clear.");
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(120.0f);
+    ImGui::SliderInt("color tol", &g_rec_color_tol, 2, 120);
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Segmentation merge threshold (RGB distance).\n"
+                          "Lower = split a pod off its hull; higher = merge\n"
+                          "similar shades into bigger regions.");
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(120.0f);
+    ImGui::SliderInt("patch px", &g_rec_patch_px, 1, 96);
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Feature scale \xe2\x80\x94 blurs away specks smaller than this\n"
+                          "and drops sub-patch regions (small=intakes, large=pods).");
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(110.0f);
+    ImGui::SliderInt("dedupe px", &g_rec_dedupe_px, 0, 64);
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Merge suggestions within this many source px into\n"
+                          "one marker at the cluster centroid, and drop any\n"
+                          "within this range of an existing light. 0 = off.");
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(80.0f);
+    ImGui::SliderInt("K", &g_rec_k, 1, 24);
+    if (!g_ghosts.empty()) {
+        ImGui::SameLine();
+        ImGui::TextColored(ImVec4(0.30f, 0.85f, 1.0f, 1.0f),
+                           "%d suggestion%s%s", (int)g_ghosts.size(),
+                           g_ghosts.size() == 1 ? "" : "s",
+                           g_rec_pick_mode ? "  [PICK 1-9]" : "");
+        ImGui::SameLine();
+        if (ImGui::SmallButton("accept all (A)")) accept_all();
+        ImGui::SameLine();
+        if (ImGui::SmallButton("clear (Esc)"))    clear_ghosts();
+    }
+
+    // Hotkeys \xe2\x80\x94 only when this editor window owns the keyboard, so the
+    // game never sees R/A/P (no accidental ship roll) and we don't fight a
+    // focused text field.
+    if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) &&
+        !ImGui::GetIO().WantTextInput) {
+        if (ImGui::IsKeyPressed(ImGuiKey_R))      seed_recommend();
+        if (ImGui::IsKeyPressed(ImGuiKey_Escape)) clear_ghosts();
+        if (!g_ghosts.empty()) {
+            if (ImGui::IsKeyPressed(ImGuiKey_A)) accept_all();
+            if (ImGui::IsKeyPressed(ImGuiKey_P)) g_rec_pick_mode = !g_rec_pick_mode;
+            if (g_rec_pick_mode)
+                for (int n = 1; n <= 9; ++n)
+                    if (ImGui::IsKeyPressed((ImGuiKey)(ImGuiKey_1 + n - 1)))
+                        accept_ghost(n - 1);   // "1" -> top-ranked ghost
+        }
+    }
+
+    ImGui::Separator();
+
     constexpr float kRightPanelMin = 340.0f;
     constexpr float kImageColPadding = 16.0f;
     const ImVec2  region        = ImGui::GetContentRegionAvail();
@@ -415,6 +616,13 @@ void build(std::vector<SpriteObject>& sprites,
     const float   fit_size      = std::max(64.0f,
                                   std::min(image_col_w, region.y - 8.0f));
     const float   img_size      = fit_size * g_zoom;
+
+    // Canvas resize (zoom or window) moves every ghost's screen position;
+    // rather than chase it, clear the suggestion set (acceptance #111).
+    if (!g_ghosts.empty()) {
+        if (g_ghosts_canvas_size < 0.0f)        g_ghosts_canvas_size = img_size;
+        else if (std::fabs(img_size - g_ghosts_canvas_size) > 0.5f) clear_ghosts();
+    }
 
     ImGui::BeginChild("image_col",
                       ImVec2(image_col_w, 0),
@@ -472,11 +680,36 @@ void build(std::vector<SpriteObject>& sprites,
             }
         }
 
+        // ---- Recommender ghosts (issue #111) ------------------------
+        // Hollow cyan circles + rank number over each suggested spot.
+        // Clicking one accepts just that ghost (same as P then its number).
+        int   ghost_hit    = -1;
+        float ghost_hit_d2 = hit_radius * hit_radius;
+        for (int i = 0; i < (int)g_ghosts.size(); ++i) {
+            const ImVec2 c{ img_pos.x + g_ghosts[i].u * img_size,
+                            img_pos.y + g_ghosts[i].v * img_size };
+            const ImU32 ring = IM_COL32(70, 210, 255, 210);
+            dl->AddCircle(c, 8.0f, ring, 0, 2.0f);
+            dl->AddCircleFilled(c, 1.5f, ring);
+            char num[8];
+            std::snprintf(num, sizeof(num), "%d", i + 1);
+            dl->AddText(ImVec2(c.x + 9.0f, c.y - 7.0f), ring, num);
+            if (image_hovered) {
+                const float dx = ImGui::GetMousePos().x - c.x;
+                const float dy = ImGui::GetMousePos().y - c.y;
+                const float d2 = dx * dx + dy * dy;
+                if (d2 < ghost_hit_d2) { ghost_hit_d2 = d2; ghost_hit = i; }
+            }
+        }
+
         // Click dispatch:
-        //   - hit on gizmo → select it
+        //   - hit on ghost  → accept that suggestion
+        //   - hit on gizmo  → select it
         //   - hit on empty area → spawn new light at that UV, select it
         if (image_clicked) {
-            if (hit_light >= 0) {
+            if (ghost_hit >= 0) {
+                accept_ghost(ghost_hit);
+            } else if (hit_light >= 0) {
                 g_sel_light = hit_light;
             } else if (mouse_uv.x >= 0 && mouse_uv.x <= 1 &&
                        mouse_uv.y >= 0 && mouse_uv.y <= 1) {

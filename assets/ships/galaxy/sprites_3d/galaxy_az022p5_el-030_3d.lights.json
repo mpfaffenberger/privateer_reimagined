@@ -1,3 +1,10 @@
 [
-  {"u": 0.386701, "v": 0.579324, "color": [26, 217, 64], "size": 5, "hz": 3.0, "phase": 0, "kind": "strobe"}
+  { "u": 0.386701, "v": 0.579324, "color": [26, 217, 64], "size": 5, "hz": 3, "phase": 0, "kind": "strobe" },
+  { "u": 0.764706, "v": 0.428356, "color": [255, 26, 26], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.729192, "v": 0.431265, "color": [255, 26, 26], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.663477, "v": 0.385156, "color": [255, 26, 26], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.150391, "v": 0.554688, "color": [255, 26, 26], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.119155, "v": 0.562594, "color": [255, 26, 26], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.27451, "v": 0.453997, "color": [255, 26, 26], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.68175, "v": 0.355958, "color": [255, 26, 26], "size": 5, "hz": 0, "phase": 0, "kind": "steady" }
 ]

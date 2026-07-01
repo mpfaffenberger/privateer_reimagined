@@ -115,16 +115,22 @@ bool gun::load_table(const std::string& json_path) {
         //   magnitude. The JSON refire values were also corrected to
         //   Damage/DamageRate so the canonical DPS column is now exact.
         //
-        // ENGINE-SCALE FEEL TWEAKS — still demo (NOT firing-rate related).
-        //   range × 2.0    — bullets relevant at long engagement
-        //                     distances after afterburner extensions.
+        // ENGINE-SCALE FEEL TWEAKS.
+        //   range × 1.0    — CANONICAL Privateer despawn distance
+        //                     (e.g. Laser 4760m).
         //   speed × 2.0    — projectiles snap to target instead of
-        //                     drifting; proper space-shooter feel.
-        //   Set these two to 1.0 for full canon range/velocity.
-        constexpr float k_range_multiplier  = 2.0f;  // demo feel tweak
-        constexpr float k_speed_multiplier  = 2.0f;  // demo feel tweak
+        //                     drifting; 1x canonical velocity felt broken
+        //                     (bolts crawl across space), so we keep the 2x
+        //                     feel tweak. Range stays canonical — the two
+        //                     knobs are independent.
+        constexpr float k_range_multiplier  = 1.0f;  // canonical range
+        constexpr float k_speed_multiplier  = 2.0f;  // feel tweak (kept)
         constexpr float k_refire_multiplier = 1.0f;  // canonical cadence
         constexpr float k_energy_multiplier = 1.0f;  // canonical per-shot
+        // Canonical per-shot damage. (The 1/3-damage TTK experiment was
+        // reverted — it slowed BOTH sides symmetrically and felt too mushy.
+        // Enemy survivability is instead raised via the enemy shield/armor
+        // multipliers in world_scale.h, applied NPC-only in ship::spawn.)
         constexpr float k_damage_multiplier = 1.0f;  // canonical per-shot
         g.range_m        *= k_range_multiplier;
         g.speed_mps      *= k_speed_multiplier;

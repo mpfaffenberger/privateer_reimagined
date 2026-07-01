@@ -1,3 +1,15 @@
 [
-  {"u": 0.495699, "v": 0.69811, "color": [26, 217, 64], "size": 5, "hz": 3.0, "phase": 0, "kind": "strobe"}
+  { "u": 0.495699, "v": 0.69811, "color": [26, 217, 64], "size": 5, "hz": 3, "phase": 0, "kind": "strobe" },
+  { "u": 0.108597, "v": 0.441931, "color": [255, 26, 26], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.110106, "v": 0.54902, "color": [255, 26, 26], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.851997, "v": 0.546658, "color": [255, 26, 26], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.239056, "v": 0.354357, "color": [255, 26, 26], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.675716, "v": 0.288084, "color": [255, 26, 26], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.319615, "v": 0.284738, "color": [255, 26, 26], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.889214, "v": 0.443359, "color": [255, 26, 26], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.727088, "v": 0.374474, "color": [255, 26, 26], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.271493, "v": 0.372549, "color": [255, 26, 26], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.889894, "v": 0.546003, "color": [255, 26, 26], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.755656, "v": 0.349925, "color": [255, 26, 26], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.149321, "v": 0.536953, "color": [255, 26, 26], "size": 5, "hz": 0, "phase": 0, "kind": "steady" }
 ]

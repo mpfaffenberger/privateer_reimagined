@@ -81,7 +81,9 @@ def render_base(base_id: str) -> bool:
     cfg = json.loads(strip_comments(cfg_path.read_text()))
 
     name = cfg.get("display_name", base_id)
-    faction = cfg.get("faction", "independent")
+    # `or` (not just default) so an empty-string faction also falls back —
+    # otherwise the subtitle bakes a bare "[]" (e.g. Oxford).
+    faction = cfg.get("faction") or "independent"
     hotspots = cfg.get("hotspots", [])
 
     img = gradient((26, 34, 52), (6, 8, 14))

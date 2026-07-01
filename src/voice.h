@@ -107,4 +107,13 @@ std::string voice_for(Faction f, uint32_t entity_id);
 void say_ship(Faction f, uint32_t entity_id, Category cat,
               HMM_Vec3 world_pos, bool to_player);
 
+// Stop any voice line(s) currently playing FOR `entity_id` and forget them
+// (issue #105). Call this the instant a ship is destroyed (and on player
+// death) so a dead ship can't keep yelling over the radio to its natural
+// clip end. Tolerates an unknown entity_id (no-op) and stale voice handles
+// (audio::stop ignores finished/stolen ids). Only voices spawned via
+// say_ship() are tracked per-entity; faction-/voice-level say() calls with
+// no entity context are untracked (UI, scenarios) and unaffected.
+void stop_for(uint32_t entity_id);
+
 } // namespace voice

@@ -223,8 +223,17 @@ music::Track base_track_for(const char* base_id) {
             if (const json::Value* m = root.find("market");
                 m && m->is_object() && m->contains("archetype")) {
                 const std::string arch = (*m)["archetype"].string_or("");
-                if (arch == "mining") g_cached_base_track = music::Track::BaseMining;
-                else                  g_cached_base_track = music::Track::BaseAgricultural;
+                // Issue #110: only "agricultural" should get the farm bed.
+                // Refinery / pirate / military are industrial-feel, so they
+                // share the mining bed for now (Option A — a dedicated bed
+                // per archetype is a follow-up once BASETUNE sub-songs are
+                // rendered). Unknown/missing archetype falls through to the
+                // calm agricultural default, matching prior behaviour.
+                if (arch == "mining"   || arch == "refinery" ||
+                    arch == "pirate"   || arch == "military")
+                    g_cached_base_track = music::Track::BaseMining;
+                else
+                    g_cached_base_track = music::Track::BaseAgricultural;
             }
         }
     }

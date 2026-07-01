@@ -1,0 +1,32 @@
+# Authored salvage commodities (issue #87) — NOT from the CARGO.IFF
+# extraction. Kept in a separate file so assets/data/privateer_db/cargo.toml
+# stays a pristine 1:1 copy of the original game data (re-running the
+# extractor must never clobber these). Loaded via commodity::load_extra()
+# right after the canonical catalog.
+#
+# Same subset-of-TOML shape commodity.cpp's parser understands:
+#   [[commodities]] + label = "..." + category = "..."
+# Ids are derived from the label (lowercase, spaces/slashes/dashes -> '_'),
+# so "Scrap Metal" -> "scrap_metal". Prices come from the SALVAGE category
+# base price in commodity_prices.json x each base's archetype default mult;
+# stock defaults to 0 (never stocked to BUY, but always sellable if carried)
+# which is exactly what "sell your salvage at any exchange" wants.
+
+[_meta]
+source = "authored (issue #87 salvage-as-commodity)"
+
+[[commodities]]
+label = "Scrap Metal"
+category = "SALVAGE"
+
+[[commodities]]
+label = "Salvaged Electronics"
+category = "SALVAGE"
+
+[[commodities]]
+label = "Damaged Components"
+category = "SALVAGE"
+
+[[commodities]]
+label = "Hull Plating"
+category = "SALVAGE"

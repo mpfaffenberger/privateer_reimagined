@@ -160,20 +160,42 @@ void firing::tick(ShipRegistry& ships,
             if (i < s.gun_armed.size() && !s.gun_armed[i]) continue;
             if (s.gun_cooldowns[i] > 0.0f)                 continue;
 
-            // Muzzle position: ship pos + rotated mount offset.
-            const HMM_Vec3 muzzle =
+            // Muzzle position: ship pos + rotated mount offset. (Mutable so
+            // the turret branch can z-correct it for the player basis below.)
+            HMM_Vec3 muzzle =
                 HMM_AddV3(s.position, body_to_world(s.orientation, m.offset_body));
 
             // Per-mount aim direction. Two firing models below.
             HMM_Vec3 aim_dir;
 
             if (m.is_turret) {
-                // ---- NPC auto-turret (lead-predicting, fires FREE) ----
-                // Player turrets are OUT OF SCOPE.
-                if (s.is_player) continue;
+                // ---- Auto-turret (lead-predicting, fires FREE) --------
+                // Issue #109: works for BOTH player and NPC ships now. The
+                // target acquisition, lead prediction and cone gate below
+                // are controller-agnostic, so the player's turret-equipped
+                // hulls (centurion, paradigm, orion, ...) get their rear
+                // turrets back. The old `if (s.is_player) continue;` guard
+                // was an unfinished-Phase-0 stub, not a design decision.
+                // (gun_armed[] still gates which mounts fire, so the player
+                // keeps agency via the G-key arm modes.)
 
                 // Cone geometry for this mount, world frame.
-                HMM_Vec3 base_dir = body_to_world(s.orientation, m.forward_body);
+                // The player flies in the CAMERA basis (-z forward), which is
+                // mirrored on z vs the gun-data body convention (+z forward)
+                // that ship.json mounts + NPCs use. Without flipping z, the
+                // rear turret's forward_body ([0,0,-1]) resolved to the
+                // player's FORWARD and the turret fired ahead. Flip z for the
+                // player on both the cone direction AND the muzzle so the
+                // rear turret faces — and fires from — the actual rear.
+                HMM_Vec3 fwd_body = m.forward_body;
+                if (s.is_player) {
+                    fwd_body.Z = -fwd_body.Z;
+                    HMM_Vec3 off_body = m.offset_body;
+                    off_body.Z = -off_body.Z;
+                    muzzle = HMM_AddV3(s.position,
+                                       body_to_world(s.orientation, off_body));
+                }
+                HMM_Vec3 base_dir = body_to_world(s.orientation, fwd_body);
                 const float bl2 = HMM_DotV3(base_dir, base_dir);
                 if (bl2 < 1e-9f) continue;
                 base_dir = HMM_DivV3F(base_dir, std::sqrt(bl2));

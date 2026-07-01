@@ -250,8 +250,15 @@ void try_sell(BaseContext& ctx, const Commodity& c, const Quote& q,
     }
 }
 
-// The registered screen body. Framework already drew background + title and
-// will draw Back; we own the middle.
+// Transaction mode + selected index, persisted across frames. BUY mode
+// browses the base's stock; SELL mode browses the player's cargo hold.
+enum class TxMode { Buy, Sell };
+TxMode g_tx  = TxMode::Buy;
+int    g_sel = 0;
+
+// The registered screen body. The framework drew the room art + title and
+// will draw Back; we render a single-commodity DISPLAY panel + react to the
+// editor-placed action zones (display/buy/sell/next/prev). No table.
 void draw_exchange(BaseContext& ctx) {
     PlayerState& p = *ctx.player;
     const ShipClass* klass = ship_class::find(p.ship_class_name);
@@ -261,102 +268,110 @@ void draw_exchange(BaseContext& ctx) {
     const float dpi = sapp_dpi_scale();
     const float sw  = (float)sapp_width()  / dpi;
     const float sh  = (float)sapp_height() / dpi;
+    ImDrawList* dl  = ImGui::GetWindowDrawList();
 
-    // Running totals strip.
-    ImGui::SetCursorScreenPos(ImVec2(28, 62));
-    ImGui::PushStyleColor(ImGuiCol_Text, kAmber);
-    ImGui::Text("CREDITS  %lld", (long long)p.credits);
-    ImGui::SameLine(260);
-    const bool full = used >= capacity;
-    ImGui::PushStyleColor(ImGuiCol_Text, full ? kRed : kAmber);
-    ImGui::Text("CARGO  %d / %d units", used, capacity);
-    ImGui::PopStyleColor(2);
-
-    // Trade table inside a scroll child, leaving room for the Back button.
-    ImGui::SetCursorScreenPos(ImVec2(28, 92));
-    const ImVec2 child_sz(sw - 56, sh - 92 - 70);
-
-    constexpr ImGuiTableFlags tflags =
-        ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerH |
-        ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit;
-
-    if (ImGui::BeginChild("##exchange_tbl", child_sz, false) &&
-        ImGui::BeginTable("commodities", 7, tflags, child_sz)) {
-        ImGui::TableSetupScrollFreeze(0, 1);
-        ImGui::TableSetupColumn("Commodity", ImGuiTableColumnFlags_WidthStretch);
-        ImGui::TableSetupColumn("Category");
-        ImGui::TableSetupColumn("Buy");
-        ImGui::TableSetupColumn("Sell");
-        ImGui::TableSetupColumn("Avail");
-        ImGui::TableSetupColumn("Held");
-        ImGui::TableSetupColumn("Trade", ImGuiTableColumnFlags_WidthFixed, 320.0f);
-        ImGui::TableHeadersRow();
-
+    // Build the list for the current mode.
+    struct Row { const Commodity* c; std::string id, label, category; Quote q; int held, avg; };
+    std::vector<Row> rows;
+    if (g_tx == TxMode::Buy) {
         for (const Commodity& c : commodity::all()) {
             const Quote q = economy::price(ctx.base_id, c.id);
-            if (!q.valid) continue;
-            int held = 0, avg = 0;
-            held_of(p, c.id, held, avg);
-            // Show only what's tradeable here: stocked-to-buy, or goods you
-            // already carry (so you can always offload).
-            if (q.buy_price <= 0 && held == 0) continue;
-
-            ImGui::TableNextRow();
-            ImGui::PushID(c.id.c_str());
-
-            ImGui::TableNextColumn(); ImGui::TextUnformatted(c.label.c_str());
-            ImGui::TableNextColumn();
-            ImGui::PushStyleColor(ImGuiCol_Text, kGrey);
-            ImGui::TextUnformatted(c.category.c_str());
-            ImGui::PopStyleColor();
-
-            // Buy price (grey if not stocked).
-            ImGui::TableNextColumn();
-            if (q.available_units > 0 && q.buy_price > 0) ImGui::Text("%d", q.buy_price);
-            else { ImGui::PushStyleColor(ImGuiCol_Text, kGrey); ImGui::TextUnformatted("--"); ImGui::PopStyleColor(); }
-
-            // Sell price — green when above your average paid (a profit).
-            ImGui::TableNextColumn();
-            const bool profit = held > 0 && q.sell_price > avg;
-            ImGui::PushStyleColor(ImGuiCol_Text, profit ? kGreen : kGrey);
-            ImGui::Text("%d", q.sell_price);
-            ImGui::PopStyleColor();
-
-            ImGui::TableNextColumn(); ImGui::Text("%d", q.available_units);
-            ImGui::TableNextColumn();
-            if (held > 0) ImGui::Text("%d (@%d)", held, avg);
-            else          { ImGui::PushStyleColor(ImGuiCol_Text, kGrey); ImGui::TextUnformatted("0"); ImGui::PopStyleColor(); }
-
-            // Trade buttons. Disabled states make the limits visible rather
-            // than mysterious (the click path also logs the refusal).
-            ImGui::TableNextColumn();
-            const int  space   = capacity - used;
-            const bool canBuy1 = q.buy_price > 0 && q.available_units >= 1 &&
-                                 space >= 1 && player::can_afford(p, q.buy_price);
-            const bool canBuy10= q.buy_price > 0 && q.available_units >= 10 &&
-                                 space >= 10 && player::can_afford(p, (int64_t)q.buy_price * 10);
-
-            ImGui::BeginDisabled(!canBuy1);
-            if (ImGui::SmallButton("Buy 1"))  try_buy(ctx, c, q, 1, capacity);
-            ImGui::EndDisabled();
-            ImGui::SameLine();
-            ImGui::BeginDisabled(!canBuy10);
-            if (ImGui::SmallButton("Buy 10")) try_buy(ctx, c, q, 10, capacity);
-            ImGui::EndDisabled();
-            ImGui::SameLine();
-            ImGui::BeginDisabled(held < 1);
-            if (ImGui::SmallButton("Sell 1")) try_sell(ctx, c, q, 1, capacity);
-            ImGui::EndDisabled();
-            ImGui::SameLine();
-            ImGui::BeginDisabled(held < 1);
-            if (ImGui::SmallButton("Sell All")) try_sell(ctx, c, q, held, capacity);
-            ImGui::EndDisabled();
-
-            ImGui::PopID();
+            if (!q.valid || q.buy_price <= 0 || q.available_units <= 0) continue;
+            int held = 0, avg = 0; held_of(p, c.id, held, avg);
+            rows.push_back({ &c, c.id, c.label, c.category, q, held, avg });
         }
-        ImGui::EndTable();
+    } else {
+        for (const CargoEntry& e : p.cargo) {
+            if (e.units <= 0) continue;
+            const Commodity* c = commodity::find(e.commodity_id);
+            const Quote q = economy::price(ctx.base_id, e.commodity_id);
+            rows.push_back({ c, e.commodity_id, c ? c->label : e.commodity_id,
+                             c ? c->category : std::string(), q, e.units, e.bought_at_price });
+        }
     }
-    ImGui::EndChild();
+    if (rows.empty()) g_sel = 0;
+    else g_sel = ((g_sel % (int)rows.size()) + (int)rows.size()) % (int)rows.size();
+
+    // Resolve editor zones (normalized), falling back to sane defaults so the
+    // screen is usable before any zones are placed.
+    auto zone = [&](BaseScreen t, float dx, float dy, float dw, float dh, float* o) {
+        if (!base_screens::current_room_zone(t, o)) { o[0]=dx; o[1]=dy; o[2]=dw; o[3]=dh; }
+    };
+    float zd[4], zb[4], zs[4], zn[4], zp[4];
+    zone(BaseScreen::CommodityDisplay, 0.03f, 0.10f, 0.34f, 0.42f, zd);
+    zone(BaseScreen::CommodityBuy,     0.21f, 0.55f, 0.12f, 0.06f, zb);
+    zone(BaseScreen::CommoditySell,    0.06f, 0.55f, 0.12f, 0.06f, zs);
+    zone(BaseScreen::CommodityPrev,    0.385f, 0.13f, 0.05f, 0.08f, zp);
+    zone(BaseScreen::CommodityNext,    0.385f, 0.22f, 0.05f, 0.08f, zn);
+
+    auto button = [&](const char* id, const float* z) -> bool {
+        ImGui::SetCursorScreenPos(ImVec2(z[0]*sw, z[1]*sh));
+        ImGui::InvisibleButton(id, ImVec2(z[2]*sw > 4 ? z[2]*sw : 4,
+                                          z[3]*sh > 4 ? z[3]*sh : 4));
+        const bool clicked = ImGui::IsItemClicked();
+        if (ImGui::IsItemHovered())
+            dl->AddRect(ImVec2(z[0]*sw, z[1]*sh), ImVec2((z[0]+z[2])*sw, (z[1]+z[3])*sh),
+                        IM_COL32(255, 220, 100, 220), 5.0f, 0, 2.5f);
+        return clicked;
+    };
+
+    // Mode toggles + cycling.
+    if (button("##cx_buy",  zb) && g_tx != TxMode::Buy)  { g_tx = TxMode::Buy;  g_sel = 0; }
+    if (button("##cx_sell", zs) && g_tx != TxMode::Sell) { g_tx = TxMode::Sell; g_sel = 0; }
+    if (button("##cx_next", zn) && !rows.empty()) g_sel = (g_sel + 1) % (int)rows.size();
+    if (button("##cx_prev", zp) && !rows.empty()) g_sel = (g_sel - 1 + (int)rows.size()) % (int)rows.size();
+    const bool exec = button("##cx_disp", zd);
+
+    // --- display panel (BORDERLESS, fully-OPAQUE dark fill so the busy art
+    // behind the monitor doesn't bleed through and muddy the readout) ---
+    const float px = zd[0]*sw, py = zd[1]*sh, pw = zd[2]*sw, ph = zd[3]*sh;
+    dl->AddRectFilled(ImVec2(px, py), ImVec2(px + pw, py + ph),
+                      IM_COL32(4, 7, 11, 255));   // alpha 255 = solid
+    const ImU32 cA = IM_COL32(255,210,90,255),  cG = IM_COL32(150,160,175,255),
+                cGn= IM_COL32(120,230,130,255), cW = IM_COL32(235,238,245,255);
+    const ImU32 cShadow = IM_COL32(0, 0, 0, 200);
+    char b[160];
+    const float lh = 22.0f, tx = px + 14.0f;
+    float ty = py + 12.0f;                       // flows DOWN from the box top
+    auto put = [&](ImU32 col, const char* s) {   // shadowed text at running y
+        dl->AddText(ImVec2(tx + 1.0f, ty + 1.0f), cShadow, s);
+        dl->AddText(ImVec2(tx, ty), col, s); ty += lh;
+    };
+    std::snprintf(b, sizeof(b), "%s MODE", g_tx == TxMode::Buy ? "BUY" : "SELL");
+    put(g_tx == TxMode::Buy ? cGn : cA, b);
+    ty += 8.0f;
+    if (rows.empty()) {
+        put(cG, g_tx == TxMode::Buy ? "Nothing for sale here." : "Cargo hold empty.");
+    } else {
+        const Row& r = rows[g_sel];
+        std::snprintf(b, sizeof(b), "%s", r.label.c_str());        put(cW, b);
+        std::snprintf(b, sizeof(b), "%s", r.category.c_str());     put(cG, b);
+        ty += 8.0f;
+        std::snprintf(b, sizeof(b), "Buy   %d cr", r.q.buy_price); put(cA, b);
+        std::snprintf(b, sizeof(b), "Sell  %d cr", r.q.sell_price);
+        put((r.held > 0 && r.q.sell_price > r.avg) ? cGn : cA, b);
+        std::snprintf(b, sizeof(b), "Avail %d    Held %d", r.q.available_units, r.held);
+        put(cG, b);
+        ty += 8.0f;
+        std::snprintf(b, sizeof(b), "click screen to %s 1",
+                      g_tx == TxMode::Buy ? "BUY" : "SELL");
+        put(cW, b);
+    }
+    // Credits/cargo anchored to the BOTTOM of the box so it's always inside.
+    std::snprintf(b, sizeof(b), "Credits %lld    Cargo %d/%d",
+                  (long long)p.credits, used, capacity);
+    const float cy = py + ph - lh - 4.0f;
+    dl->AddText(ImVec2(tx + 1.0f, cy + 1.0f), cShadow, b);
+    dl->AddText(ImVec2(tx, cy), cG, b);
+
+    // --- execute the transaction on display click ---
+    if (exec && !rows.empty()) {
+        const Row& r = rows[g_sel];
+        if (r.c) {
+            if (g_tx == TxMode::Buy) try_buy(ctx, *r.c, r.q, 1, capacity);
+            else                     try_sell(ctx, *r.c, r.q, 1, capacity);
+        }
+    }
 }
 
 } // namespace

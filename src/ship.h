@@ -84,6 +84,8 @@ struct Ship {
     const ShipClass*  klass     = nullptr;  // nullptr is legal for the player
     Faction           faction   = Faction::Civilian;
     bool              is_player = false;    // toggled on by ship::spawn_player()
+    bool              is_ace    = false;    // elite NPC (issue #91): carries the
+                                            // legendary loot bonus on death.
 
     // Kill attribution (np-ma2.1): the owner_id of the projectile that
     // landed the lethal hit, stamped by projectile::collide_and_damage at
@@ -263,6 +265,13 @@ namespace ship {
 // override `faction` if the spawn context wants something different
 // from the class default (e.g. a captured Talon flying for Confed).
 Ship spawn(const ShipClass& klass);
+
+// Promote a freshly-spawned NPC to an ELITE "ace" (issue #91): upgrade
+// its fixed guns to high-tier weapons with legendary-grade fire-rate /
+// energy mods, and enlarge its shields. Idempotent-ish (call once at
+// spawn). Assumes a non-capital fighter hull (aces are always combat
+// NPCs); the shield refresh ignores the capital flat bonus.
+void make_ace(Ship& s);
 
 // Construct a player Ship. No class, no sprite, faction defaults to
 // Civilian (the player has no faction in Privateer's sense — only

@@ -20,16 +20,18 @@
 //      offset — the "wing guns converge somewhere ahead" look. Misses
 //      (energy too low, on cooldown, disarmed) silently skip.
 //
-//      TURRET mount (is_turret == true, NPC ONLY): fires FREE and
-//      INDEPENDENT of controller.fire_guns — a fleeing merchant's tail
-//      turret still bites. Each frame it picks a target from the ship's
-//      perception (nearest hostile, else the nearest in-cone Hostile
-//      contact), lead-predicts the intercept point (aim.h) for that
-//      gun's projectile speed, and fires along that per-mount direction
-//      IF the lead bearing lies within the mount's forward_body cone
+//      TURRET mount (is_turret == true): fires FREE and INDEPENDENT of
+//      controller.fire_guns — a fleeing merchant's tail turret still
+//      bites. Each frame it picks a target from the ship's perception
+//      (nearest hostile, else the nearest in-cone Hostile contact),
+//      lead-predicts the intercept point (aim.h) for that gun's
+//      projectile speed, and fires along that per-mount direction IF the
+//      lead bearing lies within the mount's forward_body cone
 //      (cone_half_angle_deg) AND the target is within range_m. No energy
 //      cost, no energy gate — only cooldown + arc + range gate it.
-//      Player turrets are OUT OF SCOPE (guarded by !is_player).
+//      Works for BOTH player and NPC ships (issue #109 removed the old
+//      NPC-only guard); gun_armed[] still gates which mounts fire so the
+//      player keeps control via the G-key arm modes.
 //
 // Inheritance velocity: projectile starts with the SHIP's forward
 // velocity added to the gun's muzzle speed. Realistic-feel — a fast

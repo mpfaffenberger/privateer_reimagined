@@ -1,5 +1,4 @@
 [
-  { "u": 0.345, "v": 0.37, "color": [100, 200, 255], "size": 4, "hz": 0, "phase": 0, "kind": "steady" },
-  { "u": 0.575362, "v": 0.655072, "color": [255, 26, 26], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
-  { "u": 0.402899, "v": 0.708696, "color": [255, 26, 26], "size": 5, "hz": 0, "phase": 0, "kind": "steady" }
+  { "u": 0.404223, "v": 0.711916, "color": [255, 26, 26], "size": 5, "hz": 0, "phase": 0, "kind": "steady" },
+  { "u": 0.577033, "v": 0.64971, "color": [255, 26, 26], "size": 5, "hz": 0, "phase": 0, "kind": "steady" }
 ]

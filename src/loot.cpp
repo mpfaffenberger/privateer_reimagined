@@ -22,6 +22,7 @@
 #include "loot.h"
 
 #include <algorithm>
+#include <cmath>
 #include <cstdio>
 #include "cockpit_hud.h"
 #include "player.h"
@@ -54,7 +55,22 @@ struct DropDef {
     double      chance_basic = 1.0;
     double      chance_rare  = 0.0;
     double      chance_legendary = 0.0;
+    // #112 part 3: bulk-commodity-as-loot. A commodity drop hands the player
+    // qty_min..qty_max units of `id` (the commodity catalog id) at a fixed
+    // rarity. qty defaults to 1/1 so weapon/upgrade/salvage rolls (one per
+    // kill) are unchanged.
+    int         qty_min = 1;
+    int         qty_max = 1;
+    bool        has_fixed_rarity = false;
+    inventory::Rarity fixed_rarity = inventory::Rarity::Basic;
 };
+
+inventory::Rarity rarity_from_string(const std::string& s) {
+    using R = inventory::Rarity;
+    if (s == "rare")      return R::Rare;
+    if (s == "legendary") return R::Legendary;
+    return R::Basic;
+}
 
 // Tables live keyed by faction::to_name() ("pirate", "militia", "ace", ...).
 // t_ace_bonus_legendary is the top-level "ace_bonus.legendary_chance" —
@@ -73,6 +89,24 @@ Tables& tables() {
 std::vector<LootDrop>& drops() {
     static std::vector<LootDrop> v;
     return v;
+}
+
+// ----- tractor-beam VFX ----------------------------------------------------
+// When try_pull() sucks a drop into the hold we DON'T just vanish it — we
+// spawn a short-lived screen-space beam from the cockpit emitter to the
+// drop's last world position, with energy pulses travelling INTO the ship
+// and the item dot flying along the beam. Purely cosmetic, lives entirely
+// in this TU (aged in tick(), drawn in render(), wiped in clear()).
+struct TractorBeam {
+    HMM_Vec3 item_pos = HMM_V3(0, 0, 0);   // where the drop was when pulled
+    ImU32    col      = 0;                  // amber (weapon) / cyan (else)
+    float    age_s    = 0.0f;
+};
+constexpr float k_beam_life_s = 0.6f;   // how long the pull animation plays
+
+std::vector<TractorBeam>& beams() {
+    static std::vector<TractorBeam> b;
+    return b;
 }
 
 // Map the loose "kind" string the loot tables use to the strict
@@ -141,8 +175,13 @@ void ingest_drops(const json::Value& drops_v, std::vector<DropDef>& out) {
     for (const auto& e : drops_v.as_array()) {
         if (!e.is_object()) continue;
         DropDef d;
-        d.id   = e.contains("item") ? e["item"].as_string() : "scrap_metal";
         d.kind = e.contains("kind") ? e["kind"].as_string() : "salvage";
+        // Commodity drops carry the catalog id under "commodity_id"; all
+        // other kinds use "item". Accept either so the table author isn't
+        // forced to remember which key a given kind wants.
+        d.id   = e.contains("item")         ? e["item"].as_string()
+               : e.contains("commodity_id") ? e["commodity_id"].as_string()
+               : "scrap_metal";
         d.weight = e.contains("weight") ? e["weight"].as_number() : 1.0;
         if (const json::Value* rc = e.find("rarity_chance");
             rc && rc->is_object()) {
@@ -150,6 +189,14 @@ void ingest_drops(const json::Value& drops_v, std::vector<DropDef>& out) {
             d.chance_basic          = rc->contains("basic")     ? (*rc)["basic"].as_number()     : 1.0;
             d.chance_rare           = rc->contains("rare")      ? (*rc)["rare"].as_number()      : 0.0;
             d.chance_legendary      = rc->contains("legendary") ? (*rc)["legendary"].as_number() : 0.0;
+        }
+        if (e.contains("qty_min")) d.qty_min = (int)e["qty_min"].as_number();
+        if (e.contains("qty_max")) d.qty_max = (int)e["qty_max"].as_number();
+        if (d.qty_max < d.qty_min) d.qty_max = d.qty_min;
+        if (d.qty_min < 1) d.qty_min = 1;
+        if (e.contains("rarity")) {
+            d.has_fixed_rarity = true;
+            d.fixed_rarity = rarity_from_string(e["rarity"].as_string());
         }
         out.push_back(std::move(d));
     }
@@ -225,10 +272,16 @@ void spawn_for(Faction faction, HMM_Vec3 pos, bool is_ace) {
     inventory::InventoryItem item;
     item.id    = d.id;
     item.kind  = kind_from_string(d.kind);
-    item.qty   = 1;   // Phase 4c: drop exactly one item per kill.
-    item.rarity = d.has_rarity_chance
-        ? roll_rarity(d, is_ace ? T.ace_bonus_legendary : 0.0)
-        : inventory::Rarity::Basic;
+    // #112 part 3: commodity (and any qty-ranged) drops hand over a stack;
+    // weapon/upgrade/salvage default to 1 (qty_min==qty_max==1).
+    item.qty   = (d.qty_max > d.qty_min)
+        ? std::uniform_int_distribution<int>(d.qty_min, d.qty_max)(rng())
+        : d.qty_min;
+    item.rarity = d.has_fixed_rarity
+        ? d.fixed_rarity
+        : (d.has_rarity_chance
+            ? roll_rarity(d, is_ace ? T.ace_bonus_legendary : 0.0)
+            : inventory::Rarity::Basic);
     if (item.kind == inventory::ItemKind::Weapon) {
         mods_for(item.rarity, item.mods);
     }
@@ -262,6 +315,13 @@ void tick(float dt) {
             d.age_s += dt;
             return d.age_s > ttl;
         }), v.end());
+    // Age out finished tractor-beam VFX.
+    auto& b = beams();
+    b.erase(std::remove_if(b.begin(), b.end(),
+        [dt](TractorBeam& tb) {
+            tb.age_s += dt;
+            return tb.age_s >= k_beam_life_s;
+        }), b.end());
 }
 
 const std::vector<LootDrop>& all() {
@@ -270,6 +330,7 @@ const std::vector<LootDrop>& all() {
 
 void clear() {
     drops().clear();
+    beams().clear();   // don't carry stale pull VFX across a system/launch reset
 }
 
 // ----- try_pull ------------------------------------------------------------
@@ -310,6 +371,13 @@ int try_pull(HMM_Vec3 player_pos, float range, PlayerState& player,
             ok = player::add_item(player, d.item, capacity);
         }
         if (ok) {
+            // Spawn the pull VFX from the drop's last position before it's
+            // removed. Amber for weapons, cyan for everything else (matches
+            // the drop-marker palette below).
+            const ImU32 c = (d.item.kind == inventory::ItemKind::Weapon)
+                              ? IM_COL32(255, 217,  77, 255)
+                              : IM_COL32(120, 220, 255, 255);
+            beams().push_back(TractorBeam{ d.pos, c, 0.0f });
             v.erase(v.begin() + i);    // erase: don't advance i (next entry shifts down)
             ++pulled;
         } else {
@@ -333,7 +401,7 @@ int try_pull(HMM_Vec3 player_pos, float range, PlayerState& player,
 void render(const Camera& cam, bool draw_world) {
     if (!draw_world) return;
     const auto& v = drops();
-    if (v.empty()) return;
+    if (v.empty() && beams().empty()) return;   // beams outlive their drop
     auto* dl = ImGui::GetForegroundDrawList();
 
     // Amber for any weapon-kind drop (player reads "this is a gun"), cyan
@@ -367,6 +435,44 @@ void render(const Camera& cam, bool draw_world) {
                       "SALVAGE");
         const ImVec2 ts = ImGui::CalcTextSize(label);
         dl->AddText(ImVec2(sx - ts.x * 0.5f, sy - r - ts.y - 3.0f), col, label);
+    }
+
+    // ---- tractor-beam pull VFX --------------------------------------------
+    // For each active beam: draw a ray from the cockpit emitter (bottom
+    // centre) to the captured item, with the item flying inbound along the
+    // ray, energy pulses streaming toward the ship, and the whole thing
+    // fading as the item is absorbed.
+    const auto& bm = beams();
+    if (!bm.empty()) {
+        auto with_a = [](ImU32 c, float a01) -> ImU32 {
+            if (a01 < 0.0f) a01 = 0.0f; else if (a01 > 1.0f) a01 = 1.0f;
+            return (c & 0x00FFFFFFu) | ((ImU32)(255.0f * a01) << 24);
+        };
+        const ImU32 white = IM_COL32(255, 255, 255, 255);
+        const ImVec2 disp = ImGui::GetIO().DisplaySize;
+        const ImVec2 emitter(disp.x * 0.5f, disp.y * 0.96f);
+        for (const TractorBeam& tb : bm) {
+            float sx, sy;
+            if (!cockpit_hud::project_world_point(cam, tb.item_pos, sx, sy)) continue;
+            const float t    = tb.age_s / k_beam_life_s;   // 0..1
+            const float fade = 1.0f - t;
+            const ImVec2 item(sx, sy);
+            const ImVec2 cur(item.x + (emitter.x - item.x) * t,
+                             item.y + (emitter.y - item.y) * t);
+            // Beam: soft coloured glow + bright white core.
+            dl->AddLine(emitter, cur, with_a(tb.col, 0.25f * fade), 5.0f);
+            dl->AddLine(emitter, cur, with_a(white,  0.55f * fade), 1.5f);
+            // Energy pulses travelling INTO the ship.
+            for (int k = 0; k < 3; ++k) {
+                float pp = std::fmod(t * 1.7f + (float)k * 0.34f, 1.0f);
+                ImVec2 pulse(cur.x + (emitter.x - cur.x) * pp,
+                             cur.y + (emitter.y - cur.y) * pp);
+                dl->AddCircleFilled(pulse, 3.0f * fade, with_a(tb.col, 0.9f * fade));
+            }
+            // The captured item, shrinking as it reaches the ship.
+            dl->AddCircleFilled(cur, 6.0f * fade, with_a(tb.col, fade));
+            dl->AddCircleFilled(cur, 2.5f * fade, with_a(white,  fade));
+        }
     }
 }
 

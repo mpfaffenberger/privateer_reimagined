@@ -212,6 +212,24 @@ std::vector<Faction> outlaw_factions() {
     return out;
 }
 
+// Issue #107: factions the OFFERING base's faction views as Hostile in the
+// stance matrix. Used for Attack / DefendBase / Bounty target selection so
+// the contract is faction-appropriate: a pirate base offers "kill Confed",
+// a Confed base offers "kill pirate", etc. — never "kill your own kind".
+// Falls back to the outlaw pool for Independent / unknown bases so the
+// target list is never empty.
+std::vector<Faction> hostile_targets_for(Faction giver) {
+    const int gi = (int)giver;
+    if (gi < 0 || gi >= kFactionCount) return outlaw_factions();
+    std::vector<Faction> out;
+    for (int i = 0; i < kFactionCount; ++i) {
+        if (i == gi) continue;                       // never target self
+        if (g_faction_stance[gi][i] == Stance::Hostile)
+            out.push_back((Faction)i);
+    }
+    return out;
+}
+
 // Convert a generated offer to its persistent accepted form (player.h).
 ActiveMission to_active(const Mission& m) {
     ActiveMission a;
@@ -592,6 +610,14 @@ std::vector<Mission> generate(const std::string& base_id,
     const std::vector<DestBase>   dests    = collect_dest_bases(g, system_id, base_id);
     const std::vector<Commodity>& cat      = commodity::all();
     const std::vector<Faction>    outlaws  = outlaw_factions();
+    // Issue #107: prefer targets the OFFERING faction is Hostile toward
+    // (pirate base -> Confed/Militia/Hunter/Kilrathi, etc.). Independent or
+    // unknown bases have no alignment, so fall back to the outlaw pool.
+    const Faction                 giver_f  = faction::from_name(giver);
+    std::vector<Faction>          targets  = (giver_f != Faction::Count)
+                                                 ? hostile_targets_for(giver_f)
+                                                 : std::vector<Faction>{};
+    if (targets.empty()) targets = outlaws;
     const std::vector<MissionType> types   = allowed_types(source);
     if (types.empty()) return out;
 
@@ -607,8 +633,8 @@ std::vector<Mission> generate(const std::string& base_id,
     // $EN / target_faction: a real outlaw faction name (so kill attribution +
     // faction::from_name resolve), falling back to "pirate" if none exist.
     auto pick_outlaw = [&]() -> std::string {
-        if (outlaws.empty()) return "pirate";
-        return faction::to_name(outlaws[urz(outlaws.size())]);
+        if (targets.empty()) return "pirate";
+        return faction::to_name(targets[urz(targets.size())]);
     };
 
     // Issue #24: board offer count is FIXED per source — Mission Computer

@@ -120,6 +120,17 @@ int64_t item_value(const InventoryItem& it);
 // erase the stack. Returns false (no mutation) on an out-of-range index.
 bool sell_item(PlayerState& p, int index);
 
+// #112: sell ONE unit of the bulk commodity stack at p.cargo[cargo_index]
+// for `unit_price` credits. Decrements units; erases the stack when it hits
+// zero. Returns false (no mutation) on a bad index or non-positive units.
+// Shared by the LANDED CargoHold (market price) and the in-flight panel
+// (flat default_cargo_unit_value()).
+bool sell_cargo_unit(PlayerState& p, int cargo_index, int64_t unit_price);
+
+// Flat per-unit credit value used for in-flight bulk-commodity sales (v1 has
+// no market context mid-flight). Landed sales use the real exchange price.
+int64_t default_cargo_unit_value();
+
 // Install the Upgrade-kind item at p.items[index] (#99): resolve its
 // PermanentMod (known upgrade ids carry a tuned effect; unknown ids
 // default to shield_pct +0.05), refuse if an id-equal mod is ALREADY in
@@ -140,9 +151,17 @@ bool install_upgrade(PlayerState& p, int index);
 bool equip_weapon(PlayerState& p, int item_index, int mount_index);
 
 // CargoHold base-screen body (registered via base_screens::register_screen).
-// Draws cargo usage, the read-only commodity manifest, and the sellable
-// items list. Defined under !INVENTORY_HEADLESS (drags in ImGui).
+// Draws cargo usage, the commodity manifest (now sellable at market price),
+// and the sellable items list. Defined under !INVENTORY_HEADLESS (ImGui).
 void cargohold_screen(BaseContext& ctx);
+
+// #112: in-flight inventory window. A standalone ImGui overlay (toggled by
+// `I` in Flight) that shows the unified hold and lets the player sell bulk
+// commodities (flat price) + sell/fit/install loot WITHOUT docking. Reuses
+// the same model mutators as the CargoHold, so there's one enforcement path.
+// `*p_open` is the caller's visibility flag (window close button clears it).
+// No-op when p_open is null or *p_open is false.
+void in_flight_panel(PlayerState& p, bool* p_open);
 
 // Register the CargoHold screen body with base_screens. Called once at
 // startup from main.cpp, beside outfitting::register_screens().

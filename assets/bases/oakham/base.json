@@ -13,23 +13,21 @@
   "concourse_art": "bases/oakham/concourse.png",
 
   "hotspots": [
-    { "target": "Bar", "label": "BAR",
-      "rect": [0.04, 0.50, 0.26, 0.16],
-      "tooltip": "Drinks, rumours, and fixers" },
-    { "target": "CommodityExchange", "label": "COMMODITY EXCHANGE",
-      "rect": [0.37, 0.50, 0.26, 0.16],
-      "tooltip": "Buy and sell cargo" },
+    { "target": "MercenariesGuild", "label": "MERCENARIES' GUILD",
+      "rect": [0.04, 0.28, 0.26, 0.16], "tooltip": "Combat contracts (5000 cr to join)" },
     { "target": "ShipDealer", "label": "SHIP DEALER",
-      "rect": [0.70, 0.50, 0.26, 0.16],
-      "tooltip": "Trade up your hull" },
+      "rect": [0.37, 0.28, 0.26, 0.16], "tooltip": "Trade up your hull" },
     { "target": "Equipment", "label": "EQUIPMENT",
-      "rect": [0.04, 0.72, 0.26, 0.16],
-      "tooltip": "Guns, shields, engines" },
+      "rect": [0.70, 0.28, 0.26, 0.16], "tooltip": "Guns, shields, engines" },
+    { "target": "CommodityExchange", "label": "COMMODITY EXCHANGE",
+      "rect": [0.04, 0.50, 0.26, 0.16], "tooltip": "Buy and sell cargo" },
     { "target": "MissionComputer", "label": "MISSION COMPUTER",
-      "rect": [0.37, 0.72, 0.26, 0.16],
-      "tooltip": "Find work" },
+      "rect": [0.37, 0.50, 0.26, 0.16], "tooltip": "Find work" },
+    { "target": "CargoHold", "label": "CARGO HOLD",
+      "rect": [0.70, 0.50, 0.26, 0.16], "tooltip": "Sell loot and salvage" },
+    { "target": "Bar", "label": "BAR",
+      "rect": [0.04, 0.72, 0.26, 0.16], "tooltip": "Drinks, rumours, and fixers" },
     { "target": "Launch", "label": "LAUNCH",
-      "rect": [0.70, 0.72, 0.26, 0.16],
-      "tooltip": "Return to flight" }
+      "rect": [0.37, 0.72, 0.26, 0.16], "tooltip": "Return to flight" }
   ]
 }

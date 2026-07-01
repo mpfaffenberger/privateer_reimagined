@@ -65,6 +65,20 @@ enum class BaseScreen {
     MerchantsGuild,     // #16 — paid trade-mission board
     CargoHold,          // Phase 4f — sell loot/salvage from the unified hold
     Launch,
+    LandingPad,         // hangar room shown on dock; door leads to Concourse
+    // --- action zones (not navigable screens) -------------------------------
+    // Editor-placeable hotspots that trigger an in-room ACTION rather than a
+    // screen change. Used by the Commodity Exchange (display panel + buy/sell
+    // /next/prev zones placed via the F3 editor).
+    CommodityDisplay,
+    CommodityBuy,
+    CommoditySell,
+    CommodityNext,
+    CommodityPrev,
+    // Generic "talk to the NPC to open this room's shop menu" zone (placed
+    // over e.g. the ship dealer character). Rooms WITH this zone start on the
+    // art/character and reveal the shop UI only after a click.
+    OpenMenu,
 };
 
 // Everything a sub-screen renderer needs without reaching into AppState.
@@ -90,6 +104,12 @@ namespace base_screens {
 // owning module's init; unregistered fillable screens fall back to a stub.
 using ScreenHook = std::function<void(BaseContext&)>;
 void register_screen(BaseScreen screen, ScreenHook hook);
+
+// Look up an editor-placed ACTION zone in the currently-active room by its
+// target. Writes the normalized [x,y,w,h] rect into out_xywh and returns
+// true if a zone with that target was placed; false otherwise. Used by the
+// Commodity Exchange to find its display/buy/sell/next/prev hotspots.
+bool current_room_zone(BaseScreen target, float out_xywh[4]);
 
 // Called on the transition INTO Landed. Loads assets/bases/<base_id>/base.json
 // and its concourse PNG, and resets the screen stack to {Concourse}. Safe to

@@ -41,7 +41,8 @@
     "FUELS":   85,
     "MAGIC":   600,
     "SLAVES":  200,
-    "EJECT":   0
+    "EJECT":   0,
+    "SALVAGE": 22
   },
 
   // Base archetypes. categories[X] overrides the default for category X.

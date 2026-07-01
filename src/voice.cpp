@@ -99,6 +99,16 @@ bool g_loaded = false;
 // 0 == "no voice currently" — audio::stop() tolerates the zero id.
 VoiceId g_player_voice = 0;
 
+// ---- per-entity voice tracking (issue #105) ----------------------------
+// entity_id -> the VoiceId(s) currently playing for that entity, so
+// voice::stop_for() can cut a dying ship's bark mid-clip. Populated only
+// for say_ship() calls (which carry an entity_id); direct say() calls
+// (UI / scenarios) stay untracked. `g_speaking_entity` is the context the
+// say_ship delegation sets so play_sample knows which entity to file the
+// freshly-spawned handle under.
+std::unordered_map<uint32_t, std::vector<VoiceId>> g_entity_voices;
+uint32_t g_speaking_entity = 0;
+
 // ---- RNG ---------------------------------------------------------------
 // Shared default-seeded generator — same pattern as comm.cpp. Voice
 // flavour is cosmetic so reproducibility beats entropy here.
@@ -132,15 +142,20 @@ SampleId pick_random(const std::vector<SampleId>* pool) {
 //              the previous player-directed voice first.
 //   * false -> 3D world via audio::play_world(); no gating.
 void play_sample(SampleId s, HMM_Vec3 pos, bool to_player) {
+    VoiceId v;
     if (to_player) {
         audio::stop(g_player_voice);                 // retire the previous line
-        g_player_voice = audio::play(s, /*gain=*/1.0f);
+        v = g_player_voice = audio::play(s, /*gain=*/1.0f);
     } else {
-        audio::play_world(s, pos,
-                          /*ref_dist=*/3000.0f,
-                          /*max_dist=*/25000.0f,
-                          /*loop=*/false);
+        v = audio::play_world(s, pos,
+                              /*ref_dist=*/3000.0f,
+                              /*max_dist=*/25000.0f,
+                              /*loop=*/false);
     }
+    // File the handle under the speaking entity so stop_for() can cut it
+    // when the speaker dies (#105). Only set during a say_ship delegation.
+    if (g_speaking_entity != 0 && v != 0)
+        g_entity_voices[g_speaking_entity].push_back(v);
 }
 
 } // namespace
@@ -153,6 +168,8 @@ bool load(const std::string& path) {
     g_by_voice_cat.clear();
     g_faction_voices.clear();
     g_player_voice = 0;
+    g_entity_voices.clear();
+    g_speaking_entity = 0;
     g_loaded = false;
 
     json::Value root = json::parse_file(path);
@@ -342,12 +359,31 @@ std::string voice_for(Faction f, uint32_t entity_id) {
 void say_ship(Faction f, uint32_t entity_id, Category cat,
               HMM_Vec3 world_pos, bool to_player) {
     std::string vid = voice_for(f, entity_id);
+    // Forget this entity's PRIOR line before starting a new one — keeps the
+    // tracking map bounded to each entity's current bark (the previous
+    // player-directed line is already stopped by last-wins; a previous world
+    // line has almost certainly finished). The death hook stops whatever is
+    // current, which is exactly the line the player would hear cut off.
+    if (entity_id != 0) g_entity_voices.erase(entity_id);
+    g_speaking_entity = entity_id;          // tag play_sample's next spawn
     if (!vid.empty()) {
         say(vid, cat, world_pos, to_player);
     } else {
         // No dedicated voice for this entity -> faction-level pool.
         say(f, cat, world_pos, to_player);
     }
+    g_speaking_entity = 0;                  // clear context
+}
+
+void stop_for(uint32_t entity_id) {
+    if (entity_id == 0) return;
+    auto it = g_entity_voices.find(entity_id);
+    if (it == g_entity_voices.end()) return;
+    for (VoiceId v : it->second) {
+        audio::stop(v);
+        if (v == g_player_voice) g_player_voice = 0;  // don't re-stop a stale id
+    }
+    g_entity_voices.erase(it);
 }
 
 } // namespace voice

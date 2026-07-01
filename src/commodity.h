@@ -52,6 +52,15 @@ namespace commodity {
 // Logs one summary line: `[commodity] 50 commodities, 11 categories`.
 int load(const std::string& toml_path);
 
+// Append AUTHORED commodities from a supplemental cargo.toml-format file
+// (issue #87). Same parser as load(), but it does NOT clear the catalog —
+// it adds to whatever load() already populated. Use for goods that aren't in
+// the clean-room CARGO.IFF extraction (e.g. salvage like scrap_metal) so the
+// extracted cargo.toml stays a pristine 1:1 copy of the original data and a
+// re-extraction never clobbers our additions. Call once at startup right
+// after load() (before any Commodity* is cached). Returns the count added.
+int load_extra(const std::string& toml_path);
+
 // Catalog lookups. Pointers are stable for the program's lifetime once
 // load() has run (the catalog vector is never resized afterwards).
 // find() returns nullptr on unknown id.
