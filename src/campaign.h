@@ -22,10 +22,26 @@
 //   accept:   "m01:accept" loads k_m01_units of iron (hold-space checked —
 //             a full hold refuses and the offer stays on the table).
 //   deliver:  on_dock(liverpool*) with the iron aboard -> m01_delivered.
-//   fail:     on_dock(liverpool*) WITHOUT the iron (player sold it) ->
-//             m01_active cleared, offer re-appears at New Detroit.
+//   fail:     docking ANYWHERE without the consignment -> m01_active
+//             cleared, offer re-appears at New Detroit.
 //   settle:   the Tayla bar entry (fixers.json) requires m01_delivered and
 //             grants steltek_artifact + sandoval_done via done_actions.
+//
+// M02..M05 — the Tayla smuggling arc (#114-#117). Same consignment shape,
+// one table row each (see campaign.cpp k_cargo_missions): accept token
+// loads the goods, docking at the destination pays out and sets the
+// delivered flag, docking anywhere with the consignment missing fails the
+// run (flag cleared, fixer re-offers). Chain milestones (tayla_1_done ...
+// tayla_done) are advanced by the fixers' done_actions in fixers.json.
+// Extra mechanics owned here:
+//   * "tayla_employed" (set on m02 accept, cleared by the final debrief)
+//     arms the PIRATE-NEUTRAL stance override while the player is in
+//     Pentonville (tick() re-derives it every frame — see faction.h).
+//   * "m04:install_compartment" grants the secret_compartment plot item.
+//   * "m05:accept" stows the brilliance INSIDE the compartment (hidden,
+//     scan-exempt) when the player owns it.
+// Riordian (M05) lives in assets/data/scripted_encounters.json (on_launch
+// ambush + at_nav re-ambush gated on the killed:riordian kill-memory).
 //
 // The sandbox never calls in here; with no campaign flags set every
 // function is a no-op.
@@ -45,5 +61,11 @@ void init();
 // fail_cargo_on_dock site) with the raw nav base id ("liverpool_refinery").
 // Runs every active mission's delivery/failure checks.
 void on_dock(PlayerState& p, const std::string& base_id);
+
+// Per-frame world-state derivation: re-arms/clears the campaign's faction
+// stance overrides from plot flags + the player's current system (#114
+// pirate neutrality). Cheap (a couple of flag probes); call once per frame
+// in any mode. Idempotent.
+void tick(const PlayerState& p, const std::string& system_id);
 
 } // namespace campaign

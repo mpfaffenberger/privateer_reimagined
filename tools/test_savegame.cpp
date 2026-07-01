@@ -84,6 +84,9 @@ PlayerState make_mutated() {
     p.cargo = {
         { "iron",   42, 35 },
         { "tungsten", 7, 410 },
+        // (#116) a secret-compartment stow: the hidden flag must round-trip
+        // (a lost flag would turn scan-exempt goods into open contraband).
+        { "brilliance", 20, 0, /*hidden=*/true },
     };
     // np-zte.2: distinctive missile counts. afterburner_fuel field removed
     // (merged into Ship::energy_gj), so nothing to round-trip there.
@@ -182,6 +185,7 @@ bool cargo_equal(const std::vector<CargoEntry>& a, const std::vector<CargoEntry>
         if (a[i].commodity_id    != b[i].commodity_id)    return false;
         if (a[i].units           != b[i].units)           return false;
         if (a[i].bought_at_price != b[i].bought_at_price) return false;
+        if (a[i].hidden          != b[i].hidden)          return false;   // #116
     }
     return true;
 }

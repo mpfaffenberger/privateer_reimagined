@@ -71,6 +71,10 @@ struct SpawnGroup {
     int         count = 1;
     std::string name;      // display name pushed to the feed ("" = silent)
     std::string unique;    // kill-memory id -> plot flag "killed:<unique>"
+    // Force per-ship aggro on the player regardless of faction stance or
+    // any campaign stance override (#117: Riordian's pirate wing attacks
+    // even while Tayla's pirate-neutrality is in effect).
+    bool        hostile = false;
 };
 
 // (#139) One sequential wave: all groups spawn together after delay_s;
@@ -375,6 +379,8 @@ void parse_scenario(const json::Value& v, Scenario& s) {
                         grp.name = nm->as_string();
                     if (const json::Value* u = gv.find("unique"); u && u->is_string())
                         grp.unique = u->as_string();
+                    if (const json::Value* h = gv.find("hostile"); h && h->is_bool())
+                        grp.hostile = h->as_bool();
                     if (!grp.class_name.empty()) wave.groups.push_back(std::move(grp));
                 }
             }
@@ -665,6 +671,13 @@ void tick(ShipRegistry& ships, const Ship& player_ship, PlayerState& player,
                         active_wing.push_back(WingMember{ id, grp.unique });
                         if (active_anchor_id == 0) active_anchor_id = id;
                         ++spawned_count;
+                        // `hostile: true` groups aggro the player outright
+                        // — the per-ship override that beats faction stance
+                        // AND campaign stance overrides (#117 Riordian).
+                        if (grp.hostile) {
+                            if (Ship* s = ships.find_by_id(id))
+                                s->ai.aggro_player = true;
+                        }
                     }
                 }
                 // Named arrivals get a feed line ("William Riordian has

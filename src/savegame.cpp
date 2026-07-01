@@ -242,6 +242,9 @@ static std::string serialize_player(const PlayerState& p) {
                 w.key("commodity_id");    w.value_string(e.commodity_id);
                 w.key("units");           w.value_int(e.units);
                 w.key("bought_at_price"); w.value_int(e.bought_at_price);
+                // Secret-compartment stow (#116). Written unconditionally;
+                // absent on older saves -> false (visible hold stack).
+                w.key("hidden");          w.value_bool(e.hidden);
               w.end_object();
           }
         w.end_array();
@@ -567,6 +570,7 @@ bool load(PlayerState& p, const std::string& path) {
                 ce.commodity_id    = e.contains("commodity_id") ? e["commodity_id"].string_or("") : "";
                 ce.units           = e.contains("units")           ? (int)e["units"].number_or(0)           : 0;
                 ce.bought_at_price = e.contains("bought_at_price") ? (int)e["bought_at_price"].number_or(0) : 0;
+                ce.hidden          = e.contains("hidden")          ? e["hidden"].bool_or(false)             : false;
                 if (!ce.commodity_id.empty() && ce.units > 0) out.cargo.push_back(std::move(ce));
             }
         }

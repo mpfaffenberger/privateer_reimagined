@@ -3483,6 +3483,16 @@ void frame_cb() {
         const std::string target = g.pending_goto;
         g.pending_goto.clear();
         g.switch_clock_s = 0.0f;
+        // The title scene holds SpriteArt/atlas pointers into the CURRENT
+        // system's caches; switching underneath it leaves them dangling
+        // (std::length_error reading freed GunMount/atlas memory — seen
+        // via both --dev-land's stale menu and the death->title path).
+        // Tear it down first; it lazily re-inits with fresh atlases on the
+        // next title frame if the menu is still up.
+        if (title_scene::inited()) {
+            title_scene::shutdown();
+            g.title_scene_inited = false;
+        }
         load_and_build_system(target, /*first_time=*/false);
         g.keys_down.fill(false);   // no key ghosts across the switch
         return;
@@ -4148,6 +4158,11 @@ void frame_cb() {
             sw.system    = &g.system;
             sw.system_id = g.player.current_system;
             scripted::tick(g.ships, *pl, g.player, t_now, sw, encounter_spawn);
+            // Campaign world-state derivation (epic #136): re-arm/clear
+            // faction stance overrides from plot flags + current system
+            // (Tayla's pirate neutrality, #114). BEFORE-perception order
+            // doesn't matter — it's idempotent and settles within a frame.
+            campaign::tick(g.player, g.player.current_system);
         }
     }
 

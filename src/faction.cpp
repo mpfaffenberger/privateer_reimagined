@@ -99,7 +99,34 @@ Stance faction::stance_npc_vs_npc(Faction a, Faction b) {
     return g_faction_stance[(int)a][(int)b];
 }
 
+namespace {
+// Campaign player-stance overrides (#114): when armed for a faction,
+// stance_npc_vs_player short-circuits to the override instead of the
+// rep math. The CAMPAIGN layer owns arming/clearing (scoped by plot
+// flags + region there); this table is just the mechanism. Transient
+// by design — never serialized; re-derived from plot flags each frame.
+bool   g_player_override_on[kFactionCount] = {};
+Stance g_player_override[kFactionCount]    = {};
+} // namespace
+
+void faction::set_player_stance_override(Faction f, Stance s) {
+    if ((int)f < 0 || (int)f >= kFactionCount) return;
+    g_player_override_on[(int)f] = true;
+    g_player_override[(int)f]    = s;
+}
+
+void faction::clear_player_stance_override(Faction f) {
+    if ((int)f < 0 || (int)f >= kFactionCount) return;
+    g_player_override_on[(int)f] = false;
+}
+
+bool faction::player_stance_override_active(Faction f) {
+    return (int)f >= 0 && (int)f < kFactionCount &&
+           g_player_override_on[(int)f];
+}
+
 Stance faction::stance_npc_vs_player(Faction npc, const PlayerReputation& r) {
+    if (g_player_override_on[(int)npc]) return g_player_override[(int)npc];
     const int eff = std::clamp(
         (int)g_faction_baseline_to_player[(int)npc] + (int)r.rep[(int)npc],
         -100, +100);

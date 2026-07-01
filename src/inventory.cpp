@@ -20,6 +20,7 @@
 
 #include "json.h"
 #include "player.h"
+#include "plot.h"       // has_item("secret_compartment") — hold header (#116)
 
 // The model is pure data; the screen body drags in the UI/audio stack.
 // INVENTORY_HEADLESS compiles only the model (mirrors OUTFITTING_HEADLESS).
@@ -367,7 +368,14 @@ void draw_commodities_table(PlayerState& p, ImVec2 sz, bool allow_sell,
                 const CargoEntry& e = p.cargo[(size_t)i];
                 ImGui::TableNextRow();
                 ImGui::PushID(i);
-                ImGui::TableNextColumn(); ImGui::TextUnformatted(e.commodity_id.c_str());
+                ImGui::TableNextColumn();
+                if (e.hidden) {
+                    // Secret-compartment stow (#116): render distinctly so
+                    // the player can tell scan-safe goods from hold cargo.
+                    ImGui::Text("%s  [COMPARTMENT]", e.commodity_id.c_str());
+                } else {
+                    ImGui::TextUnformatted(e.commodity_id.c_str());
+                }
                 ImGui::TableNextColumn(); ImGui::Text("%d", e.units);
                 if (allow_sell) {
                     ImGui::TableNextColumn();
@@ -500,8 +508,14 @@ void cargohold_screen(BaseContext& ctx) {
     // ---- Header: cargo usage + credits -------------------------------------
     ImGui::SetCursorScreenPos(ImVec2(28, 60));
     ImGui::PushStyleColor(ImGuiCol_Text, kAmber);
-    ImGui::Text("CARGO HOLD   %d / %d units    CREDITS %lld",
-                used, cap, (long long)p.credits);
+    if (plot::has_item(p, "secret_compartment")) {
+        ImGui::Text("CARGO HOLD   %d / %d units    COMPARTMENT %d / %d    CREDITS %lld",
+                    used, cap, player::compartment_units_used(p),
+                    player::k_secret_compartment_units, (long long)p.credits);
+    } else {
+        ImGui::Text("CARGO HOLD   %d / %d units    CREDITS %lld",
+                    used, cap, (long long)p.credits);
+    }
     ImGui::PopStyleColor();
 
     // ---- Commodities (sellable at this base's market price, #112) -----------

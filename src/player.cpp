@@ -83,7 +83,9 @@ void add_credits(PlayerState& p, int64_t amount) {
 
 int cargo_units_used(const PlayerState& p) {
     int used = 0;
-    for (const CargoEntry& e : p.cargo) used += e.units;
+    // Hidden stacks live in the secret compartment (#116) — bonus space,
+    // not hold space. compartment_units_used tracks them separately.
+    for (const CargoEntry& e : p.cargo) if (!e.hidden) used += e.units;
     // Phase 4 Wave 1 (#81): unified-hold accounting. Each item's qty
     // contributes to capacity. A Weapon/Upgrade item has qty=1 (one
     // cargo space each); a Salvage/Commodity-kind stack counts as
@@ -106,6 +108,7 @@ bool add_cargo(PlayerState& p, const std::string& commodity_id,
     if (cargo_units_used(p) + units > capacity) return false;
 
     for (CargoEntry& e : p.cargo) {
+        if (e.hidden) continue;   // compartment stacks never merge with hold stacks
         if (e.commodity_id != commodity_id) continue;
         // Blend bought_at_price by unit-weighted average so the profit
         // display stays honest across multiple buys at different
@@ -210,12 +213,40 @@ bool add_item(PlayerState& p, const inventory::InventoryItem& it, int capacity) 
 }
 
 bool carrying_contraband(const PlayerState& p) {
-    // Empty stacks contribute nothing — skip cheaply.
+    // Empty stacks contribute nothing — skip cheaply. Hidden stacks are
+    // stowed in the secret compartment and invisible to scans (#116).
     for (const CargoEntry& e : p.cargo) {
-        if (e.units <= 0) continue;
+        if (e.units <= 0 || e.hidden) continue;
         if (commodity::is_contraband(e.commodity_id)) return true;
     }
     return false;
+}
+
+// ---- secret compartment (#116) ----------------------------------------------
+
+int compartment_units_used(const PlayerState& p) {
+    int used = 0;
+    for (const CargoEntry& e : p.cargo) if (e.hidden) used += e.units;
+    return used;
+}
+
+bool add_compartment_cargo(PlayerState& p, const std::string& commodity_id,
+                           int units) {
+    if (units <= 0) return false;
+    if (!commodity::is_contraband(commodity_id)) return false;   // contraband only
+    if (compartment_units_used(p) + units > k_secret_compartment_units)
+        return false;
+    for (CargoEntry& e : p.cargo) {
+        if (!e.hidden || e.commodity_id != commodity_id) continue;
+        e.units += units;
+        return true;
+    }
+    CargoEntry e;
+    e.commodity_id = commodity_id;
+    e.units        = units;
+    e.hidden       = true;
+    p.cargo.push_back(std::move(e));
+    return true;
 }
 
 } // namespace player

@@ -20,13 +20,15 @@
 //                   per `k_turn_gap_s` once the trigger fires (may be
 //                   empty for pure combat waves);
 //   * WAVES      — `waves: [ { delay_s, spawns: [ {faction, class, count,
-//                   name?, unique?} ] } ]`, spawned SEQUENTIALLY: wave
+//                   name?, unique?, hostile?} ] } ]`, spawned SEQUENTIALLY: wave
 //                   N+1 launches only after wave N is dead. A spawn with
 //                   `unique` writes plot flag `killed:<unique>` when it
 //                   dies — the kill-memory that conditional re-ambushes
-//                   gate on (forbids_flags: ["killed:riordian"]). The
-//                   legacy `spawn_on_accept{...}` still parses as a
-//                   single wave.
+//                   gate on (forbids_flags: ["killed:riordian"]). A spawn
+//                   with `hostile: true` aggros the player outright
+//                   (per-ship override; beats faction stance AND campaign
+//                   stance overrides — #117 Riordian). The legacy
+//                   `spawn_on_accept{...}` still parses as a single wave.
 //   * a REWARD   — `reward{credits, rep{faction:delta}, loot_roll}` granted
 //                   once ALL waves are cleared;
 //   * ACTIONS    — `on_cleared: ["set_flag:x", ...]` run through the

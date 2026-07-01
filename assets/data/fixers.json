@@ -44,6 +44,101 @@
         "If you want to know what it IS, I can point you at people who find things out. But my help isn't free. Come see me when you're ready to work."
       ],
       "done_actions": ["give_item:steltek_artifact", "set_flag:sandoval_done"]
+    },
+    {
+      "id": "tayla_m02_offer",
+      "name": "Tayla",
+      "base": "new_detroit",
+      "requires_flags": ["sandoval_done"],
+      "forbids_flags": ["m02_active", "tayla_1_done"],
+      "dialogue": [
+        "Ready to work? Good. First job's a milk run: plastics to Oakham, the pirate base out in Pentonville.",
+        "Oakham sits in an asteroid field, so mind your speed on approach. And relax - while you fly for me, Pentonville's pirates keep their guns to themselves.",
+        "Ten thousand on delivery. I'll set up shop in the Oakham bar - we'll talk more there."
+      ],
+      "offer": "Haul 30 units of plastics to Oakham (Pentonville system) for 10,000 credits on landing. Deal?",
+      "accept_actions": ["m02:accept"]
+    },
+    {
+      "id": "tayla_m03_offer",
+      "name": "Tayla",
+      "base": "oakham",
+      "requires_flags": ["tayla_1_done"],
+      "forbids_flags": ["m03_active", "m03_delivered", "tayla_2_done"],
+      "dialogue": [
+        "Now the real work. Brilliance - yes, THAT Brilliance - to Hector, the mining base in Troy.",
+        "The militia have Troy crawling with Talons, and they scan everything that moves. Do not stop. Do not fight. Burn past them.",
+        "Fifteen thousand on delivery at Hector. Then get yourself back here in one piece."
+      ],
+      "offer": "Smuggle 15 units of Brilliance to Hector (Troy system) for 15,000 credits, then return to Oakham. In?",
+      "accept_actions": ["m03:accept"]
+    },
+    {
+      "id": "tayla_m03_debrief",
+      "name": "Tayla",
+      "base": "oakham",
+      "requires_flags": ["m03_delivered"],
+      "forbids_flags": ["tayla_2_done"],
+      "dialogue": [
+        "You made it past the militia with the goods AND your hull. I'm almost impressed.",
+        "Catch your breath. The next run makes Troy look like a pleasure cruise."
+      ],
+      "done_actions": ["set_flag:tayla_2_done"]
+    },
+    {
+      "id": "tayla_m04_offer",
+      "name": "Tayla",
+      "base": "oakham",
+      "requires_flags": ["tayla_2_done"],
+      "forbids_flags": ["m04_active", "m04_delivered", "tayla_3_done"],
+      "dialogue": [
+        "Bigger load this time: Brilliance to New Constantinople itself. Twenty-five units.",
+        "Before you ask - I bribed the Confed patrols on the route. You won't have any trouble. Trust me.",
+        "Twenty thousand on delivery. Then come straight back."
+      ],
+      "offer": "Smuggle 25 units of Brilliance to New Constantinople for 20,000 credits, then return to Oakham. Deal?",
+      "accept_actions": ["m04:accept"]
+    },
+    {
+      "id": "tayla_m04_debrief",
+      "name": "Tayla",
+      "base": "oakham",
+      "requires_flags": ["m04_delivered"],
+      "forbids_flags": ["tayla_3_done"],
+      "dialogue": [
+        "Bribed patrols, you say? Stilettos and Broadswords at every jump point, you say? Huh. Must have been a clerical error.",
+        "Stop scowling. To make it up to you, my people just installed something in your ship: a smuggler's compartment. Twenty units, invisible to any scanner ever built.",
+        "Contraband only - the baffles foul anything legitimate. One more run and we're square."
+      ],
+      "done_actions": ["m04:install_compartment", "set_flag:tayla_3_done"]
+    },
+    {
+      "id": "tayla_m05_offer",
+      "name": "Tayla",
+      "base": "oakham",
+      "requires_flags": ["tayla_3_done"],
+      "forbids_flags": ["m05_active", "m05_delivered", "tayla_done"],
+      "dialogue": [
+        "Last run: twenty units of Brilliance to New Constantinople. Fits that new compartment of yours exactly. Poetic, no?",
+        "One thing. William Riordian - used to fly these runs before you showed up. He's been drinking and talking, mostly about you.",
+        "Ten thousand, and after this I'll tell you everything I know about your trinket. Watch yourself out there."
+      ],
+      "offer": "One final run: 20 units of Brilliance to New Constantinople for 10,000 credits. Finish the job?",
+      "accept_actions": ["m05:accept"]
+    },
+    {
+      "id": "tayla_m05_debrief",
+      "name": "Tayla",
+      "base": "oakham",
+      "requires_flags": ["m05_delivered"],
+      "forbids_flags": ["tayla_done"],
+      "dialogue": [
+        "Riordian, hm? He always was a jealous idiot. You did fine.",
+        "About your artifact - truth is, I've got nothing. Never seen anything like it. But I found someone who has.",
+        "Roman Lynch. A made man on New Constantinople - you'll find him in the bar there. Mention my name and he'll see you.",
+        "That squares us. It's been profitable, pilot. Try not to die."
+      ],
+      "done_actions": ["set_flag:tayla_done", "clear_flag:tayla_employed"]
     }
   ]
 }

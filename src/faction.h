@@ -109,6 +109,18 @@ const char* to_name(Faction f);
 Stance stance_npc_vs_npc(Faction a, Faction b);
 Stance stance_npc_vs_player(Faction npc, const PlayerReputation& rep);
 
+// ---- campaign player-stance override (#114) --------------------------------
+// When armed for a faction, stance_npc_vs_player returns the override
+// instead of the baseline+rep math ("Pentonville pirates treat you as
+// neutral while you work for Tayla"). Scoping (which flags, which system)
+// is the CAMPAIGN layer's job — it re-derives and arms/clears these per
+// frame from plot state. Transient: never serialized. Per-ship grudges
+// (Ship::provoked_by_player, AIShipState::aggro_player) still win — the
+// override only replaces the faction-level rep verdict.
+void set_player_stance_override(Faction f, Stance s);
+void clear_player_stance_override(Faction f);
+bool player_stance_override_active(Faction f);
+
 // Apply the reputation fallout of the player destroying a `victim`-faction
 // ship. Mutates `rep` in place (clamped) and returns the per-faction
 // effects (only factions whose rep actually moved are listed).

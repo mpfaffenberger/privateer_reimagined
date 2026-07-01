@@ -63,6 +63,13 @@ struct CargoEntry {
     std::string commodity_id;        // catalog id, e.g. "iron" (commodity.h)
     int         units           = 0;
     int         bought_at_price = 0; // average credits/unit paid (see header)
+    // Secret-compartment stow (campaign M04 reward, #116). Hidden stacks
+    // live in the smuggler's compartment: they take NO hold space
+    // (cargo_units_used skips them), are invisible to contraband scans
+    // (carrying_contraband skips them), never merge with visible stacks,
+    // and are capped at player::k_secret_compartment_units total. Only
+    // contraband may be stowed (add_compartment_cargo enforces).
+    bool        hidden          = false;
 };
 
 // One ACCEPTED mission, with live progress — the persistent half of the
@@ -361,8 +368,25 @@ bool add_item(PlayerState& p, const inventory::InventoryItem& it, int capacity);
 // True iff ANY cargo stack is a contraband commodity (Phase 1.1). The
 // search director (hailing.{h,cpp}) uses this to decide whether to
 // roll the contraband branch on a hail. Cheap (one unordered_map probe
-// per non-zero stack).
+// per non-zero stack). Compartment-stowed (hidden) stacks are EXEMPT —
+// that is the entire point of the secret compartment (#116).
 bool carrying_contraband(const PlayerState& p);
+
+// ---- secret compartment (campaign M04 reward, #116) -----------------------
+// A 20-unit smuggler's stash: contraband-only, scan-exempt, zero hold
+// space. Ownership is the plot item "secret_compartment" (plot.h) — these
+// helpers only manage the stowed stacks; the CALLER gates on ownership.
+constexpr int k_secret_compartment_units = 20;
+
+// Units currently stowed (sum of hidden stacks).
+int compartment_units_used(const PlayerState& p);
+
+// Stow `units` of `commodity_id` as a hidden stack. Refuses (false, no
+// mutation) when units <= 0, the commodity is not contraband, or the
+// compartment would overflow k_secret_compartment_units. Merges into an
+// existing hidden stack of the same commodity. Takes NO hold capacity.
+bool add_compartment_cargo(PlayerState& p, const std::string& commodity_id,
+                           int units);
 
 // ---- ordnance (np-zte.2) ----------------------------------------------------
 // type_index is a MissileType (0=DF,1=HS,2=IR); out-of-range is a no-op.

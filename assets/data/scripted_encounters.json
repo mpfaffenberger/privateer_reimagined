@@ -36,6 +36,196 @@
         },
         "loot_roll": "confed_thanks"
       }
+    },
+    {
+      "id": "m03_troy_militia_heat",
+      "trigger": {
+        "kind": "in_system",
+        "system": "troy",
+        "requires_flags": [
+          "m03_active"
+        ],
+        "cooldown_s": 75
+      },
+      "waves": [
+        {
+          "delay_s": 4,
+          "spawns": [
+            {
+              "faction": "militia",
+              "class": "talon",
+              "count": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "m04_pentonville_picket_outbound",
+      "trigger": {
+        "kind": "at_nav",
+        "system": "pentonville",
+        "nav": "119CE Jump",
+        "radius_m": 12000,
+        "requires_flags": [
+          "m04_active"
+        ],
+        "cooldown_s": 240
+      },
+      "dialogue": [
+        {
+          "voice": "confed",
+          "line": "Confed picket to unidentified freighter: cut thrust and prepare for cargo inspection."
+        }
+      ],
+      "waves": [
+        {
+          "delay_s": 2,
+          "spawns": [
+            {
+              "faction": "confed",
+              "class": "stiletto",
+              "count": 2
+            },
+            {
+              "faction": "confed",
+              "class": "broadsword",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "m04_pentonville_picket_return",
+      "trigger": {
+        "kind": "at_nav",
+        "system": "pentonville",
+        "nav": "119CE Jump",
+        "radius_m": 12000,
+        "requires_flags": [
+          "m04_delivered"
+        ],
+        "forbids_flags": [
+          "tayla_3_done"
+        ],
+        "cooldown_s": 240
+      },
+      "dialogue": [
+        {
+          "voice": "confed",
+          "line": "That freighter matches the smuggling profile from New Constantinople. Move to intercept."
+        }
+      ],
+      "waves": [
+        {
+          "delay_s": 2,
+          "spawns": [
+            {
+              "faction": "confed",
+              "class": "stiletto",
+              "count": 2
+            },
+            {
+              "faction": "confed",
+              "class": "broadsword",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "m05_riordian_oakham_ambush",
+      "trigger": {
+        "kind": "on_launch",
+        "base": "oakham_pirate",
+        "requires_flags": [
+          "m05_active"
+        ],
+        "forbids_flags": [
+          "killed:riordian"
+        ],
+        "cooldown_s": 60
+      },
+      "dialogue": [
+        {
+          "voice": "William Riordian",
+          "line": "Well, well. Tayla's new errand runner. You know who flew these routes before you crawled in from New Detroit?"
+        },
+        {
+          "voice": "William Riordian",
+          "line": "I did. Three years without losing a gram. Then you show up with that pretty artifact and suddenly I am yesterday's news."
+        },
+        {
+          "voice": "William Riordian",
+          "line": "Nothing personal, friend. But you are going to disappear now."
+        }
+      ],
+      "waves": [
+        {
+          "delay_s": 1,
+          "spawns": [
+            {
+              "faction": "pirate",
+              "class": "centurion",
+              "count": 1,
+              "name": "William Riordian",
+              "unique": "riordian",
+              "hostile": true
+            },
+            {
+              "faction": "pirate",
+              "class": "talon",
+              "count": 3,
+              "hostile": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "m05_riordian_jump_reambush",
+      "trigger": {
+        "kind": "at_nav",
+        "system": "pentonville",
+        "nav": "119CE Jump",
+        "radius_m": 12000,
+        "requires_flags": [
+          "m05_active"
+        ],
+        "forbids_flags": [
+          "killed:riordian"
+        ],
+        "cooldown_s": 300
+      },
+      "dialogue": [
+        {
+          "voice": "William Riordian",
+          "line": "Running for the jump point? Predictable. I brought more friends this time."
+        }
+      ],
+      "waves": [
+        {
+          "delay_s": 1,
+          "spawns": [
+            {
+              "faction": "pirate",
+              "class": "centurion",
+              "count": 1,
+              "name": "William Riordian",
+              "unique": "riordian",
+              "hostile": true
+            },
+            {
+              "faction": "pirate",
+              "class": "talon",
+              "count": 5,
+              "hostile": true
+            }
+          ]
+        }
+      ]
     }
   ]
 }
