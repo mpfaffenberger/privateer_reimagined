@@ -12,16 +12,22 @@ namespace {
 // Reading order: H = hostile, N = neutral, A = allied. Diagonal is A
 // (faction always allied to itself; wingmen rely on this).
 //
-//             Civ  Mer  Cnf  Mil  Hnt  Pir  Ret  Kil
+// (#146) Steltek appended: the drone is a lone ancient weapon — hostile
+// to EVERYTHING, including (by special exception) its own diagonal: there
+// is exactly one Steltek entity in the game and it has no friends. No
+// wingman logic ever runs for it.
+//
+//             Civ  Mer  Cnf  Mil  Hnt  Pir  Ret  Kil  Stk
 constexpr char k_stance_grid[kFactionCount][kFactionCount] = {
-    /* Civ */ { 'A', 'N', 'N', 'N', 'N', 'H', 'H', 'H' },
-    /* Mer */ { 'N', 'A', 'A', 'A', 'N', 'H', 'H', 'H' },
-    /* Cnf */ { 'N', 'A', 'A', 'A', 'N', 'H', 'H', 'H' },
-    /* Mil */ { 'N', 'A', 'A', 'A', 'N', 'H', 'H', 'H' },
-    /* Hnt */ { 'N', 'N', 'N', 'N', 'A', 'H', 'H', 'H' },
-    /* Pir */ { 'H', 'H', 'H', 'H', 'H', 'A', 'N', 'H' },
-    /* Ret */ { 'H', 'H', 'H', 'H', 'H', 'N', 'A', 'H' },
-    /* Kil */ { 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'A' },
+    /* Civ */ { 'A', 'N', 'N', 'N', 'N', 'H', 'H', 'H', 'H' },
+    /* Mer */ { 'N', 'A', 'A', 'A', 'N', 'H', 'H', 'H', 'H' },
+    /* Cnf */ { 'N', 'A', 'A', 'A', 'N', 'H', 'H', 'H', 'H' },
+    /* Mil */ { 'N', 'A', 'A', 'A', 'N', 'H', 'H', 'H', 'H' },
+    /* Hnt */ { 'N', 'N', 'N', 'N', 'A', 'H', 'H', 'H', 'H' },
+    /* Pir */ { 'H', 'H', 'H', 'H', 'H', 'A', 'N', 'H', 'H' },
+    /* Ret */ { 'H', 'H', 'H', 'H', 'H', 'N', 'A', 'H', 'H' },
+    /* Kil */ { 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'A', 'H' },
+    /* Stk */ { 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H' },
 };
 
 constexpr Stance char_to_stance(char c) {
@@ -42,11 +48,12 @@ constexpr int8_t k_baseline[kFactionCount] = {
     /* Pirate   */ -30,
     /* Retro    */ -50,
     /* Kilrathi */ -100,
+    /* Steltek  */ -100,   // (#146) the drone: no rep can save you
 };
 
 constexpr const char* k_names[kFactionCount] = {
     "civilian", "merchant", "confed", "militia",
-    "hunter", "pirate", "retro", "kilrathi",
+    "hunter", "pirate", "retro", "kilrathi", "steltek",
 };
 
 bool g_initialised = false;

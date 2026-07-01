@@ -2,7 +2,8 @@
 // -----------------------------------------------------------------------------
 // faction.h — who hates whom.
 //
-// Privateer's universe has eight factions. Most NPC behaviour is gated on
+// Privateer's universe has eight factions (plus the appended Steltek — the
+// campaign's drone, #146). Most NPC behaviour is gated on
 // "is this other ship hostile to me?" which is a 2-axis lookup:
 //
 //   * NPC vs NPC: a static 8x8 stance matrix. A Pirate sees a Confed and
@@ -36,6 +37,9 @@ enum class Faction : uint8_t {
     Pirate,
     Retro,
     Kilrathi,
+    Steltek,    // (#146) the drone + its makers — hostile to everything,
+                // -100 baseline, no rep path. Appended (never reorder);
+                // rep/kills serialize by NAME so old saves are safe.
     Count
 };
 constexpr int kFactionCount = (int)Faction::Count;
