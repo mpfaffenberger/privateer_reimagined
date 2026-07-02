@@ -204,6 +204,7 @@ add_executable(new_privateer
     src/loot.cpp
     src/objectives.cpp
     src/encounters.cpp
+    src/escort.cpp
     src/base_screens.cpp
     src/savegame.cpp
     src/player.cpp

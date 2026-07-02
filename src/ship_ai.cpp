@@ -195,6 +195,15 @@ void ship_ai::tick(Ship& s, const ShipRegistry& all_ships, float t_now,
 
     if (has_hostile) {
         s.ai.target_id = p.nearest_hostile_id;
+        // Campaign escort waves (#140): a live preferred target overrides
+        // the nearest-hostile pick (the wave focuses the escortee even
+        // when the player is closer). Falls back automatically when the
+        // preferred target is gone.
+        if (s.ai.preferred_target_id != 0) {
+            const Ship* pt = all_ships.find_by_id(s.ai.preferred_target_id);
+            if (pt && pt->alive) s.ai.target_id = s.ai.preferred_target_id;
+            else                 s.ai.preferred_target_id = 0;
+        }
         if (is_coward && being_targeted) {
             // Personality override the table can't see: a hunted Coward runs.
             // Healthy/un-hunted cowards fall through to the brain and fight.

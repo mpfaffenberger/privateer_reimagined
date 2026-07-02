@@ -6,6 +6,7 @@
 #include "scripted_encounters.h"
 
 #include "comm.h"            // comm::push
+#include "escort.h"          // campaign escorts (#140): begin + aggro target
 #include "audio.h"           // audio::load / play, SampleId
 #include "faction.h"         // faction::from_name / to_name
 #include "json.h"            // json::parse_file + Value
@@ -83,6 +84,10 @@ struct SpawnGroup {
     // any campaign stance override (#117: Riordian's pirate wing attacks
     // even while Tayla's pirate-neutrality is in effect).
     bool        hostile = false;
+    // (#140) per-wave aggro authoring: "player" == hostile above;
+    // "escortee" pins ShipAIState::preferred_target_id to the live
+    // escortee so the wave focuses the Drayman, not the player.
+    std::string aggro;
 };
 
 // (#139) One sequential wave: all groups spawn together after delay_s;
@@ -145,6 +150,12 @@ struct Scenario {
     // cleared. The comm-interaction objective ("message delivered") in
     // one grammar token; also fires for dialogue-less scenarios.
     std::vector<std::string> on_dialogue_done;
+
+    // (#140) optional escort job: spawned via escort::begin the moment
+    // the scenario triggers, so the meet-point hail + attack waves and
+    // the escortee live in ONE authored entry.
+    bool        has_escort = false;
+    escort::Def escort_def;
 };
 
 // ---- module state ---------------------------------------------------------
@@ -184,6 +195,11 @@ std::vector<WingMember> active_wing;
 std::string g_launch_base;
 float       g_launch_at = -1e9f;
 constexpr float k_launch_window_s = 8.0f;
+
+// (#140) which active_idx already had its escort spawned — keyed on the
+// activation so the begin fires exactly once per trigger. Reset with the
+// director. escort::begin also refuses double-starts on its own.
+int g_escort_begun_idx = -1;
 
 // Deterministic RNG (hailing.cpp pattern). Cosmetically seeded.
 std::mt19937& rng() {
@@ -394,6 +410,8 @@ void parse_scenario(const json::Value& v, Scenario& s) {
                         grp.unique = u->as_string();
                     if (const json::Value* h = gv.find("hostile"); h && h->is_bool())
                         grp.hostile = h->as_bool();
+                    if (const json::Value* ag = gv.find("aggro"); ag && ag->is_string())
+                        grp.aggro = ag->as_string();
                     if (!grp.class_name.empty()) wave.groups.push_back(std::move(grp));
                 }
             }
@@ -417,6 +435,27 @@ void parse_scenario(const json::Value& v, Scenario& s) {
     if (const json::Value* od = v.find("on_dialogue_done"); od && od->is_array()) {
         for (const json::Value& g : od->as_array())
             if (g.is_string()) s.on_dialogue_done.push_back(g.as_string());
+    }
+    // (#140) escort block: { faction?, class, name, dest_nav, hull_scale?,
+    // landed_flag, fail_clear_flags: [...] }.
+    if (const json::Value* ev = v.find("escort"); ev && ev->is_object()) {
+        s.has_escort = true;
+        escort::Def& d = s.escort_def;
+        if (const json::Value* f = ev->find("faction"); f && f->is_string())
+            d.faction = f->as_string();
+        if (const json::Value* c = ev->find("class"); c && c->is_string())
+            d.ship_class = c->as_string();
+        if (const json::Value* n = ev->find("name"); n && n->is_string())
+            d.name = n->as_string();
+        if (const json::Value* dn = ev->find("dest_nav"); dn && dn->is_string())
+            d.dest_nav = dn->as_string();
+        if (const json::Value* hs = ev->find("hull_scale"); hs && hs->is_number())
+            d.hull_scale = (float)hs->as_number();
+        if (const json::Value* lf = ev->find("landed_flag"); lf && lf->is_string())
+            d.landed_flag = lf->as_string();
+        if (const json::Value* fc = ev->find("fail_clear_flags"); fc && fc->is_array())
+            for (const json::Value& g : fc->as_array())
+                if (g.is_string()) d.fail_clear_flags.push_back(g.as_string());
     }
 }
 
@@ -565,6 +604,7 @@ void reset() {
     active_wing.clear();
     g_launch_base.clear();
     g_launch_at = -1e9f;
+    g_escort_begun_idx = -1;   // (#140) fresh world = fresh escort begins
 }
 
 void notify_launch(const std::string& base_id) {
@@ -593,6 +633,17 @@ void tick(ShipRegistry& ships, const Ship& player_ship, PlayerState& player,
             return;
         }
         const Scenario& sc = g_scenarios[active_idx];
+
+        // ---- (#140) escort spawn: once per activation, before the
+        // dialogue plays, so the meet-point hail has a ship to point at.
+        if (sc.has_escort && g_escort_begun_idx != active_idx &&
+            world.system) {
+            g_escort_begun_idx = active_idx;
+            const HMM_Vec3 anchor = active_anchor_fixed
+                ? active_anchor_pos : player_ship.position;
+            escort::begin(sc.escort_def, anchor, ships, *world.system,
+                          player, spawn);
+        }
 
         // ---- PHASE: DIALOGUE ------------------------------------------
         // (#139) empty dialogue = pure combat scenario: fall straight
@@ -698,12 +749,19 @@ void tick(ShipRegistry& ships, const Ship& player_ship, PlayerState& player,
                         active_wing.push_back(WingMember{ id, grp.unique });
                         if (active_anchor_id == 0) active_anchor_id = id;
                         ++spawned_count;
-                        // `hostile: true` groups aggro the player outright
-                        // — the per-ship override that beats faction stance
-                        // AND campaign stance overrides (#117 Riordian).
-                        if (grp.hostile) {
+                        // `hostile: true` / aggro:"player" groups aggro the
+                        // player outright — the per-ship override that beats
+                        // faction stance AND campaign stance overrides
+                        // (#117 Riordian). aggro:"escortee" (#140) pins the
+                        // wave on the live escort ship instead.
+                        if (grp.hostile || grp.aggro == "player") {
                             if (Ship* s = ships.find_by_id(id))
                                 s->ai.aggro_player = true;
+                        } else if (grp.aggro == "escortee") {
+                            if (const uint32_t eid = escort::active_ship_id()) {
+                                if (Ship* s = ships.find_by_id(id))
+                                    s->ai.preferred_target_id = eid;
+                            }
                         }
                     }
                 }

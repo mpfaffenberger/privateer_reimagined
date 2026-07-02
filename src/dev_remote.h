@@ -115,6 +115,10 @@
 //                          Only works when the fixer is actually present
 //                          at the current base for this player (same
 //                          present_at gate the Bar screen renders from).
+//   POST /autopilot      → select a nav BY NAME + engage the nav
+//                          autopilot (the A key). Body { nav }. Hostile
+//                          gate applies; refusals show in the HUD banner
+//                          and the game log.
 //   GET  /events?since=N → { events: [ { seq, t, category, text }, ... ],
 //                          latest } — a monotonically-sequenced ring
 //                          buffer of gameplay events (comm feed lines,
@@ -429,6 +433,11 @@ void set_dock_hook(std::function<void(std::string base)> hook);
 // main thread with (fixer id, verb). The host re-validates presence at the
 // current bar, then calls fixers::accept/refuse/dialogue_done.
 void set_fixer_hook(std::function<void(std::string id, std::string verb)> hook);
+
+// POST /autopilot enqueues a command; drain_commands invokes this hook on
+// the main thread with the nav NAME. The host resolves it to a nav index
+// and calls autopilot::try_engage (hostile gate + banner apply as usual).
+void set_autopilot_hook(std::function<void(std::string nav)> hook);
 
 // ---------------------------------------------------------------------------
 // /events — gameplay event ring buffer (agentic testing).

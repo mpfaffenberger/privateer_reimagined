@@ -338,6 +338,83 @@ int main() {
     check(!fixer_here("new_constantinople", p, "lynch_m09_offer"),
           "Lynch offers retire after lynch_done");
 
+    // =======================================================================
+    // Phase 4: the Masterson arc (M10-M13, #122-#125 + escort infra #140)
+    // =======================================================================
+    std::printf("\n=== Masterson arc (M10-M13) ===\n\n");
+
+    const int64_t mast_base = p.credits;
+
+    // ---- M10: escort settle + landing-order gate (#122) --------------------
+    check(fixer_here("oxford", p, "masterson_m10_offer"),
+          "M10 offered at Oxford after lynch_done");
+    fixers::accept(*fixers::find("masterson_m10_offer"), p);
+    check(plot::has_flag(p, "m10_active"), "M10 active");
+    // Docking before the meet (not underway): a no-op, mission continues.
+    campaign::on_dock(p, "oxford");
+    check(plot::has_flag(p, "m10_active"),
+          "M10 docking before the meet changes nothing");
+    // Escort landed (escort.cpp proxy), THEN the player lands: success.
+    plot::set_flag(p, "m10_underway");
+    plot::set_flag(p, "m10_escortee_landed");
+    campaign::on_dock(p, "oxford");
+    check(p.credits == mast_base + 10000, "M10 pays 10,000");
+    check(plot::has_flag(p, "masterson_1_done") &&
+          !plot::has_flag(p, "m10_active") &&
+          !plot::has_flag(p, "m10_escortee_landed"),
+          "M10 settles clean (flags consumed)");
+
+    // Landing-order violation: player lands while the Drayman is still up.
+    {
+        PlayerState v = player::new_game("troy");
+        plot::set_flag(v, "lynch_done");
+        fixers::accept(*fixers::find("masterson_m10_offer"), v);
+        plot::set_flag(v, "m10_underway");   // met the Drayman, it's flying
+        campaign::on_dock(v, "oxford");
+        check(!plot::has_flag(v, "m10_active"),
+              "landing-order violation FAILS the escort");
+        check(!plot::has_flag(v, "masterson_1_done"),
+              "violation pays nothing");
+        check(fixer_here("oxford", v, "masterson_m10_offer"),
+              "violation: Masterson re-offers");
+    }
+
+    // ---- M11: the Black Rhombus hunt (#123) ---------------------------------
+    check(fixer_here("oxford", p, "masterson_m11_offer"),
+          "M11 offered after masterson_1_done");
+    fixers::accept(*fixers::find("masterson_m11_offer"), p);
+    plot::set_flag(p, "m11_found");            // scenario reveal proxy
+    campaign::on_dock(p, "achilles");          // docked mid-hunt, no kill
+    check(plot::has_flag(p, "m11_active") && !plot::has_flag(p, "m11_found"),
+          "M11 docking mid-hunt re-arms the reveal");
+    plot::set_flag(p, "killed:black_rhombus"); // kill-memory proxy
+    campaign::on_dock(p, "oxford");
+    check(p.credits == mast_base + 20000, "M11 pays 10,000");
+    check(plot::has_flag(p, "masterson_2_done"), "masterson_2_done");
+
+    // ---- M12 + M13: remaining escorts -> the library (#124/#125) -----------
+    fixers::accept(*fixers::find("masterson_m12_offer"), p);
+    plot::set_flag(p, "m12_underway");
+    plot::set_flag(p, "m12_escortee_landed");
+    campaign::on_dock(p, "oxford");
+    check(plot::has_flag(p, "masterson_3_done") &&
+          p.credits == mast_base + 30000, "M12 settles (+10,000)");
+    fixers::accept(*fixers::find("masterson_m13_offer"), p);
+    plot::set_flag(p, "m13_underway");
+    plot::set_flag(p, "m13_escortee_landed");
+    campaign::on_dock(p, "oxford");
+    check(plot::has_flag(p, "masterson_done") &&
+          p.credits == mast_base + 40000, "M13 settles (+10,000)");
+
+    // ---- the library scene (#125 reward) ------------------------------------
+    check(fixer_here("oxford", p, "oxford_library_scene"),
+          "library scene unlocked after masterson_done");
+    fixers::dialogue_done(*fixers::find("oxford_library_scene"), p);
+    check(plot::has_flag(p, "library_access"),
+          "library scene grants library_access (Steltek + Monkhouse lead)");
+    check(!fixer_here("oxford", p, "oxford_library_scene"),
+          "library scene retires after access granted");
+
     std::printf("\n=== %s ===\n",
                 g_fail == 0 ? "ALL CHECKS PASSED" : "FAILURES DETECTED");
     return g_fail == 0 ? 0 : 1;

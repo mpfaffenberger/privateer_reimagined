@@ -208,6 +208,77 @@
       ],
       "offer": "Fly to Liverpool (Newcastle system) and collect Mr. Smythe for 30,000 credits. Accept?",
       "accept_actions": ["set_flag:m09_active"]
+    },
+    {
+      "id": "masterson_m10_offer",
+      "name": "Masterson",
+      "base": "oxford",
+      "requires_flags": ["lynch_done"],
+      "forbids_flags": ["m10_active", "masterson_1_done"],
+      "dialogue": [
+        "Ah. The pilot with the artifact and the trail of dead mobsters. Masterson, university administration. And no - the library is CLOSED to you.",
+        "However. The university needs work done, and I am nothing if not transactional. Four favors, and I unlock the archive myself.",
+        "First: Hunter Toth is inbound in a Drayman at the Saxtogue jump point. He wrote unkind truths about the Retros, and Retros hold grudges.",
+        "Meet him there and see him to the planet. He must be ON THE GROUND before you land - I will not pay for a corpse with an honor guard."
+      ],
+      "offer": "Escort Toth's Drayman from the Saxtogue Jump to Oxford for 10,000 credits. He lands first. Accept?",
+      "accept_actions": ["set_flag:m10_active"]
+    },
+    {
+      "id": "masterson_m11_offer",
+      "name": "Masterson",
+      "base": "oxford",
+      "requires_flags": ["masterson_1_done"],
+      "forbids_flags": ["m11_active", "masterson_2_done"],
+      "dialogue": [
+        "Favor two. Data pirates are draining our mainframe from a ship parked somewhere in-system: the Black Rhombus. A converted Galaxy, bristling with turrets.",
+        "Patrol the jump points until you find it, and make it stop existing. The escorts are optional; the Rhombus is not.",
+        "Ten thousand on your return. Do check your ammunition first."
+      ],
+      "offer": "Hunt down and destroy the Black Rhombus somewhere at Oxford's jump points, then return. 10,000 credits. Accept?",
+      "accept_actions": ["set_flag:m11_active"]
+    },
+    {
+      "id": "masterson_m12_offer",
+      "name": "Masterson",
+      "base": "oxford",
+      "requires_flags": ["masterson_2_done"],
+      "forbids_flags": ["m12_active", "masterson_3_done"],
+      "dialogue": [
+        "Favor three. My book shipment arrives on the Drayman Vulcan's Forge at the Saxtogue jump point. A rival collector hired bounty hunters to divert it.",
+        "Here is the wrinkle: the hunters were paid to remove the ESCORT. That would be you. The Demons will ignore the freighter entirely.",
+        "Same terms: the Forge lands first, then you. Ten thousand."
+      ],
+      "offer": "Escort Vulcan's Forge from the Saxtogue Jump to Oxford - the Demons will hunt YOU. 10,000 credits. Accept?",
+      "accept_actions": ["set_flag:m12_active"]
+    },
+    {
+      "id": "masterson_m13_offer",
+      "name": "Masterson",
+      "base": "oxford",
+      "requires_flags": ["masterson_3_done"],
+      "forbids_flags": ["m13_active", "masterson_done"],
+      "dialogue": [
+        "Last favor. One more Drayman, inbound at the XXN-1927 jump point, carrying... let us say 'pirate bait'. They know what is in the hold and they want it badly.",
+        "I will be honest with you, pilot: this freighter is a rust bucket. Her plating would embarrass a shuttle. Keep the Talons OFF her.",
+        "She lands first. Then you. Then the library opens. Ten thousand, and my genuine respect."
+      ],
+      "offer": "Escort the final Drayman from the XXN-1927 Jump to Oxford - she is fragile and the pirates want her badly. 10,000 credits. Accept?",
+      "accept_actions": ["set_flag:m13_active"]
+    },
+    {
+      "id": "oxford_library_scene",
+      "name": "Oxford Library",
+      "base": "oxford",
+      "requires_flags": ["masterson_done"],
+      "forbids_flags": ["library_access"],
+      "dialogue": [
+        "The archive terminal accepts Masterson's authorization. You place the artifact in the scanner cradle.",
+        "MATCH FOUND. Classification: STELTEK. A precursor civilization - starfaring while humanity was learning fire. No verified contact in recorded history.",
+        "The artifact is a power relay of unknown function. Energy signature: dormant, but not dead. Cross-reference: recent anomalous Steltek-band readings reported near PALAN.",
+        "Appended note: Dr. Monkhouse, the sector's leading xenoarchaeologist, has been asking the same questions you are. Last known location: the Palan system."
+      ],
+      "done_actions": ["set_flag:library_access"]
     }
   ]
 }

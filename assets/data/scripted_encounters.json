@@ -451,6 +451,295 @@
           ]
         }
       ]
+    },
+    {
+      "id": "m10_toth_escort",
+      "trigger": {
+        "kind": "at_nav",
+        "system": "oxford",
+        "nav": "Saxtogue Jump",
+        "radius_m": 18000,
+        "requires_flags": [
+          "m10_active"
+        ],
+        "forbids_flags": [
+          "m10_underway",
+          "m10_escortee_landed"
+        ],
+        "cooldown_s": 120
+      },
+      "dialogue": [
+        {
+          "voice": "Hunter Toth",
+          "line": "You must be Masterson's hired wing. Toth here. My sensors are lousy with Retro signatures - they REALLY did not like chapter twelve."
+        }
+      ],
+      "escort": {
+        "faction": "merchant",
+        "class": "drayman",
+        "name": "Toth's Drayman",
+        "dest_nav": "Oxford University Planet",
+        "landed_flag": "m10_escortee_landed",
+        "fail_clear_flags": [
+          "m10_active",
+          "m10_underway"
+        ]
+      },
+      "on_dialogue_done": [
+        "set_flag:m10_underway"
+      ],
+      "waves": [
+        {
+          "delay_s": 2,
+          "spawns": [
+            {
+              "faction": "retro",
+              "class": "talon",
+              "count": 2,
+              "aggro": "escortee"
+            }
+          ]
+        },
+        {
+          "delay_s": 4,
+          "spawns": [
+            {
+              "faction": "retro",
+              "class": "talon",
+              "count": 3,
+              "aggro": "escortee"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "m11_rhombus_shangri_la",
+      "trigger": {
+        "kind": "at_nav",
+        "system": "oxford",
+        "nav": "Shangri La Jump",
+        "radius_m": 18000,
+        "requires_flags": [
+          "m11_active"
+        ],
+        "forbids_flags": [
+          "killed:black_rhombus",
+          "m11_found"
+        ],
+        "cooldown_s": 120
+      },
+      "dialogue": [
+        {
+          "voice": "Black Rhombus",
+          "line": "Unregistered contact, this is a private data operation. Leave, or become an entry in someone ELSE's database."
+        }
+      ],
+      "on_dialogue_done": [
+        "set_flag:m11_found"
+      ],
+      "waves": [
+        {
+          "delay_s": 1,
+          "spawns": [
+            {
+              "faction": "pirate",
+              "class": "galaxy",
+              "count": 1,
+              "name": "Black Rhombus",
+              "unique": "black_rhombus",
+              "hostile": true
+            },
+            {
+              "faction": "pirate",
+              "class": "talon",
+              "count": 3,
+              "hostile": true
+            }
+          ]
+        },
+        {
+          "delay_s": 3,
+          "spawns": [
+            {
+              "faction": "pirate",
+              "class": "talon",
+              "count": 4,
+              "hostile": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "m11_rhombus_xxn_1927",
+      "trigger": {
+        "kind": "at_nav",
+        "system": "oxford",
+        "nav": "XXN-1927 Jump",
+        "radius_m": 18000,
+        "requires_flags": [
+          "m11_active"
+        ],
+        "forbids_flags": [
+          "killed:black_rhombus",
+          "m11_found"
+        ],
+        "cooldown_s": 120
+      },
+      "dialogue": [
+        {
+          "voice": "Black Rhombus",
+          "line": "Unregistered contact, this is a private data operation. Leave, or become an entry in someone ELSE's database."
+        }
+      ],
+      "on_dialogue_done": [
+        "set_flag:m11_found"
+      ],
+      "waves": [
+        {
+          "delay_s": 1,
+          "spawns": [
+            {
+              "faction": "pirate",
+              "class": "galaxy",
+              "count": 1,
+              "name": "Black Rhombus",
+              "unique": "black_rhombus",
+              "hostile": true
+            },
+            {
+              "faction": "pirate",
+              "class": "talon",
+              "count": 3,
+              "hostile": true
+            }
+          ]
+        },
+        {
+          "delay_s": 3,
+          "spawns": [
+            {
+              "faction": "pirate",
+              "class": "talon",
+              "count": 4,
+              "hostile": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "m12_vulcans_forge_escort",
+      "trigger": {
+        "kind": "at_nav",
+        "system": "oxford",
+        "nav": "Saxtogue Jump",
+        "radius_m": 18000,
+        "requires_flags": [
+          "m12_active"
+        ],
+        "forbids_flags": [
+          "m12_underway",
+          "m12_escortee_landed"
+        ],
+        "cooldown_s": 120
+      },
+      "dialogue": [
+        {
+          "voice": "Vulcan's Forge",
+          "line": "Escort, this is Vulcan's Forge. Fair warning from my dispatcher: the bounty on this run is on YOUR head, not my cargo. Fly accordingly."
+        }
+      ],
+      "escort": {
+        "faction": "merchant",
+        "class": "drayman",
+        "name": "Vulcan's Forge",
+        "dest_nav": "Oxford University Planet",
+        "landed_flag": "m12_escortee_landed",
+        "fail_clear_flags": [
+          "m12_active",
+          "m12_underway"
+        ]
+      },
+      "on_dialogue_done": [
+        "set_flag:m12_underway"
+      ],
+      "waves": [
+        {
+          "delay_s": 2,
+          "spawns": [
+            {
+              "faction": "hunter",
+              "class": "demon",
+              "count": 4,
+              "aggro": "player"
+            }
+          ]
+        },
+        {
+          "delay_s": 4,
+          "spawns": [
+            {
+              "faction": "hunter",
+              "class": "demon",
+              "count": 2,
+              "aggro": "player"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "m13_final_drayman_escort",
+      "trigger": {
+        "kind": "at_nav",
+        "system": "oxford",
+        "nav": "XXN-1927 Jump",
+        "radius_m": 18000,
+        "requires_flags": [
+          "m13_active"
+        ],
+        "forbids_flags": [
+          "m13_underway",
+          "m13_escortee_landed"
+        ],
+        "cooldown_s": 120
+      },
+      "dialogue": [
+        {
+          "voice": "Drayman Pilot",
+          "line": "Oh thank the stars, an escort. Listen - my hull integrity readout has been blinking ERROR since Tuesday. Please keep them very, very far away from me."
+        }
+      ],
+      "escort": {
+        "faction": "merchant",
+        "class": "drayman",
+        "name": "the final Drayman",
+        "dest_nav": "Oxford University Planet",
+        "hull_scale": 0.35,
+        "landed_flag": "m13_escortee_landed",
+        "fail_clear_flags": [
+          "m13_active",
+          "m13_underway"
+        ]
+      },
+      "on_dialogue_done": [
+        "set_flag:m13_underway"
+      ],
+      "waves": [
+        {
+          "delay_s": 2,
+          "spawns": [
+            {
+              "faction": "pirate",
+              "class": "talon",
+              "count": 5,
+              "aggro": "escortee"
+            }
+          ]
+        }
+      ]
     }
   ]
 }

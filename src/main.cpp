@@ -64,6 +64,7 @@
 #include "threat.h"
 #include "jump.h"
 #include "encounters.h"
+#include "escort.h"
 #include "hailing.h"
 #include "scripted_encounters.h"
 #include "dust.h"
@@ -1289,6 +1290,26 @@ void build_system_scene(bool first_time) {
             std::fprintf(stderr, "[dev_remote] /dock refused: no dockable nav '%s' in %s\n",
                          base.c_str(), g.player.current_system.c_str());
         });
+        // POST /autopilot — select a nav by NAME + engage (the A key).
+        dev_remote::set_autopilot_hook([](std::string nav) {
+            if (g.game.mode != GameMode::Flight) {
+                std::fprintf(stderr, "[dev_remote] /autopilot refused: not in Flight\n");
+                return;
+            }
+            for (int i = 0; i < (int)g.system.nav_points.size(); ++i) {
+                if (g.system.nav_points[i].name != nav) continue;
+                g.selected_nav = i;
+                const EngageResult r =
+                    autopilot::try_engage(g.autopilot, g.camera, g.system, i);
+                std::printf("[dev_remote] /autopilot '%s' -> %s\n", nav.c_str(),
+                            r == EngageResult::Engaged  ? "engaged"
+                            : r == EngageResult::Hostiles ? "refused (hostiles)"
+                                                          : "refused (no nav)");
+                return;
+            }
+            std::fprintf(stderr, "[dev_remote] /autopilot: no nav named '%s'\n",
+                         nav.c_str());
+        });
         // POST /fixer — drive a fixer conversation without a mouse. The
         // presence gate re-runs present_at against the CURRENT base, so the
         // judge can only do what a player in this bar could do.
@@ -1965,6 +1986,9 @@ void build_system_scene(bool first_time) {
     // Reset the Phase 2 scripted-encounter director too: a fresh system
     // gets fresh scenario cooldowns + cleared once-per-system flags.
     scripted::reset();
+    // An escort abandoned by a system switch FAILS (#140) — the Drayman
+    // doesn't teleport with you.
+    escort::reset(&g.player);
     // Loot drops (Phase 4c, np-#86): a fresh system starts with no
     // floating loot. Drops are world-state, not save state, so they
     // don't outlive a system switch.
@@ -3615,6 +3639,7 @@ void frame_cb() {
             hailing::reset();   // clear any per-NPC search state from the old encounter
             scripted::reset();  // fresh launch = fresh scenario director
             scripted::notify_launch(g.player.last_docked_base);  // on_launch triggers (#139)
+            escort::reset(&g.player);  // (#140) docking abandoned any live escort
             loot::clear();      // drop any stale loot markers from the previous wave
             objectives::clear(g.system);  // and any stale rumor leads
             std::printf("[encounter] base launch -> cleared old wave + re-rolled\n");
@@ -4163,6 +4188,13 @@ void frame_cb() {
             // (Tayla's pirate neutrality, #114). BEFORE-perception order
             // doesn't matter — it's idempotent and settles within a frame.
             campaign::tick(g.player, g.player.current_system);
+            // Escort lifecycle (#140): travel-goal pinning + arrival/death
+            // detection. After ship_ai (so the goal re-pin wins) and
+            // before ship::tick (which consumes the behavior). While the
+            // nav autopilot cruises, the escortee keeps pace (vanilla
+            // escorts auto-travel with the player).
+            escort::tick(g.ships, g.system, g.player, encounter_despawn,
+                         autopilot::engaged(g.autopilot), g.camera.position);
         }
     }
 

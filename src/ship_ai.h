@@ -164,6 +164,13 @@ struct ShipAIState {
 
     bool      aggro_player = false;   // hailing/search override: treat the player as hostile regardless of reputation (transient, not serialized)
 
+    // Campaign escort waves (#140): while this ship id is alive, Engage
+    // locks IT instead of the nearest hostile ("the Retros focus the
+    // Drayman"). Cleared automatically when the preferred target dies.
+    // Transient, not serialized — set by the scenario director's
+    // aggro:"escortee" spawn groups.
+    uint32_t  preferred_target_id = 0;
+
     // ---- data-driven brain runtime (src/ai_maneuver.h, ai_brain.cpp) ---
     // The combat brain is now a condition->maneuver table evaluator. The
     // STATIC table (3 morale tiers of logic+interrupt rules) is shared and

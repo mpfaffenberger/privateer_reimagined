@@ -56,7 +56,8 @@ struct Command {
     enum class Kind { SetCamera, Screenshot, VoiceSay, CommBark, CargoGive, Spawn,
                       Kill, SetTarget, TractorPull, InventorySell, InventoryGive,
                       InventoryInstall, InventoryEquip, SetPanel, CommsSelect,
-                      Rumor, Plot, BaseScreenNav, Goto, Dock, Fixer };
+                      Rumor, Plot, BaseScreenNav, Goto, Dock, Fixer,
+                      Autopilot };
     Kind kind;
 
     // SetCamera — any optional field is encoded with `has_*`.
@@ -206,6 +207,7 @@ std::function<void(std::string)>                            g_base_screen_hook;
 std::function<void(std::string)>                            g_goto_hook;
 std::function<void(std::string)>                            g_dock_hook;
 std::function<void(std::string, std::string)>               g_fixer_hook;
+std::function<void(std::string)>                            g_autopilot_hook;
 
 std::thread       g_thread;
 std::atomic<bool> g_running{false};
@@ -743,6 +745,26 @@ void handle_fixer(int fd, const std::string& body) {
     c.kind        = Command::Kind::Fixer;
     c.str_arg     = id;
     c.plot_action = action;
+    {
+        std::lock_guard lk(g_queue_mu);
+        g_queue.push_back(c);
+    }
+    send_json(fd, "{\"ok\":true}");
+}
+
+// POST /autopilot — select a nav BY NAME and engage the nav autopilot
+// (the A key). Body { nav }. The hostile gate still applies; the HUD
+// banner / autopilot state tells the judge whether it took (and the
+// "mode"/status events narrate arrival).
+void handle_autopilot(int fd, const std::string& body) {
+    std::string nav;
+    if (!extract_string(body, "nav", &nav) || nav.empty()) {
+        send_json(fd, "{\"ok\":false,\"error\":\"missing nav\"}");
+        return;
+    }
+    Command c;
+    c.kind    = Command::Kind::Autopilot;
+    c.str_arg = nav;
     {
         std::lock_guard lk(g_queue_mu);
         g_queue.push_back(c);
@@ -1303,6 +1325,7 @@ void handle_connection(int fd) {
     else if (method == "POST" && path == "/goto")       handle_goto(fd, body);
     else if (method == "POST" && path == "/dock")       handle_dock(fd, body);
     else if (method == "POST" && path == "/fixer")      handle_fixer(fd, body);
+    else if (method == "POST" && path == "/autopilot")  handle_autopilot(fd, body);
     else if (method == "GET"  && path == "/missions")   handle_missions(fd);
     else if (method == "GET"  && path == "/events")     handle_events(fd, query);
     else                                                send_404(fd);
@@ -1619,6 +1642,16 @@ void drain_commands(Camera& cam) {
             if (hook) hook(c.str_arg, c.plot_action);
             break;
         }
+        case Command::Kind::Autopilot: {
+            // Select the named nav + engage the nav autopilot (A key).
+            std::function<void(std::string)> hook;
+            {
+                std::lock_guard lk(g_hooks_mu);
+                hook = g_autopilot_hook;
+            }
+            if (hook) hook(c.str_arg);
+            break;
+        }
         }
     }
 
@@ -1795,6 +1828,11 @@ void set_dock_hook(std::function<void(std::string)> hook) {
 void set_fixer_hook(std::function<void(std::string, std::string)> hook) {
     std::lock_guard lk(g_hooks_mu);
     g_fixer_hook = std::move(hook);
+}
+
+void set_autopilot_hook(std::function<void(std::string)> hook) {
+    std::lock_guard lk(g_hooks_mu);
+    g_autopilot_hook = std::move(hook);
 }
 
 void set_base_screen_hook(std::function<void(std::string)> hook) {

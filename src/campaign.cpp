@@ -185,6 +185,80 @@ void cargo_on_dock(const CargoMission& m, PlayerState& p,
     }
 }
 
+// ---- escort missions (M10/M12/M13, #122/#124/#125 + infra #140) -------------
+// The escortee lifecycle lives in escort.cpp (spawned by the scenario
+// director); THIS is the settle: docking at the mission base pays out iff
+// the escortee already landed (landed_flag). Landing FIRST is the
+// vanilla-accurate failure — active flags clear and the fixer re-offers.
+struct EscortMission {
+    const char* token;        // "m10" -> m10_active / m10_underway
+    const char* dest_base;    // bare base id
+    int64_t     payout;
+    const char* landed_flag;  // set by escort.cpp on safe arrival
+    const char* done_flag;    // chain milestone
+    const char* deliver_line;
+};
+
+constexpr EscortMission k_escort_missions[] = {
+    { "m10", "oxford", 10000, "m10_escortee_landed", "masterson_1_done",
+      "Toth is down safe. Masterson transfers 10,000 credits. One favor banked." },
+    { "m12", "oxford", 10000, "m12_escortee_landed", "masterson_3_done",
+      "Vulcan's Forge delivered the books intact. 10,000 credits. Three favors banked." },
+    { "m13", "oxford", 10000, "m13_escortee_landed", "masterson_done",
+      "The last Drayman is down. 10,000 credits - and Masterson owes you a library." },
+};
+
+void escort_on_dock(const EscortMission& m, PlayerState& p,
+                    const std::string& base_id) {
+    const std::string active   = std::string(m.token) + "_active";
+    const std::string underway = std::string(m.token) + "_underway";
+    if (!plot::has_flag(p, active)) return;
+    if (!base_is(base_id, m.dest_base)) return;
+
+    if (plot::has_flag(p, m.landed_flag)) {
+        plot::clear_flag(p, active);
+        plot::clear_flag(p, underway);
+        plot::clear_flag(p, m.landed_flag);
+        plot::set_flag(p, m.done_flag);
+        player::add_credits(p, m.payout);
+        comm::push(m.deliver_line, false);
+        std::printf("[campaign] %s escort complete (+%lld cr)\n",
+                    m.token, (long long)m.payout);
+    } else if (plot::has_flag(p, underway)) {
+        // Landing-order violation: the player is on the pad while the
+        // Drayman is still up there. Vanilla-accurate gotcha (#122).
+        plot::clear_flag(p, active);
+        plot::clear_flag(p, underway);
+        comm::push("You landed before your charge was down. The contract is void.",
+                   false);
+        std::printf("[campaign] %s FAILED (landing-order violation)\n", m.token);
+    }
+    // Not underway yet (never met the Drayman): docking is a no-op — the
+    // meet is still waiting out there.
+}
+
+// ---- M11: the Black Rhombus hunt (#123) --------------------------------------
+// Patrol Oxford's navs until a scenario reveals the Rhombus (m11_found),
+// kill it (killed:black_rhombus), then land at Oxford to settle. Docking
+// mid-hunt re-arms the reveal so every sortie can find it again.
+void m11_on_dock(PlayerState& p, const std::string& base_id) {
+    if (!plot::has_flag(p, "m11_active")) return;
+    if (plot::has_flag(p, "killed:black_rhombus")) {
+        if (!base_is(base_id, "oxford")) return;
+        plot::clear_flag(p, "m11_active");
+        plot::clear_flag(p, "m11_found");
+        plot::set_flag(p, "masterson_2_done");
+        player::add_credits(p, 10000);
+        comm::push("The Black Rhombus is dust. Masterson transfers 10,000 credits.",
+                   false);
+        std::printf("[campaign] m11 complete (+10000 cr)\n");
+    } else {
+        // Landed anywhere without the kill: re-arm the hunt (the Rhombus
+        // 'doesn't despawn' — it re-appears at a patrol nav next sortie).
+        plot::clear_flag(p, "m11_found");
+    }
+}
+
 // ---- M04 reward: the secret compartment (#116) ------------------------------
 void m04_install_compartment(PlayerState& p) {
     if (!plot::give_item(p, "secret_compartment")) return;   // idempotent
@@ -232,6 +306,9 @@ void init() {
 void on_dock(PlayerState& p, const std::string& base_id) {
     for (const CargoMission& m : k_cargo_missions)
         cargo_on_dock(m, p, base_id);
+    for (const EscortMission& m : k_escort_missions)
+        escort_on_dock(m, p, base_id);
+    m11_on_dock(p, base_id);
 }
 
 void tick(const PlayerState& p, const std::string& system_id) {
