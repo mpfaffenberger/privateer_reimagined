@@ -24,6 +24,7 @@
 #include "commodity.h"
 #include "faction.h"
 #include "fixers.h"
+#include "gun.h"
 #include "player.h"
 #include "plot.h"
 #include "ship_class.h"
@@ -51,6 +52,14 @@ int cargo_units(const PlayerState& p, const std::string& id) {
 bool fixer_here(const std::string& base, const PlayerState& p,
                 const std::string& id) {
     for (const fixers::FixerDef* f : fixers::present_at(base, "", p))
+        if (f->id == id) return true;
+    return false;
+}
+
+// Archetype-placement variant (Goodin, #134: "any mining base").
+bool fixer_here_arch(const std::string& base, const std::string& arch,
+                     const PlayerState& p, const std::string& id) {
+    for (const fixers::FixerDef* f : fixers::present_at(base, arch, p))
         if (f->id == id) return true;
     return false;
 }
@@ -527,6 +536,70 @@ int main() {
     campaign::on_dock(p, "rygannon");
     check(p.credits == cross_base + 40000 && plot::has_flag(p, "cross_done"),
           "M21 settles at Rygannon with the gun (+10,000)");
+
+    // ---- Phase 7: Goodin + the Terrell finale (#134, #135) -------------------
+    check(fixer_here_arch("achilles", "mining", p, "goodin_offer"),
+          "Goodin appears at ANY mining base once cross_done");
+    check(!fixer_here_arch("rygannon", "mining", p, "goodin_offer"),
+          "Goodin never at Rygannon (excluded)");
+    check(!fixer_here_arch("perry_naval", "mining", p, "goodin_offer"),
+          "Goodin never at Perry itself (excluded)");
+    check(!fixer_here_arch("new_detroit", "industrial", p, "goodin_offer"),
+          "Goodin absent off the mining archetype");
+    fixers::accept(*fixers::find("goodin_offer"), p);
+    check(plot::has_flag(p, "m22_active"), "M22 accepted (the summons)");
+    const int64_t pre_m22 = p.credits;
+    campaign::on_dock(p, "achilles");
+    check(plot::has_flag(p, "m22_active"), "wrong-base dock is a no-op");
+    campaign::on_dock(p, "perry_naval");
+    check(!plot::has_flag(p, "m22_active") &&
+          plot::has_flag(p, "goodin_done") && p.credits == pre_m22,
+          "M22 settles at Perry Naval Base, pays NOTHING");
+
+    // M23: the boost + the drone kill + the office debrief.
+    check(fixer_here("perry_naval", p, "terrell_offer"),
+          "Terrell's office opens behind goodin_done");
+    fixers::accept(*fixers::find("terrell_offer"), p);
+    check(plot::has_flag(p, "m23_active"), "M23 accepted");
+    check(!fixer_here("perry_naval", p, "terrell_debrief"),
+          "debrief waits for the drone kill");
+
+    // The Steltek boost: flag lands via the action grammar; the stat
+    // mutation re-derives from plot state in campaign::tick.
+    gun::load_table("assets/data/privateer_ship_data.json");
+    const float dmg_stock = g_gun_stats[(int)GunType::SteltekGun].damage_cm;
+    check(dmg_stock == 10.0f, "stock Steltek gun loads complete at 10 cm");
+    plot::run_action(p, "m23:boost_gun");
+    check(plot::has_flag(p, "steltek_gun_boosted"), "boost flag set");
+    campaign::tick(p, "nitir");
+    check(g_gun_stats[(int)GunType::SteltekGun].damage_cm == 19.0f,
+          "boost re-derives Mega Steltek stats (19 cm)");
+    {   // and it reverts for an unboosted player in the same session
+        PlayerState sandbox = player::new_game("troy");
+        campaign::tick(sandbox, "troy");
+        check(g_gun_stats[(int)GunType::SteltekGun].damage_cm == dmg_stock,
+              "unboosted plot state reverts the stat table");
+        campaign::tick(p, "nitir");   // restore for the finale below
+    }
+
+    plot::set_flag(p, "killed:steltek_drone");   // the Tango kill (live-path
+                                                 // proof is the smoke run)
+    const int64_t pre_m23 = p.credits;
+    check(fixer_here("perry_naval", p, "terrell_debrief"),
+          "debrief gates open on the kill-memory flag");
+    fixers::dialogue_done(*fixers::find("terrell_debrief"), p);
+    check(p.credits == pre_m23 + 30000, "M23 pays 30,000");
+    check(plot::has_flag(p, "terrell_done") &&
+          plot::has_flag(p, "campaign_complete"),
+          "terrell_done + campaign_complete set");
+    check(!plot::has_flag(p, "drone_active") &&
+          !plot::has_flag(p, "m23_active"),
+          "the pursuit ends: drone_active + m23_active cleared");
+    check(fixer_here("perry_naval", p, "terrell_epilogue"),
+          "the famous office epilogue is waiting");
+    fixers::dialogue_done(*fixers::find("terrell_epilogue"), p);
+    check(!fixer_here("perry_naval", p, "terrell_epilogue"),
+          "epilogue plays once");
 
     std::printf("\n=== %s ===\n",
                 g_fail == 0 ? "ALL CHECKS PASSED" : "FAILURES DETECTED");

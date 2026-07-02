@@ -737,6 +737,100 @@
         "set_flag:m21_active"
       ],
       "refuse_actions": []
+    },
+    {
+      "id": "goodin_offer",
+      "name": "Sandra Goodin",
+      "archetypes": [
+        "mining"
+      ],
+      "exclude_bases": [
+        "rygannon",
+        "perry_naval"
+      ],
+      "requires_flags": [
+        "cross_done"
+      ],
+      "forbids_flags": [
+        "m22_active",
+        "goodin_done"
+      ],
+      "dialogue": [
+        "Sandra Goodin, attache to Admiral Terrell, Confederation Navy. Sit down, pilot. That was not a request.",
+        "Every long-range array in the sector is tracking a green energy signature, and every track terminates on YOUR transponder. The Admiral commands this sector from Perry Naval Base. He wants a word.",
+        "Get to Perry. Alive, preferably - the paperwork is shorter."
+      ],
+      "offer": "Report to Admiral Terrell at Perry Naval Base. No pay - serving the Confederation is its own reward, citizen.",
+      "accept_actions": [
+        "set_flag:m22_active"
+      ],
+      "refuse_actions": []
+    },
+    {
+      "id": "terrell_offer",
+      "name": "Admiral Terrell",
+      "base": "perry_naval",
+      "requires_flags": [
+        "goodin_done"
+      ],
+      "forbids_flags": [
+        "m23_active",
+        "terrell_done"
+      ],
+      "dialogue": [
+        "So YOU'RE the privateer who dragged a Kilrathi secret weapon across half my sector. Don't argue - what else could it be? It's green, it's hostile, and it doesn't die. That's Kilrathi engineering to the rivet.",
+        "Commodore Reissman has assembled a fleet at Blockade Point Tango: two Paradigms, two Broadswords. More than enough firepower to swat one drone.",
+        "Your job is simple, privateer. The thing follows you - so LEAD it to Tango and let the navy do what the navy does. Thirty thousand credits when it's confirmed destroyed."
+      ],
+      "offer": "Lead the drone to the fleet at Blockade Point Tango. 30,000 credits on its confirmed destruction.",
+      "accept_actions": [
+        "set_flag:m23_active"
+      ],
+      "refuse_actions": []
+    },
+    {
+      "id": "terrell_debrief",
+      "name": "Admiral Terrell",
+      "base": "perry_naval",
+      "requires_flags": [
+        "m23_active",
+        "killed:steltek_drone"
+      ],
+      "forbids_flags": [
+        "terrell_done"
+      ],
+      "dialogue": [
+        "Reissman's after-action report is... creative. It says the fleet 'provided a decisive containment perimeter' while a lone privateer did all the shooting. With an alien gun. That my analysts insist cannot exist.",
+        "The Confederation thanks you, pilot. Officially, a Kilrathi prototype was destroyed by naval action at Blockade Point Tango. Unofficially - here's your thirty thousand, and I never want to see you or your transponder in my sector's threat reports again."
+      ],
+      "offer": "",
+      "done_actions": [
+        "pay:30000",
+        "set_flag:terrell_done",
+        "set_flag:campaign_complete",
+        "clear_flag:m23_active",
+        "clear_flag:drone_active"
+      ]
+    },
+    {
+      "id": "terrell_epilogue",
+      "name": "Admiral Terrell",
+      "base": "perry_naval",
+      "requires_flags": [
+        "terrell_done"
+      ],
+      "forbids_flags": [
+        "terrell_epilogue_seen"
+      ],
+      "dialogue": [
+        "Still here? Fine. You want to know what the official history will say, don't you.",
+        "Goodin drafted three versions. One credits the fleet. One credits 'classified assets'. And one - her personal favorite - credits 'an unnamed civilian contractor with an unregistered antique'.",
+        "I signed the first one. The Confederation does not lose to a drone, privateer - and it CERTAINLY does not get rescued from one by a freelancer behind on his ship payments. Now get out of my office. And... good hunting."
+      ],
+      "offer": "",
+      "done_actions": [
+        "set_flag:terrell_epilogue_seen"
+      ]
     }
   ]
 }

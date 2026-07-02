@@ -398,6 +398,9 @@ target_include_directories(test_full_loop PRIVATE
 target_compile_definitions(test_full_loop PRIVATE
     ECONOMY_HEADLESS OUTFITTING_HEADLESS MISSIONS_HEADLESS COMM_HEADLESS
 )
+# comm.cpp's voice:: calls live in functions this harness never reaches;
+# dead-strip drops them at link time (same trick as test_missions).
+target_link_options(test_full_loop PRIVATE -Wl,-dead_strip)
 add_dependencies(test_full_loop mission_templates_gen)
 
 # Headless proof harness for the data-driven combat brain (docs/ai_maneuver_system.md).
@@ -421,6 +424,7 @@ target_include_directories(test_ai_brain PRIVATE
 target_compile_definitions(test_ai_brain PRIVATE
     ECONOMY_HEADLESS OUTFITTING_HEADLESS MISSIONS_HEADLESS COMM_HEADLESS
 )
+target_link_options(test_ai_brain PRIVATE -Wl,-dead_strip)
 add_dependencies(test_ai_brain mission_templates_gen)
 
 
@@ -475,6 +479,7 @@ target_include_directories(test_mission_tracker PRIVATE
 target_compile_definitions(test_mission_tracker PRIVATE
     MISSIONS_HEADLESS COMM_HEADLESS
 )
+target_link_options(test_mission_tracker PRIVATE -Wl,-dead_strip)
 add_dependencies(test_mission_tracker mission_templates_gen)
 
 # Round-trip proof for the save system (np-ymp.1 + np-3dp.19 timestamped

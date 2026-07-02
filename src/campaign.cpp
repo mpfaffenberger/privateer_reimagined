@@ -6,6 +6,7 @@
 
 #include "comm.h"
 #include "faction.h"
+#include "gun.h"
 #include "player.h"
 #include "plot.h"
 #include "ship_class.h"
@@ -293,6 +294,21 @@ void m21_on_dock(PlayerState& p, const std::string& base_id) {
     std::printf("[campaign] m21 complete (+10000 cr) - cross_done\n");
 }
 
+// ---- M22 settle: report to Terrell (#134) -----------------------------------
+// Goodin pays nothing; landing at Perry Naval Base with the summons
+// active IS the mission. Terrell's office (the M23 fixer) opens behind
+// goodin_done.
+void m22_on_dock(PlayerState& p, const std::string& base_id) {
+    if (!plot::has_flag(p, "m22_active")) return;
+    if (!base_is(base_id, "perry_naval")) return;
+    plot::clear_flag(p, "m22_active");
+    plot::set_flag(p, "goodin_done");
+    comm::push("Perry Naval Base flight control logs your arrival. A rating "
+               "in dress greys is already waiting at the pad: 'The Admiral "
+               "will see you now.'", false);
+    std::printf("[campaign] m22 complete (no pay) - goodin_done\n");
+}
+
 // ---- M04 reward: the secret compartment (#116) ------------------------------
 void m04_install_compartment(PlayerState& p) {
     if (!plot::give_item(p, "secret_compartment")) return;   // idempotent
@@ -328,6 +344,49 @@ void m21_take_gun(PlayerState& p) {
                true);
 }
 
+// ---- M23: the Steltek boost (#135) ------------------------------------------
+// The mid-route Steltek scene runs "m23:boost_gun": records the flag; the
+// stat change itself is re-derived from plot state by steltek_boost_tick
+// (below) so save/load and mid-flight grants behave identically.
+void m23_boost_gun(PlayerState& p) {
+    if (plot::has_flag(p, "steltek_gun_boosted")) return;
+    plot::set_flag(p, "steltek_gun_boosted");
+    comm::push("Green light crawls along your gun mounting and sinks INTO "
+               "the metal. The Steltek weapon hums at a pitch you feel in "
+               "your teeth. It is not the gun it was.", true);
+    std::printf("[campaign] steltek gun boosted (m23)\n");
+}
+
+// Re-derive the boosted Steltek gun stats from plot state. The boosted
+// numbers are the source data's "Mega Steltek" row (damage 19, refire
+// 0.37, speed 1250 kps, range 5000, energy 17) with gun.cpp's load-time
+// speed feel-multiplier (x2) applied, since we mutate POST-load. The
+// pre-boost stats are captured on first apply so clearing the flag (or
+// loading an unboosted save in the same session) restores them exactly.
+void steltek_boost_tick(const PlayerState& p) {
+    static bool     s_applied = false;
+    static GunStats s_saved;
+    const bool want = plot::has_flag(p, "steltek_gun_boosted");
+    if (want == s_applied) return;
+    GunStats& gs = g_gun_stats[(int)GunType::SteltekGun];
+    if (want) {
+        s_saved           = gs;
+        gs.damage_cm      = 19.0f;
+        gs.refire_delay_s = 0.37f;
+        gs.speed_mps      = 1250.0f * 2.0f;
+        gs.range_m        = 5000.0f;
+        gs.energy_cost_gj = 17.0f;
+        std::printf("[campaign] steltek gun stats BOOSTED "
+                    "(dmg %.0f refire %.2f range %.0f)\n",
+                    (double)gs.damage_cm, (double)gs.refire_delay_s,
+                    (double)gs.range_m);
+    } else {
+        gs = s_saved;
+        std::printf("[campaign] steltek gun stats reverted to stock\n");
+    }
+    s_applied = want;
+}
+
 // ---- the one campaign action handler ---------------------------------------
 bool handle_action(const std::string& action, PlayerState& p) {
     for (const CargoMission& m : k_cargo_missions) {
@@ -342,6 +401,10 @@ bool handle_action(const std::string& action, PlayerState& p) {
     }
     if (action == "m21:take_gun") {
         m21_take_gun(p);
+        return true;
+    }
+    if (action == "m23:boost_gun") {
+        m23_boost_gun(p);
         return true;
     }
     // "pay:<credits>" — fixer-settled payouts (Lynch pays at the bar,
@@ -393,6 +456,7 @@ void on_dock(PlayerState& p, const std::string& base_id) {
         escort_on_dock(m, p, base_id);
     m11_on_dock(p, base_id);
     m21_on_dock(p, base_id);
+    m22_on_dock(p, base_id);
 }
 
 void tick(const PlayerState& p, const std::string& system_id) {
@@ -414,6 +478,11 @@ void tick(const PlayerState& p, const std::string& system_id) {
         faction::clear_player_stance_override(Faction::Pirate);
         std::printf("[campaign] pirate-neutrality override OFF\n");
     }
+
+    // M23 (#135): the boosted Steltek gun. Re-derived from plot state so
+    // the mid-flight boost scene, save/load, and new-game-in-session all
+    // converge on the right stat table.
+    steltek_boost_tick(p);
 }
 
 } // namespace campaign

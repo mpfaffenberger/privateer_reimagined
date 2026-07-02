@@ -3619,6 +3619,21 @@ void frame_cb() {
             g.title_scene_inited = false;
         }
         load_and_build_system(target, /*first_time=*/false);
+        // Arrive like a jump: at the first gate, drifting inward — NEVER
+        // at player_start, which on base-dense systems (Perry) sits inside
+        // an auto-land zone. The old behavior insta-landed the dev warp
+        // and ate in-flight campaign triggers (#134's Retro gauntlet).
+        for (const auto& n : g.system.nav_points) {
+            if (n.kind != "jump") continue;
+            HMM_Vec3    into = HMM_MulV3F(n.position, -1.0f);
+            const float len  = HMM_LenV3(into);
+            into = (len > 1e-3f) ? HMM_DivV3F(into, len)
+                                 : HMM_V3(0.0f, 0.0f, -1.0f);
+            g.camera.position = HMM_AddV3(n.position,
+                                          HMM_MulV3F(into, 1500.0f));
+            g.camera.velocity = HMM_MulV3F(into, 60.0f);
+            break;
+        }
         g.keys_down.fill(false);   // no key ghosts across the switch
         return;
     }

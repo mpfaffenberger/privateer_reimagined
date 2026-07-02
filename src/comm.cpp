@@ -247,10 +247,14 @@ void report_player_kill(PlayerState& player, Faction victim) {
     }
 
     // One-and-only-one spoken line for this report_player_kill call.
+#ifndef COMM_HEADLESS
     if (voice_chosen) {
         voice::say(voice_speaker, voice_cat, HMM_Vec3{0,0,0},
                    /*to_player=*/true);
     }
+#else
+    (void)voice_chosen;   // headless: feed text only, no audio stack
+#endif
 }
 
 void npc_engage_bark(Faction speaker, bool target_is_player, uint32_t speaker_id) {
@@ -264,9 +268,11 @@ void npc_engage_bark(Faction speaker, bool target_is_player, uint32_t speaker_id
     // say_ship resolves speaker_id -> a consistent voice so each ship
     // sounds like itself; rate-limiting is the caller's job
     // (ShipAIState::last_bark_at) so this stays unconditional.
+#ifndef COMM_HEADLESS
     voice::say_ship(speaker, speaker_id,
                     event_to_category(Event::KilledByPlayerCrime),
                     HMM_Vec3{0,0,0}, /*to_player=*/true);
+#endif
     // Mark the speaker for the on-ship HUD indicator. 0 means "no ship
     // context" (dev panel); skip the marker in that case.
     if (speaker_id != 0) set_speaker(speaker_id, speaker);

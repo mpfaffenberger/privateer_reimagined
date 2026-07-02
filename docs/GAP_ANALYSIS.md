@@ -52,34 +52,46 @@ That is a *lot* of remake. Now, the gaps.
 
 ## 3. Gaps — ranked by importance
 
-### P0 — The story campaign (the biggest gap by far)
+### P0 — The story campaign — **DONE** (epic #136)
 
-The original's spine is entirely absent. No trace of: Sandoval,
-Tayla, Roman Lynch/Miggs, Dr. Monkhouse, Lynn Murphy/Palan, Masterson,
-Admiral Terrell, Goodin, the Steltek artifact/drone arc.
+The full 23-mission campaign is implemented and playable end to end:
+Sandoval (M01), the Tayla smuggling arc (M02-M05), Roman Lynch/Miggs
+(M06-M09), Masterson + the Oxford escorts (M10-M13), Lynn Murphy/Palan
+(M14-M16), Dr. Monkhouse (M17), the Cross frontier surveys (M18-M21),
+Goodin (M22), and the Terrell/drone finale at Blockade Point Tango
+(M23, `campaign_complete`).
 
-- No campaign/plot-state machine (chapter progression, fixer unlock
-  gating, plot flags in `PlayerState` or `savegame` — verified absent).
-- **Bar & fixers are a stub**: `base_screens.cpp:505` draws
-  `"BAR - fixers TBD"`; no `register_screen(BaseScreen::Bar, …)` exists.
-  Ironically the raw material is ready: bar backgrounds + bartender
-  sprites are extracted (`assets/concourse/*/bar_*.png`), bar/fixer
-  speech is extracted and labeled (`assets/speech/bar/`,
-  `docs/bar_speech_vpk_format.md`, `speech_labeler.cpp`).
-- Steltek content exists as parts, not as gameplay: the Steltek gun is
-  in the gun table, `assets/ships/drone` and
-  `assets/bases/derelict_base` exist — but the drone/derelict only
-  appear in dev showroom systems (`mesh_showroom.json`,
-  `sprite_showroom.json`). `delta_prime.json` is an 831-byte skeleton.
-  No hidden-system discovery, no drone hunt, no gun pickup event.
-- The scripted-encounter director (`scripted_encounters.*`) is the
-  natural substrate for campaign missions but currently only drives
-  ambient scenarios.
+What was built (issues #113-#135, infra #137-#140/#146):
 
-**Recommendation:** build a small plot-flag layer on `PlayerState`
-(saved), a fixer NPC hook in the Bar screen, and author the campaign as
-data on top of the existing scripted-encounter + mission systems. Most
-of the machinery already exists.
+- **Plot-flag layer** (`plot.*`, #138): string-keyed flags + plot items
+  on `PlayerState`, savegame v7 (v6 saves migrate: plot lists default
+  empty = campaign off). Debug panel + `POST /plot` for get/set.
+- **Bar screen + fixer framework** (`fixers.*`, #137): data-driven
+  registry (`assets/data/fixers.json`) with fixed-base AND
+  archetype-predicate placement (Goodin: any mining base except
+  Rygannon/Perry), plot-flag gating, portrait conversation UI with
+  accept/refuse, reused for the Oxford library and Terrell's office.
+- **Scripted-encounter extensions** (#139): `in_system` / `at_nav` /
+  `on_launch` triggers, multi-wave kill-alls, named NPCs with
+  kill-memory (`killed:<id>`), conditional re-ambush, talk-then-attack,
+  wingman + prop spawns — all in `assets/data/scripted_encounters.json`.
+- **Escort missions** (`escort.*`, #140), the Palan blockade
+  docking-refusal gate, mission-scoped stance overrides (Tayla's pirate
+  neutrality), the secret compartment (scan-exempt contraband hold).
+- **Steltek content is now gameplay** (#130-#135): plot-gated frontier
+  jump links (`JUMP: UNSURVEYED` until `monkhouse_done`), fleshed-out
+  delta/beta/gamma/delta_prime systems, the Delta Prime derelict + gun
+  pickup, the cross-system invulnerable drone pursuer (`drone.*`), the
+  Steltek boost event, and weapon-whitelist damage gating
+  (`Ship::immune_bypass_gun`) so ONLY the boosted gun kills the drone.
+  The gun is unbuyable/unsellable (no shop price row).
+- **Verification**: headless `test_campaign` walks M01→M23 against the
+  shipped data; `test_savegame` proves the v6→v7 migration; live smoke
+  runs drive every phase over the dev_remote HTTP API (`/fixer`,
+  `/plot`, `/damage`, `/ships`, `/events`).
+
+The sandbox remains untouched for players who never talk to Sandoval
+— campaign-off is the default and stays invisible.
 
 ### P1 — Combat-system gaps
 
@@ -107,8 +119,9 @@ of the machinery already exists.
 
 ### P2 — Base/UX gaps
 
-- **Bar screen** (see P0) — also blocks rumors-in-bar (rumor data files
-  exist and are used in-flight over comms instead).
+- **Rumors-in-bar** — the Bar screen now exists (fixers, #137) but
+  rumor delivery still happens in-flight over comms; porting the rumor
+  tables into bartender small-talk is an open nicety.
 - **Cockpit art**: deliberately not used — the Tarsus frame exists in
   `assets/cockpits/` but was judged not good enough and is unwired.
   Not a gap so much as an open art-direction question: either commit

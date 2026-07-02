@@ -630,6 +630,46 @@ void notify_launch(const std::string& base_id) {
     std::printf("[scenario] launch latch armed for base '%s'\n", base_id.c_str());
 }
 
+namespace {
+
+// (#135) Is any PLOT-GATED scenario (non-empty requires_flags) trigger-hot
+// for this player right now? Mirrors the gate + kind checks of the main
+// trigger loop for the in_system / at_nav kinds (on_launch can't be hot
+// mid-flight). Used to preempt an AMBIENT scenario out of the playback
+// slot: without this, a distress wing camping near a parked player holds
+// the one-at-a-time slot forever and starves campaign scenes (seen live:
+// confed_distress vs the M23 fleet at Blockade Point Tango).
+bool plot_trigger_hot(const Ship& player_ship, const PlayerState& player,
+                      float now_s, const WorldCtx& world) {
+    for (size_t i = 0; i < g_scenarios.size(); ++i) {
+        const Scenario& sc = g_scenarios[i];
+        if (sc.requires_flags.empty()) continue;   // ambient: never preempts
+        if (sc.once_per_system && g_state[i].triggered) continue;
+        if (!sc.once_per_system &&
+            (now_s - g_state[i].last_fire_s) < sc.cooldown_s) continue;
+        bool ok = true;
+        for (const std::string& fl : sc.requires_flags)
+            if (!plot::has_flag(player, fl)) { ok = false; break; }
+        if (ok)
+            for (const std::string& fl : sc.forbids_flags)
+                if (plot::has_flag(player, fl)) { ok = false; break; }
+        if (!ok) continue;
+        if (!sc.trigger_system.empty() &&
+            sc.trigger_system != world.system_id) continue;
+        if (sc.kind == "in_system") return true;
+        if (sc.kind == "at_nav" && world.system) {
+            for (const NavPointDef& n : world.system->nav_points) {
+                if (n.name != sc.trigger_nav) continue;
+                const HMM_Vec3 d = HMM_SubV3(n.position, player_ship.position);
+                if (HMM_DotV3(d, d) <= sc.radius_m * sc.radius_m) return true;
+            }
+        }
+    }
+    return false;
+}
+
+} // namespace
+
 void tick(ShipRegistry& ships, const Ship& player_ship, PlayerState& player,
           float now_s, const WorldCtx& world, const encounters::SpawnFn& spawn) {
     // Stamp the launch latch with real wall-clock time on the first tick
@@ -650,6 +690,26 @@ void tick(ShipRegistry& ships, const Ship& player_ship, PlayerState& player,
             return;
         }
         const Scenario& sc = g_scenarios[active_idx];
+
+        // (#135) Campaign preemption: plot scenes outrank ambient chatter.
+        // An AMBIENT scenario (no plot gate) that is past its dialogue
+        // yields the slot the moment a plot-gated trigger goes hot here.
+        // Abandon-style release: the wing stays in the world, no reward,
+        // no on_cleared. The trigger loop picks the plot scene up next
+        // tick.
+        if (active_phase == ActivePhase::AwaitingResolution &&
+            sc.requires_flags.empty() &&
+            plot_trigger_hot(player_ship, player, now_s, world)) {
+            std::printf("[scenario] %s preempted by a plot scene\n",
+                        sc.id.c_str());
+            active_idx       = -1;
+            active_phase     = ActivePhase::Dialogue;
+            active_anchor_id = 0;
+            active_wave      = 0;
+            active_anchor_fixed = false;
+            active_wing.clear();
+            return;
+        }
 
         // ---- (#140) escort spawn: once per activation, before the
         // dialogue plays, so the meet-point hail has a ship to point at.

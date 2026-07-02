@@ -435,10 +435,13 @@ int main() {
         const PlayerState saved = player;
         player.credits = 400000;
 
-        const std::string gun0 = player.gun_mounts.empty() ? "" : player.gun_mounts[0];
+        // gun_mounts became MountSlot rows with the v7 unified-hold work.
+        const std::string gun0 =
+            player.gun_mounts.empty() ? "" : player.gun_mounts[0].gun_id;
         check(outfitting::buy_gun(player, "tachyon_cannon", 0, tarsus),
               "bought a tachyon cannon into mount 0");
-        check(!player.gun_mounts.empty() && player.gun_mounts[0] == "tachyon_cannon",
+        check(!player.gun_mounts.empty() &&
+              player.gun_mounts[0].gun_id == "tachyon_cannon",
               "mount 0 now holds the new gun");
         check(!outfitting::buy_gun(player, "laser", 9, tarsus),
               "out-of-range mount refused");
@@ -672,7 +675,8 @@ int main() {
         PlayerState src = player;
         src.credits          = 1234567;
         src.ship_class_name  = "centurion";
-        src.gun_mounts       = { "tachyon_cannon", "", "meson_blaster" };
+        src.gun_mounts       = { MountSlot{"tachyon_cannon"}, MountSlot{},
+                                 MountSlot{"meson_blaster"} };
         src.shield_level     = 2; src.engine_level = 1; src.cargo_expansion = true;
         src.cargo            = { { "iron", 42, 35 }, { "tungsten", 7, 410 } };
         src.missiles[0] = 3; src.missiles[1] = 1; src.missiles[2] = 5;
@@ -711,7 +715,13 @@ int main() {
 
         check(dst.credits == src.credits,                 "credits round-trip");
         check(dst.ship_class_name == src.ship_class_name, "ship class round-trip");
-        check(dst.gun_mounts == src.gun_mounts,           "gun mounts round-trip");
+        {   // MountSlot has no operator==; compare the serialized axes.
+            bool mounts_ok = dst.gun_mounts.size() == src.gun_mounts.size();
+            for (size_t i = 0; mounts_ok && i < src.gun_mounts.size(); ++i)
+                mounts_ok = dst.gun_mounts[i].gun_id == src.gun_mounts[i].gun_id &&
+                            dst.gun_mounts[i].rarity == src.gun_mounts[i].rarity;
+            check(mounts_ok,                              "gun mounts round-trip");
+        }
         check(dst.shield_level == src.shield_level && dst.engine_level == src.engine_level &&
               dst.cargo_expansion == src.cargo_expansion, "equipment levels round-trip");
         check(reps_ok,                                    "reputation round-trip (all factions)");

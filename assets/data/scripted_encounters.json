@@ -1433,6 +1433,223 @@
       "on_dialogue_done": [
         "m21:take_gun"
       ]
+    },
+    {
+      "id": "m22_retro_newdetroit",
+      "trigger": {
+        "kind": "in_system",
+        "system": "new_detroit",
+        "requires_flags": [
+          "m22_active"
+        ],
+        "forbids_flags": [
+          "m22_retro1"
+        ],
+        "cooldown_s": 45
+      },
+      "dialogue": [
+        {
+          "voice": "Retro Zealot",
+          "line": "The abomination-carrier! The green judgment follows him, and we shall be its instrument. PURGE THE TECHNOLOGY!"
+        }
+      ],
+      "on_dialogue_done": [
+        "set_flag:m22_retro1"
+      ],
+      "waves": [
+        {
+          "delay_s": 2,
+          "spawns": [
+            {
+              "faction": "retro",
+              "class": "talon",
+              "count": 3,
+              "hostile": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "m22_retro_newcastle",
+      "trigger": {
+        "kind": "in_system",
+        "system": "newcastle",
+        "requires_flags": [
+          "m22_active"
+        ],
+        "forbids_flags": [
+          "m22_retro2"
+        ],
+        "cooldown_s": 45
+      },
+      "dialogue": [
+        {
+          "voice": "Retro Zealot",
+          "line": "Brothers, the heretic runs for the navy's skirts! Strip his hull and salt the wreckage!"
+        }
+      ],
+      "on_dialogue_done": [
+        "set_flag:m22_retro2"
+      ],
+      "waves": [
+        {
+          "delay_s": 2,
+          "spawns": [
+            {
+              "faction": "retro",
+              "class": "talon",
+              "count": 3,
+              "hostile": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "m22_retro_perry",
+      "trigger": {
+        "kind": "in_system",
+        "system": "perry",
+        "requires_flags": [
+          "m22_active"
+        ],
+        "forbids_flags": [
+          "m22_retro3"
+        ],
+        "cooldown_s": 45
+      },
+      "dialogue": [
+        {
+          "voice": "Retro Zealot",
+          "line": "He reaches for Perry! Five of the faithful stand between the sinner and sanctuary. Mankind will return to a simpler way!"
+        }
+      ],
+      "on_dialogue_done": [
+        "set_flag:m22_retro3"
+      ],
+      "waves": [
+        {
+          "delay_s": 2,
+          "spawns": [
+            {
+              "faction": "retro",
+              "class": "talon",
+              "count": 5,
+              "hostile": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "m23_steltek_scene",
+      "trigger": {
+        "kind": "in_system",
+        "system": "nitir",
+        "requires_flags": [
+          "m23_active"
+        ],
+        "forbids_flags": [
+          "steltek_gun_boosted"
+        ],
+        "cooldown_s": 45
+      },
+      "dialogue": [
+        {
+          "voice": "Steltek Envoy",
+          "line": "Your sensors did not register our arrival. They were not meant to. We are the ones your species names Steltek, and you carry what is ours."
+        },
+        {
+          "voice": "Steltek Envoy",
+          "line": "The hunter that follows you is a drone of our making - the last of its line, woken by the weapon you pulled from our derelict. It will not stop. It cannot."
+        },
+        {
+          "voice": "Steltek Envoy",
+          "line": "We offer terms. Destroy the drone, and the weapon remains yours. We have... amplified it. It is now the only thing in your sky that can wound what hunts you."
+        },
+        {
+          "voice": "Steltek Envoy",
+          "line": "The derelict we reclaim. The rest is yours, little pilot. Do not make us regret the smallness of this mercy."
+        }
+      ],
+      "on_dialogue_done": [
+        "m23:boost_gun"
+      ]
+    },
+    {
+      "id": "m23_steltek_scene_tango",
+      "trigger": {
+        "kind": "in_system",
+        "system": "blockade_point_tango",
+        "requires_flags": [
+          "m23_active"
+        ],
+        "forbids_flags": [
+          "steltek_gun_boosted"
+        ],
+        "cooldown_s": 45
+      },
+      "dialogue": [
+        {
+          "voice": "Steltek Envoy",
+          "line": "Hold, carrier-of-the-stolen. Before your fleet's guns speak and fail: we are the Steltek, and the hunter is ours."
+        },
+        {
+          "voice": "Steltek Envoy",
+          "line": "Terms: destroy the drone and keep the weapon. We have amplified it - nothing else in this sky can wound what hunts you. The derelict we reclaim."
+        }
+      ],
+      "on_dialogue_done": [
+        "m23:boost_gun"
+      ]
+    },
+    {
+      "id": "m23_tango_fleet",
+      "trigger": {
+        "kind": "in_system",
+        "system": "blockade_point_tango",
+        "requires_flags": [
+          "m23_active",
+          "steltek_gun_boosted"
+        ],
+        "forbids_flags": [
+          "m23_fleet_met"
+        ],
+        "cooldown_s": 45
+      },
+      "dialogue": [
+        {
+          "voice": "Commodore Reissman",
+          "line": "Privateer, this is Reissman aboard the Paradigm CS Vigilant. Blockade Point Tango is weapons-hot: two Paradigms, two Broadswords, and every gun crew in the wing itching for a medal."
+        },
+        {
+          "voice": "Commodore Reissman",
+          "line": "Draw your green friend into our firing solution and stay CLEAR of the lanes - naval ordnance does not read transponders. We'll handle the rest."
+        }
+      ],
+      "on_dialogue_done": [
+        "set_flag:m23_fleet_met"
+      ],
+      "waves": [
+        {
+          "delay_s": 2,
+          "spawns": [
+            {
+              "faction": "confed",
+              "class": "paradigm",
+              "count": 2,
+              "wingman": true
+            },
+            {
+              "faction": "confed",
+              "class": "broadsword",
+              "count": 2,
+              "wingman": true
+            }
+          ]
+        }
+      ]
     }
   ]
 }

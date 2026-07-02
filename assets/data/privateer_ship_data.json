@@ -302,8 +302,8 @@
       "Damage Eff.": 5.26,
       "Speed (kps)": 1175,
       "Range (m)": 3995,
-      "Refire Delay (s)": null,
-      "Energy Use (GJ)": null
+      "Refire Delay (s)": 0.45,
+      "Energy Use (GJ)": 19
     },
     {
       "Name": "Steltek Gun RF",
