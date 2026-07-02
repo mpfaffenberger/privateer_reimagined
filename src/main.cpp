@@ -416,6 +416,11 @@ struct AppState {
     // --system was NOT explicitly passed, we adopt the save's recorded
     // system so we load the world the player saved in (see init_cb).
     int         load_slot       = -1;
+    // Agentic-smoke affordance: --dev-invuln pins damage_immune on the
+    // player ship every Flight frame (survives hull swaps / rebuilds).
+    // The campaign smoke drivers stage combat with /spawn + /kill; this
+    // keeps the pilot alive while curl thinks.
+    bool        dev_invuln = false;
     // Death-test affordance (np-ma2.2): --dev-kill-at <secs> raises the
     // "kill player" request once after that many seconds of Flight, so the
     // death->Dying->respawn cycle can be exercised headlessly (the GUI
@@ -3928,14 +3933,23 @@ void frame_cb() {
     // "off-target" check kicks in; the function also no-ops on missions
     // whose target is this dock (so Deliver still works) and on every
     // non-cargo mission.
-    if (g.player.docked && !g.player.last_docked_base.empty()) {
+    {
         static std::string s_last_docked;
-        if (s_last_docked != g.player.last_docked_base) {
-            missions::fail_cargo_on_dock(g.player, g.player.last_docked_base);
-            // Campaign dock settles (epic #136): plot-cargo deliveries +
-            // failure detection, same once-per-dock-commit cadence.
-            campaign::on_dock(g.player, g.player.last_docked_base);
-            s_last_docked = g.player.last_docked_base;
+        if (g.player.docked && !g.player.last_docked_base.empty()) {
+            if (s_last_docked != g.player.last_docked_base) {
+                missions::fail_cargo_on_dock(g.player, g.player.last_docked_base);
+                // Campaign dock settles (epic #136): plot-cargo deliveries +
+                // failure detection, same once-per-dock-commit cadence.
+                campaign::on_dock(g.player, g.player.last_docked_base);
+                s_last_docked = g.player.last_docked_base;
+            }
+        } else {
+            // In flight: re-arm the once-per-commit latch. Without this,
+            // launching and RE-docking at the same base skipped every
+            // dock settle (mission fail-on-land AND campaign deliveries)
+            // — bit the M12 escort payout at Oxford after M11 settled
+            // at Oxford too.
+            s_last_docked.clear();
         }
     }
 
@@ -4188,6 +4202,9 @@ void frame_cb() {
             // (Tayla's pirate neutrality, #114). BEFORE-perception order
             // doesn't matter — it's idempotent and settles within a frame.
             campaign::tick(g.player, g.player.current_system);
+            // --dev-invuln: re-pin every frame so hull swaps / rebuilds
+            // can't shed it. Off by default; players never see this.
+            if (g.dev_invuln) pl->damage_immune = true;
             // Escort lifecycle (#140): travel-goal pinning + arrival/death
             // detection. After ship_ai (so the goal re-pin wins) and
             // before ship::tick (which consumes the behavior). While the
@@ -6724,6 +6741,8 @@ sapp_desc sokol_main(int argc, char** argv) {
             ++i;
         } else if (std::strcmp(argv[i], "--continue") == 0) {
             g.load_slot = savegame::k_autosave_slot;   // resume the autosave
+        } else if (std::strcmp(argv[i], "--dev-invuln") == 0) {
+            g.dev_invuln = true;
         } else if (std::strcmp(argv[i], "--dev-kill-at") == 0 && i + 1 < argc) {
             g.dev_kill_at_s = (float)std::atof(argv[i + 1]);
             ++i;

@@ -87,6 +87,13 @@ struct Ship {
     bool              is_ace    = false;    // elite NPC (issue #91): carries the
                                             // legendary loot bonus on death.
 
+    // Damage immunity (campaign M21/M23 + dev). take_damage no-ops while
+    // set: the Steltek drone is invulnerable until the boosted gun exists
+    // (#133/#135 extend this into a weapon whitelist), and --dev-invuln
+    // pins it on the player ship for agentic smoke runs. Transient — not
+    // serialized; re-derived by its owner every frame/spawn.
+    bool              damage_immune = false;
+
     // Kill attribution (np-ma2.1): the owner_id of the projectile that
     // landed the lethal hit, stamped by projectile::collide_and_damage at
     // the moment alive flips false. 0 = died to a non-projectile cause
