@@ -275,12 +275,57 @@ void m11_on_dock(PlayerState& p, const std::string& base_id) {
     }
 }
 
+// ---- M21 settle: home with the gun (#133) -----------------------------------
+// A bare row can't express "dock at Rygannon AND hold the gun" (docking
+// early would settle prematurely), so M21 gets its own check: pay only
+// once the derelict's gun is aboard. Cross's release doubles as the
+// handoff toward the finale (the drone keeps hunting regardless).
+void m21_on_dock(PlayerState& p, const std::string& base_id) {
+    if (!plot::has_flag(p, "m21_active")) return;
+    if (!plot::has_flag(p, "steltek_gun_owned")) return;
+    if (!base_is(base_id, "rygannon")) return;
+    plot::clear_flag(p, "m21_active");
+    plot::set_flag(p, "cross_done");
+    player::add_credits(p, 10000);
+    comm::push("Cross pays without meeting your eyes. 'The survey contract "
+               "is complete. Whatever you brought back with you, pilot - "
+               "it is YOURS.'", false);
+    std::printf("[campaign] m21 complete (+10000 cr) - cross_done\n");
+}
+
 // ---- M04 reward: the secret compartment (#116) ------------------------------
 void m04_install_compartment(PlayerState& p) {
     if (!plot::give_item(p, "secret_compartment")) return;   // idempotent
     comm::push("Secret compartment installed: 20 units, invisible to scans. "
                "Contraband only.", false);
     std::printf("[campaign] secret compartment installed\n");
+}
+
+// ---- M21: the derelict's gun (#133) -----------------------------------------
+// The scenario dialogue at the Delta Prime derelict runs this: clamp the
+// Steltek gun onto the player's hull (first empty mount, else mount 0 —
+// the derelict's grapple doesn't ask permission), record ownership, and
+// wake the drone. Idempotent via steltek_gun_owned.
+void m21_take_gun(PlayerState& p) {
+    if (plot::has_flag(p, "steltek_gun_owned")) return;
+    const ShipClass* klass = ship_class::find(p.ship_class_name);
+    const int mounts = klass ? (int)klass->default_guns.size()
+                             : (int)p.gun_mounts.size();
+    if ((int)p.gun_mounts.size() < mounts)
+        p.gun_mounts.resize((size_t)mounts, MountSlot{});
+    if (!p.gun_mounts.empty()) {
+        size_t slot = 0;
+        for (size_t i = 0; i < p.gun_mounts.size(); ++i)
+            if (p.gun_mounts[i].gun_id.empty()) { slot = i; break; }
+        p.gun_mounts[slot] = MountSlot{"steltek_gun"};
+        std::printf("[campaign] steltek gun fitted to mount %zu\n", slot);
+    }
+    plot::give_item(p, "steltek_gun");
+    plot::set_flag(p, "steltek_gun_owned");
+    plot::set_flag(p, "drone_active");
+    comm::push("The gun comes free in your grapple - and every light on "
+               "the derelict dies at once. Something else just woke up.",
+               true);
 }
 
 // ---- the one campaign action handler ---------------------------------------
@@ -293,6 +338,10 @@ bool handle_action(const std::string& action, PlayerState& p) {
     }
     if (action == "m04:install_compartment") {
         m04_install_compartment(p);
+        return true;
+    }
+    if (action == "m21:take_gun") {
+        m21_take_gun(p);
         return true;
     }
     // "pay:<credits>" — fixer-settled payouts (Lynch pays at the bar,
@@ -319,6 +368,16 @@ void init() {
     std::printf("[campaign] action handler registered\n");
 }
 
+bool frontier_locked(const PlayerState& p, const std::string& dest_system) {
+    // The four survey systems on the Steltek map (#130-#133). Locked
+    // until Monkhouse merges the map (monkhouse_done); sandbox saves
+    // never set it.
+    const bool frontier = dest_system == "delta" || dest_system == "beta" ||
+                          dest_system == "gamma" ||
+                          dest_system == "delta_prime";
+    return frontier && !plot::has_flag(p, "monkhouse_done");
+}
+
 bool palan_blockaded(const PlayerState& p) {
     // The blockade exists from the moment the campaign reaches the Murphy
     // arc (masterson_done, post-M13) until the M16 waves die. Sandbox
@@ -333,6 +392,7 @@ void on_dock(PlayerState& p, const std::string& base_id) {
     for (const EscortMission& m : k_escort_missions)
         escort_on_dock(m, p, base_id);
     m11_on_dock(p, base_id);
+    m21_on_dock(p, base_id);
 }
 
 void tick(const PlayerState& p, const std::string& system_id) {

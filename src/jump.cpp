@@ -15,8 +15,24 @@
 #include "threat.h"
 
 #include <cstdio>
+#include <functional>
+#include <utility>
+
+namespace {
+
+// Campaign route gate (#130): a truthy return for (from, to) locks an
+// otherwise-valid jump link ("the frontier is unsurveyed"). Unset =
+// everything open (sandbox default).
+std::function<bool(const std::string&, const std::string&)> g_route_gate;
+
+} // namespace
 
 namespace jump {
+
+void set_route_gate(
+    std::function<bool(const std::string&, const std::string&)> gate) {
+    g_route_gate = std::move(gate);
+}
 
 Eligibility evaluate(const Camera& cam, const StarSystem& system,
                      const galaxy::Galaxy& galaxy,
@@ -50,6 +66,13 @@ Eligibility evaluate(const Camera& cam, const StarSystem& system,
         galaxy.jump_target(current_system_id, nav.name);
     if (!jt.ok) {
         e.status = Status::NoRoute;
+        return e;
+    }
+    // 2b. Campaign route gate (#130): the link exists in the galaxy graph
+    // but the plot hasn't opened it yet (Exploratory Services hasn't
+    // surveyed the frontier). Distinct verdict so the HUD can explain.
+    if (g_route_gate && g_route_gate(current_system_id, jt.system)) {
+        e.status = Status::Locked;
         return e;
     }
     e.dest_id     = jt.system;
@@ -88,6 +111,7 @@ const char* prompt(const Eligibility& e, bool* ready) {
                           e.dest_name.c_str());
             return buf;
         case Status::NoRoute:  return "JUMP: NO ROUTE";
+        case Status::Locked:   return "JUMP: UNSURVEYED";
         case Status::TooFar:   return "JUMP: TOO FAR";
         case Status::Hostiles: return "JUMP: HOSTILES NEAR";
         case Status::NoDrive:  return "JUMP: NO DRIVE";
@@ -101,6 +125,7 @@ const char* status_str(Status s) {
         case Status::Ready:      return "ready";
         case Status::NotJumpNav: return "not a jump nav";
         case Status::NoRoute:    return "no route";
+        case Status::Locked:     return "locked (unsurveyed)";
         case Status::TooFar:     return "too far";
         case Status::Hostiles:   return "hostiles near";
         case Status::NoDrive:    return "no drive";

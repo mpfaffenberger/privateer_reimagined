@@ -401,13 +401,18 @@ const char* facing_name(HitFacing f) {
 
 } // namespace
 
-void ship::take_damage(Ship& s, float damage_cm, HitFacing facing) {
+void ship::take_damage(Ship& s, float damage_cm, HitFacing facing,
+                       GunType source_gun) {
     if (!s.alive || damage_cm <= 0.0f) return;
     // Damage immunity (campaign M21 drone / --dev-invuln): the ONE gate
     // every damage source funnels through — guns, missiles, collisions,
-    // sun damage. The M23 weapon whitelist extends this flag, never the
-    // individual damage call sites.
-    if (s.damage_immune) return;
+    // sun damage. The M23 weapon whitelist (immune_bypass_gun) pierces it
+    // for exactly one gun type; sources that don't know their gun pass
+    // GunType::Count and stay gated.
+    if (s.damage_immune &&
+        !(s.immune_bypass_gun != GunType::Count &&
+          source_gun == s.immune_bypass_gun))
+        return;
     HitTarget t = hit_target(s, facing);
 
     // Reset regen pause on the affected facing — sustained fire keeps

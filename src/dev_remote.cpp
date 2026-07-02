@@ -57,7 +57,7 @@ struct Command {
                       Kill, SetTarget, TractorPull, InventorySell, InventoryGive,
                       InventoryInstall, InventoryEquip, SetPanel, CommsSelect,
                       Rumor, Plot, BaseScreenNav, Goto, Dock, Fixer,
-                      Autopilot };
+                      Autopilot, Jump, Damage };
     Kind kind;
 
     // SetCamera — any optional field is encoded with `has_*`.
@@ -83,7 +83,8 @@ struct Command {
     std::string     faction_name;     // raw faction string (Spawn)
     int             int_arg = 0;      // units (CargoGive)
     float           dist    = 0.0f;   // spawn distance (Spawn)
-    uint32_t        kill_id = 0;      // target ship id (Kill; 0 = nearest)
+    uint32_t        kill_id = 0;      // target ship id (Kill/Damage; 0 = nearest)
+    float           damage_cm = 0.0f; // hit size (Damage; gun name in str_arg)
     uint32_t        target_id = 0;    // target ship id (SetTarget; 0 = nearest)
     int             sell_index = 0;   // unified-hold item index (InventorySell/Install/Equip)
     int             mount_index = -1;  // gun mount index (InventoryEquip; <0 = first empty)
@@ -193,6 +194,7 @@ std::mutex                                                  g_hooks_mu;
 std::function<void(std::string, int)>                       g_cargo_give_hook;
 std::function<void(std::string, std::string, float)>        g_spawn_hook;
 std::function<void(uint32_t)>                               g_kill_hook;
+std::function<void(uint32_t, float, const std::string&)>    g_damage_hook;
 std::function<void(uint32_t)>                               g_set_target_hook;
 std::function<void()>                                       g_tractor_pull_hook;
 std::function<void()>                                       g_rumor_hook;
@@ -208,6 +210,7 @@ std::function<void(std::string)>                            g_goto_hook;
 std::function<void(std::string)>                            g_dock_hook;
 std::function<void(std::string, std::string)>               g_fixer_hook;
 std::function<void(std::string)>                            g_autopilot_hook;
+std::function<void(std::string)>                            g_jump_hook;
 
 std::thread       g_thread;
 std::atomic<bool> g_running{false};
@@ -772,6 +775,27 @@ void handle_autopilot(int fd, const std::string& body) {
     send_json(fd, "{\"ok\":true}");
 }
 
+// POST /jump — approach the named jump gate (dev teleport, same
+// convenience as /dock) and attempt the jump through the REAL
+// eligibility path: jump::evaluate runs with the campaign route gate,
+// hostile bubble, and drive check all live. Refusals log their status;
+// the judge asserts by polling GET /player for the system change.
+void handle_jump(int fd, const std::string& body) {
+    std::string nav;
+    if (!extract_string(body, "nav", &nav) || nav.empty()) {
+        send_json(fd, "{\"ok\":false,\"error\":\"missing nav\"}");
+        return;
+    }
+    Command c;
+    c.kind    = Command::Kind::Jump;
+    c.str_arg = nav;
+    {
+        std::lock_guard lk(g_queue_mu);
+        g_queue.push_back(c);
+    }
+    send_json(fd, "{\"ok\":true}");
+}
+
 // GET /events?since=N — serialise ring-buffer events with seq > N (all of
 // them when `since` is absent/0). `latest` echoes the newest seq so the
 // caller can poll incrementally: next request passes since=<latest>.
@@ -820,11 +844,12 @@ void handle_ships(int fd) {
         char buf[256];
         std::snprintf(buf, sizeof(buf),
             "%s{\"id\":%u,\"faction\":\"%s\",\"dist\":%.1f,"
-            "\"alive\":%s,\"aggro_player\":%s,\"provoked\":%s}",
+            "\"alive\":%s,\"aggro_player\":%s,\"provoked\":%s,\"immune\":%s}",
             i ? "," : "", s.id, s.faction.c_str(), s.dist,
             s.alive        ? "true" : "false",
             s.aggro_player ? "true" : "false",
-            s.provoked     ? "true" : "false");
+            s.provoked     ? "true" : "false",
+            s.immune       ? "true" : "false");
         out += buf;
     }
     out += "]}";
@@ -989,6 +1014,37 @@ void handle_kill(int fd, const std::string& body) {
     char buf[64];
     std::snprintf(buf, sizeof(buf), "{\"ok\":true,\"killed\":%u}", id);
     send_json(fd, buf);
+}
+
+// POST /damage — hit a ship through the real take_damage path. Body
+// {"id":N,"amount":F,"gun":"steltek_gun"}; gun is optional ("" = anonymous
+// source, stays behind the immunity gate). Unlike /kill this is NOT a
+// cheat: damage_immune and the weapon whitelist apply — which is the
+// point (the drone-invulnerability probe, #133/#135).
+void handle_damage(int fd, const std::string& body) {
+    float id_f = 0.0f;
+    if (!extract_float(body, "id", &id_f) || id_f <= 0.0f) {
+        send_json(fd, "{\"ok\":false,\"error\":\"missing id\"}");
+        return;
+    }
+    float amount = 0.0f;
+    if (!extract_float(body, "amount", &amount) || amount <= 0.0f) {
+        send_json(fd, "{\"ok\":false,\"error\":\"missing amount\"}");
+        return;
+    }
+    std::string gun;
+    extract_string(body, "gun", &gun);   // optional
+
+    Command c;
+    c.kind      = Command::Kind::Damage;
+    c.kill_id   = (uint32_t)id_f;
+    c.damage_cm = amount;
+    c.str_arg   = gun;
+    {
+        std::lock_guard lk(g_queue_mu);
+        g_queue.push_back(c);
+    }
+    send_json(fd, "{\"ok\":true}");
 }
 
 // POST /target — set the player's current target. Body {"id":N} is optional;
@@ -1312,6 +1368,7 @@ void handle_connection(int fd) {
     else if (method == "POST" && path == "/rumor")      handle_rumor(fd);
     else if (method == "GET"  && path == "/inventory")  handle_inventory(fd);
     else if (method == "POST" && path == "/kill")       handle_kill(fd, body);
+    else if (method == "POST" && path == "/damage")     handle_damage(fd, body);
     else if (method == "POST" && path == "/target")     handle_target(fd, body);
     else if (method == "POST" && path == "/tractor/pull") handle_tractor_pull(fd);
     else if (method == "POST" && path == "/inventory/sell") handle_inventory_sell(fd, body);
@@ -1326,6 +1383,7 @@ void handle_connection(int fd) {
     else if (method == "POST" && path == "/dock")       handle_dock(fd, body);
     else if (method == "POST" && path == "/fixer")      handle_fixer(fd, body);
     else if (method == "POST" && path == "/autopilot")  handle_autopilot(fd, body);
+    else if (method == "POST" && path == "/jump")       handle_jump(fd, body);
     else if (method == "GET"  && path == "/missions")   handle_missions(fd);
     else if (method == "GET"  && path == "/events")     handle_events(fd, query);
     else                                                send_404(fd);
@@ -1482,6 +1540,17 @@ void drain_commands(Camera& cam) {
                 hook = g_kill_hook;
             }
             if (hook) hook(c.kill_id);
+            break;
+        }
+        case Command::Kind::Damage: {
+            // Real-path damage probe: the host applies ship::take_damage
+            // (immunity + weapon whitelist live — unlike the /kill cheat).
+            std::function<void(uint32_t, float, const std::string&)> hook;
+            {
+                std::lock_guard lk(g_hooks_mu);
+                hook = g_damage_hook;
+            }
+            if (hook) hook(c.kill_id, c.damage_cm, c.str_arg);
             break;
         }
         case Command::Kind::SetTarget: {
@@ -1652,6 +1721,16 @@ void drain_commands(Camera& cam) {
             if (hook) hook(c.str_arg);
             break;
         }
+        case Command::Kind::Jump: {
+            // Approach the named gate + attempt the jump (J key path).
+            std::function<void(std::string)> hook;
+            {
+                std::lock_guard lk(g_hooks_mu);
+                hook = g_jump_hook;
+            }
+            if (hook) hook(c.str_arg);
+            break;
+        }
         }
     }
 
@@ -1759,6 +1838,12 @@ void set_spawn_hook(std::function<void(std::string, std::string, float)> hook) {
     g_spawn_hook = std::move(hook);
 }
 
+void set_damage_hook(
+    std::function<void(uint32_t, float, const std::string&)> hook) {
+    std::lock_guard lk(g_hooks_mu);
+    g_damage_hook = std::move(hook);
+}
+
 void set_kill_hook(std::function<void(uint32_t)> hook) {
     std::lock_guard lk(g_hooks_mu);
     g_kill_hook = std::move(hook);
@@ -1833,6 +1918,11 @@ void set_fixer_hook(std::function<void(std::string, std::string)> hook) {
 void set_autopilot_hook(std::function<void(std::string)> hook) {
     std::lock_guard lk(g_hooks_mu);
     g_autopilot_hook = std::move(hook);
+}
+
+void set_jump_hook(std::function<void(std::string)> hook) {
+    std::lock_guard lk(g_hooks_mu);
+    g_jump_hook = std::move(hook);
 }
 
 void set_base_screen_hook(std::function<void(std::string)> hook) {

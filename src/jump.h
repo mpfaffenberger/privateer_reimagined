@@ -35,6 +35,7 @@
 #include "HandmadeMath.h"
 
 #include <cstdint>
+#include <functional>
 #include <string>
 
 struct Camera;
@@ -56,6 +57,8 @@ enum class Status : uint8_t {
     NotJumpNav,   // selected nav isn't a jump gate — no prompt (caller falls
                   // back to the dock prompt for the same MFD slot)
     NoRoute,      // jump gate but dangling / unsurveyed — "JUMP: NO ROUTE"
+    Locked,       // link exists but the campaign hasn't opened it (#130)
+                  // — "JUMP: UNSURVEYED"
     TooFar,       // outside trigger range — "JUMP: TOO FAR"
     Hostiles,     // hostiles in the bubble — "JUMP: HOSTILES NEAR"
     NoDrive,      // player has no Jump Drive fitted — "JUMP: NO DRIVE"
@@ -73,6 +76,14 @@ struct Eligibility {
 // system.nav_points; -1 = none). Pure: reads the camera pose, the gate's
 // position, the galaxy topology, and the threat oracle — mutates nothing.
 // Pass `has_jump_drive` so the verdict can include NoDrive.
+// Campaign route gate (#130, the locked frontier). When registered, a
+// truthy return for (from_system, to_system) turns a Ready link into
+// Status::Locked. main.cpp registers the campaign predicate (frontier
+// systems refuse until monkhouse_done); unset = sandbox default, all
+// surveyed links open.
+void set_route_gate(
+    std::function<bool(const std::string& from, const std::string& to)> gate);
+
 Eligibility evaluate(const Camera& cam, const StarSystem& system,
                      const galaxy::Galaxy& galaxy,
                      const std::string& current_system_id,

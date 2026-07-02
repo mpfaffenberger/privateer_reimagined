@@ -232,6 +232,37 @@ int main() {
     std::printf("  (drained directly from the gun energy pool now; tested via the\n");
     std::printf("   firing energy tick in firing.cpp + the cruise gate in main.cpp).\n");
 
+    // -------------------------------------------------------------------
+    // 6. Damage immunity + the M23 weapon whitelist (#133/#135): an
+    //    immune ship shrugs off everything; opening immune_bypass_gun
+    //    lets EXACTLY that gun type through, anonymous sources stay out.
+    // -------------------------------------------------------------------
+    std::printf("\n--- 6. damage_immune + immune_bypass_gun whitelist ---\n");
+    {
+        Ship s;
+        s.alive          = true;
+        s.shield_fore_cm = 10.0f;
+        s.armor_fore_cm  = 10.0f;
+        s.damage_immune  = true;
+        const float h0 = total_health(s);
+        ship::take_damage(s, 5.0f, HitFacing::Fore);
+        CHECK("immune: anonymous hit bounces", total_health(s) == h0);
+        ship::take_damage(s, 5.0f, HitFacing::Fore, GunType::SteltekGun);
+        CHECK("immune: steltek hit bounces while whitelist closed",
+              total_health(s) == h0);
+
+        s.immune_bypass_gun = GunType::SteltekGun;   // the boost event
+        ship::take_damage(s, 5.0f, HitFacing::Fore, GunType::PlasmaGun);
+        CHECK("whitelist open: OTHER gun still bounces", total_health(s) == h0);
+        ship::take_damage(s, 5.0f, HitFacing::Fore);
+        CHECK("whitelist open: anonymous source still bounces",
+              total_health(s) == h0);
+        ship::take_damage(s, 5.0f, HitFacing::Fore, GunType::SteltekGun);
+        CHECK("whitelist open: steltek hit LANDS", total_health(s) < h0);
+        ship::take_damage(s, 1.0e6f, HitFacing::Fore, GunType::SteltekGun);
+        CHECK("whitelist open: steltek overkill is lethal", !s.alive);
+    }
+
     std::printf("\n=== %s ===\n", g_fail == 0 ? "ALL CHECKS PASSED" : "FAILURES DETECTED");
     return g_fail == 0 ? 0 : 1;
 }

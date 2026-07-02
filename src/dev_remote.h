@@ -60,6 +60,14 @@
 //                          live leads + each one's distance from the player.
 //   GET  /inventory      → { items: [...], cargo_used, cargo_cap }
 //   POST /kill           → kill a ship. Body { id? } (0/missing = nearest).
+//                          God-mode: bypasses damage_immune (dev cheat).
+//   POST /damage         → hit a ship through the REAL ship::take_damage
+//                          path (immunity + weapon whitelist live). Body
+//                          { id, amount, gun? } — gun is an optional gun
+//                          short name ("steltek_gun"); missing = an
+//                          anonymous source (GunType::Count). The judge's
+//                          probe for "only the boosted gun hurts the
+//                          drone" (#133/#135).
 //   POST /tractor/pull   → pull in-range loot into the hold.
 //   POST /inventory/sell → sell the unified-hold item at { index:N }.
 //                          Returns { ok:true }.
@@ -119,6 +127,12 @@
 //                          autopilot (the A key). Body { nav }. Hostile
 //                          gate applies; refusals show in the HUD banner
 //                          and the game log.
+//   POST /jump           → approach the named jump gate (dev teleport,
+//                          same convenience as /dock) and attempt the
+//                          jump via the REAL eligibility path — campaign
+//                          route lock, hostile bubble, and jump-drive
+//                          check all apply. Body { nav }. Assert via
+//                          GET /player system change (or its absence).
 //   GET  /events?since=N → { events: [ { seq, t, category, text }, ... ],
 //                          latest } — a monotonically-sequenced ring
 //                          buffer of gameplay events (comm feed lines,
@@ -195,6 +209,7 @@ struct ShipInfo {
     bool        alive;
     bool        aggro_player;
     bool        provoked;
+    bool        immune;    // Ship::damage_immune (drone invulnerability probe)
 };
 
 // Publish the latest near-player ship snapshot for GET /ships. Called once
@@ -291,6 +306,12 @@ void publish_inventory(const std::vector<ItemInfo>& items, int used, int cap,
 // main thread with the requested ship id (0 = "nearest alive non-player").
 // The host wires it to its kill-processing path.
 void set_kill_hook(std::function<void(uint32_t id)> hook);
+
+// POST /damage → main-thread hook: apply `amount` cm to ship `id` through
+// the real ship::take_damage path (immunity gate + weapon whitelist
+// included). `gun` is the gun short name ("" = anonymous source).
+void set_damage_hook(
+    std::function<void(uint32_t id, float amount, const std::string& gun)> hook);
 
 // POST /target enqueues a command; drain_commands invokes this hook on the
 // main thread with the requested ship id (0 = "nearest alive non-player").
@@ -438,6 +459,11 @@ void set_fixer_hook(std::function<void(std::string id, std::string verb)> hook);
 // the main thread with the nav NAME. The host resolves it to a nav index
 // and calls autopilot::try_engage (hostile gate + banner apply as usual).
 void set_autopilot_hook(std::function<void(std::string nav)> hook);
+
+// POST /jump enqueues a command; drain_commands invokes this hook on the
+// main thread with the gate NAME. The host teleports to the gate and runs
+// the J-key eligibility + warp path (jump::evaluate verdicts included).
+void set_jump_hook(std::function<void(std::string nav)> hook);
 
 // ---------------------------------------------------------------------------
 // /events — gameplay event ring buffer (agentic testing).

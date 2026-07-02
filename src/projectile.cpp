@@ -99,7 +99,7 @@ void projectile::collide_and_damage(std::vector<Projectile>& projectiles,
                 // One projectile -> at most one hit; break the inner
                 // loop so a single bullet can't cascade through ships.
                 const HitFacing facing = ship::facing_of_hit(s, closest);
-                ship::take_damage(s, p.damage_cm, facing);
+                ship::take_damage(s, p.damage_cm, facing, p.type);
                 // Kill attribution (np-ma2.1): if THIS hit was lethal,
                 // remember who fired it. The death pass in main.cpp uses
                 // this to bill reputation when the killer is the player.

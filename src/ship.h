@@ -88,11 +88,17 @@ struct Ship {
                                             // legendary loot bonus on death.
 
     // Damage immunity (campaign M21/M23 + dev). take_damage no-ops while
-    // set: the Steltek drone is invulnerable until the boosted gun exists
-    // (#133/#135 extend this into a weapon whitelist), and --dev-invuln
-    // pins it on the player ship for agentic smoke runs. Transient — not
-    // serialized; re-derived by its owner every frame/spawn.
+    // set: the Steltek drone is invulnerable, and --dev-invuln pins it on
+    // the player ship for agentic smoke runs. Transient — not serialized;
+    // re-derived by its owner every frame/spawn.
     bool              damage_immune = false;
+    // Weapon-whitelist escape hatch for damage_immune (#135, the M23
+    // finale): when != GunType::Count, hits from THAT gun type pierce the
+    // immunity — the drone sets this to SteltekGun once the Steltek boost
+    // event fires, so ONLY the boosted gun lands. Damage sources that know their gun pass
+    // it to take_damage; sources with no gun (missiles, collisions, sun)
+    // pass Count and stay gated. Transient, like damage_immune.
+    GunType           immune_bypass_gun = GunType::Count;
 
     // Kill attribution (np-ma2.1): the owner_id of the projectile that
     // landed the lethal hit, stamped by projectile::collide_and_damage at
@@ -306,7 +312,8 @@ void       heal_to_full(Ship& s);
 
 // Damage-pipeline support — see implementation in ship.cpp for
 // per-function notes. All in cm-of-durasteel (same unit as gun damage).
-void       take_damage(Ship& s, float damage_cm, ::HitFacing facing);
+void       take_damage(Ship& s, float damage_cm, ::HitFacing facing,
+                       GunType source_gun = GunType::Count);
 void       regen_shields(Ship& s, float dt);
 float      hit_radius_m(const Ship& s);
 ::HitFacing  facing_of_hit(const Ship& s, const HMM_Vec3& hit_pos_world);

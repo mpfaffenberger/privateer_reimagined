@@ -97,6 +97,10 @@ struct SpawnGroup {
     // active_wing, so a scenario that only spawns wingmen resolves
     // immediately instead of waiting for its own friends to die.
     bool        wingman = false;
+    // (#133) inert prop: set-dressing hull (the Delta Prime derelict).
+    // AI disabled, drifts where placed, not an objective (skips
+    // active_wing like wingmen do).
+    bool        prop = false;
 };
 
 // (#139) One sequential wave: all groups spawn together after delay_s;
@@ -423,6 +427,8 @@ void parse_scenario(const json::Value& v, Scenario& s) {
                         grp.aggro = ag->as_string();
                     if (const json::Value* wm = gv.find("wingman"); wm && wm->is_bool())
                         grp.wingman = wm->as_bool();
+                    if (const json::Value* pr = gv.find("prop"); pr && pr->is_bool())
+                        grp.prop = pr->as_bool();
                     if (!grp.class_name.empty()) wave.groups.push_back(std::move(grp));
                 }
             }
@@ -764,8 +770,22 @@ void tick(ShipRegistry& ships, const Ship& player_ship, PlayerState& player,
                                           ((i % 2) ? 1.0f : -1.0f);
                         req.formation_offset  = HMM_V3(lat, 60.0f, -120.0f);
                     }
+                    if (grp.prop) {
+                        // (#133) inert prop: park it AT the anchor (the
+                        // derelict sits on its nav, not 8-15 km off).
+                        req.position      = anchor_pos;
+                        req.patrol_anchor = anchor_pos;
+                    }
                     const uint32_t id = spawn(req);
                     if (id != 0) {
+                        if (grp.prop) {
+                            if (Ship* s = ships.find_by_id(id)) {
+                                s->ai.enabled = false;   // dead hull, drifts
+                                s->damage_immune = true; // scenery, not loot
+                            }
+                            ++spawned_count;
+                            continue;
+                        }
                         if (grp.wingman) {
                             // Not an objective: never joins active_wing
                             // (a wingman-only scenario resolves at once),

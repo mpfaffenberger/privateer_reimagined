@@ -572,6 +572,171 @@
         "set_flag:monkhouse_done",
         "clear_flag:m17_delivered"
       ]
+    },
+    {
+      "id": "cross_m18_offer",
+      "name": "Taryn Cross",
+      "base": "rygannon",
+      "requires_flags": [
+        "monkhouse_done"
+      ],
+      "forbids_flags": [
+        "m18_active",
+        "cross_1_done"
+      ],
+      "dialogue": [
+        "Taryn Cross, Exploratory Services. Monkhouse's wire said you'd come. Sign here - you're a survey contractor now.",
+        "First assignment: the Delta system. Four nav points, full sensor sweep at each. And what a coincidence - it's the first system on that map of yours.",
+        "Fair warning: the frontier pirates don't care for company. Ten thousand on completion."
+      ],
+      "offer": "Survey all four nav points in Delta, then report back. 10,000 credits.",
+      "accept_actions": [
+        "set_flag:m18_active"
+      ],
+      "refuse_actions": []
+    },
+    {
+      "id": "cross_m18_debrief",
+      "name": "Taryn Cross",
+      "base": "rygannon",
+      "requires_flags": [
+        "m18_active",
+        "m18_nav1",
+        "m18_nav2",
+        "m18_nav3",
+        "m18_nav4"
+      ],
+      "forbids_flags": [
+        "cross_1_done"
+      ],
+      "dialogue": [
+        "Telemetry checks out - four clean sweeps. The pirates you met are already in my report as 'local color'.",
+        "Ten thousand, as agreed. Rest up. Beta is next, and Beta has a problem."
+      ],
+      "offer": "",
+      "done_actions": [
+        "pay:10000",
+        "set_flag:cross_1_done",
+        "clear_flag:m18_active",
+        "clear_flag:m18_nav1",
+        "clear_flag:m18_nav2",
+        "clear_flag:m18_nav3",
+        "clear_flag:m18_nav4"
+      ]
+    },
+    {
+      "id": "cross_m19_offer",
+      "name": "Taryn Cross",
+      "base": "rygannon",
+      "requires_flags": [
+        "cross_1_done"
+      ],
+      "forbids_flags": [
+        "m19_active",
+        "cross_2_done"
+      ],
+      "dialogue": [
+        "Survey Beta. And keep your eyes open - Captain Garrovick took a Centurion out that way three weeks ago and never reported back.",
+        "Garrovick is - was - our best pilot. Find him. Ten thousand, and Services covers the recovery bonus if he's alive."
+      ],
+      "offer": "Survey Beta and find the overdue Captain Garrovick. 10,000 credits.",
+      "accept_actions": [
+        "set_flag:m19_active"
+      ],
+      "refuse_actions": []
+    },
+    {
+      "id": "cross_m19_debrief",
+      "name": "Taryn Cross",
+      "base": "rygannon",
+      "requires_flags": [
+        "m19_active",
+        "killed:garrovick"
+      ],
+      "forbids_flags": [
+        "cross_2_done"
+      ],
+      "dialogue": [
+        "Your gun-camera footage... that was Garrovick's ship, and he fired first, and he was RAVING. What in the void does that to a man's mind?",
+        "You did what you had to. Ten thousand. But something out there broke him, pilot - and Gamma is deeper in."
+      ],
+      "offer": "",
+      "done_actions": [
+        "pay:10000",
+        "set_flag:cross_2_done",
+        "clear_flag:m19_active"
+      ]
+    },
+    {
+      "id": "cross_m20_offer",
+      "name": "Taryn Cross",
+      "base": "rygannon",
+      "requires_flags": [
+        "cross_2_done"
+      ],
+      "forbids_flags": [
+        "m20_active",
+        "cross_3_done"
+      ],
+      "dialogue": [
+        "Whatever unmade Garrovick is past Beta. Survey Gamma - four navs, full sweep - and find out what.",
+        "Intelligence flagged Kilrathi drive signatures in the area. A LOT of them. Conserve your missiles for the last nav. Ten thousand."
+      ],
+      "offer": "Survey Gamma's four nav points. Expect heavy Kilrathi resistance. 10,000 credits.",
+      "accept_actions": [
+        "set_flag:m20_active"
+      ],
+      "refuse_actions": []
+    },
+    {
+      "id": "cross_m20_debrief",
+      "name": "Taryn Cross",
+      "base": "rygannon",
+      "requires_flags": [
+        "m20_active",
+        "m20_nav1",
+        "m20_nav2",
+        "m20_nav3",
+        "m20_nav4"
+      ],
+      "forbids_flags": [
+        "cross_3_done"
+      ],
+      "dialogue": [
+        "A Kamekh. They posted a CORVETTE to a system with nothing in it. The cats aren't surveying, pilot - they're guarding the road.",
+        "Ten thousand. One system left on your map: Delta Prime. Whatever everyone is so interested in lives there."
+      ],
+      "offer": "",
+      "done_actions": [
+        "pay:10000",
+        "set_flag:cross_3_done",
+        "clear_flag:m20_active",
+        "clear_flag:m20_nav1",
+        "clear_flag:m20_nav2",
+        "clear_flag:m20_nav3",
+        "clear_flag:m20_nav4"
+      ]
+    },
+    {
+      "id": "cross_m21_offer",
+      "name": "Taryn Cross",
+      "base": "rygannon",
+      "requires_flags": [
+        "cross_3_done"
+      ],
+      "forbids_flags": [
+        "m21_active",
+        "cross_done"
+      ],
+      "dialogue": [
+        "Last one: Delta Prime. Long-range scopes show a single anomalous return - metallic, kilometers long, cold as the void.",
+        "Survey it and come home. Ten thousand. And pilot... Garrovick's last logged course was Delta Prime. Whatever you find - do not touch it."
+      ],
+      "offer": "Survey the Delta Prime anomaly and return. 10,000 credits.",
+      "accept_actions": [
+        "set_flag:m21_active"
+      ],
+      "refuse_actions": []
     }
   ]
 }

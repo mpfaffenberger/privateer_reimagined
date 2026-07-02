@@ -47,6 +47,8 @@ void push_event(const std::string& /*category*/,
 void set_cargo_give_hook(std::function<void(std::string, int)> /*hook*/) {}
 void set_spawn_hook(std::function<void(std::string, std::string, float)> /*hook*/) {}
 void set_kill_hook(std::function<void(uint32_t)> /*hook*/)             {}
+void set_damage_hook(
+    std::function<void(uint32_t, float, const std::string&)> /*hook*/)  {}
 void set_target_hook(std::function<void(uint32_t)> /*hook*/)           {}
 void set_tractor_pull_hook(std::function<void()> /*hook*/)             {}
 void set_rumor_hook(std::function<void()> /*hook*/)                    {}
@@ -64,5 +66,6 @@ void set_goto_hook(std::function<void(std::string)> /*hook*/)          {}
 void set_dock_hook(std::function<void(std::string)> /*hook*/)          {}
 void set_fixer_hook(std::function<void(std::string, std::string)> /*hook*/) {}
 void set_autopilot_hook(std::function<void(std::string)> /*hook*/)     {}
+void set_jump_hook(std::function<void(std::string)> /*hook*/)          {}
 
 } // namespace dev_remote

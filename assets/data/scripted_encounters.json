@@ -1002,6 +1002,437 @@
           ]
         }
       ]
+    },
+    {
+      "id": "m18_survey_1",
+      "trigger": {
+        "kind": "at_nav",
+        "system": "delta",
+        "nav": "Asteroid Field 2",
+        "radius_m": 16000,
+        "requires_flags": [
+          "m18_active"
+        ],
+        "forbids_flags": [
+          "m18_nav1"
+        ],
+        "cooldown_s": 30
+      },
+      "dialogue": [
+        {
+          "voice": "Survey Computer",
+          "line": "Nav one sweep complete. Mineral signatures logged. No contacts - the quiet kind of quiet."
+        }
+      ],
+      "on_dialogue_done": [
+        "set_flag:m18_nav1"
+      ]
+    },
+    {
+      "id": "m18_survey_2",
+      "trigger": {
+        "kind": "at_nav",
+        "system": "delta",
+        "nav": "Delta Nav 3",
+        "radius_m": 16000,
+        "requires_flags": [
+          "m18_active"
+        ],
+        "forbids_flags": [
+          "m18_nav2"
+        ],
+        "cooldown_s": 30
+      },
+      "dialogue": [
+        {
+          "voice": "Pirate Leader",
+          "line": "This rock is CLAIMED, survey boy. Your fancy sensors are salvage now."
+        }
+      ],
+      "on_dialogue_done": [
+        "set_flag:m18_nav2"
+      ],
+      "waves": [
+        {
+          "delay_s": 2,
+          "spawns": [
+            {
+              "faction": "pirate",
+              "class": "talon",
+              "count": 4,
+              "hostile": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "m18_survey_3",
+      "trigger": {
+        "kind": "at_nav",
+        "system": "delta",
+        "nav": "Asteroid Field 4",
+        "radius_m": 16000,
+        "requires_flags": [
+          "m18_active"
+        ],
+        "forbids_flags": [
+          "m18_nav3"
+        ],
+        "cooldown_s": 30
+      },
+      "dialogue": [
+        {
+          "voice": "Pirate Leader",
+          "line": "Word travels fast out here. You're the one who shot up our brothers at nav three. Get him!"
+        }
+      ],
+      "on_dialogue_done": [
+        "set_flag:m18_nav3"
+      ],
+      "waves": [
+        {
+          "delay_s": 2,
+          "spawns": [
+            {
+              "faction": "pirate",
+              "class": "talon",
+              "count": 4,
+              "hostile": true
+            }
+          ]
+        },
+        {
+          "delay_s": 4,
+          "spawns": [
+            {
+              "faction": "pirate",
+              "class": "talon",
+              "count": 4,
+              "hostile": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "m18_survey_4",
+      "trigger": {
+        "kind": "at_nav",
+        "system": "delta",
+        "nav": "Beta Jump",
+        "radius_m": 16000,
+        "requires_flags": [
+          "m18_active"
+        ],
+        "forbids_flags": [
+          "m18_nav4"
+        ],
+        "cooldown_s": 30
+      },
+      "dialogue": [
+        {
+          "voice": "Survey Computer",
+          "line": "Nav four sweep complete. Delta survey package assembled. Rygannon will want this."
+        }
+      ],
+      "on_dialogue_done": [
+        "set_flag:m18_nav4"
+      ]
+    },
+    {
+      "id": "m19_survey_1",
+      "trigger": {
+        "kind": "at_nav",
+        "system": "beta",
+        "nav": "Asteroid Field 2",
+        "radius_m": 16000,
+        "requires_flags": [
+          "m19_active"
+        ],
+        "forbids_flags": [
+          "m19_nav1"
+        ],
+        "cooldown_s": 30
+      },
+      "dialogue": [
+        {
+          "voice": "Survey Computer",
+          "line": "Beta nav sweep logged. Faint drive-plume residue... weeks old. Somebody flew through here in a hurry."
+        }
+      ],
+      "on_dialogue_done": [
+        "set_flag:m19_nav1"
+      ]
+    },
+    {
+      "id": "m19_garrovick",
+      "trigger": {
+        "kind": "at_nav",
+        "system": "beta",
+        "nav": "Beta Nav 3",
+        "radius_m": 16000,
+        "requires_flags": [
+          "m19_active"
+        ],
+        "forbids_flags": [
+          "killed:garrovick"
+        ],
+        "cooldown_s": 60
+      },
+      "dialogue": [
+        {
+          "voice": "Captain Garrovick",
+          "line": "Stay back stay BACK - I see you, Services markings, they sent you, IT sent you -"
+        },
+        {
+          "voice": "Captain Garrovick",
+          "line": "I saw it in the dark past the last jump. The green eye. It looked at me and it kept looking, it is STILL LOOKING -"
+        },
+        {
+          "voice": "Captain Garrovick",
+          "line": "You want my eyes. You want to take my eyes back to it. I won't let you. I WON'T LET YOU!"
+        }
+      ],
+      "waves": [
+        {
+          "delay_s": 1,
+          "spawns": [
+            {
+              "faction": "hunter",
+              "class": "centurion",
+              "count": 1,
+              "name": "Captain Garrovick",
+              "unique": "garrovick",
+              "hostile": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "m20_survey_1",
+      "trigger": {
+        "kind": "at_nav",
+        "system": "gamma",
+        "nav": "Gamma Nav 2",
+        "radius_m": 16000,
+        "requires_flags": [
+          "m20_active"
+        ],
+        "forbids_flags": [
+          "m20_nav1"
+        ],
+        "cooldown_s": 30
+      },
+      "dialogue": [
+        {
+          "voice": "Kilrathi Patrol Leader",
+          "line": "An ape, this far out? You have flown into the wrong sky, monkey."
+        }
+      ],
+      "on_dialogue_done": [
+        "set_flag:m20_nav1"
+      ],
+      "waves": [
+        {
+          "delay_s": 2,
+          "spawns": [
+            {
+              "faction": "kilrathi",
+              "class": "dralthi",
+              "count": 3,
+              "hostile": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "m20_survey_2",
+      "trigger": {
+        "kind": "at_nav",
+        "system": "gamma",
+        "nav": "Asteroid Field 3",
+        "radius_m": 16000,
+        "requires_flags": [
+          "m20_active"
+        ],
+        "forbids_flags": [
+          "m20_nav2"
+        ],
+        "cooldown_s": 30
+      },
+      "dialogue": [
+        {
+          "voice": "Kilrathi Patrol Leader",
+          "line": "The intruder from nav two! All wings converge - the Empire's business here will not be witnessed."
+        }
+      ],
+      "on_dialogue_done": [
+        "set_flag:m20_nav2"
+      ],
+      "waves": [
+        {
+          "delay_s": 2,
+          "spawns": [
+            {
+              "faction": "kilrathi",
+              "class": "dralthi",
+              "count": 3,
+              "hostile": true
+            }
+          ]
+        },
+        {
+          "delay_s": 4,
+          "spawns": [
+            {
+              "faction": "kilrathi",
+              "class": "gothri",
+              "count": 2,
+              "hostile": true
+            }
+          ]
+        },
+        {
+          "delay_s": 4,
+          "spawns": [
+            {
+              "faction": "kilrathi",
+              "class": "dralthi",
+              "count": 3,
+              "hostile": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "m20_survey_3",
+      "trigger": {
+        "kind": "at_nav",
+        "system": "gamma",
+        "nav": "Asteroid Field 4",
+        "radius_m": 16000,
+        "requires_flags": [
+          "m20_active"
+        ],
+        "forbids_flags": [
+          "m20_nav3"
+        ],
+        "cooldown_s": 30
+      },
+      "dialogue": [
+        {
+          "voice": "Survey Computer",
+          "line": "Nav sweep complete. No contacts. Which raises the question of what the Kilrathi are protecting elsewhere."
+        }
+      ],
+      "on_dialogue_done": [
+        "set_flag:m20_nav3"
+      ]
+    },
+    {
+      "id": "m20_survey_4",
+      "trigger": {
+        "kind": "at_nav",
+        "system": "gamma",
+        "nav": "Gamma Nav 6",
+        "radius_m": 16000,
+        "requires_flags": [
+          "m20_active"
+        ],
+        "forbids_flags": [
+          "m20_nav4"
+        ],
+        "cooldown_s": 30
+      },
+      "dialogue": [
+        {
+          "voice": "Kamekh Commander",
+          "line": "Enough. I will deal with this pest myself. Weapons free."
+        }
+      ],
+      "on_dialogue_done": [
+        "set_flag:m20_nav4"
+      ],
+      "waves": [
+        {
+          "delay_s": 2,
+          "spawns": [
+            {
+              "faction": "kilrathi",
+              "class": "gothri",
+              "count": 3,
+              "hostile": true
+            }
+          ]
+        },
+        {
+          "delay_s": 4,
+          "spawns": [
+            {
+              "faction": "kilrathi",
+              "class": "kamekh",
+              "count": 1,
+              "hostile": true
+            },
+            {
+              "faction": "kilrathi",
+              "class": "gothri",
+              "count": 1,
+              "hostile": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "m21_derelict",
+      "trigger": {
+        "kind": "at_nav",
+        "system": "delta_prime",
+        "nav": "Derelict",
+        "radius_m": 18000,
+        "requires_flags": [
+          "m21_active"
+        ],
+        "forbids_flags": [
+          "steltek_gun_owned"
+        ],
+        "cooldown_s": 60
+      },
+      "dialogue": [
+        {
+          "voice": "Survey Computer",
+          "line": "Contact resolved: artificial structure, 2.4 kilometers, hull composition UNKNOWN. Age estimate exceeds instrument calibration. It is Steltek, and it is dead."
+        },
+        {
+          "voice": "Survey Computer",
+          "line": "Correction: it is MOSTLY dead. A single hardpoint retains power - an energy weapon of unfamiliar design, held in a release cradle."
+        },
+        {
+          "voice": "Survey Computer",
+          "line": "The cradle responds to proximity. Grapple retrieval is possible. NOTE: Services directive 7-C prohibits artifact retrieval. NOTE: directive 7-C is very far away."
+        }
+      ],
+      "waves": [
+        {
+          "delay_s": 1,
+          "spawns": [
+            {
+              "faction": "civilian",
+              "class": "derelict",
+              "count": 1,
+              "prop": true
+            }
+          ]
+        }
+      ],
+      "on_dialogue_done": [
+        "m21:take_gun"
+      ]
     }
   ]
 }

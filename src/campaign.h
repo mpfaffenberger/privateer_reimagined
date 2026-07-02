@@ -89,6 +89,12 @@ void on_dock(PlayerState& p, const std::string& base_id);
 // this through main's registration; sandbox saves are never blockaded.
 bool palan_blockaded(const PlayerState& p);
 
+// Locked frontier predicate (#130): true when `dest_system` is one of
+// the four frontier survey systems and the player doesn't hold the
+// Steltek map yet (monkhouse_done). jump.cpp's route gate consults this
+// through main's registration.
+bool frontier_locked(const PlayerState& p, const std::string& dest_system);
+
 // Per-frame world-state derivation: re-arms/clears the campaign's faction
 // stance overrides from plot flags + the player's current system (#114
 // pirate neutrality). Cheap (a couple of flag probes); call once per frame

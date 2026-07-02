@@ -467,6 +467,67 @@ int main() {
           plot::has_flag(p, "monkhouse_done"),
           "artifact pieces merge into the steltek_map; Cross is next");
 
+    // ---- Phase 6: the Cross arc (#130-#133) ----------------------------------
+    check(!campaign::frontier_locked(p, "delta"),
+          "frontier OPEN once monkhouse_done is set");
+    {
+        PlayerState sandbox = player::new_game("troy");
+        check(campaign::frontier_locked(sandbox, "delta") &&
+              campaign::frontier_locked(sandbox, "delta_prime"),
+              "frontier LOCKED for sandbox players");
+        check(!campaign::frontier_locked(sandbox, "troy"),
+              "core systems never lock");
+    }
+    check(fixer_here("rygannon", p, "cross_m18_offer"),
+          "Cross recruits at Rygannon after monkhouse_done");
+    fixers::accept(*fixers::find("cross_m18_offer"), p);
+    for (const char* f : { "m18_nav1", "m18_nav2", "m18_nav3", "m18_nav4" })
+        plot::set_flag(p, f);              // survey scenario proxies
+    const int64_t cross_base = p.credits;
+    check(fixer_here("rygannon", p, "cross_m18_debrief"),
+          "M18 debrief gates on all four survey flags");
+    fixers::dialogue_done(*fixers::find("cross_m18_debrief"), p);
+    check(p.credits == cross_base + 10000 && plot::has_flag(p, "cross_1_done"),
+          "M18 pays 10,000 + cross_1_done");
+
+    fixers::accept(*fixers::find("cross_m19_offer"), p);
+    check(!fixer_here("rygannon", p, "cross_m19_debrief"),
+          "M19 debrief waits for Garrovick's death");
+    plot::set_flag(p, "killed:garrovick");
+    fixers::dialogue_done(*fixers::find("cross_m19_debrief"), p);
+    check(p.credits == cross_base + 20000 && plot::has_flag(p, "cross_2_done"),
+          "M19 pays 10,000 + cross_2_done");
+
+    fixers::accept(*fixers::find("cross_m20_offer"), p);
+    for (const char* f : { "m20_nav1", "m20_nav2", "m20_nav3", "m20_nav4" })
+        plot::set_flag(p, f);
+    fixers::dialogue_done(*fixers::find("cross_m20_debrief"), p);
+    check(p.credits == cross_base + 30000 && plot::has_flag(p, "cross_3_done"),
+          "M20 pays 10,000 + cross_3_done");
+
+    // M21: the gun + the drone.
+    fixers::accept(*fixers::find("cross_m21_offer"), p);
+    campaign::on_dock(p, "rygannon");
+    check(!plot::has_flag(p, "cross_done"),
+          "docking WITHOUT the gun does not settle M21");
+    plot::run_action(p, "m21:take_gun");
+    check(plot::has_item(p, "steltek_gun") &&
+          plot::has_flag(p, "steltek_gun_owned") &&
+          plot::has_flag(p, "drone_active"),
+          "taking the gun mounts it + wakes the drone");
+    bool mounted = false;
+    for (const MountSlot& m : p.gun_mounts)
+        if (m.gun_id == "steltek_gun") mounted = true;
+    check(mounted, "steltek_gun occupies a mount slot");
+    plot::run_action(p, "m21:take_gun");   // idempotent re-run
+    int steltek_mounts = 0;
+    for (const MountSlot& m : p.gun_mounts)
+        if (m.gun_id == "steltek_gun") ++steltek_mounts;
+    check(steltek_mounts == 1, "take_gun is idempotent");
+    campaign::on_dock(p, "rygannon");
+    check(p.credits == cross_base + 40000 && plot::has_flag(p, "cross_done"),
+          "M21 settles at Rygannon with the gun (+10,000)");
+
     std::printf("\n=== %s ===\n",
                 g_fail == 0 ? "ALL CHECKS PASSED" : "FAILURES DETECTED");
     return g_fail == 0 ? 0 : 1;

@@ -205,6 +205,7 @@ add_executable(new_privateer
     src/objectives.cpp
     src/encounters.cpp
     src/escort.cpp
+    src/drone.cpp
     src/base_screens.cpp
     src/savegame.cpp
     src/player.cpp

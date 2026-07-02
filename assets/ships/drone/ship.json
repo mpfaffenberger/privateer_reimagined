@@ -1,34 +1,34 @@
 {
   "name":           "drone",
   "display_name":   "Drone",
-  "class_label":    "Target Drone",
+  "class_label":    "Steltek Scout Drone",
   "atlas_manifest": "ships/drone/atlas_manifest_3d.json",
-  "default_faction": "civilian",
+  "default_faction": "steltek",
 
-  "armor_fore_cm": 8,
-  "armor_aft_cm":  8,
-  "armor_side_cm": 8,
+  "armor_fore_cm": 25,
+  "armor_aft_cm":  25,
+  "armor_side_cm": 25,
 
-  "cruise_speed":      120,
-  "afterburner_speed": 0,
-  "acceleration":      "poor",
-  "max_ypr":           "average",
+  "cruise_speed":      480,
+  "afterburner_speed": 1200,
+  "acceleration":      "excellent",
+  "max_ypr":           "excellent",
 
   "personality":       "standard",
 
-  "radar_range":   12000,
-  "weapons_range": 3000,
+  "radar_range":   25000,
+  "weapons_range": 4000,
 
   "max_engine_level": 1,
   "max_shield_level": 1,
-  "default_shield":   "Light Shields",
+  "default_shield":   "Shield Generator 2",
 
   "default_guns": [
-    { "offset_body": [0.0, 0.0, 2.0], "type": "mass_driver" }
+    { "offset_body": [0.0, 0.0, 2.0], "type": "steltek_gun" }
   ],
 
-  "energy_max":      80,
-  "energy_recharge": 15,
+  "energy_max":      500,
+  "energy_recharge": 100,
 
   "cargo_units":     0,
   "cargo_units_max": 0

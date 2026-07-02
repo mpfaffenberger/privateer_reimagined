@@ -12,12 +12,38 @@
       "name": "Gamma Jump",
       "kind": "jump",
       "position": [
+        100000,
         0,
-        0,
-        0
+        66667
       ],
       "links_to": "gamma",
-      "links_to_nav": "Delta Prime Jump"
+      "links_to_nav": "Delta Prime Jump",
+      "encounters": [
+        {
+          "chance": 40,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "dralthi",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": [
+            {
+              "faction": "kilrathi",
+              "ship": "gothri",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "chance": 30,
+          "members": []
+        }
+      ]
     },
     {
       "name": "Derelict",
@@ -32,14 +58,14 @@
   "encounters": [],
   "player_start": {
     "position": [
+      100000,
+      0,
+      63000
+    ],
+    "look_at": [
       -33333,
       0,
       -36667
-    ],
-    "look_at": [
-      -16666,
-      0,
-      -18334
     ]
   }
 }

@@ -64,6 +64,7 @@
 #include "threat.h"
 #include "jump.h"
 #include "encounters.h"
+#include "drone.h"
 #include "escort.h"
 #include "hailing.h"
 #include "scripted_encounters.h"
@@ -421,6 +422,9 @@ struct AppState {
     // The campaign smoke drivers stage combat with /spawn + /kill; this
     // keeps the pilot alive while curl thinks.
     bool        dev_invuln = false;
+    // Smoke affordance: --dev-jump-drive fits a jump drive at boot (the
+    // frontier smokes need real gate hops without shopping first).
+    bool        dev_jump_drive = false;
     // Death-test affordance (np-ma2.2): --dev-kill-at <secs> raises the
     // "kill player" request once after that many seconds of Flight, so the
     // death->Dying->respawn cycle can be exercised headlessly (the GUI
@@ -961,6 +965,14 @@ void build_system_scene(bool first_time) {
         }
         return true;
     });
+    // Locked frontier (#130): delta/beta/gamma/delta_prime refuse until
+    // the campaign hands over the Steltek map (monkhouse_done). Sandbox
+    // saves never set it -> the gates read JUMP: UNSURVEYED forever,
+    // matching the vanilla "the frontier is plot country" rule.
+    jump::set_route_gate([](const std::string& /*from*/,
+                            const std::string& to) -> bool {
+        return campaign::frontier_locked(g.player, to);
+    });
     // Faction comm chatter table (np-ma2.1) — flavour lines surfaced on
     // the HUD when a kill moves reputation. Missing file is non-fatal.
     comm::load("assets/data/comm_lines.json");
@@ -1330,6 +1342,46 @@ void build_system_scene(bool first_time) {
             std::fprintf(stderr, "[dev_remote] /autopilot: no nav named '%s'\n",
                          nav.c_str());
         });
+        // POST /jump — approach the named gate + attempt the jump via the
+        // REAL J-key path (route lock / hostiles / drive checks live).
+        dev_remote::set_jump_hook([](std::string nav) {
+            if (g.game.mode != GameMode::Flight) {
+                std::fprintf(stderr, "[dev_remote] /jump refused: not in Flight\n");
+                return;
+            }
+            for (int i = 0; i < (int)g.system.nav_points.size(); ++i) {
+                const NavPointDef& n = g.system.nav_points[i];
+                if (n.name != nav) continue;
+                if (n.kind != "jump") {
+                    std::fprintf(stderr, "[dev_remote] /jump: '%s' is not a gate\n",
+                                 nav.c_str());
+                    return;
+                }
+                // Dev teleport to the gate lip (same convenience as /dock),
+                // then the honest eligibility check.
+                g.selected_nav    = i;
+                g.camera.position = HMM_AddV3(n.position,
+                                              HMM_V3(0.0f, 0.0f, 1200.0f));
+                g.camera.velocity = HMM_V3(0.0f, 0.0f, 0.0f);
+                const jump::Eligibility e = jump::evaluate(
+                    g.camera, g.system, g.galaxy, g.player.current_system,
+                    i, g.player.has_jump_drive);
+                if (e.status == jump::Status::Ready) {
+                    std::printf("[dev_remote] /jump %s -> %s engaging\n",
+                                g.player.current_system.c_str(), e.dest_id.c_str());
+                    g.pending_jump_system = e.dest_id;
+                    g.pending_jump_nav    = e.arrival_nav;
+                    sfx::jump();
+                    game_state::request_mode(g.game, GameMode::Loading);
+                } else {
+                    std::printf("[dev_remote] /jump refused at %s: %s\n",
+                                nav.c_str(), jump::status_str(e.status));
+                }
+                return;
+            }
+            std::fprintf(stderr, "[dev_remote] /jump: no nav named '%s'\n",
+                         nav.c_str());
+        });
         // POST /fixer — drive a fixer conversation without a mouse. The
         // presence gate re-runs present_at against the CURRENT base, so the
         // judge can only do what a player in this bar could do.
@@ -1433,6 +1485,27 @@ void build_system_scene(bool first_time) {
                 target->alive        = false;
                 target->killed_by_id = pl->id;
                 std::printf("[dev_remote] kill: id=%u\n", target->id);
+            });
+
+        // POST /damage — the HONEST cousin of /kill: routes through
+        // ship::take_damage so damage_immune and the M23 weapon whitelist
+        // apply. `gun` names the source gun type ("" = anonymous).
+        dev_remote::set_damage_hook(
+            [](uint32_t id, float amount, const std::string& gun) {
+                const Ship* pl = g.ships.player();
+                for (Ship& s : g.ships) {
+                    if (s.id != id || !s.alive) continue;
+                    const GunType src = gun.empty() ? GunType::Count
+                                                    : gun::from_name(gun);
+                    ship::take_damage(s, amount, HitFacing::Fore, src);
+                    if (!s.alive && pl) s.killed_by_id = pl->id;
+                    std::printf("[dev_remote] damage: id=%u amount=%.0f gun=%s "
+                                "-> %s\n", id, (double)amount,
+                                gun.empty() ? "(none)" : gun.c_str(),
+                                s.alive ? "alive" : "DESTROYED");
+                    return;
+                }
+                std::fprintf(stderr, "[dev_remote] damage: no ship id=%u\n", id);
             });
 
         // POST /target — set the player's current target (the same field the
@@ -2009,6 +2082,9 @@ void build_system_scene(bool first_time) {
     // An escort abandoned by a system switch FAILS (#140) — the Drayman
     // doesn't teleport with you.
     escort::reset(&g.player);
+    // The drone (#133) re-acquires the player in the new system after its
+    // first-spawn delay — forget the old airframe, re-arm the stalk.
+    drone::reset();
     // Loot drops (Phase 4c, np-#86): a fresh system starts with no
     // floating loot. Drops are world-state, not save state, so they
     // don't outlive a system switch.
@@ -2324,6 +2400,11 @@ void apply_ship_debug_requests() {
     // --dev-missions: one-shot — accept a handful of generated jobs so the
     // navmap MISSION STATUS panel has real cards to inspect. Dev aid only;
     // fires once we're actually in Flight (galaxy + system are ready).
+    if (g.dev_jump_drive) {
+        g.dev_jump_drive        = false;   // one-shot
+        g.player.has_jump_drive = true;
+        std::printf("[dev] jump drive fitted (--dev-jump-drive)\n");
+    }
     if (g.dev_seed_missions && g.game.mode == GameMode::Flight) {
         g.dev_seed_missions = false;
         g.player.has_jump_drive = true;   // so cross-system jobs are acceptable
@@ -3660,6 +3741,7 @@ void frame_cb() {
             scripted::reset();  // fresh launch = fresh scenario director
             scripted::notify_launch(g.player.last_docked_base);  // on_launch triggers (#139)
             escort::reset(&g.player);  // (#140) docking abandoned any live escort
+            drone::reset();            // (#133) fresh stalk timer per sortie
             loot::clear();      // drop any stale loot markers from the previous wave
             objectives::clear(g.system);  // and any stale rumor leads
             std::printf("[encounter] base launch -> cleared old wave + re-rolled\n");
@@ -3769,6 +3851,7 @@ void frame_cb() {
             info.alive        = s.alive;
             info.aggro_player = s.ai.aggro_player;
             info.provoked     = s.provoked_by_player;
+            info.immune       = s.damage_immune;
             infos.push_back(std::move(info));
         }
         dev_remote::publish_ships(infos);
@@ -4227,6 +4310,11 @@ void frame_cb() {
             // escorts auto-travel with the player).
             escort::tick(g.ships, g.system, g.player, encounter_despawn,
                          autopilot::engaged(g.autopilot), g.camera.position);
+            // Steltek drone (#133): the cross-system pursuer. No-op until
+            // the derelict gun sets drone_active.
+            drone::tick(g.ships, g.player, g.camera.position,
+                        stm_sec(stm_now()), encounter_spawn,
+                        encounter_despawn);
         }
     }
 
@@ -6758,6 +6846,8 @@ sapp_desc sokol_main(int argc, char** argv) {
             g.load_slot = savegame::k_autosave_slot;   // resume the autosave
         } else if (std::strcmp(argv[i], "--dev-invuln") == 0) {
             g.dev_invuln = true;
+        } else if (std::strcmp(argv[i], "--dev-jump-drive") == 0) {
+            g.dev_jump_drive = true;
         } else if (std::strcmp(argv[i], "--dev-kill-at") == 0 && i + 1 < argc) {
             g.dev_kill_at_s = (float)std::atof(argv[i + 1]);
             ++i;
