@@ -34,6 +34,7 @@
 #include "HandmadeMath.h"
 
 #include <cstdint>
+#include <functional>
 #include <string>
 
 struct Camera;
@@ -69,6 +70,8 @@ enum class DockResult : uint8_t {
     TooFast,       // speed over k_dock_speed_max — "TOO FAST"
     NotDockable,   // nav point isn't a base (no prompt)
     Busy,          // already docking, or in post-launch cooldown
+    Refused,       // clearance gate veto (campaign blockade, #126) —
+                   // "DOCKING REFUSED"
 };
 
 struct Docking {
@@ -98,6 +101,14 @@ constexpr float k_relaunch_cooldown_s = 2.0f;    // anti-instant-redock after la
 // True while the autopilot owns the ship — main.cpp uses this to mute
 // player thrust / aim / cruise input so the player can't fight the dock.
 bool controls_locked(const Docking& d);
+
+// Clearance gate (campaign #126, the Palan blockade). When registered,
+// a `true` return for a base id vetoes every landing path — the D-key
+// request, the auto-land zone, and the dev_remote /dock shortcut all
+// funnel through it. The gate itself owns any player-facing messaging
+// (comm feed, rate limiting); docking just refuses quietly. Unset =
+// everything clear (the sandbox default).
+void set_clearance_gate(std::function<bool(const std::string& base_id)> gate);
 
 // Eligibility test, side-effect free. Player nav points are static so
 // "relative speed" is just |player_vel|. Call every frame to feed the

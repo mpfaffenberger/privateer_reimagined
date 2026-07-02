@@ -172,7 +172,27 @@ void ship_ai::tick(Ship& s, const ShipRegistry& all_ships, float t_now,
     if (!s.ai.enabled)            return;
 
     const ShipPerception& p = s.perception;
-    const bool  has_hostile = (p.nearest_hostile_id != 0);
+    bool has_hostile = (p.nearest_hostile_id != 0);
+
+    // Campaign wingmen (#128): guard the player. Stance tables call the
+    // blockade Demons "neutral" to a militia Talon, so perception never
+    // hands a wingman a hostile — scan for whoever is gunning for the
+    // player instead and lock the nearest one.
+    if (s.ai.wingman && !has_hostile && s.sprite) {
+        uint32_t tid  = 0;
+        float    best = 1.0e30f;
+        for (const Ship& o : all_ships) {
+            if (!o.alive || o.is_player || o.id == s.id || !o.sprite) continue;
+            if (!(o.ai.aggro_player || o.provoked_by_player)) continue;
+            const float d = HMM_LenV3(HMM_SubV3(o.sprite->position,
+                                                s.sprite->position));
+            if (d < best) { best = d; tid = o.id; }
+        }
+        if (tid != 0) {
+            s.ai.preferred_target_id = tid;
+            has_hostile = true;   // fall into the combat path below
+        }
+    }
 
     // Personality gate. Cowards (merchants, civilians) prefer to flee -- but
     // ONLY when something is actively hunting them. When no hostile is
@@ -194,7 +214,8 @@ void ship_ai::tick(Ship& s, const ShipRegistry& all_ships, float t_now,
     }
 
     if (has_hostile) {
-        s.ai.target_id = p.nearest_hostile_id;
+        s.ai.target_id = (p.nearest_hostile_id != 0) ? p.nearest_hostile_id
+                                                     : s.ai.preferred_target_id;
         // Campaign escort waves (#140): a live preferred target overrides
         // the nearest-hostile pick (the wave focuses the escortee even
         // when the player is closer). Falls back automatically when the

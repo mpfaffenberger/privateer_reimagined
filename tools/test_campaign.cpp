@@ -415,6 +415,58 @@ int main() {
     check(!fixer_here("oxford", p, "oxford_library_scene"),
           "library scene retires after access granted");
 
+    // ---- Phase 5: the Murphy blockade arc (#126-#128) -----------------------
+    check(campaign::palan_blockaded(p),
+          "Palan blockaded once the Murphy arc opens (masterson_done)");
+    {
+        PlayerState sandbox = player::new_game("troy");
+        check(!campaign::palan_blockaded(sandbox),
+              "sandbox players never see the blockade");
+    }
+    check(fixer_here("basra_refinery", p, "murphy_m14_offer"),
+          "M14 offered at Basra after masterson_done");
+    fixers::accept(*fixers::find("murphy_m14_offer"), p);
+    check(plot::has_flag(p, "m14_active"), "m14 active");
+    plot::set_flag(p, "m14_cleared");          // scenario on_cleared proxy
+    const int64_t murphy_base = p.credits;
+    check(fixer_here("basra_refinery", p, "murphy_m14_debrief"),
+          "M14 debrief appears once the waves die");
+    plot::clear_flag(p, "m14_active");
+    fixers::dialogue_done(*fixers::find("murphy_m14_debrief"), p);
+    check(p.credits == murphy_base + 15000 &&
+          plot::has_flag(p, "murphy_1_done"), "M14 debrief pays 15,000");
+
+    fixers::accept(*fixers::find("murphy_m15_offer"), p);
+    plot::set_flag(p, "m15_cleared");
+    plot::clear_flag(p, "m15_active");
+    fixers::dialogue_done(*fixers::find("murphy_m15_debrief"), p);
+    check(p.credits == murphy_base + 25000 &&
+          plot::has_flag(p, "murphy_2_done"), "M15 debrief pays 10,000");
+
+    // M16: the blockade holds until the final wave dies, then landing pays.
+    fixers::accept(*fixers::find("murphy_m16_offer"), p);
+    check(campaign::palan_blockaded(p), "blockade still up mid-M16");
+    plot::set_flag(p, "palan_blockade_lifted");   // wave on_cleared proxy
+    check(!campaign::palan_blockaded(p), "blockade lifts with the last wave");
+    campaign::on_dock(p, "palan");
+    check(p.credits == murphy_base + 40000 &&
+          plot::has_flag(p, "murphy_done"), "M16 landing pays 15,000 + murphy_done");
+
+    // ---- M17: Monkhouse to Basra (#129) --------------------------------------
+    check(fixer_here("palan", p, "monkhouse_m17_offer"),
+          "Monkhouse waits in the Palan bar");
+    fixers::accept(*fixers::find("monkhouse_m17_offer"), p);
+    check(plot::has_item(p, "dr_monkhouse"), "the doctor boards");
+    campaign::on_dock(p, "basra_refinery");
+    check(!plot::has_item(p, "dr_monkhouse") &&
+          p.credits == murphy_base + 45000, "M17 delivers the doctor (+5,000)");
+    check(fixer_here("basra_refinery", p, "monkhouse_m17_debrief"),
+          "the lab scene awaits at Basra");
+    fixers::dialogue_done(*fixers::find("monkhouse_m17_debrief"), p);
+    check(plot::has_item(p, "steltek_map") &&
+          plot::has_flag(p, "monkhouse_done"),
+          "artifact pieces merge into the steltek_map; Cross is next");
+
     std::printf("\n=== %s ===\n",
                 g_fail == 0 ? "ALL CHECKS PASSED" : "FAILURES DETECTED");
     return g_fail == 0 ? 0 : 1;

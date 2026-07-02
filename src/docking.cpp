@@ -51,9 +51,22 @@ float ease_k(float rate, float dt) {
     return 1.0f - std::exp(-rate * dt);
 }
 
+// Campaign clearance gate (#126). Consulted by every landing path;
+// nullptr / false = clear. The gate owns its own messaging.
+std::function<bool(const std::string&)> g_clearance_gate;
+
+bool clearance_refused(const NavPointDef& nav) {
+    return g_clearance_gate && !nav.base_id.empty() &&
+           g_clearance_gate(nav.base_id);
+}
+
 } // namespace
 
 namespace docking {
+
+void set_clearance_gate(std::function<bool(const std::string&)> gate) {
+    g_clearance_gate = std::move(gate);
+}
 
 bool controls_locked(const Docking& d) {
     return d.state == DockingState::Approaching ||
@@ -63,6 +76,8 @@ bool controls_locked(const Docking& d) {
 DockResult can_request(const Docking& d, HMM_Vec3 player_pos,
                        HMM_Vec3 player_vel, const NavPointDef& nav) {
     if (!nav.dockable || nav.base_id.empty()) return DockResult::NotDockable;
+    // Campaign blockade (#126): the tower answers, and the answer is no.
+    if (clearance_refused(nav))               return DockResult::Refused;
     // Mid-approach or freshly launched: don't offer a new clearance.
     if (d.state != DockingState::None || d.cooldown_s > 0.0f) {
         return DockResult::Busy;
@@ -80,6 +95,7 @@ const char* result_str(DockResult r) {
         case DockResult::TooFar:      return "TOO FAR";
         case DockResult::TooFast:     return "TOO FAST";
         case DockResult::Busy:        return "STAND BY";
+        case DockResult::Refused:     return "DOCKING REFUSED";
         case DockResult::NotDockable: return "";
         default:                      return "";
     }
@@ -109,6 +125,7 @@ DockResult request(Docking& d, HMM_Vec3 player_pos, HMM_Vec3 player_vel,
 void begin_auto(Docking& d, const NavPointDef& nav) {
     // Already docking or just launched? Leave it be.
     if (d.state != DockingState::None || d.cooldown_s > 0.0f) return;
+    if (clearance_refused(nav)) return;    // blockade: fly on through
     d.state     = DockingState::Requested;
     d.base_id   = nav.base_id;
     d.base_name = nav.name;
@@ -127,6 +144,11 @@ void land_now(Docking& d, GameState& gs, PlayerState& player,
     // the Docking->Docked transition in tick(): set the docked flags,
     // request Landed, and autosave (a new timestamped file every landing).
     if (d.state != DockingState::None || d.cooldown_s > 0.0f) return;
+    if (clearance_refused(nav)) {
+        std::printf("[dock] landing at %s REFUSED (clearance gate)\n",
+                    nav.base_id.c_str());
+        return;
+    }
     d.state                 = DockingState::Docked;
     d.base_id               = nav.base_id;
     d.base_name             = nav.name;

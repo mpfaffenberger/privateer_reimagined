@@ -171,6 +171,13 @@ struct ShipAIState {
     // aggro:"escortee" spawn groups.
     uint32_t  preferred_target_id = 0;
 
+    // Campaign wingmen (#128, Murphy's Talons): lawful faction stances
+    // never flag the player's attackers as hostile to a militia escort,
+    // so a wingman scans for ships gunning FOR THE PLAYER (aggro_player /
+    // provoked_by_player) and engages them directly. Off-combat it flies
+    // CivRole::Escort formation on the player. Transient, not serialized.
+    bool      wingman = false;
+
     // ---- data-driven brain runtime (src/ai_maneuver.h, ai_brain.cpp) ---
     // The combat brain is now a condition->maneuver table evaluator. The
     // STATIC table (3 morale tiers of logic+interrupt rules) is shared and

@@ -43,6 +43,19 @@
 // Riordian (M05) lives in assets/data/scripted_encounters.json (on_launch
 // ambush + at_nav re-ambush gated on the killed:riordian kill-memory).
 //
+// M10..M13 — the Masterson arc (#122-#125): three escort rows (settle =
+// dock at Oxford AFTER the escortee lands; landing first voids the
+// contract) + the M11 Black Rhombus hunt (kill-memory settle). The
+// escortee lifecycle itself lives in escort.h.
+//
+// M14..M16 — the Murphy blockade arc (#126-#128). M14/M15 are pure
+// scenario + fixer content (multi-wave kill-alls at Palan's asteroid
+// field; the bar debrief pays via "pay:<credits>"). M16 is a bare
+// go-to-Palan row; the pad is refused while palan_blockaded() holds
+// (docking.cpp clearance gate) and the final wave's on_cleared sets
+// palan_blockade_lifted. M17 (Monkhouse, #129) is a passenger row to
+// Basra; the debrief upgrades the artifact into the steltek_map.
+//
 // M06..M09 — the Lynch arc (#118-#121). M06 is pure data: the fixer sets
 // m06_active, the Seelig scenario's on_dialogue_done marks the message
 // delivered, and Lynch's debrief pays via the "pay:<credits>" token here.
@@ -69,6 +82,12 @@ void init();
 // fail_cargo_on_dock site) with the raw nav base id ("liverpool_refinery").
 // Runs every active mission's delivery/failure checks.
 void on_dock(PlayerState& p, const std::string& base_id);
+
+// Palan blockade predicate (#126/#128): true while the campaign has
+// reached the Murphy arc (masterson_done) and the M16 waves haven't
+// died (palan_blockade_lifted). docking.cpp's clearance gate consults
+// this through main's registration; sandbox saves are never blockaded.
+bool palan_blockaded(const PlayerState& p);
 
 // Per-frame world-state derivation: re-arms/clears the campaign's faction
 // stance overrides from plot flags + the player's current system (#114

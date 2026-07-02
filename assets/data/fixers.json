@@ -21,131 +21,201 @@
       "id": "sandoval_offer",
       "name": "Ernesto Sandoval",
       "base": "new_detroit",
-      "forbids_flags": ["m01_active", "m01_delivered", "sandoval_done"],
+      "forbids_flags": [
+        "m01_active",
+        "m01_delivered",
+        "sandoval_done"
+      ],
       "dialogue": [
         "You look like a pilot who could use honest work. Ernesto Sandoval. I deal in... acquisitions.",
         "I have a consignment of iron that needs to reach Liverpool, over in the Newcastle system. Forty units, no questions, no trouble.",
         "Fifteen thousand credits. I don't have it on me - you'll be paid when you return to New Detroit. You have my word."
       ],
       "offer": "Haul 40 units of iron to Liverpool (Newcastle system), then return here for 15,000 credits. Deal?",
-      "accept_actions": ["m01:accept"],
+      "accept_actions": [
+        "m01:accept"
+      ],
       "refuse_actions": []
     },
     {
       "id": "tayla_artifact_handoff",
       "name": "Tayla",
       "base": "new_detroit",
-      "requires_flags": ["m01_delivered"],
-      "forbids_flags": ["sandoval_done"],
+      "requires_flags": [
+        "m01_delivered"
+      ],
+      "forbids_flags": [
+        "sandoval_done"
+      ],
       "dialogue": [
         "Looking for Sandoval? Don't bother. He's dead. Word is it wasn't an accident.",
         "Name's Tayla. Sandoval owed people, and now those people are curious about that trinket he handed you as collateral.",
         "My advice? Keep the artifact. It's worth more than his fifteen grand ever was - and it's yours now, like it or not.",
         "If you want to know what it IS, I can point you at people who find things out. But my help isn't free. Come see me when you're ready to work."
       ],
-      "done_actions": ["give_item:steltek_artifact", "set_flag:sandoval_done"]
+      "done_actions": [
+        "give_item:steltek_artifact",
+        "set_flag:sandoval_done"
+      ]
     },
     {
       "id": "tayla_m02_offer",
       "name": "Tayla",
       "base": "new_detroit",
-      "requires_flags": ["sandoval_done"],
-      "forbids_flags": ["m02_active", "tayla_1_done"],
+      "requires_flags": [
+        "sandoval_done"
+      ],
+      "forbids_flags": [
+        "m02_active",
+        "tayla_1_done"
+      ],
       "dialogue": [
         "Ready to work? Good. First job's a milk run: plastics to Oakham, the pirate base out in Pentonville.",
         "Oakham sits in an asteroid field, so mind your speed on approach. And relax - while you fly for me, Pentonville's pirates keep their guns to themselves.",
         "Ten thousand on delivery. I'll set up shop in the Oakham bar - we'll talk more there."
       ],
       "offer": "Haul 30 units of plastics to Oakham (Pentonville system) for 10,000 credits on landing. Deal?",
-      "accept_actions": ["m02:accept"]
+      "accept_actions": [
+        "m02:accept"
+      ]
     },
     {
       "id": "tayla_m03_offer",
       "name": "Tayla",
       "base": "oakham",
-      "requires_flags": ["tayla_1_done"],
-      "forbids_flags": ["m03_active", "m03_delivered", "tayla_2_done"],
+      "requires_flags": [
+        "tayla_1_done"
+      ],
+      "forbids_flags": [
+        "m03_active",
+        "m03_delivered",
+        "tayla_2_done"
+      ],
       "dialogue": [
         "Now the real work. Brilliance - yes, THAT Brilliance - to Hector, the mining base in Troy.",
         "The militia have Troy crawling with Talons, and they scan everything that moves. Do not stop. Do not fight. Burn past them.",
         "Fifteen thousand on delivery at Hector. Then get yourself back here in one piece."
       ],
       "offer": "Smuggle 15 units of Brilliance to Hector (Troy system) for 15,000 credits, then return to Oakham. In?",
-      "accept_actions": ["m03:accept"]
+      "accept_actions": [
+        "m03:accept"
+      ]
     },
     {
       "id": "tayla_m03_debrief",
       "name": "Tayla",
       "base": "oakham",
-      "requires_flags": ["m03_delivered"],
-      "forbids_flags": ["tayla_2_done"],
+      "requires_flags": [
+        "m03_delivered"
+      ],
+      "forbids_flags": [
+        "tayla_2_done"
+      ],
       "dialogue": [
         "You made it past the militia with the goods AND your hull. I'm almost impressed.",
         "Catch your breath. The next run makes Troy look like a pleasure cruise."
       ],
-      "done_actions": ["set_flag:tayla_2_done"]
+      "done_actions": [
+        "set_flag:tayla_2_done"
+      ]
     },
     {
       "id": "tayla_m04_offer",
       "name": "Tayla",
       "base": "oakham",
-      "requires_flags": ["tayla_2_done"],
-      "forbids_flags": ["m04_active", "m04_delivered", "tayla_3_done"],
+      "requires_flags": [
+        "tayla_2_done"
+      ],
+      "forbids_flags": [
+        "m04_active",
+        "m04_delivered",
+        "tayla_3_done"
+      ],
       "dialogue": [
         "Bigger load this time: Brilliance to New Constantinople itself. Twenty-five units.",
         "Before you ask - I bribed the Confed patrols on the route. You won't have any trouble. Trust me.",
         "Twenty thousand on delivery. Then come straight back."
       ],
       "offer": "Smuggle 25 units of Brilliance to New Constantinople for 20,000 credits, then return to Oakham. Deal?",
-      "accept_actions": ["m04:accept"]
+      "accept_actions": [
+        "m04:accept"
+      ]
     },
     {
       "id": "tayla_m04_debrief",
       "name": "Tayla",
       "base": "oakham",
-      "requires_flags": ["m04_delivered"],
-      "forbids_flags": ["tayla_3_done"],
+      "requires_flags": [
+        "m04_delivered"
+      ],
+      "forbids_flags": [
+        "tayla_3_done"
+      ],
       "dialogue": [
         "Bribed patrols, you say? Stilettos and Broadswords at every jump point, you say? Huh. Must have been a clerical error.",
         "Stop scowling. To make it up to you, my people just installed something in your ship: a smuggler's compartment. Twenty units, invisible to any scanner ever built.",
         "Contraband only - the baffles foul anything legitimate. One more run and we're square."
       ],
-      "done_actions": ["m04:install_compartment", "set_flag:tayla_3_done"]
+      "done_actions": [
+        "m04:install_compartment",
+        "set_flag:tayla_3_done"
+      ]
     },
     {
       "id": "tayla_m05_offer",
       "name": "Tayla",
       "base": "oakham",
-      "requires_flags": ["tayla_3_done"],
-      "forbids_flags": ["m05_active", "m05_delivered", "tayla_done"],
+      "requires_flags": [
+        "tayla_3_done"
+      ],
+      "forbids_flags": [
+        "m05_active",
+        "m05_delivered",
+        "tayla_done"
+      ],
       "dialogue": [
         "Last run: twenty units of Brilliance to New Constantinople. Fits that new compartment of yours exactly. Poetic, no?",
         "One thing. William Riordian - used to fly these runs before you showed up. He's been drinking and talking, mostly about you.",
         "Ten thousand, and after this I'll tell you everything I know about your trinket. Watch yourself out there."
       ],
       "offer": "One final run: 20 units of Brilliance to New Constantinople for 10,000 credits. Finish the job?",
-      "accept_actions": ["m05:accept"]
+      "accept_actions": [
+        "m05:accept"
+      ]
     },
     {
       "id": "tayla_m05_debrief",
       "name": "Tayla",
       "base": "oakham",
-      "requires_flags": ["m05_delivered"],
-      "forbids_flags": ["tayla_done"],
+      "requires_flags": [
+        "m05_delivered"
+      ],
+      "forbids_flags": [
+        "tayla_done"
+      ],
       "dialogue": [
         "Riordian, hm? He always was a jealous idiot. You did fine.",
         "About your artifact - truth is, I've got nothing. Never seen anything like it. But I found someone who has.",
         "Roman Lynch. A made man on New Constantinople - you'll find him in the bar there. Mention my name and he'll see you.",
         "That squares us. It's been profitable, pilot. Try not to die."
       ],
-      "done_actions": ["set_flag:tayla_done", "clear_flag:tayla_employed"]
+      "done_actions": [
+        "set_flag:tayla_done",
+        "clear_flag:tayla_employed"
+      ]
     },
     {
       "id": "lynch_m06_offer",
       "name": "Roman Lynch",
       "base": "new_constantinople",
-      "requires_flags": ["tayla_done"],
-      "forbids_flags": ["m06_active", "m06_message_delivered", "lynch_1_done"],
+      "requires_flags": [
+        "tayla_done"
+      ],
+      "forbids_flags": [
+        "m06_active",
+        "m06_message_delivered",
+        "lynch_1_done"
+      ],
       "dialogue": [
         "So you're Tayla's courier. Roman Lynch. The gentleman looming behind me is Miggs - pay him no mind.",
         "Your artifact interests me. There's a hologram in it, did you know? My people will study it while you make yourself useful.",
@@ -153,68 +223,107 @@
         "Ten thousand when you get back. A simple courier run - what could go wrong?"
       ],
       "offer": "Deliver Lynch's message to Seelig at Pentonville Nav 3, then return to New Constantinople for 10,000 credits. Accept?",
-      "accept_actions": ["set_flag:m06_active"]
+      "accept_actions": [
+        "set_flag:m06_active"
+      ]
     },
     {
       "id": "lynch_m06_debrief",
       "name": "Roman Lynch",
       "base": "new_constantinople",
-      "requires_flags": ["m06_message_delivered"],
-      "forbids_flags": ["lynch_1_done"],
+      "requires_flags": [
+        "m06_message_delivered"
+      ],
+      "forbids_flags": [
+        "lynch_1_done"
+      ],
       "dialogue": [
         "Seelig took it badly? Shocking. Some men simply cannot accept a severance package.",
         "Your ten thousand, as agreed. The hologram is... resisting analysis. My people need more time - and I have more work."
       ],
-      "done_actions": ["pay:10000", "set_flag:lynch_1_done", "clear_flag:m06_active", "clear_flag:m06_message_delivered"]
+      "done_actions": [
+        "pay:10000",
+        "set_flag:lynch_1_done",
+        "clear_flag:m06_active",
+        "clear_flag:m06_message_delivered"
+      ]
     },
     {
       "id": "lynch_m07_offer",
       "name": "Roman Lynch",
       "base": "new_constantinople",
-      "requires_flags": ["lynch_1_done"],
-      "forbids_flags": ["m07_active", "m07_delivered", "lynch_2_done"],
+      "requires_flags": [
+        "lynch_1_done"
+      ],
+      "forbids_flags": [
+        "m07_active",
+        "m07_delivered",
+        "lynch_2_done"
+      ],
       "dialogue": [
         "The artifact investigation has hit... complications. People keep dying around it. Fascinating, really.",
         "Meanwhile: twenty units of weaponry to Siva, the agricultural base in Rikel. Fifteen thousand on delivery.",
         "One wrinkle. Salman Kroiz runs guns on that route and considers it his. He flies a Demon. So do his friends."
       ],
       "offer": "Run 20 units of weaponry to Siva (Rikel system) for 15,000 credits, past Kroiz's gang. Accept?",
-      "accept_actions": ["m07:accept"]
+      "accept_actions": [
+        "m07:accept"
+      ]
     },
     {
       "id": "lynch_m08_offer",
       "name": "Roman Lynch",
       "base": "new_constantinople",
-      "requires_flags": ["lynch_2_done"],
-      "forbids_flags": ["m08_active", "lynch_3_done"],
+      "requires_flags": [
+        "lynch_2_done"
+      ],
+      "forbids_flags": [
+        "m08_active",
+        "lynch_3_done"
+      ],
       "dialogue": [
         "Your trinket is confirmed alien. Not Kilrathi - OLD. That knowledge cost me three good analysts.",
         "Before we discuss it further: my cousin needs to get out of town. Away from the heat. The heat being the entire Confederation navy.",
         "Get him to Romulus, the mining base in Castor. Thirty thousand on landing. Do avoid the Stilettos - they are faster than you."
       ],
       "offer": "Smuggle Lynch's cousin to Romulus (Castor system) for 30,000 credits on landing. Take him aboard?",
-      "accept_actions": ["give_item:lynch_cousin", "set_flag:m08_active"]
+      "accept_actions": [
+        "give_item:lynch_cousin",
+        "set_flag:m08_active"
+      ]
     },
     {
       "id": "lynch_m09_offer",
       "name": "Roman Lynch",
       "base": "new_constantinople",
-      "requires_flags": ["lynch_3_done"],
-      "forbids_flags": ["m09_active", "lynch_done"],
+      "requires_flags": [
+        "lynch_3_done"
+      ],
+      "forbids_flags": [
+        "m09_active",
+        "lynch_done"
+      ],
       "dialogue": [
         "One last job. A Mr. Smythe on Liverpool claims he found something about your artifact in the Oxford library archives.",
         "Pick him up, bring him here. Thirty thousand for a taxi run. You may notice Miggs is elsewhere tonight - errands of his own.",
         "Go on then. Liverpool. Newcastle system. Mr. Smythe is waiting."
       ],
       "offer": "Fly to Liverpool (Newcastle system) and collect Mr. Smythe for 30,000 credits. Accept?",
-      "accept_actions": ["set_flag:m09_active"]
+      "accept_actions": [
+        "set_flag:m09_active"
+      ]
     },
     {
       "id": "masterson_m10_offer",
       "name": "Masterson",
       "base": "oxford",
-      "requires_flags": ["lynch_done"],
-      "forbids_flags": ["m10_active", "masterson_1_done"],
+      "requires_flags": [
+        "lynch_done"
+      ],
+      "forbids_flags": [
+        "m10_active",
+        "masterson_1_done"
+      ],
       "dialogue": [
         "Ah. The pilot with the artifact and the trail of dead mobsters. Masterson, university administration. And no - the library is CLOSED to you.",
         "However. The university needs work done, and I am nothing if not transactional. Four favors, and I unlock the archive myself.",
@@ -222,63 +331,247 @@
         "Meet him there and see him to the planet. He must be ON THE GROUND before you land - I will not pay for a corpse with an honor guard."
       ],
       "offer": "Escort Toth's Drayman from the Saxtogue Jump to Oxford for 10,000 credits. He lands first. Accept?",
-      "accept_actions": ["set_flag:m10_active"]
+      "accept_actions": [
+        "set_flag:m10_active"
+      ]
     },
     {
       "id": "masterson_m11_offer",
       "name": "Masterson",
       "base": "oxford",
-      "requires_flags": ["masterson_1_done"],
-      "forbids_flags": ["m11_active", "masterson_2_done"],
+      "requires_flags": [
+        "masterson_1_done"
+      ],
+      "forbids_flags": [
+        "m11_active",
+        "masterson_2_done"
+      ],
       "dialogue": [
         "Favor two. Data pirates are draining our mainframe from a ship parked somewhere in-system: the Black Rhombus. A converted Galaxy, bristling with turrets.",
         "Patrol the jump points until you find it, and make it stop existing. The escorts are optional; the Rhombus is not.",
         "Ten thousand on your return. Do check your ammunition first."
       ],
       "offer": "Hunt down and destroy the Black Rhombus somewhere at Oxford's jump points, then return. 10,000 credits. Accept?",
-      "accept_actions": ["set_flag:m11_active"]
+      "accept_actions": [
+        "set_flag:m11_active"
+      ]
     },
     {
       "id": "masterson_m12_offer",
       "name": "Masterson",
       "base": "oxford",
-      "requires_flags": ["masterson_2_done"],
-      "forbids_flags": ["m12_active", "masterson_3_done"],
+      "requires_flags": [
+        "masterson_2_done"
+      ],
+      "forbids_flags": [
+        "m12_active",
+        "masterson_3_done"
+      ],
       "dialogue": [
         "Favor three. My book shipment arrives on the Drayman Vulcan's Forge at the Saxtogue jump point. A rival collector hired bounty hunters to divert it.",
         "Here is the wrinkle: the hunters were paid to remove the ESCORT. That would be you. The Demons will ignore the freighter entirely.",
         "Same terms: the Forge lands first, then you. Ten thousand."
       ],
       "offer": "Escort Vulcan's Forge from the Saxtogue Jump to Oxford - the Demons will hunt YOU. 10,000 credits. Accept?",
-      "accept_actions": ["set_flag:m12_active"]
+      "accept_actions": [
+        "set_flag:m12_active"
+      ]
     },
     {
       "id": "masterson_m13_offer",
       "name": "Masterson",
       "base": "oxford",
-      "requires_flags": ["masterson_3_done"],
-      "forbids_flags": ["m13_active", "masterson_done"],
+      "requires_flags": [
+        "masterson_3_done"
+      ],
+      "forbids_flags": [
+        "m13_active",
+        "masterson_done"
+      ],
       "dialogue": [
         "Last favor. One more Drayman, inbound at the XXN-1927 jump point, carrying... let us say 'pirate bait'. They know what is in the hold and they want it badly.",
         "I will be honest with you, pilot: this freighter is a rust bucket. Her plating would embarrass a shuttle. Keep the Talons OFF her.",
         "She lands first. Then you. Then the library opens. Ten thousand, and my genuine respect."
       ],
       "offer": "Escort the final Drayman from the XXN-1927 Jump to Oxford - she is fragile and the pirates want her badly. 10,000 credits. Accept?",
-      "accept_actions": ["set_flag:m13_active"]
+      "accept_actions": [
+        "set_flag:m13_active"
+      ]
     },
     {
       "id": "oxford_library_scene",
       "name": "Oxford Library",
       "base": "oxford",
-      "requires_flags": ["masterson_done"],
-      "forbids_flags": ["library_access"],
+      "requires_flags": [
+        "masterson_done"
+      ],
+      "forbids_flags": [
+        "library_access"
+      ],
       "dialogue": [
         "The archive terminal accepts Masterson's authorization. You place the artifact in the scanner cradle.",
         "MATCH FOUND. Classification: STELTEK. A precursor civilization - starfaring while humanity was learning fire. No verified contact in recorded history.",
         "The artifact is a power relay of unknown function. Energy signature: dormant, but not dead. Cross-reference: recent anomalous Steltek-band readings reported near PALAN.",
         "Appended note: Dr. Monkhouse, the sector's leading xenoarchaeologist, has been asking the same questions you are. Last known location: the Palan system."
       ],
-      "done_actions": ["set_flag:library_access"]
+      "done_actions": [
+        "set_flag:library_access"
+      ]
+    },
+    {
+      "id": "murphy_m14_offer",
+      "name": "Lynn Murphy",
+      "base": "basra_refinery",
+      "requires_flags": [
+        "masterson_done"
+      ],
+      "forbids_flags": [
+        "m14_active",
+        "m14_cleared",
+        "murphy_1_done"
+      ],
+      "dialogue": [
+        "You tried to land on Palan, didn't you? Bounty hunters have the planet sewn up tight. Lynn Murphy - I run what's left of the resistance from this refinery.",
+        "The blockade rotates fresh ships through the staging point at the asteroid field. If their reinforcements stop arriving, the whole thing starts to starve.",
+        "Three waves of Demon-class fighters. Kill every last one and come back. Fifteen thousand credits - most of what we have."
+      ],
+      "offer": "Destroy the blockade reinforcements at the Palan asteroid field, then return to Basra. 15,000 credits.",
+      "accept_actions": [
+        "set_flag:m14_active"
+      ],
+      "refuse_actions": []
+    },
+    {
+      "id": "murphy_m14_debrief",
+      "name": "Lynn Murphy",
+      "base": "basra_refinery",
+      "requires_flags": [
+        "m14_cleared"
+      ],
+      "forbids_flags": [
+        "murphy_1_done"
+      ],
+      "dialogue": [
+        "Their whole relief wing, gone. The hunters are already flying tighter rotations to cover the gap.",
+        "Here's your fifteen thousand. Don't spend it anywhere the Guild can see you - you're on their list now, and they hold grudges."
+      ],
+      "offer": "",
+      "done_actions": [
+        "pay:15000",
+        "set_flag:murphy_1_done",
+        "clear_flag:m14_cleared"
+      ]
+    },
+    {
+      "id": "murphy_m15_offer",
+      "name": "Lynn Murphy",
+      "base": "basra_refinery",
+      "requires_flags": [
+        "murphy_1_done"
+      ],
+      "forbids_flags": [
+        "m15_active",
+        "m15_cleared",
+        "murphy_2_done"
+      ],
+      "dialogue": [
+        "They've reinforced the asteroid-field patrols with mercenary Centurions. Ace pilots, player-grade hulls - not the rabble you scattered last time.",
+        "Same job, harder targets. Ten thousand. It's what's left in the jar."
+      ],
+      "offer": "Destroy the blockade patrols at the asteroid field - Demons and ace Centurions. 10,000 credits.",
+      "accept_actions": [
+        "set_flag:m15_active"
+      ],
+      "refuse_actions": []
+    },
+    {
+      "id": "murphy_m15_debrief",
+      "name": "Lynn Murphy",
+      "base": "basra_refinery",
+      "requires_flags": [
+        "m15_cleared"
+      ],
+      "forbids_flags": [
+        "murphy_2_done"
+      ],
+      "dialogue": [
+        "Centurion aces, and you're still breathing. I'd hire you permanently if we had a treasury.",
+        "Ten thousand. One more push and Palan breathes free air."
+      ],
+      "offer": "",
+      "done_actions": [
+        "pay:10000",
+        "set_flag:murphy_2_done",
+        "clear_flag:m15_cleared"
+      ]
+    },
+    {
+      "id": "murphy_m16_offer",
+      "name": "Lynn Murphy",
+      "base": "basra_refinery",
+      "requires_flags": [
+        "murphy_2_done"
+      ],
+      "forbids_flags": [
+        "m16_active",
+        "murphy_done"
+      ],
+      "dialogue": [
+        "This is it. What's left of the blockade is parked in orbit over Palan itself. Break it, land on the planet, and it's done.",
+        "You won't fly alone - two of our Talons will launch with you. They're volunteers, not professionals, but they'll fight.",
+        "Fifteen thousand waiting on Palan. And fair warning - after this the Mercenaries' Guild will REALLY hate you. Militia and Confed patrols listen to Guild gossip, too."
+      ],
+      "offer": "Break the Palan blockade (four waves) with two friendly Talon wingmen, then land on Palan. 15,000 credits.",
+      "accept_actions": [
+        "set_flag:m16_active"
+      ],
+      "refuse_actions": []
+    },
+    {
+      "id": "monkhouse_m17_offer",
+      "name": "Dr. Lemuel Monkhouse",
+      "base": "palan",
+      "requires_flags": [
+        "murphy_done"
+      ],
+      "forbids_flags": [
+        "m17_active",
+        "m17_delivered",
+        "monkhouse_done"
+      ],
+      "dialogue": [
+        "You're the pilot from Oxford's inquiry! Dr. Lemuel Monkhouse, xenoarchaeology. I've been marooned here since the blockade went up.",
+        "I have spent thirty years on the Steltek. I must examine your artifact - but my instruments are at the Basra laboratory.",
+        "A lift is all I ask. Though I should mention: someone has been asking about me. Someone with FUR."
+      ],
+      "offer": "Fly Dr. Monkhouse to Basra. The direct route may be watched - the Kilrathi want him. 5,000 credits.",
+      "accept_actions": [
+        "give_item:dr_monkhouse",
+        "set_flag:m17_active"
+      ],
+      "refuse_actions": []
+    },
+    {
+      "id": "monkhouse_m17_debrief",
+      "name": "Dr. Lemuel Monkhouse",
+      "base": "basra_refinery",
+      "requires_flags": [
+        "m17_delivered"
+      ],
+      "forbids_flags": [
+        "monkhouse_done"
+      ],
+      "dialogue": [
+        "Extraordinary... EXTRAORDINARY. My fragment - look - it FITS yours. They were one device, split millennia ago.",
+        "Together they form a map, and something like a translation aid. The marked route runs past Rygannon, out into the unexplored frontier.",
+        "A proposal: join Exploratory Services at Rygannon - they run the only jump-capable survey net out there. Follow the map. I publish the findings, you keep whatever you find. Ask for Taryn Cross."
+      ],
+      "offer": "",
+      "done_actions": [
+        "give_item:steltek_map",
+        "set_flag:monkhouse_done",
+        "clear_flag:m17_delivered"
+      ]
     }
   ]
 }

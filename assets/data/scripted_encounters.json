@@ -740,6 +740,268 @@
           ]
         }
       ]
+    },
+    {
+      "id": "m14_blockade_reinforcements",
+      "trigger": {
+        "kind": "at_nav",
+        "system": "palan",
+        "nav": "Asteroid Field 2",
+        "radius_m": 18000,
+        "requires_flags": [
+          "m14_active"
+        ],
+        "forbids_flags": [
+          "m14_cleared"
+        ],
+        "cooldown_s": 60
+      },
+      "dialogue": [
+        {
+          "voice": "Blockade Wing Leader",
+          "line": "Unidentified freelancer, this is Guild space now. The Palan contract does not concern you. Leave, or join the planet on the embargo list."
+        }
+      ],
+      "waves": [
+        {
+          "delay_s": 2,
+          "spawns": [
+            {
+              "faction": "hunter",
+              "class": "demon",
+              "count": 4,
+              "hostile": true
+            }
+          ]
+        },
+        {
+          "delay_s": 4,
+          "spawns": [
+            {
+              "faction": "hunter",
+              "class": "demon",
+              "count": 3,
+              "hostile": true
+            }
+          ]
+        },
+        {
+          "delay_s": 4,
+          "spawns": [
+            {
+              "faction": "hunter",
+              "class": "demon",
+              "count": 3,
+              "hostile": true
+            }
+          ]
+        }
+      ],
+      "on_cleared": [
+        "set_flag:m14_cleared"
+      ]
+    },
+    {
+      "id": "m15_blockade_patrols",
+      "trigger": {
+        "kind": "at_nav",
+        "system": "palan",
+        "nav": "Asteroid Field 2",
+        "radius_m": 18000,
+        "requires_flags": [
+          "m15_active"
+        ],
+        "forbids_flags": [
+          "m15_cleared"
+        ],
+        "cooldown_s": 60
+      },
+      "dialogue": [
+        {
+          "voice": "Mercenary Ace",
+          "line": "So YOU are the reinforcement problem. The Guild pays triple for your hull, freelancer. Nothing personal."
+        }
+      ],
+      "waves": [
+        {
+          "delay_s": 2,
+          "spawns": [
+            {
+              "faction": "hunter",
+              "class": "demon",
+              "count": 3,
+              "hostile": true
+            }
+          ]
+        },
+        {
+          "delay_s": 4,
+          "spawns": [
+            {
+              "faction": "hunter",
+              "class": "centurion",
+              "count": 4,
+              "hostile": true
+            }
+          ]
+        }
+      ],
+      "on_cleared": [
+        "set_flag:m15_cleared"
+      ]
+    },
+    {
+      "id": "m16_wingmen_launch",
+      "trigger": {
+        "kind": "on_launch",
+        "base": "basra_refinery",
+        "requires_flags": [
+          "m16_active"
+        ],
+        "forbids_flags": [
+          "palan_blockade_lifted"
+        ],
+        "cooldown_s": 30
+      },
+      "dialogue": [
+        {
+          "voice": "Resistance Wingman",
+          "line": "Forming up on your wing, boss. Murphy says you point, we shoot. Let's crack that blockade."
+        }
+      ],
+      "waves": [
+        {
+          "delay_s": 1,
+          "spawns": [
+            {
+              "faction": "militia",
+              "class": "talon",
+              "count": 2,
+              "wingman": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "m16_blockade_bust",
+      "trigger": {
+        "kind": "at_nav",
+        "system": "palan",
+        "nav": "Palan Agricultural Planet",
+        "radius_m": 25000,
+        "requires_flags": [
+          "m16_active"
+        ],
+        "forbids_flags": [
+          "palan_blockade_lifted"
+        ],
+        "cooldown_s": 60
+      },
+      "dialogue": [
+        {
+          "voice": "Blockade Commander",
+          "line": "This is your only warning, resistance scum. The planet is under Guild interdiction. ALL WINGS - INTERCEPT."
+        }
+      ],
+      "waves": [
+        {
+          "delay_s": 2,
+          "spawns": [
+            {
+              "faction": "hunter",
+              "class": "demon",
+              "count": 3,
+              "hostile": true
+            }
+          ]
+        },
+        {
+          "delay_s": 4,
+          "spawns": [
+            {
+              "faction": "hunter",
+              "class": "demon",
+              "count": 2,
+              "hostile": true
+            }
+          ]
+        },
+        {
+          "delay_s": 4,
+          "spawns": [
+            {
+              "faction": "hunter",
+              "class": "demon",
+              "count": 2,
+              "hostile": true
+            }
+          ]
+        },
+        {
+          "delay_s": 4,
+          "spawns": [
+            {
+              "faction": "hunter",
+              "class": "demon",
+              "count": 2,
+              "hostile": true
+            }
+          ]
+        }
+      ],
+      "on_cleared": [
+        "set_flag:palan_blockade_lifted"
+      ]
+    },
+    {
+      "id": "m17_kilrathi_ambush",
+      "trigger": {
+        "kind": "at_nav",
+        "system": "palan",
+        "nav": "Asteroid Field 2",
+        "radius_m": 15000,
+        "requires_flags": [
+          "m17_active"
+        ],
+        "cooldown_s": 120
+      },
+      "dialogue": [
+        {
+          "voice": "Kilrathi Flight Leader",
+          "line": "The ape scholar and his trinket. Both belong to the Empire now, monkey. Surrender them and your death will be swift."
+        }
+      ],
+      "waves": [
+        {
+          "delay_s": 2,
+          "spawns": [
+            {
+              "faction": "kilrathi",
+              "class": "gothri",
+              "count": 1,
+              "hostile": true
+            },
+            {
+              "faction": "kilrathi",
+              "class": "dralthi",
+              "count": 2,
+              "hostile": true
+            }
+          ]
+        },
+        {
+          "delay_s": 4,
+          "spawns": [
+            {
+              "faction": "kilrathi",
+              "class": "gothri",
+              "count": 2,
+              "hostile": true
+            }
+          ]
+        }
+      ]
     }
   ]
 }

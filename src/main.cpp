@@ -946,6 +946,21 @@ void build_system_scene(bool first_time) {
     // Campaign mission logic (epic #136): registers the plot action
     // handler that fixer accept_actions route through ("m01:accept").
     campaign::init();
+    // Palan blockade (#126): every landing path consults this gate. The
+    // gate owns the player-facing refusal line (rate-limited so the HUD
+    // prompt spam doesn't flood the feed).
+    docking::set_clearance_gate([](const std::string& base_id) -> bool {
+        if (base_id != "palan") return false;
+        if (!campaign::palan_blockaded(g.player)) return false;
+        static double s_last_warn_t = -1.0e9;
+        const double  now = stm_sec(stm_now());
+        if (now - s_last_warn_t > 8.0) {
+            comm::push("PALAN CONTROL: 'Landing clearance DENIED. The pads "
+                       "are closed until the blockade is dealt with.'", true);
+            s_last_warn_t = now;
+        }
+        return true;
+    });
     // Faction comm chatter table (np-ma2.1) — flavour lines surfaced on
     // the HUD when a kill moves reputation. Missing file is non-fatal.
     comm::load("assets/data/comm_lines.json");

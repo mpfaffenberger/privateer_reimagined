@@ -45,7 +45,10 @@ constexpr float k_min_sep_m       = 600.0f;
 // encounter director's "left behind" bookkeeping, and is what lets a
 // same-system re-ambush (Kroiz at Siva) trigger after the player fled the
 // first wave.
-constexpr float k_abandon_dist_m  = 25000.0f;
+// Wide enough that a wave spawning 15 km beyond the trigger nav while
+// the player waits 15 km this side of it doesn't read as "abandoned"
+// before the fight even starts (bit the M14 kill-alls at Palan).
+constexpr float k_abandon_dist_m  = 40000.0f;
 
 // ---- per-scenario runtime state ------------------------------------------
 // One entry per loaded scenario. `triggered` short-circuits the trigger
@@ -88,6 +91,12 @@ struct SpawnGroup {
     // "escortee" pins ShipAIState::preferred_target_id to the live
     // escortee so the wave focuses the Drayman, not the player.
     std::string aggro;
+    // (#128) player-allied wingman: flies CivRole::Escort formation on
+    // the player, engages whoever aggros the player (ShipAIState::
+    // wingman), and is NOT an objective — wingman ships never join
+    // active_wing, so a scenario that only spawns wingmen resolves
+    // immediately instead of waiting for its own friends to die.
+    bool        wingman = false;
 };
 
 // (#139) One sequential wave: all groups spawn together after delay_s;
@@ -412,6 +421,8 @@ void parse_scenario(const json::Value& v, Scenario& s) {
                         grp.hostile = h->as_bool();
                     if (const json::Value* ag = gv.find("aggro"); ag && ag->is_string())
                         grp.aggro = ag->as_string();
+                    if (const json::Value* wm = gv.find("wingman"); wm && wm->is_bool())
+                        grp.wingman = wm->as_bool();
                     if (!grp.class_name.empty()) wave.groups.push_back(std::move(grp));
                 }
             }
@@ -744,8 +755,26 @@ void tick(ShipRegistry& ships, const Ship& player_ship, PlayerState& player,
                     req.position         = pick_spawn_point(anchor_pos, rng(), placed);
                     req.initial_ai_state = AIState::Patrol;
                     req.patrol_anchor    = req.position;
+                    if (grp.wingman) {
+                        // (#128) player-allied wingman: formation off the
+                        // player, staggered left/right of the wing lead.
+                        req.civ_role          = CivRole::Escort;
+                        req.formation_lead_id = player_ship.id;
+                        const float lat = 300.0f * (float)(i / 2 + 1) *
+                                          ((i % 2) ? 1.0f : -1.0f);
+                        req.formation_offset  = HMM_V3(lat, 60.0f, -120.0f);
+                    }
                     const uint32_t id = spawn(req);
                     if (id != 0) {
+                        if (grp.wingman) {
+                            // Not an objective: never joins active_wing
+                            // (a wingman-only scenario resolves at once),
+                            // just gets the guard-the-player brain.
+                            if (Ship* s = ships.find_by_id(id))
+                                s->ai.wingman = true;
+                            ++spawned_count;
+                            continue;
+                        }
                         active_wing.push_back(WingMember{ id, grp.unique });
                         if (active_anchor_id == 0) active_anchor_id = id;
                         ++spawned_count;

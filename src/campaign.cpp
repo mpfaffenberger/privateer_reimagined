@@ -106,6 +106,22 @@ constexpr CargoMission k_cargo_missions[] = {
       "",
       "No Smythe. No payment. But the Oxford library is real - and someone here knows about your artifact.",
       "", "lynch_done", false },
+    // M16 Murphy 3 (#128): break the blockade, land on Palan. The wingmen
+    // and the four Demon waves are scenario data; the docking gate
+    // (palan_blockaded) refuses the pad until the last wave dies and
+    // sets palan_blockade_lifted.
+    { "m16", "", 0, "", "palan", 15000,
+      "",
+      "Palan is free. Murphy's people transfer 15,000 credits - and a Dr. Monkhouse has been asking about you in the bar.",
+      "", "murphy_done", false },
+    // M17 Monkhouse (#129): the doctor rides to Basra. The Kilrathi
+    // ambush sits on the direct-route nav only (scenario data) - flying
+    // wide dodges it, vanilla-accurate. Chain milestone (monkhouse_done +
+    // the steltek_map) lands in the bar debrief, not here.
+    { "m17", "", 0, "dr_monkhouse", "basra", 5000,
+      "",
+      "Monkhouse bounds down the ramp, artifact piece clutched tight. 5,000 credits for the lift.",
+      "", "", false },
 };
 
 std::string flag_active(const CargoMission& m)    { return std::string(m.token) + "_active"; }
@@ -301,6 +317,14 @@ bool handle_action(const std::string& action, PlayerState& p) {
 void init() {
     plot::set_action_handler(handle_action);
     std::printf("[campaign] action handler registered\n");
+}
+
+bool palan_blockaded(const PlayerState& p) {
+    // The blockade exists from the moment the campaign reaches the Murphy
+    // arc (masterson_done, post-M13) until the M16 waves die. Sandbox
+    // saves never set masterson_done -> never blockaded.
+    return plot::has_flag(p, "masterson_done") &&
+           !plot::has_flag(p, "palan_blockade_lifted");
 }
 
 void on_dock(PlayerState& p, const std::string& base_id) {
