@@ -341,34 +341,15 @@ void draw_back_to_concourse_button(const ScreenSize& ss) {
     }
 }
 
-// Collect the set of navigable targets already covered by the concourse
-// room's placed links so we can fill in the gaps from base.json.
-void concourse_placed_targets(bool out[kBaseScreenCount]) {
-    for (int i = 0; i < kBaseScreenCount; ++i) out[i] = false;
-    if (!g_concourse.valid) return;
-    for (const Link& lk : g_concourse.rooms[(int)BaseScreen::Concourse].links)
-        out[(int)lk.target] = true;
-}
-
 // Draw the concourse hub. When the art set has placed transition links
 // (positioned on the real art by the F3 editor), use those — filtered to the
-// services THIS base offers. Any service in base.json that ISN'T covered by
-// a placed link gets a fallback grid hotspot so it's still reachable (e.g.
-// Equipment was never placed on the mining/pirate/etc. concourse art).
+// services THIS base offers. Otherwise fall back to base.json's grid hotspots.
 void draw_concourse(ImDrawList* dl, const ScreenSize& ss, PlayerState& player) {
-    bool placed[kBaseScreenCount];
-    concourse_placed_targets(placed);
-    const bool has_placed = g_concourse.valid &&
-        !g_concourse.rooms[(int)BaseScreen::Concourse].links.empty();
-
-    if (has_placed)
+    if (g_concourse.valid && !g_concourse.rooms[(int)BaseScreen::Concourse].links.empty()) {
         draw_links(dl, ss, g_concourse.rooms[(int)BaseScreen::Concourse], /*filter=*/true);
-
-    // Fallback: draw grid hotspots for any base-offered service NOT already
-    // covered by a placed art link. This keeps Equipment (and any future
-    // room that hasn't been placed on the art yet) reachable.
+        return;
+    }
     for (const Hotspot& hs : g_def.hotspots) {
-        if (has_placed && placed[(int)hs.target]) continue;  // already on art
         const float px = hs.x * ss.w;
         const float py = hs.y * ss.h;
         const float pw = hs.w * ss.w;
