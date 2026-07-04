@@ -94,6 +94,7 @@ int              g_dirty_saves  = 0;       // edits since last save (HUD only)
 struct UseRow { int index; const char* use; };
 constexpr UseRow k_current_use[] = {
     // { <NN>, "<event or call-site>" },  // uncomment + fill when wired up
+    { -1, nullptr },  // sentinel (MSVC rejects zero-size arrays)
 };
 
 const char* lookup_use(int index) {
