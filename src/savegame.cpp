@@ -117,23 +117,65 @@ struct JsonWriter {
     }
 };
 
-// HOME-based application support dir. Returns "" if HOME is unset.
-std::string home_dir() {
-    if (const char* h = std::getenv("HOME"); h && *h) return h;
+// Platform-appropriate per-user data dir. On macOS this is
+// `~/Library/Application Support/`; on Windows it's `%APPDATA%` (typically
+// `C:\Users\<user>\AppData\Roaming`); on Linux it's `$XDG_DATA_HOME` or
+// `~/.local/share/`. Falls back to `$HOME` (Unix) or `%USERPROFILE%` (Win)
+// only when the proper override isn't set.
+//
+// Returns "" if no usable path can be found (degenerate; caller logs).
+std::string user_data_dir() {
+#ifdef _WIN32
+    // Prefer APPDATA — that's where Windows apps are expected to stash
+    // mutable per-user state. %USERPROFILE% is a last-resort fallback.
+    if (const char* a = std::getenv("APPDATA"); a && *a) {
+        fs::path p = fs::path(a);
+        p /= "new_privateer";
+        return p.string();
+    }
+    if (const char* u = std::getenv("USERPROFILE"); u && *u) {
+        fs::path p = fs::path(u);
+        p /= "AppData";
+        p /= "Roaming";
+        p /= "new_privateer";
+        return p.string();
+    }
     return {};
+#else
+    // macOS: $HOME/Library/Application Support/new_privateer
+    // Linux: $XDG_DATA_HOME/new_privateer  or  $HOME/.local/share/new_privateer
+    if (const char* h = std::getenv("HOME"); h && *h) {
+        fs::path p = fs::path(h);
+#ifdef __APPLE__
+        p /= "Library";
+        p /= "Application Support";
+        p /= "new_privateer";
+        return p.string();
+#else
+        if (const char* x = std::getenv("XDG_DATA_HOME"); x && *x) {
+            fs::path px = fs::path(x);
+            px /= "new_privateer";
+            return px.string();
+        }
+        p /= ".local";
+        p /= "share";
+        p /= "new_privateer";
+        return p.string();
+#endif
+    }
+    return {};
+#endif
 }
 
 } // namespace
 
 std::string saves_dir() {
-    const std::string home = home_dir();
-    if (home.empty()) {
-        std::fprintf(stderr, "[save] HOME unset — cannot locate saves dir\n");
+    std::string base = user_data_dir();
+    if (base.empty()) {
+        std::fprintf(stderr, "[save] no user data dir (HOME/APPDATA unset) — cannot locate saves dir\n");
         return {};
     }
-    // ~/Library/Application Support/new_privateer/saves — see header.
-    fs::path dir = fs::path(home) / "Library" / "Application Support" /
-                   "new_privateer" / "saves";
+    fs::path dir = fs::path(base) / "saves";
     std::error_code ec;
     fs::create_directories(dir, ec);   // no-op if it already exists
     if (ec) {
@@ -145,10 +187,9 @@ std::string saves_dir() {
 }
 
 std::string slot_path(int slot) {
-    const std::string home = home_dir();
-    if (home.empty()) return {};
-    fs::path dir = fs::path(home) / "Library" / "Application Support" /
-                   "new_privateer" / "saves";
+    std::string base = user_data_dir();
+    if (base.empty()) return {};
+    fs::path dir = fs::path(base) / "saves";
     return (dir / ("save_" + std::to_string(slot) + ".json")).string();
 }
 
