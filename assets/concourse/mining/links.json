@@ -20,7 +20,9 @@
     { "target": "CommodityPrev", "rect": [0.37312, 0.13750, 0.03000, 0.07500] },
     { "target": "CommodityBuy", "rect": [0.21864, 0.37179, 0.06680, 0.04606] }
   ],
-  "shipdealer": [],
+  "shipdealer": [
+    { "target": "OpenMenu", "rect": [0.441, 0.44875, 0.12, 0.18] }
+  ],
   "equipment": [],
   "mercguild": [
     { "target": "OpenMenu", "rect": [0.12500, 0.46667, 0.33500, 0.29333] }
