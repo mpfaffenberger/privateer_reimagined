@@ -129,6 +129,7 @@ HMM_Mat4 model_matrix(HMM_Vec3 pos, HMM_Vec3 euler_deg, float s);
 
 #include <algorithm>   // std::clamp, std::min, std::max, std::sort
 #include <array>
+#include <chrono>       // std::chrono::steady_clock
 #include <cmath>       // std::sin/cos/sqrt; needs _USE_MATH_DEFINES for M_PI on MSVC
 #include <cstdio>
 #include <cstdlib>

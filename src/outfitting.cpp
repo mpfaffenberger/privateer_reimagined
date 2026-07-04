@@ -16,6 +16,8 @@
 
 #include "outfitting.h"
 
+#include <algorithm>  // std::clamp
+
 #include "armor.h"
 #include "gun.h"
 #include "json.h"

@@ -78,7 +78,11 @@ void shutdown();
 // the caller (drops on overflow rather than waiting). Mirrors printf
 // semantics: format string + varargs. Lines are truncated at ~512 bytes so
 // a runaway format can't blow the buffer.
-void log(const char* fmt, ...) __attribute__((format(printf, 1, 2)));
+void log(const char* fmt, ...)
+#if defined(__GNUC__) || defined(__clang__)
+    __attribute__((format(printf, 1, 2)))
+#endif
+    ;
 
 // ---- scoped timing ---------------------------------------------------------
 
