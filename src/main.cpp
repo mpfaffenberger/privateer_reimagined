@@ -434,6 +434,7 @@ struct AppState {
     float       dev_run_clock_s = 0.0f;    // wall-ish clock for dev timers
     bool        system_explicit = false;   // true once --system is seen on the CLI
     bool        capture_clean = false;  // hide HUD/cockpit overlay for atlas screenshots
+    bool        force_windowed = false; // --windowed: skip fullscreen override
     // Ship-sprite frame HUD: prints camera az/el and picked atlas cell az/el
     // for every placed_ship_sprites entry, every frame. F3 toggles. Hidden by
     // --capture-clean so screenshots stay HUD-free without extra flags.
@@ -6855,6 +6856,8 @@ sapp_desc sokol_main(int argc, char** argv) {
             ++i;
         } else if (std::strcmp(argv[i], "--dev-missions") == 0) {
             g.dev_seed_missions = true;   // accept a few generated jobs on boot
+        } else if (std::strcmp(argv[i], "--windowed") == 0) {
+            g.force_windowed = true;
         } else if (std::strcmp(argv[i], "--load") == 0 && i + 1 < argc) {
             g.load_slot = std::atoi(argv[i + 1]);
             ++i;
@@ -6902,13 +6905,18 @@ sapp_desc sokol_main(int argc, char** argv) {
     sapp_desc desc = make_app_desc();
 
 #ifdef _WIN32
-    int desktop_w = 0, desktop_h = 0;
-    if (win32::desktop_resolution(&desktop_w, &desktop_h)) {
-        desc.width      = desktop_w;
-        desc.height     = desktop_h;
-        desc.fullscreen = true;
-        std::fprintf(stderr, "[launch] using desktop resolution %dx%d fullscreen\n",
-                     desktop_w, desktop_h);
+    if (!g.force_windowed) {
+        int desktop_w = 0, desktop_h = 0;
+        if (win32::desktop_resolution(&desktop_w, &desktop_h)) {
+            desc.width      = desktop_w;
+            desc.height     = desktop_h;
+            desc.fullscreen = true;
+            std::fprintf(stderr, "[launch] using desktop resolution %dx%d fullscreen\n",
+                         desktop_w, desktop_h);
+            std::fflush(stderr);
+        }
+    } else {
+        std::fprintf(stderr, "[launch] --windowed: staying at %dx%d\n", desc.width, desc.height);
         std::fflush(stderr);
     }
 #endif
