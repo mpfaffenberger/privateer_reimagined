@@ -17,6 +17,7 @@
 #include "outfitting.h"
 
 #include <algorithm>  // std::clamp
+#include <array>      // std::array
 
 #include "armor.h"
 #include "gun.h"
