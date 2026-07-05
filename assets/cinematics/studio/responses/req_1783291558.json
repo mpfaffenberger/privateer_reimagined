@@ -1,0 +1,10 @@
+{
+  "id": "req_1783291558",
+  "status": "done",
+  "message": "refined ambush_troy: 1 line edit(s), 0 portrait regen(s), 0 voice regen(s)",
+  "cinematic_id": "ambush_troy",
+  "log": [
+    "line 0: text -> 'Wrong lane to be flying alone, Troy-boy...  Cargo or corpse. Pick.'",
+    "updated assets/cinematics/ambush_troy.json"
+  ]
+}

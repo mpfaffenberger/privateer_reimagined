@@ -33,6 +33,25 @@
       }
     },
     {
+      "cinematic": "penders_haulers",
+      "once": true,
+      "cooldown_s": 0,
+      "when": {
+        "system": "blockade_point_tango",
+        "ship_class": "centurion",
+        "near_nav": {
+          "nav": "Nitir Jump",
+          "radius_m": 25000
+        },
+        "requires_flags": [
+          "steltek_gun_owned"
+        ],
+        "forbids_flags": [
+          "penders_crusader_seen"
+        ]
+      }
+    },
+    {
       "cinematic": "penders_thanks",
       "once": true,
       "cooldown_s": 0,

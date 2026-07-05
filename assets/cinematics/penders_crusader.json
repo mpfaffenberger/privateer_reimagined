@@ -1,0 +1,996 @@
+{
+  "id": "penders_crusader",
+  "letterbox": true,
+  "skippable": true,
+  "location": {
+    "system": "blockade_point_tango",
+    "nav": "Nitir Jump"
+  },
+  "outcome": {
+    "player_at_nav": "Nitir Jump",
+    "spawns": [
+      {
+        "class": "talon",
+        "faction": "retro",
+        "count": 10,
+        "hostile": true,
+        "cleared_flag": "penders_crusader_cleared"
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "cmd": "fade_in",
+      "dur": 1.5,
+      "t": 0.0
+    },
+    {
+      "cmd": "music",
+      "file": "../music/original/combat_06.wav",
+      "t": 0.0
+    },
+    {
+      "cmd": "sfx",
+      "file": "../sfx/engine_hum.wav",
+      "t": 0.0
+    },
+    {
+      "cmd": "spawn",
+      "actor": "grayson_ship",
+      "class": "$player",
+      "faction": "civilian",
+      "pos": [
+        198500.0,
+        66500.0,
+        -131800.0
+      ],
+      "t": 0.5
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 5.0,
+      "ease": "smooth",
+      "keys": [
+        {
+          "pos": [
+            201800.0,
+            67800.0,
+            -130400.0
+          ],
+          "look_at": [
+            198500.0,
+            66500.0,
+            -131800.0
+          ]
+        },
+        {
+          "pos": [
+            199600.0,
+            67200.0,
+            -131200.0
+          ],
+          "look_at": [
+            198500.0,
+            66500.0,
+            -131800.0
+          ]
+        }
+      ],
+      "t": 0.5
+    },
+    {
+      "cmd": "subtitle",
+      "text": "BLOCKADE POINT TANGO \u2014 Nitir jump, fresh on approach. Cargo hold is hot.",
+      "dur": 4.5,
+      "t": 0.7
+    },
+    {
+      "cmd": "spawn",
+      "actor": "vera",
+      "class": "talon",
+      "faction": "retro",
+      "pos": [
+        199400.0,
+        67000.0,
+        -130400.0
+      ],
+      "t": 5.0
+    },
+    {
+      "cmd": "spawn",
+      "actor": "talon1",
+      "class": "talon",
+      "faction": "retro",
+      "pos": [
+        200800.0,
+        67500.0,
+        -130200.0
+      ],
+      "t": 5.0
+    },
+    {
+      "cmd": "spawn",
+      "actor": "talon2",
+      "class": "talon",
+      "faction": "retro",
+      "pos": [
+        201300.0,
+        67300.0,
+        -129800.0
+      ],
+      "t": 5.0
+    },
+    {
+      "cmd": "spawn",
+      "actor": "talon3",
+      "class": "talon",
+      "faction": "retro",
+      "pos": [
+        201900.0,
+        67000.0,
+        -129200.0
+      ],
+      "t": 5.0
+    },
+    {
+      "cmd": "spawn",
+      "actor": "talon4",
+      "class": "talon",
+      "faction": "retro",
+      "pos": [
+        202500.0,
+        66800.0,
+        -128600.0
+      ],
+      "t": 5.0
+    },
+    {
+      "cmd": "spawn",
+      "actor": "talon5",
+      "class": "talon",
+      "faction": "retro",
+      "pos": [
+        203200.0,
+        66600.0,
+        -128000.0
+      ],
+      "t": 5.0
+    },
+    {
+      "cmd": "spawn",
+      "actor": "talon6",
+      "class": "talon",
+      "faction": "retro",
+      "pos": [
+        200600.0,
+        65800.0,
+        -130800.0
+      ],
+      "t": 5.0
+    },
+    {
+      "cmd": "spawn",
+      "actor": "talon7",
+      "class": "talon",
+      "faction": "retro",
+      "pos": [
+        201100.0,
+        65600.0,
+        -130400.0
+      ],
+      "t": 5.0
+    },
+    {
+      "cmd": "spawn",
+      "actor": "talon8",
+      "class": "talon",
+      "faction": "retro",
+      "pos": [
+        201700.0,
+        65300.0,
+        -129800.0
+      ],
+      "t": 5.0
+    },
+    {
+      "cmd": "spawn",
+      "actor": "talon9",
+      "class": "talon",
+      "faction": "retro",
+      "pos": [
+        202300.0,
+        65000.0,
+        -129200.0
+      ],
+      "t": 5.0
+    },
+    {
+      "cmd": "spawn",
+      "actor": "talon10",
+      "class": "talon",
+      "faction": "retro",
+      "pos": [
+        203000.0,
+        64700.0,
+        -128600.0
+      ],
+      "t": 5.0
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "talon1",
+      "dur": 3.0,
+      "keys": [
+        {
+          "pos": [
+            200800.0,
+            67500.0,
+            -130200.0
+          ]
+        },
+        {
+          "pos": [
+            200100.0,
+            67550.0,
+            -129500.0
+          ]
+        }
+      ],
+      "t": 5.5
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "talon2",
+      "dur": 3.0,
+      "keys": [
+        {
+          "pos": [
+            201300.0,
+            67300.0,
+            -129800.0
+          ]
+        },
+        {
+          "pos": [
+            200600.0,
+            67350.0,
+            -129100.0
+          ]
+        }
+      ],
+      "t": 5.5
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "talon3",
+      "dur": 3.0,
+      "keys": [
+        {
+          "pos": [
+            201900.0,
+            67000.0,
+            -129200.0
+          ]
+        },
+        {
+          "pos": [
+            201200.0,
+            67050.0,
+            -128500.0
+          ]
+        }
+      ],
+      "t": 5.5
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "talon4",
+      "dur": 3.0,
+      "keys": [
+        {
+          "pos": [
+            202500.0,
+            66800.0,
+            -128600.0
+          ]
+        },
+        {
+          "pos": [
+            201800.0,
+            66850.0,
+            -127900.0
+          ]
+        }
+      ],
+      "t": 5.5
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "talon5",
+      "dur": 3.0,
+      "keys": [
+        {
+          "pos": [
+            203200.0,
+            66600.0,
+            -128000.0
+          ]
+        },
+        {
+          "pos": [
+            202500.0,
+            66650.0,
+            -127300.0
+          ]
+        }
+      ],
+      "t": 5.5
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "talon6",
+      "dur": 3.0,
+      "keys": [
+        {
+          "pos": [
+            200600.0,
+            65800.0,
+            -130800.0
+          ]
+        },
+        {
+          "pos": [
+            199900.0,
+            65750.0,
+            -130100.0
+          ]
+        }
+      ],
+      "t": 5.5
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "talon7",
+      "dur": 3.0,
+      "keys": [
+        {
+          "pos": [
+            201100.0,
+            65600.0,
+            -130400.0
+          ]
+        },
+        {
+          "pos": [
+            200400.0,
+            65550.0,
+            -129700.0
+          ]
+        }
+      ],
+      "t": 5.5
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "talon8",
+      "dur": 3.0,
+      "keys": [
+        {
+          "pos": [
+            201700.0,
+            65300.0,
+            -129800.0
+          ]
+        },
+        {
+          "pos": [
+            201000.0,
+            65250.0,
+            -129100.0
+          ]
+        }
+      ],
+      "t": 5.5
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "talon9",
+      "dur": 3.0,
+      "keys": [
+        {
+          "pos": [
+            202300.0,
+            65000.0,
+            -129200.0
+          ]
+        },
+        {
+          "pos": [
+            201600.0,
+            64950.0,
+            -128500.0
+          ]
+        }
+      ],
+      "t": 5.5
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "talon10",
+      "dur": 3.0,
+      "keys": [
+        {
+          "pos": [
+            203000.0,
+            64700.0,
+            -128600.0
+          ]
+        },
+        {
+          "pos": [
+            202300.0,
+            64650.0,
+            -127900.0
+          ]
+        }
+      ],
+      "t": 5.5
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "vera",
+      "dur": 3.0,
+      "keys": [
+        {
+          "pos": [
+            199400.0,
+            67000.0,
+            -130400.0
+          ]
+        },
+        {
+          "pos": [
+            198900.0,
+            66900.0,
+            -131100.0
+          ]
+        }
+      ],
+      "t": 5.5
+    },
+    {
+      "cmd": "sfx",
+      "file": "../sfx/lock_seeking.wav",
+      "pos": [
+        200000.0,
+        66667.0,
+        -133333.0
+      ],
+      "t": 6.0
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 4.0,
+      "follow": "vera,talon1,talon2,talon3,talon4,talon5",
+      "keys": [
+        {
+          "pos": [
+            0.0,
+            400.0,
+            -800.0
+          ],
+          "look_at": "ship:vera"
+        }
+      ],
+      "t": 6.0
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 6.0,
+      "follow": "vera",
+      "keys": [
+        {
+          "pos": [
+            350.0,
+            90.0,
+            320.0
+          ],
+          "look_at": "ship:vera"
+        }
+      ],
+      "t": 10.0
+    },
+    {
+      "cmd": "line",
+      "speaker": "Vera \"Crusader\" Rostova",
+      "text": "Halt, freighter. Stand down your drive and submit to a holy inspection.",
+      "side": "right",
+      "dur": 5.5,
+      "portrait": "portraits/vera/penders_crusader_01.png",
+      "voice_file": "audio/penders_crusader_vera_01.mp3",
+      "t": 10.0
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 6.0,
+      "follow": "grayson_ship",
+      "keys": [
+        {
+          "pos": [
+            320.0,
+            80.0,
+            -340.0
+          ],
+          "look_at": "ship:grayson_ship"
+        }
+      ],
+      "t": 16.0
+    },
+    {
+      "cmd": "line",
+      "speaker": "Grayson Burrows",
+      "text": "Holy inspection? That's a new one. Mind telling me which church sends retro fighters these days?",
+      "side": "left",
+      "dur": 5.5,
+      "portrait": "portraits/grayson/penders_crusader_01.png",
+      "voice_file": "audio/penders_crusader_grayson_01.mp3",
+      "t": 16.0
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 6.5,
+      "follow": "vera",
+      "keys": [
+        {
+          "pos": [
+            -340.0,
+            90.0,
+            300.0
+          ],
+          "look_at": "ship:vera"
+        }
+      ],
+      "t": 22.0
+    },
+    {
+      "cmd": "line",
+      "speaker": "Vera \"Crusader\" Rostova",
+      "text": "Silence, heretic. You carry MACHINES OF DAMNABLE INTENT. Alien filth that will consume us all.",
+      "side": "right",
+      "dur": 6.0,
+      "portrait": "portraits/vera/penders_crusader_02.png",
+      "voice_file": "audio/penders_crusader_vera_02.mp3",
+      "t": 22.0
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 6.0,
+      "follow": "grayson_ship",
+      "keys": [
+        {
+          "pos": [
+            -310.0,
+            70.0,
+            320.0
+          ],
+          "look_at": "ship:grayson_ship"
+        }
+      ],
+      "t": 28.5
+    },
+    {
+      "cmd": "line",
+      "speaker": "Grayson Burrows",
+      "text": "Machines of damnable intent, huh. Is that what they're calling hard-light emitters at the retrofit shop?",
+      "side": "left",
+      "dur": 5.5,
+      "portrait": "portraits/grayson/penders_crusader_02.png",
+      "voice_file": "audio/penders_crusader_grayson_02.mp3",
+      "t": 28.5
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 6.0,
+      "follow": "grayson_ship",
+      "keys": [
+        {
+          "pos": [
+            330.0,
+            80.0,
+            -310.0
+          ],
+          "look_at": "ship:grayson_ship"
+        }
+      ],
+      "t": 34.5
+    },
+    {
+      "cmd": "line",
+      "speaker": "Grayson Burrows",
+      "text": "For what it's worth, that eye-patch really brings out your cheekbones. The burn's a nice touch too.",
+      "side": "left",
+      "dur": 5.5,
+      "portrait": "portraits/grayson/penders_crusader_03.png",
+      "voice_file": "audio/penders_crusader_grayson_03.mp3",
+      "t": 34.5
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 4.5,
+      "follow": "vera",
+      "keys": [
+        {
+          "pos": [
+            340.0,
+            100.0,
+            320.0
+          ],
+          "look_at": "ship:vera"
+        }
+      ],
+      "t": 40.5
+    },
+    {
+      "cmd": "line",
+      "speaker": "Vera \"Crusader\" Rostova",
+      "text": "You DARE \u2014 you think this is a JOKE?!",
+      "side": "right",
+      "dur": 4.0,
+      "portrait": "portraits/vera/penders_crusader_03.png",
+      "voice_file": "audio/penders_crusader_vera_03.mp3",
+      "t": 40.5
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 5.5,
+      "follow": "vera",
+      "keys": [
+        {
+          "pos": [
+            -330.0,
+            100.0,
+            300.0
+          ],
+          "look_at": "ship:vera"
+        }
+      ],
+      "t": 45.0
+    },
+    {
+      "cmd": "line",
+      "speaker": "Vera \"Crusader\" Rostova",
+      "text": "VILE HERETIC!! PREPARE TO DIE.",
+      "side": "right",
+      "dur": 5.0,
+      "portrait": "portraits/vera/penders_crusader_04.png",
+      "voice_file": "audio/penders_crusader_vera_04.mp3",
+      "t": 45.0
+    },
+    {
+      "cmd": "sfx",
+      "file": "../sfx/laser_fire.wav",
+      "pos": [
+        199400.0,
+        66900.0,
+        -131100.0
+      ],
+      "t": 50.5
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "talon1",
+      "dur": 3.0,
+      "keys": [
+        {
+          "pos": [
+            200800.0,
+            67500.0,
+            -130200.0
+          ]
+        },
+        {
+          "pos": [
+            199000.0,
+            67550.0,
+            -128400.0
+          ]
+        }
+      ],
+      "t": 50.5
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "talon2",
+      "dur": 3.0,
+      "keys": [
+        {
+          "pos": [
+            201300.0,
+            67300.0,
+            -129800.0
+          ]
+        },
+        {
+          "pos": [
+            199500.0,
+            67350.0,
+            -128000.0
+          ]
+        }
+      ],
+      "t": 50.5
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "talon3",
+      "dur": 3.0,
+      "keys": [
+        {
+          "pos": [
+            201900.0,
+            67000.0,
+            -129200.0
+          ]
+        },
+        {
+          "pos": [
+            200100.0,
+            67050.0,
+            -127400.0
+          ]
+        }
+      ],
+      "t": 50.5
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "talon4",
+      "dur": 3.0,
+      "keys": [
+        {
+          "pos": [
+            202500.0,
+            66800.0,
+            -128600.0
+          ]
+        },
+        {
+          "pos": [
+            200700.0,
+            66850.0,
+            -126800.0
+          ]
+        }
+      ],
+      "t": 50.5
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "talon5",
+      "dur": 3.0,
+      "keys": [
+        {
+          "pos": [
+            203200.0,
+            66600.0,
+            -128000.0
+          ]
+        },
+        {
+          "pos": [
+            201400.0,
+            66650.0,
+            -126200.0
+          ]
+        }
+      ],
+      "t": 50.5
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "talon6",
+      "dur": 3.0,
+      "keys": [
+        {
+          "pos": [
+            200600.0,
+            65800.0,
+            -130800.0
+          ]
+        },
+        {
+          "pos": [
+            198800.0,
+            65750.0,
+            -129000.0
+          ]
+        }
+      ],
+      "t": 50.5
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "talon7",
+      "dur": 3.0,
+      "keys": [
+        {
+          "pos": [
+            201100.0,
+            65600.0,
+            -130400.0
+          ]
+        },
+        {
+          "pos": [
+            199300.0,
+            65550.0,
+            -128600.0
+          ]
+        }
+      ],
+      "t": 50.5
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "talon8",
+      "dur": 3.0,
+      "keys": [
+        {
+          "pos": [
+            201700.0,
+            65300.0,
+            -129800.0
+          ]
+        },
+        {
+          "pos": [
+            199900.0,
+            65250.0,
+            -128000.0
+          ]
+        }
+      ],
+      "t": 50.5
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "talon9",
+      "dur": 3.0,
+      "keys": [
+        {
+          "pos": [
+            202300.0,
+            65000.0,
+            -129200.0
+          ]
+        },
+        {
+          "pos": [
+            200500.0,
+            64950.0,
+            -127400.0
+          ]
+        }
+      ],
+      "t": 50.5
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "talon10",
+      "dur": 3.0,
+      "keys": [
+        {
+          "pos": [
+            203000.0,
+            64700.0,
+            -128600.0
+          ]
+        },
+        {
+          "pos": [
+            201200.0,
+            64650.0,
+            -126800.0
+          ]
+        }
+      ],
+      "t": 50.5
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "vera",
+      "dur": 3.0,
+      "keys": [
+        {
+          "pos": [
+            198900.0,
+            66900.0,
+            -131100.0
+          ]
+        },
+        {
+          "pos": [
+            197800.0,
+            67200.0,
+            -130200.0
+          ]
+        }
+      ],
+      "t": 50.5
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 4.5,
+      "follow": "vera,talon1,talon2,talon3,talon4,talon5,talon6,talon7,talon8,talon9,talon10",
+      "keys": [
+        {
+          "pos": [
+            0.0,
+            500.0,
+            -1100.0
+          ],
+          "look_at": "ship:vera"
+        }
+      ],
+      "t": 50.5
+    },
+    {
+      "cmd": "sfx",
+      "file": "../sfx/impact_armor.wav",
+      "pos": [
+        198500.0,
+        66500.0,
+        -131800.0
+      ],
+      "t": 50.8
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 3.5,
+      "follow": "grayson_ship",
+      "keys": [
+        {
+          "pos": [
+            320.0,
+            70.0,
+            -320.0
+          ],
+          "look_at": "ship:grayson_ship"
+        }
+      ],
+      "t": 55.0
+    },
+    {
+      "cmd": "line",
+      "speaker": "Grayson Burrows",
+      "text": "Worth a try.",
+      "side": "left",
+      "dur": 2.5,
+      "portrait": "portraits/grayson/penders_crusader_04.png",
+      "voice_file": "audio/penders_crusader_grayson_04.mp3",
+      "t": 55.0
+    },
+    {
+      "cmd": "sfx",
+      "file": "../sfx/explosion_big.wav",
+      "pos": [
+        197500.0,
+        66500.0,
+        -131000.0
+      ],
+      "t": 56.0
+    },
+    {
+      "cmd": "fade_out",
+      "dur": 1.0,
+      "t": 58.0
+    },
+    {
+      "cmd": "end",
+      "actions": [
+        "set_flag:penders_crusader_seen"
+      ],
+      "t": 59.0
+    }
+  ]
+}

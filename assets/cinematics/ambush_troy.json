@@ -159,7 +159,7 @@
     {
       "cmd": "line",
       "speaker": "Pirate",
-      "text": "Wrong lane to be flying alone, Troy-boy — cargo or corpse. Pick.",
+      "text": "Wrong lane to be flying alone, Troy-boy...  Cargo or corpse. Pick.",
       "side": "right",
       "dur": 5.0,
       "portrait": "portraits/pirate/ambush_troy_01.png",

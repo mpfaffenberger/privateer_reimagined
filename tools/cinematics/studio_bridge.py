@@ -399,6 +399,17 @@ def build_author_prompt(req: dict) -> str:
         "DO NOT use author_studio_cinematic.py or any stale mirror scripts. "
         "Author FRESH via tools/cinematics/builder.py Cinematic(...) — it is "
         "the canonical authoring API.")
+    parts.append(
+        f"CINEMATIC ID UNIQUENESS (mandatory): The cinematic id '{cid}' "
+        "writes to assets/cinematics/<id>.json. NEVER reuse an existing id "
+        "for a new scene — even if the topic overlaps (e.g. do not write a "
+        "new 'penders_haulers' that contradicts an existing one). Before "
+        "authoring, check `ls assets/cinematics/`; if <id>.json already "
+        "exists with a DIFFERENT scene (different cast, different trigger, "
+        "different tone), use a NEW id (e.g. 'penders_crusader' vs "
+        "'penders_haulers'). One id = one scene, full stop. The same rule "
+        "applies to asset filenames: audio/<id>_<speaker>_<seq>.mp3 and "
+        "portraits/<speaker>/<id>_<seq>.png are namespaced by cinematic id.")
     style = (req.get("image") or {}).get("style_extra")
     if style:
         parts.append(f"Portrait style direction for every line: {style}")

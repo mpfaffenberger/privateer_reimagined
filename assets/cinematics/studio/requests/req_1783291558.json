@@ -1,0 +1,10 @@
+{
+  "id": "req_1783291558",
+  "kind": "refine",
+  "cinematic_id": "ambush_troy",
+  "image": { "quality": "medium" },
+  "line_overrides": [
+    { "index": 0,
+      "text": "Wrong lane to be flying alone, Troy-boy...  Cargo or corpse. Pick." }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "id": "req_1783291785",
+  "kind": "author",
+  "brief": "A wave of 10 retro talons led by a fanatical ace known as Vera \"Crusader\" Rostova. Grayson's Centurion is stopped in its tracks. The fanatical ace accuses Grayson of carrying dangerous high level alien technology - \"MACHINES OF DAMNABLE INTENT\". \nGrayson turns the entire thing into a joke by casually flirting with Vera, only making her more agitated. \"VILE HERETIC!! PREPARE TO DIE\"",
+  "triggers_text": "Carrying the Steltek gun through Nitir jump to Blockade Point Tango.",
+  "outcome_text": "The player must defeat 10 retro talons.",
+  "image": { "quality": "medium" }
+}

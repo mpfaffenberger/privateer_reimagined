@@ -89,13 +89,16 @@ def voice_for(character: str, bible: Optional[dict] = None) -> str:
 
 
 def _t2a(key: str, text: str, voice_id: str, speed: float,
-         timeout: float) -> Optional[bytes]:
+         timeout: float, emotion: str = "") -> Optional[bytes]:
     import httpx
 
+    voice_setting = {"voice_id": voice_id, "speed": speed, "vol": 1, "pitch": 0}
+    if emotion:
+        voice_setting["emotion"] = emotion
     body = {
         "model": MODEL,
         "text": text,
-        "voice_setting": {"voice_id": voice_id, "speed": speed, "vol": 1, "pitch": 0},
+        "voice_setting": voice_setting,
         "audio_setting": {"sample_rate": 32000, "bitrate": 128000,
                           "format": "mp3", "channel": 1},
         "output_format": "hex",
@@ -112,6 +115,7 @@ def _t2a(key: str, text: str, voice_id: str, speed: float,
 
 def gen_line_voice(character: str, text: str, out_rel: Optional[str] = None, *,
                    voice_id: Optional[str] = None, speed: float = 1.0,
+                   emotion: str = "",
                    bible: Optional[dict] = None, cache: bool = True,
                    force: bool = False, timeout: float = 120.0) -> Optional[str]:
     """Synthesize ``text`` in ``character``'s cloned voice.
@@ -120,18 +124,14 @@ def gen_line_voice(character: str, text: str, out_rel: Optional[str] = None, *,
     ``line`` cue's ``voice_file`` field, or ``None`` if it couldn't be produced
     (no key / API failure) so the caller can leave the line silent.
 
-    Idempotent + content-hash cached on (model, voice_id, speed, text). Writes
-    into ``assets/cinematics/audio/``; ``out_rel`` defaults to a stable
-    hash-named file so identical lines dedupe across cinematics.
+    ``emotion`` sets the MiniMax voice emotion (happy, sad, angry, fearful,
+    disgusted, surprised, neutral). Empty string = no emotion override.
 
-    ``force=True`` bypasses the "destination already exists" early-exit so a
-    changed (voice_id, speed, text) can REgenerate to the same path — the
-    Studio refine loop. The content-hash cache still applies, so an unchanged
-    combo remains a free copy.
+    Idempotent + content-hash cached on (model, voice_id, speed, emotion, text).
     """
     vid = voice_id or voice_for(character, bible)
     digest = hashlib.sha256(
-        f"{MODEL}|{vid}|{speed}|{text}".encode("utf-8")).hexdigest()[:16]
+        f"{MODEL}|{vid}|{speed}|{emotion}|{text}".encode("utf-8")).hexdigest()[:16]
     if out_rel is None:
         out_rel = f"audio/{character}_{digest}.mp3"
 
@@ -155,7 +155,7 @@ def gen_line_voice(character: str, text: str, out_rel: Optional[str] = None, *,
         return None
 
     try:
-        audio = _t2a(key, text, vid, speed, timeout)
+        audio = _t2a(key, text, vid, speed, timeout, emotion)
     except Exception as e:  # noqa: BLE001 - degrade, never crash authoring
         print(f"[voice] synth failed for {character!r}: {e}")
         return None
@@ -183,7 +183,8 @@ def _main() -> None:
     ap.add_argument("--out", default=None, help="cinematics-relative path (audio/..mp3)")
     ap.add_argument("--voice-id", default=None)
     ap.add_argument("--speed", type=float, default=1.0)
-    ap.add_argument("--no-cache", action="store_true")
+    ap.add_argument("--emotion", default="", help="happy, sad, angry, fearful, disgusted, surprised, neutral")
+    ap.add_argument("--no-cache", action="store_true", help="Bypass cache AND force regenerate")
     args = ap.parse_args()
 
     bible = None
@@ -195,7 +196,9 @@ def _main() -> None:
 
     out = gen_line_voice(args.character, args.text, out_rel=args.out,
                          voice_id=args.voice_id, speed=args.speed,
-                         bible=bible, cache=not args.no_cache)
+                         emotion=args.emotion,
+                         bible=bible, cache=not args.no_cache,
+                         force=args.no_cache)
     if out:
         print(f"OK -> assets/cinematics/{out}")
     else:

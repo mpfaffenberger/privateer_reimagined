@@ -23,18 +23,8 @@
   },
   "timeline": [
     {
-      "cmd": "fade_in",
-      "dur": 1.5,
-      "t": 0.0
-    },
-    {
       "cmd": "music",
       "file": "../music/original/basetune_00.wav",
-      "t": 0.0
-    },
-    {
-      "cmd": "sfx",
-      "file": "../sfx/engine_hum.wav",
       "t": 0.0
     },
     {
@@ -63,8 +53,10 @@
     },
     {
       "cmd": "camera_path",
+      "t": 0.0,
       "dur": 2.0,
       "ease": "smooth",
+      "follow": "merchant_ship",
       "keys": [
         {
           "pos": [
@@ -74,31 +66,34 @@
           ],
           "look_at": "ship:merchant_ship"
         }
-      ],
-      "t": 0.0,
-      "follow": "merchant_ship"
+      ]
+    },
+    {
+      "cmd": "sfx",
+      "file": "../sfx/engine_hum.wav",
+      "t": 0.0
+    },
+    {
+      "cmd": "camera_path",
+      "t": 2.0,
+      "dur": 3.5,
+      "ease": "smooth",
+      "follow": "merchant_ship",
+      "keys": [
+        {
+          "pos": [
+            -900,
+            600,
+            1100
+          ],
+          "look_at": "ship:merchant_ship"
+        }
+      ]
     },
     {
       "cmd": "sfx",
       "file": "../sfx/ui_click.wav",
       "t": 2.0
-    },
-    {
-      "cmd": "camera_path",
-      "dur": 3.5,
-      "ease": "smooth",
-      "keys": [
-        {
-          "pos": [
-            -900,
-            600,
-            1100
-          ],
-          "look_at": "ship:merchant_ship"
-        }
-      ],
-      "t": 2.0,
-      "follow": "merchant_ship"
     },
     {
       "cmd": "line",
@@ -112,8 +107,10 @@
     },
     {
       "cmd": "camera_path",
-      "dur": 3.5,
+      "t": 5.5,
+      "dur": 3.7,
       "ease": "smooth",
+      "follow": "grayson_ship",
       "keys": [
         {
           "pos": [
@@ -123,24 +120,24 @@
           ],
           "look_at": "ship:grayson_ship"
         }
-      ],
-      "t": 5.5,
-      "follow": "grayson_ship"
+      ]
     },
     {
       "cmd": "line",
       "speaker": "Grayson Burrows",
       "text": "Just pulled in. Still getting my bearings.",
       "side": "right",
-      "dur": 3.5,
+      "dur": 3.7,
       "portrait": "portraits/grayson/troy_merchant_tour_01.png",
       "t": 5.5,
       "voice_file": "audio/troy_merchant_tour_grayson_01.mp3"
     },
     {
       "cmd": "camera_path",
-      "dur": 4.0,
+      "t": 9.2,
+      "dur": 4.9,
       "ease": "smooth",
+      "follow": "merchant_ship",
       "keys": [
         {
           "pos": [
@@ -150,24 +147,24 @@
           ],
           "look_at": "ship:merchant_ship"
         }
-      ],
-      "t": 9.0,
-      "follow": "merchant_ship"
+      ]
     },
     {
       "cmd": "line",
       "speaker": "Old Mack",
       "text": "I don't mind giving you a quick tour if you like. Call it a welcome.",
       "side": "left",
-      "dur": 4.0,
+      "dur": 4.9,
       "portrait": "portraits/mack/troy_merchant_tour_02.png",
-      "t": 9.0,
+      "t": 9.2,
       "voice_file": "audio/troy_merchant_tour_mack_02.mp3"
     },
     {
       "cmd": "camera_path",
-      "dur": 2.5,
+      "t": 14.1,
+      "dur": 2.9,
       "ease": "smooth",
+      "follow": "grayson_ship",
       "keys": [
         {
           "pos": [
@@ -177,24 +174,22 @@
           ],
           "look_at": "ship:grayson_ship"
         }
-      ],
-      "t": 13.0,
-      "follow": "grayson_ship"
+      ]
     },
     {
       "cmd": "line",
       "speaker": "Grayson Burrows",
       "text": "Sure. I'm listening.",
       "side": "right",
-      "dur": 2.5,
+      "dur": 2.9,
       "portrait": "portraits/grayson/troy_merchant_tour_02.png",
-      "t": 13.0,
+      "t": 14.1,
       "voice_file": "audio/troy_merchant_tour_grayson_02.mp3"
     },
     {
       "cmd": "camera_path",
-      "t": 15.5,
-      "dur": 8.0,
+      "t": 17.5,
+      "dur": 10.0,
       "ease": "smooth",
       "keys": [
         {
@@ -225,8 +220,8 @@
     },
     {
       "cmd": "line",
-      "t": 15.5,
-      "dur": 8.0,
+      "t": 17.5,
+      "dur": 10.0,
       "speaker": "Old Mack",
       "text": "Pyrenees Jump. That's the lane out to the Humboldt border. Militia run patrols through there, so it's mostly safe. Mostly.",
       "side": "right",
@@ -235,8 +230,8 @@
     },
     {
       "cmd": "camera_path",
-      "t": 23.5,
-      "dur": 8.0,
+      "t": 27.5,
+      "dur": 9.5,
       "ease": "smooth",
       "keys": [
         {
@@ -267,8 +262,8 @@
     },
     {
       "cmd": "line",
-      "t": 23.5,
-      "dur": 8.0,
+      "t": 27.5,
+      "dur": 9.5,
       "speaker": "Old Mack",
       "text": "Pender's Star Jump. Rough corridor. Bounty hunters work it when the pickings are slim upspin. Watch your six.",
       "side": "right",
@@ -277,8 +272,8 @@
     },
     {
       "cmd": "camera_path",
-      "t": 31.5,
-      "dur": 8.0,
+      "t": 37.0,
+      "dur": 10.4,
       "ease": "smooth",
       "keys": [
         {
@@ -309,8 +304,8 @@
     },
     {
       "cmd": "line",
-      "t": 31.5,
-      "dur": 8.0,
+      "t": 37.0,
+      "dur": 10.4,
       "speaker": "Old Mack",
       "text": "Hector Mining Base. The other dig site. Militia keep a wing there, but pirates hit the ore shipments regular as clockwork.",
       "side": "right",
@@ -319,8 +314,8 @@
     },
     {
       "cmd": "camera_path",
-      "t": 39.5,
-      "dur": 8.0,
+      "t": 47.4,
+      "dur": 8.4,
       "ease": "smooth",
       "keys": [
         {
@@ -351,8 +346,8 @@
     },
     {
       "cmd": "line",
-      "t": 39.5,
-      "dur": 8.0,
+      "t": 47.4,
+      "dur": 8.4,
       "speaker": "Old Mack",
       "text": "Regallis Jump. Quiet on paper, but pirates shadow the ore ships coming out of Hector. Don't linger.",
       "side": "right",
@@ -361,8 +356,8 @@
     },
     {
       "cmd": "camera_path",
-      "t": 47.5,
-      "dur": 8.0,
+      "t": 55.8,
+      "dur": 11.3,
       "ease": "smooth",
       "keys": [
         {
@@ -393,8 +388,8 @@
     },
     {
       "cmd": "line",
-      "t": 47.5,
-      "dur": 8.0,
+      "t": 55.8,
+      "dur": 11.3,
       "speaker": "Old Mack",
       "text": "Helen. The agricultural planet. Feeds half the quadrant. Boring run, good money, zero excitement. You'll love it.",
       "side": "right",
@@ -403,8 +398,8 @@
     },
     {
       "cmd": "camera_path",
-      "t": 55.5,
-      "dur": 8.0,
+      "t": 67.1,
+      "dur": 10.8,
       "ease": "smooth",
       "keys": [
         {
@@ -435,8 +430,8 @@
     },
     {
       "cmd": "line",
-      "t": 55.5,
-      "dur": 8.0,
+      "t": 67.1,
+      "dur": 10.8,
       "speaker": "Old Mack",
       "text": "War Jump. The military corridor. Militia run in strength here. Civilian traffic stays clear unless you fancy a scan and a lecture.",
       "side": "right",
@@ -445,8 +440,8 @@
     },
     {
       "cmd": "camera_path",
-      "t": 63.5,
-      "dur": 8.0,
+      "t": 77.9,
+      "dur": 10.9,
       "ease": "smooth",
       "keys": [
         {
@@ -477,8 +472,8 @@
     },
     {
       "cmd": "line",
-      "t": 63.5,
-      "dur": 8.0,
+      "t": 77.9,
+      "dur": 10.9,
       "speaker": "Old Mack",
       "text": "Troy Nav 8. Dead center waypoint. Militia use it as a rally point. Good place to orient yourself if you get turned around.",
       "side": "right",
@@ -487,8 +482,9 @@
     },
     {
       "cmd": "camera_path",
-      "t": 71.5,
-      "dur": 6.0,
+      "t": 89.5,
+      "dur": 10.6,
+      "ease": "smooth",
       "follow": "merchant_ship",
       "keys": [
         {
@@ -503,18 +499,19 @@
     },
     {
       "cmd": "line",
-      "t": 71.5,
-      "dur": 6.0,
+      "t": 89.5,
+      "dur": 10.6,
       "speaker": "Old Mack",
-      "text": "That's the grand tour. Achilles is home. berth, refuel, and don't fly drunk. Safe skies out there, kid.",
+      "text": "That's the grand tour. Achilles is home. Berth, refuel, and don't fly drunk. Safe skies out there, kid.",
       "side": "right",
       "portrait": "portraits/mack/troy_merchant_tour_03.png",
       "voice_file": "audio/troy_merchant_tour_mack_03.mp3"
     },
     {
       "cmd": "camera_path",
-      "t": 79.5,
-      "dur": 4.0,
+      "t": 100.7,
+      "dur": 3.1,
+      "ease": "smooth",
       "follow": "grayson_ship",
       "keys": [
         {
@@ -529,8 +526,8 @@
     },
     {
       "cmd": "line",
-      "t": 79.5,
-      "dur": 4.0,
+      "t": 100.7,
+      "dur": 3.1,
       "speaker": "Grayson Burrows",
       "text": "Appreciate it. Safe skies.",
       "side": "left",
@@ -542,7 +539,7 @@
       "actions": [
         "set_flag:troy_merchant_tour_seen"
       ],
-      "t": 85.5
+      "t": 104.8
     }
   ]
 }
