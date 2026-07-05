@@ -166,6 +166,15 @@ time on opposite sides render **both** panels simultaneously (an exchange).
 - `side`       — `"left"` (default) or `"right"`.
 - `dur`        — seconds the panel + subtitle stay up (then slides out).
 
+**Voice generation tags (MiniMax TTS):** The `text` field may contain
+`<#N.N#>` pause tags (e.g. `<#0.5#>` for a 0.5s pause). These are passed to
+the MiniMax TTS engine for natural delivery but **stripped from the on-screen
+subtitle** automatically by the engine. Example:
+`"Pender's Star Jump.<#0.5#>Rough corridor."` — the voice pauses, the subtitle
+shows clean text. See `tools/cinematics/voices.py` for full TTS markup
+(emotion, interjections, speed) documented at
+https://platform.minimax.io/docs/api-reference/speech-t2a-http.
+
 ### `subtitle` — `{ text, dur }`
 A bare centered subtitle with no portrait — narration / scene-setting.
 

@@ -106,7 +106,7 @@
       "text": "Hey there! New to the Troy system?",
       "side": "left",
       "dur": 3.5,
-      "portrait": "portraits/vance/penders_haulers_01.png",
+      "portrait": "portraits/mack/troy_merchant_tour_01.png",
       "t": 2.0,
       "voice_file": "audio/troy_merchant_tour_mack_01.mp3"
     },
@@ -133,7 +133,7 @@
       "text": "Just pulled in. Still getting my bearings.",
       "side": "right",
       "dur": 3.5,
-      "portrait": "portraits/grayson/penders_haulers_01.png",
+      "portrait": "portraits/grayson/troy_merchant_tour_01.png",
       "t": 5.5,
       "voice_file": "audio/troy_merchant_tour_grayson_01.mp3"
     },
@@ -160,7 +160,7 @@
       "text": "I don't mind giving you a quick tour if you like. Call it a welcome.",
       "side": "left",
       "dur": 4.0,
-      "portrait": "portraits/vance/penders_haulers_02.png",
+      "portrait": "portraits/mack/troy_merchant_tour_02.png",
       "t": 9.0,
       "voice_file": "audio/troy_merchant_tour_mack_02.mp3"
     },
@@ -187,175 +187,309 @@
       "text": "Sure. I'm listening.",
       "side": "right",
       "dur": 2.5,
-      "portrait": "portraits/grayson/penders_haulers_02.png",
+      "portrait": "portraits/grayson/troy_merchant_tour_02.png",
       "t": 13.0,
       "voice_file": "audio/troy_merchant_tour_grayson_02.mp3"
     },
     {
       "cmd": "camera_path",
-      "dur": 5.0,
-      "ease": "smooth",
-      "keys": [
-        {
-          "pos": [
-            200,
-            150,
-            200
-          ],
-          "look_at": "ship:grayson_ship"
-        }
-      ],
       "t": 15.5,
-      "follow": "grayson_ship"
-    },
-    {
-      "cmd": "subtitle",
-      "text": "Pyrenees Jump — the lane out to the Humboldt border. Militia patrol it heavy, but Retro fanatics love to hit convoys here.",
-      "dur": 5.0,
-      "t": 15.5
-    },
-    {
-      "cmd": "camera_path",
-      "dur": 5.0,
+      "dur": 8.0,
       "ease": "smooth",
       "keys": [
         {
           "pos": [
-            200,
-            150,
-            200
+            114000,
+            76667,
+            145333
           ],
-          "look_at": "ship:grayson_ship"
+          "look_at": [
+            100000,
+            66667,
+            133333
+          ]
+        },
+        {
+          "pos": [
+            112000,
+            74667,
+            147333
+          ],
+          "look_at": [
+            100000,
+            66667,
+            133333
+          ]
         }
-      ],
-      "t": 20.5,
-      "follow": "grayson_ship"
+      ]
     },
     {
-      "cmd": "subtitle",
-      "text": "Pender's Star Jump — a rough corridor. Bounty hunters work it, and pirates hit the merchant lanes hard. Watch your six.",
-      "dur": 5.0,
-      "t": 20.5
+      "cmd": "line",
+      "t": 15.5,
+      "dur": 8.0,
+      "speaker": "Old Mack",
+      "text": "Pyrenees Jump. That's the lane out to the Humboldt border. Militia run patrols through there, so it's mostly safe. Mostly.",
+      "side": "right",
+      "portrait": "portraits/mack/troy_merchant_tour_02.png",
+      "voice_file": "audio/troy_merchant_tour_nav_01.mp3"
     },
     {
       "cmd": "camera_path",
-      "dur": 5.0,
+      "t": 23.5,
+      "dur": 8.0,
       "ease": "smooth",
       "keys": [
         {
           "pos": [
-            200,
-            150,
-            200
+            114000,
+            143333,
+            -121333
           ],
-          "look_at": "ship:grayson_ship"
+          "look_at": [
+            100000,
+            133333,
+            -133333
+          ]
+        },
+        {
+          "pos": [
+            112000,
+            141333,
+            -119333
+          ],
+          "look_at": [
+            100000,
+            133333,
+            -133333
+          ]
         }
-      ],
-      "t": 25.5,
-      "follow": "grayson_ship"
+      ]
     },
     {
-      "cmd": "subtitle",
-      "text": "Hector Mining Base — the other dig site. Militia keep a wing there, but Retros have been testing the defenses. Ore flows, blood too.",
-      "dur": 5.0,
-      "t": 25.5
+      "cmd": "line",
+      "t": 23.5,
+      "dur": 8.0,
+      "speaker": "Old Mack",
+      "text": "Pender's Star Jump. Rough corridor. Bounty hunters work it when the pickings are slim upspin. Watch your six.",
+      "side": "right",
+      "portrait": "portraits/mack/troy_merchant_tour_02.png",
+      "voice_file": "audio/troy_merchant_tour_nav_02.mp3"
     },
     {
       "cmd": "camera_path",
-      "dur": 5.0,
+      "t": 31.5,
+      "dur": 8.0,
       "ease": "smooth",
       "keys": [
         {
           "pos": [
-            200,
-            150,
-            200
+            -152667,
+            -123333,
+            -188000
           ],
-          "look_at": "ship:grayson_ship"
+          "look_at": [
+            -166667,
+            -133333,
+            -200000
+          ]
+        },
+        {
+          "pos": [
+            -154667,
+            -125333,
+            -186000
+          ],
+          "look_at": [
+            -166667,
+            -133333,
+            -200000
+          ]
         }
-      ],
-      "t": 30.5,
-      "follow": "grayson_ship"
+      ]
     },
     {
-      "cmd": "subtitle",
-      "text": "Regallis Jump — quiet on paper, but pirates shadow the ore shipments. Don't drift here without guns hot.",
-      "dur": 5.0,
-      "t": 30.5
+      "cmd": "line",
+      "t": 31.5,
+      "dur": 8.0,
+      "speaker": "Old Mack",
+      "text": "Hector Mining Base. The other dig site. Militia keep a wing there, but pirates hit the ore shipments regular as clockwork.",
+      "side": "right",
+      "portrait": "portraits/mack/troy_merchant_tour_02.png",
+      "voice_file": "audio/troy_merchant_tour_nav_03.mp3"
     },
     {
       "cmd": "camera_path",
-      "dur": 5.0,
+      "t": 39.5,
+      "dur": 8.0,
       "ease": "smooth",
       "keys": [
         {
           "pos": [
-            200,
-            150,
-            200
+            -136000,
+            -90000,
+            -54667
           ],
-          "look_at": "ship:grayson_ship"
+          "look_at": [
+            -150000,
+            -100000,
+            -66667
+          ]
+        },
+        {
+          "pos": [
+            -138000,
+            -92000,
+            -52667
+          ],
+          "look_at": [
+            -150000,
+            -100000,
+            -66667
+          ]
         }
-      ],
-      "t": 35.5,
-      "follow": "grayson_ship"
+      ]
     },
     {
-      "cmd": "subtitle",
-      "text": "Helen — the agricultural planet. Feeds half the quadrant. Bounty hunters orbit looking for smugglers running food off-world.",
-      "dur": 5.0,
-      "t": 35.5
+      "cmd": "line",
+      "t": 39.5,
+      "dur": 8.0,
+      "speaker": "Old Mack",
+      "text": "Regallis Jump. Quiet on paper, but pirates shadow the ore ships coming out of Hector. Don't linger.",
+      "side": "right",
+      "portrait": "portraits/mack/troy_merchant_tour_02.png",
+      "voice_file": "audio/troy_merchant_tour_nav_04.mp3"
     },
     {
       "cmd": "camera_path",
-      "dur": 5.0,
+      "t": 47.5,
+      "dur": 8.0,
       "ease": "smooth",
       "keys": [
         {
           "pos": [
-            200,
-            150,
-            200
+            -152667,
+            -56667,
+            112000
           ],
-          "look_at": "ship:grayson_ship"
+          "look_at": [
+            -166667,
+            -66667,
+            100000
+          ]
+        },
+        {
+          "pos": [
+            -154667,
+            -58667,
+            114000
+          ],
+          "look_at": [
+            -166667,
+            -66667,
+            100000
+          ]
         }
-      ],
-      "t": 40.5,
-      "follow": "grayson_ship"
+      ]
     },
     {
-      "cmd": "subtitle",
-      "text": "War Jump — the military corridor. Militia run in strength here. Civilians are... not encouraged to linger.",
-      "dur": 5.0,
-      "t": 40.5
+      "cmd": "line",
+      "t": 47.5,
+      "dur": 8.0,
+      "speaker": "Old Mack",
+      "text": "Helen. The agricultural planet. Feeds half the quadrant. Boring run, good money, zero excitement. You'll love it.",
+      "side": "right",
+      "portrait": "portraits/mack/troy_merchant_tour_02.png",
+      "voice_file": "audio/troy_merchant_tour_nav_05.mp3"
     },
     {
       "cmd": "camera_path",
-      "dur": 5.0,
+      "t": 55.5,
+      "dur": 8.0,
       "ease": "smooth",
       "keys": [
         {
           "pos": [
-            200,
-            150,
-            200
+            14000,
+            10000,
+            162000
           ],
-          "look_at": "ship:grayson_ship"
+          "look_at": [
+            0,
+            0,
+            150000
+          ]
+        },
+        {
+          "pos": [
+            12000,
+            8000,
+            164000
+          ],
+          "look_at": [
+            0,
+            0,
+            150000
+          ]
         }
-      ],
-      "t": 45.5,
-      "follow": "grayson_ship"
+      ]
     },
     {
-      "cmd": "subtitle",
-      "text": "Troy Nav 8 — the dead-center waypoint. Militia use it as a rally point. Good place to get scanned, bad place to hide anything.",
-      "dur": 5.0,
-      "t": 45.5
+      "cmd": "line",
+      "t": 55.5,
+      "dur": 8.0,
+      "speaker": "Old Mack",
+      "text": "War Jump. The military corridor. Militia run in strength here. Civilian traffic stays clear unless you fancy a scan and a lecture.",
+      "side": "right",
+      "portrait": "portraits/mack/troy_merchant_tour_02.png",
+      "voice_file": "audio/troy_merchant_tour_nav_06.mp3"
     },
     {
       "cmd": "camera_path",
-      "dur": 4.0,
+      "t": 63.5,
+      "dur": 8.0,
       "ease": "smooth",
+      "keys": [
+        {
+          "pos": [
+            64000,
+            -90000,
+            45333
+          ],
+          "look_at": [
+            50000,
+            -100000,
+            33333
+          ]
+        },
+        {
+          "pos": [
+            62000,
+            -92000,
+            47333
+          ],
+          "look_at": [
+            50000,
+            -100000,
+            33333
+          ]
+        }
+      ]
+    },
+    {
+      "cmd": "line",
+      "t": 63.5,
+      "dur": 8.0,
+      "speaker": "Old Mack",
+      "text": "Troy Nav 8. Dead center waypoint. Militia use it as a rally point. Good place to orient yourself if you get turned around.",
+      "side": "right",
+      "portrait": "portraits/mack/troy_merchant_tour_02.png",
+      "voice_file": "audio/troy_merchant_tour_nav_07.mp3"
+    },
+    {
+      "cmd": "camera_path",
+      "t": 71.5,
+      "dur": 6.0,
+      "follow": "merchant_ship",
       "keys": [
         {
           "pos": [
@@ -365,24 +499,23 @@
           ],
           "look_at": "ship:merchant_ship"
         }
-      ],
-      "t": 50.5,
-      "follow": "merchant_ship"
+      ]
     },
     {
       "cmd": "line",
+      "t": 71.5,
+      "dur": 6.0,
       "speaker": "Old Mack",
-      "text": "That's the grand tour. Achilles is home — berth, refuel, and don't fly drunk. Safe skies, kid.",
-      "side": "left",
-      "dur": 4.0,
-      "portrait": "portraits/vance/penders_haulers_03.png",
-      "t": 50.5,
+      "text": "That's the grand tour. Achilles is home. berth, refuel, and don't fly drunk. Safe skies out there, kid.",
+      "side": "right",
+      "portrait": "portraits/mack/troy_merchant_tour_03.png",
       "voice_file": "audio/troy_merchant_tour_mack_03.mp3"
     },
     {
       "cmd": "camera_path",
-      "dur": 3.0,
-      "ease": "smooth",
+      "t": 79.5,
+      "dur": 4.0,
+      "follow": "grayson_ship",
       "keys": [
         {
           "pos": [
@@ -392,31 +525,24 @@
           ],
           "look_at": "ship:grayson_ship"
         }
-      ],
-      "t": 54.5,
-      "follow": "grayson_ship"
+      ]
     },
     {
       "cmd": "line",
+      "t": 79.5,
+      "dur": 4.0,
       "speaker": "Grayson Burrows",
       "text": "Appreciate it. Safe skies.",
-      "side": "right",
-      "dur": 3.0,
-      "portrait": "portraits/grayson/penders_haulers_03.png",
-      "t": 54.5,
+      "side": "left",
+      "portrait": "portraits/grayson/troy_merchant_tour_03.png",
       "voice_file": "audio/troy_merchant_tour_grayson_03.mp3"
-    },
-    {
-      "cmd": "fade_out",
-      "dur": 1.0,
-      "t": 57.5
     },
     {
       "cmd": "end",
       "actions": [
         "set_flag:troy_merchant_tour_seen"
       ],
-      "t": 58.5
+      "t": 85.5
     }
   ]
 }

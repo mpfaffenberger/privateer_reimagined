@@ -10,6 +10,18 @@ It deliberately mirrors the game's EXISTING MiniMax pipeline
 (``/v1/t2a_v2``), same model (``speech-2.8-hd``), and the same cloned cast
 voice_ids. Auth is ``MINIMAX_API_KEY``.
 
+MiniMax TTS markup (https://platform.minimax.io/docs/api-reference/speech-t2a-http):
+* **Pauses:** ``<#N.N#>`` inserts a pause of N.N seconds in the spoken audio.
+  Example: ``'Pender's Star Jump.<#0.5#>Rough corridor.'`` pauses 0.5s after
+  the name. The engine's subtitle renderer strips ``<#...#>`` tags automatically,
+  so they never appear on screen. Use ``<#0.3#>`` for a beat, ``<#0.5#>`` for a
+  noticeable pause, ``<#1.0#>`` for a dramatic beat.
+* **Emotion:** pass ``--emotion`` with one of: happy, sad, angry, fearful,
+  disgusted, surprised, neutral. Match the emotion to the scene.
+* **Interjections:** inline markers like ``[laughter]``, ``[sigh]``, ``[cough]``,
+  ``[breath]``, ``[gasps]`` are spoken as sounds, not read as words. Use sparingly.
+* **Speed:** ``--speed 0.9`` for slower/calmer, ``--speed 1.1`` for urgent/fast.
+
 Behaviour:
 * content-hash cached + idempotent — re-runs with the same (voice, text) are
   free (no API spend);

@@ -728,11 +728,42 @@ float line_slide(const Cue& c) {
     return std::min(in, out);
 }
 
+// Strip <#...#> pause tags from text for subtitle rendering (the TTS
+// engine interprets them as silence, but they should not appear on screen).
+std::string strip_pause_tags(const std::string& s) {
+    std::string out;
+    out.reserve(s.size());
+    size_t i = 0;
+    while (i < s.size()) {
+        if (i + 1 < s.size() && s[i] == '<' && s[i+1] == '#') {
+            size_t end = s.find('#', i + 2);
+            if (end != std::string::npos && end + 1 < s.size() && s[end+1] == '>') {
+                i = end + 2;  // skip the whole <#...#> tag
+                continue;
+            }
+        }
+        out += s[i++];
+    }
+    return out;
+}
+
 void draw_centered_text(ImDrawList* dl, float size, float cx, float cy,
-                        ImU32 col, const char* txt) {
+                        ImU32 col, const char* txt,
+                        float max_w = 0.0f) {
     ImFont* font = ImGui::GetFont();
-    const ImVec2 sz = font->CalcTextSizeA(size, FLT_MAX, 0.0f, txt);
-    dl->AddText(font, size, ImVec2(cx - sz.x * 0.5f, cy - sz.y * 0.5f), col, txt);
+    const float wrap_w = (max_w > 0.0f) ? max_w : FLT_MAX;
+    const ImVec2 sz = font->CalcTextSizeA(size, FLT_MAX, wrap_w, txt);
+    // CalcTextSizeA with wrap returns the full bounding box (multi-line).
+    // We need to draw with the same wrap width so it actually wraps.
+    if (max_w > 0.0f) {
+        dl->AddText(font, size,
+                    ImVec2(cx - sz.x * 0.5f, cy - sz.y * 0.5f),
+                    col, txt, nullptr, wrap_w);
+    } else {
+        dl->AddText(font, size,
+                    ImVec2(cx - sz.x * 0.5f, cy - sz.y * 0.5f),
+                    col, txt);
+    }
 }
 
 void draw_portrait(ImDrawList* dl, float fb_w, float fb_h, const Cue& c) {
@@ -796,10 +827,11 @@ void draw_overlay(float fb_w, float fb_h) {
         draw_portrait(dl, fb_w, fb_h, c);
         if (!c.text.empty()) {
             const float alpha = line_slide(c);
+            const std::string clean = strip_pause_tags(c.text);
             draw_centered_text(dl, fb_h * 0.028f, fb_w * 0.5f,
                                fb_h * (1.0f - k_letterbox_frac) - fb_h * 0.04f,
                                IM_COL32(255, 255, 255, (int)(255 * alpha)),
-                               c.text.c_str());
+                               clean.c_str(), fb_w * 0.7f);
         }
     }
 
@@ -807,9 +839,11 @@ void draw_overlay(float fb_w, float fb_h) {
     for (const Cue& c : g_cin.cues) {
         if (c.cmd != Cmd::Subtitle) continue;
         if (g_time < c.t || g_time > c.t + c.dur) continue;
+        const std::string clean = strip_pause_tags(c.text);
         draw_centered_text(dl, fb_h * 0.030f, fb_w * 0.5f,
                            fb_h * (1.0f - k_letterbox_frac) - fb_h * 0.05f,
-                           IM_COL32(230, 230, 255, 255), c.text.c_str());
+                           IM_COL32(230, 230, 255, 255), clean.c_str(),
+                           fb_w * 0.8f);
     }
 
     // Full-screen fade (drawn last so it covers everything, letterbox incl.).

@@ -153,6 +153,16 @@
       "personality": "Cold, methodical, professional. No taunts, no mercy — this is a contract.",
       "wardrobe": "Heavy matte-black composite armor with a Mercenaries' Guild sigil, reinforced shoulder pauldrons, tactical webbing, a slung sidearm. Serious kit.",
       "reference_image": "assets/cinematics/portraits/bounty_hunter/_ref.png"
+    },
+    "mack": {
+      "id": "mack",
+      "display_name": "Old Mack",
+      "role": "Veteran merchant hauler based at Achilles in the Troy system; a friendly old-timer who shows new pilots around.",
+      "appearance": "Human man in his 60s, weathered and stout with a ruddy sun-baked face, thick grey mutton-chop sideburns, and a balding pate fringed with wild white hair. Deep laugh lines around squinting pale-blue eyes. Missing a front tooth. The look of a man who has been hauling cargo since before the war and has stories he'll tell whether you want them or not.",
+      "personality": "Jovial, talkative, grandfatherly. Treats every new pilot like a lost nephew. Chatty to a fault, genuinely kind, slightly hard of hearing so he talks louder than necessary.",
+      "wardrobe": "A faded orange merchant guild coverall with patches on both knees, a battered leather cap with earflaps, fingerless gloves, and a tarnished guild pin on the chest. Well-worn and comfortable.",
+      "voice_id": "PrivFlightV1401",
+      "reference_image": "assets/cinematics/portraits/mack/_ref.png"
     }
   }
 }
