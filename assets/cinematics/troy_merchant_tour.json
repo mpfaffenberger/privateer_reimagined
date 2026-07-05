@@ -68,30 +68,15 @@
       "keys": [
         {
           "pos": [
-            202000.0,
-            -132000.0,
-            9000.0
+            -900,
+            600,
+            1100
           ],
-          "look_at": [
-            202000.0,
-            -133333.0,
-            6000.0
-          ]
-        },
-        {
-          "pos": [
-            201500.0,
-            -131800.0,
-            8500.0
-          ],
-          "look_at": [
-            202000.0,
-            -133333.0,
-            6000.0
-          ]
+          "look_at": "ship:merchant_ship"
         }
       ],
-      "t": 0.0
+      "t": 0.0,
+      "follow": "merchant_ship"
     },
     {
       "cmd": "sfx",
@@ -105,31 +90,25 @@
       "keys": [
         {
           "pos": [
-            204000.0,
-            -132500.0,
-            6400.0
-          ],
-          "look_at": "ship:merchant_ship"
-        },
-        {
-          "pos": [
-            204200.0,
-            -132400.0,
-            6500.0
+            -900,
+            600,
+            1100
           ],
           "look_at": "ship:merchant_ship"
         }
       ],
-      "t": 2.0
+      "t": 2.0,
+      "follow": "merchant_ship"
     },
     {
       "cmd": "line",
-      "speaker": "Captain Vance",
+      "speaker": "Old Mack",
       "text": "Hey there! New to the Troy system?",
       "side": "left",
       "dur": 3.5,
       "portrait": "portraits/vance/penders_haulers_01.png",
-      "t": 2.0
+      "t": 2.0,
+      "voice_file": "audio/troy_merchant_tour_mack_01.mp3"
     },
     {
       "cmd": "camera_path",
@@ -138,22 +117,15 @@
       "keys": [
         {
           "pos": [
-            200000.0,
-            -132500.0,
-            6400.0
-          ],
-          "look_at": "ship:grayson_ship"
-        },
-        {
-          "pos": [
-            200200.0,
-            -132400.0,
-            6500.0
+            200,
+            150,
+            200
           ],
           "look_at": "ship:grayson_ship"
         }
       ],
-      "t": 5.5
+      "t": 5.5,
+      "follow": "grayson_ship"
     },
     {
       "cmd": "line",
@@ -162,7 +134,8 @@
       "side": "right",
       "dur": 3.5,
       "portrait": "portraits/grayson/penders_haulers_01.png",
-      "t": 5.5
+      "t": 5.5,
+      "voice_file": "audio/troy_merchant_tour_grayson_01.mp3"
     },
     {
       "cmd": "camera_path",
@@ -171,31 +144,25 @@
       "keys": [
         {
           "pos": [
-            203800.0,
-            -132600.0,
-            6300.0
-          ],
-          "look_at": "ship:merchant_ship"
-        },
-        {
-          "pos": [
-            204000.0,
-            -132500.0,
-            6400.0
+            -900,
+            600,
+            1100
           ],
           "look_at": "ship:merchant_ship"
         }
       ],
-      "t": 9.0
+      "t": 9.0,
+      "follow": "merchant_ship"
     },
     {
       "cmd": "line",
-      "speaker": "Captain Vance",
+      "speaker": "Old Mack",
       "text": "I don't mind giving you a quick tour if you like. Call it a welcome.",
       "side": "left",
       "dur": 4.0,
       "portrait": "portraits/vance/penders_haulers_02.png",
-      "t": 9.0
+      "t": 9.0,
+      "voice_file": "audio/troy_merchant_tour_mack_02.mp3"
     },
     {
       "cmd": "camera_path",
@@ -204,22 +171,15 @@
       "keys": [
         {
           "pos": [
-            199800.0,
-            -132600.0,
-            6300.0
-          ],
-          "look_at": "ship:grayson_ship"
-        },
-        {
-          "pos": [
-            200000.0,
-            -132500.0,
-            6400.0
+            200,
+            150,
+            200
           ],
           "look_at": "ship:grayson_ship"
         }
       ],
-      "t": 13.0
+      "t": 13.0,
+      "follow": "grayson_ship"
     },
     {
       "cmd": "line",
@@ -228,7 +188,8 @@
       "side": "right",
       "dur": 2.5,
       "portrait": "portraits/grayson/penders_haulers_02.png",
-      "t": 13.0
+      "t": 13.0,
+      "voice_file": "audio/troy_merchant_tour_grayson_02.mp3"
     },
     {
       "cmd": "camera_path",
@@ -237,30 +198,15 @@
       "keys": [
         {
           "pos": [
-            103000.0,
-            68167.0,
-            136333.0
+            200,
+            150,
+            200
           ],
-          "look_at": [
-            100000.0,
-            66667.0,
-            133333.0
-          ]
-        },
-        {
-          "pos": [
-            98500.0,
-            63667.0,
-            134833.0
-          ],
-          "look_at": [
-            100000.0,
-            66667.0,
-            133333.0
-          ]
+          "look_at": "ship:grayson_ship"
         }
       ],
-      "t": 15.5
+      "t": 15.5,
+      "follow": "grayson_ship"
     },
     {
       "cmd": "subtitle",
@@ -275,30 +221,15 @@
       "keys": [
         {
           "pos": [
-            103000.0,
-            134833.0,
-            -130333.0
+            200,
+            150,
+            200
           ],
-          "look_at": [
-            100000.0,
-            133333.0,
-            -133333.0
-          ]
-        },
-        {
-          "pos": [
-            98500.0,
-            130333.0,
-            -131833.0
-          ],
-          "look_at": [
-            100000.0,
-            133333.0,
-            -133333.0
-          ]
+          "look_at": "ship:grayson_ship"
         }
       ],
-      "t": 20.5
+      "t": 20.5,
+      "follow": "grayson_ship"
     },
     {
       "cmd": "subtitle",
@@ -313,30 +244,15 @@
       "keys": [
         {
           "pos": [
-            -163667.0,
-            -131833.0,
-            -197000.0
+            200,
+            150,
+            200
           ],
-          "look_at": [
-            -166667.0,
-            -133333.0,
-            -200000.0
-          ]
-        },
-        {
-          "pos": [
-            -168167.0,
-            -136333.0,
-            -198500.0
-          ],
-          "look_at": [
-            -166667.0,
-            -133333.0,
-            -200000.0
-          ]
+          "look_at": "ship:grayson_ship"
         }
       ],
-      "t": 25.5
+      "t": 25.5,
+      "follow": "grayson_ship"
     },
     {
       "cmd": "subtitle",
@@ -351,30 +267,15 @@
       "keys": [
         {
           "pos": [
-            -147000.0,
-            -98500.0,
-            -63667.0
+            200,
+            150,
+            200
           ],
-          "look_at": [
-            -150000.0,
-            -100000.0,
-            -66667.0
-          ]
-        },
-        {
-          "pos": [
-            -151500.0,
-            -103000.0,
-            -65167.0
-          ],
-          "look_at": [
-            -150000.0,
-            -100000.0,
-            -66667.0
-          ]
+          "look_at": "ship:grayson_ship"
         }
       ],
-      "t": 30.5
+      "t": 30.5,
+      "follow": "grayson_ship"
     },
     {
       "cmd": "subtitle",
@@ -389,30 +290,15 @@
       "keys": [
         {
           "pos": [
-            -163667.0,
-            -65167.0,
-            103000.0
+            200,
+            150,
+            200
           ],
-          "look_at": [
-            -166667.0,
-            -66667.0,
-            100000.0
-          ]
-        },
-        {
-          "pos": [
-            -168167.0,
-            -69667.0,
-            101500.0
-          ],
-          "look_at": [
-            -166667.0,
-            -66667.0,
-            100000.0
-          ]
+          "look_at": "ship:grayson_ship"
         }
       ],
-      "t": 35.5
+      "t": 35.5,
+      "follow": "grayson_ship"
     },
     {
       "cmd": "subtitle",
@@ -427,30 +313,15 @@
       "keys": [
         {
           "pos": [
-            3000.0,
-            1500.0,
-            153000.0
+            200,
+            150,
+            200
           ],
-          "look_at": [
-            0.0,
-            0.0,
-            150000.0
-          ]
-        },
-        {
-          "pos": [
-            -1500.0,
-            -3000.0,
-            151500.0
-          ],
-          "look_at": [
-            0.0,
-            0.0,
-            150000.0
-          ]
+          "look_at": "ship:grayson_ship"
         }
       ],
-      "t": 40.5
+      "t": 40.5,
+      "follow": "grayson_ship"
     },
     {
       "cmd": "subtitle",
@@ -465,30 +336,15 @@
       "keys": [
         {
           "pos": [
-            53000.0,
-            -98500.0,
-            36333.0
+            200,
+            150,
+            200
           ],
-          "look_at": [
-            50000.0,
-            -100000.0,
-            33333.0
-          ]
-        },
-        {
-          "pos": [
-            48500.0,
-            -103000.0,
-            34833.0
-          ],
-          "look_at": [
-            50000.0,
-            -100000.0,
-            33333.0
-          ]
+          "look_at": "ship:grayson_ship"
         }
       ],
-      "t": 45.5
+      "t": 45.5,
+      "follow": "grayson_ship"
     },
     {
       "cmd": "subtitle",
@@ -503,31 +359,25 @@
       "keys": [
         {
           "pos": [
-            204000.0,
-            -132500.0,
-            6400.0
-          ],
-          "look_at": "ship:merchant_ship"
-        },
-        {
-          "pos": [
-            204100.0,
-            -132300.0,
-            6600.0
+            -900,
+            600,
+            1100
           ],
           "look_at": "ship:merchant_ship"
         }
       ],
-      "t": 50.5
+      "t": 50.5,
+      "follow": "merchant_ship"
     },
     {
       "cmd": "line",
-      "speaker": "Captain Vance",
+      "speaker": "Old Mack",
       "text": "That's the grand tour. Achilles is home — berth, refuel, and don't fly drunk. Safe skies, kid.",
       "side": "left",
       "dur": 4.0,
       "portrait": "portraits/vance/penders_haulers_03.png",
-      "t": 50.5
+      "t": 50.5,
+      "voice_file": "audio/troy_merchant_tour_mack_03.mp3"
     },
     {
       "cmd": "camera_path",
@@ -536,22 +386,15 @@
       "keys": [
         {
           "pos": [
-            200000.0,
-            -132500.0,
-            6400.0
-          ],
-          "look_at": "ship:grayson_ship"
-        },
-        {
-          "pos": [
-            200100.0,
-            -132300.0,
-            6600.0
+            200,
+            150,
+            200
           ],
           "look_at": "ship:grayson_ship"
         }
       ],
-      "t": 54.5
+      "t": 54.5,
+      "follow": "grayson_ship"
     },
     {
       "cmd": "line",
@@ -560,7 +403,8 @@
       "side": "right",
       "dur": 3.0,
       "portrait": "portraits/grayson/penders_haulers_03.png",
-      "t": 54.5
+      "t": 54.5,
+      "voice_file": "audio/troy_merchant_tour_grayson_03.mp3"
     },
     {
       "cmd": "fade_out",
@@ -570,7 +414,7 @@
     {
       "cmd": "end",
       "actions": [
-        "set_flag:penders_haulers_seen"
+        "set_flag:troy_merchant_tour_seen"
       ],
       "t": 58.5
     }

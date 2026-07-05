@@ -333,14 +333,41 @@ def build_author_prompt(req: dict) -> str:
         "speck).")
     parts.append(
         "CAMERA (mandatory): during every line of dialogue the camera MUST "
-        "be in a CLOSE-UP on the speaker's ship — look_at:\"ship:<actor>\" "
-        "with the camera 200-600 m from the tracked ship. Emit a camera_path "
-        "cue that starts at or before each line cue, tracks the speaking "
-        "ship, and holds the close-up for the line's full duration. Wide "
-        "establishing shots are ONLY for non-dialogue moments (approach, "
-        "arrival, ambush reveal, post-battle). No two camera_path cues may "
-        "overlap in time. Each speaker's ship must have been spawned as a "
-        "named actor so look_at:\"ship:<name>\" can track it.")
+        "be in a CLOSE-UP on the speaker's ship — use follow mode: set "
+        "\"follow\": \"<actor>\" on the camera_path cue with keys[0].pos as "
+        "the OFFSET from the ship (NOT a world position). The camera "
+        "matches the ship's velocity every frame. Use ~300m offset for "
+        "fighters (talon, centurion, $player) and ~1500m for capital ships "
+        "(drayman, galaxy). look_at should be \"ship:<actor>\". Emit a "
+        "camera_path cue that starts at or before each line cue and holds "
+        "for the line's full duration. Wide establishing shots are ONLY for "
+        "non-dialogue moments. No two camera_path cues may overlap in time. "
+        "For formation shots, comma-separated actors: "
+        "\"follow\": \"talon1,talon2,...\" targets the centroid.")
+    parts.append(
+        "CHARACTERS (mandatory): check assets/data/characters.json for the "
+        "cast. Use EXISTING characters when appropriate (grayson, etc). For "
+        "NEW NPCs, invent a name, NOT a reuse of an existing character — "
+        "add them to characters.json with appearance/personality/wardrobe, "
+        "then use that character id for portrait + voice generation. NEVER "
+        "reuse a named character (like 'Captain Vance' or 'Reesa Kort') for "
+        "a different NPC — create a new one.")
+    parts.append(
+        "VOICES (mandatory): Cinematic(auto_voices=True) generates voices "
+        "via the MiniMax API. If you see 'MINIMAX_API_KEY not set' in the "
+        "output, voices will be SILENT — this is a failure, not graceful "
+        "degradation. STOP and report the error instead of saving a "
+        "voiceless cinematic. Every line cue MUST have a voice_file field "
+        "that resolves to a real .mp3 on disk.")
+    parts.append(
+        "PORTRAITS (mandatory): Cinematic(auto_portraits=True) generates "
+        "portraits for each line. Verify the portrait PNGs exist on disk "
+        "after saving. If portrait generation fails, STOP and report — do "
+        "not save a cinematic with missing portraits.")
+    parts.append(
+        "DO NOT use author_studio_cinematic.py or any stale mirror scripts. "
+        "Author FRESH via tools/cinematics/builder.py Cinematic(...) — it is "
+        "the canonical authoring API.")
     style = (req.get("image") or {}).get("style_extra")
     if style:
         parts.append(f"Portrait style direction for every line: {style}")
@@ -349,7 +376,8 @@ def build_author_prompt(req: dict) -> str:
         "Cinematic(auto_portraits=True, auto_voices=True) and save it; "
         "2) apply the trigger + outcome as above; "
         "3) run `python -m tools.cinematics.validate " + cid + "` and fix any "
-        "errors; 4) finish by printing the cinematic id on its own line.")
+        "errors; 4) verify all voice files and portrait PNGs exist on disk; "
+        "5) finish by printing the cinematic id on its own line.")
     return "\n\n".join(parts)
 
 
@@ -367,6 +395,10 @@ def process_author(req: dict, log: List[str]) -> str:
 
     log.append(f"invoking {AGENT_NAME} headlessly (timeout {AGENT_TIMEOUT_S}s)")
     env = dict(os.environ)
+    # Pre-flight: warn about missing API keys that will cause silent failures.
+    for key in ("MINIMAX_API_KEY", "OPENAI_API_KEY"):
+        if not env.get(key):
+            log.append(f"WARNING: {key} not set — voice/portrait generation will fail")
     quality = (req.get("image") or {}).get("quality")
     if quality:
         env["OPENAI_IMAGE_QUALITY"] = quality
