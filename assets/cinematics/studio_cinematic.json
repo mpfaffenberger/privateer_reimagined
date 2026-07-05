@@ -1,0 +1,554 @@
+{
+  "id": "studio_cinematic",
+  "letterbox": true,
+  "skippable": true,
+  "location": {
+    "system": "penders_star",
+    "nav": "Asteroid Field"
+  },
+  "outcome": {
+    "player_at_nav": "Asteroid Field",
+    "spawns": [
+      {
+        "class": "drayman",
+        "faction": "merchant",
+        "count": 2
+      },
+      {
+        "class": "talon",
+        "faction": "pirate",
+        "count": 5,
+        "hostile": true
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "cmd": "fade_in",
+      "dur": 1.5,
+      "t": 0.0
+    },
+    {
+      "cmd": "music",
+      "file": "audio/penders_ambush_theme.wav",
+      "t": 0.0
+    },
+    {
+      "cmd": "spawn",
+      "actor": "hauler1",
+      "class": "drayman",
+      "faction": "merchant",
+      "pos": [
+        34000.0,
+        0.0,
+        36000.0
+      ],
+      "t": 0.5
+    },
+    {
+      "cmd": "spawn",
+      "actor": "hauler2",
+      "class": "drayman",
+      "faction": "merchant",
+      "pos": [
+        30000.0,
+        300.0,
+        39000.0
+      ],
+      "t": 0.5
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "hauler1",
+      "dur": 44.0,
+      "keys": [
+        {
+          "pos": [
+            34000.0,
+            0.0,
+            36000.0
+          ]
+        },
+        {
+          "pos": [
+            22000.0,
+            0.0,
+            22000.0
+          ]
+        },
+        {
+          "pos": [
+            10000.0,
+            0.0,
+            8000.0
+          ]
+        },
+        {
+          "pos": [
+            2000.0,
+            0.0,
+            -2000.0
+          ]
+        }
+      ],
+      "t": 0.5
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "hauler2",
+      "dur": 44.0,
+      "keys": [
+        {
+          "pos": [
+            30000.0,
+            300.0,
+            39000.0
+          ]
+        },
+        {
+          "pos": [
+            18000.0,
+            300.0,
+            25000.0
+          ]
+        },
+        {
+          "pos": [
+            6000.0,
+            300.0,
+            11000.0
+          ]
+        },
+        {
+          "pos": [
+            -2000.0,
+            300.0,
+            1000.0
+          ]
+        }
+      ],
+      "t": 0.5
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 8.0,
+      "ease": "smooth",
+      "keys": [
+        {
+          "pos": [
+            40000.0,
+            4200.0,
+            30000.0
+          ],
+          "look_at": "ship:hauler1"
+        },
+        {
+          "pos": [
+            30000.0,
+            2600.0,
+            26000.0
+          ],
+          "look_at": "ship:hauler1"
+        }
+      ],
+      "t": 0.5
+    },
+    {
+      "cmd": "subtitle",
+      "text": "PENDER'S STAR - inbound from the Troy jump gate, autopilot locked for the asteroid field.",
+      "dur": 4.5,
+      "t": 2.0
+    },
+    {
+      "cmd": "spawn",
+      "actor": "grayson_ship",
+      "class": "tarsus",
+      "faction": "civilian",
+      "pos": [
+        50000.0,
+        -2500.0,
+        54000.0
+      ],
+      "t": 5.0
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "grayson_ship",
+      "dur": 40.0,
+      "keys": [
+        {
+          "pos": [
+            50000.0,
+            -2500.0,
+            54000.0
+          ]
+        },
+        {
+          "pos": [
+            38000.0,
+            -1200.0,
+            42000.0
+          ]
+        },
+        {
+          "pos": [
+            26000.0,
+            -300.0,
+            28000.0
+          ]
+        },
+        {
+          "pos": [
+            14000.0,
+            0.0,
+            12000.0
+          ]
+        },
+        {
+          "pos": [
+            6000.0,
+            0.0,
+            2000.0
+          ]
+        }
+      ],
+      "t": 5.0
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 8.0,
+      "ease": "smooth",
+      "keys": [
+        {
+          "pos": [
+            42000.0,
+            -1800.0,
+            46000.0
+          ],
+          "look_at": "ship:grayson_ship"
+        },
+        {
+          "pos": [
+            24000.0,
+            900.0,
+            24000.0
+          ],
+          "look_at": "ship:grayson_ship"
+        }
+      ],
+      "t": 9.0
+    },
+    {
+      "cmd": "line",
+      "speaker": "Grayson Burrows",
+      "text": "Pender's Star haulers, this is Grayson. Mind if I tuck into your formation? This lane's been eating ships.",
+      "side": "left",
+      "dur": 5.0,
+      "portrait": "portraits/grayson/studio_cinematic_01.png",
+      "voice_file": "audio/studio_cinematic_grayson_01.mp3",
+      "t": 10.0
+    },
+    {
+      "cmd": "line",
+      "speaker": "Captain Vance",
+      "text": "Plenty of room, privateer. Truth be told - we're glad of the extra guns out here.",
+      "side": "right",
+      "dur": 4.5,
+      "portrait": "portraits/vance/studio_cinematic_01.png",
+      "voice_file": "audio/studio_cinematic_vance_01.mp3",
+      "t": 15.5
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 12.0,
+      "ease": "smooth",
+      "keys": [
+        {
+          "pos": [
+            26000.0,
+            1600.0,
+            30000.0
+          ],
+          "look_at": "ship:hauler2"
+        },
+        {
+          "pos": [
+            16000.0,
+            1200.0,
+            18000.0
+          ],
+          "look_at": "ship:hauler2"
+        }
+      ],
+      "t": 17.5
+    },
+    {
+      "cmd": "line",
+      "speaker": "Reesa Kort",
+      "text": "Third convoy this month gone dark out here, Cap. No wreckage. No beacon. Nothing.",
+      "side": "left",
+      "dur": 5.0,
+      "portrait": "portraits/kort/studio_cinematic_01.png",
+      "voice_file": "audio/studio_cinematic_kort_01.mp3",
+      "t": 20.5
+    },
+    {
+      "cmd": "line",
+      "speaker": "Captain Vance",
+      "text": "Ships don't just vanish. Somebody's out here picking us off the lane, one at a time.",
+      "side": "right",
+      "dur": 5.0,
+      "portrait": "portraits/vance/studio_cinematic_02.png",
+      "voice_file": "audio/studio_cinematic_vance_02.mp3",
+      "t": 26.0
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 4.5,
+      "ease": "smooth",
+      "keys": [
+        {
+          "pos": [
+            16000.0,
+            900.0,
+            16000.0
+          ],
+          "look_at": [
+            9000.0,
+            0.0,
+            6000.0
+          ]
+        },
+        {
+          "pos": [
+            12000.0,
+            500.0,
+            9000.0
+          ],
+          "look_at": [
+            -16667.0,
+            0.0,
+            -16667.0
+          ]
+        }
+      ],
+      "t": 30.0
+    },
+    {
+      "cmd": "line",
+      "speaker": "Reesa Kort",
+      "text": "I don't like this field, Cap. I've had a bad feeling since we jumped in.",
+      "side": "left",
+      "dur": 4.0,
+      "portrait": "portraits/kort/studio_cinematic_02.png",
+      "voice_file": "audio/studio_cinematic_kort_02.mp3",
+      "t": 31.5
+    },
+    {
+      "cmd": "spawn",
+      "actor": "talon1",
+      "class": "talon",
+      "faction": "pirate",
+      "pos": [
+        -2000.0,
+        2000.0,
+        -4000.0
+      ],
+      "t": 34.5
+    },
+    {
+      "cmd": "spawn",
+      "actor": "talon2",
+      "class": "talon",
+      "faction": "pirate",
+      "pos": [
+        4000.0,
+        -1500.0,
+        -8000.0
+      ],
+      "t": 34.5
+    },
+    {
+      "cmd": "spawn",
+      "actor": "talon3",
+      "class": "talon",
+      "faction": "pirate",
+      "pos": [
+        -8000.0,
+        800.0,
+        1000.0
+      ],
+      "t": 34.5
+    },
+    {
+      "cmd": "spawn",
+      "actor": "talon4",
+      "class": "talon",
+      "faction": "pirate",
+      "pos": [
+        12000.0,
+        2500.0,
+        -6000.0
+      ],
+      "t": 34.5
+    },
+    {
+      "cmd": "spawn",
+      "actor": "talon5",
+      "class": "talon",
+      "faction": "pirate",
+      "pos": [
+        0.0,
+        -2500.0,
+        -10000.0
+      ],
+      "t": 34.5
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 8.5,
+      "ease": "smooth",
+      "keys": [
+        {
+          "pos": [
+            14000.0,
+            2200.0,
+            8000.0
+          ],
+          "look_at": "ship:hauler1"
+        },
+        {
+          "pos": [
+            12000.0,
+            1200.0,
+            12000.0
+          ],
+          "look_at": "ship:hauler1"
+        },
+        {
+          "pos": [
+            10000.0,
+            400.0,
+            15000.0
+          ],
+          "look_at": "ship:hauler1"
+        }
+      ],
+      "t": 35.0
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "talon1",
+      "dur": 8.0,
+      "keys": [
+        {
+          "pos": [
+            -2000.0,
+            2000.0,
+            -4000.0
+          ]
+        },
+        {
+          "pos": [
+            4000.0,
+            800.0,
+            2000.0
+          ]
+        },
+        {
+          "pos": [
+            8000.0,
+            0.0,
+            5000.0
+          ]
+        }
+      ],
+      "t": 35.0
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "talon2",
+      "dur": 8.0,
+      "keys": [
+        {
+          "pos": [
+            4000.0,
+            -1500.0,
+            -8000.0
+          ]
+        },
+        {
+          "pos": [
+            6000.0,
+            -500.0,
+            -1000.0
+          ]
+        },
+        {
+          "pos": [
+            8000.0,
+            0.0,
+            4000.0
+          ]
+        }
+      ],
+      "t": 35.0
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "talon3",
+      "dur": 8.0,
+      "keys": [
+        {
+          "pos": [
+            -8000.0,
+            800.0,
+            1000.0
+          ]
+        },
+        {
+          "pos": [
+            0.0,
+            300.0,
+            4000.0
+          ]
+        },
+        {
+          "pos": [
+            7000.0,
+            0.0,
+            6000.0
+          ]
+        }
+      ],
+      "t": 35.0
+    },
+    {
+      "cmd": "sfx",
+      "file": "audio/proximity_alarm.wav",
+      "pos": [
+        9000.0,
+        0.0,
+        6000.0
+      ],
+      "t": 35.5
+    },
+    {
+      "cmd": "line",
+      "speaker": "Pirate",
+      "text": "You've fallen right into our trap, little piggies!",
+      "side": "right",
+      "dur": 4.5,
+      "portrait": "portraits/pirate/studio_cinematic_01.png",
+      "voice_file": "audio/studio_cinematic_pirate_01.mp3",
+      "t": 37.5
+    },
+    {
+      "cmd": "end",
+      "actions": [
+        "set_flag:penders_ambush_seen"
+      ],
+      "t": 43.5
+    }
+  ]
+}

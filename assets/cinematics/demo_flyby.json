@@ -1,0 +1,33 @@
+{
+  "id": "demo_flyby",
+  "letterbox": true,
+  "skippable": true,
+  "timeline": [
+    { "t": 0.0, "cmd": "fade_in", "dur": 1.0 },
+    { "t": 0.0, "cmd": "music", "file": "audio/demo_theme.mp3" },
+
+    { "t": 0.0, "cmd": "spawn", "actor": "runner", "class": "talon",
+      "faction": "pirate", "pos": [-2200, -150, 0] },
+    { "t": 0.5, "cmd": "actor_path", "actor": "runner", "dur": 8.0,
+      "keys": [ { "pos": [-2200, -150, 0] },
+                { "pos": [-600, 0, 250] },
+                { "pos": [900, 120, 200] },
+                { "pos": [2400, 200, 500] } ] },
+
+    { "t": 0.0, "cmd": "camera_path", "dur": 9.0, "ease": "smooth",
+      "keys": [ { "pos": [0, 500, 2600],   "look_at": "ship:runner" },
+                { "pos": [700, 250, 1900], "look_at": "ship:runner" },
+                { "pos": [1400, 150, 1500],"look_at": "ship:runner" } ] },
+
+    { "t": 0.6, "cmd": "subtitle", "text": "TROY SYSTEM  --  PATROL SECTOR 7", "dur": 3.0 },
+
+    { "t": 3.2, "cmd": "line", "speaker": "Unknown Contact",
+      "portrait": "portraits/pirate/demo.png",
+      "text": "You're a long way from a friendly port, pilot.",
+      "voice_file": "audio/demo_pirate_01.mp3",
+      "side": "left", "dur": 4.0 },
+
+    { "t": 8.6, "cmd": "fade_out", "dur": 1.0 },
+    { "t": 9.8, "cmd": "end", "actions": ["set_flag:cinematic_demo_seen"] }
+  ]
+}

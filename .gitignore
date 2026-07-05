@@ -170,3 +170,6 @@ assets/speech/bar_by_speaker/
 assets/speech/scenarios/
 assets/speech/player_comms/
 build_debug/
+
+# Cinematic portrait pipeline content-hash cache (regenerable)
+tools/cinematics/.cache/

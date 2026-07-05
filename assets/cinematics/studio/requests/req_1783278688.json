@@ -1,0 +1,8 @@
+{
+  "id": "req_1783278688",
+  "kind": "author",
+  "brief": "A merchant hails Grayson - who is stationary outside of Achilles base in space. \nThe merchant says \"hey there! new the the troy system? I don't mind giving you a quick tour if you like...?\" or something like that.\nThe camera pans around to each of the nav points in the Troy system - with an intricate short story for each nav point.",
+  "triggers_text": "This will fire the very first time Grayson launches from Achilles in Troy, like in a very fresh game.",
+  "outcome_text": "Player is just chilling at Achilles - no enemies, 2 Drayman, 2 Militia Talons are around.",
+  "image": { "quality": "medium" }
+}

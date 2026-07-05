@@ -1,0 +1,138 @@
+{
+  "id": "confrontation_demo",
+  "letterbox": true,
+  "skippable": true,
+  "timeline": [
+    {
+      "cmd": "fade_in",
+      "dur": 1.5,
+      "t": 0.0
+    },
+    {
+      "cmd": "music",
+      "file": "audio/tension_bed.wav",
+      "t": 0.0
+    },
+    {
+      "cmd": "spawn",
+      "actor": "hero",
+      "class": "tarsus",
+      "faction": "civilian",
+      "pos": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "t": 0.2
+    },
+    {
+      "cmd": "spawn",
+      "actor": "raider",
+      "class": "talon",
+      "faction": "pirate",
+      "pos": [
+        600.0,
+        40.0,
+        900.0
+      ],
+      "t": 0.2
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 11.0,
+      "ease": "smooth",
+      "keys": [
+        {
+          "pos": [
+            -300.0,
+            120.0,
+            -700.0
+          ],
+          "look_at": "ship:raider"
+        },
+        {
+          "pos": [
+            -150.0,
+            80.0,
+            -300.0
+          ],
+          "look_at": "ship:raider"
+        }
+      ],
+      "t": 0.5
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "raider",
+      "dur": 6.0,
+      "keys": [
+        {
+          "pos": [
+            600.0,
+            40.0,
+            900.0
+          ]
+        },
+        {
+          "pos": [
+            300.0,
+            20.0,
+            400.0
+          ]
+        }
+      ],
+      "t": 0.6
+    },
+    {
+      "cmd": "line",
+      "speaker": "Pirate",
+      "text": "Cut your engines and drop the cargo. Last warning.",
+      "side": "right",
+      "dur": 3.5,
+      "portrait": "portraits/pirate/confrontation_demo_01.png",
+      "voice_file": "audio/pirate_warning.wav",
+      "t": 2.0
+    },
+    {
+      "cmd": "line",
+      "speaker": "Grayson Burrows",
+      "text": "I didn't sign up for this.",
+      "side": "left",
+      "dur": 3.2,
+      "portrait": "portraits/grayson/confrontation_demo_01.png",
+      "voice_file": "audio/grayson_signup.wav",
+      "t": 5.8
+    },
+    {
+      "cmd": "line",
+      "speaker": "Pirate",
+      "text": "Then you'll die not knowing why.",
+      "side": "right",
+      "dur": 3.0,
+      "portrait": "portraits/pirate/confrontation_demo_02.png",
+      "t": 9.2
+    },
+    {
+      "cmd": "sfx",
+      "file": "audio/blaster_charge.wav",
+      "pos": [
+        300.0,
+        20.0,
+        400.0
+      ],
+      "t": 12.4
+    },
+    {
+      "cmd": "fade_out",
+      "dur": 1.5,
+      "t": 13.0
+    },
+    {
+      "cmd": "end",
+      "actions": [
+        "set_flag:pirate_confrontation_seen"
+      ],
+      "t": 14.5
+    }
+  ]
+}

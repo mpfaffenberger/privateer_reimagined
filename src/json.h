@@ -6,9 +6,13 @@
 // Supports objects, arrays, strings, numbers (double), booleans, null, and
 // `// line comments` (non-spec but useful for human-authored configs).
 //
-// NOT in scope: streaming parse, schema validation, emitting JSON, unicode
-// escape normalisation beyond basic `\n \t \" \\` pairs. When any of those
-// matter, swap in nlohmann/json — the Value API here is a subset of theirs.
+// Escapes: `\" \\ \/ \n \t \r \b \f` plus `\uXXXX` (decoded to UTF-8, with
+// UTF-16 surrogate-pair stitching). Raw UTF-8 bytes in strings pass through
+// verbatim, so both `"\u2014"` and a literal em-dash parse to the same bytes.
+//
+// NOT in scope: streaming parse, schema validation, emitting JSON. When any
+// of those matter, swap in nlohmann/json — the Value API here is a subset of
+// theirs.
 //
 // Error handling: on parse failure, parse() returns a null Value and prints
 // a `line:col: msg` diagnostic to stderr. Typed accessors throw std::runtime

@@ -1,0 +1,35 @@
+{
+  "id": "demo_exchange",
+  "letterbox": true,
+  "skippable": true,
+  "timeline": [
+    { "t": 0.0, "cmd": "fade_in", "dur": 0.8 },
+
+    { "t": 0.0, "cmd": "spawn", "actor": "grayson", "class": "centurion",
+      "faction": "confed", "pos": [-900, 0, 0] },
+    { "t": 0.0, "cmd": "spawn", "actor": "raider", "class": "talon",
+      "faction": "pirate", "pos": [900, 40, 200] },
+
+    { "t": 0.0, "cmd": "camera_path", "dur": 10.0, "ease": "smooth",
+      "keys": [ { "pos": [0, 120, 1900], "look_at": [0, 0, 100] },
+                { "pos": [0, 60, 1500],  "look_at": [0, 0, 100] } ] },
+
+    { "t": 0.6, "cmd": "subtitle", "text": "STANDOFF  --  JUMP POINT ALPHA", "dur": 2.5 },
+
+    { "t": 1.6, "cmd": "line", "speaker": "Grayson",
+      "portrait": "portraits/grayson/demo_01.png",
+      "text": "Cut your engines and drop the cargo. Last warning.",
+      "voice_file": "audio/demo_grayson_01.mp3",
+      "side": "left", "dur": 4.0 },
+
+    { "t": 4.0, "cmd": "line", "speaker": "Raider",
+      "portrait": "portraits/pirate/demo_01.png",
+      "text": "Or what, hero? You and whose fleet?",
+      "voice_file": "audio/demo_raider_01.mp3",
+      "side": "right", "dur": 4.0 },
+
+    { "t": 8.4, "cmd": "sfx", "file": "audio/demo_sting.wav" },
+    { "t": 8.6, "cmd": "fade_out", "dur": 1.0 },
+    { "t": 9.8, "cmd": "end", "actions": ["set_flag:cinematic_exchange_seen"] }
+  ]
+}

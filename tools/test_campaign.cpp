@@ -601,6 +601,44 @@ int main() {
     check(!fixer_here("perry_naval", p, "terrell_epilogue"),
           "epilogue plays once");
 
+    // =======================================================================
+    // Phase 5.2: the "play_cinematic:<id>" action token (#143)
+    // =======================================================================
+    // Data-driven cutscene triggers. campaign.cpp can't reach the live
+    // GameMode/director, so it routes the token to a trigger main.cpp wires
+    // (Flight -> play now, Landed -> defer). Here we stand in for main.cpp's
+    // trigger with a capture that records what it was handed, and prove the
+    // token grammar reaches it with the right id.
+    std::printf("\n=== play_cinematic token (#143) ===\n\n");
+    {
+        std::vector<std::string> fired;
+        campaign::set_cinematic_trigger(
+            [&fired](const std::string& id) { fired.push_back(id); });
+
+        // Fires through the SAME grammar fixers' done_actions /
+        // scripted_encounters' on_cleared use (plot::run_action).
+        plot::run_action(p, "play_cinematic:confrontation_demo");
+        check(fired.size() == 1 && fired[0] == "confrontation_demo",
+              "play_cinematic:<id> routes the id to the wired trigger");
+
+        // A second id (e.g. a bar fixer's done_action) reaches the trigger
+        // too — the trigger (main.cpp) decides play-now vs defer by mode.
+        plot::run_action(p, "play_cinematic:demo_exchange");
+        check(fired.size() == 2 && fired[1] == "demo_exchange",
+              "a second play_cinematic token routes independently");
+
+        // Empty id: logs one line, never calls the trigger, non-fatal.
+        plot::run_action(p, "play_cinematic:");
+        check(fired.size() == 2, "empty-id play_cinematic no-ops (no trigger call)");
+
+        // Unwired trigger (headless tools / tests without a director): the
+        // token still consumes cleanly (logs, no crash), same policy as
+        // every other token. Restore a sink afterward for hygiene.
+        campaign::set_cinematic_trigger(nullptr);
+        plot::run_action(p, "play_cinematic:confrontation_demo");
+        check(true, "unwired trigger: token no-ops without crashing");
+    }
+
     std::printf("\n=== %s ===\n",
                 g_fail == 0 ? "ALL CHECKS PASSED" : "FAILURES DETECTED");
     return g_fail == 0 ? 0 : 1;

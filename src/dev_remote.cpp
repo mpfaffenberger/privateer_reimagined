@@ -52,12 +52,26 @@ struct ScreenshotWaiter {
     bool success = false;
 };
 
+// Blocking reply waiter for the cinematic mutators (play/reload/seek). The
+// HTTP thread owns it on its stack, enqueues a command carrying a pointer,
+// and blocks on `cv` until the main thread fulfils it in drain_commands —
+// exactly like ScreenshotWaiter, but carrying an ok + error string so
+// parse/validation failures come back IN the HTTP reply.
+struct CinematicWaiter {
+    std::mutex mu;
+    std::condition_variable cv;
+    bool        done  = false;
+    bool        ok    = false;
+    std::string error;
+};
+
 struct Command {
     enum class Kind { SetCamera, Screenshot, VoiceSay, CommBark, CargoGive, Spawn,
                       Kill, SetTarget, TractorPull, InventorySell, InventoryGive,
                       InventoryInstall, InventoryEquip, SetPanel, CommsSelect,
                       Rumor, Plot, BaseScreenNav, Goto, Dock, Fixer,
-                      Autopilot, Jump, Damage };
+                      Autopilot, Jump, Damage,
+                      CinematicPlay, CinematicStop, CinematicReload, CinematicSeek };
     Kind kind;
 
     // SetCamera — any optional field is encoded with `has_*`.
@@ -96,6 +110,10 @@ struct Command {
     // Fixer — the verb (accept|refuse|done) rides here too; the fixer id
     // reuses str_arg. Goto/Dock reuse str_arg for the system/base id.
     std::string     plot_action;      // set_flag|clear_flag|give_item|remove_item
+    // Cinematic — id reuses str_arg; the blocking reply waiter + seek target
+    // ride these dedicated fields.
+    CinematicWaiter* cin_waiter = nullptr;   // play/reload/seek reply channel
+    float            cin_t      = 0.0f;      // seek target (seconds)
 };
 
 std::mutex          g_queue_mu;
@@ -169,6 +187,11 @@ std::vector<MissionInfo> g_missions;
 std::mutex  g_base_mu;
 BaseInfo    g_base;
 
+// Latest cinematic status for GET /cinematic/status, published once per
+// frame (ALL modes) by the main thread (publish_cinematic).
+std::mutex     g_cinematic_mu;
+CinematicInfo  g_cinematic;
+
 // Gameplay event ring buffer for GET /events. push_event may be called from
 // any main-thread system (in practice: the comm feed tap + mode-transition
 // detection in main.cpp); the HTTP thread reads under the same lock. Ring
@@ -211,6 +234,10 @@ std::function<void(std::string)>                            g_dock_hook;
 std::function<void(std::string, std::string)>               g_fixer_hook;
 std::function<void(std::string)>                            g_autopilot_hook;
 std::function<void(std::string)>                            g_jump_hook;
+std::function<bool(const std::string&, std::string&)>       g_cinematic_play_hook;
+std::function<bool(const std::string&, std::string&)>       g_cinematic_reload_hook;
+std::function<bool(float, std::string&)>                    g_cinematic_seek_hook;
+std::function<void()>                                       g_cinematic_stop_hook;
 
 std::thread       g_thread;
 std::atomic<bool> g_running{false};
@@ -829,6 +856,101 @@ void handle_events(int fd, const std::string& query) {
     send_json(fd, out);
 }
 
+// ---------------------------------------------------------------------------
+// Cinematic control plane (Phase 2). play/reload/seek MUTATE director state,
+// so they run on the main thread via drain_commands — but they also need to
+// report parse/validation errors IN the reply, so the HTTP thread BLOCKS on
+// a CinematicWaiter (the ScreenshotWaiter pattern, carrying ok + error).
+// ---------------------------------------------------------------------------
+// Enqueue a cinematic command + block until the main thread fulfils its
+// waiter, then emit the {ok}/{ok:false,error} reply. Shared by play/reload/
+// seek so the enqueue-wait-reply dance lives in exactly one place.
+void run_cinematic_cmd(int fd, Command c) {
+    CinematicWaiter w;
+    c.cin_waiter = &w;
+    {
+        std::lock_guard lk(g_queue_mu);
+        g_queue.push_back(c);
+    }
+    std::unique_lock lk(w.mu);
+    // 2s guard: if the main loop isn't draining (paused/hung) we answer
+    // rather than block the HTTP thread forever — same policy as screenshot.
+    w.cv.wait_for(lk, std::chrono::seconds(2), [&]{ return w.done; });
+    if (!w.done)
+        send_json(fd, "{\"ok\":false,\"error\":\"timeout \u2014 game loop not draining\"}");
+    else if (w.ok)
+        send_json(fd, "{\"ok\":true}");
+    else
+        send_json(fd, "{\"ok\":false,\"error\":\"" + json_escape(w.error) + "\"}");
+}
+
+// POST /cinematic/play — load + play assets/cinematics/<id>.json. Body { id }.
+void handle_cinematic_play(int fd, const std::string& body) {
+    std::string id;
+    if (!extract_string(body, "id", &id) || id.empty()) {
+        send_json(fd, "{\"ok\":false,\"error\":\"missing id\"}");
+        return;
+    }
+    Command c;
+    c.kind    = Command::Kind::CinematicPlay;
+    c.str_arg = id;
+    run_cinematic_cmd(fd, std::move(c));
+}
+
+// POST /cinematic/reload — re-parse the named (or current) cinematic live.
+// Body { id } optional; empty id reloads whatever is loaded/playing.
+void handle_cinematic_reload(int fd, const std::string& body) {
+    std::string id;   // optional
+    extract_string(body, "id", &id);
+    Command c;
+    c.kind    = Command::Kind::CinematicReload;
+    c.str_arg = id;
+    run_cinematic_cmd(fd, std::move(c));
+}
+
+// POST /cinematic/seek — jump the active timeline to t seconds. Body { t }.
+void handle_cinematic_seek(int fd, const std::string& body) {
+    float t = 0.0f;
+    if (!extract_float(body, "t", &t)) {
+        send_json(fd, "{\"ok\":false,\"error\":\"missing t\"}");
+        return;
+    }
+    Command c;
+    c.kind  = Command::Kind::CinematicSeek;
+    c.cin_t = t;
+    run_cinematic_cmd(fd, std::move(c));
+}
+
+// POST /cinematic/stop — stop any active cinematic (fire-and-forget).
+void handle_cinematic_stop(int fd) {
+    Command c;
+    c.kind = Command::Kind::CinematicStop;
+    {
+        std::lock_guard lk(g_queue_mu);
+        g_queue.push_back(c);
+    }
+    send_json(fd, "{\"ok\":true}");
+}
+
+// GET /cinematic/status — serialise the latest published director state.
+// Pure read of the snapshot; no main-thread round trip.
+void handle_cinematic_status(int fd) {
+    CinematicInfo ci;
+    {
+        std::lock_guard lk(g_cinematic_mu);
+        ci = g_cinematic;
+    }
+    std::string out = "{\"playing\":";
+    out += ci.playing ? "true" : "false";
+    char buf[128];
+    std::snprintf(buf, sizeof(buf), ",\"t\":%.3f,\"duration\":%.3f,\"id\":\"",
+                  ci.t, ci.duration);
+    out += buf;
+    out += json_escape(ci.id);
+    out += "\",\"last_error\":\"" + json_escape(ci.last_error) + "\"}";
+    send_json(fd, out);
+}
+
 // GET /ships — serialise the latest near-player ship snapshot. Pure read
 // of the published vector; no command queued, no main-thread round trip,
 // because the host publishes the snapshot every Flight frame.
@@ -1386,6 +1508,11 @@ void handle_connection(int fd) {
     else if (method == "POST" && path == "/jump")       handle_jump(fd, body);
     else if (method == "GET"  && path == "/missions")   handle_missions(fd);
     else if (method == "GET"  && path == "/events")     handle_events(fd, query);
+    else if (method == "POST" && path == "/cinematic/play")   handle_cinematic_play(fd, body);
+    else if (method == "POST" && path == "/cinematic/stop")   handle_cinematic_stop(fd);
+    else if (method == "POST" && path == "/cinematic/reload") handle_cinematic_reload(fd, body);
+    else if (method == "POST" && path == "/cinematic/seek")   handle_cinematic_seek(fd, body);
+    else if (method == "GET"  && path == "/cinematic/status") handle_cinematic_status(fd);
     else                                                send_404(fd);
 
     ::close(fd);
@@ -1731,6 +1858,61 @@ void drain_commands(Camera& cam) {
             if (hook) hook(c.str_arg);
             break;
         }
+        case Command::Kind::CinematicPlay:
+        case Command::Kind::CinematicReload: {
+            // Load+play / re-parse on the main thread. Both share the
+            // (id, err) -> bool hook shape; fulfil the blocking waiter with
+            // the result so the HTTP thread can answer with the error text.
+            std::function<bool(const std::string&, std::string&)> hook;
+            {
+                std::lock_guard lk(g_hooks_mu);
+                hook = (c.kind == Command::Kind::CinematicPlay)
+                           ? g_cinematic_play_hook
+                           : g_cinematic_reload_hook;
+            }
+            std::string err;
+            bool ok = false;
+            if (hook) ok = hook(c.str_arg, err);
+            else      err = "no cinematic hook registered";
+            if (c.cin_waiter) {
+                std::lock_guard lk(c.cin_waiter->mu);
+                c.cin_waiter->ok    = ok;
+                c.cin_waiter->error = err;
+                c.cin_waiter->done  = true;
+                c.cin_waiter->cv.notify_all();
+            }
+            break;
+        }
+        case Command::Kind::CinematicSeek: {
+            // Jump the active timeline to c.cin_t on the main thread.
+            std::function<bool(float, std::string&)> hook;
+            {
+                std::lock_guard lk(g_hooks_mu);
+                hook = g_cinematic_seek_hook;
+            }
+            std::string err;
+            bool ok = false;
+            if (hook) ok = hook(c.cin_t, err);
+            else      err = "no cinematic seek hook registered";
+            if (c.cin_waiter) {
+                std::lock_guard lk(c.cin_waiter->mu);
+                c.cin_waiter->ok    = ok;
+                c.cin_waiter->error = err;
+                c.cin_waiter->done  = true;
+                c.cin_waiter->cv.notify_all();
+            }
+            break;
+        }
+        case Command::Kind::CinematicStop: {
+            // Fire-and-forget: stop any active cinematic on the main thread.
+            std::function<void()> hook;
+            {
+                std::lock_guard lk(g_hooks_mu);
+                hook = g_cinematic_stop_hook;
+            }
+            if (hook) hook();
+            break;
+        }
         }
     }
 
@@ -1793,6 +1975,11 @@ void publish_missions(const std::vector<MissionInfo>& missions) {
 void publish_base(const BaseInfo& b) {
     std::lock_guard lk(g_base_mu);
     g_base = b;
+}
+
+void publish_cinematic(const CinematicInfo& c) {
+    std::lock_guard lk(g_cinematic_mu);
+    g_cinematic = c;
 }
 
 void push_event(const std::string& category, const std::string& text) {
@@ -1928,6 +2115,29 @@ void set_jump_hook(std::function<void(std::string)> hook) {
 void set_base_screen_hook(std::function<void(std::string)> hook) {
     std::lock_guard lk(g_hooks_mu);
     g_base_screen_hook = std::move(hook);
+}
+
+void set_cinematic_play_hook(
+    std::function<bool(const std::string&, std::string&)> hook) {
+    std::lock_guard lk(g_hooks_mu);
+    g_cinematic_play_hook = std::move(hook);
+}
+
+void set_cinematic_reload_hook(
+    std::function<bool(const std::string&, std::string&)> hook) {
+    std::lock_guard lk(g_hooks_mu);
+    g_cinematic_reload_hook = std::move(hook);
+}
+
+void set_cinematic_seek_hook(
+    std::function<bool(float, std::string&)> hook) {
+    std::lock_guard lk(g_hooks_mu);
+    g_cinematic_seek_hook = std::move(hook);
+}
+
+void set_cinematic_stop_hook(std::function<void()> hook) {
+    std::lock_guard lk(g_hooks_mu);
+    g_cinematic_stop_hook = std::move(hook);
 }
 
 } // namespace dev_remote

@@ -1,0 +1,148 @@
+{
+  "id": "penders_thanks",
+  "letterbox": false,
+  "skippable": true,
+  "location": {
+    "system": "penders_star",
+    "nav": "Asteroid Field"
+  },
+  "timeline": [
+    {
+      "cmd": "fade_in",
+      "dur": 1.0,
+      "t": 0.0
+    },
+    {
+      "cmd": "music",
+      "file": "../music/original/basetune_03.wav",
+      "t": 0.0
+    },
+    {
+      "cmd": "spawn",
+      "actor": "hauler1",
+      "class": "drayman",
+      "faction": "merchant",
+      "pos": [
+        51500,
+        0,
+        59500
+      ],
+      "t": 0.0
+    },
+    {
+      "cmd": "spawn",
+      "actor": "hauler2",
+      "class": "drayman",
+      "faction": "merchant",
+      "pos": [
+        48500,
+        300,
+        58500
+      ],
+      "t": 0.0
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "hauler1",
+      "dur": 12.0,
+      "t": 0.0,
+      "keys": [
+        {
+          "pos": [
+            51500,
+            0,
+            59500
+          ]
+        },
+        {
+          "pos": [
+            51000,
+            0,
+            59000
+          ]
+        }
+      ]
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "hauler2",
+      "dur": 12.0,
+      "t": 0.0,
+      "keys": [
+        {
+          "pos": [
+            48500,
+            300,
+            58500
+          ]
+        },
+        {
+          "pos": [
+            48000,
+            300,
+            58000
+          ]
+        }
+      ]
+    },
+    {
+      "cmd": "camera_path",
+      "t": 0.0,
+      "dur": 5.6,
+      "follow": "hauler1",
+      "keys": [
+        {
+          "pos": [
+            -900,
+            600,
+            1100
+          ],
+          "look_at": "ship:hauler1"
+        }
+      ]
+    },
+    {
+      "cmd": "line",
+      "speaker": "Captain Vance",
+      "text": "Privateer, you saved our hides. We'd have been scrap drifting to Perry without you.",
+      "side": "right",
+      "dur": 4.8,
+      "portrait": "portraits/vance/studio_cinematic_02.png",
+      "voice_file": "audio/penders_thanks_vance_01.mp3",
+      "t": 0.5
+    },
+    {
+      "cmd": "camera_path",
+      "t": 5.6,
+      "dur": 5.7,
+      "follow": "hauler2",
+      "keys": [
+        {
+          "pos": [
+            1000,
+            500,
+            -900
+          ],
+          "look_at": "ship:hauler2"
+        }
+      ]
+    },
+    {
+      "cmd": "line",
+      "speaker": "Reesa Kort",
+      "text": "Thank you, Grayson. Drinks are on us if you ever limp into New Glasgow in one piece.",
+      "side": "left",
+      "dur": 5.2,
+      "portrait": "portraits/kort/studio_cinematic_02.png",
+      "voice_file": "audio/penders_thanks_kort_01.mp3",
+      "t": 6.1
+    },
+    {
+      "cmd": "end",
+      "actions": [
+        "set_flag:penders_thanks_seen"
+      ],
+      "t": 11.8
+    }
+  ]
+}

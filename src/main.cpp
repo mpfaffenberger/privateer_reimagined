@@ -68,6 +68,10 @@
 #include "escort.h"
 #include "hailing.h"
 #include "scripted_encounters.h"
+#include "cinematic.h"
+#include "cinematic_parse.h"     // cinematic::Outcome (outcome hook, Studio A2)
+#include "cinematic_triggers.h"  // data-driven cutscene triggers (Studio A1)
+#include "cinematic_studio.h"    // in-game Studio panel, Ctrl+K (Studio B)
 #include "dust.h"
 #include "loot.h"
 #include "objectives.h"
@@ -432,6 +436,13 @@ struct AppState {
     // button needs a human clicking ImGui). <0 = off.
     float       dev_kill_at_s   = -1.0f;
     float       dev_run_clock_s = 0.0f;    // wall-ish clock for dev timers
+    // Cinematic dev trigger (np-cinematic Phase 1): --play-cinematic <id>
+    // auto-plays assets/cinematics/<id>.json after dev_cinematic_at_s of
+    // Flight, so the director can be smoke-tested without a human at the
+    // F8 key (the dev_remote /cinematic/play endpoint lands in Phase 2).
+    std::string dev_cinematic;            // "" = off
+    float       dev_cinematic_at_s = 2.0f;
+    bool        dev_cinematic_fired = false;
     bool        system_explicit = false;   // true once --system is seen on the CLI
     bool        capture_clean = false;  // hide HUD/cockpit overlay for atlas screenshots
     bool        force_windowed = false; // --windowed: skip fullscreen override
@@ -458,6 +469,14 @@ struct AppState {
     // (the reciprocal gate on the far side). Both empty = no jump in flight.
     std::string pending_jump_system;   // destination galaxy id
     std::string pending_jump_nav;      // arrival gate name in that system
+    // Deferred cinematic (np-cinematic Phase 5.2, #143). A "play_cinematic:
+    // <id>" campaign token that fires while NOT in Flight (e.g. a bar
+    // fixer done_action) parks the id here; the Flight tick plays it on the
+    // next launch ("...and then you launch into an ambush cutscene"). Empty
+    // = nothing pending. Session-only by design: it isn't serialized, so a
+    // save/reload while Landed drops the deferral (acceptable — the trigger
+    // is a story beat, not durable state; the fixer flag that gates it is).
+    std::string pending_cinematic;
     // --goto <id>: fire a single deferred switch after goto_at_s of Flight,
     // proving runtime switching WITHOUT the jump mechanic (np-6al.3).
     std::string goto_system;
@@ -554,6 +573,15 @@ struct AppState {
     ShipSpriteObject               player_ship_sprite{};
     std::deque<ShipSpriteObject>   player_sprite_scratch;    // 1-elem feed for frame select
 
+    // Outcome battle-clear watches: an outcome-spawned group may request a
+    // plot flag once all of its tracked ids are dead/despawned (used for
+    // follow-up thank-you cinematics after a rescue brawl resolves).
+    struct OutcomeClearWatch {
+        std::string           flag;
+        std::vector<uint32_t> ids;
+    };
+    std::vector<OutcomeClearWatch> outcome_watches;
+
     // Deferred ship spawn/despawn requests from the debug panel's
     // registry smoke-test buttons. Applied at the top of frame_cb —
     // never mid-frame — because half the frame's systems hold Ship&s
@@ -631,6 +659,105 @@ void unload_current_system();
 void build_system_scene(bool first_time);
 bool load_and_build_system(const std::string& id, bool first_time);
 static uint32_t encounter_spawn(const encounters::SpawnRequest& req);   // defined below
+static void     encounter_despawn(uint32_t id);                         // defined below
+
+// Resolve a nav point by name in the CURRENT system — exact match first,
+// then the bare-prefix form ("Troy Nav" matches "Troy Nav 8"), the same
+// tolerance /dock's base-id matcher applies. Shared by the cinematic
+// trigger ctx (near_nav) and the outcome applier (player_at_nav) so both
+// speak one nav vocabulary.
+static const NavPointDef* find_nav_by_name(const std::string& name) {
+    if (name.empty()) return nullptr;
+    for (const NavPointDef& n : g.system.nav_points)
+        if (n.name == name) return &n;
+    for (const NavPointDef& n : g.system.nav_points)
+        if (n.name.size() > name.size() && n.name.rfind(name + " ", 0) == 0)
+            return &n;
+    return nullptr;
+}
+
+// ---- cinematic entry-point (pre-play teleport) -------------------------------
+// EVERY play path (Studio panel, dev_remote /cinematic/play, the
+// "play_cinematic:" plot token, data-driven triggers, --play-cinematic, the
+// F8/F9 demos) funnels through here so a cinematic authored for a specific
+// backdrop always runs against it. (The penders_haulers-in-Troy failure:
+// played from the wrong system, the scene ran on the wrong skybox and the
+// outcome's player_at_nav silently no-opped.) Peeks the OPTIONAL top-level
+// "location" block BEFORE playback (cinematic::peek_location):
+//   * no location / already in the located system -> snap the player to the
+//     nav (the /dock parking recipe: nav pos + small offset, zero velocity),
+//     then play. Unknown nav NAME in the right system degrades to "play in
+//     place" + a log line (the validator warns at author time).
+//   * DIFFERENT system -> queue the SAME deferred frame-boundary switch
+//     /goto uses (g.pending_goto) and park the id in g.pending_cinematic —
+//     the Flight tick's pending-cinematic block re-runs this helper after
+//     the rebuild, hits the same-system branch, snaps and plays. Exactly
+//     the cross-load pattern jump-arrival positioning uses.
+//   * system not in the galaxy -> REFUSE with a clear `err`, surfaced in
+//     the dev_remote HTTP reply and the Studio panel status line.
+static bool cinematic_play_located(const std::string& id, std::string& err) {
+    err.clear();
+    if (cinematic::active()) {
+        err = "a cinematic is already playing ('" +
+              std::string(cinematic::current_id()) + "') - stop it first";
+        return false;
+    }
+    std::string loc_system, loc_nav;
+    if (!cinematic::peek_location(id, loc_system, loc_nav, err))
+        return false;   // missing / unparseable file — play() would fail too
+
+    if (!loc_system.empty() && loc_system != g.player.current_system) {
+        if (!g.galaxy.find(loc_system)) {
+            err = "cinematic '" + id + "' wants location.system '" +
+                  loc_system + "' which is not in the galaxy - play refused";
+            std::printf("[cinematic] %s\n", err.c_str());
+            dev_remote::push_event("cinematic",
+                                   "refused id=" + id +
+                                   " unknown_system=" + loc_system);
+            return false;
+        }
+        // Travel first, play on arrival: the frame boundary consumes the
+        // goto; the Flight tick's pending-cinematic block replays us.
+        g.pending_goto      = loc_system;
+        g.pending_cinematic = id;
+        std::printf("[cinematic] '%s' located in '%s' — travelling, play "
+                    "deferred to arrival\n", id.c_str(), loc_system.c_str());
+        dev_remote::push_event("cinematic",
+                               "travel id=" + id + " system=" + loc_system);
+        return true;
+    }
+
+    if (!loc_nav.empty()) {
+        if (const NavPointDef* n = find_nav_by_name(loc_nav)) {
+            // The /dock parking recipe: just off the nav, dead stop, so the
+            // authored geometry (and the outcome's player_at_nav) line up.
+            g.camera.position = HMM_AddV3(n->position,
+                                          HMM_V3(0.0f, 0.0f, 1200.0f));
+            g.camera.velocity = HMM_V3(0.0f, 0.0f, 0.0f);
+            std::printf("[cinematic] '%s' entry snap -> nav '%s'\n",
+                        id.c_str(), n->name.c_str());
+        } else {
+            std::printf("[cinematic] '%s' location.nav '%s' not found in "
+                        "'%s' — playing in place\n", id.c_str(),
+                        loc_nav.c_str(), g.player.current_system.c_str());
+        }
+    }
+    // A cutscene must never start into a frozen sim: g.paused zeroes dt,
+    // which locks the timeline at t=0 — fade-from-black holds a black screen
+    // forever while the render loop hums along at 60fps. (Bit us live: Play
+    // was hit with the flight pause engaged; PLAY logged, then nothing.)
+    if (g.paused) {
+        g.paused = false;
+        std::printf("[pause] sim RESUMED (cinematic '%s' starting)\n",
+                    id.c_str());
+    }
+    if (!cinematic::play(id)) {
+        err = cinematic::last_error();
+        if (err.empty()) err = "play refused";
+        return false;
+    }
+    return true;
+}
 
 // ---- sokol callbacks --------------------------------------------------------
 
@@ -1257,6 +1384,138 @@ void build_system_scene(bool first_time) {
             dev_remote::push_event(taunt ? "comm" : "status", text);
         });
 
+        // Cinematic beat stream (np-cinematic Phase 2): the director emits a
+        // compact line at every meaningful beat (started / cue / line /
+        // music / sfx / seeked / ended). Mirror them into /events under the
+        // "cinematic" category so the authoring agent asserts "line_shown
+        // grayson at t=3.0" instead of divining it from screenshots. Same
+        // one-seam trick as the comm tap — cinematic.cpp never sees
+        // dev_remote.
+        cinematic::set_event_tap([](const std::string& text) {
+            dev_remote::push_event("cinematic", text);
+            // Same beat, second consumer: the Studio panel's Playback tab
+            // shows the last few events. One tap, two sinks — cinematic.cpp
+            // still never learns either exists.
+            cinematic::studio::note_event(text);
+        });
+        // Despawn recipe so cinematic teardown frees the sprite slot too (not
+        // just the registry ship) — otherwise the actor's sprite lingers in
+        // g.placed_ship_sprites as a ghost and stacks up across replays.
+        cinematic::set_despawn_hook(encounter_despawn);
+
+        // Outcome applier (Cinematic Studio Phase A2): the world state a
+        // cutscene leaves behind. Fired by the director's teardown for
+        // natural/skipped ends only (never /cinematic/stop). Teleport uses
+        // the /dock dev-hook recipe (park just off the nav, zero velocity);
+        // spawns reuse encounter_spawn — confed vs kilrathi brawl on their
+        // own via faction stance, `hostile:true` additionally aggros the
+        // player (scripted_encounters' per-ship override).
+        cinematic::set_outcome_hook([](const cinematic::Outcome& oc) {
+            // Fresh outcome, fresh clear-watch set (old ids belong to an old fight).
+            g.outcome_watches.clear();
+            std::string nav_note = "-";
+            if (oc.has_player_pos) {
+                // Exact drop point wins over the nav name (finales that end
+                // away from any nav, e.g. an ambush 100k up the corridor).
+                g.camera.position = oc.player_pos;
+                g.camera.velocity = HMM_V3(0.0f, 0.0f, 0.0f);
+                char pb[64];
+                std::snprintf(pb, sizeof(pb), "pos(%.0f,%.0f,%.0f)",
+                              oc.player_pos.X, oc.player_pos.Y,
+                              oc.player_pos.Z);
+                nav_note = pb;
+            } else if (!oc.player_at_nav.empty()) {
+                if (const NavPointDef* n = find_nav_by_name(oc.player_at_nav)) {
+                    g.camera.position = HMM_AddV3(n->position,
+                                                  HMM_V3(0.0f, 0.0f, 1200.0f));
+                    g.camera.velocity = HMM_V3(0.0f, 0.0f, 0.0f);
+                    nav_note = n->name;
+                } else {
+                    std::printf("[cinematic] outcome: unknown nav '%s' — "
+                                "player stays put\n", oc.player_at_nav.c_str());
+                }
+            }
+            // Spawn each group on a shallow arc ~1.5 km ahead of the player,
+            // groups split left/right, wingmates staggered a few hundred
+            // metres — close enough to matter, far enough not to clip him.
+            const HMM_Vec3 ahead = HMM_AddV3(
+                g.camera.position, HMM_MulV3F(g.camera.forward(), 1500.0f));
+            const HMM_Vec3 right = g.camera.right();
+            const HMM_Vec3 up    = g.camera.up();
+            int spawned = 0, gi = 0;
+            for (const cinematic::OutcomeSpawn& grp : oc.spawns) {
+                const Faction fac = faction::from_name(grp.faction);
+                if (fac == Faction::Count) {
+                    std::printf("[cinematic] outcome: unknown faction '%s' — "
+                                "group skipped\n", grp.faction.c_str());
+                    ++gi;
+                    continue;
+                }
+                const float side = (gi % 2 == 0) ? -1.0f : 1.0f;
+                // Wingmate spacing scales with the class's actual size (read
+                // off the first spawned ship): 260 m looked fine for talons
+                // but glued draymans together. ~6 hull radii apart, 400 m min.
+                float stagger = 400.0f;
+                std::vector<uint32_t> watch_ids;
+                for (int i = 0; i < grp.count; ++i) {
+                    HMM_Vec3 pos = ahead;
+                    pos = HMM_AddV3(pos, HMM_MulV3F(right,
+                            side * (500.0f + 90.0f * (float)gi) +
+                            (float)i * stagger * side));
+                    pos = HMM_AddV3(pos, HMM_MulV3F(up,
+                            ((i % 2) ? 0.35f : -0.35f) * stagger));
+                    encounters::SpawnRequest req;
+                    req.class_name    = grp.klass;
+                    req.position      = pos;
+                    req.faction       = fac;
+                    req.patrol_anchor = pos;
+                    const uint32_t id = encounter_spawn(req);
+                    if (id == 0) {
+                        std::printf("[cinematic] outcome: spawn failed "
+                                    "class '%s'\n", grp.klass.c_str());
+                        continue;
+                    }
+                    ++spawned;
+                    watch_ids.push_back(id);
+                    if (Ship* s = g.ships.find_by_id(id)) {
+                        if (i == 0)
+                            stagger = fmaxf(400.0f, ship::hit_radius_m(*s) * 6.0f);
+                        if (grp.hostile) s->ai.aggro_player = true;
+                    }
+                }
+                if (!grp.cleared_flag.empty() && !watch_ids.empty()) {
+                    g.outcome_watches.push_back({ grp.cleared_flag, watch_ids });
+                    std::printf("[cinematic] outcome watch armed flag=%s ids=%zu\n",
+                                grp.cleared_flag.c_str(), watch_ids.size());
+                }
+                ++gi;
+            }
+            char buf[160];
+            std::snprintf(buf, sizeof(buf), "outcome applied nav=%s spawns=%d",
+                          nav_note.c_str(), spawned);
+            dev_remote::push_event("cinematic", buf);
+            std::printf("[cinematic] %s\n", buf);
+        });
+
+        // Trigger evaluator firing seam (Cinematic Studio Phase A1): a
+        // trigger only fires in Flight, with no cinematic active, and never
+        // over the death cam (Dying is a different mode, so the Flight check
+        // covers it). A refusal doesn't latch — the trigger retries.
+        cinematic::triggers::set_play_hook([](const std::string& id) -> bool {
+            if (g.game.mode != GameMode::Flight) return false;
+            if (cinematic::active()) return false;
+            // Located play: a trigger fires in-system within its radius, so
+            // this is normally just the nav snap (outcome coherence), but it
+            // keeps every play path uniform. A queued cross-system travel
+            // returns true — the fire latches, and arrival plays it.
+            std::string err;
+            const bool ok = cinematic_play_located(id, err);
+            if (!ok)
+                std::printf("[cinematic] trigger play '%s' refused: %s\n",
+                            id.c_str(), err.c_str());
+            return ok;
+        });
+
         // Campaign plot observability + remote mutation (#138). The
         // observer mirrors every real plot change into /events; the hook
         // lets the agentic judge drive plot::* over POST /plot. Both are
@@ -1658,6 +1917,86 @@ void build_system_scene(bool first_time) {
                 comms_menu::select(n);
                 std::printf("[dev_remote] comms/select: n=%d\n", n);
             });
+
+        // Cinematic control plane (np-cinematic Phase 2). All four run on
+        // the main thread inside drain_commands; play/reload/seek report
+        // parse/validation errors back through `err` so the authoring agent
+        // gets structured feedback in the HTTP reply. Same globals the
+        // scenario director + /spawn hook use (g.ships, g.player,
+        // encounter_spawn) — seek/reload re-establish actors through the
+        // exact same spawn recipe.
+        // The Studio panel (Ctrl+K) and the HTTP endpoints are two fronts
+        // for the SAME verbs, so both are wired to the SAME lambdas — one
+        // Flight gate, one triggers-reload policy, zero drift (Studio B).
+        const auto cine_play = [](const std::string& id, std::string& err) -> bool {
+            if (g.game.mode != GameMode::Flight) {
+                err = "not in Flight (a cinematic only starts from Flight)";
+                return false;
+            }
+            // The title screen runs a live Flight scene as its backdrop, so
+            // the Flight check alone is NOT enough: a trigger once re-fired
+            // over the menu after a death respawn (new-game baseline cleared
+            // its forbids flag while the dead player still sat in-radius) and
+            // hijacked the title into a black screen with two musics playing.
+            if (g.show_title) {
+                err = "title screen is up (menu backdrop is not gameplay)";
+                return false;
+            }
+            if (!cinematic_play_located(id, err)) return false;
+            std::printf("[dev_remote] cinematic/play '%s'\n", id.c_str());
+            return true;
+        };
+        const auto cine_stop = []() {
+            if (cinematic::active()) cinematic::stop();
+        };
+        const auto cine_reload = [](const std::string& id, std::string& err) -> bool {
+            // Hot-reload the trigger table too (Studio A1): reload is
+            // the Studio's one "pick up my edits" verb, and triggers
+            // live in the same authoring loop as the cinematic JSON.
+            cinematic::triggers::load("assets/cinematics/triggers.json");
+            const bool ok = cinematic::reload(id, g.ships, g.player,
+                                              encounter_spawn, err);
+            if (ok) std::printf("[dev_remote] cinematic/reload '%s'\n",
+                                cinematic::current_id());
+            return ok;
+        };
+        const auto cine_seek = [](float t, std::string& err) -> bool {
+            const bool ok = cinematic::seek(t, g.ships, g.player,
+                                            encounter_spawn, err);
+            if (ok) std::printf("[dev_remote] cinematic/seek -> %.2fs\n", t);
+            return ok;
+        };
+        dev_remote::set_cinematic_play_hook(cine_play);
+        dev_remote::set_cinematic_stop_hook(cine_stop);
+        dev_remote::set_cinematic_reload_hook(cine_reload);
+        dev_remote::set_cinematic_seek_hook(cine_seek);
+        cinematic::studio::set_hooks(
+            { cine_play, cine_stop, cine_reload, cine_seek });
+
+        // Data-driven cutscene triggers (np-cinematic Phase 5.2, #143).
+        // The "play_cinematic:<id>" campaign token routes here (campaign.cpp
+        // can't see the GameMode). A cinematic only STARTS from Flight, so:
+        //   * in Flight (and none already playing) -> play now;
+        //   * anything else (Landed bar fixer, a cutscene already running)
+        //     -> DEFER: park the id and let the Flight tick launch it on the
+        //     next undock. cinematic::play() logs+no-ops on a missing id, so
+        //     an unknown cinematic never crashes — same policy as every token.
+        campaign::set_cinematic_trigger([](const std::string& id) {
+            if (g.game.mode == GameMode::Flight && !cinematic::active()) {
+                std::string err;
+                if (!cinematic_play_located(id, err))
+                    std::printf("[campaign] play_cinematic '%s' failed: %s\n",
+                                id.c_str(), err.c_str());
+                else
+                    std::printf("[campaign] play_cinematic '%s' (Flight, now)\n",
+                                id.c_str());
+            } else {
+                g.pending_cinematic = id;
+                std::printf("[campaign] play_cinematic '%s' deferred "
+                            "(not in Flight) — will fire on next launch\n",
+                            id.c_str());
+            }
+        });
     }
     dev_remote::publish_system_name(g.system.name.c_str());
 
@@ -1684,6 +2023,11 @@ void build_system_scene(bool first_time) {
         // the director becomes a silent no-op. Runs at startup so the table
         // is available before any system-load / tick happens.
         scripted::load("assets/data/scripted_encounters.json");
+        // Data-driven cutscene triggers (Cinematic Studio Phase A1). Same
+        // policy: a missing/bad file logs one line and the evaluator is a
+        // silent no-op. Hot-reloaded by /cinematic/reload alongside the
+        // cinematic itself.
+        cinematic::triggers::load("assets/cinematics/triggers.json");
     }
     for (const auto& pm_def : g.system.placed_meshes) {
         PlacedMesh pm;
@@ -2081,6 +2425,9 @@ void build_system_scene(bool first_time) {
     // Reset the Phase 2 scripted-encounter director too: a fresh system
     // gets fresh scenario cooldowns + cleared once-per-system flags.
     scripted::reset();
+    // Cutscene triggers (Studio A1) share scripted::reset's sites: fresh
+    // system = fresh once-latches + cooldowns (plot flags still gate).
+    cinematic::triggers::reset();
     // An escort abandoned by a system switch FAILS (#140) — the Drayman
     // doesn't teleport with you.
     escort::reset(&g.player);
@@ -3122,6 +3469,18 @@ void publish_dev_remote_snapshots() {
         dev_remote::publish_base(bi);
     }
 
+    // Cinematic director status for GET /cinematic/status (all modes, so the
+    // authoring agent can poll t/duration/last_error while iterating).
+    {
+        dev_remote::CinematicInfo ci;
+        ci.playing    = cinematic::active();
+        ci.id         = cinematic::current_id();
+        ci.t          = cinematic::time();
+        ci.duration   = cinematic::duration();
+        ci.last_error = cinematic::last_error();
+        dev_remote::publish_cinematic(ci);
+    }
+
     // Mode-transition events ("Flight -> Landed @ oakham_pirate"). Detected
     // here rather than at every transition site — one detector beats a
     // dozen push_event calls sprinkled through the mode machine.
@@ -3218,6 +3577,9 @@ void frame_stub() {
     // commands) must follow it and precede debug_panel::render().
     debug_panel::build(g.placed_meshes, g.placed_ship_sprites, g.game,
                        g.ship_debug, g.audio_debug, g.player);
+    // Cinematic Studio (Ctrl+K) — same ImGui frame debug_panel just began;
+    // built here too so the panel stays usable on the stub screens.
+    cinematic::studio::build();
     if (landed) {
         // A save loaded straight into a base (autosave-on-dock, or LOAD from
         // the menu) never passes through the Flight update where the loaded
@@ -3756,6 +4118,7 @@ void frame_cb() {
                                           g.sun.position, encounter_spawn);
             hailing::reset();   // clear any per-NPC search state from the old encounter
             scripted::reset();  // fresh launch = fresh scenario director
+            cinematic::triggers::reset();  // fresh cutscene-trigger latches too (Studio A1)
             scripted::notify_launch(g.player.last_docked_base);  // on_launch triggers (#139)
             escort::reset(&g.player);  // (#140) docking abandoned any live escort
             drone::reset();            // (#133) fresh stalk timer per sortie
@@ -3843,7 +4206,7 @@ void frame_cb() {
     const bool autopilot_lock = dock_autopilot || nav_autopilot;
 
     if (g.fly_by_wire && !ImGui::GetIO().WantCaptureMouse && !autopilot_lock
-        && !dying) {
+        && !dying && !cinematic::active()) {
         g.camera.apply_mouse_aim(off_x, off_y, dt);
     }
 
@@ -3938,7 +4301,7 @@ void frame_cb() {
     // Skipped entirely under dock autopilot — docking::tick moves the
     // camera itself, and we don't want manual thrust/integrate doubling
     // up on its position update.
-    if (!autopilot_lock && !dying) {
+    if (!autopilot_lock && !dying && !cinematic::active()) {
         // Afterburner energy gate (np-zte.2, merged pool). The cruise system
         // IS the afterburner here (there's no second engine — see camera.h),
         // and it now drains from the player Ship's energy_gj — the SAME pool
@@ -4136,6 +4499,36 @@ void frame_cb() {
             target_dir = HMM_DivV3F(vel, spd);          // unit velocity
         }
 
+        // Cinematic override: while a cutscene owns the camera, autopilot is
+        // off and the player camera is frozen, so the block above yields
+        // nothing. Drive the streaks off the DIRECTOR camera's spline
+        // velocity instead so motion reads clearly in space. Lower floor
+        // than autopilot since scripted cameras cruise well under 800 m/s.
+        if (cinematic::active()) {
+            const HMM_Vec3 cvel = cinematic::camera_velocity();
+            const float    cspd = HMM_LenV3(cvel);
+            // Scripted cameras cruise at ~100-400 m/s, far below autopilot's
+            // 2500 m/s, so the autopilot length formula (0.1 m per m/s) makes
+            // streaks a useless ~30 m. Give the cinematic path its own, much
+            // more generous tuning: reach full intensity by ~250 m/s, streaks
+            // ~0.9 m per m/s with a hard MINIMUM so even a slow drift reads as
+            // clear motion, capped at the cube-safe k_len_max.
+            constexpr float k_cine_floor       = 25.0f;   // below this, no streaks
+            constexpr float k_cine_full        = 250.0f;  // full intensity by here
+            constexpr float k_cine_len_per_mps = 0.9f;    // longer than autopilot
+            constexpr float k_cine_len_min     = 90.0f;   // always legible when moving
+            if (cspd > k_cine_floor) {
+                target_i = std::clamp((cspd - k_cine_floor)
+                                      / (k_cine_full - k_cine_floor), 0.15f, 1.0f);
+                target_L = std::clamp(cspd * k_cine_len_per_mps,
+                                      k_cine_len_min, k_len_max);
+                target_dir = HMM_DivV3F(cvel, cspd);
+            } else {
+                target_i = 0.0f;
+                target_L = 0.0f;
+            }
+        }
+
         // Exponential ease toward the targets so engage/disengage spools
         // smoothly instead of popping. Direction snaps when on (since the
         // streak orientation depends on it), but the master intensity fade
@@ -4187,6 +4580,20 @@ void frame_cb() {
     // dt is 0 while the title freezes the sim, but the music crossfade
     // needs real seconds to lerp the OPENING bed in — feed it raw_dt then.
     const float music_dt = g.show_title ? raw_dt : dt;
+    // A playing cinematic OWNS the soundtrack (its music cue loops on a raw
+    // audio voice, outside this director). Without ducking, the director's
+    // bed keeps playing underneath — and since flight_main IS combat_04, a
+    // cinematic using any director-mapped track doubles it audibly. Mute on
+    // the cinematic edge (set_muted keeps the selection logic running, so
+    // the bed fades right back when the letterbox lifts).
+    {
+        static bool s_cine_duck = false;
+        const bool cine_now = cinematic::active();
+        if (cine_now != s_cine_duck) {
+            music::set_muted(cine_now);
+            s_cine_duck = cine_now;
+        }
+    }
     music::update(music_mode, g.camera.position,
                   g.player.last_docked_base.c_str(), music_dt);
 
@@ -4312,6 +4719,93 @@ void frame_cb() {
             sw.system    = &g.system;
             sw.system_id = g.player.current_system;
             scripted::tick(g.ships, *pl, g.player, t_now, sw, encounter_spawn);
+            // Outcome battle-clear watches: when every tracked id in a watch
+            // is gone, stamp its plot flag exactly once. This lets a follow-up
+            // cinematic trigger off "pirates cleared" after an outcome-spawned
+            // rescue fight resolves.
+            for (size_t wi = 0; wi < g.outcome_watches.size();) {
+                bool any_alive = false;
+                for (const uint32_t id : g.outcome_watches[wi].ids) {
+                    if (const Ship* s = g.ships.find_by_id(id); s && s->alive) {
+                        any_alive = true; break;
+                    }
+                }
+                if (!any_alive) {
+                    plot::set_flag(g.player, g.outcome_watches[wi].flag);
+                    dev_remote::push_event("cinematic",
+                                           "outcome cleared flag=" +
+                                           g.outcome_watches[wi].flag);
+                    std::printf("[cinematic] outcome cleared -> set_flag:%s\n",
+                                g.outcome_watches[wi].flag.c_str());
+                    g.outcome_watches.erase(g.outcome_watches.begin() + (long)wi);
+                    continue;
+                }
+                ++wi;
+            }
+            // Data-driven cutscene triggers (Cinematic Studio Phase A1).
+            // Runs after scripted::tick so scenario-set plot flags are
+            // visible the same frame. The ctx lookups close over the live
+            // system/player; firing routes through the play hook (Flight +
+            // no-active-cinematic gated), so this call is unconditional.
+            if (!g.show_title) {   // title backdrop is Flight mode, NOT gameplay
+                cinematic::triggers::TriggerCtx tc;
+                tc.system_id  = g.player.current_system;
+                tc.ship_class = g.player.ship_class_name;
+                tc.missiles_total = player::missile_count(g.player, 0) +
+                                    player::missile_count(g.player, 1) +
+                                    player::missile_count(g.player, 2);
+                tc.player_pos = pl->position;
+                tc.nav_pos = [](const std::string& name, HMM_Vec3& out) {
+                    const NavPointDef* n = find_nav_by_name(name);
+                    if (!n) return false;
+                    out = n->position;
+                    return true;
+                };
+                tc.cargo_units = [](const std::string& commodity) {
+                    int units = 0;
+                    for (const CargoEntry& ce : g.player.cargo)
+                        if (ce.commodity_id == commodity) units += ce.units;
+                    return units;
+                };
+                tc.player = &g.player;
+                cinematic::triggers::tick(tc, t_now);
+            }
+            // Cinematic director (np-cinematic Phase 1). Runs here so it
+            // sees the same live registry the scenario director does; it
+            // spawns/animates actors through the SAME encounter_spawn
+            // recipe. No-op unless a cinematic is playing. Drives the
+            // director-owned camera + the 2D overlay (drawn later).
+            // Deferred campaign cutscene (#143): a "play_cinematic:<id>"
+            // token that fired while Landed parked its id; now that we're
+            // in Flight (this block is guaranteed per-Flight-frame) launch
+            // it once. Skip if a cinematic is already active (e.g. two
+            // deferrals stacked) and retry next frame.
+            if (!g.pending_cinematic.empty() && !cinematic::active()) {
+                const std::string id = g.pending_cinematic;
+                g.pending_cinematic.clear();
+                std::printf("[campaign] deferred play_cinematic '%s' firing "
+                            "on launch\n", id.c_str());
+                std::string err;
+                if (!cinematic_play_located(id, err))
+                    std::printf("[campaign] deferred play_cinematic '%s' "
+                                "failed: %s\n", id.c_str(), err.c_str());
+            }
+            // --play-cinematic dev trigger: fire once after --cine-at
+            // seconds of Flight (this block is guaranteed per-Flight-frame).
+            if (!g.dev_cinematic.empty() && !g.dev_cinematic_fired) {
+                g.dev_cinematic_at_s -= dt;
+                if (g.dev_cinematic_at_s <= 0.0f) {
+                    g.dev_cinematic_fired = true;
+                    std::printf("[dev] --play-cinematic '%s' firing\n", g.dev_cinematic.c_str());
+                    std::fflush(stdout);
+                    std::string err;
+                    if (!cinematic_play_located(g.dev_cinematic, err))
+                        std::printf("[dev] --play-cinematic '%s' failed: %s\n",
+                                    g.dev_cinematic.c_str(), err.c_str());
+                    std::fflush(stdout);
+                }
+            }
+            cinematic::tick(dt, g.ships, g.player, encounter_spawn);
             // Campaign world-state derivation (epic #136): re-arm/clear
             // faction stance overrides from plot flags + current system
             // (Tayla's pirate neutrality, #114). BEFORE-perception order
@@ -4553,7 +5047,11 @@ void frame_cb() {
     // before projectile motion so a freshly-spawned projectile gets a
     // first-frame integration step (otherwise it'd appear stuck at the
     // muzzle for one frame).
-    firing::tick(g.ships, g.projectiles, dt);
+    // Suppress ALL fire during cinematics — turrets fire free and would
+    // happily murder the ambush before the cutscene ends. The director
+    // owns the scene; no peashooting from the peanut gallery.
+    if (!cinematic::active())
+        firing::tick(g.ships, g.projectiles, dt);
     projectile::tick(g.projectiles, dt);
     // Guided missiles (np-zte.2): steer + advance BEFORE the snapshot/damage
     // pass below, exactly like projectiles, so their detonations are caught
@@ -4702,6 +5200,10 @@ void frame_cb() {
             // Dying/Landed is ignored). Hand back anything that owns the
             // ship and freeze the camera so the wreck holds in view.
             if (s->is_player && g.game.mode == GameMode::Flight) {
+                // Death cam INTERRUPTS a cinematic (never vice versa): drop
+                // any active cutscene so the director stops fighting the
+                // orbit death camera for camera ownership (np-cinematic).
+                if (cinematic::active()) cinematic::stop();
                 if (autopilot::engaged(g.autopilot)) {
                     autopilot::disengage(g.autopilot, g.camera, "");
                 }
@@ -5189,6 +5691,16 @@ void frame_cb() {
     const float fb_h = (float)sapp_height();
     sdtx_canvas(fb_w * 0.5f, fb_h * 0.5f);
 
+    // np-cinematic HUD suppression: while a cutscene is playing the
+    // director owns the frame, so the whole flight HUD (radar box, nav
+    // box, crosshair, ship-indicator boxes, target "talon N km" label,
+    // flight-status + weapons MFDs) must be hidden for a clean shot. This
+    // is the SAME predicate that already gates the camera swap and input
+    // suppression elsewhere in this file. The cinematic's OWN 2D overlay
+    // (letterbox/portraits/subtitles) is drawn separately below and is
+    // deliberately NOT gated on this.
+    const bool cine_active = cinematic::active();
+
     // Death cinematic overlay (np-ma2.2): a big centered "SHIP DESTROYED"
     // and the impending respawn target while the explosion blooms. Drawn
     // even under capture_clean so screenshots of the death moment carry
@@ -5338,7 +5850,12 @@ void frame_cb() {
         // — the previous in-place version accumulated the roll each
         // frame and flickered (np-3dp).
         Camera title_cam;
-        const Camera* scene_cam_ptr = g.orbit_active ? &g.orbit_cam : &g.camera;
+        // Cinematic director owns the camera EXCLUSIVELY while active — it
+        // wins over the ship/orbit camera (but the death cam interrupts a
+        // cinematic before we ever get here; see the Dying stop() hook).
+        const Camera* scene_cam_ptr = cinematic::active() ? &cinematic::camera()
+                                    : g.orbit_active       ? &g.orbit_cam
+                                                           : &g.camera;
         // Chase-cam variant supplies its own orbiting camera pose; use it
         // verbatim (no roll/swoosh — the orbit IS the motion, and the
         // camera moving through space is what makes the warp streaks flow).
@@ -5681,6 +6198,13 @@ void frame_cb() {
     debug_panel::build(g.placed_meshes, g.placed_ship_sprites, g.game,
                        g.ship_debug, g.audio_debug, g.player);
 
+    // Cinematic Studio panel (Ctrl+K, Studio Phase B). Built inside the
+    // frame debug_panel::build just began and flushed by the same
+    // debug_panel::render() — and deliberately NOT gated on
+    // cinematic::active(), so you can hit Stop / scrub Seek while a
+    // cutscene (its overlay draws to the foreground list) is playing.
+    cinematic::studio::build();
+
     // --- Live gun-mount tuner (dev tool) --------------------------------
     // Drag the player's muzzle offset_body values in real time, then hit
     // "copy JSON" to paste the tuned numbers straight into the hull's
@@ -5798,8 +6322,9 @@ void frame_cb() {
         // Skip the entire cockpit HUD while the title is up: the title
         // owns the screen and we want a clean star+ships background. The
         // sim is also frozen at this point (dt=0), so no overlay makes
-        // sense anyway (np-3dp).
-        if (!g.show_title) {
+        // sense anyway (np-3dp). Also skipped during a cinematic
+        // (np-cinematic HUD suppression) so the shot is clean.
+        if (!g.show_title && !cine_active) {
             // World glyphs (nav reticle + mission objective diamonds) are
             // hidden when autopilot owns the ship or the navmap overlay is
             // up — the autopilot HUD already shows what's en route, and
@@ -5836,7 +6361,7 @@ void frame_cb() {
             cockpit_hud::draw_sun_warning(g.camera, g.sun.position);
         }
         // floating sdtx text up at the HUD-build step ran before that.
-        if (!g.show_title && !g.capture_clean) {
+        if (!g.show_title && !g.capture_clean && !cine_active) {
             const HMM_Vec3 pp = g.camera.position;
             cockpit_hud::FlightStatusHudState fs;
             fs.speed = HMM_LenV3(g.camera.velocity);
@@ -5858,8 +6383,8 @@ void frame_cb() {
         // Weapons + ordnance status (np-zte.2). Afterburner fuel bar
         // removed — the energy bar in the STATUS panel already shows the
         // shared bank that drives both guns and the burner. Hidden during
-        // the title screen (np-3dp.4).
-        if (!g.show_title) {
+        // the title screen (np-3dp.4) and during a cinematic (np-cinematic).
+        if (!g.show_title && !cine_active) {
             cockpit_hud::WeaponsHudState w;
             const MissileStats& sel = g_missile_stats[g.selected_missile];
             w.missile_name  = sel.short_name;
@@ -5884,6 +6409,25 @@ void frame_cb() {
         // ---- HIDDEN TEMPORARILY (re-enable by uncommenting the line below) ----
         // comm::draw();
         (void)0;   // silence unused-function warnings when re-enabled
+
+        // Cinematic 2D overlay (np-cinematic Phase 1): letterbox bars,
+        // fades, subtitles, and comm-VDU portrait panels. Drawn over the
+        // HUD via the ImGui foreground draw list.
+        //
+        // CRITICAL (np-cinematic bugfix): the ImGui foreground draw list
+        // works in LOGICAL pixels, but fb_w/fb_h here are PHYSICAL
+        // (HiDPI-scaled) pixels from sapp_width/_height. On a 2x retina
+        // display, passing physical pixels pushed everything
+        // bottom-anchored (the bottom letterbox bar, the portrait panels,
+        // the subtitles) OFF the bottom of the logical viewport — which
+        // is exactly why only the top letterbox bar showed and the
+        // portraits/subtitles were invisible. Divide by the DPI scale so
+        // the overlay lands in the same logical space as every other
+        // ImGui draw-list overlay (see the target-bracket path below).
+        {
+            const float cin_dpi = sapp_dpi_scale();
+            cinematic::draw_overlay(fb_w / cin_dpi, fb_h / cin_dpi);
+        }
 
         // Alpha welcome/briefing overlay — drawn last so it sits on top of
         // the whole HUD. The sim is frozen (dt=0) while this is up.
@@ -6070,7 +6614,8 @@ void frame_cb() {
     // edge pointing toward where they are. Text below shows class
     // name + distance + faction stance. Drawn into the simgui
     // foreground draw list so it renders on top of everything.
-    if (!g.capture_clean && g.player_target_id != 0 && g.ships.player()) {
+    // Suppressed during a cinematic (np-cinematic) so the shot is clean.
+    if (!g.capture_clean && !cine_active && g.player_target_id != 0 && g.ships.player()) {
         const Ship* target = g.ships.find_by_id(g.player_target_id);
         if (target && target->alive) {
             // Engine quirks (mirror cockpit_hud.cpp's well-tested path):
@@ -6458,6 +7003,9 @@ void event_cb(const sapp_event* ev) {
     if (mesh_orient_editor::handle_event(ev))    return;
     // F10 — navmap auditor. Same focus-beating toggle behavior.
     if (navmap_auditor::handle_event(ev))        return;
+    // Ctrl+K — Cinematic Studio. Ahead of debug_panel so the toggle beats
+    // ImGui widget focus, same trick as the F-key tools above.
+    if (cinematic::studio::handle_event(ev))     return;
     if (debug_panel::handle_event(ev)) return;
 
     // Non-Flight modes: the sim is paused, so game input is ignored.
@@ -6490,6 +7038,26 @@ void event_cb(const sapp_event* ev) {
 
     switch (ev->type) {
     case SAPP_EVENTTYPE_KEY_DOWN:
+        // Cinematic controls (np-cinematic Phase 1). While a cutscene
+        // plays, Esc SKIPS it (if skippable) instead of arming quit. F8
+        // is the dev trigger — plays the demo cinematic from Flight (the
+        // dev_remote /cinematic/play endpoint lands in Phase 2).
+        if (cinematic::active()) {
+            if (ev->key_code == SAPP_KEYCODE_ESCAPE) { cinematic::skip(); return; }
+        } else if (ev->key_code == SAPP_KEYCODE_F8 && !ev->key_repeat &&
+                   g.game.mode == GameMode::Flight) {
+            std::string err;
+            if (!cinematic_play_located("demo_flyby", err))
+                std::printf("[cinematic] F8 demo refused: %s\n", err.c_str());
+            return;
+        }
+        if (ev->key_code == SAPP_KEYCODE_F9 && !ev->key_repeat &&
+            g.game.mode == GameMode::Flight && !cinematic::active()) {
+            std::string err;
+            if (!cinematic_play_located("demo_exchange", err))
+                std::printf("[cinematic] F9 demo refused: %s\n", err.c_str());
+            return;
+        }
         if (ev->key_code == SAPP_KEYCODE_ESCAPE) {
             const uint64_t now  = stm_now();
             const double   gap  = g.escape_armed_ticks
@@ -6771,8 +7339,18 @@ void event_cb(const sapp_event* ev) {
         // the player should be on the cinematic, not a pause overlay.
         if (ev->key_code == SAPP_KEYCODE_P && !ev->key_repeat &&
             g.game.mode == GameMode::Flight && !g.show_title) {
-            g.paused = !g.paused;
-            std::printf("[pause] sim %s\n", g.paused ? "PAUSED" : "RESUMED");
+            if (cinematic::active()) {
+                // Pausing zeroes dt, which freezes the cutscene timeline on
+                // whatever frame it's on (worst case the opening fade = pure
+                // black). Skippable cutscenes have ESC/SPACE; pause doesn't
+                // belong here.
+                std::printf("[pause] ignored - cinematic playing (skip with "
+                            "ESC instead)\n");
+            } else {
+                g.paused = !g.paused;
+                std::printf("[pause] sim %s\n",
+                            g.paused ? "PAUSED" : "RESUMED");
+            }
         }
         // I — toggle the in-flight inventory window (#112). Edge-triggered;
         // Flight-only (the LANDED CargoHold owns the hold at a base).
@@ -6869,6 +7447,12 @@ sapp_desc sokol_main(int argc, char** argv) {
             g.dev_jump_drive = true;
         } else if (std::strcmp(argv[i], "--dev-kill-at") == 0 && i + 1 < argc) {
             g.dev_kill_at_s = (float)std::atof(argv[i + 1]);
+            ++i;
+        } else if (std::strcmp(argv[i], "--play-cinematic") == 0 && i + 1 < argc) {
+            g.dev_cinematic = argv[i + 1];
+            ++i;
+        } else if (std::strcmp(argv[i], "--cine-at") == 0 && i + 1 < argc) {
+            g.dev_cinematic_at_s = (float)std::atof(argv[i + 1]);
             ++i;
         } else if (std::strcmp(argv[i], "--goto") == 0 && i + 1 < argc) {
             // Deferred single switch to <system> a couple seconds after boot

@@ -136,7 +136,46 @@ struct Parser {
         bump();
         return true;
     }
+
+    // Read exactly 4 hex digits FOLLOWING the current position into `cp`
+    // (used by the \uXXXX escape). Advances p to the last hex digit so the
+    // caller's trailing bump() lands past it. Returns false (and fails) on
+    // EOF or a non-hex digit.
+    bool read_hex4(unsigned& cp) {
+        cp = 0;
+        for (int i = 0; i < 4; ++i) {
+            bump();
+            if (eof()) { fail("unterminated \\u escape"); return false; }
+            const char h = *p;
+            unsigned d;
+            if      (h >= '0' && h <= '9') d = (unsigned)(h - '0');
+            else if (h >= 'a' && h <= 'f') d = 10u + (unsigned)(h - 'a');
+            else if (h >= 'A' && h <= 'F') d = 10u + (unsigned)(h - 'A');
+            else { fail("bad hex digit in \\u escape"); return false; }
+            cp = (cp << 4) | d;
+        }
+        return true;
+    }
 };
+
+// Append a Unicode code point to `out` as UTF-8 bytes (1–4 bytes).
+static void append_utf8(std::string& out, unsigned cp) {
+    if (cp <= 0x7Fu) {
+        out.push_back((char)cp);
+    } else if (cp <= 0x7FFu) {
+        out.push_back((char)(0xC0u | (cp >> 6)));
+        out.push_back((char)(0x80u | (cp & 0x3Fu)));
+    } else if (cp <= 0xFFFFu) {
+        out.push_back((char)(0xE0u | (cp >> 12)));
+        out.push_back((char)(0x80u | ((cp >> 6) & 0x3Fu)));
+        out.push_back((char)(0x80u | (cp & 0x3Fu)));
+    } else {
+        out.push_back((char)(0xF0u | (cp >> 18)));
+        out.push_back((char)(0x80u | ((cp >> 12) & 0x3Fu)));
+        out.push_back((char)(0x80u | ((cp >> 6) & 0x3Fu)));
+        out.push_back((char)(0x80u | (cp & 0x3Fu)));
+    }
+}
 
 Value Parser::parse_string() {
     // Leading '"' already looked at in parse_value; we assume *p == '"'.
@@ -154,6 +193,40 @@ Value Parser::parse_string() {
                 case 'n':  out.push_back('\n'); break;
                 case 't':  out.push_back('\t'); break;
                 case 'r':  out.push_back('\r'); break;
+                case 'b':  out.push_back('\b'); break;
+                case 'f':  out.push_back('\f'); break;
+                case 'u': {
+                    // \uXXXX unicode escape (np-cinematic fix): decode 4
+                    // hex digits to a code point, stitch UTF-16 surrogate
+                    // pairs, and emit UTF-8 bytes. Previously this hit the
+                    // default and failed with "bad escape sequence", which
+                    // is exactly what tripped up an em-dash (\u2014) written
+                    // by a JSON encoder with ensure_ascii=True. Now the
+                    // engine accepts BOTH literal UTF-8 and \u escapes.
+                    unsigned cp = 0;
+                    if (!read_hex4(cp)) return {};
+                    // High surrogate: pair it with a following \uDC00..DFFF.
+                    if (cp >= 0xD800 && cp <= 0xDBFF) {
+                        if (p + 2 < end && p[1] == '\\' && p[2] == 'u') {
+                            bump();            // -> '\\'
+                            bump();            // -> 'u'
+                            unsigned lo = 0;
+                            if (!read_hex4(lo)) return {};
+                            if (lo >= 0xDC00 && lo <= 0xDFFF) {
+                                cp = 0x10000 + ((cp - 0xD800) << 10)
+                                             + (lo - 0xDC00);
+                            } else {
+                                fail("bad low surrogate in \\u escape");
+                                return {};
+                            }
+                        } else {
+                            fail("unpaired high surrogate in \\u escape");
+                            return {};
+                        }
+                    }
+                    append_utf8(out, cp);
+                    break;
+                }
                 default:   fail("bad escape sequence"); return {};
             }
             bump();

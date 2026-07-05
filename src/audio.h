@@ -129,6 +129,17 @@ VoiceId play_world(SampleId s, HMM_Vec3 world_pos,
 // set_voice_gain to fade (e.g. throttle-driven engine pitch beds).
 VoiceId play_loop(SampleId s, float gain);
 
+// Convenience: load-by-path (cached, see load()) + play in one call. Lets
+// content reference an arbitrary .wav/.mp3 by filepath with NO manifest
+// rebuild and NO recompile — the cinematic director drops clips into
+// assets/cinematics/audio/ and names them in the timeline JSON. Missing /
+// undecodable file degrades to a silent no-op (load() logs, returns 0, and
+// play*() ignores a 0 SampleId). `loop` picks the 2D looping path (music
+// beds); a positional variant plays the clip in the world at `pos`.
+VoiceId play_file(const std::string& path, float gain = 1.0f, bool loop = false);
+VoiceId play_file_world(const std::string& path, HMM_Vec3 pos,
+                        float ref_dist, float max_dist, float gain = 1.0f);
+
 // Update the listener pose. Call once per frame (Flight mode) BEFORE
 // the frame's play_world calls so new voices spatialize against the
 // current pose; existing world voices re-spatialize here too.

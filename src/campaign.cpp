@@ -13,6 +13,7 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <functional>
 
 namespace campaign {
 namespace {
@@ -387,6 +388,10 @@ void steltek_boost_tick(const PlayerState& p) {
     s_applied = want;
 }
 
+// The cinematic trigger (Phase 5.2, #143). Wired by main.cpp with the live
+// world (GameMode + the director) in scope; unwired everywhere else.
+std::function<void(const std::string&)> g_cinematic_trigger;
+
 // ---- the one campaign action handler ---------------------------------------
 bool handle_action(const std::string& action, PlayerState& p) {
     for (const CargoMission& m : k_cargo_missions) {
@@ -405,6 +410,27 @@ bool handle_action(const std::string& action, PlayerState& p) {
     }
     if (action == "m23:boost_gun") {
         m23_boost_gun(p);
+        return true;
+    }
+    // "play_cinematic:<id>" (#143) — fire a data-driven cutscene. We can't
+    // reach the live GameMode / director from here, so we hand the id to
+    // the trigger main.cpp wired (Flight -> play now, Landed -> defer to
+    // next launch). Unknown ids fail non-fatally INSIDE the trigger
+    // (cinematic::play logs + no-ops on a missing file), same policy as
+    // every other token. Empty id or no trigger wired: log one line.
+    if (action.rfind("play_cinematic:", 0) == 0) {
+        const std::string id = action.substr(15);
+        if (id.empty()) {
+            std::fprintf(stderr, "[campaign] play_cinematic: empty id\n");
+            return true;
+        }
+        if (g_cinematic_trigger) {
+            g_cinematic_trigger(id);
+        } else {
+            std::fprintf(stderr,
+                         "[campaign] play_cinematic:%s ignored "
+                         "(no trigger wired)\n", id.c_str());
+        }
         return true;
     }
     // "pay:<credits>" — fixer-settled payouts (Lynch pays at the bar,
@@ -429,6 +455,10 @@ bool handle_action(const std::string& action, PlayerState& p) {
 void init() {
     plot::set_action_handler(handle_action);
     std::printf("[campaign] action handler registered\n");
+}
+
+void set_cinematic_trigger(std::function<void(const std::string&)> fn) {
+    g_cinematic_trigger = std::move(fn);
 }
 
 bool frontier_locked(const PlayerState& p, const std::string& dest_system) {

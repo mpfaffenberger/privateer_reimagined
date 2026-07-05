@@ -1,0 +1,11 @@
+{
+  "id": "req_1783261479",
+  "status": "done",
+  "message": "authored studio_cinematic: 2 draymans in formation, grayson joins, 5-talon pirate ambush at Penders Star asteroid field. 2 new characters (vance, kort) w/ gpt-image-2 portraits + MiniMax voices. Trigger + outcome compiled. (bridge was rescued mid-run; timeout now 2400s)",
+  "cinematic_id": "studio_cinematic",
+  "log": [
+    "agent ran 15.5 min (orphan-rescued from 600s timeout)",
+    "validate: 0 errors PASS",
+    "triggers.json merged (penders_star)"
+  ]
+}

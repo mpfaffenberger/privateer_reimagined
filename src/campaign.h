@@ -68,6 +68,7 @@
 // function is a no-op.
 // -----------------------------------------------------------------------------
 
+#include <functional>
 #include <string>
 
 struct PlayerState;
@@ -77,6 +78,18 @@ namespace campaign {
 // Register the campaign action handler with plot::set_action_handler.
 // Call once at startup (after commodity/ship_class tables load).
 void init();
+
+// The cinematic seam (Phase 5.2, #143): the campaign action handler owns
+// the "play_cinematic:<id>" token (data-driven cutscene triggers from
+// fixers' done_actions / scripted_encounters' on_cleared), but STARTING a
+// cinematic needs the live GameMode (a cinematic only starts from Flight)
+// which lives in main.cpp, not here. So main.cpp wires this trigger once at
+// startup with a lambda that has the world in scope: it plays now if we're
+// in Flight, else DEFERS until the next launch. handle_action just routes
+// the token here — same one-seam discipline as plot::set_action_handler /
+// plot::set_observer (campaign.cpp never includes cinematic.h or main's g).
+// Unwired (headless tools, tests) -> the token logs one line and no-ops.
+void set_cinematic_trigger(std::function<void(const std::string& id)> fn);
 
 // Dock settle hook: call once per NEW dock commit (main.cpp's
 // fail_cargo_on_dock site) with the raw nav base id ("liverpool_refinery").

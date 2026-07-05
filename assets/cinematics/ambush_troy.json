@@ -1,0 +1,358 @@
+{
+  "id": "ambush_troy",
+  "letterbox": true,
+  "skippable": true,
+  "outcome": {
+    "player_at_nav": "Troy Nav 8",
+    "spawns": [
+      {
+        "class": "stiletto",
+        "faction": "confed",
+        "count": 3
+      },
+      {
+        "class": "dralthi",
+        "faction": "kilrathi",
+        "count": 3
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "cmd": "fade_in",
+      "dur": 1.5,
+      "t": 0.0
+    },
+    {
+      "cmd": "music",
+      "file": "../music/original/combat_05.wav",
+      "t": 0.0
+    },
+    {
+      "cmd": "spawn",
+      "actor": "hero",
+      "class": "tarsus",
+      "faction": "civilian",
+      "pos": [
+        12333.0,
+        -58167.0,
+        21083.0
+      ],
+      "t": 0.2
+    },
+    {
+      "cmd": "spawn",
+      "actor": "raider",
+      "class": "talon",
+      "faction": "pirate",
+      "pos": [
+        13733.0,
+        -58087.0,
+        22883.0
+      ],
+      "t": 0.2
+    },
+    {
+      "cmd": "subtitle",
+      "text": "Troy jump lane - departure",
+      "dur": 2.5,
+      "t": 0.5
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 0.0,
+      "ease": "smooth",
+      "keys": [
+        {
+          "pos": [
+            13233.0,
+            -58367.0,
+            21483.0
+          ],
+          "look_at": "ship:hero"
+        }
+      ],
+      "t": 0.5
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "hero",
+      "dur": 8.0,
+      "keys": [
+        {
+          "pos": [
+            12333.0,
+            -58167.0,
+            21083.0
+          ]
+        },
+        {
+          "pos": [
+            11933.0,
+            -58167.0,
+            19483.0
+          ]
+        }
+      ],
+      "t": 0.5
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "raider",
+      "dur": 0.9,
+      "keys": [
+        {
+          "pos": [
+            13733.0,
+            -58087.0,
+            22883.0
+          ]
+        },
+        {
+          "pos": [
+            13833.0,
+            -58047.0,
+            21833.0
+          ]
+        }
+      ],
+      "t": 5.0
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "raider",
+      "dur": 9.0,
+      "keys": [
+        {
+          "pos": [
+            13833.0,
+            -58047.0,
+            21833.0
+          ]
+        },
+        {
+          "pos": [
+            13763.0,
+            -58057.0,
+            21643.0
+          ]
+        }
+      ],
+      "t": 6.0
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 0.0,
+      "ease": "smooth",
+      "keys": [
+        {
+          "pos": [
+            14213.0,
+            -57987.0,
+            21803.0
+          ],
+          "look_at": "ship:raider"
+        }
+      ],
+      "t": 6.0
+    },
+    {
+      "cmd": "line",
+      "speaker": "Pirate",
+      "text": "Wrong lane to be flying alone, Troy-boy — cargo or corpse. Pick.",
+      "side": "right",
+      "dur": 5.0,
+      "portrait": "portraits/pirate/ambush_troy_01.png",
+      "voice_file": "audio/ambush_troy_pirate_01.mp3",
+      "t": 6.0
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 0.0,
+      "ease": "smooth",
+      "keys": [
+        {
+          "pos": [
+            11683.0,
+            -58057.0,
+            18933.0
+          ],
+          "look_at": "ship:hero"
+        }
+      ],
+      "t": 13.3
+    },
+    {
+      "cmd": "line",
+      "speaker": "Grayson Burrows",
+      "text": "You picked the wrong tarsus. Come and get it.",
+      "side": "left",
+      "dur": 3.3,
+      "portrait": "portraits/grayson/ambush_troy_01.png",
+      "voice_file": "audio/ambush_troy_grayson_01.mp3",
+      "t": 13.3
+    },
+    {
+      "cmd": "sfx",
+      "file": "../sfx/cruise_windup.wav",
+      "pos": [
+        13833.0,
+        -58047.0,
+        21833.0
+      ],
+      "t": 14.9
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 0.0,
+      "ease": "smooth",
+      "keys": [
+        {
+          "pos": [
+            12833.0,
+            -58467.0,
+            20783.0
+          ],
+          "look_at": "ship:hero"
+        }
+      ],
+      "t": 15.0
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "hero",
+      "dur": 6.0,
+      "keys": [
+        {
+          "pos": [
+            11933.0,
+            -58167.0,
+            19483.0
+          ]
+        },
+        {
+          "pos": [
+            11433.0,
+            -58127.0,
+            18883.0
+          ]
+        },
+        {
+          "pos": [
+            10333.0,
+            -58167.0,
+            17683.0
+          ]
+        }
+      ],
+      "t": 15.0
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "raider",
+      "dur": 5.5,
+      "keys": [
+        {
+          "pos": [
+            13763.0,
+            -58057.0,
+            21643.0
+          ]
+        },
+        {
+          "pos": [
+            12733.0,
+            -58077.0,
+            20483.0
+          ]
+        },
+        {
+          "pos": [
+            11833.0,
+            -58117.0,
+            19283.0
+          ]
+        }
+      ],
+      "t": 15.0
+    },
+    {
+      "cmd": "sfx",
+      "file": "../sfx/laser_fire.wav",
+      "pos": [
+        13433.0,
+        -58057.0,
+        21383.0
+      ],
+      "t": 15.8
+    },
+    {
+      "cmd": "sfx",
+      "file": "../sfx/laser_fire.wav",
+      "pos": [
+        12833.0,
+        -58077.0,
+        20583.0
+      ],
+      "t": 16.6
+    },
+    {
+      "cmd": "sfx",
+      "file": "../sfx/impact_armor.wav",
+      "pos": [
+        11433.0,
+        -58127.0,
+        18883.0
+      ],
+      "t": 17.4
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 0.0,
+      "ease": "smooth",
+      "keys": [
+        {
+          "pos": [
+            11818.0,
+            -58512.0,
+            19324.0
+          ],
+          "look_at": "ship:hero"
+        }
+      ],
+      "t": 17.9
+    },
+    {
+      "cmd": "line",
+      "speaker": "Grayson Burrows",
+      "text": "Not today, scavenger.",
+      "side": "left",
+      "dur": 2.6,
+      "portrait": "portraits/grayson/ambush_troy_02.png",
+      "voice_file": "audio/ambush_troy_grayson_02.mp3",
+      "t": 17.9
+    },
+    {
+      "cmd": "sfx",
+      "file": "../sfx/engine_hum.wav",
+      "pos": [
+        11033.0,
+        -58147.0,
+        18183.0
+      ],
+      "t": 19.1
+    },
+    {
+      "cmd": "fade_out",
+      "dur": 1.5,
+      "t": 20.3
+    },
+    {
+      "cmd": "end",
+      "actions": [
+        "set_flag:ambush_troy_seen"
+      ],
+      "t": 22.0
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "id": "req_1783261479",
+  "kind": "author",
+  "brief": "Create me a scene where two drayman are flying in formation in autopilot mode. Grayson's tarsus approaches and joins formation with them in autopilot mode approaching the asteroid field / second nav point of pender's star from the troy jump point side. The two Drayman pilots are having a discussion about how ships have been dissappearing in this asteroid field for some time now and that they are feeling apprehensive. After a short moment of silence while nearing the astroid field all of a sudden five pirate talons appear and ambush them. \"You've fallen into our trap little piggies!\".",
+  "triggers_text": "this should trigger the very first time Grayson visits pender's star and approaches within 50k kilometers of",
+  "outcome_text": "We're ~15,000 units away from the pender's star nav 2. There are two terrified Drayman merchants, main character (grayson) and 5 pirate talons firing on them.",
+  "image": { "quality": "medium" }
+}

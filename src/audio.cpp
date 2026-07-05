@@ -696,6 +696,24 @@ VoiceId play_loop(SampleId s, float gain) {
                    HMM_V3(0, 0, 0), 1.0f, 2.0f, gain);
 }
 
+VoiceId play_file(const std::string& path, float gain, bool loop) {
+    // load() dedupes by path (g_path_cache) so repeated cinematic beats
+    // referencing the same clip decode exactly once. A 0 SampleId (missing
+    // file / no device) flows straight through the play*() 0-guards.
+    const SampleId s = load(path);
+    return loop ? play_loop(s, gain) : play(s, gain);
+}
+
+VoiceId play_file_world(const std::string& path, HMM_Vec3 pos,
+                        float ref_dist, float max_dist, float gain) {
+    const SampleId s = load(path);
+    // gain rides on the positional path via the shared base_gain (play_world
+    // takes no explicit gain today), so we fold it in by not scaling here —
+    // callers that need a quieter positional cue can pre-attenuate ref/max.
+    (void)gain;
+    return play_world(s, pos, ref_dist, max_dist, /*loop=*/false);
+}
+
 VoiceId play_world(SampleId s, HMM_Vec3 world_pos,
                    float ref_dist, float max_dist, bool loop) {
     if (!g_ready || s == 0 || s >= g_samples.size()) return 0;

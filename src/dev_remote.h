@@ -133,6 +133,23 @@
 //                          route lock, hostile bubble, and jump-drive
 //                          check all apply. Body { nav }. Assert via
 //                          GET /player system change (or its absence).
+//   POST /cinematic/play   → load + play assets/cinematics/<id>.json. Body
+//                          { id }. Runs on the main thread; BLOCKS until it
+//                          resolves so parse/validation errors come back IN
+//                          the reply: { ok:true } or { ok:false, error }.
+//   POST /cinematic/stop   → stop any active cinematic. { ok:true }.
+//   POST /cinematic/reload → re-parse the named (or current) cinematic from
+//                          disk so JSON edits take effect live. Body
+//                          { id } (optional; empty = current). Returns
+//                          { ok:true } or { ok:false, error } on a missing
+//                          file / parse error — the core iterate primitive.
+//   POST /cinematic/seek   → jump the active timeline to t seconds. Body
+//                          { t }. Re-establishes camera + spawned actors,
+//                          restarts music, skips one-shot sfx/voice. Returns
+//                          { ok:true } or { ok:false, error } (nothing
+//                          playing).
+//   GET  /cinematic/status → { playing, id, t, duration, last_error } —
+//                          published once per frame (all modes) by the host.
 //   GET  /events?since=N → { events: [ { seq, t, category, text }, ... ],
 //                          latest } — a monotonically-sequenced ring
 //                          buffer of gameplay events (comm feed lines,
@@ -433,6 +450,46 @@ struct BaseInfo {
 // Publish the latest base-UI snapshot for GET /base. Called once per frame
 // from the main thread (every mode); stored mutex-guarded.
 void publish_base(const BaseInfo& b);
+
+// ---------------------------------------------------------------------------
+// /cinematic/status snapshot — the cutscene director's live state.
+// ---------------------------------------------------------------------------
+// Flat mirror of cinematic::{active,current_id,time,duration,last_error}.
+// The host publishes it once per frame (ALL modes, so status answers even
+// while docked/dying) and GET /cinematic/status serves the latest copy —
+// same decoupled snapshot pattern as /player. dev_remote never sees the
+// cinematic module's internals.
+struct CinematicInfo {
+    bool        playing = false;
+    std::string id;            // current cinematic id ("" when stopped)
+    float       t         = 0.0f;   // current timeline position, seconds
+    float       duration  = 0.0f;   // total length, seconds
+    std::string last_error;    // last load/parse error ("" once a load ok'd)
+};
+
+// Publish the latest cinematic status for GET /cinematic/status. Called once
+// per frame from the main thread (every mode); stored mutex-guarded.
+void publish_cinematic(const CinematicInfo& c);
+
+// POST /cinematic/play|reload enqueue a command that BLOCKS the HTTP thread
+// until drain_commands runs this hook on the main thread. The hook does the
+// load+play (reload: re-parse) and returns ok; on failure it fills `err`,
+// which the handler returns verbatim in the JSON reply. The host wires these
+// to cinematic::play / cinematic::reload.
+void set_cinematic_play_hook(
+    std::function<bool(const std::string& id, std::string& err)> hook);
+void set_cinematic_reload_hook(
+    std::function<bool(const std::string& id, std::string& err)> hook);
+
+// POST /cinematic/seek — main-thread hook, blocking like play/reload: jump
+// the active timeline to `t` seconds, filling `err` + returning false when
+// nothing is playing. The host wires it to cinematic::seek.
+void set_cinematic_seek_hook(
+    std::function<bool(float t, std::string& err)> hook);
+
+// POST /cinematic/stop — fire-and-forget main-thread hook. The host wires
+// it to cinematic::stop.
+void set_cinematic_stop_hook(std::function<void()> hook);
 
 // POST /base/screen enqueues a command; drain_commands invokes this hook on
 // the main thread with the screen name. The host wires it to

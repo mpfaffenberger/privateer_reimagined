@@ -195,6 +195,11 @@ add_executable(new_privateer
     src/voice.cpp
     src/hailing.cpp
     src/scripted_encounters.cpp
+    src/cinematic.cpp
+    src/cinematic_parse.cpp
+    src/cinematic_triggers.cpp
+    src/cinematic_studio.cpp
+    src/cinematic_studio_io.cpp
     src/game_state.cpp
     src/docking.cpp
     src/autopilot.cpp
@@ -527,6 +532,24 @@ target_compile_definitions(test_campaign PRIVATE FIXERS_HEADLESS COMM_HEADLESS)
 # Same trick as test_missions: comm.cpp's voice:: calls live in functions
 # this harness never references; dead-strip drops them at link time.
 target_link_options(test_campaign PRIVATE -Wl,-dead_strip)
+
+# Cinematic parser hardening proof (np-cinematic Phase 6.2 + Studio Phase A):
+# feeds a battery of deliberately-malformed inline JSON at the ENGINE-FREE
+# parsers (cinematic doc + outcome block + trigger table) and asserts they
+# never throw; also exercises the trigger evaluator's once/cooldown latches
+# through a fake play hook. Links only the engine-free TUs (+ plot.cpp for
+# the flag gates) — no imgui / sokol / GL / audio.
+#   cmake --build build --target test_cinematic && ./build/test_cinematic
+add_executable(test_cinematic EXCLUDE_FROM_ALL
+    tools/test_cinematic.cpp
+    src/cinematic_parse.cpp src/cinematic_triggers.cpp
+    src/cinematic_studio_io.cpp
+    src/plot.cpp src/json.cpp
+)
+target_include_directories(test_cinematic PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/third_party
+)
 
 # ---------------------------------------------------------------------------
 # `dist` — portable, relocatable game folder (build/dist/).

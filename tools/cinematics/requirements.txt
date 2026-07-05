@@ -1,0 +1,9 @@
+# Cinematic portrait pipeline — minimal deps.
+# The placeholder (offline) path needs ONLY Pillow. httpx is used by the real
+# cloud backends. The official SDKs are optional — the backends talk plain REST
+# via httpx, so you do NOT need openai/ or google-genai installed.
+Pillow>=10.0
+httpx>=0.24
+# Optional but recommended: structural JSON-Schema validation in validate.py.
+# validate.py degrades gracefully (semantic rules only) if it is absent.
+jsonschema>=4.0

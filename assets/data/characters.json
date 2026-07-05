@@ -1,0 +1,158 @@
+{
+  "_doc": [
+    "Character bible for the cinematic portrait pipeline (Phase 3, tools/cinematics/).",
+    "The ENGINE never reads this file — it only loads pre-generated 512x640 PNGs by",
+    "path. This bible is authoring-time data: it feeds prompt conditioning for the",
+    "portrait generator (tools/cinematics/portraits.py). Cast + roles are pulled from",
+    "the real campaign (src/campaign.h, assets/data/fixers.json).",
+    "",
+    "Per-character fields:",
+    "  id               stable key; also the portraits/<id>/ folder name",
+    "  display_name     nameplate string shown in the cinematic line cue",
+    "  role             one-line story role (for the author, not the prompt)",
+    "  appearance       DETAILED physical description — the identity anchor that",
+    "                   conditions every generation for this character",
+    "  personality      demeanor cues that steer expression/pose",
+    "  wardrobe         clothing/gear description",
+    "  reference_image  canonical headshot path; gen-line conditions ON this file"
+  ],
+  "characters": {
+    "grayson": {
+      "id": "grayson",
+      "display_name": "Grayson Burrows",
+      "role": "The player-character privateer; a freelance pilot dragged into the Steltek mystery.",
+      "appearance": "Human man in his late 30s, weathered and lean with a strong jaw and a few days of dark stubble. Short dark-brown hair going slightly grey at the temples, cut practical. Sharp hazel eyes with crow's-feet from squinting at cockpit glare. A faint old scar through the left eyebrow. Sun-worn tan of someone who lives under station lights and hard vacuum.",
+      "personality": "Dry, unflappable, quietly cynical. A working-class survivor who has learned not to trust easy money. Reads as tired but sharp; the faintest smirk.",
+      "wardrobe": "Scuffed brown leather flight jacket over a grey utility undershirt, collar open. A worn pilot's harness with buckles at the chest. Utilitarian, lived-in, not military.",
+      "reference_image": "assets/cinematics/portraits/grayson/_ref.png"
+    },
+    "sandoval": {
+      "id": "sandoval",
+      "display_name": "Ernesto Sandoval",
+      "role": "First fixer at New Detroit; hands over the Steltek artifact as collateral, then turns up dead.",
+      "appearance": "Human man in his 50s, heavyset with a broad face, olive complexion, and a thick greying moustache. Small dark eyes that dart. Sweating slightly, the look of a man who owes the wrong people money.",
+      "personality": "Smooth-talking, ingratiating, nervous underneath. A dealer in 'acquisitions' who over-promises and never pays.",
+      "wardrobe": "A rumpled once-expensive maroon jacket with a loud collar, a gaudy ring, an open shirt. Cheap flash trying to look like real money.",
+      "reference_image": "assets/cinematics/portraits/sandoval/_ref.png"
+    },
+    "tayla": {
+      "id": "tayla",
+      "display_name": "Tayla",
+      "role": "Smuggling contact who employs the player across the Tayla arc; hard, professional, honest about being dishonest.",
+      "appearance": "Human woman in her 40s, athletic and hard-edged, medium-brown skin, close-cropped black hair with a shaved side. High cheekbones, a level unsmiling gaze, dark brown eyes. A thin scar along the jaw.",
+      "personality": "Cool, transactional, dangerous. Says exactly what she means. Respects competence, has zero patience for excuses.",
+      "wardrobe": "A fitted dark tactical jacket with subtle armor panels, a high collar, a comm earpiece. Muted greys and gunmetal. All business.",
+      "reference_image": "assets/cinematics/portraits/tayla/_ref.png"
+    },
+    "lynch": {
+      "id": "lynch",
+      "display_name": "Roman Lynch",
+      "role": "New Constantinople crime boss who takes the artifact 'for study' and runs the player on increasingly ugly errands.",
+      "appearance": "Human man in his 60s, silver-haired and immaculately groomed, pale, with cold pale-grey eyes and a thin cruel mouth. The composed stillness of a man used to being obeyed. Manicured.",
+      "personality": "Urbane, patronizing, casually ruthless. Speaks softly and threatens with a smile.",
+      "wardrobe": "A tailored charcoal suit with a dark silk cravat, a subtle metallic lapel pin. Old-money mobster elegance.",
+      "reference_image": "assets/cinematics/portraits/lynch/_ref.png"
+    },
+    "masterson": {
+      "id": "masterson",
+      "display_name": "Masterson",
+      "role": "Oxford university administrator; gatekeeps the library archive behind four 'favors'.",
+      "appearance": "Human man in his late 50s, thin and prim, balding with neat greying hair at the sides, wire-rimmed spectacles, a pinched disapproving expression and a narrow nose. Bloodless academic pallor.",
+      "personality": "Fussy, transactional, self-important. A petty bureaucrat who enjoys the leverage his archive gives him.",
+      "wardrobe": "A stiff high-collared academic tunic in deep blue with a university crest, a thin scarf. Formal, humorless.",
+      "reference_image": "assets/cinematics/portraits/masterson/_ref.png"
+    },
+    "murphy": {
+      "id": "murphy",
+      "display_name": "Lynn Murphy",
+      "role": "Runs the Palan resistance from the Basra refinery; sends the player against the bounty-hunter blockade.",
+      "appearance": "Human woman in her late 30s, wiry and tired, freckled fair skin, red hair pulled back in a rough braid with loose strands, sharp green eyes with dark circles. The lean look of someone running a losing fight on no sleep.",
+      "personality": "Blunt, weary, determined. A idealist grinding on fumes; grateful but braced for more bad news.",
+      "wardrobe": "A patched orange-and-grey refinery work coverall with rolled sleeves, a bandolier of tools, a resistance armband. Practical, grimy.",
+      "reference_image": "assets/cinematics/portraits/murphy/_ref.png"
+    },
+    "monkhouse": {
+      "id": "monkhouse",
+      "display_name": "Dr. Lemuel Monkhouse",
+      "role": "Xenoarchaeologist marooned on Palan; his artifact fragment completes the Steltek map.",
+      "appearance": "Human man in his late 60s, frail and excitable, wild white hair, round wire glasses, a short white beard, deep smile lines, bright over-caffeinated pale-blue eyes. Bookish and thin.",
+      "personality": "Eccentric, brilliant, endlessly enthusiastic. Talks too fast about ancient civilizations, nervous about the 'someone with fur' hunting him.",
+      "wardrobe": "A rumpled sand-colored field jacket with too many pockets, a data-slate on a lanyard, a scarf against station chill. Dusty academic-explorer.",
+      "reference_image": "assets/cinematics/portraits/monkhouse/_ref.png"
+    },
+    "cross": {
+      "id": "cross",
+      "display_name": "Taryn Cross",
+      "role": "Exploratory Services handler at Rygannon who runs the player through the frontier survey arc.",
+      "appearance": "Human woman in her 40s, calm and capable, warm brown skin, black hair in a tight professional bun, steady dark eyes, a faint pilot's tan-line across the brow. Composed.",
+      "personality": "Measured, professional, quietly protective of her survey pilots. Even-keeled even delivering bad news.",
+      "wardrobe": "A clean teal Exploratory Services flight uniform with a survey-net shoulder patch, a headset resting on the collar. Corporate-scientific.",
+      "reference_image": "assets/cinematics/portraits/cross/_ref.png"
+    },
+    "terrell": {
+      "id": "terrell",
+      "display_name": "Admiral Terrell",
+      "role": "Confederation admiral at Perry Naval Base; commands the fleet against the Steltek drone in the finale.",
+      "appearance": "Human man in his 60s, broad-shouldered and imposing, dark skin, close-cropped grey hair and a neat grey beard, heavy brows over stern deep-set eyes. The bearing of decades of command.",
+      "personality": "Gruff, blunt, contemptuous of civilians and paperwork alike. Grudgingly fair.",
+      "wardrobe": "A crisp navy-blue Confederation admiral's dress uniform, gold braid at the shoulders, a chestful of service ribbons, high stiff collar.",
+      "reference_image": "assets/cinematics/portraits/terrell/_ref.png"
+    },
+    "vance": {
+      "id": "vance",
+      "display_name": "Captain Vance",
+      "role": "Merchant hauler captain leading a two-drayman convoy through Pender's Star; a lifer who has run this lane for decades.",
+      "appearance": "Human man in his 50s, broad and grizzled, ruddy weather-worn skin, a heavy salt-and-pepper beard, tired pale-blue eyes set in deep bags, a balding crown with close grey at the sides. The thick neck and slouch of a man who has spent his life strapped into a cargo hauler's seat.",
+      "personality": "Gruff, fatalistic, unshakeably steady — seen it all, spooked by little, which makes his unease on this run land all the harder.",
+      "wardrobe": "A faded olive-drab merchant-marine jumpsuit with a cargo-guild patch on the shoulder, a grease-smudged open collar, a battered headset hooked over one ear.",
+      "voice_id": "PrivFlightV1401",
+      "reference_image": "assets/cinematics/portraits/vance/_ref.png"
+    },
+    "kort": {
+      "id": "kort",
+      "display_name": "Reesa Kort",
+      "role": "Young co-pilot on the second drayman of Vance's convoy; the first to say out loud what everyone is feeling.",
+      "appearance": "Human woman in her late 20s, slight and wiry, warm brown skin, tightly-coiled black hair pulled back under a headset, wide anxious dark eyes, a light scatter of freckles across the nose. A young spacer who has not yet grown the calluses for this run.",
+      "personality": "Jumpy, earnest, quick-witted — apprehensive and honest about it, voicing the dread the older crews swallow.",
+      "wardrobe": "A slightly-too-big grey merchant flight jacket with rolled cuffs over a rust-orange undershirt, a guild lanyard around the neck, a comm headset.",
+      "voice_id": "PrivMerchantFem01",
+      "reference_image": "assets/cinematics/portraits/kort/_ref.png"
+    },
+    "pirate": {
+      "id": "pirate",
+      "display_name": "Pirate",
+      "role": "Generic archetype: hostile raider / Kindred pirate encountered in flight and scripted ambushes.",
+      "appearance": "Human raider of indeterminate age, hard-living and unshaven, pale skin marred by a crude cybernetic eye implant and old scars. A sneer of broken teeth, greasy dark hair, a wild dangerous stare.",
+      "personality": "Cocky, cruel, taunting. Enjoys the threat more than the payoff.",
+      "wardrobe": "A patchwork of scavenged armor plates over dark grease-stained flight leathers, mismatched straps, a bandolier, a red raider's marking painted on the shoulder.",
+      "reference_image": "assets/cinematics/portraits/pirate/_ref.png"
+    },
+    "militia": {
+      "id": "militia",
+      "display_name": "Militia Pilot",
+      "role": "Generic archetype: local system militia pilot who scans and polices trade lanes.",
+      "appearance": "Human pilot in their 30s, clean-cut and slightly officious, average build, short regulation haircut, a wary by-the-book expression.",
+      "personality": "Officious, procedural, quick to suspect smugglers. Not cruel, just doing the job.",
+      "wardrobe": "A grey-green militia flight suit with a system patch, a light helmet with the visor up, a comm mic. Regional-military neat but low-budget.",
+      "reference_image": "assets/cinematics/portraits/militia/_ref.png"
+    },
+    "confed": {
+      "id": "confed",
+      "display_name": "Confed Officer",
+      "role": "Generic archetype: Terran Confederation naval pilot / officer, the reach of the central government.",
+      "appearance": "Human officer in their 40s, disciplined and clean-shaven, sharp posture, short military hair, a cool professional gaze. Well-fed, well-drilled.",
+      "personality": "Formal, authoritative, faintly disdainful of frontier privateers. Rule-bound.",
+      "wardrobe": "A navy-blue Confederation naval uniform with rank insignia at the collar, silver buttons, a peaked cap or headset. Crisp and official.",
+      "reference_image": "assets/cinematics/portraits/confed/_ref.png"
+    },
+    "bounty_hunter": {
+      "id": "bounty_hunter",
+      "display_name": "Bounty Hunter",
+      "role": "Generic archetype: Mercenaries' Guild bounty hunter; enforcers of the Palan blockade and later grudge-holders.",
+      "appearance": "Human mercenary of hard middle age, weathered and muscular, a squared-off jaw, a full-face targeting scanner monocle over one eye, a shaved scarred scalp, a flat professional stare.",
+      "personality": "Cold, methodical, professional. No taunts, no mercy — this is a contract.",
+      "wardrobe": "Heavy matte-black composite armor with a Mercenaries' Guild sigil, reinforced shoulder pauldrons, tactical webbing, a slung sidearm. Serious kit.",
+      "reference_image": "assets/cinematics/portraits/bounty_hunter/_ref.png"
+    }
+  }
+}
