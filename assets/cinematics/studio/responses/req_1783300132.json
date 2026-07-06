@@ -1,0 +1,11 @@
+{
+  "id": "req_1783300132",
+  "status": "done",
+  "message": "refined penders_crusader: 1 line edit(s), 0 portrait regen(s), 1 voice regen(s)",
+  "cinematic_id": "penders_crusader",
+  "log": [
+    "voice 5: regenerated -> audio/penders_crusader_vera_04.mp3",
+    "line 5: text -> 'Vile heretic, prepare to die!'",
+    "updated assets/cinematics/penders_crusader.json"
+  ]
+}

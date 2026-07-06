@@ -4,6 +4,7 @@
 
 #include "comm.h"
 
+#include "cinematic.h"   // active() — suppress ambient barks during cutscenes
 #include "json.h"
 #include "player.h"
 #include "voice.h"
@@ -247,8 +248,9 @@ void report_player_kill(PlayerState& player, Faction victim) {
     }
 
     // One-and-only-one spoken line for this report_player_kill call.
+    // Suppress during cinematics — same rationale as npc_engage_bark.
 #ifndef COMM_HEADLESS
-    if (voice_chosen) {
+    if (voice_chosen && !cinematic::active()) {
         voice::say(voice_speaker, voice_cat, HMM_Vec3{0,0,0},
                    /*to_player=*/true);
     }
@@ -261,6 +263,9 @@ void npc_engage_bark(Faction speaker, bool target_is_player, uint32_t speaker_id
     // Only the player's HUD gets the line; NPC-on-NPC chatter is
     // cosmetic and would just spam the feed with fights we're not in.
     if (!target_is_player) return;
+    // Suppress ambient combat barks while a cinematic is playing — the
+    // cutscene's own dialogue should be the only voice on the radio.
+    if (cinematic::active()) return;
     std::string line = pick_line(speaker, Event::KilledByPlayerCrime);
     if (line.empty()) return;
     push(line, /*taunt=*/true);

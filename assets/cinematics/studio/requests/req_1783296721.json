@@ -1,0 +1,10 @@
+{
+  "id": "req_1783296721",
+  "kind": "refine",
+  "cinematic_id": "penders_crusader",
+  "image": { "quality": "medium" },
+  "line_overrides": [
+    { "index": 2,
+      "text": "Do not mock the righteous! Your actions have added to the technological burden of mankind! Prepare yourself for retribution!" }
+  ]
+}

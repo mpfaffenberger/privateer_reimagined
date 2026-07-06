@@ -1,0 +1,10 @@
+{
+  "id": "req_1783296721",
+  "status": "done",
+  "message": "refined penders_crusader: 1 line edit(s), 0 portrait regen(s), 0 voice regen(s)",
+  "cinematic_id": "penders_crusader",
+  "log": [
+    "line 2: text -> 'Do not mock the righteous! Your actions have added to the technological burden of mankind! Prepare yourself for retribution!'",
+    "updated assets/cinematics/penders_crusader.json"
+  ]
+}

@@ -580,6 +580,18 @@ void populate_on_entry(const StarSystem& system, HMM_Vec3 player_pos,
                 spawn_center = HMM_AddV3(nav.position, HMM_MulV3F(to_sun, off));
             }
         }
+        // Jump gates get pushed 15-22k off the nav so combat traffic
+        // doesn't camp the gate and ambush / chatter over the player
+        // on arrival (same idea as the base offset above, bigger).
+        if (nav.kind == "jump") {
+            HMM_Vec3 away = HMM_SubV3(sun_pos, nav.position);
+            const float d = len(away);
+            if (d > 1.0f) {
+                away = HMM_MulV3F(away, 1.0f / d);
+                const float off = 15000.0f + U(rng) * 7000.0f;  // 15-22k
+                spawn_center = HMM_AddV3(nav.position, HMM_MulV3F(away, off));
+            }
+        }
         spawn_group(mem, spawn_center, loiter);
     }
 

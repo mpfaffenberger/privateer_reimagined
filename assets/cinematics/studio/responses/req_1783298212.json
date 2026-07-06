@@ -1,0 +1,20 @@
+{
+  "id": "req_1783298212",
+  "status": "done",
+  "message": "refined penders_crusader: 1 line edit(s), 5 portrait regen(s), 5 voice regen(s)",
+  "cinematic_id": "penders_crusader",
+  "log": [
+    "portrait 0: regenerated -> portraits/vera/penders_crusader_01.png",
+    "portrait 2: regenerated -> portraits/vera/penders_crusader_02.png",
+    "portrait 3: regenerated -> portraits/grayson/penders_crusader_02.png",
+    "portrait 4: regenerated -> portraits/vera/penders_crusader_03.png",
+    "portrait 5: regenerated -> portraits/vera/penders_crusader_04.png",
+    "voice 2: regenerated -> audio/penders_crusader_vera_02.mp3",
+    "voice 3: regenerated -> audio/penders_crusader_grayson_02.mp3",
+    "voice 4: regenerated -> audio/penders_crusader_vera_03.mp3",
+    "voice 5: regenerated -> audio/penders_crusader_vera_04.mp3",
+    "voice 6: regenerated -> audio/penders_crusader_grayson_04.mp3",
+    "line 6: text -> 'Oh well, it was worth a try.'",
+    "updated assets/cinematics/penders_crusader.json"
+  ]
+}

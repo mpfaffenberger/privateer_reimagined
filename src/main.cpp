@@ -4707,7 +4707,10 @@ void frame_cb() {
         // Contraband search director (Phase 1). Runs AFTER perception +
         // AI so any aggro override we set is read on the next frame.
         if (Ship* pl = g.ships.player()) {
-            hailing::tick(g.ships, *pl, g.player, t_now);
+            // Contraband search director is skipped during cinematics —
+            // no Militia scan chatter over a cutscene's dialogue.
+            if (!cinematic::active())
+                hailing::tick(g.ships, *pl, g.player, t_now);
             // Dynamic-objective (lead) arrival check (Phase 3 Wave 1).
             // Reaching a lead marker spawns its loot payoff + clears the
             // marker; leads otherwise live until landing / system change.

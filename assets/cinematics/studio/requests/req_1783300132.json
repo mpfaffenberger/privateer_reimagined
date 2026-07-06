@@ -1,0 +1,12 @@
+{
+  "id": "req_1783300132",
+  "kind": "refine",
+  "cinematic_id": "penders_crusader",
+  "image": { "quality": "medium" },
+  "line_overrides": [
+    { "index": 5,
+      "text": "Vile heretic, prepare to die!",
+      "emotion": "angry" }
+  ],
+  "regen": { "portraits": [], "voices": [5] }
+}

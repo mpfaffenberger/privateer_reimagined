@@ -1,0 +1,26 @@
+{
+  "id": "req_1783298212",
+  "kind": "refine",
+  "cinematic_id": "penders_crusader",
+  "image": { "quality": "medium" },
+  "line_overrides": [
+    { "index": 0,
+      "seed_image": "assets/cinematics/portraits/vera/_ref.png" },
+    { "index": 2,
+      "text": "Do not mock the righteous! Your actions have added to the technological burden of mankind! Prepare yourself for retribution!",
+      "portrait_prompt_extra": "annoyed",
+      "seed_image": "assets/cinematics/portraits/vera/_ref.png" },
+    { "index": 3,
+      "text": "You know, for a religious fanatic, you're super cute... Instead of blasting me to oblivion, why don't we go out to dinner?",
+      "portrait_prompt_extra": "smug" },
+    { "index": 4,
+      "text": "(gasps) You dare make this into a joke?",
+      "portrait_prompt_extra": "blushing just a tiny bit",
+      "seed_image": "assets/cinematics/portraits/vera/_ref.png" },
+    { "index": 5,
+      "portrait_prompt_extra": "angry" },
+    { "index": 6,
+      "text": "Oh well, it was worth a try." }
+  ],
+  "regen": { "portraits": [0, 2, 3, 4, 5], "voices": [2, 3, 4, 5, 6] }
+}
