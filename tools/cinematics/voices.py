@@ -63,8 +63,18 @@ DEFAULT_VOICE_MAP = {
     "militia":       "PrivFlightV0101",
     "confed":        "PrivFlightV0801",
     "bounty_hunter": "PrivFlightV0501",
+    # Phase-2 cast (#176 / #178 auditions, 2026-07)
+    "quist":         "PrivBarMercgirl01", # flashy ace (won audition - shared w/ krieg)
+    "sian":          "female_2",          # preset: Drayman captain, Korean-American
+    "chen_wl":       "female_1",          # preset: plague doctor supplier
+    "ferao":         "PrivFlightV0601",  # fast-talking smuggler (won audition)
 }
 _FALLBACK_VOICE = "PrivFlightV0801"
+
+# MiniMax rejects unknown emotions by SILENTLY returning empty audio (cost a
+# whole audition session to discover). Validate loudly instead.
+VALID_EMOTIONS = {"happy", "sad", "angry", "fearful", "disgusted",
+                  "surprised", "neutral"}
 
 _CACHE_DIR = Path(__file__).resolve().parent / ".cache_voice"
 
@@ -129,6 +139,10 @@ def gen_line_voice(character: str, text: str, out_rel: Optional[str] = None, *,
 
     Idempotent + content-hash cached on (model, voice_id, speed, emotion, text).
     """
+    if emotion and emotion not in VALID_EMOTIONS:
+        print(f"[voice] INVALID emotion {emotion!r} for {character!r} — MiniMax "
+              f"would silently return no audio. Valid: {sorted(VALID_EMOTIONS)}")
+        return None
     vid = voice_id or voice_for(character, bible)
     digest = hashlib.sha256(
         f"{MODEL}|{vid}|{speed}|{emotion}|{text}".encode("utf-8")).hexdigest()[:16]

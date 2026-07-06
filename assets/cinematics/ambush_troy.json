@@ -159,9 +159,9 @@
     {
       "cmd": "line",
       "speaker": "Pirate",
-      "text": "Wrong lane to be flying alone, Troy-boy...  Cargo or corpse. Pick.",
+      "text": "Wrong lane to be flying alone, Troy-boy.<#0.4#>Cargo or corpse. Pick.",
       "side": "right",
-      "dur": 5.0,
+      "dur": 6.2,
       "portrait": "portraits/pirate/ambush_troy_01.png",
       "voice_file": "audio/ambush_troy_pirate_01.mp3",
       "t": 6.0
@@ -187,7 +187,7 @@
       "speaker": "Grayson Burrows",
       "text": "You picked the wrong tarsus. Come and get it.",
       "side": "left",
-      "dur": 3.3,
+      "dur": 2.8,
       "portrait": "portraits/grayson/ambush_troy_01.png",
       "voice_file": "audio/ambush_troy_grayson_01.mp3",
       "t": 13.3
@@ -327,7 +327,7 @@
       "speaker": "Grayson Burrows",
       "text": "Not today, scavenger.",
       "side": "left",
-      "dur": 2.6,
+      "dur": 1.7,
       "portrait": "portraits/grayson/ambush_troy_02.png",
       "voice_file": "audio/ambush_troy_grayson_02.mp3",
       "t": 17.9
