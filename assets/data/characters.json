@@ -173,6 +173,16 @@
       "wardrobe": "A faded orange merchant guild coverall with patches on both knees, a battered leather cap with earflaps, fingerless gloves, and a tarnished guild pin on the chest. Well-worn and comfortable.",
       "voice_id": "PrivFlightV1401",
       "reference_image": "assets/cinematics/portraits/mack/_ref.png"
+    },
+    "sian": {
+      "id": "sian",
+      "display_name": "Sian Turner",
+      "role": "Drayman captain hauling luxury goods on the Oxford <-> New Constantinople run (Potter quadrant, 8-day loop). The youngest Drayman captain on the books in five years.",
+      "appearance": "Korean-American woman in her early 30s — born Seoul, raised on New Constantinople's trading floors, which explains both the accent and the poker face. Sharp angular features softened by a permanent half-smirk that says she has already read the last page of your offer. Jet-black hair in a tight chignon held by worn tortoiseshell chopsticks; warm amber-brown eyes behind gold-rimmed spectacles; a small scar above her right eyebrow from a childhood docking accident she refuses to get smoothed.",
+      "wardrobe": "Immaculate deep-teal Drayman longcoat with the guild pin at the throat, specs pushed up into her hair when a manifest needs disagreeing with, tailored dark gloves she replaces the day they scuff.",
+      "personality": "Dry, sharp-tongued, quietly warm — in that order, and you earn each layer. Lets the silence remind you she is the youngest Drayman captain in five years. Treats every docking like an audition she intends to win, every contract like a duel she already has. Genuinely fond of pilots who arrive with their paperwork in order.",
+      "voice_id": "PrivCustomSian02",
+      "reference_image": "assets/cinematics/portraits/sian/_ref.png"
     }
   }
 }

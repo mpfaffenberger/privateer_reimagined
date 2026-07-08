@@ -65,7 +65,7 @@ DEFAULT_VOICE_MAP = {
     "bounty_hunter": "PrivFlightV0501",
     # Phase-2 cast (#176 / #178 auditions, 2026-07)
     "quist":         "PrivBarMercgirl01", # flashy ace (won audition - shared w/ krieg)
-    "sian":          "female_2",          # preset: Drayman captain, Korean-American
+    "sian":          "PrivCustomSian02",  # real-life clone (noise-reduced), Drayman captain
     "chen_wl":       "female_1",          # preset: plague doctor supplier
     "ferao":         "PrivFlightV0601",  # fast-talking smuggler (won audition)
 }

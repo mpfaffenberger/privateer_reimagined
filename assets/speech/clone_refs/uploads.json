@@ -535,5 +535,17 @@
   "voice_id": "PrivMerchantFem01",
   "ref": "assets/speech/clone_refs/merchant_fem.mp3",
   "note": "V00 re-cloned from merchant-only clips (clean trader delivery); replaces V0001/V0601 in merchant pool"
+ },
+ {
+  "id": "priv_custom_sian",
+  "source": "real_life",
+  "speaker": "Sian (real-life recording, New Recording 4.qt)",
+  "duration_s": 102.5,
+  "ref": "assets/speech/clone_refs/priv_custom_sian.mp3",
+  "file_id": 417769009463366,
+  "voice_id": "PrivCustomSian02",
+  "upload_status": "success",
+  "clone_status": "success (noise_reduction + need_volume_normalization)",
+  "note": "PrivCustomSian01 also exists (raw clone, no cleanup) \u2014 02 is canonical"
  }
 ]
