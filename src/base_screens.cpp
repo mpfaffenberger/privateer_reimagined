@@ -1214,6 +1214,15 @@ void build(PlayerState& player, Ship* player_ship, Docking& d, Camera& cam, Game
             draw_links(dl, ss, g_concourse.rooms[(int)cur], /*filter=*/false);  // back door
             draw_back_to_concourse_button(ss);  // visible affordance, not just Escape
         } else {
+            // A service room without OpenMenu still owns authored navigation
+            // links (for example Ship Dealer -> Equipment). Previously this
+            // branch jumped straight to the shop renderer, so every F3 box
+            // in a non-gated service room existed in memory but was never
+            // submitted to ImGui. Submit links first so deliberate overlaps
+            // with shop UI remain usable as authored navigation targets.
+            if (!gated && has_room) {
+                draw_links(dl, ss, g_concourse.rooms[(int)cur], /*filter=*/false);
+            }
             // No opaque backdrop here anymore — the room's real pre-rendered
             // background (already blitted above via draw_room/has_room) stays
             // visible behind the shop UI, same as Commodity Exchange/Bar
