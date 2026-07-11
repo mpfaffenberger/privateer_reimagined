@@ -1427,6 +1427,14 @@ void draw_board(BaseContext& ctx, MissionSource source) {
     ImGui::TextUnformatted("AVAILABLE MISSIONS");
     ImGui::PopStyleColor();
 
+    // The mission board sits over detailed room art. Keep that atmosphere,
+    // but give both tables enough smoked-glass opacity for multiline mission
+    // text to remain legible instead of fighting every pixel underneath.
+    ImGui::PushStyleColor(ImGuiCol_ChildBg,       ImVec4(0.025f, 0.030f, 0.040f, 0.78f));
+    ImGui::PushStyleColor(ImGuiCol_TableHeaderBg, ImVec4(0.120f, 0.130f, 0.160f, 0.92f));
+    ImGui::PushStyleColor(ImGuiCol_TableRowBg,    ImVec4(0.035f, 0.040f, 0.052f, 0.72f));
+    ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, ImVec4(0.075f, 0.080f, 0.095f, 0.76f));
+
     if (ImGui::BeginChild("##avail", child_sz, false) &&
         ImGui::BeginTable("avail_tbl", 5, tflags, child_sz)) {
         ImGui::TableSetupScrollFreeze(0, 1);
@@ -1538,6 +1546,7 @@ void draw_board(BaseContext& ctx, MissionSource source) {
         }
     }
     ImGui::EndChild();
+    ImGui::PopStyleColor(4);
 }
 
 } // namespace
