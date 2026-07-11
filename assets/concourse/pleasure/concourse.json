@@ -161,14 +161,11 @@
     },
     "shipdealer": {
       "background": "shipdealer_bg.png",
-      "bg_size": [320, 200],
-      "overlays": [{
-        "name": "sd", "atlas": "shipdealer_sd.png",
-        "rect": [0.441, 0.44875, 0.12, 0.18],
-        "total_frames": 16, "lead_blanks": 0, "fps": 5.0,
-        "frame_w": 512, "frame_h": 512, "cols": 16, "rows": 1,
-        "atlas_w": 8192, "atlas_h": 512, "real_frames": 16
-      }],
+      "bg_size": [
+        320,
+        200
+      ],
+      "overlays": [],
       "links": [
         {
           "target": "OpenMenu",
