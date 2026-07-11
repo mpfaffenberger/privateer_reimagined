@@ -349,16 +349,19 @@ void draw_concourse(ImDrawList* dl, const ScreenSize& ss, PlayerState& player) {
         draw_links(dl, ss, g_concourse.rooms[(int)BaseScreen::Concourse], /*filter=*/true);
         return;
     }
-    for (const Hotspot& hs : g_def.hotspots) {
+    for (size_t i = 0; i < g_def.hotspots.size(); ++i) {
+        const Hotspot& hs = g_def.hotspots[i];
         const float px = hs.x * ss.w;
         const float py = hs.y * ss.h;
         const float pw = hs.w * ss.w;
         const float ph = hs.h * ss.h;
 
+        ImGui::PushID((int)i);
         ImGui::SetCursorScreenPos(ImVec2(px, py));
-        ImGui::InvisibleButton(hs.label.c_str(), ImVec2(pw, ph));
+        ImGui::InvisibleButton("##base_hotspot", ImVec2(pw, ph));
         const bool hovered = ImGui::IsItemHovered();
         if (ImGui::IsItemClicked()) activate(hs.target);
+        ImGui::PopID();
 
         dl->AddRectFilled(ImVec2(px, py), ImVec2(px + pw, py + ph),
                           hovered ? kHotHover : kHotFill, 4.0f);
@@ -700,15 +703,21 @@ bool base_offers(BaseScreen t) {
 // `filter` gates each link on base_offers() (used by the concourse so a
 // guild-less base doesn't show a guild door).
 void draw_links(ImDrawList* dl, const ScreenSize& ss, const Room& room, bool filter) {
-    for (const Link& lk : room.links) {
+    for (size_t i = 0; i < room.links.size(); ++i) {
+        const Link& lk = room.links[i];
         if (is_action(lk.target)) continue;   // handled inside the room, not nav
         if (filter && !base_offers(lk.target)) continue;
         const float px = lk.rect[0]*ss.w, py = lk.rect[1]*ss.h;
         const float pw = lk.rect[2]*ss.w, ph = lk.rect[3]*ss.h;
+        // IDs must identify the ZONE, not its destination. Multiple authored
+        // doors may legitimately target the same room; using link_label as
+        // the ID made later duplicates impossible to hover or click.
+        ImGui::PushID((int)i);
         ImGui::SetCursorScreenPos(ImVec2(px, py));
-        ImGui::InvisibleButton(link_label(lk.target), ImVec2(pw, ph));
+        ImGui::InvisibleButton("##room_link", ImVec2(pw, ph));
         const bool hovered = ImGui::IsItemHovered();
         if (ImGui::IsItemClicked()) activate(lk.target);
+        ImGui::PopID();
         // Outside edit mode the doorways are INVISIBLE — the painted art is
         // the affordance. On hover we reveal ONLY the label text (no box).
         if (hovered)
