@@ -375,13 +375,17 @@ void append_ship_sprites_for_camera(std::deque<ShipSpriteObject>& ships,
         if (ship.lights_enabled) {
             sprite.lights = frame->art->light_spots;
 
-            // Afterburner cue: every animated light doubles in size while
-            // the ship is burning -- colors stay as authored. Mutating only
-            // this frame's per-instance copy keeps the ART's spots intact,
-            // so non-burning ships and the sprite light editor still see
-            // the original sizes. Cheap O(n_lights); ~4-8 spots per ship.
-            if (ship.afterburner) {
-                for (LightSpot& ls : sprite.lights) ls.size *= 2.0f;
+            // Light radii are authored against the title scene's canonical
+            // 80 m billboard. Flight hulls use their physical ship length,
+            // so scale each copied spot by the same relative size or capital
+            // ships (notably the Paradigm) get fighter-sized engine glows.
+            // This stays ship-specific: environmental SpriteObjects retain
+            // their authored world-space light radii.
+            constexpr float k_light_authoring_ship_size_m = 80.0f;
+            const float hull_scale = sprite.world_size / k_light_authoring_ship_size_m;
+            const float afterburner_scale = ship.afterburner ? 2.0f : 1.0f;
+            for (LightSpot& ls : sprite.lights) {
+                ls.size *= hull_scale * afterburner_scale;
             }
         }
         out_sprites.push_back(sprite);
