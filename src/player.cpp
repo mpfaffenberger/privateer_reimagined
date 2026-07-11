@@ -22,12 +22,12 @@ PlayerState new_game(const std::string& start_system) {
     PlayerState p;
     p.credits         = k_new_game_credits;
     // Canonical Privateer start (np-3dp.25): a stock 'barfy' Tarsus with a
-    // SINGLE laser cannon (not the class-default twin mass drivers) and a
+    // pair of laser cannons (not the class-default twin mass drivers) and a
     // single missile launcher loaded with 4 heat-seekers. The spawn path in
     // main.cpp fits these onto the live ship via apply_player_loadout, so
     // the data here is the single source of truth for the starting hull.
     p.ship_class_name = "tarsus";
-    p.gun_mounts      = { MountSlot{"laser"} }; // one laser, one muzzle
+    p.gun_mounts      = { MountSlot{"laser"}, MountSlot{"laser"} };
     p.current_system  = start_system;
     // Start docked at Achilles Mining Base (Troy) — you begin in the
     // concourse, the way the 1995 game drops you on a base.

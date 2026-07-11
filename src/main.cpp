@@ -887,8 +887,7 @@ void init_cb() {
 // the ship class default_guns (authored in assets/ships/<hull>/ship.json) --
 // the single source of truth for muzzle geometry. p.gun_mounts only decides
 // how many hardpoints are FILLED and with what gun, in list order: a brand-
-// new Tarsus fills slot 0 with its single laser, a bought second gun fills
-// slot 1. Tune muzzle placement in the JSON, never here. Shared by the boot
+// new Tarsus fills slots 0 and 1 with its two lasers. Tune muzzle placement in the JSON, never here. Shared by the boot
 // spawn AND the title NEW handler. Unknown / empty gun names fall back to a Laser.
 static void apply_player_loadout(Ship& pl, const PlayerState& p, bool heal = true) {
     if (const ShipClass* k = ship_class::find(p.ship_class_name)) pl.klass = k;
@@ -943,7 +942,7 @@ static void apply_player_loadout(Ship& pl, const PlayerState& p, bool heal = tru
     const ShipClass* k = pl.klass;
     pl.mounts.clear();
     // Fill hardpoints from the ship class in list order. Count follows the
-    // player's loadout (1 for a new Tarsus, 2 after buying a second), capped
+    // player's loadout (2 for a new Tarsus), capped
     // at the number of hardpoints the hull actually has; with no loadout set
     // (--ship dev override) fill every hardpoint with its default gun.
     const size_t slots = k ? k->default_guns.size() : size_t{0};
@@ -1155,10 +1154,10 @@ void build_system_scene(bool first_time) {
 
     // --ship CLI override (dev): swap the player into an arbitrary hull AND
     // refit it to that class's stock guns, so the override flies a complete
-    // ship rather than new_game's single laser. Applied to g.player HERE
+    // ship rather than new_game's twin lasers. Applied to g.player HERE
     // (before the atlas resolve + ship spawn below read ship_class_name) so
     // the hull, the 3rd-person atlas, and the fitted guns all agree. No
-    // override -> keep new_game's canonical Tarsus + single laser.
+    // override -> keep new_game's canonical Tarsus + twin lasers.
     if (!g_player_ship_override.empty()) {
         if (const ShipClass* k = ship_class::find(g_player_ship_override)) {
             g.player.ship_class_name = g_player_ship_override;
@@ -2230,7 +2229,7 @@ void build_system_scene(bool first_time) {
 
     // Fit the player's persistent loadout onto the freshly-spawned slot-0
     // Ship (np-3dp.25). Class + guns come straight from g.player
-    // (new_game's stock Tarsus + single laser, a loaded save's hull, or a
+    // (new_game's stock Tarsus + twin lasers, a loaded save's hull, or a
     // --ship override applied above), so the live ship can never drift from
     // the player state / equipment shop. apply_player_loadout heals to full
     // and mounts exactly the guns named in p.gun_mounts.

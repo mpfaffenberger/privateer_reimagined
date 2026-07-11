@@ -295,7 +295,7 @@ struct PlayerState {
 namespace player {
 
 // The canonical Privateer start (np-3dp.25): a stock Tarsus fitted with a
-// SINGLE laser cannon + a single launcher of 4 heat-seekers, a modest
+// two laser cannons + a single launcher of 4 heat-seekers, a modest
 // bankroll, an empty hold, docked at Achilles Mining Base in Troy. The
 // spawn path (main.cpp apply_player_loadout) fits these onto the live
 // Ship, so this data is the single source of truth. `start_system` lets
