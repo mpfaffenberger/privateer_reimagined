@@ -1,0 +1,281 @@
+[
+ {
+  "id": "priv_bar_rand_npc_randcu_3",
+  "speaker": "rand_npc/randcu_3",
+  "voice_id": "PrivBarRandNpcRandcu301",
+  "file_id": 413209544081718,
+  "clone_status": "success",
+  "tts_status": "ok",
+  "test_mp3": "assets/speech/clone_tests/PrivBarRandNpcRandcu301.mp3"
+ },
+ {
+  "id": "priv_bar_rand_npc_shpdlr_1",
+  "speaker": "rand_npc/shpdlr_1",
+  "voice_id": "PrivBarRandNpcShpdlr101",
+  "file_id": 413213263315051,
+  "clone_status": "success",
+  "tts_status": "ok",
+  "test_mp3": "assets/speech/clone_tests/PrivBarRandNpcShpdlr101.mp3"
+ },
+ {
+  "id": "priv_bar_terrel",
+  "speaker": "terrel",
+  "voice_id": "PrivBarTerrel01",
+  "file_id": 413216246964313,
+  "clone_status": "success",
+  "tts_status": "ok",
+  "test_mp3": "assets/speech/clone_tests/PrivBarTerrel01.mp3"
+ },
+ {
+  "id": "priv_bar_pc",
+  "speaker": "pc",
+  "voice_id": "PrivBarPc01",
+  "file_id": 413217335136533,
+  "clone_status": "success",
+  "tts_status": "ok",
+  "test_mp3": "assets/speech/clone_tests/PrivBarPc01.mp3"
+ },
+ {
+  "id": "priv_bar_mercgirl",
+  "speaker": "mercgirl",
+  "voice_id": "PrivBarMercgirl01",
+  "file_id": 413215874445405,
+  "clone_status": "success",
+  "tts_status": "ok",
+  "test_mp3": "assets/speech/clone_tests/PrivBarMercgirl01.mp3"
+ },
+ {
+  "id": "priv_bar_miggs",
+  "speaker": "miggs",
+  "voice_id": "PrivBarMiggs01",
+  "file_id": 413212592558175,
+  "clone_status": "success",
+  "tts_status": "ok",
+  "test_mp3": "assets/speech/clone_tests/PrivBarMiggs01.mp3"
+ },
+ {
+  "id": "priv_bar_merchguy",
+  "speaker": "merchguy",
+  "voice_id": "PrivBarMerchguy01",
+  "file_id": 413211851747564,
+  "clone_status": "success",
+  "tts_status": "ok",
+  "test_mp3": "assets/speech/clone_tests/PrivBarMerchguy01.mp3"
+ },
+ {
+  "id": "priv_bar_mastersn",
+  "speaker": "mastersn",
+  "voice_id": "PrivBarMastersn01",
+  "file_id": 413212440121446,
+  "clone_status": "success",
+  "tts_status": "ok",
+  "test_mp3": "assets/speech/clone_tests/PrivBarMastersn01.mp3"
+ },
+ {
+  "id": "priv_bar_sandra",
+  "speaker": "sandra",
+  "voice_id": "PrivBarSandra01",
+  "file_id": 413209569964341,
+  "clone_status": "success",
+  "tts_status": "ok",
+  "test_mp3": "assets/speech/clone_tests/PrivBarSandra01.mp3"
+ },
+ {
+  "id": "priv_bar_monkhous",
+  "speaker": "monkhous",
+  "voice_id": "PrivBarMonkhous01",
+  "file_id": 413211786117228,
+  "clone_status": "success",
+  "tts_status": "ok",
+  "test_mp3": "assets/speech/clone_tests/PrivBarMonkhous01.mp3"
+ },
+ {
+  "id": "priv_bar_monte",
+  "speaker": "monte",
+  "voice_id": "PrivBarMonte01",
+  "file_id": 413208779243838,
+  "clone_status": "success",
+  "tts_status": "ok",
+  "test_mp3": "assets/speech/clone_tests/PrivBarMonte01.mp3"
+ },
+ {
+  "id": "priv_bar_tayla",
+  "speaker": "tayla",
+  "voice_id": "PrivBarTayla01",
+  "file_id": 413212897218674,
+  "clone_status": "voice clone voice id duplicate",
+  "tts_status": "skipped(exists)",
+  "test_mp3": "assets/speech/clone_tests/PrivBarTayla01.mp3"
+ },
+ {
+  "id": "priv_bar_roman",
+  "speaker": "roman",
+  "voice_id": "PrivBarRoman01",
+  "file_id": 413215870988378,
+  "clone_status": "success",
+  "tts_status": "ok",
+  "test_mp3": "assets/speech/clone_tests/PrivBarRoman01.mp3"
+ },
+ {
+  "id": "priv_bar_lynn",
+  "speaker": "lynn",
+  "voice_id": "PrivBarLynn01",
+  "file_id": 413216474800404,
+  "clone_status": "success",
+  "tts_status": "ok",
+  "test_mp3": "assets/speech/clone_tests/PrivBarLynn01.mp3"
+ },
+ {
+  "id": "priv_bar_taryn",
+  "speaker": "taryn",
+  "voice_id": "PrivBarTaryn01",
+  "file_id": 413211103211749,
+  "clone_status": "success",
+  "tts_status": "ok",
+  "test_mp3": "assets/speech/clone_tests/PrivBarTaryn01.mp3"
+ },
+ {
+  "id": "priv_flight_V14",
+  "speaker": "V14",
+  "voice_id": "PrivFlightV1401",
+  "file_id": 413216710918227,
+  "clone_status": "success",
+  "tts_status": "ok",
+  "test_mp3": "assets/speech/clone_tests/PrivFlightV1401.mp3"
+ },
+ {
+  "id": "priv_flight_V05",
+  "speaker": "V05",
+  "voice_id": "PrivFlightV0501",
+  "file_id": 413209023930490,
+  "clone_status": "success",
+  "tts_status": "ok",
+  "test_mp3": "assets/speech/clone_tests/PrivFlightV0501.mp3"
+ },
+ {
+  "id": "priv_flight_V04",
+  "speaker": "V04",
+  "voice_id": "PrivFlightV0401",
+  "file_id": 413211276366059,
+  "clone_status": "success",
+  "tts_status": "ok",
+  "test_mp3": "assets/speech/clone_tests/PrivFlightV0401.mp3"
+ },
+ {
+  "id": "priv_flight_V08",
+  "speaker": "V08",
+  "voice_id": "PrivFlightV0801",
+  "file_id": 413213426528354,
+  "clone_status": "success",
+  "tts_status": "ok",
+  "test_mp3": "assets/speech/clone_tests/PrivFlightV0801.mp3"
+ },
+ {
+  "id": "priv_flight_V09",
+  "speaker": "V09",
+  "voice_id": "PrivFlightV0901",
+  "file_id": 413209569964342,
+  "clone_status": "success",
+  "tts_status": "ok",
+  "test_mp3": "assets/speech/clone_tests/PrivFlightV0901.mp3"
+ },
+ {
+  "id": "priv_flight_V00",
+  "speaker": "V00",
+  "voice_id": "PrivFlightV0001",
+  "file_id": 413216101478490,
+  "clone_status": "success",
+  "tts_status": "ok",
+  "test_mp3": "assets/speech/clone_tests/PrivFlightV0001.mp3"
+ },
+ {
+  "id": "priv_flight_V01",
+  "speaker": "V01",
+  "voice_id": "PrivFlightV0101",
+  "file_id": 413213360169059,
+  "clone_status": "success",
+  "tts_status": "ok",
+  "test_mp3": "assets/speech/clone_tests/PrivFlightV0101.mp3"
+ },
+ {
+  "id": "priv_flight_V02",
+  "speaker": "V02",
+  "voice_id": "PrivFlightV0201",
+  "file_id": 413213701664993,
+  "clone_status": "success",
+  "tts_status": "ok",
+  "test_mp3": "assets/speech/clone_tests/PrivFlightV0201.mp3"
+ },
+ {
+  "id": "priv_flight_V11",
+  "speaker": "V11",
+  "voice_id": "PrivFlightV1101",
+  "file_id": 413218507440195,
+  "clone_status": "success",
+  "tts_status": "ok",
+  "test_mp3": "assets/speech/clone_tests/PrivFlightV1101.mp3"
+ },
+ {
+  "id": "priv_flight_V12",
+  "speaker": "V12",
+  "voice_id": "PrivFlightV1201",
+  "file_id": 413209325605117,
+  "clone_status": "success",
+  "tts_status": "ok",
+  "test_mp3": "assets/speech/clone_tests/PrivFlightV1201.mp3"
+ },
+ {
+  "id": "priv_flight_V15",
+  "speaker": "V15",
+  "voice_id": "PrivFlightV1501",
+  "file_id": 413215471452254,
+  "clone_status": "success",
+  "tts_status": "ok",
+  "test_mp3": "assets/speech/clone_tests/PrivFlightV1501.mp3"
+ },
+ {
+  "id": "priv_flight_V13",
+  "speaker": "V13",
+  "voice_id": "PrivFlightV1301",
+  "file_id": 413214058266734,
+  "clone_status": "success",
+  "tts_status": "ok",
+  "test_mp3": "assets/speech/clone_tests/PrivFlightV1301.mp3"
+ },
+ {
+  "id": "priv_flight_V10",
+  "speaker": "V10",
+  "voice_id": "PrivFlightV1001",
+  "file_id": 413218657403143,
+  "clone_status": "success",
+  "tts_status": "ok",
+  "test_mp3": "assets/speech/clone_tests/PrivFlightV1001.mp3"
+ },
+ {
+  "id": "priv_flight_V03",
+  "speaker": "V03",
+  "voice_id": "PrivFlightV0301",
+  "file_id": 413215919034585,
+  "clone_status": "success",
+  "tts_status": "ok",
+  "test_mp3": "assets/speech/clone_tests/PrivFlightV0301.mp3"
+ },
+ {
+  "id": "priv_flight_V06",
+  "speaker": "V06",
+  "voice_id": "PrivFlightV0601",
+  "file_id": 413210477817974,
+  "clone_status": "success",
+  "tts_status": "ok",
+  "test_mp3": "assets/speech/clone_tests/PrivFlightV0601.mp3"
+ },
+ {
+  "id": "priv_flight_V07",
+  "speaker": "V07",
+  "voice_id": "PrivFlightV0701",
+  "file_id": 413216112779557,
+  "clone_status": "success",
+  "tts_status": "ok",
+  "test_mp3": "assets/speech/clone_tests/PrivFlightV0701.mp3"
+ }
+]

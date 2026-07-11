@@ -158,17 +158,14 @@ CM32L_*.ROM
 /re/dosbox/*
 !/re/dosbox/patch_cnst.py
 
-# --- Voice-line pipeline: generated/cloned audio is large + regenerable ---
-# (regenerate via .agents/commands/generate-voice-lines.md)
-assets/speech/generated/audio/
-assets/speech/generated/scenes/
-assets/speech/clone_tests/
-assets/speech/clone_refs/*.mp3
+# --- Voice-line pipeline ---
+# Unique/runtime audio is tracked in Git LFS so fresh Windows clones work.
+# These analysis caches and organizational mirrors are regenerable; the mirror
+# folders duplicate tracked audio and often use symlinks that are hostile to
+# default Windows Git checkouts.
 assets/speech/flight_embeddings.npz
 assets/speech/flight_by_voice/
 assets/speech/bar_by_speaker/
-assets/speech/scenarios/
-assets/speech/player_comms/
 build_debug/
 
 # Cinematic portrait pipeline content-hash cache (regenerable)
