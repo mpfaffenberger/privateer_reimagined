@@ -202,13 +202,25 @@ std::vector<missions::DestBase> collect_dest_bases(const galaxy::Galaxy& g,
     return out;
 }
 
+// Plot-only/special factions are not ordinary contract fodder. In particular,
+// the unique Steltek drone belongs to the campaign and must never appear as a
+// randomly generated "rogue Steltek" bounty, attack wave, or base assault.
+bool is_procedural_combat_target(Faction f) {
+    return f != Faction::Steltek;
+}
+
 // Outlaw factions = those the lawful universe already distrusts (negative
-// baseline-to-player). Derived, never hardcoded — same source of truth the
-// reputation system reads (faction.h g_faction_baseline_to_player).
+// baseline-to-player). Derived from reputation data, then constrained to the
+// conventional factions procedural mission boards are allowed to target.
 std::vector<Faction> outlaw_factions() {
     std::vector<Faction> out;
-    for (int i = 0; i < kFactionCount; ++i)
-        if (g_faction_baseline_to_player[i] < 0) out.push_back((Faction)i);
+    for (int i = 0; i < kFactionCount; ++i) {
+        const Faction faction = (Faction)i;
+        if (g_faction_baseline_to_player[i] < 0 &&
+            is_procedural_combat_target(faction)) {
+            out.push_back(faction);
+        }
+    }
     return out;
 }
 
@@ -223,9 +235,11 @@ std::vector<Faction> hostile_targets_for(Faction giver) {
     if (gi < 0 || gi >= kFactionCount) return outlaw_factions();
     std::vector<Faction> out;
     for (int i = 0; i < kFactionCount; ++i) {
+        const Faction target = (Faction)i;
         if (i == gi) continue;                       // never target self
+        if (!is_procedural_combat_target(target)) continue;
         if (g_faction_stance[gi][i] == Stance::Hostile)
-            out.push_back((Faction)i);
+            out.push_back(target);
     }
     return out;
 }
