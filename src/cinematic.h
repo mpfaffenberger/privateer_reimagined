@@ -176,9 +176,10 @@ void set_follow_offset_override(HMM_Vec3 offset);
 void clear_follow_offset_override();
 
 // Request a skip. Honored only if the active cinematic is `skippable`
-// (else ignored). Ends the cinematic without running any pending `end`
-// actions. Wire this to the skip key (Esc) while active.
-void skip();
+// (else ignored). Runs pending `end` actions before teardown so skipping
+// cannot strand plot progression or make one-shot cinematics repeat.
+// Wire this to the skip key (Esc) while active.
+void skip(PlayerState& player);
 
 // Draw the 2D overlay for this frame (letterbox, fade, subtitles, portrait
 // panels) via the ImGui foreground draw list. Call from the HUD/overlay

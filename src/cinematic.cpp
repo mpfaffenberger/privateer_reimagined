@@ -371,13 +371,21 @@ void clear_follow_offset_override() {
     g_offset_override_active = false;
 }
 
-void skip() {
+void skip(PlayerState& player) {
     if (!g_active) return;
     if (!g_cin.skippable) {
         std::printf("[cinematic] skip ignored — '%s' is not skippable\n", g_cin.id.c_str());
         return;
     }
     std::printf("[cinematic] SKIP '%s' at %.2fs\n", g_cin.id.c_str(), g_time);
+    // A skip resolves the story just like a natural ending. Run every
+    // still-pending end cue before teardown; fired guards against repeating
+    // an action if the end cue somehow ran immediately before this input.
+    for (Cue& c : g_cin.cues) {
+        if (c.cmd != Cmd::End || c.fired) continue;
+        plot::run_actions(player, c.actions);
+        c.fired = true;
+    }
     end_cinematic("skipped");
 }
 

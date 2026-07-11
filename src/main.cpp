@@ -7045,7 +7045,7 @@ void event_cb(const sapp_event* ev) {
         // is the dev trigger — plays the demo cinematic from Flight (the
         // dev_remote /cinematic/play endpoint lands in Phase 2).
         if (cinematic::active()) {
-            if (ev->key_code == SAPP_KEYCODE_ESCAPE) { cinematic::skip(); return; }
+            if (ev->key_code == SAPP_KEYCODE_ESCAPE) { cinematic::skip(g.player); return; }
         } else if (ev->key_code == SAPP_KEYCODE_F8 && !ev->key_repeat &&
                    g.game.mode == GameMode::Flight) {
             std::string err;
