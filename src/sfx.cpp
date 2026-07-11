@@ -189,8 +189,15 @@ constexpr float k_gun_zone_quiet_m = 15000.0f;
 constexpr float k_gun_zone_gain_full  = 1.00f;
 constexpr float k_gun_zone_gain_med   = 0.50f;
 constexpr float k_gun_zone_gain_quiet = 0.25f;
-constexpr float k_impact_ref_m    = 150.0f,  k_impact_max_m    = 5000.0f;
-constexpr float k_explosion_ref_m = 400.0f,  k_explosion_max_m = 20000.0f;
+// Enemy-hit feedback must carry across normal combat ranges. NPC impacts
+// get a generous reference radius and remain audible to 20 km; player hits
+// retain the tight positional profile (their source is effectively local).
+constexpr float k_player_impact_ref_m = 150.0f;
+constexpr float k_player_impact_max_m = 5000.0f;
+constexpr float k_npc_impact_ref_m    = 1500.0f;
+constexpr float k_npc_impact_max_m    = 20000.0f;
+constexpr float k_explosion_ref_m     = 400.0f;
+constexpr float k_explosion_max_m     = 20000.0f;
 
 } // namespace
 
@@ -338,7 +345,11 @@ void impact(HMM_Vec3 world_pos, bool shield, bool victim_is_player) {
         return;
     }
     g_last_impact_ticks = now;
-    const VoiceId v = audio::play_world(s, world_pos, k_impact_ref_m, k_impact_max_m);
+    const float ref_m = victim_is_player ? k_player_impact_ref_m
+                                         : k_npc_impact_ref_m;
+    const float max_m = victim_is_player ? k_player_impact_max_m
+                                         : k_npc_impact_max_m;
+    const VoiceId v = audio::play_world(s, world_pos, ref_m, max_m);
     float gl = 0, gr = 0; audio::voice_gains(v, &gl, &gr);
     std::printf("[sfx] impact (%s %s) voice %u gain L/R %.2f/%.2f pos %.0f,%.0f,%.0f\n",
                 shield ? "shield" : "armor", victim_is_player ? "player" : "npc",
