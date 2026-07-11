@@ -52,6 +52,11 @@ struct AudioDebugRequests {
 void init();
 void shutdown();
 
+// Build a full-screen startup presentation in the current ImGui frame.
+// The caller owns the swapchain pass and commit so this remains reusable
+// without coupling the UI backend to the application's render plumbing.
+void build_loading(float progress, const char* stage);
+
 // Input forwarding. Call from sapp's event_cb; returns true if ImGui ate
 // the event (so the scene's camera / input handler should ignore it).
 bool handle_event(const sapp_event* e);

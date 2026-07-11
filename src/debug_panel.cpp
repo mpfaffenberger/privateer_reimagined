@@ -81,6 +81,40 @@ void shutdown() {
     simgui_shutdown();
 }
 
+void build_loading(float progress, const char* stage) {
+    simgui_new_frame({
+        sapp_width(),
+        sapp_height(),
+        1.0 / 60.0,
+        sapp_dpi_scale(),
+    });
+
+    progress = std::clamp(progress, 0.0f, 1.0f);
+    ImDrawList* dl = ImGui::GetBackgroundDrawList();
+    const ImVec2 size = ImGui::GetIO().DisplaySize;
+    const ImVec2 center(size.x * 0.5f, size.y * 0.5f);
+
+    const char* title = "NEW PRIVATEER";
+    const ImVec2 title_size = ImGui::CalcTextSize(title);
+    dl->AddText(ImVec2(center.x - title_size.x * 0.5f, center.y - 78.0f),
+                IM_COL32(235, 190, 75, 255), title);
+
+    const float bar_w = std::min(560.0f, size.x * 0.68f);
+    const float bar_h = 18.0f;
+    const ImVec2 bar_min(center.x - bar_w * 0.5f, center.y - bar_h * 0.5f);
+    const ImVec2 bar_max(center.x + bar_w * 0.5f, center.y + bar_h * 0.5f);
+    dl->AddRectFilled(bar_min, bar_max, IM_COL32(18, 24, 38, 255), 4.0f);
+    dl->AddRectFilled(bar_min,
+                      ImVec2(bar_min.x + bar_w * progress, bar_max.y),
+                      IM_COL32(215, 158, 45, 255), 4.0f);
+    dl->AddRect(bar_min, bar_max, IM_COL32(235, 205, 120, 230), 4.0f, 0, 1.5f);
+
+    const char* label = stage ? stage : "Loading...";
+    const ImVec2 label_size = ImGui::CalcTextSize(label);
+    dl->AddText(ImVec2(center.x - label_size.x * 0.5f, center.y + 30.0f),
+                IM_COL32(205, 215, 230, 255), label);
+}
+
 bool handle_event(const sapp_event* e) {
     // Intercept the toggle combo BEFORE forwarding to ImGui so it works
     // even when a widget has keyboard focus. Ctrl rather than Cmd on

@@ -766,6 +766,19 @@ static bool cinematic_play_located(const std::string& id, std::string& err) {
 
 // ---- sokol callbacks --------------------------------------------------------
 
+void present_startup_progress(float progress, const char* stage) {
+    debug_panel::build_loading(progress, stage);
+
+    sg_pass pass{};
+    pass.swapchain = sglue_swapchain();
+    pass.action.colors[0].load_action = SG_LOADACTION_CLEAR;
+    pass.action.colors[0].clear_value = {0.008f, 0.012f, 0.028f, 1.0f};
+    sg_begin_pass(&pass);
+    debug_panel::render();
+    sg_end_pass();
+    sg_commit();
+}
+
 void init_cb() {
     sg_desc desc{};
     desc.environment = sglue_environment();
@@ -813,6 +826,11 @@ void init_cb() {
     sdt_desc.logger.func = slog_func;
     sdtx_setup(&sdt_desc);
 
+    // Bring up the ImGui backend before heavyweight asset initialization so
+    // startup can present real progress instead of leaving a blank window.
+    debug_panel::init();
+    present_startup_progress(0.08f, "Initializing renderer...");
+
     // Clear color only shows if everything else fails to draw.
     g.scene_pass_action.colors[0].load_action = SG_LOADACTION_CLEAR;
     g.scene_pass_action.colors[0].clear_value = g.capture_clean
@@ -831,6 +849,7 @@ void init_cb() {
         std::fprintf(stderr, "[main] post pipeline init failed\n");
         std::exit(1);
     }
+    present_startup_progress(0.20f, "Preparing save data...");
 
     // ---- save-load: adopt the saved system (np-ymp.1) ---------------------
     // When resuming a save (--load/--continue), load the world the player
@@ -863,6 +882,7 @@ void init_cb() {
     if (!galaxy::load("assets/galaxy.json", g.galaxy)) {
         std::fprintf(stderr, "[main] galaxy load failed — single-system mode\n");
     }
+    present_startup_progress(0.32f, "Loading Gemini Sector...");
 
     // ---- build the initial system ----------------------------------------
     // Everything past this point (skybox, sun, belts, sprites, ships,
@@ -992,6 +1012,7 @@ static void apply_pending_player_health_snapshot(Ship& player) {
 }
 
 void build_system_scene(bool first_time) {
+    if (first_time) present_startup_progress(0.42f, "Loading ship and faction data...");
     g.camera.position = g.system.player_start;
 
     // Optional spawn aim. The camera's default forward is -Z (identity
@@ -1321,6 +1342,8 @@ void build_system_scene(bool first_time) {
                     (int)g.system.nav_points.size());
     }
 
+    if (first_time) present_startup_progress(0.58f, "Building star system...");
+
     // Spin up one AsteroidField per entry in the system JSON. Each uses its
     // own seed so placement/sizes are deterministic per-sector.
     g.asteroid_fields.reserve(g.system.asteroid_fields.size());
@@ -1359,7 +1382,7 @@ void build_system_scene(bool first_time) {
     // Dear ImGui debug overlay. Must come after sg_setup() so the sokol
     // backend has a valid device/context to build its pipeline against.
     if (first_time) {
-        debug_panel::init();
+        present_startup_progress(0.65f, "Preparing interface...");
         sprite_light_editor::init();
         atlas_grid_viewer::init();
         sound_labeler::init();
@@ -2008,6 +2031,7 @@ void build_system_scene(bool first_time) {
     // audio::init logs and every later call no-ops, the game runs
     // silent (same resilience philosophy as dev_remote above).
     if (first_time) {
+        present_startup_progress(0.72f, "Loading audio...");
         audio::init();
         g.sfx_blip  = audio::load("assets/sfx/blip.wav");
         g.sfx_burst = audio::load("assets/sfx/burst.wav");
@@ -2114,6 +2138,8 @@ void build_system_scene(bool first_time) {
         std::fprintf(stderr, "[main] sprite renderer init failed\n");
         std::exit(1);
     }
+    if (first_time) present_startup_progress(0.82f, "Loading ship artwork...");
+
     // Load bolt sprite art (per-GunType animated frames from assets/bolts/).
     // Flattened into bolt_textures with per-type offsets for the renderer.
     if (first_time) {
@@ -2610,6 +2636,7 @@ bool load_and_build_system(const std::string& id, bool first_time) {
     if (!first_time) unload_current_system();
     g.system = std::move(*loaded);
     build_system_scene(first_time);
+    if (first_time) present_startup_progress(1.0f, "Entering Gemini Sector...");
 
     g.player.current_system = id;
     g.system_loaded = true;
