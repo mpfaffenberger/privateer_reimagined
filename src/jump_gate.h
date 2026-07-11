@@ -35,12 +35,12 @@ struct JumpGate {
     sg_pipeline pipeline{};
 
     // ---- per-render knobs (sane defaults; main.cpp can override later) ---
-    // radius_m is the world-space half-extent of each gate's shell. Default
-    // 1500 m so a gate reads from a couple km out without blotting the
-    // skybox at close range. Tint .rgb is the deep-blue core colour
+    // radius_m is the world-space half-extent of each gate's visual only;
+    // jump activation distance is owned by jump.cpp. A 2500 m radius keeps
+    // the hole readable without blotting out the sky at close range. Tint .rgb is the deep-blue core colour
     // (silhouette rim hue is shader-side, hotter white-blue); .a multiplies
     // shell intensity (0 = invisible, 1 = full-brightness pulse cycle).
-    float    radius_m   = 7500.0f;
+    float    radius_m   = 2500.0f;
     HMM_Vec4 tint       = { 0.15f, 0.35f, 0.85f, 1.10f };
     float    pulse_slow_hz = 0.25f;   // ~4 s period breath
     float    pulse_fast_hz = 1.30f;   // shimmer overlay
