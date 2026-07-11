@@ -108,6 +108,7 @@ constexpr int   k_max_arm_attempts = 30;
 // resolves class_name -> atlas + display size and runs the spawn recipe.
 struct SpawnRequest {
     std::string class_name;                 // ship_class::find key, e.g. "talon"
+    std::string display_name;               // named pilot/NPC; empty = class label
     HMM_Vec3    position    = { 0, 0, 0 };  // world spawn point (8-15 km from player)
     Faction     faction     = Faction::Civilian;
     AIState     initial_ai_state = AIState::Patrol;

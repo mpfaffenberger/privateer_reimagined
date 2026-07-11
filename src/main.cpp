@@ -3146,8 +3146,9 @@ static uint32_t encounter_spawn(const encounters::SpawnRequest& req) {
     spr.world_size = encounter_class_length(req.class_name) * world_scale::k_ship_size_scale;
 
     Ship inst       = ship::spawn(*klass);
-    inst.sprite     = &spr;
-    inst.faction    = req.faction;
+    inst.sprite       = &spr;
+    inst.faction      = req.faction;
+    inst.display_name = req.display_name;
 
     // Talon loadout rule (global): the ONLY Talons that keep the stock
     // 2x laser + center mass driver (the ship.json default) are PIRATE

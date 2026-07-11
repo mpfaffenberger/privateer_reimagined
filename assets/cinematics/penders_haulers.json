@@ -42,6 +42,7 @@
       "cmd": "spawn",
       "actor": "hauler1",
       "class": "drayman",
+      "display_name": "Captain Vance",
       "faction": "merchant",
       "pos": [
         78000,
@@ -54,6 +55,7 @@
       "cmd": "spawn",
       "actor": "hauler2",
       "class": "drayman",
+      "display_name": "Reesa Kort",
       "faction": "merchant",
       "pos": [
         74000,

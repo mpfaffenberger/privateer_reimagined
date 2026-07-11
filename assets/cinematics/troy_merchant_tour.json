@@ -43,6 +43,7 @@
       "cmd": "spawn",
       "actor": "merchant_ship",
       "class": "drayman",
+      "display_name": "Old Mack",
       "faction": "merchant",
       "pos": [
         204000.0,

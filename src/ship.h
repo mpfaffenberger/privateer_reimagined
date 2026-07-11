@@ -108,6 +108,10 @@ struct Ship {
     // and owes a reputation consequence.
     uint32_t          killed_by_id = 0;
 
+    // Authored identity for named NPCs ("Old Mack", "Reesa Kort"). Empty
+    // for procedural traffic, whose UI label falls back to the hull class.
+    std::string       display_name;
+
     // Player grievance (np): repeated player hits on an otherwise non-hostile
     // ship provoke it. Once player_hit_count reaches k_provoke_hits the ship
     // bears a grudge (provoked_by_player) and perception::classify_pair treats

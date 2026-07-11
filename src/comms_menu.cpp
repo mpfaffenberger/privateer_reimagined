@@ -324,8 +324,10 @@ void rebuild_dests(const StarSystem& sys, const Ship* target,
         g_dests.push_back(std::move(d));
     }
     if (target) {
-        const char* cls = target->klass ? target->klass->display_name.c_str()
-                                         : "Unknown";
+        const char* cls = !target->display_name.empty()
+                            ? target->display_name.c_str()
+                            : (target->klass ? target->klass->display_name.c_str()
+                                             : "Unknown");
         const char* fac = faction::to_name(target->faction);
         char buf[160];
         std::snprintf(buf, sizeof(buf), "Target: %s / %s", cls, fac);

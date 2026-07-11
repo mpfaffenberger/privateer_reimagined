@@ -455,9 +455,10 @@ void draw_target_mfd(const Camera& cam, const ShipRegistry& ships,
             // Right column: identity + range + stance + HP bars.
             ImGui::BeginGroup();
 
-            const char* class_name = target->klass
-                ? target->klass->display_name.c_str()
-                : (target->is_player ? "PLAYER" : "?");
+            const char* class_name = !target->display_name.empty()
+                ? target->display_name.c_str()
+                : (target->klass ? target->klass->display_name.c_str()
+                                 : (target->is_player ? "PLAYER" : "?"));
             ImGui::PushStyleColor(ImGuiCol_Text, kHudWhite);
             ImGui::Text("%s", class_name);
             ImGui::PopStyleColor();

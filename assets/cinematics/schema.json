@@ -134,6 +134,7 @@
             "properties": {
               "actor":   { "type": "string" },
               "class":   { "type": "string", "description": "ship_class key" },
+            "display_name": { "type": "string", "description": "Optional named NPC/pilot label shown by the flight HUD." },
               "faction": { "type": "string", "default": "civilian" },
               "pos":     { "$ref": "#/definitions/vec3" }
             }

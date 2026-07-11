@@ -535,6 +535,7 @@ void tick(float dt, ShipRegistry& ships, PlayerState& player,
                 // not a class hardcoded at author time.
                 req.class_name = (c.klass == "$player")
                                      ? player.ship_class_name : c.klass;
+                req.display_name = c.display_name;
                 req.faction    = faction::from_name(c.faction);
                 req.position   = c.pos;
                 req.patrol_anchor = c.pos;

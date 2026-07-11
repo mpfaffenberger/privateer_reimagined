@@ -57,7 +57,7 @@ struct Cue {
     bool                ease_smooth = true;
 
     // spawn / actor_path
-    std::string           actor, klass, faction;
+    std::string           actor, klass, faction, display_name;
     std::vector<HMM_Vec3> actor_keys;
 
     // line / subtitle

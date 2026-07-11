@@ -137,9 +137,10 @@ bool parse_cue(const json::Value& v, Cue& out) {
             break;
         }
         case Cmd::Spawn:
-            out.actor   = str(v, "actor", "");
-            out.klass   = str(v, "class", "");
-            out.faction = str(v, "faction", "civilian");
+            out.actor        = str(v, "actor", "");
+            out.klass        = str(v, "class", "");
+            out.faction      = str(v, "faction", "civilian");
+            out.display_name = str(v, "display_name", "");
             if (const json::Value* p = v.find("pos")) out.pos = read_vec3(*p);
             break;
         case Cmd::ActorPath:
