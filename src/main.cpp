@@ -6973,6 +6973,26 @@ void event_cb(const sapp_event* ev) {
         if (ev->mouse_button == 1) g.mouse_right_held = false;
     }
 
+    // Global double-Escape quit must run BEFORE title, landed screens,
+    // cinematics, ImGui, and dev tools get a chance to consume the key.
+    // The first tap still falls through to its normal local behavior
+    // (back/close/skip); only the second tap inside one second exits.
+    if (ev->type == SAPP_EVENTTYPE_KEY_DOWN && !ev->key_repeat &&
+        ev->key_code == SAPP_KEYCODE_ESCAPE) {
+        const uint64_t now = stm_now();
+        const double gap = g.escape_armed_ticks
+                         ? stm_sec(stm_diff(now, g.escape_armed_ticks))
+                         : 999.0;
+        if (gap < 1.0) {
+            g.escape_armed_ticks = 0;
+            std::printf("[new_privateer] double escape — quitting\n");
+            sapp_request_quit();
+            return;
+        }
+        g.escape_armed_ticks = now;
+        std::printf("[new_privateer] escape armed — tap again within 1s to quit\n");
+    }
+
     // 3rd-person orbit zoom: scroll wheel changes camera distance while the
     // autopilot freelook camera is active. Handled up top so ImGui/editor
     // handlers can't swallow it; clamped in update_orbit_camera.
@@ -7067,18 +7087,6 @@ void event_cb(const sapp_event* ev) {
             if (!cinematic_play_located("demo_exchange", err))
                 std::printf("[cinematic] F9 demo refused: %s\n", err.c_str());
             return;
-        }
-        if (ev->key_code == SAPP_KEYCODE_ESCAPE) {
-            const uint64_t now  = stm_now();
-            const double   gap  = g.escape_armed_ticks
-                                ? stm_sec(stm_diff(now, g.escape_armed_ticks))
-                                : 999.0;
-            if (gap < 1.0) {
-                sapp_request_quit();
-            } else {
-                g.escape_armed_ticks = now;
-                std::printf("[new_privateer] escape armed — tap again within 1s to quit\n");
-            }
         }
         // N — cycle target through nav_points. KEY_DOWN (not keys_down
         // polled per frame) so a single press advances exactly one slot,
