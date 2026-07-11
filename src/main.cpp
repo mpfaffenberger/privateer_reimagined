@@ -549,6 +549,11 @@ struct AppState {
     // damaged save keeps you damaged. One-shot; cleared after apply.
     bool apply_health_pending = false;
     bool show_load_menu       = false;   // title LOAD picker open (np-3dp.19)
+    // Snapshot save metadata once when LOAD opens. Parsing every accumulated
+    // JSON save every render frame made the title crawl for long-running
+    // profiles. No saves can be created from this modal, so entry-time
+    // refresh is both current and dramatically cheaper.
+    std::vector<savegame::SlotInfo> load_menu_saves;
 
     // Title 'galaxy tour' (np-3dp.13): during the ChaseCam variant the hero
     // ship cruises toward a jump hole and 'jumps' (sky reskin + sun repos)
@@ -6511,8 +6516,10 @@ void frame_cb() {
                     // Open the save picker (np-3dp.19): a scrollable list of
                     // every accumulated save, newest first. Selection loads
                     // that file + enters flight (handled below).
+                    g.load_menu_saves = savegame::list_saves();
                     g.show_load_menu = true;
-                    std::printf("[title] LOAD clicked — opening save picker\n");
+                    std::printf("[title] LOAD clicked — opening save picker (%zu saves)\n",
+                                g.load_menu_saves.size());
                 } else if (a == title_screen::Action::Options) {
                     std::printf("[title] OPTIONS clicked — coming soon\n");
                 } else if (a == title_screen::Action::Quit) {
@@ -6524,8 +6531,8 @@ void frame_cb() {
             // Save picker (np-3dp.19): a centered modal listing every
             // accumulated save, newest first, each row the full timestamped
             // title. Click a row to load it + enter flight; Close/Esc backs
-            // out to the menu. Rebuilt each frame from disk so a fresh
-            // autosave shows up without a restart.
+            // out to the menu. Metadata is snapshotted when LOAD is clicked;
+            // rescanning and parsing every save every frame scales horribly.
             if (g.show_load_menu) {
                 const ImGuiViewport* vp = ImGui::GetMainViewport();
                 ImGui::SetNextWindowPos(
@@ -6540,7 +6547,7 @@ void frame_cb() {
                 if (ImGui::Begin("LOAD GAME", nullptr,
                                  ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
                                  ImGuiWindowFlags_NoCollapse)) {
-                    const std::vector<savegame::SlotInfo> saves = savegame::list_saves();
+                    const std::vector<savegame::SlotInfo>& saves = g.load_menu_saves;
                     if (saves.empty()) {
                         ImGui::TextUnformatted("No saves yet — land at a base to autosave.");
                     } else {
