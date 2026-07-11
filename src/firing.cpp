@@ -212,7 +212,8 @@ void firing::tick(ShipRegistry& ships,
 
                 // Lead prediction (ITTS) on the target's world velocity.
                 const HMM_Vec3 lead = aim::lead_point(
-                    muzzle, target->position, target->world_velocity, gs.speed_mps);
+                    muzzle, s.world_velocity, target->position,
+                    target->world_velocity, gs.speed_mps);
                 HMM_Vec3 d = HMM_SubV3(lead, muzzle);
                 const float dl2 = HMM_DotV3(d, d);
                 if (dl2 < 1e-9f) continue;

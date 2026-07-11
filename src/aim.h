@@ -9,8 +9,10 @@
 // to point the nose), the player's ITTS reticle (main.cpp), and now NPC
 // turrets (firing.cpp), which need a per-mount aim vector.
 //
-// The math: let r = target_pos - shooter_pos, v = target_vel, s = proj
-// speed. We want the time t at which the projectile (travelling distance
+// The math: let r = target_pos - shooter_pos,
+// v = target_vel - shooter_vel, and s = projectile speed relative to the
+// shooter. Projectiles inherit shooter velocity, so relative velocity is
+// required for correct fire-control from moving ships. We want the time t at which the projectile (travelling distance
 // s*t from the shooter) reaches the target's future position:
 //
 //     |r + v*t|^2 = (s*t)^2
@@ -35,19 +37,20 @@
 namespace aim {
 
 // World-space point to aim a projectile of `proj_speed` (m/s) at, so it
-// intercepts a target now at `target_pos` moving at `target_vel` (world
-// m/s), fired from `shooter_pos`. Degrades to the straight-line lead
-// (dist/speed) when no positive intercept time exists. Never returns a
-// NaN — proj_speed ≤ 0 just yields target_pos unchanged.
+// intercepts a moving target. Both velocities are world-space; the shot is
+// assumed to inherit `shooter_vel`, matching firing.cpp. Degrades to the
+// straight-line lead when no positive intercept exists. Never returns NaN.
 inline HMM_Vec3 lead_point(HMM_Vec3 shooter_pos,
+                           HMM_Vec3 shooter_vel,
                            HMM_Vec3 target_pos,
                            HMM_Vec3 target_vel,
                            float    proj_speed) {
     const HMM_Vec3 r = HMM_SubV3(target_pos, shooter_pos);
+    const HMM_Vec3 relative_vel = HMM_SubV3(target_vel, shooter_vel);
     if (proj_speed <= 1.0f) return target_pos;
 
-    const float a = HMM_DotV3(target_vel, target_vel) - proj_speed * proj_speed;
-    const float b = 2.0f * HMM_DotV3(r, target_vel);
+    const float a = HMM_DotV3(relative_vel, relative_vel) - proj_speed * proj_speed;
+    const float b = 2.0f * HMM_DotV3(r, relative_vel);
     const float c = HMM_DotV3(r, r);
 
     float t = -1.0f;
@@ -74,7 +77,7 @@ inline HMM_Vec3 lead_point(HMM_Vec3 shooter_pos,
         t = dist / proj_speed;
     }
 
-    return HMM_AddV3(target_pos, HMM_MulV3F(target_vel, t));
+    return HMM_AddV3(target_pos, HMM_MulV3F(relative_vel, t));
 }
 
 } // namespace aim

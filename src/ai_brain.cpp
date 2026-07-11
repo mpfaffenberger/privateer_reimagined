@@ -18,6 +18,7 @@
 #include "ai_brain.h"
 
 #include "armor.h"
+#include "aim.h"
 #include "comm.h"
 #include "faction.h"
 #include "gun.h"
@@ -410,13 +411,13 @@ Ctx make_ctx(Ship& s, const Ship& t, const ShipRegistry& all, float t_now) {
     // class hint, then 4500.
     c.gun_range = (max_range > 0.0f) ? max_range
                 : (s.klass && s.klass->weapons_range > 0.0f ? s.klass->weapons_range : 4500.0f);
-    HMM_Vec3 t_vel = HMM_V3(0, 0, 0);
-    if (t.sprite) {
-        const HMM_Vec4 tf = HMM_MulM4V4(HMM_QToM4(t.orientation), HMM_V4(0, 0, 1, 0));
-        t_vel = HMM_MulV3F(HMM_V3(tf.X, tf.Y, tf.Z), t.sprite->forward_speed);
-    }
-    const float t_int = (avg_proj_speed > 1.0f) ? c.dist / avg_proj_speed : 0.0f;
-    c.lead_pos = HMM_AddV3(t.position, HMM_MulV3F(t_vel, t_int));
+    // Exact first-order interception using synchronized world velocities.
+    // Projectiles inherit the shooter's velocity, so the shared solver uses
+    // target-minus-shooter relative motion. This matters most when agile
+    // fighters cross or circle each other at comparable speeds.
+    c.lead_pos = aim::lead_point(s.position, s.world_velocity,
+                                 t.position, t.world_velocity,
+                                 avg_proj_speed);
     return c;
 }
 
