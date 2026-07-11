@@ -25,13 +25,13 @@ out float v_alpha;
 void main() {
     float E = field_params.x;
 
-    // Translate by the camera position, then wrap so the speck always lands
-    // in [cam - E, cam + E]. This makes the cloud *follow* the camera, giving
-    // the illusion of an infinite parallax field.
-    vec3 p = a_pos * E + cam_pos.xyz;
-    vec3 rel = p - cam_pos.xyz;
-    rel = mod(rel + E, 2.0 * E) - E;
-    p   = cam_pos.xyz + rel;
+    // Treat the VBO positions as a repeating WORLD-space cell, then wrap
+    // that cell around the camera. Do not add the camera before deriving
+    // `rel`: doing so cancels the subtraction algebraically and glues every
+    // speck to the camera, eliminating all fly-by motion.
+    vec3 world_seed = a_pos * E;
+    vec3 rel = mod(world_seed - cam_pos.xyz + E, 2.0 * E) - E;
+    vec3 p   = cam_pos.xyz + rel;
 
     // Fade dust near the cubic boundary to avoid a hard pop when it wraps.
     float edge = max(max(abs(rel.x), abs(rel.y)), abs(rel.z)) / E;
