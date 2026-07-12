@@ -235,7 +235,7 @@
       "text": "Pender's Star haulers, this is Grayson. Mind if I tuck into your formation? This lane's been eating ships.",
       "side": "left",
       "dur": 5.0,
-      "portrait": "portraits/grayson/studio_cinematic_01.png",
+      "portrait": "portraits/grayson/_ref.png",
       "voice_file": "audio/studio_cinematic_grayson_01.mp3",
       "t": 10.0
     },
@@ -261,7 +261,7 @@
       "text": "Plenty of room, privateer. Truth be told - we're glad of the extra guns out here.",
       "side": "right",
       "dur": 4.5,
-      "portrait": "portraits/vance/studio_cinematic_01.png",
+      "portrait": "portraits/vance/_ref.png",
       "voice_file": "audio/studio_cinematic_vance_01.mp3",
       "t": 17.0
     },
@@ -287,7 +287,7 @@
       "text": "Third convoy this month gone dark out here, Cap. No wreckage. No beacon. Nothing.",
       "side": "left",
       "dur": 5.0,
-      "portrait": "portraits/kort/studio_cinematic_01.png",
+      "portrait": "portraits/kort/_ref.png",
       "voice_file": "audio/studio_cinematic_kort_01.mp3",
       "t": 23.5
     },
@@ -329,7 +329,7 @@
       "text": "Ships don't just vanish. Somebody's out here picking us off the lane, one at a time.",
       "side": "right",
       "dur": 5.0,
-      "portrait": "portraits/vance/studio_cinematic_02.png",
+      "portrait": "portraits/vance/_ref.png",
       "voice_file": "audio/studio_cinematic_vance_02.mp3",
       "t": 30.5
     },
@@ -371,7 +371,7 @@
       "text": "I don't like this field, Cap. I've had a bad feeling since we jumped in.",
       "side": "left",
       "dur": 4.0,
-      "portrait": "portraits/kort/studio_cinematic_02.png",
+      "portrait": "portraits/kort/_ref.png",
       "voice_file": "audio/studio_cinematic_kort_02.mp3",
       "t": 39.9
     },
@@ -644,7 +644,7 @@
       "text": "You've fallen right into our trap, little piggies!",
       "side": "right",
       "dur": 4.5,
-      "portrait": "portraits/pirate/studio_cinematic_01.png",
+      "portrait": "portraits/pirate/_ref.png",
       "voice_file": "audio/studio_cinematic_pirate_01.mp3",
       "t": 56.5
     },

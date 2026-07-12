@@ -109,7 +109,7 @@
       "text": "Privateer, you saved our hides. We'd have been scrap drifting to Perry without you.",
       "side": "right",
       "dur": 4.8,
-      "portrait": "portraits/vance/studio_cinematic_02.png",
+      "portrait": "portraits/vance/_ref.png",
       "voice_file": "audio/penders_thanks_vance_01.mp3",
       "t": 0.5
     },
@@ -135,7 +135,7 @@
       "text": "Thank you, Grayson. Drinks are on us if you ever limp into New Glasgow in one piece.",
       "side": "left",
       "dur": 5.2,
-      "portrait": "portraits/kort/studio_cinematic_02.png",
+      "portrait": "portraits/kort/_ref.png",
       "voice_file": "audio/penders_thanks_kort_01.mp3",
       "t": 6.1
     },
