@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include <filesystem>
 #include <fstream>
 #include <string>
 
@@ -210,15 +211,33 @@ void start_crossfade(music::Track t) {
     std::printf("[music] -> %s\n", music::to_name(t));
 }
 
+// System nav data may suffix a base's folder id with its type
+// (new_detroit_industrial, drake_pirate, ...). Resolve the same way the base
+// renderer does so music and visuals cannot disagree about which definition
+// the player docked at.
+std::string resolve_base_folder(std::string id) {
+    namespace fs = std::filesystem;
+    auto exists = [](const std::string& candidate) {
+        return fs::exists("assets/bases/" + candidate + "/base.json");
+    };
+    while (!id.empty() && !exists(id)) {
+        const std::string::size_type split = id.rfind('_');
+        if (split == std::string::npos) return {};
+        id.resize(split);
+    }
+    return exists(id) ? id : std::string{};
+}
+
 // Resolve a docked base_id to its landed bed, caching the JSON read.
 music::Track base_track_for(const char* base_id) {
     const std::string id = base_id ? base_id : "";
     if (id == g_cached_base_id) return g_cached_base_track;
     g_cached_base_id = id;
     g_cached_base_track = music::Track::BaseAgricultural;   // calm default
-    if (!id.empty()) {
+    const std::string folder = resolve_base_folder(id);
+    if (!folder.empty()) {
         const json::Value root =
-            json::parse_file("assets/bases/" + id + "/base.json");
+            json::parse_file("assets/bases/" + folder + "/base.json");
         if (root.is_object()) {
             if (const json::Value* m = root.find("market");
                 m && m->is_object() && m->contains("archetype")) {
