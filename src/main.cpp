@@ -57,6 +57,7 @@
 #include "player.h"
 #include "savegame.h"
 #include "base_screens.h"
+#include "base_art_studio.h"
 #include "debug_panel.h"
 #include "dev_remote.h"
 #include "docking.h"
@@ -829,6 +830,7 @@ void init_cb() {
     // Bring up the ImGui backend before heavyweight asset initialization so
     // startup can present real progress instead of leaving a blank window.
     debug_panel::init();
+    base_art_studio::init();
     present_startup_progress(0.08f, "Initializing renderer...");
 
     // Clear color only shows if everything else fails to draw.
@@ -3634,6 +3636,8 @@ void frame_stub() {
         base_screens::build(g.player, g.ships.player(), g.docking, g.camera, g.game,
                             g.sun.position);
     }
+    // Draw after the full-screen base window so the F11 Studio remains on top.
+    base_art_studio::build();
 
     sg_pass p{};
     p.swapchain = sglue_swapchain();
@@ -6957,6 +6961,7 @@ void frame_cb() {
 
 void cleanup_cb() {
     dev_remote::stop();
+    base_art_studio::shutdown();
     audio::shutdown();
     sdtx_shutdown();
     g.post.destroy();
@@ -7063,6 +7068,8 @@ void event_cb(const sapp_event* ev) {
     // Ctrl+K — Cinematic Studio. Ahead of debug_panel so the toggle beats
     // ImGui widget focus, same trick as the F-key tools above.
     if (cinematic::studio::handle_event(ev))     return;
+    // F11 Base Art Studio; available only when its landed-room seam resolves.
+    if (base_art_studio::handle_event(ev))        return;
     if (debug_panel::handle_event(ev)) return;
 
     // Non-Flight modes: the sim is paused, so game input is ignored.

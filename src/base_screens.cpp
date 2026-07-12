@@ -1029,6 +1029,32 @@ bool current_room_zone(BaseScreen target, float out_xywh[4]) {
     return false;
 }
 
+bool current_room_info(CurrentRoomInfo& out) {
+    if (g_stack.empty() || g_def.id.empty() || !g_concourse.valid) return false;
+    const BaseScreen screen = g_stack.back();
+    const char* key = room_key(screen);
+    if (!key[0]) return false;
+    out.base_id = g_def.id; out.display_name = g_def.display_name;
+    out.faction = g_def.faction; out.archetype = g_concourse.type; out.room = key;
+    out.asset_path = "assets/concourse/" + g_concourse.type + "/" + key + "_bg.png";
+    return true;
+}
+
+bool reload_current_room_texture(const std::string& png_path) {
+    if (g_stack.empty() || !g_concourse.valid) return false;
+    Room& room = g_concourse.rooms[(int)g_stack.back()];
+    TextureSlot replacement{};
+    if (!load_texture_png(png_path, replacement)) return false;
+    if (room.background.valid) {
+        sg_destroy_view(room.background.view);
+        sg_destroy_image(room.background.image);
+    }
+    room.background = replacement;
+    room.valid = true;
+    std::printf("[base] hot reloaded %s from %s\n", room_key(g_stack.back()), png_path.c_str());
+    return true;
+}
+
 void enter(const std::string& base_id) {
     // Reset any prior base's GPU texture before loading the new one.
     if (g_art.valid) { /* slot reuse handled by load below via destroy */ }

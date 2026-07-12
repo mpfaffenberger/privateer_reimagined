@@ -43,6 +43,7 @@
 
 #include <functional>
 #include <string>
+#include <vector>
 
 struct PlayerState;
 struct Docking;
@@ -115,6 +116,15 @@ void register_screen(BaseScreen screen, ScreenHook hook);
 // true if a zone with that target was placed; false otherwise. Used by the
 // Commodity Exchange to find its display/buy/sell/next/prev hotspots.
 bool current_room_zone(BaseScreen target, float out_xywh[4]);
+
+// Narrow Base Art Studio seam. Paths are repo-relative and describe only the
+// currently displayed landed room. reload_current_room_texture transactionally
+// loads first and swaps only on success, preserving a working live texture.
+struct CurrentRoomInfo {
+    std::string base_id, display_name, faction, archetype, room, asset_path;
+};
+bool current_room_info(CurrentRoomInfo& out);
+bool reload_current_room_texture(const std::string& png_path);
 
 // Called on the transition INTO Landed. Loads assets/bases/<base_id>/base.json
 // and its concourse PNG, and resets the screen stack to {Concourse}. Safe to

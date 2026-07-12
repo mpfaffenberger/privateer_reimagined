@@ -104,6 +104,7 @@ assets/ships/*/sprites_ingame/
 # Local AI generation experiments (promote intentionally if useful)
 assets/ships/*/regen_trials/
 generated/base_imagery/
+generated/base_art_studio/
 
 # In-game sprite-generation workbench requests/logs/status files
 assets/shipgen/

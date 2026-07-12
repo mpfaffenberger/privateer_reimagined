@@ -212,6 +212,7 @@ add_executable(new_privateer
     src/escort.cpp
     src/drone.cpp
     src/base_screens.cpp
+    src/base_art_studio.cpp
     src/savegame.cpp
     src/player.cpp
     src/plot.cpp
