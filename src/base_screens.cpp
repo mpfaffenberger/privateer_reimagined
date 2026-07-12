@@ -341,6 +341,24 @@ void draw_back_to_concourse_button(const ScreenSize& ss) {
     }
 }
 
+// OpenMenu turns an authored showroom into a modal service overlay. Give that
+// state its own readable backdrop and an unmistakable dismissal control;
+// relying on a bottom-left generic Back button made the dealer feel like a
+// navigation dead end, especially at short window heights.
+void draw_open_menu_chrome(ImDrawList* dl, const ScreenSize& ss) {
+    dl->AddRectFilled(ImVec2(16, 16), ImVec2(ss.w - 16, ss.h - 16),
+                      IM_COL32(8, 12, 22, 224), 7.0f);
+    dl->AddRect(ImVec2(16, 16), ImVec2(ss.w - 16, ss.h - 16),
+                kAmberDim, 7.0f, 0, 1.0f);
+
+    ImGui::SetCursorScreenPos(ImVec2(ss.w - 148, 24));
+    if (ImGui::Button("CLOSE  X", ImVec2(116, 32))) {
+        g_menu_open = false;
+        sfx::ui_click();
+        std::printf("[base] close %s menu\n", screen_name(g_menu_screen));
+    }
+}
+
 // Draw the concourse hub. When the art set has placed transition links
 // (positioned on the real art by the F3 editor), use those — filtered to the
 // services THIS base offers. Otherwise fall back to base.json's grid hotspots.
@@ -1229,7 +1247,10 @@ void build(PlayerState& player, Ship* player_ship, Docking& d, Camera& cam, Game
             // already did. Matches the original game's look: the trading/
             // dealer/guild computer is an overlay ON the scene, not a screen
             // that replaces it.
-            if (gated) g_menu_screen = cur;
+            if (gated) {
+                g_menu_screen = cur;
+                draw_open_menu_chrome(dl, ss);
+            }
             draw_subscreen(dl, ss, cur, player);
         }
     }

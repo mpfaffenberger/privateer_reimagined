@@ -536,6 +536,16 @@ void draw_dealer(BaseContext& ctx) {
 
     ImGui::SetCursorScreenPos(ImVec2(28, 92));
     const ImVec2 child_sz(ss.w - 56, ss.h - 92 - 70);
+    // The dealer is modal over bright authored room art. Keep the table's own
+    // surfaces opaque enough to remain legible even before considering the
+    // base-screen smoked-glass backdrop; headers and alternating rows retain
+    // clear hierarchy rather than borrowing accidental colors from the art.
+    ImGui::PushStyleColor(ImGuiCol_ChildBg,   ImVec4(0.025f, 0.035f, 0.060f, 0.94f));
+    ImGui::PushStyleColor(ImGuiCol_Header,    ImVec4(0.12f, 0.14f, 0.19f, 0.98f));
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.17f, 0.19f, 0.25f, 1.00f));
+    ImGui::PushStyleColor(ImGuiCol_TableRowBg,    ImVec4(0.035f, 0.045f, 0.070f, 0.92f));
+    ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, ImVec4(0.065f, 0.075f, 0.105f, 0.94f));
+    ImGui::PushStyleColor(ImGuiCol_TableBorderLight, ImVec4(0.55f, 0.46f, 0.22f, 0.55f));
     constexpr ImGuiTableFlags tflags =
         ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerH |
         ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit;
@@ -616,6 +626,7 @@ void draw_dealer(BaseContext& ctx) {
         ImGui::EndTable();
     }
     ImGui::EndChild();
+    ImGui::PopStyleColor(6);
 }
 
 // ---- Equipment --------------------------------------------------------------
