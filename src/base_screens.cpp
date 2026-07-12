@@ -122,6 +122,17 @@ struct ConcourseSet {
 BaseDef                  g_def;
 TextureSlot              g_art;            // concourse PNG; valid==false if missing
 ConcourseSet             g_concourse;      // animated WCU art set (optional, by archetype)
+TextureSlot              g_landing_composite; // installed full-frame ship × archetype art
+TextureSlot              g_landing_preview;   // temporary F11 full-frame override
+std::string              g_landing_composite_key;
+std::string              g_landing_preview_ship;
+
+void release_texture(TextureSlot& texture) {
+    if (!texture.valid) return;
+    sg_destroy_view(texture.view);
+    sg_destroy_image(texture.image);
+    texture = TextureSlot{};
+}
 
 // "Shop menu open" gate for rooms with an OpenMenu zone (ship dealer, guild
 // consoles). The room shows its art + NPC until the player clicks the zone,
@@ -754,15 +765,39 @@ void draw_ship_pose(ImDrawList* dl, const ScreenSize& ss, const ShipPose& pose) 
 // Launch). No facility filter — every base can launch + enter.
 void draw_landing(ImDrawList* dl, const ScreenSize& ss) {
     Room& lp = g_concourse.rooms[(int)BaseScreen::LandingPad];
-    draw_room(dl, ss, lp);
-    // Parked ship = the player's current hull, drawn with its authored pose
-    // for this base type (or a default angle/size if not posed yet).
-    const std::string pcls = (g_player_ship && g_player_ship->klass)
-                           ? g_player_ship->klass->name : std::string();
-    if (!pcls.empty()) {
-        if (const ShipPose* p = find_pose(pcls)) draw_ship_pose(dl, ss, *p);
-        else { ShipPose def; def.cls = pcls; draw_ship_pose(dl, ss, def); }
+    const std::string player_class = (g_player_ship && g_player_ship->klass)
+                                   ? g_player_ship->klass->name : std::string();
+
+    // An F11 preview may deliberately show a ship other than the player's.
+    // It is a complete frame, so never draw the dynamic hull over it.
+    bool complete_frame = g_landing_preview.valid;
+    if (complete_frame) {
+        dl->AddImage(simgui_imtextureid(g_landing_preview.view),
+                     ImVec2(0, 0), ImVec2(ss.w, ss.h));
+    } else if (!player_class.empty()) {
+        const std::string key = g_concourse.type + "|" + player_class;
+        if (key != g_landing_composite_key) {
+            release_texture(g_landing_composite);
+            g_landing_composite_key = key;
+            const std::string path = "assets/concourse/" + g_concourse.type +
+                                     "/landing_ships/" + player_class + ".png";
+            if (std::filesystem::is_regular_file(path))
+                load_texture_png(path, g_landing_composite);
+        }
+        complete_frame = g_landing_composite.valid;
+        if (complete_frame)
+            dl->AddImage(simgui_imtextureid(g_landing_composite.view),
+                         ImVec2(0, 0), ImVec2(ss.w, ss.h));
     }
+
+    if (!complete_frame) {
+        draw_room(dl, ss, lp);
+        if (!player_class.empty()) {
+            if (const ShipPose* p = find_pose(player_class)) draw_ship_pose(dl, ss, *p);
+            else { ShipPose def; def.cls = player_class; draw_ship_pose(dl, ss, def); }
+        }
+    }
+    // Navigation remains data-driven and clickable above every visual path.
     draw_links(dl, ss, lp, /*filter=*/false);
 }
 
@@ -1030,19 +1065,51 @@ bool reload_current_room_texture(const std::string& png_path) {
     Room& room = g_concourse.rooms[(int)g_stack.back()];
     TextureSlot replacement{};
     if (!load_texture_png(png_path, replacement)) return false;
-    if (room.background.valid) {
-        sg_destroy_view(room.background.view);
-        sg_destroy_image(room.background.image);
-    }
+    release_texture(room.background);
     room.background = replacement;
     room.valid = true;
     std::printf("[base] hot reloaded %s from %s\n", room_key(g_stack.back()), png_path.c_str());
     return true;
 }
 
+bool current_landing_info(CurrentLandingInfo& out) {
+    CurrentRoomInfo room;
+    if (!current_room_info(room) || room.room != "landing") return false;
+    out.base_id = room.base_id; out.display_name = room.display_name;
+    out.faction = room.faction; out.archetype = room.archetype;
+    out.background_path = room.asset_path;
+    out.player_ship_class = (g_player_ship && g_player_ship->klass)
+                          ? g_player_ship->klass->name : std::string();
+    return true;
+}
+
+bool preview_current_landing_composite(const std::string& png_path,
+                                       const std::string& ship_class) {
+    CurrentLandingInfo info;
+    if (!current_landing_info(info) || ship_class.empty()) return false;
+    TextureSlot replacement{};
+    if (!load_texture_png(png_path, replacement)) return false;
+    release_texture(g_landing_preview);
+    g_landing_preview = replacement;
+    g_landing_preview_ship = ship_class;
+    std::printf("[base] previewing %s landing composite from %s\n",
+                ship_class.c_str(), png_path.c_str());
+    return true;
+}
+
+void clear_current_landing_composite_preview() {
+    release_texture(g_landing_preview);
+    g_landing_preview_ship.clear();
+    // An install may have replaced the file behind the installed texture.
+    // Force lazy discovery/reload on the next landing frame.
+    release_texture(g_landing_composite);
+    g_landing_composite_key.clear();
+}
+
 void enter(const std::string& base_id) {
     // Reset any prior base's GPU texture before loading the new one.
     if (g_art.valid) { /* slot reuse handled by load below via destroy */ }
+    clear_current_landing_composite_preview();
     g_def = BaseDef{};
     g_def.id = base_id;
     g_stack.assign(1, BaseScreen::Concourse);
@@ -1280,11 +1347,8 @@ void build(PlayerState& player, Ship* player_ship, Docking& d, Camera& cam, Game
 }
 
 void exit() {
-    if (g_art.valid) {
-        sg_destroy_view(g_art.view);
-        sg_destroy_image(g_art.image);
-        g_art = TextureSlot{};
-    }
+    release_texture(g_art);
+    clear_current_landing_composite_preview();
     // Release the animated concourse set's GPU textures (both rooms).
     auto free_room = [](Room& rm) {
         if (rm.background.valid) {

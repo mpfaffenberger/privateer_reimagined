@@ -126,6 +126,19 @@ struct CurrentRoomInfo {
 bool current_room_info(CurrentRoomInfo& out);
 bool reload_current_room_texture(const std::string& png_path);
 
+// Landing-composite Studio seam. A preview is a complete landing frame, so
+// it intentionally replaces both landing_bg and the dynamic parked sprite.
+// Installed pair art is discovered at landing_ships/<ship>.png; when absent,
+// the existing background + authored ShipPose path remains the fallback.
+struct CurrentLandingInfo {
+    std::string base_id, display_name, faction, archetype, background_path;
+    std::string player_ship_class;
+};
+bool current_landing_info(CurrentLandingInfo& out);
+bool preview_current_landing_composite(const std::string& png_path,
+                                       const std::string& ship_class);
+void clear_current_landing_composite_preview();
+
 // Called on the transition INTO Landed. Loads assets/bases/<base_id>/base.json
 // and its concourse PNG, and resets the screen stack to {Concourse}. Safe to
 // call with an unknown/empty base_id — degrades to a labelled fallback.
