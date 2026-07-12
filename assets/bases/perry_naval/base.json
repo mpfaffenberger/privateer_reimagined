@@ -1,14 +1,13 @@
 {
   // Perry Naval Base Military Starbase (Perry) — Confederation military hub.
-  // Uses the shared industrial concourse art until we have bespoke naval-base
-  // pixel art. Gameplay data lives here; art reuse should not fork a PNG pile.
+  // Uses the shared military concourse set; gameplay data remains authored
+  // per base while common room art stays centralized by archetype.
   "display_name":  "Perry Naval Base",
   "faction":       "Confederation Navy",
   "concourse_art": "bases/achilles/concourse.png",
 
-  // Temporary economy archetype: "mining" is our closest industrial/military
-  // stand-in until we add a dedicated naval/refinery archetype.
-  "market": { "archetype": "mining" },
+  // Confederation naval economy and military concourse artwork.
+  "market": { "archetype": "military" },
 
   "hotspots": [
     { "target": "MercenariesGuild", "label": "MERCENARIES' GUILD",
