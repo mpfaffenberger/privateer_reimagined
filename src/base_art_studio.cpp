@@ -91,6 +91,12 @@ std::string identity(const base_screens::CurrentRoomInfo& info) {
     return info.base_id + "|" + info.archetype + "|" + info.room;
 }
 
+bool latest_exists(const base_screens::CurrentRoomInfo& info) {
+    const auto repo = find_repo_root();
+    return !repo.empty() && std::filesystem::is_regular_file(
+        repo / "generated" / "base_art_studio" / info.archetype / info.room / "latest.png");
+}
+
 void seed_prompt(const base_screens::CurrentRoomInfo& info) {
     const std::string text =
         "Create a fresh cinematic retro-futurist space-opera background for the " +
@@ -190,6 +196,7 @@ void build() {
     const std::string room_id = identity(info);
     if (room_id != g_room_identity) {
         g_room_identity = room_id;
+        g_ref_mode = 1; // Original is always valid; Latest/Both are room-specific.
         seed_prompt(info);
         g_status = "Ready";
     }
@@ -198,16 +205,30 @@ void build() {
     ImGui::TextWrapped("Installed: %s", info.asset_path.c_str());
     ImGui::Separator();
     ImGui::InputTextMultiline("Prompt", g_prompt, sizeof(g_prompt), ImVec2(-1, 280));
-    ImGui::Combo("References", &g_ref_mode, k_ref_labels, 4);
+    const bool has_latest = latest_exists(info);
+    if (!has_latest && g_ref_mode >= 2) g_ref_mode = 1;
+    if (ImGui::BeginCombo("References", k_ref_labels[g_ref_mode])) {
+        for (int i = 0; i < 4; ++i) {
+            const bool unavailable = i >= 2 && !has_latest;
+            ImGui::BeginDisabled(unavailable);
+            if (ImGui::Selectable(k_ref_labels[i], g_ref_mode == i)) g_ref_mode = i;
+            ImGui::EndDisabled();
+        }
+        ImGui::EndCombo();
+    }
+    if (!has_latest)
+        ImGui::TextDisabled("Latest and Both unlock after this room's first generation.");
 
     const bool busy = g_worker.joinable();
     ImGui::BeginDisabled(busy || !g_prompt[0]);
     if (ImGui::Button("Generate + Live Preview")) launch("generate", info);
     ImGui::EndDisabled();
     ImGui::SameLine();
-    ImGui::BeginDisabled(busy);
+    ImGui::BeginDisabled(busy || !has_latest);
     if (ImGui::Button("Install Latest (backup)")) launch("install", info);
+    ImGui::EndDisabled();
     ImGui::SameLine();
+    ImGui::BeginDisabled(busy);
     if (ImGui::Button("Revert Original")) launch("revert", info);
     ImGui::EndDisabled();
 
