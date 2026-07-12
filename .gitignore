@@ -98,8 +98,9 @@ __pycache__/
 # In-game sprite atlas capture dirs (regeneratable via tools/tour_ship_sprite_atlas.sh)
 assets/ships/*/sprites_ingame/
 
-# Local AI sprite regeneration experiments (promote intentionally if useful)
+# Local AI generation experiments (promote intentionally if useful)
 assets/ships/*/regen_trials/
+generated/base_imagery/
 
 # In-game sprite-generation workbench requests/logs/status files
 assets/shipgen/
