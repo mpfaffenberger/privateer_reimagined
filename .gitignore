@@ -91,6 +91,9 @@ assets/meshes/
 *.db
 .beads-credential-key
 
+# Local API credentials (never commit secrets)
+.openai_api_key
+
 # Python bytecode caches
 __pycache__/
 *.pyc

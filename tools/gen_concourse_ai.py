@@ -12,7 +12,8 @@ Examples:
     python tools/gen_concourse_ai.py --archetype all --room concourse
     python tools/gen_concourse_ai.py --archetype mining --room all --install
 
-Set OPENAI_API_KEY for real generation. Dry runs need no key and cost nothing.
+Set OPENAI_API_KEY or put the key in repo-root ``.openai_api_key`` for real
+ generation. The environment takes precedence. Dry runs need no key and cost nothing.
 """
 from __future__ import annotations
 
@@ -172,6 +173,16 @@ def plan_jobs(args: argparse.Namespace) -> list[Job]:
     return jobs
 
 
+def load_api_key(key_file: Path = REPO / ".openai_api_key") -> str:
+    """Resolve the API key without logging it or leaking it into manifests."""
+    environment_key = os.environ.get("OPENAI_API_KEY", "").strip()
+    if environment_key:
+        return environment_key
+    if key_file.is_file():
+        return key_file.read_text(encoding="utf-8").strip()
+    return ""
+
+
 def generate_png(prompt: str, api_key: str, model: str, size: str,
                  quality: str, timeout: int) -> bytes:
     payload = json.dumps({
@@ -260,9 +271,13 @@ def main(argv: list[str] | None = None) -> int:
     if args.install and args.dry_run:
         print("note: --install has no effect during --dry-run", file=sys.stderr)
 
-    api_key = os.environ.get("OPENAI_API_KEY", "")
+    api_key = load_api_key()
     if not args.dry_run and not api_key:
-        print("error: set OPENAI_API_KEY, or use --dry-run to review prompts", file=sys.stderr)
+        print(
+            "error: set OPENAI_API_KEY or add a key to repo-root "
+            ".openai_api_key; use --dry-run to review prompts",
+            file=sys.stderr,
+        )
         return 2
 
     print(f"Planned {len(jobs)} image(s); staging under {args.output}")

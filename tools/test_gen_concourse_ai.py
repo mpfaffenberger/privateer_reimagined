@@ -6,6 +6,7 @@ import argparse
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 import gen_concourse_ai as generator
 
@@ -41,6 +42,27 @@ class PromptTests(unittest.TestCase):
                 Path(job.install_path),
                 generator.ASSET_ROOT / "pirate" / "bar_bg.png",
             )
+
+
+class CredentialTests(unittest.TestCase):
+    def test_environment_key_takes_precedence(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            key_file = Path(tmp) / ".openai_api_key"
+            key_file.write_text("file-key\n", encoding="utf-8")
+            with patch.dict("os.environ", {"OPENAI_API_KEY": " env-key "}):
+                self.assertEqual(generator.load_api_key(key_file), "env-key")
+
+    def test_key_file_is_trimmed_when_environment_is_unset(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            key_file = Path(tmp) / ".openai_api_key"
+            key_file.write_text("  file-key\r\n", encoding="utf-8")
+            with patch.dict("os.environ", {}, clear=True):
+                self.assertEqual(generator.load_api_key(key_file), "file-key")
+
+    def test_missing_key_returns_empty_string(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch.dict("os.environ", {}, clear=True):
+                self.assertEqual(generator.load_api_key(Path(tmp) / "missing"), "")
 
 
 class InstallTests(unittest.TestCase):
