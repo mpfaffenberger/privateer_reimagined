@@ -480,16 +480,18 @@ def _derive_links(scene, include_hangar_sprite=True):
     return links
 
 
-def build_dos_archetype(scenes, palettes, shape_files, name, concourse_scene, landing_scene, base_ids):
-    """Create assets/concourse/<name>/ from a base's own DOS concourse +
-    landing scenes, and point base_ids at it. Seeds structure + DOS service
-    rooms from the agricultural folder (they are shared game-wide)."""
+def build_dos_archetype(scenes, palettes, shape_files, name, concourse_scene,
+                        landing_scene, base_ids, room_scenes=None):
+    """Create assets/concourse/<name>/ from a base's bespoke DOS scenes and
+    point base_ids at it. Unlisted service rooms retain the shared agricultural
+    versions; room_scenes maps manifest room names to base-specific scenes."""
     import json, shutil
     root = REPO / "assets" / "concourse"
     agri, dst = root / "agricultural", root / name
     if not agri.exists():
         raise SystemExit("run extract_wcu_concourse.py first")
-    shutil.copytree(agri, dst, dirs_exist_ok=True)
+    shutil.copytree(agri, dst, dirs_exist_ok=True,
+                    ignore=shutil.ignore_patterns("landing_ships", "links.json"))
 
     cim = render_scene(scenes[concourse_scene], palettes, shape_files, include_foreground=False)
     cim.save(dst / "concourse_bg.png")
@@ -504,17 +506,29 @@ def build_dos_archetype(scenes, palettes, shape_files, name, concourse_scene, la
     lroom = manifest["rooms"]["landing"]
     lroom.update(background="landing_bg.png", bg_size=[lim.width, lim.height],
                  overlays=[], links=_derive_links(scenes[landing_scene], include_hangar_sprite=False))
+    for room, scene_index in (room_scenes or {}).items():
+        image = render_scene(scenes[scene_index], palettes, shape_files,
+                             include_foreground=False)
+        filename = f"{room}_bg.png"
+        image.save(dst / filename)
+        manifest["rooms"][room].update(background=filename,
+                                        bg_size=[image.width, image.height],
+                                        overlays=[])
     (dst / "concourse.json").write_text(json.dumps(manifest, indent=2))
 
-    # Point the base(s) at the new archetype (art only; these bases are
-    # military kind, absent from commodity_prices.json -> same graceful
-    # economy fallback as before, no pricing change).
+    # Point the base(s) at the bespoke art without changing their economy.
     for bid in base_ids:
         bf = REPO / "assets" / "bases" / bid / "base.json"
         if bf.exists():
             txt = bf.read_text()
             import re as _re
-            txt = _re.sub(r'("archetype":\s*")[a-z_]+(")', r"\g<1>" + name + r"\g<2>", txt, count=1)
+            if '"visual_archetype"' in txt:
+                txt = _re.sub(r'("visual_archetype":\s*")[a-z_]+(")',
+                              r"\g<1>" + name + r"\g<2>", txt, count=1)
+            else:
+                txt = _re.sub(r'(^\s*"market"\s*:)',
+                              f'  "visual_archetype": "{name}",\n\n\\1',
+                              txt, count=1, flags=_re.MULTILINE)
             bf.write_text(txt)
     print(f"[{name}] concourse={cim.width}x{cim.height} ({len(croom['links'])} links), "
           f"landing={lim.width}x{lim.height} ({len(lroom['links'])} links) -> {base_ids}")
@@ -524,7 +538,12 @@ def build_dos_archetype(scenes, palettes, shape_files, name, concourse_scene, la
 # covering. Each: (concourse_scene, landing_scene, [base_ids]). Verified via
 # the GAMEFLOW.IFF base->startScene map + visual ID of the rendered scenes.
 DOS_BASE_ARCHETYPES = {
-    "newcon": (17, 20, ["new_constantinople"]),
+    "newcon": (17, 20, ["new_constantinople"], None),
+    "newdetroit": (21, 24, ["new_detroit"], {
+        "bar": 22,
+        "equipment": 23,
+        "shipdealer": 23,
+    }),
 }
 
 
@@ -649,8 +668,9 @@ def main():
     print(f"[scenes] {len(scenes)} scene(s), {len(palettes)} palette(s), {len(shape_files)} shape blob(s)")
 
     if args.build_bases:
-        for nm, (cs, ls, bids) in DOS_BASE_ARCHETYPES.items():
-            build_dos_archetype(scenes, palettes, shape_files, nm, cs, ls, bids)
+        for nm, (cs, ls, bids, room_scenes) in DOS_BASE_ARCHETYPES.items():
+            build_dos_archetype(scenes, palettes, shape_files, nm, cs, ls, bids,
+                                room_scenes)
     elif args.build_pleasure:
         build_pleasure(scenes, palettes, shape_files)
     elif args.install:

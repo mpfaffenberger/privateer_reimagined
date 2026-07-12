@@ -1150,11 +1150,15 @@ void enter(const std::string& base_id) {
         ? root["display_name"].string_or(base_id) : base_id;
     g_def.faction = root.contains("faction") ? root["faction"].string_or("") : "";
 
-    // Market archetype selects the animated concourse art set (if any).
+    // Visual identity normally follows the economy archetype, but canonical
+    // one-off locations (New Detroit, Oxford, Perry) can override artwork
+    // without corrupting their commodity-pricing behavior.
     g_def.archetype.clear();
     if (const json::Value* mk = root.find("market"); mk && mk->is_object()) {
         if (mk->contains("archetype")) g_def.archetype = (*mk)["archetype"].string_or("");
     }
+    if (root.contains("visual_archetype"))
+        g_def.archetype = root["visual_archetype"].string_or(g_def.archetype);
 
     // Concourse art path is stored relative to assets/; resolve it.
     std::string art_rel = root.contains("concourse_art")
