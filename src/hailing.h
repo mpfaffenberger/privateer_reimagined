@@ -12,11 +12,10 @@
 //   * Idle  : in comms range AND global cooldown elapsed -> roll 35% to
 //             start a scan. Miss -> Resolved (skip for the encounter).
 //             Hit  -> Searching; voice::say(Search) + comm feed push.
-//   * Searching : player leaves comms range -> GUILTY flee; aggro
-//             toggled, voice::say(Hostile) + "Fleeing a lawful scan?".
-//             2.5 s elapses: contraband -> GUILTY (aggro, "Contraband
-//             detected. Prepare to be destroyed."); clean -> "Scan
-//             complete. You're clean, safe travels." (voice::Clear).
+//   * Searching : after 2.5 s, or if normal flight carries the player out
+//             of comms range, resolve from actual visible cargo. Contraband
+//             -> GUILTY (aggro, hostile voice); clean -> "Scan complete.
+//             You're clean, safe travels." (voice::Clear).
 //   * Resolved : nothing; the per-NPC entry stays in the map until the
 //             ship is no longer alive in the registry, at which point
 //             the prune pass below drops it.

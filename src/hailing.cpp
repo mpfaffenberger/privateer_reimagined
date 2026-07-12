@@ -81,6 +81,25 @@ void feed(Faction f, const char* body, bool taunt = true) {
     comm::push(std::string(line), taunt);
 }
 
+// Resolve every completed or interrupted scan from the player's actual visible
+// cargo. Keeping one verdict path prevents movement across the comms boundary
+// from inventing guilt that the scanner's cargo check would immediately refute.
+void resolve_scan(Ship& scanner, const PlayerState& player) {
+    if (player::carrying_contraband(player)) {
+        scanner.ai.aggro_player = true;
+        feed(scanner.faction,
+             "Contraband detected. Prepare to be destroyed.");
+        voice::say(scanner.faction, voice::Category::Hostile,
+                   scanner.position, /*to_player=*/true);
+        return;
+    }
+
+    feed(scanner.faction,
+         "Scan complete. You're clean, safe travels.");
+    voice::say(scanner.faction, voice::Category::Clear,
+               scanner.position, /*to_player=*/true);
+}
+
 } // namespace
 
 void reset() {
@@ -148,34 +167,16 @@ void tick(ShipRegistry& ships, const Ship& player_ship,
         }
 
         case Phase::Searching: {
-            // Player fled the scan envelope -> treat as fleeing a
-            // lawful stop. Same hostile path as contraband.
-            if (dist > k_comms_range_m) {
-                s.ai.aggro_player = true;
-                feed(s.faction, "Fleeing a lawful scan? Hostile!");
-                voice::say(s.faction, voice::Category::Hostile,
-                           s.position, /*to_player=*/true);
-                ns.phase = Phase::Resolved;
-                break;
-            }
+            // Resolve on timeout OR when normal flight carries the player out
+            // of comms range. Both branches inspect actual visible cargo: a
+            // smuggler cannot escape the verdict, and a clean pilot is never
+            // made hostile merely for crossing an arbitrary range boundary.
+            const bool left_scan_range = dist > k_comms_range_m;
+            const bool scan_finished =
+                (now_s - ns.search_start) >= k_search_delay_s;
+            if (!left_scan_range && !scan_finished) break;
 
-            // Scan timer expired -> verdict time. Contraband goes
-            // hostile (same path as fleeing); clean gets the radio
-            // all-clear.
-            if ((now_s - ns.search_start) < k_search_delay_s) break;
-
-            if (player::carrying_contraband(player)) {
-                s.ai.aggro_player = true;
-                feed(s.faction,
-                     "Contraband detected. Prepare to be destroyed.");
-                voice::say(s.faction, voice::Category::Hostile,
-                           s.position, /*to_player=*/true);
-            } else {
-                feed(s.faction,
-                     "Scan complete. You're clean, safe travels.");
-                voice::say(s.faction, voice::Category::Clear,
-                           s.position, /*to_player=*/true);
-            }
+            resolve_scan(s, player);
             ns.phase = Phase::Resolved;
             break;
         }
