@@ -191,14 +191,30 @@ void add_bases_from_system(const galaxy::Galaxy& g, const std::string& system_id
     }
 }
 
-// Reachable destination bases: this system (0 jumps) + every neighbour (1).
+// Every dockable base reachable from the origin, tagged with its shortest
+// jump distance. Breadth-first traversal matters here: rewards scale per hop,
+// so a longer non-shortest route would silently overpay the contract.
 std::vector<missions::DestBase> collect_dest_bases(const galaxy::Galaxy& g,
                                          const std::string& system_id,
                                          const std::string& origin_base) {
     std::vector<missions::DestBase> out;
-    add_bases_from_system(g, system_id, origin_base, 0, out);
-    for (const std::string& nb : g.neighbors(system_id))
-        add_bases_from_system(g, nb, origin_base, 1, out);
+    std::queue<std::string> pending;
+    std::unordered_map<std::string, int> distance;
+    pending.push(system_id);
+    distance.emplace(system_id, 0);
+
+    while (!pending.empty()) {
+        const std::string current = pending.front();
+        pending.pop();
+        const int jumps = distance.at(current);
+        add_bases_from_system(g, current, origin_base, jumps, out);
+
+        for (const std::string& neighbor : g.neighbors(current)) {
+            if (distance.contains(neighbor)) continue;
+            distance.emplace(neighbor, jumps + 1);
+            pending.push(neighbor);
+        }
+    }
     return out;
 }
 

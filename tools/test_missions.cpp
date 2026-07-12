@@ -696,6 +696,26 @@ int main() {
         check(all_pos,   "every reward is > 0");
         check(bounty_single, "bounty count_required is always 1 (single target)");
 
+        // Cargo generation must use the whole reachable graph rather than
+        // stopping at direct neighbours. Verify through the public generator
+        // so this covers destination collection and mission construction.
+        bool cargo_multi_jump = false;
+        bool cargo_shortest_routes = true;
+        for (uint64_t s = 0; s < 80; ++s) {
+            for (const missions::Mission& m :
+                 missions::generate("achilles", "troy", gal, s,
+                                    missions::MissionSource::MerchantsGuild)) {
+                if (m.type != missions::MissionType::CargoDelivery) continue;
+                const int hops = missions::hops_between(gal, "troy", m.dest_system);
+                cargo_multi_jump |= hops > 1;
+                cargo_shortest_routes &= hops >= 0;
+            }
+        }
+        check(cargo_multi_jump,
+              "cargo generation includes destinations more than one jump away");
+        check(cargo_shortest_routes,
+              "generated cargo destinations have reachable shortest routes");
+
         // 9c. Source gating: MercenariesGuild never emits CargoDelivery;
         // MerchantsGuild only ever emits CargoDelivery or Bounty.
         bool merc_ok = true, merch_ok = true;
