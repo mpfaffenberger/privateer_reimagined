@@ -545,27 +545,12 @@ void draw_subscreen(ImDrawList* dl, const ScreenSize& ss, BaseScreen cur,
 // Load an animated concourse set (assets/concourse/<type>/concourse.json) if
 // one exists for this base's archetype. Best-effort: any miss leaves
 // g_concourse.valid==false and the caller falls back to the static PNG.
-// Parse one room object (background + overlays [+ door/launch]) from JSON.
+// Parse one room object. Legacy GIF-derived overlays are intentionally not
+// loaded: their tiny frames blur badly against the high-resolution room art.
 bool load_room(const std::string& dir, const json::Value& r, Room& out) {
     if (!r.is_object()) return false;
     if (!load_texture_png(dir + r["background"].string_or(""), out.background))
         return false;
-    if (const json::Value* ovs = r.find("overlays"); ovs && ovs->is_array()) {
-        for (const json::Value& o : ovs->as_array()) {
-            if (!o.is_object()) continue;
-            AnimOverlay ov;
-            if (const json::Value* rc = o.find("rect"); rc && rc->is_array() && rc->as_array().size() == 4)
-                for (int i = 0; i < 4; ++i) ov.rect[i] = (*rc)[(size_t)i].as_float();
-            ov.total_frames = (int)o["total_frames"].number_or(1);
-            ov.lead_blanks  = (int)o["lead_blanks"].number_or(0);
-            ov.cols = (int)o["cols"].number_or(1);  ov.rows = (int)o["rows"].number_or(1);
-            ov.frame_w = (int)o["frame_w"].number_or(0);  ov.frame_h = (int)o["frame_h"].number_or(0);
-            ov.atlas_w = (int)o["atlas_w"].number_or(1);  ov.atlas_h = (int)o["atlas_h"].number_or(1);
-            ov.fps = (float)o["fps"].number_or(5.0);
-            const std::string atlas = dir + o["atlas"].string_or("");
-            if (load_texture_png(atlas, ov.tex)) out.overlays.push_back(std::move(ov));
-        }
-    }
     // Placed transition links: [{ "target": "Bar", "rect": [x,y,w,h] }, ...].
     if (const json::Value* ls = r.find("links"); ls && ls->is_array()) {
         for (const json::Value& l : ls->as_array()) {
