@@ -27,21 +27,16 @@
   "max_shield_level": 5,
   "default_shield":   "Shield Generator 5",
 
-  // Two fixed forward Meson Blasters, but the merchant's real teeth are
-  // its defensive turrets: dorsal, ventral, and rear Mass Driver pairs
-  // that keep firing even while the coward AI runs for the jump point.
+  // Two fixed forward Meson Blasters plus one Mass Driver on each defensive
+  // turret mount: dorsal, ventral, and rear. The turrets keep firing even
+  // while the coward AI runs for the jump point.
   "default_guns": [
     { "offset_body": [-4.0, 0.0, 6.0], "type": "meson_blaster" },
     { "offset_body": [ 4.0, 0.0, 6.0], "type": "meson_blaster" },
 
-    { "offset_body": [-0.6, 4.0, 0.0], "forward_body": [0,  1, 0], "cone_half_angle_deg": 120, "type": "mass_driver", "turret": true },
-    { "offset_body": [ 0.6, 4.0, 0.0], "forward_body": [0,  1, 0], "cone_half_angle_deg": 120, "type": "mass_driver", "turret": true },
-
-    { "offset_body": [-0.6, -4.0, 0.0], "forward_body": [0, -1, 0], "cone_half_angle_deg": 120, "type": "mass_driver", "turret": true },
-    { "offset_body": [ 0.6, -4.0, 0.0], "forward_body": [0, -1, 0], "cone_half_angle_deg": 120, "type": "mass_driver", "turret": true },
-
-    { "offset_body": [-0.6, 0.0, -7.0], "forward_body": [0, 0, -1], "cone_half_angle_deg": 120, "type": "mass_driver", "turret": true },
-    { "offset_body": [ 0.6, 0.0, -7.0], "forward_body": [0, 0, -1], "cone_half_angle_deg": 120, "type": "mass_driver", "turret": true }
+    { "offset_body": [0.0,  4.0,  0.0], "forward_body": [0,  1,  0], "cone_half_angle_deg": 120, "type": "mass_driver", "turret": true },
+    { "offset_body": [0.0, -4.0,  0.0], "forward_body": [0, -1,  0], "cone_half_angle_deg": 120, "type": "mass_driver", "turret": true },
+    { "offset_body": [0.0,  0.0, -7.0], "forward_body": [0,  0, -1], "cone_half_angle_deg": 120, "type": "mass_driver", "turret": true }
   ],
 
   "energy_max":      220,
