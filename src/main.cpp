@@ -5964,7 +5964,8 @@ void frame_cb() {
         //   5. sun gas + corona — additive halos, depth test but no write.
         if (!g.capture_clean) {
             g.skybox.draw(scene_cam, aspect);
-            g.dust.draw(scene_cam, aspect);
+            // Camera velocity uses the same numeric convention exposed as kps.
+            g.dust.draw(scene_cam, aspect, HMM_LenV3(g.camera.velocity));
             // Warp streaks layer over dust (additive). Self-gates on
             // intensity > 0 so this is cheap when autopilot is off.
             g.warp_streaks.draw(scene_cam, aspect);

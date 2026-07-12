@@ -48,7 +48,15 @@ bool DustField::init() {
     return sg_query_pipeline_state(pipeline) == SG_RESOURCESTATE_VALID;
 }
 
-void DustField::draw(const Camera& cam, float aspect) const {
+void DustField::draw(const Camera& cam, float aspect, float speed_kps) const {
+    constexpr float k_fade_start_kps = 1200.0f;
+    constexpr float k_hidden_kps = 1500.0f;
+    if (speed_kps >= k_hidden_kps) return;
+    const float visibility = speed_kps <= k_fade_start_kps ? 1.0f
+        : (k_hidden_kps - speed_kps) / (k_hidden_kps - k_fade_start_kps);
+    const int visible_count = (int)(count * visibility * visibility);
+    if (visible_count <= 0) return;
+
     const HMM_Mat4 vp = HMM_MulM4(cam.projection(aspect), cam.view());
 
     vs_params_t vsp{};
@@ -66,7 +74,7 @@ void DustField::draw(const Camera& cam, float aspect) const {
     sg_apply_pipeline(pipeline);
     sg_apply_bindings(&b);
     sg_apply_uniforms(UB_vs_params, SG_RANGE(vsp));
-    sg_draw(0, count, 1);
+    sg_draw(0, visible_count, 1);
 }
 
 void DustField::destroy() {

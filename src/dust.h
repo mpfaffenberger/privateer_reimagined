@@ -11,15 +11,17 @@
 #include "camera.h"
 
 struct DustField {
-    int   count         = 15000;
-    float wrap_extent   = 600.0f;  // bigger cube = longer streaks when cruising
-    float point_size_px = 5.0f;    // 2px is eaten by MSAA; 5 reads as 'speck'
+    int   count         = 3500;    // sparse motion cue, not a snowstorm
+    float wrap_extent   = 600.0f;
+    float point_size_px = 2.0f;
 
     sg_buffer   vbuf{};
     sg_shader   shader{};
     sg_pipeline pipeline{};
 
     bool init();
-    void draw(const Camera& cam, float aspect) const;
+    // `speed_kps` follows the game's canonical displayed-speed convention.
+    // Debris fades from 1200 and is completely absent at/above 1500 kps.
+    void draw(const Camera& cam, float aspect, float speed_kps) const;
     void destroy();
 };
