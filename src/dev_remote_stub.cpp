@@ -40,6 +40,7 @@ void publish_inventory(const std::vector<ItemInfo>& /*items*/,
 void publish_player(const PlayerInfo& /*p*/)                           {}
 void publish_missions(const std::vector<MissionInfo>& /*missions*/)    {}
 void publish_base(const BaseInfo& /*b*/)                               {}
+void publish_cinematic(const CinematicInfo& /*c*/)                     {}
 void push_event(const std::string& /*category*/,
                 const std::string& /*text*/)                           {}
 
@@ -67,5 +68,15 @@ void set_dock_hook(std::function<void(std::string)> /*hook*/)          {}
 void set_fixer_hook(std::function<void(std::string, std::string)> /*hook*/) {}
 void set_autopilot_hook(std::function<void(std::string)> /*hook*/)     {}
 void set_jump_hook(std::function<void(std::string)> /*hook*/)          {}
+
+// Cinematic hooks — same deal: accepted and discarded, no HTTP thread ever
+// calls them on non-macOS builds.
+void set_cinematic_play_hook(
+    std::function<bool(const std::string&, std::string&)> /*hook*/)   {}
+void set_cinematic_reload_hook(
+    std::function<bool(const std::string&, std::string&)> /*hook*/)   {}
+void set_cinematic_seek_hook(
+    std::function<bool(float, std::string&)> /*hook*/)                {}
+void set_cinematic_stop_hook(std::function<void()> /*hook*/)           {}
 
 } // namespace dev_remote

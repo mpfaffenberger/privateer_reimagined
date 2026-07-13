@@ -24,7 +24,7 @@
   ],
   "placed_sprites": [
     {
-      "sprite": "sprites/mining_base",
+      "sprite": "sprites/base_mining",
       "position": [
         116667,
         0,

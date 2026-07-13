@@ -8,7 +8,7 @@
   "asteroid_fields": [],
   "placed_sprites": [
     {
-      "sprite": "sprites/helen_planet",
+      "sprite": "sprites/base_pleasure",
       "position": [
         116667,
         -66667,
@@ -17,7 +17,7 @@
       "length_meters": 2000
     },
     {
-      "sprite": "sprites/mining_base",
+      "sprite": "sprites/base_mining",
       "position": [
         -133333,
         60000,
@@ -162,7 +162,7 @@
         0
       ],
       "dockable": true,
-      "base_id": "new",
+      "base_id": "new_reno",
       "encounters": [
         {
           "chance": 30,

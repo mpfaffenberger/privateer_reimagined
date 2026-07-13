@@ -67,6 +67,43 @@ def load_system(name: str) -> dict:
     sys.exit(f"system '{name}' not found in {DATA.name}")
 
 
+def exterior_sprite_for(base_id: str) -> str:
+    """Return the canonical space-view exterior stem for a dockable base."""
+    special = {
+        "gaea": "agricultural",
+        "magdaline": "pleasure",
+        "new_iberia": "agricultural",
+        "new_reno": "pleasure",
+        "new_detroit": "new_detroit",
+        "new_constantinople": "new_constantinople",
+        "oxford": "oxford",
+        "perry_naval": "perry",
+    }
+    for prefix, identity in special.items():
+        if base_id == prefix or base_id.startswith(prefix + "_"):
+            return f"sprites/base_{identity}"
+
+    resolved = base_id
+    base_root = REPO / "assets" / "bases"
+    while resolved and not (base_root / resolved / "base.json").is_file():
+        resolved = resolved.rsplit("_", 1)[0] if "_" in resolved else ""
+    text = ((base_root / resolved / "base.json").read_text()
+            if resolved else "")
+    match = re.search(r'"visual_archetype"\s*:\s*"([a-z_]+)"', text)
+    if not match:
+        match = re.search(r'"market"\s*:\s*\{[^}]*"archetype"\s*:\s*"([a-z_]+)"',
+                          text, re.DOTALL)
+    archetype = match.group(1) if match else "mining"
+    identity = {
+        "agricultural": "agricultural",
+        "newcon": "new_constantinople",
+        "newdetroit": "new_detroit",
+        "pleasure": "pleasure",
+        "refinery": "refinery",
+    }.get(archetype, "mining")
+    return f"sprites/base_{identity}"
+
+
 def nav_from(desc: str, pos: list[int], idx: int, sysname: str):
     """Return (navpoint dict, optional sprite dict, optional asteroid dict).
 
@@ -93,13 +130,17 @@ def nav_from(desc: str, pos: list[int], idx: int, sysname: str):
         bid = snake(core.split(" Mining")[0].split(" Base")[0])
         nav = {"name": core, "kind": "station", "position": pos,
                "dockable": True, "base_id": bid}
-        spr = {"sprite": "sprites/mining_base", "position": pos, "length_meters": 3000}
+        spr = {"sprite": exterior_sprite_for(bid), "position": pos,
+               "length_meters": 3000}
         return (nav, spr, ast)
     if "planet" in clow:
-        bid = snake(core.split(" ")[0])
+        base_name = re.sub(r"(?i)\s+(?:agricultural|pleasure|industrial)?\s*planet.*$",
+                           "", core).strip()
+        bid = snake(base_name)
         nav = {"name": core, "kind": "planet", "position": pos,
                "dockable": True, "base_id": bid}
-        spr = {"sprite": "sprites/helen_planet", "position": pos, "length_meters": 2000}
+        spr = {"sprite": exterior_sprite_for(bid), "position": pos,
+               "length_meters": 2000}
         return (nav, spr, ast)
     if has_ast:
         nav = {"name": core or f"Asteroid Field {idx}", "kind": "nav", "position": pos}

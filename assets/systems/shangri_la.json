@@ -8,7 +8,7 @@
   "asteroid_fields": [],
   "placed_sprites": [
     {
-      "sprite": "sprites/helen_planet",
+      "sprite": "sprites/base_pleasure",
       "position": [
         -100000,
         -66667,

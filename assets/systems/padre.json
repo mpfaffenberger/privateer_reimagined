@@ -8,7 +8,7 @@
   "asteroid_fields": [],
   "placed_sprites": [
     {
-      "sprite": "sprites/helen_planet",
+      "sprite": "sprites/base_pleasure",
       "position": [
         66667,
         -150000,
@@ -27,7 +27,7 @@
         133333
       ],
       "dockable": true,
-      "base_id": "magdelene",
+      "base_id": "magdaline",
       "encounters": [
         {
           "chance": 25,

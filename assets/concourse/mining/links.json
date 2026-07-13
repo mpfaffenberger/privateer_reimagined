@@ -1,12 +1,12 @@
 {
   "concourse": [
-    { "target": "Bar", "rect": [0.63250, 0.43750, 0.11625, 0.11625] },
-    { "target": "MissionComputer", "rect": [0.77781, 0.47875, 0.05297, 0.11375] },
-    { "target": "MerchantsGuild", "rect": [0.84891, 0.22250, 0.15219, 0.09250] },
-    { "target": "MercenariesGuild", "rect": [0.62000, 0.29625, 0.13891, 0.08625] },
-    { "target": "CommodityExchange", "rect": [0.85437, 0.42500, 0.13969, 0.18375] },
-    { "target": "ShipDealer", "rect": [0.44925, 0.34707, 0.10286, 0.15483] },
-    { "target": "LandingPad", "rect": [0.13905, 0.32977, 0.08041, 0.20675] }
+    { "target": "Bar", "rect": [0.62957, 0.52812, 0.11625, 0.11625] },
+    { "target": "MissionComputer", "rect": [0.76609, 0.58604, 0.05297, 0.11375] },
+    { "target": "MerchantsGuild", "rect": [0.83309, 0.28188, 0.15219, 0.09250] },
+    { "target": "MercenariesGuild", "rect": [0.60594, 0.34833, 0.13891, 0.08625] },
+    { "target": "CommodityExchange", "rect": [0.85437, 0.52917, 0.13969, 0.18375] },
+    { "target": "ShipDealer", "rect": [0.42054, 0.43040, 0.10286, 0.15483] },
+    { "target": "LandingPad", "rect": [0.13495, 0.41102, 0.08041, 0.20675] }
   ],
   "landing": [
     { "target": "Concourse", "rect": [0.78172, 0.39083, 0.15531, 0.28083] },
@@ -21,7 +21,8 @@
     { "target": "CommodityBuy", "rect": [0.21864, 0.37179, 0.06680, 0.04606] }
   ],
   "shipdealer": [
-    { "target": "OpenMenu", "rect": [0.441, 0.44875, 0.12, 0.18] }
+    { "target": "OpenMenu", "rect": [0.44100, 0.44875, 0.12000, 0.18000] },
+    { "target": "Equipment", "rect": [0.43992, 0.05021, 0.32816, 0.36396] }
   ],
   "equipment": [],
   "mercguild": [
