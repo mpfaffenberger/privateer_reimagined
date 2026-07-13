@@ -1,0 +1,187 @@
+{
+  "type": "oxford",
+  "rooms": {
+    "concourse": {
+      "background": "concourse_bg.png",
+      "bg_size": [
+        320,
+        200
+      ],
+      "overlays": [],
+      "links": [
+        {
+          "target": "Bar",
+          "rect": [
+            0.0,
+            0.125,
+            0.1375,
+            0.305
+          ]
+        },
+        {
+          "target": "LandingPad",
+          "rect": [
+            0.0,
+            0.52,
+            0.40313,
+            0.475
+          ]
+        },
+        {
+          "target": "MissionComputer",
+          "rect": [
+            0.1875,
+            0.23,
+            0.04688,
+            0.1
+          ]
+        },
+        {
+          "target": "MerchantsGuild",
+          "rect": [
+            0.275,
+            0.04,
+            0.06875,
+            0.19
+          ]
+        },
+        {
+          "target": "MercenariesGuild",
+          "rect": [
+            0.36562,
+            0.0,
+            0.0625,
+            0.17
+          ]
+        },
+        {
+          "target": "ShipDealer",
+          "rect": [
+            0.85,
+            0.485,
+            0.14688,
+            0.51
+          ]
+        },
+        {
+          "target": "CommodityExchange",
+          "rect": [
+            0.55,
+            0.825,
+            0.31562,
+            0.17
+          ]
+        }
+      ]
+    },
+    "landing": {
+      "background": "landing_bg.png",
+      "bg_size": [
+        320,
+        200
+      ],
+      "overlays": [],
+      "links": [
+        {
+          "target": "Concourse",
+          "rect": [
+            0.0,
+            0.0,
+            0.48,
+            1.0
+          ]
+        },
+        {
+          "target": "Launch",
+          "rect": [
+            0.4875,
+            0.66,
+            0.21875,
+            0.14
+          ]
+        }
+      ]
+    },
+    "bar": {
+      "background": "bar_bg.png",
+      "bg_size": [
+        320,
+        200
+      ],
+      "overlays": []
+    },
+    "commodity": {
+      "background": "commodity_bg.png",
+      "bg_size": [
+        320,
+        200
+      ],
+      "overlays": []
+    },
+    "shipdealer": {
+      "background": "shipdealer_bg.png",
+      "bg_size": [
+        320,
+        200
+      ],
+      "overlays": [],
+      "links": [
+        {
+          "target": "OpenMenu",
+          "rect": [
+            0.441,
+            0.44875,
+            0.12,
+            0.18
+          ]
+        }
+      ]
+    },
+    "equipment": {
+      "background": "equipment_bg.png",
+      "bg_size": [
+        320,
+        200
+      ],
+      "overlays": []
+    },
+    "mercguild": {
+      "background": "mercguild_bg.png",
+      "bg_size": [
+        320,
+        200
+      ],
+      "overlays": [],
+      "links": [
+        {
+          "target": "OpenMenu",
+          "rect": [
+            0.125,
+            0.46667,
+            0.335,
+            0.29333
+          ]
+        }
+      ]
+    },
+    "merchguild": {
+      "background": "merchguild_bg.png",
+      "bg_size": [
+        320,
+        200
+      ],
+      "overlays": [],
+      "links": [
+        {
+          "target": "OpenMenu",
+          "rect": [
+            0.24375,
+            0.44,
+            0.195,
+            0.22333
+          ]
+        }
+      ]
+    }
+  }
+}
