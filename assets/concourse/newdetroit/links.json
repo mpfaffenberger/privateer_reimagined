@@ -16,7 +16,8 @@
   "bar": [],
   "commodity": [],
   "shipdealer": [
-    { "target": "OpenMenu", "rect": [0.44100, 0.44875, 0.12000, 0.18000] }
+    { "target": "OpenMenu", "rect": [0.28553, 0.44250, 0.37078, 0.55875] },
+    { "target": "Equipment", "rect": [0.47938, 0.03875, 0.29281, 0.33500] }
   ],
   "equipment": [],
   "mercguild": [
