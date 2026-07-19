@@ -30,13 +30,10 @@
 //                     hotspot clicks / Back / Launch.
 //   exit()          — on transition OUT of Landed. Frees the GPU texture.
 //
-// Integration seam for the shop tasks: the CommodityExchange / ShipDealer /
-// Equipment / MissionComputer screens are placeholders today. Rather than
-// have np-9cu.2/.3/zte.1 reach into this file, each fillable screen exposes
-// a registration hook (register_screen). Those tasks call register_screen()
-// from their own module's init and draw their UI into the body the framework
-// hands them — the framework still owns the background, the title, and the
-// Back affordance. No hook registered => the clearly-labelled stub draws.
+// Integration seam for service screens: CommodityExchange / ShipDealer /
+// Equipment / MissionComputer and guild modules register their own body hooks
+// instead of reaching into this file. The framework still owns backgrounds,
+// titles, navigation, and Back. A missing hook degrades to a labelled stub.
 // -----------------------------------------------------------------------------
 
 #include "HandmadeMath.h"

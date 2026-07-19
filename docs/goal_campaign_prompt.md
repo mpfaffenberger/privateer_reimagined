@@ -97,7 +97,7 @@ gating so ONLY the boosted Steltek gun hurts the drone
   loaders. Read neighboring modules before writing new ones.
 - Files under 600 lines. New campaign code goes in new modules (e.g.
   `src/fixers.*`, `src/plot.*`, `src/campaign_missions.*` or data),
-  NOT into `main.cpp` (it's 337 KB of prior sin — see #151; do not
+  NOT into `main.cpp` (it's roughly 390 KB of prior sin — see #151; do not
   make it worse).
 - Append, don't repurpose: enums, save fields, mission types.
 - Keep each PR/commit scoped to one phase step; build + test between.

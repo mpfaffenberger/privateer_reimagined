@@ -70,6 +70,7 @@ compile_commands.json
 # OS cruft
 .DS_Store
 ._*
+/~/
 
 # Generated skyboxes (regenerated on demand by tools/gen_skybox.sh).
 # All used seeds (troy + every skybox_seed referenced from assets/systems/*.json)
