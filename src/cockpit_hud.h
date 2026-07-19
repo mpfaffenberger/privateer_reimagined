@@ -41,8 +41,8 @@ namespace cockpit_hud {
 
 // Which screen the top-left STATUS panel is currently showing. The canonical
 // Privateer cockpit cycles a single MFD frame between sub-displays — here the
-// STATUS window flips between the hull diagram (Ship), the Comms menu, and
-// stub Damage / Weapons panels. main.cpp's key handler drives the cycle
+// STATUS window flips between the hull diagram (Ship), Comms, live Weapons,
+// and the pending component-Damage panel. main.cpp's key handler drives the cycle
 // (C/R/W toggles); draw_player_status dispatches on the current value.
 enum class StatusScreen { Ship, Comms, Damage, Weapons };
 

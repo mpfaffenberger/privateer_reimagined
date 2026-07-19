@@ -4,7 +4,9 @@
 
 #include "comm.h"
 
+#ifndef COMM_HEADLESS
 #include "cinematic.h"   // active() — suppress ambient barks during cutscenes
+#endif
 #include "json.h"
 #include "player.h"
 #include "voice.h"
@@ -264,8 +266,12 @@ void npc_engage_bark(Faction speaker, bool target_is_player, uint32_t speaker_id
     // cosmetic and would just spam the feed with fights we're not in.
     if (!target_is_player) return;
     // Suppress ambient combat barks while a cinematic is playing — the
-    // cutscene's own dialogue should be the only voice on the radio.
+    // cutscene's own dialogue should be the only voice on the radio. Headless
+    // harnesses have no cinematic runtime, so they deliberately exercise the
+    // feed behavior without linking the renderer/audio dependency tree.
+#ifndef COMM_HEADLESS
     if (cinematic::active()) return;
+#endif
     std::string line = pick_line(speaker, Event::KilledByPlayerCrime);
     if (line.empty()) return;
     push(line, /*taunt=*/true);

@@ -101,17 +101,17 @@ The sandbox remains untouched for players who never talk to Sandoval
    `is_turret` mounts in ship.json loadouts), and there's no manual
    turret view (original let you man the Galaxy/Centurion turret
    yourself — arguably auto-fire is the better design, so this may be
-   an intentional non-goal). Also: `ship_class.h` still says turrets
-   are "out of scope / we ignore them" and `gun.h:19` says "NPC-only"
-   — both comments are stale and contradict `firing.cpp`.
+   an intentional non-goal). The stale turret comments in `ship_class.h`
+   and `gun.h` have been corrected to match `firing.cpp`.
 2. **Friend-or-Foe missiles** — missing. `MissileType` = DF/HS/IR/
    Torpedo only. Original had FF as the pirate favorite.
 3. **Per-system component damage** — `cockpit_hud.cpp:683`:
    `"DAMAGE CONTROL — system damage not yet modeled"`. Original damaged
    individual systems (guns, engines, radar, jump drive) and made you
    pay per-system repair. `repair.*` covers hull/armor only.
-4. **Weapons MFD** — `"WEAPONS — loadout screen TBD"`
-   (`cockpit_hud.cpp:686`).
+4. **Weapons MFD — DONE.** The STATUS/Weapons page now reads the live ship
+   and shows arm mode, armed mount count, energy, fitted gun names, turret
+   markers, and per-mount armed state.
 5. **Scanner/radar tiers** — no scanner products at all (grep confirms:
    only a coincidental "Skybird Scanners" company name). Original had
    Iris/Hunter/B&S lines with color-coded IFF, ITTS, and lock quality.
@@ -155,22 +155,21 @@ compartment for contraband). Fine to defer — base game first.
 
 ### P5 — Platform & engineering hygiene (not game features, but real gaps)
 
-- **macOS/Metal only in practice.** `dev_remote_stub.cpp` hints at
-  Linux intent; sokol supports GL/D3D — untested/unwired.
-- **`src/main.cpp` is 337 KB.** The repo's own style rules (and mine —
-  woof) say split it: input, sim loop, lock-state machine, HUD glue.
-- **Repo hygiene:** `tracelog.log` (11 MB!), `tl.log`, `CMakeCache.txt`,
-  `Makefile`, `CMakeFiles/`, `compile_commands.json`, a literal `~/`
-  directory, and a 2.2 MB `new_privateer` binary are committed at the
-  root. `.gitignore` them and purge.
-- **README.md is a fossil** — describes a 1,700-line skybox demo;
-  undersells the project by roughly two orders of magnitude. The
-  roadmap checkboxes claim missions/trade/factions are still open;
-  they're done.
-- **Stale "stub" comments** — `threat.h`/`autopilot`/`jump` comments
-  still say the hostile gate "is a stub today"; verify and refresh
-  (`threat.cpp` looks live now). Same for `base_screens.h` header
-  claiming shops are placeholders.
+- **Platform confidence is uneven.** macOS/Metal is the primary development
+  path and Windows/D3D11 has a build + rolling-nightly CI workflow. The
+  Linux OpenGL/X11 path remains comparatively untested.
+- **`src/main.cpp` is roughly 390 KB / 7,500 lines.** The repo's own style
+  rules (and mine — woof) say split it by cohesive responsibility: input,
+  sim loop, lock-state machine, HUD glue.
+- **Repo hygiene — DONE for source control.** Root build products, compile
+  databases, binaries, logs, and the accidental literal `~/` directory are
+  untracked and covered by `.gitignore`. Local copies may remain for developer
+  convenience without polluting commits.
+- **README refresh — DONE.** It now documents the actual game, architecture,
+  build/test entry points, and current roadmap instead of the old skybox demo.
+- **Stale-comment scrub — initial pass DONE.** Turret, threat/autopilot, and
+  base-screen integration comments now match the live implementations; keep
+  treating comments as code when behavior changes.
 
 ---
 
@@ -186,7 +185,6 @@ compartment for contraband). Fine to defer — base game first.
    big fidelity win).
 5. **Steltek arc wiring** (derelict base + drone into real systems,
    hidden-jump gating, Steltek gun as pickup not purchase).
-6. Hygiene pass: split main.cpp, scrub logs/artifacts, rewrite README,
-   fix stale comments (turrets "NPC-only", threat "stub", ship_class
-   "turrets out of scope").
+6. Hygiene pass: continue splitting main.cpp. Ignore coverage, README rewrite,
+   and the first stale-comment pass are complete.
 7. Righteous Fire, someday.

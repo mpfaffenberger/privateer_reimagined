@@ -118,9 +118,8 @@ void pop_hud_style() {
 // diagram (Ship). Mutated only on the main thread via set_status_screen.
 StatusScreen g_status_screen = StatusScreen::Ship;
 
-// A bare stub sub-panel: an amber title + a dim "not yet modeled" line.
-// Shared by the Damage / Weapons screens so the two read identically until
-// their real content lands (DRY — one helper, two callers).
+// Bare placeholder for a sub-panel whose underlying simulation model has not
+// landed yet. Keep the lie obvious instead of drawing fake instrumentation.
 void draw_status_stub(const char* title, const char* body) {
     ImGui::PushStyleColor(ImGuiCol_Text, kAmber);
     ImGui::TextUnformatted(title);
@@ -129,6 +128,49 @@ void draw_status_stub(const char* title, const char* body) {
     ImGui::PushStyleColor(ImGuiCol_Text, kHudWhite);
     ImGui::TextUnformatted(body);
     ImGui::PopStyleColor();
+}
+
+void draw_weapons_status(const Ship& player) {
+    ImGui::PushStyleColor(ImGuiCol_Text, kAmber);
+    ImGui::TextUnformatted("WEAPONS");
+    ImGui::PopStyleColor();
+    ImGui::Separator();
+
+    const auto& unique_types = firing::gun_unique_types_cache(player.mounts);
+    const char* mode = firing::gun_mode_label(unique_types, player.gun_mode_idx);
+    ImGui::PushStyleColor(ImGuiCol_Text, kHudWhite);
+    ImGui::Text("MODE %-14s %d/%zu ARMED", mode,
+                firing::gun_mode_armed_count(player), player.mounts.size());
+    const float energy_max = player.klass ? player.klass->energy_max : 0.0f;
+    ImGui::Text("ENERGY %5.0f / %5.0f GJ", player.energy_gj, energy_max);
+    ImGui::PopStyleColor();
+    ImGui::Separator();
+
+    if (player.mounts.empty()) {
+        ImGui::PushStyleColor(ImGuiCol_Text, kDimAmber);
+        ImGui::TextUnformatted("NO GUNS FITTED");
+        ImGui::PopStyleColor();
+        return;
+    }
+
+    constexpr size_t k_max_visible_mounts = 6;
+    const size_t visible = std::min(player.mounts.size(), k_max_visible_mounts);
+    for (size_t i = 0; i < visible; ++i) {
+        const GunMount& mount = player.mounts[i];
+        const int type_index = (int)mount.type;
+        const char* name = (type_index >= 0 && type_index < kGunTypeCount)
+            ? g_gun_stats[type_index].name : "UNKNOWN";
+        const bool armed = i < player.gun_armed.size() && player.gun_armed[i];
+        ImGui::PushStyleColor(ImGuiCol_Text, armed ? kGreen : kDimAmber);
+        ImGui::Text("%d  %-18.18s %s%s", (int)i + 1, name,
+                    armed ? "ARM" : "OFF", mount.is_turret ? " T" : "");
+        ImGui::PopStyleColor();
+    }
+    if (player.mounts.size() > visible) {
+        ImGui::PushStyleColor(ImGuiCol_Text, kDimAmber);
+        ImGui::Text("+ %zu MORE MOUNTS", player.mounts.size() - visible);
+        ImGui::PopStyleColor();
+    }
 }
 
 constexpr float kShipDiagramIconScale = 4.15f;
@@ -673,7 +715,8 @@ void draw_player_status(const ShipRegistry& ships,
 
       // Dispatch the STATUS window to its active sub-screen. Ship keeps the
       // canonical hull diagram; Comms hosts the data-driven hail menu;
-      // Damage / Weapons are stubs until their systems land.
+      // Damage remains a stub until component health exists; Weapons reads
+      // the live mount/arm/energy state.
       switch (g_status_screen) {
       case StatusScreen::Comms: {
         static const PlayerReputation kNoRep{};
@@ -684,7 +727,7 @@ void draw_player_status(const ShipRegistry& ships,
         draw_status_stub("DAMAGE CONTROL", "system damage not yet modeled");
         break;
       case StatusScreen::Weapons:
-        draw_status_stub("WEAPONS", "loadout screen TBD");
+        draw_weapons_status(player);
         break;
       case StatusScreen::Ship:
       default:

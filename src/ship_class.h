@@ -15,15 +15,10 @@
 // multipliers). Armor in cm is per-facing (Fore/Aft/Side, sides
 // symmetric L=R).
 //
-// Out of scope for v1:
-//   * upgrade economy. ShipClass declares max engine/shield levels but
-//     nothing reads them yet — the per-class default loadout is
-//     authoritative for combat balance.
-//   * turrets. Centurion etc. have rear/top/bottom mounts; we ignore
-//     them and treat their fixed forward guns as the full loadout.
-//   * cargo. The Galaxy carries 150 units, the Tarsus 100 — fields are
-//     loaded so the trading layer can read them later, but combat
-//     doesn't care today.
+// ShipClass is also the immutable source for upgrade limits, cargo capacity,
+// fixed guns, and turret mounts. PlayerState records the mutable fitted
+// equipment by stable string/id; runtime Ship instances resolve it against
+// this catalog.
 // -----------------------------------------------------------------------------
 
 #include "faction.h"
