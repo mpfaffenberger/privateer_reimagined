@@ -138,10 +138,10 @@
       ]
     },
     "equipment": {
-      "background": "../equipment_vanilla_bg.png",
+      "background": "equipment_bg.png",
       "bg_size": [
-        320,
-        200
+        1281,
+        1024
       ],
       "overlays": []
     },
