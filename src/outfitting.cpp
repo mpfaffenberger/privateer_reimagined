@@ -686,6 +686,16 @@ void draw_equipment(BaseContext& ctx) {
     ImGui::PopID();
 
     // ---- Gun catalog -> fit into selected mount ----------------------------
+    // Vanilla equipment bays are visually busy. Give both equipment panes
+    // their own near-opaque surfaces instead of letting global ImGui alpha
+    // turn the catalog and upgrades into ghost text over the room art.
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.025f, 0.035f, 0.060f, 0.94f));
+    ImGui::PushStyleColor(ImGuiCol_TableHeaderBg, ImVec4(0.10f, 0.12f, 0.17f, 0.98f));
+    ImGui::PushStyleColor(ImGuiCol_TableRowBg, ImVec4(0.035f, 0.045f, 0.070f, 0.92f));
+    ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, ImVec4(0.065f, 0.075f, 0.105f, 0.94f));
+    ImGui::PushStyleColor(ImGuiCol_TableBorderLight, ImVec4(0.55f, 0.46f, 0.22f, 0.55f));
+    ImGui::PushStyleColor(ImGuiCol_TableBorderStrong, ImVec4(0.72f, 0.60f, 0.26f, 0.72f));
+
     ImGui::SetCursorScreenPos(ImVec2(28, 150));
     const ImVec2 gun_sz(ss.w * 0.5f - 40, ss.h - 150 - 70);
     constexpr ImGuiTableFlags tflags =
@@ -1181,6 +1191,7 @@ void draw_equipment(BaseContext& ctx) {
         }
     }
     ImGui::EndChild();
+    ImGui::PopStyleColor(6);
 }
 
 } // namespace
