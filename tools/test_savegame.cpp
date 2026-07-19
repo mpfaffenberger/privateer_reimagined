@@ -25,12 +25,31 @@
 #include "savegame.h"
 
 #include <cstdio>
+#include <cstdlib>
+#include <filesystem>
 #include <fstream>
 #include <string>
 
 namespace {
 
 int g_fail = 0;
+
+// Hermetic sandbox (#242): every slot/timestamped write in this harness —
+// including the deliberately corrupt fixtures — lands in a throwaway temp
+// tree instead of the player's real save directory and save picker.
+std::filesystem::path sandbox_data_dir() {
+    namespace fs = std::filesystem;
+    const fs::path dir = fs::temp_directory_path() / "new_privateer_test_saves";
+    std::error_code ec;
+    fs::remove_all(dir, ec);              // stale fixtures from a prior run
+    fs::create_directories(dir, ec);
+#ifdef _WIN32
+    _putenv_s("NP_DATA_DIR", dir.string().c_str());
+#else
+    setenv("NP_DATA_DIR", dir.string().c_str(), 1);
+#endif
+    return dir;
+}
 
 // Compare one field; log PASS/FAIL with both values.
 template <typename T>
@@ -242,6 +261,9 @@ bool missions_equal(const std::vector<ActiveMission>& a, const std::vector<Activ
 
 int main() {
     std::printf("=== np-ymp.1 save/load round-trip harness ===\n\n");
+
+    const std::filesystem::path sandbox = sandbox_data_dir();
+    std::printf("[0] sandbox data dir: %s\n\n", sandbox.string().c_str());
 
     // ---- 1+2. round-trip --------------------------------------------------
     const PlayerState src = make_mutated();

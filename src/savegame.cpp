@@ -125,7 +125,14 @@ struct JsonWriter {
 // only when the proper override isn't set.
 //
 // Returns "" if no usable path can be found (degenerate; caller logs).
+//
+// NP_DATA_DIR overrides the platform default entirely. Test harnesses use it
+// to keep scratch/corrupt fixture saves out of the player's real save picker
+// (#242); it also lets a portable install carry its saves alongside the game.
 std::string user_data_dir() {
+    if (const char* o = std::getenv("NP_DATA_DIR"); o && *o) {
+        return (fs::path(o) / "new_privateer").string();
+    }
 #ifdef _WIN32
     // Prefer APPDATA — that's where Windows apps are expected to stash
     // mutable per-user state. %USERPROFILE% is a last-resort fallback.
@@ -921,7 +928,14 @@ std::vector<SlotInfo> list_saves() {
         if (fname.rfind("save_", 0) != 0) continue;
         if (ent.path().extension() != ".json") continue;
         SlotInfo info = peek_path(ent.path().string());
-        if (info.exists) out.push_back(std::move(info));
+        if (!info.exists) {
+            // Name the offender: the raw [json] parse error above this line
+            // carries no filename, which made #242 needlessly mysterious.
+            std::fprintf(stderr, "[save] skipping unreadable save file '%s'\n",
+                         ent.path().string().c_str());
+            continue;
+        }
+        out.push_back(std::move(info));
     }
     // Newest first (by embedded unix timestamp; ties broken by path so the
     // order is stable).
