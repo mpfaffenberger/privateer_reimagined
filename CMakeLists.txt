@@ -156,6 +156,7 @@ set(IMGUI_SRC
 
 add_executable(new_privateer
     src/main.cpp
+    src/app_cli.cpp
     src/audio.cpp
     src/sfx.cpp
     src/music.cpp
@@ -499,6 +500,16 @@ add_executable(test_savegame EXCLUDE_FROM_ALL
 target_include_directories(test_savegame PRIVATE
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/third_party
+)
+
+# Engine-free launch argument grammar.
+#   cmake --build build --target test_app_cli && ./build/test_app_cli
+add_executable(test_app_cli EXCLUDE_FROM_ALL
+    tools/test_app_cli.cpp
+    src/app_cli.cpp
+)
+target_include_directories(test_app_cli PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
 )
 
 # Fixer framework proof (#137): placement (base + archetype predicate),

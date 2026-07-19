@@ -36,6 +36,7 @@
 #include "sokol_time.h"
 #include "sokol_debugtext.h"
 
+#include "app_cli.h"
 #include "armor.h"
 #include "asteroid.h"
 #include "atlas_grid_viewer.h"
@@ -251,7 +252,7 @@ struct AppState {
     // selected nav. Like docking it owns the camera while engaged
     // (controls_locked mutes pilot input), but it's a traversal
     // controller — it ends in free flight at the nav, not a mode flip.
-    // Hostile-gated through threat:: (stub today; live with np-ma2.3).
+    // Hostile-gated through the live threat:: proximity query.
     Autopilot      autopilot{};
 
     Camera         camera{};
@@ -7470,74 +7471,28 @@ sapp_desc sokol_main(int argc, char** argv) {
     std::fprintf(stderr, "[trace] sokol_main entered, argc=%d\n", argc);
     std::fflush(stderr);
 
-    for (int i = 1; i < argc; ++i) {
-        if (std::strcmp(argv[i], "--system") == 0 && i + 1 < argc) {
-            g.system_name     = argv[i + 1];
-            g.system_explicit = true;   // explicit --system wins over a saved system
-            ++i;
-        } else if (std::strcmp(argv[i], "--ship") == 0 && i + 1 < argc) {
-            g_player_ship_override = argv[i + 1];
-            ++i;
-        } else if (std::strcmp(argv[i], "--capture-clean") == 0) {
-            g.capture_clean = true;
-        } else if (std::strcmp(argv[i], "--skip-title") == 0) {
-            g.skip_title_at_boot = true;   // dev: drop straight into flight
-        } else if (std::strcmp(argv[i], "--dev-land") == 0 && i + 1 < argc) {
-            g.dev_land_base = argv[i + 1];
-            ++i;
-        } else if (std::strcmp(argv[i], "--dev-missions") == 0) {
-            g.dev_seed_missions = true;   // accept a few generated jobs on boot
-        } else if (std::strcmp(argv[i], "--windowed") == 0) {
-            g.force_windowed = true;
-        } else if (std::strcmp(argv[i], "--load") == 0 && i + 1 < argc) {
-            g.load_slot = std::atoi(argv[i + 1]);
-            ++i;
-        } else if (std::strcmp(argv[i], "--continue") == 0) {
-            g.load_slot = savegame::k_autosave_slot;   // resume the autosave
-        } else if (std::strcmp(argv[i], "--dev-invuln") == 0) {
-            g.dev_invuln = true;
-        } else if (std::strcmp(argv[i], "--dev-jump-drive") == 0) {
-            g.dev_jump_drive = true;
-        } else if (std::strcmp(argv[i], "--dev-kill-at") == 0 && i + 1 < argc) {
-            g.dev_kill_at_s = (float)std::atof(argv[i + 1]);
-            ++i;
-        } else if (std::strcmp(argv[i], "--play-cinematic") == 0 && i + 1 < argc) {
-            g.dev_cinematic = argv[i + 1];
-            ++i;
-        } else if (std::strcmp(argv[i], "--cine-at") == 0 && i + 1 < argc) {
-            g.dev_cinematic_at_s = (float)std::atof(argv[i + 1]);
-            ++i;
-        } else if (std::strcmp(argv[i], "--goto") == 0 && i + 1 < argc) {
-            // Deferred single switch to <system> a couple seconds after boot
-            // — proves runtime system switching WITHOUT the jump mechanic.
-            g.goto_system = argv[i + 1];
-            ++i;
-        } else if (std::strcmp(argv[i], "--goto-at") == 0 && i + 1 < argc) {
-            g.goto_at_s = (float)std::atof(argv[i + 1]);
-            ++i;
-        } else if (std::strcmp(argv[i], "--goto-soak") == 0 && i + 1 < argc) {
-            // Cycle the galaxy's systems <n> times then quit cleanly — the
-            // resource-leak / crash soak for repeated teardown+rebuild.
-            g.soak_remaining = std::atoi(argv[i + 1]);
-            ++i;
-        } else if (std::strcmp(argv[i], "--goto-interval") == 0 && i + 1 < argc) {
-            g.soak_interval = (float)std::atof(argv[i + 1]);
-            ++i;
-        } else if (std::strcmp(argv[i], "--dev-jump-soak") == 0 && i + 1 < argc) {
-            // np-6al.3: auto-fire the J jump through the first surveyed gate
-            // <n> times on an interval (teleporting into range first), then
-            // quit cleanly. Exercises the full jump path — eligibility,
-            // Loading cinematic, reciprocal arrival, repeated teardown+build
-            // — headlessly, so the round-trip + leak/stability soak can run
-            // without a human at the J key. Ping-pongs Troy<->Pyrenees.
-            g.dev_jump_remaining = std::atoi(argv[i + 1]);
-            g.show_welcome = false;   // soak is headless; don't freeze on the briefing
-            ++i;
-        } else if (std::strcmp(argv[i], "--dev-jump-interval") == 0 && i + 1 < argc) {
-            g.dev_jump_interval = (float)std::atof(argv[i + 1]);
-            ++i;
-        }
-    }
+    const LaunchOptions options = app_cli::parse(argc, argv);
+    g.system_name           = options.system_name;
+    g.system_explicit       = options.system_explicit;
+    g_player_ship_override  = options.player_ship;
+    g.capture_clean         = options.capture_clean;
+    g.skip_title_at_boot    = options.skip_title;
+    g.dev_land_base         = options.dev_land_base;
+    g.dev_seed_missions     = options.seed_missions;
+    g.force_windowed        = options.force_windowed;
+    g.load_slot             = options.load_slot;
+    g.dev_invuln            = options.dev_invuln;
+    g.dev_jump_drive        = options.dev_jump_drive;
+    g.dev_kill_at_s         = options.dev_kill_at_s;
+    g.dev_cinematic         = options.cinematic;
+    g.dev_cinematic_at_s    = options.cinematic_at_s;
+    g.goto_system           = options.goto_system;
+    g.goto_at_s             = options.goto_at_s;
+    g.soak_remaining        = options.goto_soak_count;
+    g.soak_interval         = options.goto_interval_s;
+    g.dev_jump_remaining    = options.jump_soak_count;
+    g.dev_jump_interval     = options.jump_interval_s;
+
 
     sapp_desc desc = make_app_desc();
 
@@ -7560,8 +7515,3 @@ sapp_desc sokol_main(int argc, char** argv) {
 
     return desc;
 }
-// 1781714421
-// touch 1781714977133978000
-// 1781714994388554000
-// 1781715631188585000
-// 1781715641475509000
