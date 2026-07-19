@@ -1,137 +1,205 @@
-# space_sim
+# Privateer Reimagined
 
-A from-scratch space-sim renderer in C++20. Runs at 60fps on Metal, boots in
-milliseconds, no engine.
+**Privateer Reimagined** is a from-scratch C++20 reimagining of **Wing
+Commander: Privateer**. It rebuilds the Gemini Sector as a modern standalone
+space sim while preserving the original game's open-ended mix of trading,
+combat, contracts, ship upgrades, exploration, and story-driven adventure.
 
-> _"The whole point of programming used to be how satisfying it felt. I'm
-> trying to remember."_ — probably
+Explore all 69 systems, make your fortune, follow the complete campaign, and
+generally discover why space insurance premiums are obscene.
 
-## Screenshot
+This is an unofficial standalone implementation, with no game engine, ECS
+framework, or runtime dependency manager. Rendering, window/input, audio, and
+debug UI are built on small vendored libraries under `third_party/`.
 
-Purple-and-green nebula, plasma sun with fresnel limb-brightening, corona +
-god rays, volumetric gas shell, 12 000 parallax-dust specks, bloom
-post-process, procedural lens flare, all driven by a seed string you typed
-at the command line.
+## Current state
 
-## Build & Run
+The playable sandbox includes:
+
+- 69 systems, 170 jump links, and 59 landable bases
+- 18 ship classes, 9 gun types, missiles, torpedoes, turrets, shields, armor,
+  ECM, repair systems, tractor beams, and ship upgrades
+- six-axis flight, afterburner, autopilot, autodocking, jumping, nav maps,
+  targeting, and combat HUDs
+- data-driven combat AI, faction standings, dynamic encounters, hailing, and
+  voiced comms
+- commodity trading, cargo, salvage, ship sales, equipment dealers, guilds,
+  and generated missions
+- versioned saves and accumulating autosaves
+- the complete 23-mission Privateer campaign, including fixers, escorts,
+  scripted encounters, Steltek systems, and the drone finale
+- cinematics, an in-game cinematic studio, music, SFX, speech, and extensive
+  development/debug tooling
+- a persistent Confed calendar beginning at stardate `2669.135`
+
+For a detailed feature audit, see [`docs/GAP_ANALYSIS.md`](docs/GAP_ANALYSIS.md).
+The current living-world work is documented in
+[`docs/persistent_world_plan.md`](docs/persistent_world_plan.md) and its
+[frozen interface contracts](docs/persistent_world_contracts.md).
+
+## Build
+
+### macOS
+
+Requirements: CMake 3.20+, a C++20 compiler, and a Metal-capable Mac.
 
 ```bash
+git lfs pull
 cmake -S . -B build
 cmake --build build -j
 ./build/new_privateer
 ```
 
-That's it. It works on any macOS with a Metal GPU.
+The macOS build uses Metal and links the required Apple frameworks directly.
+
+### Windows
+
+Windows uses D3D11. The GitHub Actions workflow builds a portable static-CRT
+executable and publishes a rolling `nightly` zip from `main`.
+
+For a local Visual Studio developer shell:
+
+```powershell
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build build --target new_privateer
+.\build\new_privateer.exe
+```
+
+`third_party/bin/sokol-shdc.exe` must be present; CI downloads it automatically.
+
+### Linux
+
+CMake has an OpenGL/X11 backend. It is less exercised than macOS and Windows,
+so consider it a porting target rather than a polished supported release.
+
+## Command-line options
+
+Useful development overrides include:
 
 ```bash
-# Try different stars (hot-swap with 1..6 at runtime too):
-./build/new_privateer --star blue
-./build/new_privateer --star red    --seed sector_4774
-./build/new_privateer --star purple --seed troy_rich
+./build/new_privateer --system troy
+./build/new_privateer --ship centurion
+./build/new_privateer --skip-title
+./build/new_privateer --play-cinematic demo_flyby
 ```
 
-## Controls
+Additional `--dev-*`, capture, load, and system-soak switches live near
+`sokol_main()` in `src/main.cpp`; they are developer interfaces rather than a
+stable player-facing CLI.
 
-| key                 | action                                            |
-|---------------------|---------------------------------------------------|
-| `mouse`             | look (pointer captured FPS-style)                 |
-| `right-click`       | toggle pointer capture                            |
-| `W` / `S`           | throttle forward / reverse                        |
-| `Q` / `E`           | strafe left / right                               |
-| `R` / `F`           | thrust up / down                                  |
-| `Z` / `C`           | roll left / right                                 |
-| `Tab` (hold)        | cruise engine — 10× thrust + FOV widen            |
-| `X`                 | full brake                                        |
-| `N` (`Alt+N`)       | cycle selected nav point (Alt+N: navmap overlay)  |
-| `A`                 | autopilot to selected nav (hostile-gated; any input cancels) |
-| `D`                 | dock at selected base when cleared                |
-| `T`                 | cycle selected ship target                        |
-| `1`..`6`            | swap star (yellow / blue / red / green / orange / purple) |
-| `Esc` ×2            | quit (double-tap within 1s)                       |
+## Core controls
 
-## Generate your own skybox
+| Input | Action |
+|---|---|
+| Mouse | Fly-by-wire aiming |
+| `+` / `-` | Increase/decrease throttle |
+| Hold `Tab` | Afterburner |
+| `,` / `.` | Roll left/right |
+| `N` | Open/cycle navigation targets |
+| `A` | Autopilot to selected nav point |
+| `D` | Dock at the selected base |
+| `T` | Cycle ship targets |
+| `Esc` | Back/close; double-tap in flight to quit |
+
+Additional context-sensitive bindings are shown by the in-game HUD. Debug and
+content-authoring panels intentionally have their own development bindings.
+
+## Tests
+
+The CMake harnesses are opt-in so a normal build remains a game-only build.
+Build and run a focused test like this:
 
 ```bash
-# Any string is a valid seed. Presets: --rich / --sparse / --wild.
-tools/gen_skybox.sh my_cool_system --rich
+cmake --build build --target test_world_clock
+./build/test_world_clock
 
-# Pick specific nebula colors:
-tools/gen_skybox.sh purple_haze --rich --nebula-colors "0.55,0.15,0.85;0.2,0.75,0.3"
+cmake --build build --target test_docking
+./build/test_docking
 
-./build/new_privateer --seed my_cool_system
+cmake --build build --target test_savegame
+./build/test_savegame
 ```
 
-Requires [`skyboxgen`](https://github.com/mpfaffenberger/skyboxgen) built
-next to this repo (or set `SKYBOXGEN=/path/to/skyboxgen`).
+Other wired targets include:
 
-## What's in here
+- `test_app_cli`
+- `test_ai_brain`
+- `test_missions`
+- `test_mission_tracker`
+- `test_fixers`
+- `test_campaign`
+- `test_cinematic`
+- `test_full_loop` — broad sandbox integration harness; currently undergoing
+  modernization as older assumptions are replaced by accumulating autosaves
+  and newer content behavior
 
-| Layer | Lines | Notes |
-|---|---|---|
-| Procedural skybox cubemap | `skybox.{h,cpp}` + `skybox.glsl` | loads 6 PNGs, flips faces to match D3D/Metal convention, draws with `CLAMP_TO_EDGE` so seams don't bleed |
-| 6-DOF flight + cruise engine | `camera.{h,cpp}` | exponential damping, smooth cruise windup/windown, FOV widens on engage |
-| Plasma sun | `sun.{cpp,glsl}` | animated fBM granulation, limb-brightening (not darkening — stars are optically thick emitters) |
-| Gas shell | `sun_gas.{cpp,glsl}` | noise-ring billboard that hugs the silhouette, breaks the hard sphere boundary |
-| Corona + god rays | `sun_corona.{cpp}` + `sun_glow.glsl` | procedural sunbeams, aspect-corrected anamorphic streaks |
-| Stellar presets | `star_presets.{h,cpp}` | 6 "star types" differing in color, granulation contrast, flow speed, corona size |
-| Parallax dust | `dust.{cpp,glsl}` | 12 k `GL_POINTS`, wrapped in the vertex shader to feel infinite |
-| Bloom + lens-flare post | `postprocess*.cpp` + `post_*.glsl` | two-pass separable gaussian at quarter-res, procedural flare tracking sun NDC |
-| On-screen HUD | `sokol_debugtext` | speed / mode / distance / position / controls |
+More focused standalone harnesses live under `tools/test_*.cpp`.
 
-Total ≈ 1 700 lines of project code. No engine, no ECS, no asset pipeline.
+## Architecture
 
-## Toolchain
-
-| Layer        | Tool                                             | Why                              |
-|--------------|--------------------------------------------------|----------------------------------|
-| Language     | C++20                                            | matches `skyboxgen`              |
-| Build        | CMake 3.20+                                      | boring, universal                |
-| Window/Input | [sokol_app](https://github.com/floooh/sokol)     | Metal on Mac, GL/D3D elsewhere   |
-| Renderer     | sokol_gfx                                        | modern command-buffer API        |
-| Text HUD     | sokol_debugtext                                  | 6 built-in bitmap fonts          |
-| Images       | [stb_image](https://github.com/nothings/stb)     | one header, zero config          |
-| Math         | [HandmadeMath](https://github.com/HandmadeMath)  | vec/mat/quat, single header      |
-| Shaders      | GLSL → [`sokol-shdc`](https://github.com/floooh/sokol-tools) → MSL/SPIR-V/HLSL | write once, run everywhere |
-
-All dependencies live as single-header files in `third_party/`. No package
-manager, no submodules, no `vcpkg.json`.
-
-## Layout
-
-```
-.
-├── src/                C++ sources
-├── shaders/            GLSL (cross-compiled to MSL/SPIR-V/HLSL at build time)
-├── assets/skybox/troy/ Default skybox (generated reference)
-├── third_party/        single-header libs + sokol-shdc binary
-├── tools/              shell helpers: gen_skybox.sh, ...
-└── CMakeLists.txt
+```text
+src/
+  main.cpp                 application host and orchestration
+  camera/autopilot/...     flight, navigation, docking, jumping
+  ship/ai_brain/...        ships, combat, weapons, and AI
+  economy/outfitting/...   trading, inventory, repairs, and equipment
+  missions/campaign/...    generated missions and scripted story
+  cinematic*               runtime, parser, triggers, and studio
+  savegame/player/plot     persistent player and campaign state
+  mesh/sprite/postprocess  rendering and visual effects
+shaders/                   GLSL cross-compiled by sokol-shdc
+assets/
+  systems/ ships/ bases/   world and entity definitions
+  data/                    economy, encounters, dialogue, and equipment
+  cinematics/ speech/ ...  authored media
+third_party/               vendored Sokol, ImGui, stb, and HandmadeMath
+tools/                     extraction, generation, authoring, and test tools
+docs/                      architecture notes, reverse engineering, and plans
+re/                        recovered data and reverse-engineering material
 ```
 
-## Roadmap
+### Runtime stack
 
-- [x] Procedural skybox (seed → 6 PNGs) with color + nebula tuning
-- [x] Mouselook camera, 6-DOF flight, cruise engine
-- [x] Plasma sun with corona, gas shell, god rays, stellar presets
-- [x] Parallax dust
-- [x] Bloom + procedural lens flare
-- [x] On-screen HUD
-- [ ] Asteroid field (instanced, LOD billboards at distance)
-- [ ] Mesh loader (glTF) + a placeholder ship
-- [ ] Volumetric nebula gas clouds (raymarched 3D noise)
-- [ ] Audio (sokol_audio — engine whoosh, ambient drone)
-- [ ] HUD overlays, targeting, weapons
-- [ ] Missions, factions, trade, the actual game
+| Layer | Technology |
+|---|---|
+| Language | C++20 |
+| Build | CMake 3.20+ |
+| Window/input | `sokol_app` |
+| Graphics | `sokol_gfx` — Metal, D3D11, or OpenGL |
+| Audio | Sokol audio plus project mixers/content |
+| Debug/content UI | Dear ImGui |
+| Images | `stb_image` |
+| Math | HandmadeMath |
+| Shaders | GLSL → `sokol-shdc` generated platform code |
 
-## Credits
+The code favors plain modules and explicit state over framework machinery.
+Game/content boundaries are mostly JSON-driven, while headless compile guards
+keep logic testable without a GPU or audio device.
 
-- [Andre Weissflog](https://github.com/floooh) for sokol — the spine of this
-  whole project.
-- [Sean Barrett](https://github.com/nothings) for `stb_image` and forever
-  reminding us what a good header looks like.
-- Chris Roberts & the Digital Anvil team for Freelancer (2003), which is
-  still the benchmark 22 years later.
+## Development priorities
+
+Near-term work is tracked in the docs rather than a pretend-static checkbox
+list. The major active areas are:
+
+1. **Gemini Lives:** world calendar, scheduled named NPCs, recurring encounters,
+   richer character/voice content, and persistent living-world events.
+2. **Combat fidelity:** component damage, useful Damage/Weapons MFDs,
+   Friend-or-Foe missiles, scanner tiers, and remaining turret UX.
+3. **Engineering:** split cohesive responsibilities out of `src/main.cpp`, keep
+   headless harnesses current, and continue improving cross-platform builds.
+4. **Later:** Righteous Fire content and campaign.
+
+## Asset and tooling notes
+
+Many tools under `tools/` recover or transform data from an original Privateer
+installation. Generated/intermediate material is intentionally separate from
+runtime data where practical. Do not assume every script is needed to play the
+game; most are authoring or reverse-engineering utilities.
+
+The project uses Git LFS for large media. If assets appear to be tiny pointer
+files, run `git lfs pull` before blaming the renderer. The renderer has enough
+to answer for already.
 
 ## License
 
-MIT. See `LICENSE` if you see one — otherwise assume MIT and go wild.
+MIT. See [`LICENSE`](LICENSE).
