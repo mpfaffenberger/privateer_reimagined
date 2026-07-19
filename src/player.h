@@ -286,6 +286,12 @@ struct PlayerState {
     float hp_shield_starboard = 0.0f;
     float hp_energy      = 0.0f;
 
+    // ---- persistent world clock (Gemini Lives #171, save v8) ------------
+    // Elapsed days since 2669.135. Successful landings advance this exactly
+    // once; world_clock owns display/quarter arithmetic without depending on
+    // PlayerState.
+    int         day = 0;
+
     // ---- location ---------------------------------------------------------
     std::string current_system;      // "troy" (assets/systems/<name>.json)
     std::string last_docked_base;    // "" until first landing

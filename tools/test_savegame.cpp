@@ -105,8 +105,9 @@ PlayerState make_mutated() {
     p.hp_shield_port = 0.75f;
     p.hp_shield_starboard = 0.0f;
     p.hp_energy      = 99.0f;
-    p.current_system   = "pentonville";
-    p.last_docked_base = "achilles";
+    p.day                = 321;
+    p.current_system     = "pentonville";
+    p.last_docked_base   = "achilles";
     p.docked           = true;
 
     // (#8) one mission of EACH new type with every new-field populated so
@@ -299,6 +300,7 @@ int main() {
     { const bool ok = cargo_equal(src.cargo, dst.cargo); if (!ok) ++g_fail;
       std::printf("  [%s] %-20s\n", ok ? "OK  " : "FAIL", "cargo (id/units/price)"); }
 
+    CHECK_EQ("day",              dst.day,              src.day);
     CHECK_EQ("current_system",   dst.current_system,   src.current_system);
     CHECK_EQ("last_docked_base", dst.last_docked_base, src.last_docked_base);
     CHECK_EQ("docked",           dst.docked,           src.docked);
@@ -381,6 +383,7 @@ int main() {
         bool found1 = false, found2 = false, label_ok = false;
         for (const auto& s : saves) {
             if (s.path == ts_path)  { found1 = true; label_ok =
+                s.label.find("2670.091")    != std::string::npos &&
                 s.label.find("pentonville") != std::string::npos &&
                 s.label.find("achilles")    != std::string::npos &&
                 s.label.find("centurion")   != std::string::npos &&
@@ -390,7 +393,7 @@ int main() {
         if (!found1 || !found2) ++g_fail;
         std::printf("  [%s] list_saves contains BOTH new files\n", (found1 && found2) ? "OK  " : "FAIL");
         if (!label_ok) ++g_fail;
-        std::printf("  [%s] label = '<time> - pentonville - achilles - centurion - 1234567 cr'\n",
+        std::printf("  [%s] label includes stardate + location + hull + credits\n",
                     label_ok ? "OK  " : "FAIL");
     }
     {
@@ -503,7 +506,22 @@ int main() {
                     ok ? "OK  " : "FAIL");
     }
 
-    // 3g. (#138) plot:: mutator invariants: idempotent set/give, clear/
+    // 3g. (Gemini Lives #171) a v7 save has no day key and therefore
+    //     migrates to the epoch (day zero / stardate 2669.135).
+    {
+        const std::string path = savegame::slot_path(kOldNoMissSlot);
+        { std::ofstream f(path, std::ios::trunc);
+          f << "{ \"version\": 7, \"label\": \"v7-pre-clock\",\n"
+               "  \"player\": { \"credits\": \"888\", \"current_system\": \"troy\" } }"; }
+        PlayerState p;
+        const bool r = savegame::load(p, kOldNoMissSlot);
+        const bool ok = r && p.credits == 888 && p.day == 0;
+        if (!ok) ++g_fail;
+        std::printf("  [%s] v7 save loads with day=0 (world-clock epoch)\n",
+                    ok ? "OK  " : "FAIL");
+    }
+
+    // 3h. (#138) plot:: mutator invariants: idempotent set/give, clear/
     //     remove report presence truthfully, empty ids refused.
     {
         PlayerState p = player::new_game("troy");

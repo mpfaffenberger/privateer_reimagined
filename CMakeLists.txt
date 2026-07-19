@@ -202,6 +202,7 @@ add_executable(new_privateer
     src/cinematic_studio.cpp
     src/cinematic_studio_io.cpp
     src/game_state.cpp
+    src/world_clock.cpp
     src/docking.cpp
     src/autopilot.cpp
     src/threat.cpp
@@ -390,7 +391,7 @@ add_executable(test_full_loop EXCLUDE_FROM_ALL
     tools/test_full_loop.cpp
     src/game_state.cpp src/player.cpp src/faction.cpp src/comm.cpp
     src/commodity.cpp src/economy.cpp src/outfitting.cpp src/missions.cpp
-    src/galaxy.cpp src/system_def.cpp src/json.cpp src/savegame.cpp
+    src/galaxy.cpp src/system_def.cpp src/json.cpp src/savegame.cpp src/world_clock.cpp
     src/docking.cpp src/autopilot.cpp src/threat.cpp src/jump.cpp
     src/encounters.cpp src/repair.cpp src/missile.cpp src/ship.cpp
     src/ship_class.cpp src/ship_registry.cpp src/ship_ai.cpp
@@ -416,7 +417,7 @@ add_executable(test_ai_brain EXCLUDE_FROM_ALL
     tools/test_ai_brain.cpp
     src/game_state.cpp src/player.cpp src/faction.cpp src/comm.cpp
     src/commodity.cpp src/economy.cpp src/outfitting.cpp src/missions.cpp
-    src/galaxy.cpp src/system_def.cpp src/json.cpp src/savegame.cpp
+    src/galaxy.cpp src/system_def.cpp src/json.cpp src/savegame.cpp src/world_clock.cpp
     src/docking.cpp src/autopilot.cpp src/threat.cpp src/jump.cpp
     src/encounters.cpp src/repair.cpp src/missile.cpp src/ship.cpp
     src/ship_class.cpp src/ship_registry.cpp src/ship_ai.cpp
@@ -445,7 +446,7 @@ add_executable(test_missions EXCLUDE_FROM_ALL
     tools/test_missions.cpp
     src/missions.cpp src/comm.cpp src/player.cpp src/faction.cpp
     src/commodity.cpp
-    src/galaxy.cpp src/system_def.cpp src/json.cpp src/savegame.cpp
+    src/galaxy.cpp src/system_def.cpp src/json.cpp src/savegame.cpp src/world_clock.cpp
     src/ship_class.cpp src/ship_registry.cpp
     src/encounters.cpp
     src/mobility.cpp
@@ -474,7 +475,7 @@ add_executable(test_mission_tracker EXCLUDE_FROM_ALL
     src/mission_tracker.cpp
     src/missions.cpp src/comm.cpp src/player.cpp src/faction.cpp
     src/threat.cpp src/commodity.cpp
-    src/galaxy.cpp src/system_def.cpp src/json.cpp src/savegame.cpp
+    src/galaxy.cpp src/system_def.cpp src/json.cpp src/savegame.cpp src/world_clock.cpp
     src/ship_class.cpp src/ship_registry.cpp
     src/mobility.cpp
     src/gun.cpp src/armor.cpp src/shield.cpp
@@ -494,7 +495,7 @@ add_dependencies(test_mission_tracker mission_templates_gen)
 #   cmake --build build --target test_savegame && ./build/test_savegame
 add_executable(test_savegame EXCLUDE_FROM_ALL
     tools/test_savegame.cpp
-    src/savegame.cpp src/player.cpp src/plot.cpp src/json.cpp src/faction.cpp
+    src/savegame.cpp src/world_clock.cpp src/player.cpp src/plot.cpp src/json.cpp src/faction.cpp
     src/commodity.cpp
 )
 target_include_directories(test_savegame PRIVATE
@@ -510,6 +511,28 @@ add_executable(test_app_cli EXCLUDE_FROM_ALL
 )
 target_include_directories(test_app_cli PRIVATE
     ${CMAKE_SOURCE_DIR}/src
+)
+
+# Pure calendar arithmetic for Gemini Lives (#171). No engine dependencies.
+#   cmake --build build --target test_world_clock && ./build/test_world_clock
+add_executable(test_world_clock EXCLUDE_FROM_ALL
+    tools/test_world_clock.cpp
+    src/world_clock.cpp
+)
+target_include_directories(test_world_clock PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+# Docking lifecycle proof, including the once-per-landing day advance. Save
+# and audio boundaries are stubbed by the harness; no real user files touched.
+#   cmake --build build --target test_docking && ./build/test_docking
+add_executable(test_docking EXCLUDE_FROM_ALL
+    tools/test_docking.cpp
+    src/docking.cpp src/game_state.cpp src/camera.cpp
+)
+target_include_directories(test_docking PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/third_party
 )
 
 # Fixer framework proof (#137): placement (base + archetype predicate),

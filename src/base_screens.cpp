@@ -27,6 +27,7 @@
 #include "ship_class.h"    // ship_class::all() for the landing-pad ship picker
 #include "ship_sprite.h"   // atlas load + choose_ship_sprite_frame_by_angles
 #include "sprite.h"        // SpriteArt (per-frame hull texture)
+#include "world_clock.h"
 #include <unordered_map>
 
 #include "imgui.h"
@@ -1335,6 +1336,19 @@ void build(PlayerState& player, Ship* player_ship, Docking& d, Camera& cam, Game
             }
             draw_subscreen(dl, ss, cur, player);
         }
+    }
+
+    // Gemini Lives clock: base screens are where a pilot notices time pass.
+    // Keep it on the two arrival/hub rooms; service UIs already have dense
+    // chrome and can read the same day through their BaseContext later.
+    if (cur == BaseScreen::LandingPad || cur == BaseScreen::Concourse) {
+        const std::string stamp = "STARDATE " + world_clock::stardate_string(player.day);
+        const ImVec2 text_size = ImGui::CalcTextSize(stamp.c_str());
+        const ImVec2 lo(ss.w - text_size.x - 34.0f, 18.0f);
+        const ImVec2 hi(ss.w - 18.0f, 18.0f + text_size.y + 14.0f);
+        dl->AddRectFilled(lo, hi, IM_COL32(5, 8, 14, 190), 3.0f);
+        dl->AddRect(lo, hi, kAmberDim, 3.0f);
+        dl->AddText(ImVec2(lo.x + 8.0f, lo.y + 7.0f), kAmber, stamp.c_str());
     }
 
     ImGui::End();

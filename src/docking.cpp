@@ -22,6 +22,7 @@
 
 #include <cmath>
 #include <cstdio>
+#include <limits>
 
 namespace {
 
@@ -156,6 +157,7 @@ void land_now(Docking& d, GameState& gs, PlayerState& player,
     d.timer_s               = 0.0f;
     player.docked           = true;
     player.last_docked_base = nav.base_id;
+    if (player.day < std::numeric_limits<int>::max()) ++player.day;
     game_state::request_mode(gs, GameMode::Landed);
     sfx::ui_click();
     if (!savegame::save_timestamped(player).empty()) {
@@ -230,6 +232,7 @@ void tick(Docking& d, Camera& cam, GameState& gs, PlayerState& player, float dt)
             d.state                 = DockingState::Docked;
             player.docked           = true;
             player.last_docked_base = d.base_id;
+            if (player.day < std::numeric_limits<int>::max()) ++player.day;
             game_state::request_mode(gs, GameMode::Landed);
             std::printf("[dock] docked at %s\n", d.base_id.c_str());
             // Autosave the moment we commit to the pad (np-ymp.1 / np-3dp.19):

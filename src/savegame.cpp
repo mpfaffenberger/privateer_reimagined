@@ -26,6 +26,7 @@
 #include "json.h"
 #include "player.h"
 #include "repair.h"
+#include "world_clock.h"
 
 #include <algorithm>
 #include <chrono>
@@ -196,16 +197,17 @@ std::string slot_path(int slot) {
 // ---- save -------------------------------------------------------------------
 
 // Build the full timestamped title (np-3dp.19):
-//   "YYYY-MM-DD HH:MM - <system> - <base> - <ship> - <credits> cr"
+//   "YYYY-MM-DD HH:MM - <stardate> - <system> - <base> - <ship> - <credits> cr"
 // Unset fields read as placeholders ("deep space" base, "?" system/ship).
 static std::string make_label(const PlayerState& p, long long ts) {
     char when[32] = "0000-00-00 00:00";   // overwritten below; avoid ?\?- trigraphs
     const std::time_t tt = (std::time_t)ts;
     if (std::tm* lt = std::localtime(&tt))
         std::strftime(when, sizeof(when), "%Y-%m-%d %H:%M", lt);
-    char label[256];
-    std::snprintf(label, sizeof(label), "%s - %s - %s - %s - %lld cr",
-                  when,
+    char label[288];
+    const std::string stardate = world_clock::stardate_string(p.day);
+    std::snprintf(label, sizeof(label), "%s - %s - %s - %s - %s - %lld cr",
+                  when, stardate.c_str(),
                   p.current_system.empty()  ? "?"          : p.current_system.c_str(),
                   p.last_docked_base.empty() ? "deep space" : p.last_docked_base.c_str(),
                   p.ship_class_name.empty()  ? "?"          : p.ship_class_name.c_str(),
@@ -423,6 +425,8 @@ static std::string serialize_player(const PlayerState& p) {
           w.key("energy");         w.value_raw(std::to_string(p.hp_energy));
         w.end_object();
 
+        // Persistent world clock (Gemini Lives #171, format v8).
+        w.key("day");              w.value_int(p.day);
         w.key("current_system");   w.value_string(p.current_system);
         w.key("last_docked_base"); w.value_string(p.last_docked_base);
         w.key("docked");           w.value_bool(p.docked);
@@ -844,6 +848,10 @@ bool load(PlayerState& p, const std::string& path) {
             }
         }
 
+        // Persistent world clock (Gemini Lives #171, format v8). Pre-v8
+        // saves begin at the epoch; hand-edited negative days clamp to zero.
+        out.day = pl.contains("day")
+            ? std::max(0, (int)pl["day"].number_or(0)) : 0;
         out.current_system   = pl.contains("current_system")   ? pl["current_system"].string_or("")   : "";
         out.last_docked_base = pl.contains("last_docked_base") ? pl["last_docked_base"].string_or("") : "";
         out.docked           = pl.contains("docked")           ? pl["docked"].bool_or(false)          : false;
