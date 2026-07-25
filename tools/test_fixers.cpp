@@ -53,8 +53,10 @@ const char* kTable = R"json({
     { "id": "sandoval_offer", "name": "Ernesto Sandoval",
       "base": "new_detroit_industrial",
       "forbids_flags": ["sandoval_done"],
-      "dialogue": ["I have a job.", "Iron to Liverpool."],
+      "dialogue": ["I have a job.", "What's the pay?", "Iron to Liverpool."],
+      "speaker": ["", "pc", ""],
       "portrait": "portraits/sandoval/_ref.png",
+      "portrait_pc": "portraits/grayson/_ref.png",
       "voice": ["audio/fixers/sandoval_offer_00.mp3"],
       "offer": "15,000 credits on your return. Deal?",
       "accept_actions": ["set_flag:sandoval_accepted",
@@ -154,6 +156,17 @@ int main() {
               "voice: may be shorter than dialogue (unvoiced paragraphs)");
         check(t && t->portrait.empty() && t->voice.empty(),
               "portrait/voice: absent fields default to empty (text-only)");
+
+        // Two-hander: speaker[] marks which lines the player-character says.
+        check(s && s->speaker.size() == 3 && s->speaker[1] == "pc" &&
+                  s->speaker[0].empty() && s->speaker[2].empty(),
+              "speaker: 'pc' marks player lines, '' marks the fixer");
+        check(s && s->speaker.size() == s->dialogue.size(),
+              "speaker: stays index-aligned with dialogue");
+        check(s && s->portrait_pc == "portraits/grayson/_ref.png",
+              "portrait_pc: parsed for the player side of a two-hander");
+        check(t && t->speaker.empty(),
+              "speaker: absent array = every line is the fixer's");
     }
 
     // ---- 4b. $NM / $CS token expansion -------------------------------------

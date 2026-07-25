@@ -98,17 +98,24 @@ def main(argv: list[str] | None = None) -> int:
             skipped += 1
             continue
 
+        # Two-hander support: speaker[i] == "pc" means Grayson answers, so the
+        # line is rendered in the player-character's cloned voice instead of
+        # the fixer's. A short/absent speaker array means all-fixer.
+        speakers = entry.get("speaker", [])
+
         clips: list[str] = []
         for i, line in enumerate(entry.get("dialogue", [])):
+            is_pc = i < len(speakers) and speakers[i] == "pc"
+            who = "grayson" if is_pc else speaker
             rel = voice_rel_path(fid, f"{i:02d}")
             text = speakable(line)
             if args.dry_run:
-                print(f"  {speaker:<10} {rel}  {text[:70]}")
+                print(f"  {who:<10} {rel}  {text[:70]}")
                 clips.append(rel)
                 made += 1
                 continue
             out = voices.gen_line_voice(
-                speaker, text, out_rel=rel, bible=bible, force=args.force
+                who, text, out_rel=rel, bible=bible, force=args.force
             )
             if out:
                 clips.append(out)

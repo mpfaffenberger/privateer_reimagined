@@ -64,8 +64,11 @@ int load(const std::string& path) {
         read_string_array(e, "requires_flags", f.requires_flags);
         read_string_array(e, "forbids_flags",  f.forbids_flags);
         read_string_array(e, "dialogue",       f.dialogue);
+        read_string_array(e, "speaker",        f.speaker);
         f.offer_text = e.contains("offer") ? e["offer"].string_or("") : "";
         f.portrait   = e.contains("portrait") ? e["portrait"].string_or("") : "";
+        f.portrait_pc = e.contains("portrait_pc")
+                        ? e["portrait_pc"].string_or("") : "";
         read_string_array(e, "voice", f.voice);
         f.voice_offer = e.contains("voice_offer")
                         ? e["voice_offer"].string_or("") : "";
@@ -211,6 +214,35 @@ std::map<std::string, TextureSlot> g_portrait_tex;
 // cuts it rather than letting lines stack on top of each other.
 VoiceId g_voice = 0;
 
+// ---- auto-advance --------------------------------------------------------
+// Conversations play themselves: a paragraph holds until its voice clip
+// finishes, then the next one starts. No clicking through a performance.
+//
+// "Finished" is detected via audio::voice_gains, which returns false once the
+// voice slot retires -- no new audio API needed. Unvoiced paragraphs (and the
+// whole no-key case) fall back to a READ-TIME estimate so text-only content
+// still paces sensibly instead of freezing or flashing past.
+float g_para_elapsed = 0.0f;   // seconds shown
+float g_para_hold    = 0.0f;   // read-time estimate for the current paragraph
+bool  g_auto_advance = true;   // player can pin a paragraph (see controls)
+
+// ~14 chars/sec is a comfortable subtitle rate; clamp so one-liners still
+// linger and long paragraphs don't overstay if their clip is missing.
+float read_time_for(const std::string& text) {
+    return std::clamp(1.6f + (float)text.size() / 14.0f, 2.2f, 11.0f);
+}
+
+// True once the current paragraph has had its say.
+bool paragraph_done() {
+    float l = 0.0f, r = 0.0f;
+    if (g_voice && audio::voice_gains(g_voice, &l, &r))
+        return false;                       // clip still playing
+    if (g_voice) {                          // clip finished -> small beat
+        return g_para_elapsed >= 0.35f;
+    }
+    return g_para_elapsed >= g_para_hold;   // unvoiced: read-time
+}
+
 const TextureSlot& portrait_texture(const std::string& rel_path) {
     auto it = g_portrait_tex.find(rel_path);
     if (it != g_portrait_tex.end()) return it->second;
@@ -234,8 +266,10 @@ void stop_voice() {
 // the index is past its end, or the entry is blank -- all normal for
 // partially-voiced content).
 void play_paragraph_voice(const FixerDef& f, size_t idx) {
-    if (idx >= f.voice.size() || f.voice[idx].empty()) return;
     stop_voice();
+    g_para_elapsed = 0.0f;
+    g_para_hold = read_time_for(idx < f.dialogue.size() ? f.dialogue[idx] : "");
+    if (idx >= f.voice.size() || f.voice[idx].empty()) return;
     g_voice = audio::play_file(k_portrait_root + f.voice[idx], 1.0f);
 }
 
@@ -243,6 +277,13 @@ void reset_conversation() {
     stop_voice();
     g_talking_to.clear();
     g_paragraph = 0;
+    g_para_elapsed = 0.0f;
+    g_auto_advance = true;
+}
+
+// Who speaks paragraph i -- "" (or past the end of the array) means the fixer.
+bool is_pc_line(const FixerDef& f, size_t idx) {
+    return idx < f.speaker.size() && f.speaker[idx] == "pc";
 }
 
 void draw_bar_body(BaseContext& ctx) {
@@ -292,12 +333,28 @@ void draw_bar_body(BaseContext& ctx) {
     const FixerDef* f = find(g_talking_to);
     if (!f) { reset_conversation(); return; }
 
+    // Advance the clock and roll to the next paragraph when the current one
+    // has finished speaking. Done BEFORE drawing so a completed paragraph
+    // never renders a stale frame.
+    const bool has_dialogue_now = !f->dialogue.empty();
+    const bool at_last = !has_dialogue_now ||
+                         g_paragraph + 1 >= f->dialogue.size();
+    g_para_elapsed += ImGui::GetIO().DeltaTime;
+    if (g_auto_advance && !at_last && paragraph_done()) {
+        ++g_paragraph;
+        play_paragraph_voice(*f, g_paragraph);
+    }
+
     // Portrait (optional) sits inside the panel's left edge; when present the
     // text column shifts right to clear it. A failed decode falls back to the
-    // original full-width text layout.
+    // original full-width text layout. On a "pc" line we swap in the player's
+    // portrait so the exchange reads as a conversation rather than a monologue.
+    const bool pc_line = is_pc_line(*f, g_paragraph);
+    const std::string& art_rel = (pc_line && !f->portrait_pc.empty())
+                                 ? f->portrait_pc : f->portrait;
     const TextureSlot* art = nullptr;
-    if (!f->portrait.empty()) {
-        const TextureSlot& slot = portrait_texture(f->portrait);
+    if (!art_rel.empty()) {
+        const TextureSlot& slot = portrait_texture(art_rel);
         if (slot.valid) art = &slot;
     }
     const float art_gutter = art ? (kPortraitW + 18.0f) : 0.0f;
@@ -317,7 +374,9 @@ void draw_bar_body(BaseContext& ctx) {
     }
 
     const float tx = px + 18.0f + art_gutter;   // text column origin
-    dl->AddText(ImVec2(tx, py + 14), kAmber, f->name.c_str());
+    // Nameplate follows the speaker so it is always clear who is talking.
+    const char* who = pc_line ? "Grayson Burrows" : f->name.c_str();
+    dl->AddText(ImVec2(tx, py + 14), pc_line ? kWhite : kAmber, who);
     dl->AddLine(ImVec2(tx, py + 36), ImVec2(px + pw - 18, py + 36), kDim);
 
     const bool has_dialogue = !f->dialogue.empty();
@@ -360,11 +419,27 @@ void draw_bar_body(BaseContext& ctx) {
     // ---- controls: NEXT / ACCEPT+REFUSE / LEAVE ---------------------------
     const float byy = py + ph - 44.0f;
     if (!last_para) {
+        // Conversations play themselves. SKIP jumps the rest of the current
+        // line for anyone who reads faster than the VO; PAUSE pins the
+        // paragraph so a player can sit with it.
+        ImGui::SetCursorScreenPos(ImVec2(px + pw - 262, byy));
+        if (ImGui::Button(g_auto_advance ? "PAUSE" : "RESUME", ImVec2(120, 30))) {
+            sfx::ui_click();
+            g_auto_advance = !g_auto_advance;
+        }
         ImGui::SetCursorScreenPos(ImVec2(px + pw - 130, byy));
-        if (ImGui::Button("NEXT >", ImVec2(112, 30))) {
+        if (ImGui::Button("SKIP >", ImVec2(112, 30))) {
             sfx::ui_click();
             ++g_paragraph;
             play_paragraph_voice(*f, g_paragraph);
+        }
+        // Progress pips: how far through the conversation we are.
+        const float dot_y = byy + 14.0f;
+        float dot_x = tx;
+        for (size_t i = 0; i < f->dialogue.size() && i < 24; ++i) {
+            dl->AddCircleFilled(ImVec2(dot_x, dot_y), 3.0f,
+                                i == g_paragraph ? kAmber : kDim);
+            dot_x += 11.0f;
         }
     } else if (offering) {
         ImGui::SetCursorScreenPos(ImVec2(px + pw - 262, byy));

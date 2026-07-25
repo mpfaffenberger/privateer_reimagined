@@ -75,7 +75,13 @@ struct FixerDef {
     std::vector<std::string> forbids_flags;  // NONE may be set
 
     // ---- conversation ----
+    // Vanilla bar conversations are TWO-HANDERS: the fixer talks, the player
+    // (Grayson) answers, back and forth. dialogue[i] is the line; speaker[i]
+    // names who says it -- "" (or a short/absent array) means the fixer, and
+    // "pc" means the player-character. Keeping this parallel rather than
+    // nesting means old single-voice entries stay valid untouched.
     std::vector<std::string> dialogue;       // linear paragraphs
+    std::vector<std::string> speaker;        // ""=fixer, "pc"=player
     std::string              offer_text;     // "" = pure dialogue, no offer
 
     // ---- presentation (optional; absent = the old text-only panel) ----
@@ -83,6 +89,9 @@ struct FixerDef {
     // cinematic DSL's `line` cue) -- e.g. "portraits/tayla/_ref.png". Missing
     // or undecodable is non-fatal: the panel just renders without art.
     std::string              portrait;
+    // portrait_pc: the player-character's portrait, shown in place of the
+    // fixer's on "pc" lines so a two-hander reads as an exchange.
+    std::string              portrait_pc;
     // voice[i] is the audio for dialogue[i], relative to assets/cinematics/.
     // Short/absent arrays are fine -- any paragraph without a clip is silent.
     std::vector<std::string> voice;
