@@ -57,7 +57,12 @@ const char* kTable = R"json({
       "speaker": ["", "pc", ""],
       "portrait": "portraits/sandoval/_ref.png",
       "portrait_pc": "portraits/grayson/_ref.png",
+      "prop": ["", "props/steltek_artifact.png", ""],
       "voice": ["audio/fixers/sandoval_offer_00.mp3"],
+      "accept_dialogue": ["Good. The cargo's aboard.", "Of course it is."],
+      "accept_speaker": ["", "pc"],
+      "refuse_dialogue": ["A pity."],
+      "refuse_speaker": [""],
       "offer": "15,000 credits on your return. Deal?",
       "accept_actions": ["set_flag:sandoval_accepted",
                          "offer_mission:m01"],
@@ -147,6 +152,23 @@ int main() {
         const fixers::FixerDef* s = fixers::find("sandoval_offer");
         const fixers::FixerDef* t = fixers::find("tayla_intro");
         const fixers::FixerDef* g = fixers::find("goodin");
+
+        // Prop shots swap the panel art for a specific line.
+        check(s && s->prop.size() == 3 &&
+                  s->prop[1] == "props/steltek_artifact.png" &&
+                  s->prop[0].empty(),
+              "prop: per-line art override parsed, blanks keep the portrait");
+
+        // Post-decision exchanges: the scene continues after the button.
+        check(s && s->accept_dialogue.size() == 2 &&
+                  s->accept_speaker.size() == 2 &&
+                  s->accept_speaker[1] == "pc",
+              "accept_dialogue/speaker: parsed as a two-hander epilogue");
+        check(s && s->refuse_dialogue.size() == 1,
+              "refuse_dialogue: parsed independently of accept");
+        check(t && t->accept_dialogue.empty() && t->refuse_dialogue.empty() &&
+                  t->prop.empty(),
+              "epilogue/prop: absent fields default empty (old entries valid)");
         check(s && s->portrait == "portraits/sandoval/_ref.png",
               "portrait: parsed when present");
         check(s && s->voice.size() == 1 &&

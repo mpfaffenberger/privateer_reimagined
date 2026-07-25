@@ -143,6 +143,41 @@ def main(argv: list[str] | None = None) -> int:
         if clips and any(clips):
             entry["voice"] = clips
 
+        # ---- post-decision exchanges (accept_/refuse_) ---------------------
+        # Same parallel-array contract as the main conversation, just keyed
+        # under a different prefix so the phases can't collide on disk.
+        for phase in ("accept", "refuse"):
+            lines = entry.get(f"{phase}_dialogue", [])
+            if not lines:
+                continue
+            ph_speakers = entry.get(f"{phase}_speaker", [])
+            ph_clips: list[str] = []
+            for i, line in enumerate(lines):
+                is_pc = i < len(ph_speakers) and ph_speakers[i] == "pc"
+                who = "grayson" if is_pc else speaker
+                rel = voice_rel_path(fid, f"{phase}_{i:02d}")
+                if is_beat(line):
+                    ph_clips.append("")
+                    skipped += 1
+                    continue
+                if args.dry_run:
+                    print(f"  {who:<10} {rel}  {speakable(line)[:60]}")
+                    ph_clips.append(rel)
+                    made += 1
+                    continue
+                out = voices.gen_line_voice(
+                    who, speakable(line), out_rel=rel, bible=bible,
+                    force=args.force
+                )
+                if out:
+                    ph_clips.append(out)
+                    made += 1
+                else:
+                    ph_clips.append("")
+                    failed += 1
+            if any(ph_clips):
+                entry[f"{phase}_voice"] = ph_clips
+
         # NOTE: `offer` is deliberately NOT voiced. It is UI-summary text --
         # "Haul 40 units of iron to Liverpool (Newcastle system) ... Deal?" --
         # full of parentheticals and mechanical numbers that read as a menu

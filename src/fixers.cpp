@@ -65,6 +65,14 @@ int load(const std::string& path) {
         read_string_array(e, "forbids_flags",  f.forbids_flags);
         read_string_array(e, "dialogue",       f.dialogue);
         read_string_array(e, "speaker",        f.speaker);
+        read_string_array(e, "prop",           f.prop);
+        read_string_array(e, "accept_dialogue", f.accept_dialogue);
+        read_string_array(e, "accept_speaker",  f.accept_speaker);
+        read_string_array(e, "accept_voice",    f.accept_voice);
+        read_string_array(e, "accept_prop",     f.accept_prop);
+        read_string_array(e, "refuse_dialogue", f.refuse_dialogue);
+        read_string_array(e, "refuse_speaker",  f.refuse_speaker);
+        read_string_array(e, "refuse_voice",    f.refuse_voice);
         f.offer_text = e.contains("offer") ? e["offer"].string_or("") : "";
         f.portrait   = e.contains("portrait") ? e["portrait"].string_or("") : "";
         f.portrait_pc = e.contains("portrait_pc")
@@ -186,6 +194,15 @@ namespace {
 // along. Reset when the bar is entered for a different base (or after the
 // conversation closes). `g_noted` de-dupes the "offered" observer line per
 // bar visit.
+// Which stretch of dialogue we're playing. MAIN runs up to the offer; ACCEPTED
+// and REFUSED are the short exchanges AFTER the player commits, so a scene
+// ends on a line rather than on a button press. The gameplay actions fire when
+// the epilogue finishes (or immediately, when a fixer has no epilogue authored)
+// -- never twice, guarded by g_actions_ran.
+enum class Phase { Main, Accepted, Refused };
+Phase                    g_phase = Phase::Main;
+bool                     g_actions_ran = false;
+
 std::string              g_talking_to;     // fixer id, "" = browsing the bar
 size_t                   g_paragraph = 0;
 std::string              g_last_base;      // bar-visit change detector
@@ -275,15 +292,56 @@ void stop_voice() {
     if (g_voice) { audio::stop(g_voice); g_voice = 0; }
 }
 
+// ---- phase-aware accessors ----------------------------------------------
+// Each phase has its own parallel arrays; everything below reads through
+// these so the drawing code never branches on the phase itself.
+const std::vector<std::string>& phase_dialogue(const FixerDef& f) {
+    if (g_phase == Phase::Accepted) return f.accept_dialogue;
+    if (g_phase == Phase::Refused)  return f.refuse_dialogue;
+    return f.dialogue;
+}
+
+const std::vector<std::string>& phase_speaker(const FixerDef& f) {
+    if (g_phase == Phase::Accepted) return f.accept_speaker;
+    if (g_phase == Phase::Refused)  return f.refuse_speaker;
+    return f.speaker;
+}
+
+const std::vector<std::string>& phase_voice(const FixerDef& f) {
+    if (g_phase == Phase::Accepted) return f.accept_voice;
+    if (g_phase == Phase::Refused)  return f.refuse_voice;
+    return f.voice;
+}
+
+const std::vector<std::string>& phase_prop(const FixerDef& f) {
+    static const std::vector<std::string> k_none;
+    if (g_phase == Phase::Accepted) return f.accept_prop;
+    if (g_phase == Phase::Refused)  return k_none;
+    return f.prop;
+}
+
 // Play the clip for paragraph `idx` (no-op when the entry has no voice array,
 // the index is past its end, or the entry is blank -- all normal for
 // partially-voiced content).
 void play_paragraph_voice(const FixerDef& f, size_t idx) {
     stop_voice();
+    const std::vector<std::string>& dlg = phase_dialogue(f);
+    const std::vector<std::string>& vox = phase_voice(f);
     g_para_elapsed = 0.0f;
-    g_para_hold = read_time_for(idx < f.dialogue.size() ? f.dialogue[idx] : "");
-    if (idx >= f.voice.size() || f.voice[idx].empty()) return;
-    g_voice = audio::play_file(k_portrait_root + f.voice[idx], 1.0f);
+    g_para_hold = read_time_for(idx < dlg.size() ? dlg[idx] : "");
+    if (idx >= vox.size() || vox[idx].empty()) return;
+    g_voice = audio::play_file(k_portrait_root + vox[idx], 1.0f);
+}
+
+// Enter a post-decision exchange. Returns false when the fixer has no lines
+// authored for that outcome, so the caller can just run the actions and close.
+bool begin_phase(const FixerDef& f, Phase p) {
+    g_phase = p;
+    if (phase_dialogue(f).empty()) { g_phase = Phase::Main; return false; }
+    g_paragraph = 0;
+    g_auto_advance = true;
+    play_paragraph_voice(f, 0);
+    return true;
 }
 
 void reset_conversation() {
@@ -292,11 +350,14 @@ void reset_conversation() {
     g_paragraph = 0;
     g_para_elapsed = 0.0f;
     g_auto_advance = true;
+    g_phase = Phase::Main;
+    g_actions_ran = false;
 }
 
 // Who speaks paragraph i -- "" (or past the end of the array) means the fixer.
 bool is_pc_line(const FixerDef& f, size_t idx) {
-    return idx < f.speaker.size() && f.speaker[idx] == "pc";
+    const std::vector<std::string>& sp = phase_speaker(f);
+    return idx < sp.size() && sp[idx] == "pc";
 }
 
 void draw_bar_body(BaseContext& ctx) {
@@ -349,9 +410,9 @@ void draw_bar_body(BaseContext& ctx) {
     // Advance the clock and roll to the next paragraph when the current one
     // has finished speaking. Done BEFORE drawing so a completed paragraph
     // never renders a stale frame.
-    const bool has_dialogue_now = !f->dialogue.empty();
-    const bool at_last = !has_dialogue_now ||
-                         g_paragraph + 1 >= f->dialogue.size();
+    const std::vector<std::string>& dlg = phase_dialogue(*f);
+    const bool has_dialogue_now = !dlg.empty();
+    const bool at_last = !has_dialogue_now || g_paragraph + 1 >= dlg.size();
     g_para_elapsed += ImGui::GetIO().DeltaTime;
     if (g_auto_advance && !at_last && paragraph_done()) {
         ++g_paragraph;
@@ -362,9 +423,17 @@ void draw_bar_body(BaseContext& ctx) {
     // text column shifts right to clear it. A failed decode falls back to the
     // original full-width text layout. On a "pc" line we swap in the player's
     // portrait so the exchange reads as a conversation rather than a monologue.
+    // A PROP for this line (the artifact, a datapad) takes the frame instead
+    // of either portrait -- the object IS the subject at that beat.
+    const std::vector<std::string>& props = phase_prop(*f);
+    const bool has_prop = g_paragraph < props.size() &&
+                          !props[g_paragraph].empty();
+
     const bool pc_line = is_pc_line(*f, g_paragraph);
-    const std::string& art_rel = (pc_line && !f->portrait_pc.empty())
-                                 ? f->portrait_pc : f->portrait;
+    const std::string& art_rel =
+        has_prop ? props[g_paragraph]
+                 : ((pc_line && !f->portrait_pc.empty()) ? f->portrait_pc
+                                                         : f->portrait);
     const TextureSlot* art = nullptr;
     if (!art_rel.empty()) {
         const TextureSlot& slot = portrait_texture(art_rel);
@@ -392,12 +461,10 @@ void draw_bar_body(BaseContext& ctx) {
     dl->AddText(ImVec2(tx, py + 14), pc_line ? kWhite : kAmber, who);
     dl->AddLine(ImVec2(tx, py + 36), ImVec2(px + pw - 18, py + 36), kDim);
 
-    const bool has_dialogue = !f->dialogue.empty();
-    const bool last_para    = !has_dialogue ||
-                              g_paragraph + 1 >= f->dialogue.size();
+    const bool has_dialogue = !dlg.empty();
+    const bool last_para    = !has_dialogue || g_paragraph + 1 >= dlg.size();
     if (has_dialogue) {
-        const std::string raw =
-            f->dialogue[std::min(g_paragraph, f->dialogue.size() - 1)];
+        const std::string raw = dlg[std::min(g_paragraph, dlg.size() - 1)];
         // A beat prints nothing -- the portrait and the silence do the work.
         const std::string text = is_beat(raw) ? std::string() : expand_tokens(raw);
         // Wrapped body text via ImGui (draw-list text doesn't wrap).
@@ -412,7 +479,10 @@ void draw_bar_body(BaseContext& ctx) {
     // Offer line, shown with the final paragraph. Its clip fires once on
     // arrival (tracked separately from paragraph advance, since the offer
     // shares the screen with the last paragraph rather than replacing it).
-    const bool offering = last_para && !f->offer_text.empty();
+    // The offer only belongs to the MAIN phase -- once the player has decided,
+    // the epilogue plays out without re-asking the question.
+    const bool offering = g_phase == Phase::Main && last_para &&
+                          !f->offer_text.empty();
     static std::string g_offer_voiced;   // fixer id whose offer clip has played
     if (offering && !f->voice_offer.empty() && g_offer_voiced != f->id) {
         g_offer_voiced = f->id;
@@ -451,22 +521,44 @@ void draw_bar_body(BaseContext& ctx) {
         // Progress pips: how far through the conversation we are.
         const float dot_y = byy + 14.0f;
         float dot_x = tx;
-        for (size_t i = 0; i < f->dialogue.size() && i < 24; ++i) {
+        for (size_t i = 0; i < dlg.size() && i < 24; ++i) {
             dl->AddCircleFilled(ImVec2(dot_x, dot_y), 3.0f,
                                 i == g_paragraph ? kAmber : kDim);
             dot_x += 11.0f;
         }
     } else if (offering) {
+        // Committing does NOT end the scene: it rolls into the post-decision
+        // exchange so the fixer can react and the player gets a last word.
+        // The gameplay actions run when that exchange finishes (below), or
+        // immediately here when none is authored.
         ImGui::SetCursorScreenPos(ImVec2(px + pw - 262, byy));
         if (ImGui::Button("ACCEPT", ImVec2(120, 30))) {
             sfx::ui_click();
-            accept(*f, player);
-            reset_conversation();
+            if (!begin_phase(*f, Phase::Accepted)) {
+                accept(*f, player);
+                reset_conversation();
+            }
         }
         ImGui::SetCursorScreenPos(ImVec2(px + pw - 130, byy));
         if (ImGui::Button("REFUSE", ImVec2(112, 30))) {
             sfx::ui_click();
-            refuse(*f, player);
+            if (!begin_phase(*f, Phase::Refused)) {
+                refuse(*f, player);
+                reset_conversation();
+            }
+        }
+    } else if (g_phase != Phase::Main) {
+        // End of a post-decision exchange. Run the actions exactly once, then
+        // close. g_actions_ran guards against a double-fire if the player
+        // clicks during the same frame the phase ends.
+        ImGui::SetCursorScreenPos(ImVec2(px + pw - 130, byy));
+        if (ImGui::Button("DONE", ImVec2(112, 30))) {
+            sfx::ui_click();
+            if (!g_actions_ran) {
+                g_actions_ran = true;
+                if (g_phase == Phase::Accepted) accept(*f, player);
+                else                            refuse(*f, player);
+            }
             reset_conversation();
         }
     } else {

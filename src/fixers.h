@@ -30,10 +30,19 @@
 // campaign handler (plot::set_action_handler). One grammar for fixers AND
 // scripted encounters — they can never drift.
 //
+// CONVERSATION SHAPE — a scene runs in up to two phases. The MAIN dialogue
+// plays to the offer; then ACCEPT/REFUSE roll into the optional
+// accept_/refuse_ exchange so the fixer can react and the player gets a last
+// word. The accept/refuse ACTIONS fire when that exchange finishes (or
+// immediately, if none is authored) — never on the button press itself, and
+// never twice. A conversation should end on a line, not on a click.
+//
 // PRESENTATION (optional) — a fixer may carry a `portrait` PNG and a `voice`
 // clip per dialogue paragraph, both paths relative to assets/cinematics/ so
 // the bar shares its art and audio with the cutscene system rather than
-// duplicating it. Portrait art is the character's canonical _ref.png; voices
+// duplicating it. `prop[i]` overrides the panel art for one line so the object
+// under discussion (the Steltek artifact) can hold the frame at the beat where
+// it matters. Portrait art is the character's canonical _ref.png; voices
 // are their cloned ORIGINAL 1993 actor (tools/cinematics/gen_fixer_voices.py).
 // Every field is optional and degrades independently: no portrait renders the
 // original text-only panel, a short/absent voice array leaves those paragraphs
@@ -82,7 +91,24 @@ struct FixerDef {
     // nesting means old single-voice entries stay valid untouched.
     std::vector<std::string> dialogue;       // linear paragraphs
     std::vector<std::string> speaker;        // ""=fixer, "pc"=player
+    // prop[i] is a PNG (relative to assets/cinematics/) shown INSTEAD of the
+    // speaker portrait for that line -- the object being discussed takes the
+    // frame at the moment it matters, e.g. the Steltek artifact when Sandoval
+    // hands it over. "" (or a short/absent array) keeps the portrait.
+    std::vector<std::string> prop;
     std::string              offer_text;     // "" = pure dialogue, no offer
+
+    // ---- post-decision exchange (optional) ----
+    // A conversation shouldn't end on a button. These play AFTER the player
+    // commits, before the actions run: the fixer reacts, the player gets a
+    // last word. Same parallel-array shape as the main conversation.
+    std::vector<std::string> accept_dialogue;
+    std::vector<std::string> accept_speaker;
+    std::vector<std::string> accept_voice;
+    std::vector<std::string> accept_prop;
+    std::vector<std::string> refuse_dialogue;
+    std::vector<std::string> refuse_speaker;
+    std::vector<std::string> refuse_voice;
 
     // ---- presentation (optional; absent = the old text-only panel) ----
     // portrait: path relative to assets/cinematics/ (same convention as the
