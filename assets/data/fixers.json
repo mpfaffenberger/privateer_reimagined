@@ -14,7 +14,12 @@
     "  offer          offer line ('' / absent = pure dialogue)",
     "  accept_actions [..] run on ACCEPT: plot verbs or campaign tokens",
     "  refuse_actions [..] run on REFUSE",
-    "  done_actions   [..] run when a pure-dialogue conversation ends"
+    "  done_actions   [..] run when a pure-dialogue conversation ends",
+    "  portrait       optional PNG under assets/cinematics/ (e.g.",
+    "                 'portraits/tayla/_ref.png'); absent = text-only panel",
+    "  voice          optional [..] clip per dialogue paragraph, under",
+    "                 assets/cinematics/; short/absent entries are silent",
+    "  voice_offer    optional clip for the offer line"
   ],
   "fixers": [
     {
@@ -37,7 +42,14 @@
         "m01:accept",
         "give_item:steltek_artifact"
       ],
-      "refuse_actions": []
+      "refuse_actions": [],
+      "portrait": "portraits/sandoval/_ref.png",
+      "voice": [
+        "audio/fixers/sandoval_offer_00.mp3",
+        "audio/fixers/sandoval_offer_01.mp3",
+        "audio/fixers/sandoval_offer_02.mp3",
+        "audio/fixers/sandoval_offer_03.mp3"
+      ]
     },
     {
       "id": "tayla_artifact_handoff",
@@ -59,6 +71,14 @@
       "done_actions": [
         "give_item:steltek_artifact",
         "set_flag:sandoval_done"
+      ],
+      "portrait": "portraits/tayla/_ref.png",
+      "voice": [
+        "audio/fixers/tayla_artifact_handoff_00.mp3",
+        "audio/fixers/tayla_artifact_handoff_01.mp3",
+        "audio/fixers/tayla_artifact_handoff_02.mp3",
+        "audio/fixers/tayla_artifact_handoff_03.mp3",
+        "audio/fixers/tayla_artifact_handoff_04.mp3"
       ]
     },
     {
@@ -81,6 +101,13 @@
       "offer": "Haul 30 units of plastics to Oakham (Pentonville system) for 10,000 credits on landing. Deal?",
       "accept_actions": [
         "m02:accept"
+      ],
+      "portrait": "portraits/tayla/_ref.png",
+      "voice": [
+        "audio/fixers/tayla_m02_offer_00.mp3",
+        "audio/fixers/tayla_m02_offer_01.mp3",
+        "audio/fixers/tayla_m02_offer_02.mp3",
+        "audio/fixers/tayla_m02_offer_03.mp3"
       ]
     },
     {
@@ -103,6 +130,12 @@
       "offer": "Smuggle 15 units of Brilliance to Hector (Troy system) for 15,000 credits, then return to Oakham. In?",
       "accept_actions": [
         "m03:accept"
+      ],
+      "portrait": "portraits/tayla/_ref.png",
+      "voice": [
+        "audio/fixers/tayla_m03_offer_00.mp3",
+        "audio/fixers/tayla_m03_offer_01.mp3",
+        "audio/fixers/tayla_m03_offer_02.mp3"
       ]
     },
     {
@@ -121,6 +154,11 @@
       ],
       "done_actions": [
         "set_flag:tayla_2_done"
+      ],
+      "portrait": "portraits/tayla/_ref.png",
+      "voice": [
+        "audio/fixers/tayla_m03_debrief_00.mp3",
+        "audio/fixers/tayla_m03_debrief_01.mp3"
       ]
     },
     {
@@ -143,6 +181,12 @@
       "offer": "Smuggle 25 units of Brilliance to New Constantinople for 20,000 credits, then return to Oakham. Deal?",
       "accept_actions": [
         "m04:accept"
+      ],
+      "portrait": "portraits/tayla/_ref.png",
+      "voice": [
+        "audio/fixers/tayla_m04_offer_00.mp3",
+        "audio/fixers/tayla_m04_offer_01.mp3",
+        "audio/fixers/tayla_m04_offer_02.mp3"
       ]
     },
     {
@@ -163,6 +207,12 @@
       "done_actions": [
         "m04:install_compartment",
         "set_flag:tayla_3_done"
+      ],
+      "portrait": "portraits/tayla/_ref.png",
+      "voice": [
+        "audio/fixers/tayla_m04_debrief_00.mp3",
+        "audio/fixers/tayla_m04_debrief_01.mp3",
+        "audio/fixers/tayla_m04_debrief_02.mp3"
       ]
     },
     {
@@ -185,6 +235,12 @@
       "offer": "One final run: 20 units of Brilliance to New Constantinople for 10,000 credits. Finish the job?",
       "accept_actions": [
         "m05:accept"
+      ],
+      "portrait": "portraits/tayla/_ref.png",
+      "voice": [
+        "audio/fixers/tayla_m05_offer_00.mp3",
+        "audio/fixers/tayla_m05_offer_01.mp3",
+        "audio/fixers/tayla_m05_offer_02.mp3"
       ]
     },
     {
@@ -206,6 +262,13 @@
       "done_actions": [
         "set_flag:tayla_done",
         "clear_flag:tayla_employed"
+      ],
+      "portrait": "portraits/tayla/_ref.png",
+      "voice": [
+        "audio/fixers/tayla_m05_debrief_00.mp3",
+        "audio/fixers/tayla_m05_debrief_01.mp3",
+        "audio/fixers/tayla_m05_debrief_02.mp3",
+        "audio/fixers/tayla_m05_debrief_03.mp3"
       ]
     },
     {
@@ -230,6 +293,14 @@
       "offer": "Deliver Lynch's message to Seelig at Pentonville Nav 3, then return to New Constantinople for 10,000 credits. Accept?",
       "accept_actions": [
         "set_flag:m06_active"
+      ],
+      "portrait": "portraits/lynch/_ref.png",
+      "voice": [
+        "audio/fixers/lynch_m06_offer_00.mp3",
+        "audio/fixers/lynch_m06_offer_01.mp3",
+        "audio/fixers/lynch_m06_offer_02.mp3",
+        "audio/fixers/lynch_m06_offer_03.mp3",
+        "audio/fixers/lynch_m06_offer_04.mp3"
       ]
     },
     {
@@ -251,6 +322,11 @@
         "set_flag:lynch_1_done",
         "clear_flag:m06_active",
         "clear_flag:m06_message_delivered"
+      ],
+      "portrait": "portraits/lynch/_ref.png",
+      "voice": [
+        "audio/fixers/lynch_m06_debrief_00.mp3",
+        "audio/fixers/lynch_m06_debrief_01.mp3"
       ]
     },
     {
@@ -273,6 +349,12 @@
       "offer": "Run 20 units of weaponry to Siva (Rikel system) for 15,000 credits, past Kroiz's gang. Accept?",
       "accept_actions": [
         "m07:accept"
+      ],
+      "portrait": "portraits/lynch/_ref.png",
+      "voice": [
+        "audio/fixers/lynch_m07_offer_00.mp3",
+        "audio/fixers/lynch_m07_offer_01.mp3",
+        "audio/fixers/lynch_m07_offer_02.mp3"
       ]
     },
     {
@@ -295,6 +377,12 @@
       "accept_actions": [
         "give_item:lynch_cousin",
         "set_flag:m08_active"
+      ],
+      "portrait": "portraits/lynch/_ref.png",
+      "voice": [
+        "audio/fixers/lynch_m08_offer_00.mp3",
+        "audio/fixers/lynch_m08_offer_01.mp3",
+        "audio/fixers/lynch_m08_offer_02.mp3"
       ]
     },
     {
@@ -316,6 +404,12 @@
       "offer": "Fly to Liverpool (Newcastle system) and collect Mr. Smythe for 30,000 credits. Accept?",
       "accept_actions": [
         "set_flag:m09_active"
+      ],
+      "portrait": "portraits/lynch/_ref.png",
+      "voice": [
+        "audio/fixers/lynch_m09_offer_00.mp3",
+        "audio/fixers/lynch_m09_offer_01.mp3",
+        "audio/fixers/lynch_m09_offer_02.mp3"
       ]
     },
     {
@@ -338,6 +432,13 @@
       "offer": "Escort Toth's Drayman from the Saxtogue Jump to Oxford for 10,000 credits. He lands first. Accept?",
       "accept_actions": [
         "set_flag:m10_active"
+      ],
+      "portrait": "portraits/masterson/_ref.png",
+      "voice": [
+        "audio/fixers/masterson_m10_offer_00.mp3",
+        "audio/fixers/masterson_m10_offer_01.mp3",
+        "audio/fixers/masterson_m10_offer_02.mp3",
+        "audio/fixers/masterson_m10_offer_03.mp3"
       ]
     },
     {
@@ -359,6 +460,12 @@
       "offer": "Hunt down and destroy the Black Rhombus somewhere at Oxford's jump points, then return. 10,000 credits. Accept?",
       "accept_actions": [
         "set_flag:m11_active"
+      ],
+      "portrait": "portraits/masterson/_ref.png",
+      "voice": [
+        "audio/fixers/masterson_m11_offer_00.mp3",
+        "audio/fixers/masterson_m11_offer_01.mp3",
+        "audio/fixers/masterson_m11_offer_02.mp3"
       ]
     },
     {
@@ -380,6 +487,12 @@
       "offer": "Escort Vulcan's Forge from the Saxtogue Jump to Oxford - the Demons will hunt YOU. 10,000 credits. Accept?",
       "accept_actions": [
         "set_flag:m12_active"
+      ],
+      "portrait": "portraits/masterson/_ref.png",
+      "voice": [
+        "audio/fixers/masterson_m12_offer_00.mp3",
+        "audio/fixers/masterson_m12_offer_01.mp3",
+        "audio/fixers/masterson_m12_offer_02.mp3"
       ]
     },
     {
@@ -401,6 +514,12 @@
       "offer": "Escort the final Drayman from the XXN-1927 Jump to Oxford - she is fragile and the pirates want her badly. 10,000 credits. Accept?",
       "accept_actions": [
         "set_flag:m13_active"
+      ],
+      "portrait": "portraits/masterson/_ref.png",
+      "voice": [
+        "audio/fixers/masterson_m13_offer_00.mp3",
+        "audio/fixers/masterson_m13_offer_01.mp3",
+        "audio/fixers/masterson_m13_offer_02.mp3"
       ]
     },
     {
@@ -445,7 +564,14 @@
       "accept_actions": [
         "set_flag:m14_active"
       ],
-      "refuse_actions": []
+      "refuse_actions": [],
+      "portrait": "portraits/murphy/_ref.png",
+      "voice": [
+        "audio/fixers/murphy_m14_offer_00.mp3",
+        "audio/fixers/murphy_m14_offer_01.mp3",
+        "audio/fixers/murphy_m14_offer_02.mp3",
+        "audio/fixers/murphy_m14_offer_03.mp3"
+      ]
     },
     {
       "id": "murphy_m14_debrief",
@@ -466,6 +592,11 @@
         "pay:15000",
         "set_flag:murphy_1_done",
         "clear_flag:m14_cleared"
+      ],
+      "portrait": "portraits/murphy/_ref.png",
+      "voice": [
+        "audio/fixers/murphy_m14_debrief_00.mp3",
+        "audio/fixers/murphy_m14_debrief_01.mp3"
       ]
     },
     {
@@ -488,7 +619,12 @@
       "accept_actions": [
         "set_flag:m15_active"
       ],
-      "refuse_actions": []
+      "refuse_actions": [],
+      "portrait": "portraits/murphy/_ref.png",
+      "voice": [
+        "audio/fixers/murphy_m15_offer_00.mp3",
+        "audio/fixers/murphy_m15_offer_01.mp3"
+      ]
     },
     {
       "id": "murphy_m15_debrief",
@@ -509,6 +645,11 @@
         "pay:10000",
         "set_flag:murphy_2_done",
         "clear_flag:m15_cleared"
+      ],
+      "portrait": "portraits/murphy/_ref.png",
+      "voice": [
+        "audio/fixers/murphy_m15_debrief_00.mp3",
+        "audio/fixers/murphy_m15_debrief_01.mp3"
       ]
     },
     {
@@ -531,7 +672,13 @@
       "accept_actions": [
         "set_flag:m16_active"
       ],
-      "refuse_actions": []
+      "refuse_actions": [],
+      "portrait": "portraits/murphy/_ref.png",
+      "voice": [
+        "audio/fixers/murphy_m16_offer_00.mp3",
+        "audio/fixers/murphy_m16_offer_01.mp3",
+        "audio/fixers/murphy_m16_offer_02.mp3"
+      ]
     },
     {
       "id": "monkhouse_m17_offer",
@@ -556,7 +703,14 @@
         "give_item:dr_monkhouse",
         "set_flag:m17_active"
       ],
-      "refuse_actions": []
+      "refuse_actions": [],
+      "portrait": "portraits/monkhouse/_ref.png",
+      "voice": [
+        "audio/fixers/monkhouse_m17_offer_00.mp3",
+        "audio/fixers/monkhouse_m17_offer_01.mp3",
+        "audio/fixers/monkhouse_m17_offer_02.mp3",
+        "audio/fixers/monkhouse_m17_offer_03.mp3"
+      ]
     },
     {
       "id": "monkhouse_m17_debrief",
@@ -578,6 +732,12 @@
         "give_item:steltek_map",
         "set_flag:monkhouse_done",
         "clear_flag:m17_delivered"
+      ],
+      "portrait": "portraits/monkhouse/_ref.png",
+      "voice": [
+        "audio/fixers/monkhouse_m17_debrief_00.mp3",
+        "audio/fixers/monkhouse_m17_debrief_01.mp3",
+        "audio/fixers/monkhouse_m17_debrief_02.mp3"
       ]
     },
     {
@@ -600,7 +760,13 @@
       "accept_actions": [
         "set_flag:m18_active"
       ],
-      "refuse_actions": []
+      "refuse_actions": [],
+      "portrait": "portraits/cross/_ref.png",
+      "voice": [
+        "audio/fixers/cross_m18_offer_00.mp3",
+        "audio/fixers/cross_m18_offer_01.mp3",
+        "audio/fixers/cross_m18_offer_02.mp3"
+      ]
     },
     {
       "id": "cross_m18_debrief",
@@ -629,6 +795,11 @@
         "clear_flag:m18_nav2",
         "clear_flag:m18_nav3",
         "clear_flag:m18_nav4"
+      ],
+      "portrait": "portraits/cross/_ref.png",
+      "voice": [
+        "audio/fixers/cross_m18_debrief_00.mp3",
+        "audio/fixers/cross_m18_debrief_01.mp3"
       ]
     },
     {
@@ -650,7 +821,12 @@
       "accept_actions": [
         "set_flag:m19_active"
       ],
-      "refuse_actions": []
+      "refuse_actions": [],
+      "portrait": "portraits/cross/_ref.png",
+      "voice": [
+        "audio/fixers/cross_m19_offer_00.mp3",
+        "audio/fixers/cross_m19_offer_01.mp3"
+      ]
     },
     {
       "id": "cross_m19_debrief",
@@ -672,6 +848,11 @@
         "pay:10000",
         "set_flag:cross_2_done",
         "clear_flag:m19_active"
+      ],
+      "portrait": "portraits/cross/_ref.png",
+      "voice": [
+        "audio/fixers/cross_m19_debrief_00.mp3",
+        "audio/fixers/cross_m19_debrief_01.mp3"
       ]
     },
     {
@@ -693,7 +874,12 @@
       "accept_actions": [
         "set_flag:m20_active"
       ],
-      "refuse_actions": []
+      "refuse_actions": [],
+      "portrait": "portraits/cross/_ref.png",
+      "voice": [
+        "audio/fixers/cross_m20_offer_00.mp3",
+        "audio/fixers/cross_m20_offer_01.mp3"
+      ]
     },
     {
       "id": "cross_m20_debrief",
@@ -722,6 +908,11 @@
         "clear_flag:m20_nav2",
         "clear_flag:m20_nav3",
         "clear_flag:m20_nav4"
+      ],
+      "portrait": "portraits/cross/_ref.png",
+      "voice": [
+        "audio/fixers/cross_m20_debrief_00.mp3",
+        "audio/fixers/cross_m20_debrief_01.mp3"
       ]
     },
     {
@@ -743,7 +934,12 @@
       "accept_actions": [
         "set_flag:m21_active"
       ],
-      "refuse_actions": []
+      "refuse_actions": [],
+      "portrait": "portraits/cross/_ref.png",
+      "voice": [
+        "audio/fixers/cross_m21_offer_00.mp3",
+        "audio/fixers/cross_m21_offer_01.mp3"
+      ]
     },
     {
       "id": "goodin_offer",
@@ -771,7 +967,12 @@
       "accept_actions": [
         "set_flag:m22_active"
       ],
-      "refuse_actions": []
+      "refuse_actions": [],
+      "voice": [
+        "audio/fixers/goodin_offer_00.mp3",
+        "audio/fixers/goodin_offer_01.mp3",
+        "audio/fixers/goodin_offer_02.mp3"
+      ]
     },
     {
       "id": "terrell_offer",
@@ -793,7 +994,13 @@
       "accept_actions": [
         "set_flag:m23_active"
       ],
-      "refuse_actions": []
+      "refuse_actions": [],
+      "portrait": "portraits/terrell/_ref.png",
+      "voice": [
+        "audio/fixers/terrell_offer_00.mp3",
+        "audio/fixers/terrell_offer_01.mp3",
+        "audio/fixers/terrell_offer_02.mp3"
+      ]
     },
     {
       "id": "terrell_debrief",
@@ -819,6 +1026,13 @@
         "set_flag:campaign_complete",
         "clear_flag:m23_active",
         "clear_flag:drone_active"
+      ],
+      "portrait": "portraits/terrell/_ref.png",
+      "voice": [
+        "audio/fixers/terrell_debrief_00.mp3",
+        "audio/fixers/terrell_debrief_01.mp3",
+        "audio/fixers/terrell_debrief_02.mp3",
+        "audio/fixers/terrell_debrief_03.mp3"
       ]
     },
     {
@@ -839,6 +1053,12 @@
       "offer": "",
       "done_actions": [
         "set_flag:terrell_epilogue_seen"
+      ],
+      "portrait": "portraits/terrell/_ref.png",
+      "voice": [
+        "audio/fixers/terrell_epilogue_00.mp3",
+        "audio/fixers/terrell_epilogue_01.mp3",
+        "audio/fixers/terrell_epilogue_02.mp3"
       ]
     }
   ]

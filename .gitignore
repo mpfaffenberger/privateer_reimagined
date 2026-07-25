@@ -181,3 +181,7 @@ build_debug/
 
 # Cinematic portrait pipeline content-hash cache (regenerable)
 tools/cinematics/.cache/
+
+# Voice-synthesis content-hash cache (regenerable; the SHIPPED clips live in
+# assets/cinematics/audio/ -- this is just the dedup blob store behind them)
+tools/cinematics/.cache_voice/

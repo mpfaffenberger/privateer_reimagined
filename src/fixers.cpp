@@ -13,9 +13,14 @@
 #include <cstdio>
 
 #ifndef FIXERS_HEADLESS
+#include "audio.h"        // audio::play_file / stop (per-paragraph voice)
 #include "base_screens.h"
+#include "material.h"     // TextureSlot + load_texture_png (portrait art)
 #include "sfx.h"
 #include "imgui.h"
+#include "sokol_app.h"    // must precede sokol_imgui.h
+#include "sokol_imgui.h"  // simgui_imtextureid
+#include <map>
 #endif
 
 namespace fixers {
@@ -60,6 +65,10 @@ int load(const std::string& path) {
         read_string_array(e, "forbids_flags",  f.forbids_flags);
         read_string_array(e, "dialogue",       f.dialogue);
         f.offer_text = e.contains("offer") ? e["offer"].string_or("") : "";
+        f.portrait   = e.contains("portrait") ? e["portrait"].string_or("") : "";
+        read_string_array(e, "voice", f.voice);
+        f.voice_offer = e.contains("voice_offer")
+                        ? e["voice_offer"].string_or("") : "";
         read_string_array(e, "accept_actions", f.accept_actions);
         read_string_array(e, "refuse_actions", f.refuse_actions);
         read_string_array(e, "done_actions",   f.done_actions);
@@ -184,7 +193,54 @@ constexpr ImU32 kWhite    = IM_COL32(235, 235, 235, 255);
 constexpr ImU32 kDim      = IM_COL32(160, 150, 130, 255);
 constexpr ImU32 kBackdrop = IM_COL32(8, 10, 14, 222);
 
+// Portrait art lives under assets/cinematics/ so fixer entries and cinematic
+// `line` cues can share the exact same PNGs (portraits/<char>/_ref.png).
+const std::string k_portrait_root = "assets/cinematics/";
+
+// Portrait size in the conversation panel. 4:5 to match the pinned 512x640
+// source art, scaled to sit comfortably beside the text column.
+constexpr float kPortraitW = 192.0f;
+constexpr float kPortraitH = 240.0f;
+
+// Lazy-loaded portrait textures, keyed by relative path. A failed load is
+// negative-cached as an invalid slot so we log once and never retry per-frame
+// (same contract as cinematic.cpp's portrait_texture).
+std::map<std::string, TextureSlot> g_portrait_tex;
+
+// The voice clip currently playing for a paragraph, so advancing (or leaving)
+// cuts it rather than letting lines stack on top of each other.
+VoiceId g_voice = 0;
+
+const TextureSlot& portrait_texture(const std::string& rel_path) {
+    auto it = g_portrait_tex.find(rel_path);
+    if (it != g_portrait_tex.end()) return it->second;
+    TextureSlot slot;
+    const std::string full = k_portrait_root + rel_path;
+    if (!load_texture_png(full, slot)) {
+        std::printf("[fixers] portrait missing/undecodable: %s (text only)\n",
+                    full.c_str());
+        slot.valid = false;   // negative-cache
+    }
+    auto [ins, ok] = g_portrait_tex.emplace(rel_path, slot);
+    (void)ok;
+    return ins->second;
+}
+
+void stop_voice() {
+    if (g_voice) { audio::stop(g_voice); g_voice = 0; }
+}
+
+// Play the clip for paragraph `idx` (no-op when the entry has no voice array,
+// the index is past its end, or the entry is blank -- all normal for
+// partially-voiced content).
+void play_paragraph_voice(const FixerDef& f, size_t idx) {
+    if (idx >= f.voice.size() || f.voice[idx].empty()) return;
+    stop_voice();
+    g_voice = audio::play_file(k_portrait_root + f.voice[idx], 1.0f);
+}
+
 void reset_conversation() {
+    stop_voice();
     g_talking_to.clear();
     g_paragraph = 0;
 }
@@ -225,6 +281,7 @@ void draw_bar_body(BaseContext& ctx) {
                 sfx::ui_click();
                 g_talking_to = f->id;
                 g_paragraph  = 0;
+                play_paragraph_voice(*f, 0);
             }
             by += 40.0f;
         }
@@ -235,14 +292,33 @@ void draw_bar_body(BaseContext& ctx) {
     const FixerDef* f = find(g_talking_to);
     if (!f) { reset_conversation(); return; }
 
-    const float pw = std::min(disp.x * 0.62f, 760.0f);
-    const float ph = 240.0f;
+    // Portrait (optional) sits inside the panel's left edge; when present the
+    // text column shifts right to clear it. A failed decode falls back to the
+    // original full-width text layout.
+    const TextureSlot* art = nullptr;
+    if (!f->portrait.empty()) {
+        const TextureSlot& slot = portrait_texture(f->portrait);
+        if (slot.valid) art = &slot;
+    }
+    const float art_gutter = art ? (kPortraitW + 18.0f) : 0.0f;
+
+    const float pw = std::min(disp.x * 0.62f, 760.0f) + art_gutter;
+    const float ph = art ? std::max(240.0f, kPortraitH + 32.0f) : 240.0f;
     const float px = (disp.x - pw) * 0.5f;
     const float py = disp.y - ph - 84.0f;
     dl->AddRectFilled(ImVec2(px, py), ImVec2(px + pw, py + ph), kBackdrop, 8.0f);
     dl->AddRect(ImVec2(px, py), ImVec2(px + pw, py + ph), kAmber, 8.0f);
-    dl->AddText(ImVec2(px + 18, py + 14), kAmber, f->name.c_str());
-    dl->AddLine(ImVec2(px + 18, py + 36), ImVec2(px + pw - 18, py + 36), kDim);
+
+    if (art) {
+        const ImVec2 pmin(px + 12, py + 12);
+        const ImVec2 pmax(pmin.x + kPortraitW, pmin.y + kPortraitH);
+        dl->AddImage(simgui_imtextureid(art->view), pmin, pmax);
+        dl->AddRect(pmin, pmax, kDim, 4.0f);
+    }
+
+    const float tx = px + 18.0f + art_gutter;   // text column origin
+    dl->AddText(ImVec2(tx, py + 14), kAmber, f->name.c_str());
+    dl->AddLine(ImVec2(tx, py + 36), ImVec2(px + pw - 18, py + 36), kDim);
 
     const bool has_dialogue = !f->dialogue.empty();
     const bool last_para    = !has_dialogue ||
@@ -251,7 +327,7 @@ void draw_bar_body(BaseContext& ctx) {
         const std::string text = expand_tokens(
             f->dialogue[std::min(g_paragraph, f->dialogue.size() - 1)]);
         // Wrapped body text via ImGui (draw-list text doesn't wrap).
-        ImGui::SetCursorScreenPos(ImVec2(px + 18, py + 48));
+        ImGui::SetCursorScreenPos(ImVec2(tx, py + 48));
         ImGui::PushTextWrapPos(px + pw - 18);
         ImGui::PushStyleColor(ImGuiCol_Text, kWhite);
         ImGui::TextUnformatted(text.c_str());
@@ -259,11 +335,21 @@ void draw_bar_body(BaseContext& ctx) {
         ImGui::PopTextWrapPos();
     }
 
-    // Offer line, shown with the final paragraph.
+    // Offer line, shown with the final paragraph. Its clip fires once on
+    // arrival (tracked separately from paragraph advance, since the offer
+    // shares the screen with the last paragraph rather than replacing it).
     const bool offering = last_para && !f->offer_text.empty();
+    static std::string g_offer_voiced;   // fixer id whose offer clip has played
+    if (offering && !f->voice_offer.empty() && g_offer_voiced != f->id) {
+        g_offer_voiced = f->id;
+        stop_voice();
+        g_voice = audio::play_file(k_portrait_root + f->voice_offer, 1.0f);
+    } else if (!offering && g_offer_voiced == f->id) {
+        g_offer_voiced.clear();          // re-arm if they back out and return
+    }
     if (offering) {
         const std::string offer = expand_tokens(f->offer_text);
-        ImGui::SetCursorScreenPos(ImVec2(px + 18, py + ph - 92));
+        ImGui::SetCursorScreenPos(ImVec2(tx, py + ph - 92));
         ImGui::PushTextWrapPos(px + pw - 18);
         ImGui::PushStyleColor(ImGuiCol_Text, kAmber);
         ImGui::TextUnformatted(offer.c_str());
@@ -278,6 +364,7 @@ void draw_bar_body(BaseContext& ctx) {
         if (ImGui::Button("NEXT >", ImVec2(112, 30))) {
             sfx::ui_click();
             ++g_paragraph;
+            play_paragraph_voice(*f, g_paragraph);
         }
     } else if (offering) {
         ImGui::SetCursorScreenPos(ImVec2(px + pw - 262, byy));

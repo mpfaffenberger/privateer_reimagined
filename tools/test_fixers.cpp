@@ -54,6 +54,8 @@ const char* kTable = R"json({
       "base": "new_detroit_industrial",
       "forbids_flags": ["sandoval_done"],
       "dialogue": ["I have a job.", "Iron to Liverpool."],
+      "portrait": "portraits/sandoval/_ref.png",
+      "voice": ["audio/fixers/sandoval_offer_00.mp3"],
       "offer": "15,000 credits on your return. Deal?",
       "accept_actions": ["set_flag:sandoval_accepted",
                          "offer_mission:m01"],
@@ -136,6 +138,22 @@ int main() {
               "dialogue_done: native give_item action ran");
         check(plot::has_flag(p, "tayla_available"),
               "dialogue_done: second action ran in order");
+    }
+
+    // ---- 4a2. optional presentation fields ---------------------------------
+    {
+        const fixers::FixerDef* s = fixers::find("sandoval_offer");
+        const fixers::FixerDef* t = fixers::find("tayla_intro");
+        check(s && s->portrait == "portraits/sandoval/_ref.png",
+              "portrait: parsed when present");
+        check(s && s->voice.size() == 1 &&
+                  s->voice[0] == "audio/fixers/sandoval_offer_00.mp3",
+              "voice: parsed as a string array");
+        // A SHORT voice array is legal -- paragraph 1 here simply has no clip.
+        check(s && s->voice.size() < s->dialogue.size(),
+              "voice: may be shorter than dialogue (unvoiced paragraphs)");
+        check(t && t->portrait.empty() && t->voice.empty(),
+              "portrait/voice: absent fields default to empty (text-only)");
     }
 
     // ---- 4b. $NM / $CS token expansion -------------------------------------

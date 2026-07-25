@@ -30,10 +30,21 @@
 // campaign handler (plot::set_action_handler). One grammar for fixers AND
 // scripted encounters — they can never drift.
 //
+// PRESENTATION (optional) — a fixer may carry a `portrait` PNG and a `voice`
+// clip per dialogue paragraph, both paths relative to assets/cinematics/ so
+// the bar shares its art and audio with the cutscene system rather than
+// duplicating it. Portrait art is the character's canonical _ref.png; voices
+// are their cloned ORIGINAL 1993 actor (tools/cinematics/gen_fixer_voices.py).
+// Every field is optional and degrades independently: no portrait renders the
+// original text-only panel, a short/absent voice array leaves those paragraphs
+// silent, and an undecodable PNG is negative-cached after one log line. The
+// engine still only ever opens a file by path — no AI, no network.
+//
 // HEADLESS SPLIT: the model (load / present_at / accept / refuse) is pure
 // logic; the ImGui bar body compiles only when FIXERS_HEADLESS is undefined
 // (same pattern as MISSIONS_HEADLESS) so tools/test_fixers.cpp links the
-// real gating/action code with no render/audio stack.
+// real gating/action code with no render/audio stack. Note the presentation
+// FIELDS still parse in headless builds — only their rendering is excluded.
 //
 // Observability: set_observer mirrors offered/accepted/refused into
 // dev_remote /events (category "fixer") via main.cpp — the agentic judge's
@@ -66,6 +77,18 @@ struct FixerDef {
     // ---- conversation ----
     std::vector<std::string> dialogue;       // linear paragraphs
     std::string              offer_text;     // "" = pure dialogue, no offer
+
+    // ---- presentation (optional; absent = the old text-only panel) ----
+    // portrait: path relative to assets/cinematics/ (same convention as the
+    // cinematic DSL's `line` cue) -- e.g. "portraits/tayla/_ref.png". Missing
+    // or undecodable is non-fatal: the panel just renders without art.
+    std::string              portrait;
+    // voice[i] is the audio for dialogue[i], relative to assets/cinematics/.
+    // Short/absent arrays are fine -- any paragraph without a clip is silent.
+    std::vector<std::string> voice;
+    // voice_offer: optional clip for the offer line shown with the final
+    // paragraph (the ACCEPT/REFUSE beat).
+    std::string              voice_offer;
 
     // ---- actions (see grammar in the header comment) ----
     std::vector<std::string> accept_actions;
