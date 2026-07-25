@@ -32,12 +32,37 @@
         "sandoval_done"
       ],
       "dialogue": [
-        "Welcome to New Detroit. You look like a man who's hungry for work. Sandoval. Ernesto Sandoval.",
+        "Welcome to New Detroit. You look like a man who's hungry for work.",
         "Depends on the work. And the man offering it.",
-        "A simple delivery of iron, strictly legit - forty units to the Liverpool refinery in Newcastle. Just a short jump. No contraband, no hassles.",
-        "Fifteen thousand credits on your return. I don't have it on me... but I'll show you something better. Here - hold this as collateral until I pay.",
-        "An advance? Or do I fly this on trust?",
-        "Don't ask me what it is. Just keep it safe, and keep it quiet. Bring it back with you and there's another five thousand in it for you."
+        "Sandoval. Ernesto Sandoval. I deal in acquisitions.",
+        "That's a word people use when the real one sounds worse.",
+        "It's a word that keeps a man out of court. Sit down, Captain.",
+        "I'll stand. What's the run?",
+        "Forty units of iron. Here to the Liverpool refinery, over in Newcastle.",
+        "Iron. That's it.",
+        "Strictly legit. No contraband, no hassles. Just a short jump from here.",
+        "If it's that clean, why are you buying me a drink instead of posting it?",
+        "Because the posted board is full of men who ask fewer questions and lose more cargo. I'd rather pay for judgment.",
+        "Flattery's cheap. What's the pay?",
+        "Fifteen thousand credits on your return.",
+        "On my return.",
+        "I don't have it on me tonight.",
+        "Then we don't have a deal tonight.",
+        "Wait. I'll show you something better than credits.",
+        "...",
+        "Here. Hold this. Collateral, until I pay.",
+        "What is it?",
+        "Don't ask me what it is.",
+        "It's warm.",
+        "Just keep it safe. And keep it quiet -- inside your jacket, not on your console.",
+        "You're handing a stranger something you won't name, and telling him to hide it. You see how that sounds.",
+        "I see how it sounds. Bring it back with you and there's another five thousand in it for you.",
+        "Twenty total, then. For hauling iron.",
+        "For hauling iron, and for having a short memory.",
+        "...",
+        "Deliver at Liverpool. My people will meet the ship. Then come back here.",
+        "And if you're not here when I get back?",
+        "I'll be here."
       ],
       "offer": "Haul 40 units of iron to Liverpool (Newcastle system), then return here for 15,000 credits - plus 5,000 for returning his collateral. Deal?",
       "accept_actions": [
@@ -50,6 +75,31 @@
         "",
         "pc",
         "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
         "",
         "pc",
         ""
@@ -61,7 +111,32 @@
         "audio/fixers/sandoval_offer_02.mp3",
         "audio/fixers/sandoval_offer_03.mp3",
         "audio/fixers/sandoval_offer_04.mp3",
-        "audio/fixers/sandoval_offer_05.mp3"
+        "audio/fixers/sandoval_offer_05.mp3",
+        "audio/fixers/sandoval_offer_06.mp3",
+        "audio/fixers/sandoval_offer_07.mp3",
+        "audio/fixers/sandoval_offer_08.mp3",
+        "audio/fixers/sandoval_offer_09.mp3",
+        "audio/fixers/sandoval_offer_10.mp3",
+        "audio/fixers/sandoval_offer_11.mp3",
+        "audio/fixers/sandoval_offer_12.mp3",
+        "audio/fixers/sandoval_offer_13.mp3",
+        "audio/fixers/sandoval_offer_14.mp3",
+        "audio/fixers/sandoval_offer_15.mp3",
+        "audio/fixers/sandoval_offer_16.mp3",
+        "",
+        "audio/fixers/sandoval_offer_18.mp3",
+        "audio/fixers/sandoval_offer_19.mp3",
+        "audio/fixers/sandoval_offer_20.mp3",
+        "audio/fixers/sandoval_offer_21.mp3",
+        "audio/fixers/sandoval_offer_22.mp3",
+        "audio/fixers/sandoval_offer_23.mp3",
+        "audio/fixers/sandoval_offer_24.mp3",
+        "audio/fixers/sandoval_offer_25.mp3",
+        "audio/fixers/sandoval_offer_26.mp3",
+        "",
+        "audio/fixers/sandoval_offer_28.mp3",
+        "audio/fixers/sandoval_offer_29.mp3",
+        "audio/fixers/sandoval_offer_30.mp3"
       ]
     },
     {
@@ -75,13 +150,34 @@
         "sandoval_done"
       ],
       "dialogue": [
-        "Looking for Sandoval? Don't bother. He's dead. Word is it wasn't an accident.",
-        "Dead. And the fifteen thousand he owed me?",
-        "Name's Tayla. Sandoval owed people, and now those people are curious about that trinket he handed you as collateral.",
-        "Keep it. He's in no position to redeem it, and his fifteen grand died with him. It's yours now, like it or not.",
-        "I'll tell you this much for free: Sandoval didn't buy that thing. He got it by killing the man who owned it. Death follows it, $CS. Feel lucky?",
+        "I'm looking for Sandoval.",
+        "Don't bother. He's dead.",
+        "...",
+        "Two nights ago. Word is it wasn't an accident.",
+        "He owed me fifteen thousand credits.",
+        "He owed a lot of people a lot of things. You're near the back of that line.",
+        "Who are you?",
+        "Tayla. I keep track of who's breathing in this sector. It's a growth industry lately.",
+        "And you tracked me down why?",
+        "Because Sandoval handed you a trinket before he died, and now the people he owed are very curious about where it went.",
+        "It's collateral. It's his.",
+        "It's yours. He's in no position to redeem it, and his fifteen grand died with him. Keep it, like it or not.",
+        "I'd rather hand it back and walk away clean.",
+        "Hand it back to who? There's no one left to hand it to -- that's the point. You're holding it now. That's the whole story.",
+        "Then tell me what I'm holding.",
+        "I'll tell you this much for free. Sandoval didn't buy that thing.",
+        "...",
+        "He got it by killing the man who owned it.",
         "You're telling me I'm carrying a murder motive.",
-        "I know more. I'll trade it out a piece at a time, and you'll earn every piece. Come see me when you're ready to work."
+        "I'm telling you death follows it, $CS. Feel lucky?",
+        "Not particularly.",
+        "Good. Lucky men die out here first.",
+        "You know more than you're saying.",
+        "Of course I do. That's the only thing I sell.",
+        "What's the price?",
+        "You fly for me. I'll trade the rest out a piece at a time, and you'll earn every piece.",
+        "That's a long way of saying you own me.",
+        "It's a long way of saying you're the only one who can carry that thing without being searched. Come see me when you're ready to work."
       ],
       "done_actions": [
         "give_item:steltek_artifact",
@@ -89,10 +185,31 @@
       ],
       "portrait": "portraits/tayla/_ref.png",
       "speaker": [
+        "pc",
         "",
         "pc",
         "",
+        "pc",
         "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
         "",
         "pc",
         ""
@@ -101,11 +218,32 @@
       "voice": [
         "audio/fixers/tayla_artifact_handoff_00.mp3",
         "audio/fixers/tayla_artifact_handoff_01.mp3",
-        "audio/fixers/tayla_artifact_handoff_02.mp3",
+        "",
         "audio/fixers/tayla_artifact_handoff_03.mp3",
         "audio/fixers/tayla_artifact_handoff_04.mp3",
         "audio/fixers/tayla_artifact_handoff_05.mp3",
-        "audio/fixers/tayla_artifact_handoff_06.mp3"
+        "audio/fixers/tayla_artifact_handoff_06.mp3",
+        "audio/fixers/tayla_artifact_handoff_07.mp3",
+        "audio/fixers/tayla_artifact_handoff_08.mp3",
+        "audio/fixers/tayla_artifact_handoff_09.mp3",
+        "audio/fixers/tayla_artifact_handoff_10.mp3",
+        "audio/fixers/tayla_artifact_handoff_11.mp3",
+        "audio/fixers/tayla_artifact_handoff_12.mp3",
+        "audio/fixers/tayla_artifact_handoff_13.mp3",
+        "audio/fixers/tayla_artifact_handoff_14.mp3",
+        "audio/fixers/tayla_artifact_handoff_15.mp3",
+        "",
+        "audio/fixers/tayla_artifact_handoff_17.mp3",
+        "audio/fixers/tayla_artifact_handoff_18.mp3",
+        "audio/fixers/tayla_artifact_handoff_19.mp3",
+        "audio/fixers/tayla_artifact_handoff_20.mp3",
+        "audio/fixers/tayla_artifact_handoff_21.mp3",
+        "audio/fixers/tayla_artifact_handoff_22.mp3",
+        "audio/fixers/tayla_artifact_handoff_23.mp3",
+        "audio/fixers/tayla_artifact_handoff_24.mp3",
+        "audio/fixers/tayla_artifact_handoff_25.mp3",
+        "audio/fixers/tayla_artifact_handoff_26.mp3",
+        "audio/fixers/tayla_artifact_handoff_27.mp3"
       ]
     },
     {
@@ -120,11 +258,25 @@
         "tayla_1_done"
       ],
       "dialogue": [
-        "Ready to work? Good. First job's a milk run: thirty units of plastics. Completely legal, nothing to hide.",
-        "Officially you're running it to Newcastle. Actually you'll divert to Oakham - a hidden pirate base out in Pentonville. The paperwork is for anyone watching.",
-        "Falsified manifest. That's a jump up from hauling iron.",
-        "Oakham sits in an asteroid field, so mind your speed on approach. And relax - while you fly for me, Pentonville's pirates keep their guns to themselves.",
-        "Ten thousand on delivery. Leave the ship docked and meet me in the Oakham bar - we'll talk more there."
+        "Ready to work? Good. First job's a milk run.",
+        "Nothing about the last week has been a milk run.",
+        "Thirty units of plastics. Completely legal, nothing to hide.",
+        "Then why are you smiling?",
+        "Because officially you're running it to Newcastle.",
+        "And actually?",
+        "Actually you'll divert to Oakham. Hidden pirate base out in Pentonville.",
+        "A falsified manifest. That's a jump up from hauling iron.",
+        "The paperwork is for anyone watching. The cargo really is plastics -- if they board you, you're clean.",
+        "And if they check the flight recorder?",
+        "Then you're a pilot who got lost. It happens.",
+        "...",
+        "Oakham sits in an asteroid field. Mind your speed on approach -- I've lost two people to rocks and none to guns.",
+        "The pirates don't shoot?",
+        "While you fly for me, Pentonville's pirates keep their guns to themselves. That's what you're really buying.",
+        "Ten thousand?",
+        "Ten thousand on delivery. Leave the ship docked and meet me in the Oakham bar. We'll talk more there.",
+        "More about the artifact.",
+        "More about whatever you've earned by then."
       ],
       "offer": "Haul 30 units of plastics to Oakham (Pentonville system) for 10,000 credits on landing. Deal?",
       "accept_actions": [
@@ -133,9 +285,23 @@
       "portrait": "portraits/tayla/_ref.png",
       "speaker": [
         "",
+        "pc",
         "",
         "pc",
         "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
         ""
       ],
       "portrait_pc": "portraits/grayson/_ref.png",
@@ -144,7 +310,21 @@
         "audio/fixers/tayla_m02_offer_01.mp3",
         "audio/fixers/tayla_m02_offer_02.mp3",
         "audio/fixers/tayla_m02_offer_03.mp3",
-        "audio/fixers/tayla_m02_offer_04.mp3"
+        "audio/fixers/tayla_m02_offer_04.mp3",
+        "audio/fixers/tayla_m02_offer_05.mp3",
+        "audio/fixers/tayla_m02_offer_06.mp3",
+        "audio/fixers/tayla_m02_offer_07.mp3",
+        "audio/fixers/tayla_m02_offer_08.mp3",
+        "audio/fixers/tayla_m02_offer_09.mp3",
+        "audio/fixers/tayla_m02_offer_10.mp3",
+        "",
+        "audio/fixers/tayla_m02_offer_12.mp3",
+        "audio/fixers/tayla_m02_offer_13.mp3",
+        "audio/fixers/tayla_m02_offer_14.mp3",
+        "audio/fixers/tayla_m02_offer_15.mp3",
+        "audio/fixers/tayla_m02_offer_16.mp3",
+        "audio/fixers/tayla_m02_offer_17.mp3",
+        "audio/fixers/tayla_m02_offer_18.mp3"
       ]
     },
     {
@@ -160,10 +340,21 @@
         "tayla_2_done"
       ],
       "dialogue": [
-        "Now the real work. Brilliance - yes, THAT Brilliance - to Hector, the mining base in Troy.",
-        "The militia have Troy crawling with Talons, and they scan everything that moves. Do not stop. Do not fight. Burn past them.",
-        "Militia scanning everything, and I'm carrying Brilliance.",
-        "Fifteen thousand on delivery at Hector. Then get yourself back here in one piece."
+        "Now the real work.",
+        "The milk run's over, then.",
+        "Brilliance. Yes -- that Brilliance. To Hector, the mining base in Troy.",
+        "That's not a manifest problem. That's a prison sentence.",
+        "Fifteen units. It'll fit where nobody looks.",
+        "Troy's crawling with militia.",
+        "It is. Talons, and they scan everything that moves.",
+        "You're sending me through a checkpoint with contraband in the hold.",
+        "I'm sending you through it fast. Do not stop. Do not fight. Burn past them and dock.",
+        "And if they light me up?",
+        "Then you run, and you don't lead them back here.",
+        "Charming.",
+        "Fifteen thousand on delivery at Hector. Then get yourself back here in one piece.",
+        "And another piece of the story.",
+        "You're learning."
       ],
       "offer": "Smuggle 15 units of Brilliance to Hector (Troy system) for 15,000 credits, then return to Oakham. In?",
       "accept_actions": [
@@ -172,6 +363,17 @@
       "portrait": "portraits/tayla/_ref.png",
       "speaker": [
         "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
         "",
         "pc",
         ""
@@ -181,7 +383,18 @@
         "audio/fixers/tayla_m03_offer_00.mp3",
         "audio/fixers/tayla_m03_offer_01.mp3",
         "audio/fixers/tayla_m03_offer_02.mp3",
-        "audio/fixers/tayla_m03_offer_03.mp3"
+        "audio/fixers/tayla_m03_offer_03.mp3",
+        "audio/fixers/tayla_m03_offer_04.mp3",
+        "audio/fixers/tayla_m03_offer_05.mp3",
+        "audio/fixers/tayla_m03_offer_06.mp3",
+        "audio/fixers/tayla_m03_offer_07.mp3",
+        "audio/fixers/tayla_m03_offer_08.mp3",
+        "audio/fixers/tayla_m03_offer_09.mp3",
+        "audio/fixers/tayla_m03_offer_10.mp3",
+        "audio/fixers/tayla_m03_offer_11.mp3",
+        "audio/fixers/tayla_m03_offer_12.mp3",
+        "audio/fixers/tayla_m03_offer_13.mp3",
+        "audio/fixers/tayla_m03_offer_14.mp3"
       ]
     },
     {
@@ -195,16 +408,36 @@
         "tayla_2_done"
       ],
       "dialogue": [
-        "You made it past the militia with the goods AND your hull. I'm almost impressed.",
-        "Catch your breath. The next run makes Troy look like a pleasure cruise."
+        "You made it past the militia with the goods and your hull.",
+        "It was close at the second nav point.",
+        "I'm almost impressed.",
+        "Almost.",
+        "Don't fish. Catch your breath -- the next run makes Troy look like a pleasure cruise.",
+        "You said that about the last one.",
+        "And I was wrong. This time I'm not."
       ],
       "done_actions": [
         "set_flag:tayla_2_done"
       ],
       "portrait": "portraits/tayla/_ref.png",
+      "speaker": [
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        ""
+      ],
+      "portrait_pc": "portraits/grayson/_ref.png",
       "voice": [
         "audio/fixers/tayla_m03_debrief_00.mp3",
-        "audio/fixers/tayla_m03_debrief_01.mp3"
+        "audio/fixers/tayla_m03_debrief_01.mp3",
+        "audio/fixers/tayla_m03_debrief_02.mp3",
+        "audio/fixers/tayla_m03_debrief_03.mp3",
+        "audio/fixers/tayla_m03_debrief_04.mp3",
+        "audio/fixers/tayla_m03_debrief_05.mp3",
+        "audio/fixers/tayla_m03_debrief_06.mp3"
       ]
     },
     {
@@ -220,9 +453,16 @@
         "tayla_3_done"
       ],
       "dialogue": [
-        "Bigger load this time: Brilliance to New Constantinople itself. Twenty-five units.",
-        "Before you ask - I bribed the Confed patrols on the route. You won't have any trouble. Trust me.",
+        "Bigger load this time. Brilliance to New Constantinople itself.",
+        "The capital. You're not serious.",
+        "Twenty-five units.",
+        "That's Confed's front porch, Tayla.",
+        "Before you say no -- I bribed the patrols on the route.",
+        "You bribed them.",
+        "Generously.",
         "Bribed patrols. You'll forgive me if I keep my guns hot.",
+        "Keep them hot. You won't need them. Trust me.",
+        "Every time you say that it costs me hull.",
         "Twenty thousand on delivery. Then come straight back."
       ],
       "offer": "Smuggle 25 units of Brilliance to New Constantinople for 20,000 credits, then return to Oakham. Deal?",
@@ -232,6 +472,13 @@
       "portrait": "portraits/tayla/_ref.png",
       "speaker": [
         "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
         "",
         "pc",
         ""
@@ -241,7 +488,14 @@
         "audio/fixers/tayla_m04_offer_00.mp3",
         "audio/fixers/tayla_m04_offer_01.mp3",
         "audio/fixers/tayla_m04_offer_02.mp3",
-        "audio/fixers/tayla_m04_offer_03.mp3"
+        "audio/fixers/tayla_m04_offer_03.mp3",
+        "audio/fixers/tayla_m04_offer_04.mp3",
+        "audio/fixers/tayla_m04_offer_05.mp3",
+        "audio/fixers/tayla_m04_offer_06.mp3",
+        "audio/fixers/tayla_m04_offer_07.mp3",
+        "audio/fixers/tayla_m04_offer_08.mp3",
+        "audio/fixers/tayla_m04_offer_09.mp3",
+        "audio/fixers/tayla_m04_offer_10.mp3"
       ]
     },
     {
@@ -255,10 +509,18 @@
         "tayla_3_done"
       ],
       "dialogue": [
-        "Bribed patrols, you say? Stilettos and Broadswords at every jump point, you say? Huh. Must have been a clerical error.",
-        "Clerical error. Right.",
-        "Stop scowling. To make it up to you, my people just installed something in your ship: a smuggler's compartment. Twenty units, invisible to any scanner ever built.",
-        "Contraband only - the baffles foul anything legitimate. One more run and we're square."
+        "Bribed patrols, you said.",
+        "I did say that.",
+        "Stilettos and Broadswords at every jump point.",
+        "Huh. Must have been a clerical error.",
+        "I lost half my shields to a clerical error.",
+        "Stop scowling. To make it up to you, my people just installed something in your ship.",
+        "You went into my ship.",
+        "A smuggler's compartment. Twenty units, invisible to any scanner ever built.",
+        "...",
+        "You'd rather have the apology?",
+        "I'd rather have been asked.",
+        "Contraband only -- the baffles foul anything legitimate. One more run and we're square."
       ],
       "done_actions": [
         "m04:install_compartment",
@@ -266,9 +528,17 @@
       ],
       "portrait": "portraits/tayla/_ref.png",
       "speaker": [
+        "pc",
         "",
         "pc",
         "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
         ""
       ],
       "portrait_pc": "portraits/grayson/_ref.png",
@@ -276,7 +546,15 @@
         "audio/fixers/tayla_m04_debrief_00.mp3",
         "audio/fixers/tayla_m04_debrief_01.mp3",
         "audio/fixers/tayla_m04_debrief_02.mp3",
-        "audio/fixers/tayla_m04_debrief_03.mp3"
+        "audio/fixers/tayla_m04_debrief_03.mp3",
+        "audio/fixers/tayla_m04_debrief_04.mp3",
+        "audio/fixers/tayla_m04_debrief_05.mp3",
+        "audio/fixers/tayla_m04_debrief_06.mp3",
+        "audio/fixers/tayla_m04_debrief_07.mp3",
+        "",
+        "audio/fixers/tayla_m04_debrief_09.mp3",
+        "audio/fixers/tayla_m04_debrief_10.mp3",
+        "audio/fixers/tayla_m04_debrief_11.mp3"
       ]
     },
     {
@@ -292,10 +570,21 @@
         "tayla_done"
       ],
       "dialogue": [
-        "Last run: twenty units of Brilliance to New Constantinople. Fits that new compartment of yours exactly. Poetic, no?",
-        "One thing. William Riordian - used to fly these runs before you showed up. He's been drinking and talking, mostly about you.",
-        "Riordian. Should I be watching my back?",
-        "Ten thousand, and after this I'll tell you everything I know about your trinket. Watch yourself out there."
+        "Last run. Twenty units of Brilliance to New Constantinople.",
+        "Fits the new compartment exactly.",
+        "Poetic, no?",
+        "Convenient. There's a difference.",
+        "One thing before you go. William Riordian.",
+        "Should that name mean something?",
+        "He flew these runs before you showed up.",
+        "And now he doesn't.",
+        "Now he's been drinking, and talking. Mostly about you.",
+        "Should I be watching my back?",
+        "You should always be watching your back. But yes -- more than usual.",
+        "...",
+        "Ten thousand. And after this I'll tell you everything I know about your trinket.",
+        "Everything.",
+        "Everything I have. Watch yourself out there."
       ],
       "offer": "One final run: 20 units of Brilliance to New Constantinople for 10,000 credits. Finish the job?",
       "accept_actions": [
@@ -304,6 +593,17 @@
       "portrait": "portraits/tayla/_ref.png",
       "speaker": [
         "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
         "",
         "pc",
         ""
@@ -313,7 +613,18 @@
         "audio/fixers/tayla_m05_offer_00.mp3",
         "audio/fixers/tayla_m05_offer_01.mp3",
         "audio/fixers/tayla_m05_offer_02.mp3",
-        "audio/fixers/tayla_m05_offer_03.mp3"
+        "audio/fixers/tayla_m05_offer_03.mp3",
+        "audio/fixers/tayla_m05_offer_04.mp3",
+        "audio/fixers/tayla_m05_offer_05.mp3",
+        "audio/fixers/tayla_m05_offer_06.mp3",
+        "audio/fixers/tayla_m05_offer_07.mp3",
+        "audio/fixers/tayla_m05_offer_08.mp3",
+        "audio/fixers/tayla_m05_offer_09.mp3",
+        "audio/fixers/tayla_m05_offer_10.mp3",
+        "",
+        "audio/fixers/tayla_m05_offer_12.mp3",
+        "audio/fixers/tayla_m05_offer_13.mp3",
+        "audio/fixers/tayla_m05_offer_14.mp3"
       ]
     },
     {
@@ -327,11 +638,23 @@
         "tayla_done"
       ],
       "dialogue": [
-        "Riordian, hm? He always was a jealous idiot. You did fine.",
-        "Here's the rest of what I owe you. Before Sandoval, it belonged to a spice merchant named Deiter - who had it from his own father. Every owner I can name died holding it.",
-        "Every owner you can name is dead, Tayla.",
-        "That's where my thread runs out. I've sent the holo on to someone who can actually read it: Roman Lynch, on New Constantinople. A thug, but an expert on exotic and valuable things.",
-        "He's expecting you in the bar there. That squares us. It's been profitable, pilot. Try not to die."
+        "Riordian, hm?",
+        "He found me at the jump point. He wasn't alone.",
+        "He always was a jealous idiot. You did fine.",
+        "You owe me a story, Tayla.",
+        "Here's the rest of what I owe you, first.",
+        "...",
+        "Before Sandoval, it belonged to a spice merchant named Deiter.",
+        "And before him?",
+        "Deiter had it from his own father. Every owner I can name died holding it.",
+        "That's a pattern, not a story.",
+        "That's where my thread runs out. I've sent the holo on to someone who can actually read it.",
+        "Who?",
+        "Roman Lynch. New Constantinople. A thug -- but an expert on exotic and valuable things.",
+        "A thug.",
+        "The polite kind. He's expecting you in the bar there.",
+        "And that squares us.",
+        "That squares us. It's been profitable, pilot. Try not to die."
       ],
       "done_actions": [
         "set_flag:tayla_done",
@@ -340,9 +663,21 @@
       "portrait": "portraits/tayla/_ref.png",
       "speaker": [
         "",
+        "pc",
         "",
         "pc",
         "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
         ""
       ],
       "portrait_pc": "portraits/grayson/_ref.png",
@@ -351,7 +686,19 @@
         "audio/fixers/tayla_m05_debrief_01.mp3",
         "audio/fixers/tayla_m05_debrief_02.mp3",
         "audio/fixers/tayla_m05_debrief_03.mp3",
-        "audio/fixers/tayla_m05_debrief_04.mp3"
+        "audio/fixers/tayla_m05_debrief_04.mp3",
+        "",
+        "audio/fixers/tayla_m05_debrief_06.mp3",
+        "audio/fixers/tayla_m05_debrief_07.mp3",
+        "audio/fixers/tayla_m05_debrief_08.mp3",
+        "audio/fixers/tayla_m05_debrief_09.mp3",
+        "audio/fixers/tayla_m05_debrief_10.mp3",
+        "audio/fixers/tayla_m05_debrief_11.mp3",
+        "audio/fixers/tayla_m05_debrief_12.mp3",
+        "audio/fixers/tayla_m05_debrief_13.mp3",
+        "audio/fixers/tayla_m05_debrief_14.mp3",
+        "audio/fixers/tayla_m05_debrief_15.mp3",
+        "audio/fixers/tayla_m05_debrief_16.mp3"
       ]
     },
     {
@@ -367,13 +714,33 @@
         "lynch_1_done"
       ],
       "dialogue": [
-        "You don't wanna talk to me, 'cause I don't wanna talk to you. Mr. Lynch, sittin' over there - HE'S the one you wanna talk to. So state your bidness or take a hike, buddy.",
-        "Enough, Miggs. Ah, Captain - I've been expecting you. I am Roman Lynch. You may speak freely around my assistant; he is exceedingly loyal.",
+        "You don't wanna talk to me, 'cause I don't wanna talk to you.",
+        "I'm here to see Lynch.",
+        "Mr. Lynch, sittin' over there, HE'S the one you wanna talk to. So state your bidness or take a hike, buddy.",
+        "Enough, Miggs.",
+        "Ah, Captain. I've been expecting you. I am Roman Lynch.",
+        "Tayla said you'd see me.",
+        "You may speak freely around my assistant. He is exceedingly loyal.",
+        "He's exceedingly something.",
+        "Your artifact interests me, $NM.",
+        "Everyone finds it interesting. Nobody will tell me what it is.",
+        "There is a hologram inside it. Did you know?",
         "A hologram. And you'd know that how?",
-        "Your artifact interests me. There's a hologram in it, did you know? My people will study it while you make yourself useful.",
-        "A message. That's all it is?",
-        "A certain Captain Seelig is loitering at Nav 3 in Pentonville - his ship is the Hooded Hawk. Deliver a message: tell him how profoundly disappointed I am in him. Verbatim, please.",
-        "Ten thousand when you get back. A simple courier run - what could go wrong?"
+        "Because Tayla sent me an image, and my people are thorough. It is a map, or something that behaves like one.",
+        "A map to what?",
+        "That is precisely the question I intend to answer -- while you make yourself useful.",
+        "There it is.",
+        "A certain Captain Seelig is loitering at Nav 3 in Pentonville. His ship is the Hooded Hawk.",
+        "And?",
+        "Deliver a message. Tell him how profoundly disappointed I am in him. Verbatim, please.",
+        "That's all. Words.",
+        "Words, Captain. I am a businessman.",
+        "Businessmen don't need couriers for a comm channel.",
+        "Some messages lose their meaning over a relay. Ten thousand when you get back.",
+        "And the artifact?",
+        "Stays with you. I want it studied, not stolen -- and frankly it is safer in a ship than in my safe.",
+        "A simple courier run.",
+        "What could go wrong?"
       ],
       "offer": "Deliver Lynch's message to Seelig at Pentonville Nav 3, then return to New Constantinople for 10,000 credits. Accept?",
       "accept_actions": [
@@ -382,11 +749,31 @@
       "portrait": "portraits/lynch/_ref.png",
       "speaker": [
         "",
+        "pc",
+        "",
+        "",
         "",
         "pc",
         "",
         "pc",
         "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
         ""
       ],
       "portrait_pc": "portraits/grayson/_ref.png",
@@ -397,7 +784,27 @@
         "audio/fixers/lynch_m06_offer_03.mp3",
         "audio/fixers/lynch_m06_offer_04.mp3",
         "audio/fixers/lynch_m06_offer_05.mp3",
-        "audio/fixers/lynch_m06_offer_06.mp3"
+        "audio/fixers/lynch_m06_offer_06.mp3",
+        "audio/fixers/lynch_m06_offer_07.mp3",
+        "audio/fixers/lynch_m06_offer_08.mp3",
+        "audio/fixers/lynch_m06_offer_09.mp3",
+        "audio/fixers/lynch_m06_offer_10.mp3",
+        "audio/fixers/lynch_m06_offer_11.mp3",
+        "audio/fixers/lynch_m06_offer_12.mp3",
+        "audio/fixers/lynch_m06_offer_13.mp3",
+        "audio/fixers/lynch_m06_offer_14.mp3",
+        "audio/fixers/lynch_m06_offer_15.mp3",
+        "audio/fixers/lynch_m06_offer_16.mp3",
+        "audio/fixers/lynch_m06_offer_17.mp3",
+        "audio/fixers/lynch_m06_offer_18.mp3",
+        "audio/fixers/lynch_m06_offer_19.mp3",
+        "audio/fixers/lynch_m06_offer_20.mp3",
+        "audio/fixers/lynch_m06_offer_21.mp3",
+        "audio/fixers/lynch_m06_offer_22.mp3",
+        "audio/fixers/lynch_m06_offer_23.mp3",
+        "audio/fixers/lynch_m06_offer_24.mp3",
+        "audio/fixers/lynch_m06_offer_25.mp3",
+        "audio/fixers/lynch_m06_offer_26.mp3"
       ]
     },
     {
@@ -411,8 +818,19 @@
         "lynch_1_done"
       ],
       "dialogue": [
-        "Seelig took it badly? Shocking. Some men simply cannot accept a severance package.",
-        "Your ten thousand, as agreed. The hologram is... resisting analysis. My people need more time - and I have more work."
+        "Ah. You're breathing. How did Captain Seelig take my chastisement?",
+        "He opened fire before I finished the sentence.",
+        "Took it badly? Shocking.",
+        "You knew he would.",
+        "I suspected. Some men simply cannot accept a severance package.",
+        "You used me as a trigger, Lynch.",
+        "I used you as a messenger. What he did with the message was his choice.",
+        "...",
+        "Your ten thousand, as agreed.",
+        "And the artifact?",
+        "The hologram is resisting analysis. My people need more time.",
+        "How much time?",
+        "As much as I am willing to buy. And I have more work."
       ],
       "done_actions": [
         "pay:10000",
@@ -421,9 +839,36 @@
         "clear_flag:m06_message_delivered"
       ],
       "portrait": "portraits/lynch/_ref.png",
+      "speaker": [
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        ""
+      ],
+      "portrait_pc": "portraits/grayson/_ref.png",
       "voice": [
         "audio/fixers/lynch_m06_debrief_00.mp3",
-        "audio/fixers/lynch_m06_debrief_01.mp3"
+        "audio/fixers/lynch_m06_debrief_01.mp3",
+        "audio/fixers/lynch_m06_debrief_02.mp3",
+        "audio/fixers/lynch_m06_debrief_03.mp3",
+        "audio/fixers/lynch_m06_debrief_04.mp3",
+        "audio/fixers/lynch_m06_debrief_05.mp3",
+        "audio/fixers/lynch_m06_debrief_06.mp3",
+        "",
+        "audio/fixers/lynch_m06_debrief_08.mp3",
+        "audio/fixers/lynch_m06_debrief_09.mp3",
+        "audio/fixers/lynch_m06_debrief_10.mp3",
+        "audio/fixers/lynch_m06_debrief_11.mp3",
+        "audio/fixers/lynch_m06_debrief_12.mp3"
       ]
     },
     {
@@ -439,10 +884,21 @@
         "lynch_2_done"
       ],
       "dialogue": [
-        "The artifact investigation has hit... complications. People keep dying around it. Fascinating, really.",
-        "People keep dying around it. You say that like it's weather.",
+        "The artifact investigation has hit complications.",
+        "Meaning what?",
+        "People keep dying around it. Fascinating, really.",
+        "You say that like it's weather.",
+        "At my age one becomes philosophical about other people's mortality.",
+        "Which people?",
+        "Two analysts and a records clerk. All quite unrelated, I'm sure.",
+        "...",
         "Meanwhile: twenty units of weaponry to Siva, the agricultural base in Rikel. Fifteen thousand on delivery.",
-        "One wrinkle. Salman Kroiz runs guns on that route and considers it his. He flies a Demon. So do his friends."
+        "Weapons to a farming world.",
+        "Farmers have enemies too.",
+        "There's a wrinkle. There's always a wrinkle.",
+        "Salman Kroiz runs guns on that route and considers it his.",
+        "And he'll object.",
+        "He flies a Demon. So do his friends. Handle it appropriately."
       ],
       "offer": "Run 20 units of weaponry to Siva (Rikel system) for 15,000 credits, past Kroiz's gang. Accept?",
       "accept_actions": [
@@ -453,6 +909,17 @@
         "",
         "pc",
         "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
         ""
       ],
       "portrait_pc": "portraits/grayson/_ref.png",
@@ -460,7 +927,18 @@
         "audio/fixers/lynch_m07_offer_00.mp3",
         "audio/fixers/lynch_m07_offer_01.mp3",
         "audio/fixers/lynch_m07_offer_02.mp3",
-        "audio/fixers/lynch_m07_offer_03.mp3"
+        "audio/fixers/lynch_m07_offer_03.mp3",
+        "audio/fixers/lynch_m07_offer_04.mp3",
+        "audio/fixers/lynch_m07_offer_05.mp3",
+        "audio/fixers/lynch_m07_offer_06.mp3",
+        "",
+        "audio/fixers/lynch_m07_offer_08.mp3",
+        "audio/fixers/lynch_m07_offer_09.mp3",
+        "audio/fixers/lynch_m07_offer_10.mp3",
+        "audio/fixers/lynch_m07_offer_11.mp3",
+        "audio/fixers/lynch_m07_offer_12.mp3",
+        "audio/fixers/lynch_m07_offer_13.mp3",
+        "audio/fixers/lynch_m07_offer_14.mp3"
       ]
     },
     {
@@ -475,11 +953,25 @@
         "lynch_3_done"
       ],
       "dialogue": [
-        "Your trinket is confirmed alien. Not Kilrathi - OLD. That knowledge cost me three good analysts.",
-        "Alien. Not Kilrathi.",
-        "Before we discuss it further: my cousin Regis has been subpoenaed in a murder trial. It would be best for everyone if he simply... disappeared.",
-        "Your cousin. What did he do?",
-        "He favors the Romulus mining base in Castor. Get him out of New Constantinople and take him there. Thirty thousand on landing. Do avoid the Stilettos - they are faster than you."
+        "Your trinket is confirmed alien.",
+        "...",
+        "Not Kilrathi. Old. Older than the word old is usually asked to carry.",
+        "How old?",
+        "My analysts refused to write a number down. That knowledge cost me three of them.",
+        "Cost them what?",
+        "Their positions, Captain. What did you think I meant?",
+        "...",
+        "Before we discuss it further, I need a favor.",
+        "Of course you do.",
+        "My cousin Regis has been subpoenaed in a murder trial.",
+        "Whose murder?",
+        "A tedious man's. It would be best for everyone if Regis simply disappeared before he testifies.",
+        "You want me to disappear a witness.",
+        "I want you to give a relative a ride. The distinction matters to lawyers, so it should matter to you.",
+        "Where?",
+        "He favors the Romulus mining base in Castor. Get him out of New Constantinople and take him there.",
+        "Thirty thousand?",
+        "Thirty thousand on landing. And do avoid the Stilettos -- they are faster than you."
       ],
       "offer": "Smuggle Lynch's cousin Regis to Romulus (Castor system) for 30,000 credits on landing. Take him aboard?",
       "accept_actions": [
@@ -492,15 +984,43 @@
         "pc",
         "",
         "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
         ""
       ],
       "portrait_pc": "portraits/grayson/_ref.png",
       "voice": [
         "audio/fixers/lynch_m08_offer_00.mp3",
-        "audio/fixers/lynch_m08_offer_01.mp3",
+        "",
         "audio/fixers/lynch_m08_offer_02.mp3",
         "audio/fixers/lynch_m08_offer_03.mp3",
-        "audio/fixers/lynch_m08_offer_04.mp3"
+        "audio/fixers/lynch_m08_offer_04.mp3",
+        "audio/fixers/lynch_m08_offer_05.mp3",
+        "audio/fixers/lynch_m08_offer_06.mp3",
+        "",
+        "audio/fixers/lynch_m08_offer_08.mp3",
+        "audio/fixers/lynch_m08_offer_09.mp3",
+        "audio/fixers/lynch_m08_offer_10.mp3",
+        "audio/fixers/lynch_m08_offer_11.mp3",
+        "audio/fixers/lynch_m08_offer_12.mp3",
+        "audio/fixers/lynch_m08_offer_13.mp3",
+        "audio/fixers/lynch_m08_offer_14.mp3",
+        "audio/fixers/lynch_m08_offer_15.mp3",
+        "audio/fixers/lynch_m08_offer_16.mp3",
+        "audio/fixers/lynch_m08_offer_17.mp3",
+        "audio/fixers/lynch_m08_offer_18.mp3"
       ]
     },
     {
@@ -515,10 +1035,21 @@
         "lynch_done"
       ],
       "dialogue": [
-        "One last job. A Mr. Smythe on Liverpool claims he found something about your artifact in the Oxford library archives.",
-        "Pick him up, bring him here. Thirty thousand for a taxi run. You may notice Miggs is elsewhere tonight - errands of his own.",
+        "One last job, Captain.",
+        "You've said that before.",
+        "This time I mean it, because this time it ends the question.",
+        "Go on.",
+        "A Mr. Smythe on Liverpool claims he found something about your artifact in the Oxford library archives.",
+        "Then have him transmit it.",
+        "He will not put it on a relay. He was quite insistent about that.",
+        "...",
+        "Pick him up. Bring him here. Thirty thousand for a taxi run.",
         "A taxi run. Nothing about this has been a taxi run.",
-        "Go on then. Liverpool. Newcastle system. Mr. Smythe is waiting."
+        "You may notice Miggs is elsewhere tonight. Errands of his own.",
+        "Should that worry me?",
+        "It should worry someone. Go on then. Liverpool. Newcastle system.",
+        "And Smythe is waiting.",
+        "Mr. Smythe is waiting."
       ],
       "offer": "Fly to Liverpool (Newcastle system) and collect Mr. Smythe for 30,000 credits. Accept?",
       "accept_actions": [
@@ -527,6 +1058,17 @@
       "portrait": "portraits/lynch/_ref.png",
       "speaker": [
         "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
         "",
         "pc",
         ""
@@ -536,7 +1078,18 @@
         "audio/fixers/lynch_m09_offer_00.mp3",
         "audio/fixers/lynch_m09_offer_01.mp3",
         "audio/fixers/lynch_m09_offer_02.mp3",
-        "audio/fixers/lynch_m09_offer_03.mp3"
+        "audio/fixers/lynch_m09_offer_03.mp3",
+        "audio/fixers/lynch_m09_offer_04.mp3",
+        "audio/fixers/lynch_m09_offer_05.mp3",
+        "audio/fixers/lynch_m09_offer_06.mp3",
+        "",
+        "audio/fixers/lynch_m09_offer_08.mp3",
+        "audio/fixers/lynch_m09_offer_09.mp3",
+        "audio/fixers/lynch_m09_offer_10.mp3",
+        "audio/fixers/lynch_m09_offer_11.mp3",
+        "audio/fixers/lynch_m09_offer_12.mp3",
+        "audio/fixers/lynch_m09_offer_13.mp3",
+        "audio/fixers/lynch_m09_offer_14.mp3"
       ]
     },
     {
@@ -551,11 +1104,26 @@
         "masterson_1_done"
       ],
       "dialogue": [
-        "Ah. The pilot with the artifact and the trail of dead mobsters. Masterson, university administration. And no - the library is CLOSED to you.",
-        "However. Access can be purchased - not with money, but with service. Consider it an endowment to the university, paid in four installments. Complete them and I unlock the archive myself.",
+        "I need access to the Oxford archive.",
+        "Ah. The pilot with the artifact and the trail of dead mobsters.",
+        "News travels.",
+        "Masterson. University administration. And no -- the library is CLOSED to you.",
+        "I can pay.",
+        "Everyone can pay. That is what makes payment uninteresting.",
+        "Then what's interesting?",
+        "Service. The university needs work done, and I am nothing if not transactional.",
+        "How much work?",
+        "Access is an endowment, paid in four installments. Complete them and I unlock the archive myself.",
         "Four favors for a library card. That's quite a fee.",
-        "First installment: Hunter Toth is inbound in a Drayman at the Saxtogue jump point. He wrote unkind truths about the Retros, and Retros hold grudges.",
-        "Meet him there and see him to the planet. He must be ON THE GROUND before you land - I will not pay for a corpse with an honor guard."
+        "It is quite a library.",
+        "...",
+        "First installment. Hunter Toth is inbound in a Drayman at the Saxtogue jump point.",
+        "Who is he?",
+        "A journalist. He wrote unkind truths about the Retros, and Retros hold grudges with unusual sincerity.",
+        "So they'll be waiting for him.",
+        "Meet him there and see him to the planet. He must be ON THE GROUND before you land.",
+        "Before I land.",
+        "I will not pay for a corpse with an honor guard. Ten thousand, and one installment struck from your debt."
       ],
       "offer": "Escort Toth's Drayman from the Saxtogue Jump to Oxford for 10,000 credits. He lands first. Accept?",
       "accept_actions": [
@@ -563,10 +1131,25 @@
       ],
       "portrait": "portraits/masterson/_ref.png",
       "speaker": [
-        "",
+        "pc",
         "",
         "pc",
         "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
         ""
       ],
       "portrait_pc": "portraits/grayson/_ref.png",
@@ -575,7 +1158,22 @@
         "audio/fixers/masterson_m10_offer_01.mp3",
         "audio/fixers/masterson_m10_offer_02.mp3",
         "audio/fixers/masterson_m10_offer_03.mp3",
-        "audio/fixers/masterson_m10_offer_04.mp3"
+        "audio/fixers/masterson_m10_offer_04.mp3",
+        "audio/fixers/masterson_m10_offer_05.mp3",
+        "audio/fixers/masterson_m10_offer_06.mp3",
+        "audio/fixers/masterson_m10_offer_07.mp3",
+        "audio/fixers/masterson_m10_offer_08.mp3",
+        "audio/fixers/masterson_m10_offer_09.mp3",
+        "audio/fixers/masterson_m10_offer_10.mp3",
+        "audio/fixers/masterson_m10_offer_11.mp3",
+        "",
+        "audio/fixers/masterson_m10_offer_13.mp3",
+        "audio/fixers/masterson_m10_offer_14.mp3",
+        "audio/fixers/masterson_m10_offer_15.mp3",
+        "audio/fixers/masterson_m10_offer_16.mp3",
+        "audio/fixers/masterson_m10_offer_17.mp3",
+        "audio/fixers/masterson_m10_offer_18.mp3",
+        "audio/fixers/masterson_m10_offer_19.mp3"
       ]
     },
     {
@@ -590,19 +1188,49 @@
         "masterson_2_done"
       ],
       "dialogue": [
-        "Favor two. Data pirates are draining our mainframe from a ship parked somewhere in-system: the Black Rhombus. A converted Galaxy, bristling with turrets.",
-        "Patrol the jump points until you find it, and make it stop existing. The escorts are optional; the Rhombus is not.",
-        "Ten thousand on your return. Do check your ammunition first."
+        "Favor two.",
+        "Installment two, I thought.",
+        "Don't be smart, it doesn't suit pilots. Data pirates are draining our mainframe.",
+        "From where?",
+        "A ship parked somewhere in-system. The Black Rhombus -- a converted Galaxy, bristling with turrets.",
+        "Somewhere in-system is not a location.",
+        "Then patrol the jump points until it becomes one, and make it stop existing.",
+        "The escorts?",
+        "Optional. The Rhombus is not.",
+        "Ten thousand?",
+        "Ten thousand on your return. Do check your ammunition first -- I have seen your invoices."
       ],
       "offer": "Hunt down and destroy the Black Rhombus somewhere at Oxford's jump points, then return. 10,000 credits. Accept?",
       "accept_actions": [
         "set_flag:m11_active"
       ],
       "portrait": "portraits/masterson/_ref.png",
+      "speaker": [
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        ""
+      ],
+      "portrait_pc": "portraits/grayson/_ref.png",
       "voice": [
         "audio/fixers/masterson_m11_offer_00.mp3",
         "audio/fixers/masterson_m11_offer_01.mp3",
-        "audio/fixers/masterson_m11_offer_02.mp3"
+        "audio/fixers/masterson_m11_offer_02.mp3",
+        "audio/fixers/masterson_m11_offer_03.mp3",
+        "audio/fixers/masterson_m11_offer_04.mp3",
+        "audio/fixers/masterson_m11_offer_05.mp3",
+        "audio/fixers/masterson_m11_offer_06.mp3",
+        "audio/fixers/masterson_m11_offer_07.mp3",
+        "audio/fixers/masterson_m11_offer_08.mp3",
+        "audio/fixers/masterson_m11_offer_09.mp3",
+        "audio/fixers/masterson_m11_offer_10.mp3"
       ]
     },
     {
@@ -617,10 +1245,19 @@
         "masterson_3_done"
       ],
       "dialogue": [
-        "Favor three. My book shipment arrives on the Drayman Vulcan's Forge at the Saxtogue jump point. A rival collector hired bounty hunters to divert it.",
-        "Here is the wrinkle: the hunters were paid to remove the ESCORT. That would be you. The Demons will ignore the freighter entirely.",
+        "Favor three, and this one is genuinely unpleasant.",
+        "You've been saving it.",
+        "My book shipment arrives on the Drayman Vulcan's Forge at the Saxtogue jump point.",
+        "Books again.",
+        "A rival collector hired bounty hunters to divert it.",
+        "Then I fly escort. Same as Toth.",
+        "Not the same. Here is the wrinkle: the hunters were paid to remove the ESCORT.",
+        "...",
+        "That would be you.",
         "So the freighter is bait, and I'm the target.",
-        "Same terms: the Forge lands first, then you. Ten thousand."
+        "The Demons will ignore the freighter entirely. I thought you would prefer to know.",
+        "I'd prefer a different job.",
+        "Same terms. The Forge lands first, then you. Ten thousand."
       ],
       "offer": "Escort Vulcan's Forge from the Saxtogue Jump to Oxford - the Demons will hunt YOU. 10,000 credits. Accept?",
       "accept_actions": [
@@ -629,6 +1266,15 @@
       "portrait": "portraits/masterson/_ref.png",
       "speaker": [
         "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
         "",
         "pc",
         ""
@@ -638,7 +1284,16 @@
         "audio/fixers/masterson_m12_offer_00.mp3",
         "audio/fixers/masterson_m12_offer_01.mp3",
         "audio/fixers/masterson_m12_offer_02.mp3",
-        "audio/fixers/masterson_m12_offer_03.mp3"
+        "audio/fixers/masterson_m12_offer_03.mp3",
+        "audio/fixers/masterson_m12_offer_04.mp3",
+        "audio/fixers/masterson_m12_offer_05.mp3",
+        "audio/fixers/masterson_m12_offer_06.mp3",
+        "",
+        "audio/fixers/masterson_m12_offer_08.mp3",
+        "audio/fixers/masterson_m12_offer_09.mp3",
+        "audio/fixers/masterson_m12_offer_10.mp3",
+        "audio/fixers/masterson_m12_offer_11.mp3",
+        "audio/fixers/masterson_m12_offer_12.mp3"
       ]
     },
     {
@@ -653,19 +1308,55 @@
         "masterson_done"
       ],
       "dialogue": [
-        "Last favor. One more Drayman, inbound at the XXN-1927 jump point, carrying... let us say 'pirate bait'. They know what is in the hold and they want it badly.",
-        "I will be honest with you, pilot: this freighter is a rust bucket. Her plating would embarrass a shuttle. Keep the Talons OFF her.",
-        "She lands first. Then you. Then the library opens. Ten thousand, and my genuine respect."
+        "Last favor.",
+        "Then the archive opens.",
+        "Then the archive opens. One more Drayman, inbound at the XXN-1927 jump point.",
+        "Carrying?",
+        "Let us say pirate bait. They know what is in the hold and they want it badly.",
+        "That's not an answer.",
+        "It is the only one you're getting, and I will be honest with you about the rest.",
+        "Go ahead.",
+        "This freighter is a rust bucket. Her plating would embarrass a shuttle.",
+        "Wonderful.",
+        "Keep the Talons OFF her. She lands first. Then you.",
+        "And then?",
+        "Then the library opens. Ten thousand, and my genuine respect -- which I assure you is rarer."
       ],
       "offer": "Escort the final Drayman from the XXN-1927 Jump to Oxford - she is fragile and the pirates want her badly. 10,000 credits. Accept?",
       "accept_actions": [
         "set_flag:m13_active"
       ],
       "portrait": "portraits/masterson/_ref.png",
+      "speaker": [
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        ""
+      ],
+      "portrait_pc": "portraits/grayson/_ref.png",
       "voice": [
         "audio/fixers/masterson_m13_offer_00.mp3",
         "audio/fixers/masterson_m13_offer_01.mp3",
-        "audio/fixers/masterson_m13_offer_02.mp3"
+        "audio/fixers/masterson_m13_offer_02.mp3",
+        "audio/fixers/masterson_m13_offer_03.mp3",
+        "audio/fixers/masterson_m13_offer_04.mp3",
+        "audio/fixers/masterson_m13_offer_05.mp3",
+        "audio/fixers/masterson_m13_offer_06.mp3",
+        "audio/fixers/masterson_m13_offer_07.mp3",
+        "audio/fixers/masterson_m13_offer_08.mp3",
+        "audio/fixers/masterson_m13_offer_09.mp3",
+        "audio/fixers/masterson_m13_offer_10.mp3",
+        "audio/fixers/masterson_m13_offer_11.mp3",
+        "audio/fixers/masterson_m13_offer_12.mp3"
       ]
     },
     {
@@ -679,13 +1370,31 @@
         "library_access"
       ],
       "dialogue": [
-        "The archive terminal accepts Masterson's authorization. You place the artifact in the scanner cradle.",
-        "MATCH FOUND. Classification: STELTEK. A precursor civilization - starfaring while humanity was learning fire. No verified contact in recorded history.",
-        "The artifact is a power relay of unknown function. Energy signature: dormant, but not dead. Cross-reference: recent anomalous Steltek-band readings reported near PALAN.",
-        "Appended note: Dr. Monkhouse, the sector's leading xenoarchaeologist, has been asking the same questions you are. Last known location: the Palan system."
+        "The archive terminal accepts Masterson's authorization.",
+        "You place the artifact in the scanner cradle. The cradle hums.",
+        "MATCH FOUND. Classification: STELTEK.",
+        "A precursor civilization. Starfaring while humanity was learning fire.",
+        "No verified contact in recorded history. No recovered vessels. No remains.",
+        "The artifact is a power relay of unknown function.",
+        "Energy signature: dormant, but not dead.",
+        "Cross-reference: recent anomalous Steltek-band readings reported near PALAN.",
+        "Appended note. Dr. Monkhouse, the sector's leading xenoarchaeologist, has been asking the same questions you are.",
+        "Last known location: the Palan system."
       ],
       "done_actions": [
         "set_flag:library_access"
+      ],
+      "speaker": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
       ]
     },
     {
@@ -701,11 +1410,25 @@
         "murphy_1_done"
       ],
       "dialogue": [
-        "You tried to land on Palan, didn't you? Bounty hunters have the planet sewn up tight. The name's Murphy - only my close friends call me Lynn.",
-        "Two corporations here: Rondell and Bronte. Bronte hired the hunters. Choke off Rondell's food exports, ship their own in to fill the gap, take the market. People are starving over market share.",
+        "You tried to land on Palan, didn't you?",
+        "I got as far as the orbital line.",
+        "Bounty hunters have the planet sewn up tight. The name's Murphy -- only my close friends call me Lynn.",
+        "Understood.",
+        "Two corporations here. Rondell and Bronte.",
+        "And the hunters?",
+        "Bronte hired them. Choke off Rondell's food exports, ship their own in to fill the gap, take the market.",
         "People are starving so a corporation can move a decimal point.",
-        "I run the resistance for Rondell out of this refinery. Hired resistance - I won't pretend otherwise. The blockade rotates fresh ships through the asteroid field; cut the reinforcements and the whole thing starves.",
-        "Three waves of Demons. Kill every last one and come back. Fifteen thousand - most of what we have."
+        "Now you understand Palan.",
+        "And you're what, the resistance?",
+        "I run it for Rondell out of this refinery. Hired resistance -- I won't pretend otherwise.",
+        "At least you're honest about it.",
+        "Honesty's free. Everything else out here costs.",
+        "So what do you need?",
+        "The blockade rotates fresh ships through the asteroid field. Cut the reinforcements and the whole thing starves.",
+        "How many?",
+        "Three waves of Demons. Kill every last one and come back.",
+        "And the pay?",
+        "Fifteen thousand. Most of what we have -- so try to be worth it."
       ],
       "offer": "Destroy the blockade reinforcements at the Palan asteroid field, then return to Basra. 15,000 credits.",
       "accept_actions": [
@@ -715,9 +1438,23 @@
       "portrait": "portraits/murphy/_ref.png",
       "speaker": [
         "",
+        "pc",
         "",
         "pc",
         "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
         ""
       ],
       "portrait_pc": "portraits/grayson/_ref.png",
@@ -726,7 +1463,21 @@
         "audio/fixers/murphy_m14_offer_01.mp3",
         "audio/fixers/murphy_m14_offer_02.mp3",
         "audio/fixers/murphy_m14_offer_03.mp3",
-        "audio/fixers/murphy_m14_offer_04.mp3"
+        "audio/fixers/murphy_m14_offer_04.mp3",
+        "audio/fixers/murphy_m14_offer_05.mp3",
+        "audio/fixers/murphy_m14_offer_06.mp3",
+        "audio/fixers/murphy_m14_offer_07.mp3",
+        "audio/fixers/murphy_m14_offer_08.mp3",
+        "audio/fixers/murphy_m14_offer_09.mp3",
+        "audio/fixers/murphy_m14_offer_10.mp3",
+        "audio/fixers/murphy_m14_offer_11.mp3",
+        "audio/fixers/murphy_m14_offer_12.mp3",
+        "audio/fixers/murphy_m14_offer_13.mp3",
+        "audio/fixers/murphy_m14_offer_14.mp3",
+        "audio/fixers/murphy_m14_offer_15.mp3",
+        "audio/fixers/murphy_m14_offer_16.mp3",
+        "audio/fixers/murphy_m14_offer_17.mp3",
+        "audio/fixers/murphy_m14_offer_18.mp3"
       ]
     },
     {
@@ -740,8 +1491,15 @@
         "murphy_1_done"
       ],
       "dialogue": [
-        "Their whole relief wing, gone. The hunters are already flying tighter rotations to cover the gap.",
-        "Here's your fifteen thousand. Don't spend it anywhere the Guild can see you - you're on Bronte's payroll list now, in the worst way, and hunters hold grudges."
+        "Their whole relief wing, gone.",
+        "They fought like they expected to win.",
+        "They usually do. The hunters are already flying tighter rotations to cover the gap.",
+        "So it worked.",
+        "It worked. Here's your fifteen thousand.",
+        "...",
+        "Don't spend it anywhere the Guild can see you. You're on Bronte's payroll list now, in the worst way.",
+        "And hunters hold grudges.",
+        "Hunters hold grudges."
       ],
       "offer": "",
       "done_actions": [
@@ -750,9 +1508,28 @@
         "clear_flag:m14_cleared"
       ],
       "portrait": "portraits/murphy/_ref.png",
+      "speaker": [
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        ""
+      ],
+      "portrait_pc": "portraits/grayson/_ref.png",
       "voice": [
         "audio/fixers/murphy_m14_debrief_00.mp3",
-        "audio/fixers/murphy_m14_debrief_01.mp3"
+        "audio/fixers/murphy_m14_debrief_01.mp3",
+        "audio/fixers/murphy_m14_debrief_02.mp3",
+        "audio/fixers/murphy_m14_debrief_03.mp3",
+        "audio/fixers/murphy_m14_debrief_04.mp3",
+        "",
+        "audio/fixers/murphy_m14_debrief_06.mp3",
+        "audio/fixers/murphy_m14_debrief_07.mp3",
+        "audio/fixers/murphy_m14_debrief_08.mp3"
       ]
     },
     {
@@ -768,8 +1545,17 @@
         "murphy_2_done"
       ],
       "dialogue": [
-        "Bronte's money bought better help. Ace pilots in Centurions now, not the rabble you scattered last time.",
-        "Same job, harder targets. Ten thousand. It's what's left in the jar."
+        "Bronte's money bought better help.",
+        "How much better?",
+        "Ace pilots in Centurions now. Not the rabble you scattered last time.",
+        "Centurions. That's my hull class.",
+        "That's the point. They stopped sending people who lose.",
+        "Same job?",
+        "Same job, harder targets. Ten thousand.",
+        "That's less than last time.",
+        "It's what's left in the jar. I can show you the jar if you like.",
+        "...",
+        "That's what I thought."
       ],
       "offer": "Destroy the blockade patrols at the asteroid field - Demons and ace Centurions. 10,000 credits.",
       "accept_actions": [
@@ -777,9 +1563,32 @@
       ],
       "refuse_actions": [],
       "portrait": "portraits/murphy/_ref.png",
+      "speaker": [
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        ""
+      ],
+      "portrait_pc": "portraits/grayson/_ref.png",
       "voice": [
         "audio/fixers/murphy_m15_offer_00.mp3",
-        "audio/fixers/murphy_m15_offer_01.mp3"
+        "audio/fixers/murphy_m15_offer_01.mp3",
+        "audio/fixers/murphy_m15_offer_02.mp3",
+        "audio/fixers/murphy_m15_offer_03.mp3",
+        "audio/fixers/murphy_m15_offer_04.mp3",
+        "audio/fixers/murphy_m15_offer_05.mp3",
+        "audio/fixers/murphy_m15_offer_06.mp3",
+        "audio/fixers/murphy_m15_offer_07.mp3",
+        "audio/fixers/murphy_m15_offer_08.mp3",
+        "",
+        "audio/fixers/murphy_m15_offer_10.mp3"
       ]
     },
     {
@@ -793,8 +1602,13 @@
         "murphy_2_done"
       ],
       "dialogue": [
-        "Centurion aces, and you're still breathing. I'd hire you permanently if we had a treasury.",
-        "Ten thousand. One more push and Palan breathes free air."
+        "Centurion aces, and you're still breathing.",
+        "Two of them nearly weren't a problem I got to solve.",
+        "I'd hire you permanently if we had a treasury.",
+        "You'd hire me permanently if I were cheaper.",
+        "Both things can be true. Ten thousand.",
+        "And after this?",
+        "One more push and Palan breathes free air."
       ],
       "offer": "",
       "done_actions": [
@@ -803,9 +1617,24 @@
         "clear_flag:m15_cleared"
       ],
       "portrait": "portraits/murphy/_ref.png",
+      "speaker": [
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        ""
+      ],
+      "portrait_pc": "portraits/grayson/_ref.png",
       "voice": [
         "audio/fixers/murphy_m15_debrief_00.mp3",
-        "audio/fixers/murphy_m15_debrief_01.mp3"
+        "audio/fixers/murphy_m15_debrief_01.mp3",
+        "audio/fixers/murphy_m15_debrief_02.mp3",
+        "audio/fixers/murphy_m15_debrief_03.mp3",
+        "audio/fixers/murphy_m15_debrief_04.mp3",
+        "audio/fixers/murphy_m15_debrief_05.mp3",
+        "audio/fixers/murphy_m15_debrief_06.mp3"
       ]
     },
     {
@@ -820,10 +1649,21 @@
         "murphy_done"
       ],
       "dialogue": [
-        "This is it. Our attacks finally wore them down - they're low on fuel, food and patience. What's left is parked in orbit over Palan itself.",
-        "You won't fly alone - two militia Talons will launch with you. Volunteers, not professionals, but they'll fight.",
-        "Volunteers. Against a blockade.",
-        "Fifteen thousand waiting on Palan. Fair warning - you've killed a lot of bounty hunters. Militia and Confed listen to hunter gossip, and none of them will forget your transponder."
+        "This is it.",
+        "The last push.",
+        "Our attacks finally wore them down. They're low on fuel, food and patience.",
+        "Where are they?",
+        "What's left is parked in orbit over Palan itself. Break it, land on the planet, and it's done.",
+        "Alone?",
+        "Not this time. Two militia Talons launch with you.",
+        "Pilots or volunteers?",
+        "Volunteers. They'll fight -- I won't promise more than that.",
+        "...",
+        "Say what you're thinking.",
+        "I'm thinking they should stay home.",
+        "It's their planet. Fifteen thousand waiting on Palan.",
+        "And the bill afterward?",
+        "You've killed a lot of bounty hunters. Militia and Confed listen to hunter gossip, and none of them will forget your transponder."
       ],
       "offer": "Break the Palan blockade (four waves) with two friendly Talon wingmen, then land on Palan. 15,000 credits.",
       "accept_actions": [
@@ -833,6 +1673,17 @@
       "portrait": "portraits/murphy/_ref.png",
       "speaker": [
         "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
         "",
         "pc",
         ""
@@ -842,7 +1693,18 @@
         "audio/fixers/murphy_m16_offer_00.mp3",
         "audio/fixers/murphy_m16_offer_01.mp3",
         "audio/fixers/murphy_m16_offer_02.mp3",
-        "audio/fixers/murphy_m16_offer_03.mp3"
+        "audio/fixers/murphy_m16_offer_03.mp3",
+        "audio/fixers/murphy_m16_offer_04.mp3",
+        "audio/fixers/murphy_m16_offer_05.mp3",
+        "audio/fixers/murphy_m16_offer_06.mp3",
+        "audio/fixers/murphy_m16_offer_07.mp3",
+        "audio/fixers/murphy_m16_offer_08.mp3",
+        "",
+        "audio/fixers/murphy_m16_offer_10.mp3",
+        "audio/fixers/murphy_m16_offer_11.mp3",
+        "audio/fixers/murphy_m16_offer_12.mp3",
+        "audio/fixers/murphy_m16_offer_13.mp3",
+        "audio/fixers/murphy_m16_offer_14.mp3"
       ]
     },
     {
@@ -858,12 +1720,33 @@
         "monkhouse_done"
       ],
       "dialogue": [
-        "Don't speak to me about extraterrestrial artifacts - I'm sick of them! I nearly got killed on this rock because of my work.",
-        "Dr. Lemuel Monkhouse, xenoarchaeology. I didn't COME to Palan, young man - I was kidnapped and brought here by men who wanted my Steltek fragment. Thank God the bombing buried them with their interrogation compound.",
-        "Kidnapped. And they're still looking for you.",
-        "Thirty years I've given the Steltek. Show me your piece and I'll tell you what it is - but my instruments are at the Basra refinery, and I detest cramped quarters.",
-        "Someone with fur. You're saying Kilrathi.",
-        "Five thousand credits toward your expenses, and every answer I have. Though I should mention: someone else has been asking about me. Someone with FUR."
+        "Doctor Monkhouse?",
+        "Don't speak to me about extraterrestrial artifacts. I'm sick of them!",
+        "I haven't said a word about one.",
+        "You have the look. I nearly got killed on this rock because of my work.",
+        "...",
+        "Lemuel Monkhouse. Xenoarchaeology. Formerly of several institutions that no longer return my calls.",
+        "How did you end up on Palan?",
+        "I didn't COME to Palan, young man. I was brought.",
+        "Brought.",
+        "Kidnapped. By men who wanted my Steltek fragment.",
+        "Kidnapped. And they're still looking for you?",
+        "They are buried under their own interrogation compound. The bombing had one merciful outcome.",
+        "...",
+        "You may take a moment. Everyone does.",
+        "You said fragment. You have a piece of one.",
+        "Thirty years I've given the Steltek. Show me your piece and I'll tell you what it is.",
+        "Here.",
+        "...",
+        "Oh. Oh, my.",
+        "Doctor?",
+        "My instruments are at the Basra refinery, and I detest cramped quarters. Fly me there.",
+        "That's it? A lift?",
+        "Five thousand credits toward your expenses, and every answer I have.",
+        "Then why do you look nervous?",
+        "Because someone else has been asking about me. Someone with FUR.",
+        "Fur. You're saying Kilrathi.",
+        "I am saying we should leave promptly."
       ],
       "offer": "Fly Dr. Monkhouse to Basra. The direct route may be watched - the Kilrathi want him. 5,000 credits.",
       "accept_actions": [
@@ -873,7 +1756,28 @@
       "refuse_actions": [],
       "portrait": "portraits/monkhouse/_ref.png",
       "speaker": [
+        "pc",
         "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "",
+        "pc",
+        "",
+        "pc",
         "",
         "pc",
         "",
@@ -886,8 +1790,29 @@
         "audio/fixers/monkhouse_m17_offer_01.mp3",
         "audio/fixers/monkhouse_m17_offer_02.mp3",
         "audio/fixers/monkhouse_m17_offer_03.mp3",
-        "audio/fixers/monkhouse_m17_offer_04.mp3",
-        "audio/fixers/monkhouse_m17_offer_05.mp3"
+        "",
+        "audio/fixers/monkhouse_m17_offer_05.mp3",
+        "audio/fixers/monkhouse_m17_offer_06.mp3",
+        "audio/fixers/monkhouse_m17_offer_07.mp3",
+        "audio/fixers/monkhouse_m17_offer_08.mp3",
+        "audio/fixers/monkhouse_m17_offer_09.mp3",
+        "audio/fixers/monkhouse_m17_offer_10.mp3",
+        "audio/fixers/monkhouse_m17_offer_11.mp3",
+        "",
+        "audio/fixers/monkhouse_m17_offer_13.mp3",
+        "audio/fixers/monkhouse_m17_offer_14.mp3",
+        "audio/fixers/monkhouse_m17_offer_15.mp3",
+        "audio/fixers/monkhouse_m17_offer_16.mp3",
+        "",
+        "audio/fixers/monkhouse_m17_offer_18.mp3",
+        "audio/fixers/monkhouse_m17_offer_19.mp3",
+        "audio/fixers/monkhouse_m17_offer_20.mp3",
+        "audio/fixers/monkhouse_m17_offer_21.mp3",
+        "audio/fixers/monkhouse_m17_offer_22.mp3",
+        "audio/fixers/monkhouse_m17_offer_23.mp3",
+        "audio/fixers/monkhouse_m17_offer_24.mp3",
+        "audio/fixers/monkhouse_m17_offer_25.mp3",
+        "audio/fixers/monkhouse_m17_offer_26.mp3"
       ]
     },
     {
@@ -901,9 +1826,23 @@
         "monkhouse_done"
       ],
       "dialogue": [
-        "Extraordinary... EXTRAORDINARY. My fragment - look - it FITS yours. They were one device, split millennia ago.",
-        "Together they form a map, and something like a translation aid. The marked route runs past Rygannon, out into the unexplored frontier.",
-        "A proposal: join Exploratory Services at Rygannon - they run the only jump-capable survey net out there. Follow the map. I publish the findings, you keep whatever you find. Ask for Taryn Cross."
+        "Extraordinary. EXTRAORDINARY.",
+        "You've been at that bench for six hours.",
+        "My fragment -- look. Look here. It FITS yours.",
+        "...",
+        "They were one device, split millennia ago. Deliberately, I'd wager.",
+        "Why split it?",
+        "Because whoever did it wanted it hard to use. Together they form a map, and something like a translation aid.",
+        "A map to where?",
+        "The marked route runs past Rygannon, out into the unexplored frontier.",
+        "That's a long way to fly on a hunch.",
+        "It is not a hunch, it is a heading. And I have a proposal.",
+        "Go on.",
+        "Join Exploratory Services at Rygannon. They run the only jump-capable survey net out there.",
+        "And you get?",
+        "I publish the findings. You keep whatever you find. Ask for Taryn Cross.",
+        "Whatever I find.",
+        "Young man, if I am right about what is out there, you will not want to keep it either."
       ],
       "offer": "",
       "done_actions": [
@@ -912,10 +1851,44 @@
         "clear_flag:m17_delivered"
       ],
       "portrait": "portraits/monkhouse/_ref.png",
+      "speaker": [
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        ""
+      ],
+      "portrait_pc": "portraits/grayson/_ref.png",
       "voice": [
         "audio/fixers/monkhouse_m17_debrief_00.mp3",
         "audio/fixers/monkhouse_m17_debrief_01.mp3",
-        "audio/fixers/monkhouse_m17_debrief_02.mp3"
+        "audio/fixers/monkhouse_m17_debrief_02.mp3",
+        "",
+        "audio/fixers/monkhouse_m17_debrief_04.mp3",
+        "audio/fixers/monkhouse_m17_debrief_05.mp3",
+        "audio/fixers/monkhouse_m17_debrief_06.mp3",
+        "audio/fixers/monkhouse_m17_debrief_07.mp3",
+        "audio/fixers/monkhouse_m17_debrief_08.mp3",
+        "audio/fixers/monkhouse_m17_debrief_09.mp3",
+        "audio/fixers/monkhouse_m17_debrief_10.mp3",
+        "audio/fixers/monkhouse_m17_debrief_11.mp3",
+        "audio/fixers/monkhouse_m17_debrief_12.mp3",
+        "audio/fixers/monkhouse_m17_debrief_13.mp3",
+        "audio/fixers/monkhouse_m17_debrief_14.mp3",
+        "audio/fixers/monkhouse_m17_debrief_15.mp3",
+        "audio/fixers/monkhouse_m17_debrief_16.mp3"
       ]
     },
     {
@@ -930,9 +1903,19 @@
         "cross_1_done"
       ],
       "dialogue": [
-        "Taryn Cross, Exploratory Services. Monkhouse's wire said you'd come. Sign here - you're a survey contractor now.",
-        "First assignment: the Delta system. Four nav points, full sensor sweep at each. And what a coincidence - it's the first system on that map of yours.",
-        "Fair warning: the frontier pirates don't care for company. Ten thousand on completion."
+        "Taryn Cross, Exploratory Services. Monkhouse's wire said you'd come.",
+        "He tends to arrange things without asking.",
+        "He does. Sign here -- you're a survey contractor now.",
+        "That fast?",
+        "Out here paperwork is the only thing that moves fast. First assignment: the Delta system.",
+        "...",
+        "Four nav points, full sensor sweep at each.",
+        "And what a coincidence -- Delta's the first system on my map.",
+        "I noticed that too. I decided not to find it suspicious.",
+        "Generous of you.",
+        "Fair warning: the frontier pirates don't care for company.",
+        "They never do. Pay?",
+        "Ten thousand on completion. And bring the survey disc back intact -- the data's worth more than the ship."
       ],
       "offer": "Survey all four nav points in Delta, then report back. 10,000 credits.",
       "accept_actions": [
@@ -940,10 +1923,36 @@
       ],
       "refuse_actions": [],
       "portrait": "portraits/cross/_ref.png",
+      "speaker": [
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        ""
+      ],
+      "portrait_pc": "portraits/grayson/_ref.png",
       "voice": [
         "audio/fixers/cross_m18_offer_00.mp3",
         "audio/fixers/cross_m18_offer_01.mp3",
-        "audio/fixers/cross_m18_offer_02.mp3"
+        "audio/fixers/cross_m18_offer_02.mp3",
+        "audio/fixers/cross_m18_offer_03.mp3",
+        "audio/fixers/cross_m18_offer_04.mp3",
+        "",
+        "audio/fixers/cross_m18_offer_06.mp3",
+        "audio/fixers/cross_m18_offer_07.mp3",
+        "audio/fixers/cross_m18_offer_08.mp3",
+        "audio/fixers/cross_m18_offer_09.mp3",
+        "audio/fixers/cross_m18_offer_10.mp3",
+        "audio/fixers/cross_m18_offer_11.mp3",
+        "audio/fixers/cross_m18_offer_12.mp3"
       ]
     },
     {
@@ -961,8 +1970,13 @@
         "cross_1_done"
       ],
       "dialogue": [
-        "Telemetry checks out - four clean sweeps. The pirates you met are already in my report as 'local color'.",
-        "Ten thousand, as agreed. Rest up. Beta is next, and Beta has a problem."
+        "Telemetry checks out. Four clean sweeps.",
+        "There were pirates at the third point.",
+        "They're already in my report as local color.",
+        "Is that what we're calling them.",
+        "It's what the brass calls anything they don't want to fund a response to. Ten thousand, as agreed.",
+        "And next?",
+        "Rest up. Beta is next, and Beta has a problem."
       ],
       "offer": "",
       "done_actions": [
@@ -975,9 +1989,24 @@
         "clear_flag:m18_nav4"
       ],
       "portrait": "portraits/cross/_ref.png",
+      "speaker": [
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        ""
+      ],
+      "portrait_pc": "portraits/grayson/_ref.png",
       "voice": [
         "audio/fixers/cross_m18_debrief_00.mp3",
-        "audio/fixers/cross_m18_debrief_01.mp3"
+        "audio/fixers/cross_m18_debrief_01.mp3",
+        "audio/fixers/cross_m18_debrief_02.mp3",
+        "audio/fixers/cross_m18_debrief_03.mp3",
+        "audio/fixers/cross_m18_debrief_04.mp3",
+        "audio/fixers/cross_m18_debrief_05.mp3",
+        "audio/fixers/cross_m18_debrief_06.mp3"
       ]
     },
     {
@@ -992,9 +2021,17 @@
         "cross_2_done"
       ],
       "dialogue": [
-        "Survey Beta. And keep your eyes open - Captain Garrovick took a Centurion out that way three weeks ago and never reported back.",
+        "Survey Beta. Same pattern as Delta.",
+        "You said Beta has a problem.",
+        "Captain Garrovick took a Centurion out that way three weeks ago.",
+        "And never reported back.",
+        "Never reported back.",
         "Missing three weeks. You want a survey or a search party?",
-        "Garrovick is - was - our best pilot. Find him. Ten thousand, and Services covers the recovery bonus if he's alive."
+        "I want both, and I can only fund one.",
+        "...",
+        "Garrovick is -- was -- our best pilot. I've been careful with that tense for two weeks.",
+        "I'll look for him.",
+        "Ten thousand, and Services covers the recovery bonus if he's alive."
       ],
       "offer": "Survey Beta and find the overdue Captain Garrovick. 10,000 credits.",
       "accept_actions": [
@@ -1005,13 +2042,29 @@
       "speaker": [
         "",
         "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
         ""
       ],
       "portrait_pc": "portraits/grayson/_ref.png",
       "voice": [
         "audio/fixers/cross_m19_offer_00.mp3",
         "audio/fixers/cross_m19_offer_01.mp3",
-        "audio/fixers/cross_m19_offer_02.mp3"
+        "audio/fixers/cross_m19_offer_02.mp3",
+        "audio/fixers/cross_m19_offer_03.mp3",
+        "audio/fixers/cross_m19_offer_04.mp3",
+        "audio/fixers/cross_m19_offer_05.mp3",
+        "audio/fixers/cross_m19_offer_06.mp3",
+        "",
+        "audio/fixers/cross_m19_offer_08.mp3",
+        "audio/fixers/cross_m19_offer_09.mp3",
+        "audio/fixers/cross_m19_offer_10.mp3"
       ]
     },
     {
@@ -1026,8 +2079,19 @@
         "cross_2_done"
       ],
       "dialogue": [
-        "Your gun-camera footage... that was Garrovick's ship, and he fired first, and he was RAVING. What in the void does that to a man's mind?",
-        "You did what you had to. Ten thousand. But something out there broke him, pilot - and Gamma is deeper in."
+        "Well? Did you find him?",
+        "You should sit down.",
+        "...",
+        "Here's the gun-camera footage.",
+        "That's Garrovick's ship. That's his transponder.",
+        "He fired first.",
+        "He fired FIRST?",
+        "He was raving on an open channel. I don't think he knew what he was shooting at.",
+        "What in the void does that to a man's mind?",
+        "I've been asking myself that the whole way back.",
+        "You did what you had to. Ten thousand.",
+        "I don't want it.",
+        "Take it anyway. Something out there broke him, pilot -- and Gamma is deeper in."
       ],
       "offer": "",
       "done_actions": [
@@ -1036,9 +2100,36 @@
         "clear_flag:m19_active"
       ],
       "portrait": "portraits/cross/_ref.png",
+      "speaker": [
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        ""
+      ],
+      "portrait_pc": "portraits/grayson/_ref.png",
       "voice": [
         "audio/fixers/cross_m19_debrief_00.mp3",
-        "audio/fixers/cross_m19_debrief_01.mp3"
+        "audio/fixers/cross_m19_debrief_01.mp3",
+        "",
+        "audio/fixers/cross_m19_debrief_03.mp3",
+        "audio/fixers/cross_m19_debrief_04.mp3",
+        "audio/fixers/cross_m19_debrief_05.mp3",
+        "audio/fixers/cross_m19_debrief_06.mp3",
+        "audio/fixers/cross_m19_debrief_07.mp3",
+        "audio/fixers/cross_m19_debrief_08.mp3",
+        "audio/fixers/cross_m19_debrief_09.mp3",
+        "audio/fixers/cross_m19_debrief_10.mp3",
+        "audio/fixers/cross_m19_debrief_11.mp3",
+        "audio/fixers/cross_m19_debrief_12.mp3"
       ]
     },
     {
@@ -1053,9 +2144,17 @@
         "cross_3_done"
       ],
       "dialogue": [
-        "Whatever unmade Garrovick is past Beta. Survey Gamma - four navs, full sweep - and find out what.",
-        "Intelligence flagged Kilrathi drive signatures in the area. A LOT of them. Conserve your missiles for the last nav. Ten thousand.",
-        "A corvette guarding an empty system."
+        "Whatever unmade Garrovick is past Beta.",
+        "You've decided that's a fact.",
+        "I've decided it's the only lead. Survey Gamma -- four navs, full sweep.",
+        "And find out what.",
+        "And find out what. There's more.",
+        "There always is.",
+        "Intelligence flagged Kilrathi drive signatures in the area. A lot of them.",
+        "A corvette guarding an empty system.",
+        "We don't know that yet. That's the job.",
+        "...",
+        "Conserve your missiles for the last nav. Ten thousand."
       ],
       "offer": "Survey Gamma's four nav points. Expect heavy Kilrathi resistance. 10,000 credits.",
       "accept_actions": [
@@ -1065,14 +2164,30 @@
       "portrait": "portraits/cross/_ref.png",
       "speaker": [
         "",
+        "pc",
         "",
-        "pc"
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        ""
       ],
       "portrait_pc": "portraits/grayson/_ref.png",
       "voice": [
         "audio/fixers/cross_m20_offer_00.mp3",
         "audio/fixers/cross_m20_offer_01.mp3",
-        "audio/fixers/cross_m20_offer_02.mp3"
+        "audio/fixers/cross_m20_offer_02.mp3",
+        "audio/fixers/cross_m20_offer_03.mp3",
+        "audio/fixers/cross_m20_offer_04.mp3",
+        "audio/fixers/cross_m20_offer_05.mp3",
+        "audio/fixers/cross_m20_offer_06.mp3",
+        "audio/fixers/cross_m20_offer_07.mp3",
+        "audio/fixers/cross_m20_offer_08.mp3",
+        "",
+        "audio/fixers/cross_m20_offer_10.mp3"
       ]
     },
     {
@@ -1090,8 +2205,16 @@
         "cross_3_done"
       ],
       "dialogue": [
-        "A Kamekh. They posted a CORVETTE to a system with nothing in it. The cats aren't surveying, pilot - they're guarding the road.",
-        "Ten thousand. One system left on your map: Delta Prime. Whatever everyone is so interested in lives there."
+        "Did you complete the run?",
+        "All four. And I found your Kilrathi.",
+        "How many?",
+        "A Kamekh. They posted a CORVETTE to a system with nothing in it.",
+        "...",
+        "The cats aren't surveying, pilot. They're guarding the road.",
+        "The road to what?",
+        "One system left on your map. Whatever everyone is so interested in lives there.",
+        "Delta Prime.",
+        "Ten thousand. Go get some sleep first -- that's an order from your employer."
       ],
       "offer": "",
       "done_actions": [
@@ -1104,9 +2227,30 @@
         "clear_flag:m20_nav4"
       ],
       "portrait": "portraits/cross/_ref.png",
+      "speaker": [
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "",
+        "pc",
+        "",
+        "pc",
+        ""
+      ],
+      "portrait_pc": "portraits/grayson/_ref.png",
       "voice": [
         "audio/fixers/cross_m20_debrief_00.mp3",
-        "audio/fixers/cross_m20_debrief_01.mp3"
+        "audio/fixers/cross_m20_debrief_01.mp3",
+        "audio/fixers/cross_m20_debrief_02.mp3",
+        "audio/fixers/cross_m20_debrief_03.mp3",
+        "",
+        "audio/fixers/cross_m20_debrief_05.mp3",
+        "audio/fixers/cross_m20_debrief_06.mp3",
+        "audio/fixers/cross_m20_debrief_07.mp3",
+        "audio/fixers/cross_m20_debrief_08.mp3",
+        "audio/fixers/cross_m20_debrief_09.mp3"
       ]
     },
     {
@@ -1121,8 +2265,19 @@
         "cross_done"
       ],
       "dialogue": [
-        "Last one: Delta Prime. Long-range scopes show a single anomalous return - metallic, kilometers long, cold as the void.",
-        "Survey it and come home. Ten thousand. And pilot... Garrovick's last logged course was Delta Prime. Whatever you find - do not touch it."
+        "Last one. Delta Prime.",
+        "And then the map's finished.",
+        "Long-range scopes show a single anomalous return.",
+        "Anomalous how?",
+        "Metallic. Kilometers long. Cold as the void.",
+        "Kilometers.",
+        "I had the figure checked three times. Survey it and come home.",
+        "Ten thousand?",
+        "Ten thousand. And pilot -- one more thing.",
+        "Go ahead.",
+        "Garrovick's last logged course was Delta Prime.",
+        "...",
+        "Whatever you find out there -- do not touch it."
       ],
       "offer": "Survey the Delta Prime anomaly and return. 10,000 credits.",
       "accept_actions": [
@@ -1130,9 +2285,36 @@
       ],
       "refuse_actions": [],
       "portrait": "portraits/cross/_ref.png",
+      "speaker": [
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        ""
+      ],
+      "portrait_pc": "portraits/grayson/_ref.png",
       "voice": [
         "audio/fixers/cross_m21_offer_00.mp3",
-        "audio/fixers/cross_m21_offer_01.mp3"
+        "audio/fixers/cross_m21_offer_01.mp3",
+        "audio/fixers/cross_m21_offer_02.mp3",
+        "audio/fixers/cross_m21_offer_03.mp3",
+        "audio/fixers/cross_m21_offer_04.mp3",
+        "audio/fixers/cross_m21_offer_05.mp3",
+        "audio/fixers/cross_m21_offer_06.mp3",
+        "audio/fixers/cross_m21_offer_07.mp3",
+        "audio/fixers/cross_m21_offer_08.mp3",
+        "audio/fixers/cross_m21_offer_09.mp3",
+        "audio/fixers/cross_m21_offer_10.mp3",
+        "",
+        "audio/fixers/cross_m21_offer_12.mp3"
       ]
     },
     {
@@ -1153,10 +2335,19 @@
         "goodin_done"
       ],
       "dialogue": [
-        "Sandra Goodin, attache to Admiral Terrell, Confederation Navy. Sit down, pilot. That was not a request.",
-        "Every long-range array in the sector is tracking a green energy signature, and every track terminates on YOUR transponder. The Admiral commands this sector from Perry Naval Base. He wants a word.",
+        "Sandra Goodin, attache to Admiral Terrell, Confederation Navy.",
+        "I'm just passing through.",
+        "Sit down, pilot. That was not a request.",
+        "...",
+        "Every long-range array in the sector is tracking a green energy signature.",
+        "And?",
+        "Every track terminates on YOUR transponder.",
+        "That's not possible.",
+        "It's on nine separate arrays. Argue with them, not with me.",
+        "Am I under arrest?",
+        "If you were, we'd be having this conversation somewhere with worse lighting.",
         "The Admiral wants a word. Do I get a choice?",
-        "Get to Perry. Alive, preferably - the paperwork is shorter."
+        "He commands this sector from Perry Naval Base. Get there. Alive, preferably -- the paperwork is shorter."
       ],
       "offer": "Report to Admiral Terrell at Perry Naval Base. No pay - serving the Confederation is its own reward, citizen.",
       "accept_actions": [
@@ -1165,6 +2356,15 @@
       "refuse_actions": [],
       "speaker": [
         "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
         "",
         "pc",
         ""
@@ -1174,7 +2374,16 @@
         "audio/fixers/goodin_offer_00.mp3",
         "audio/fixers/goodin_offer_01.mp3",
         "audio/fixers/goodin_offer_02.mp3",
-        "audio/fixers/goodin_offer_03.mp3"
+        "",
+        "audio/fixers/goodin_offer_04.mp3",
+        "audio/fixers/goodin_offer_05.mp3",
+        "audio/fixers/goodin_offer_06.mp3",
+        "audio/fixers/goodin_offer_07.mp3",
+        "audio/fixers/goodin_offer_08.mp3",
+        "audio/fixers/goodin_offer_09.mp3",
+        "audio/fixers/goodin_offer_10.mp3",
+        "audio/fixers/goodin_offer_11.mp3",
+        "audio/fixers/goodin_offer_12.mp3"
       ]
     },
     {
@@ -1189,11 +2398,23 @@
         "terrell_done"
       ],
       "dialogue": [
-        "So YOU'RE the privateer who dragged a Kilrathi secret weapon across half my sector. Don't argue - what else could it be? It's green, it's hostile, and it doesn't die. That's Kilrathi engineering to the rivet.",
-        "It's not Kilrathi. Whatever it is, it's older than that.",
-        "Commodore Reismann has assembled a fleet at Blockade Point Tango: two Paradigms, two Broadswords. Far enough out to keep civilian casualties down, and more than enough firepower to swat one drone.",
+        "So YOU'RE the privateer who dragged a Kilrathi secret weapon across half my sector.",
+        "It isn't Kilrathi.",
+        "Don't argue -- what else could it be?",
+        "Whatever it is, it's older than that. A lot older.",
+        "It's green, it's hostile, and it doesn't die. That's Kilrathi engineering to the rivet.",
+        "It's Steltek. There's a library record and a xenoarchaeologist who'll swear to it.",
+        "I have read your file, and I have read his. I'm not interested in archaeology, I'm interested in the fact that it follows you.",
+        "...",
+        "You don't deny that part.",
+        "No. I don't.",
+        "Good. Then we can do business. Commodore Reismann has assembled a fleet at Blockade Point Tango.",
+        "How many?",
+        "Two Paradigms, two Broadswords. Far enough out to keep civilian casualties down.",
         "So I'm bait. Say it plainly, Admiral.",
-        "Your job is simple, privateer. The thing follows you - so LEAD it to Tango and let the navy do what the navy does. Thirty thousand credits when it's confirmed destroyed."
+        "Your job is simple, privateer. The thing follows you -- so LEAD it to Tango and let the navy do what the navy does.",
+        "And if the navy doesn't do it?",
+        "Then you'll have died somewhere useful, which is more than most people manage. Thirty thousand credits when it's confirmed destroyed."
       ],
       "offer": "Lead the drone to the fleet at Blockade Point Tango. 30,000 credits on its confirmed destruction.",
       "accept_actions": [
@@ -1206,6 +2427,18 @@
         "pc",
         "",
         "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
         ""
       ],
       "portrait_pc": "portraits/grayson/_ref.png",
@@ -1214,7 +2447,19 @@
         "audio/fixers/terrell_offer_01.mp3",
         "audio/fixers/terrell_offer_02.mp3",
         "audio/fixers/terrell_offer_03.mp3",
-        "audio/fixers/terrell_offer_04.mp3"
+        "audio/fixers/terrell_offer_04.mp3",
+        "audio/fixers/terrell_offer_05.mp3",
+        "audio/fixers/terrell_offer_06.mp3",
+        "",
+        "audio/fixers/terrell_offer_08.mp3",
+        "audio/fixers/terrell_offer_09.mp3",
+        "audio/fixers/terrell_offer_10.mp3",
+        "audio/fixers/terrell_offer_11.mp3",
+        "audio/fixers/terrell_offer_12.mp3",
+        "audio/fixers/terrell_offer_13.mp3",
+        "audio/fixers/terrell_offer_14.mp3",
+        "audio/fixers/terrell_offer_15.mp3",
+        "audio/fixers/terrell_offer_16.mp3"
       ]
     },
     {
@@ -1229,10 +2474,25 @@
         "terrell_done"
       ],
       "dialogue": [
-        "Reismann's after-action report is... creative. It says the fleet 'provided a decisive containment perimeter' while a lone privateer did all the shooting. With an alien gun. That my analysts insist cannot exist.",
+        "Reismann's after-action report is... creative.",
+        "I'll bet.",
+        "It says the fleet provided a decisive containment perimeter.",
+        "The fleet was scrap in ninety seconds.",
+        "It also says a lone privateer did all the shooting. With an alien gun. That my analysts insist cannot exist.",
+        "It exists. It's bolted to my ship.",
+        "I know it exists, son. I'm deciding what the record says it was.",
+        "...",
         "You're an insubordinate smart-ass and one of the best pilots I've ever seen. Say the word and an officer's commission is yours.",
-        "No? Then you're getting the Confederation Medal of Freedom whether you like it or not. Officially, a Kilrathi prototype was destroyed by naval action at Blockade Point Tango.",
-        "Unofficially - here's your thirty thousand. I'm sure you're headed for trouble, and I'm sure you probably deserve it. Good luck anyway, pilot."
+        "I've spent this whole run getting out from under people who owned me.",
+        "That's a no, then.",
+        "That's a no.",
+        "Then you're getting the Confederation Medal of Freedom whether you like it or not.",
+        "And officially?",
+        "Officially, a Kilrathi prototype was destroyed by naval action at Blockade Point Tango.",
+        "Unofficially?",
+        "Unofficially -- here's your thirty thousand. I'm sure you're headed for trouble, and I'm sure you probably deserve it.",
+        "Admiral.",
+        "Good luck anyway, pilot."
       ],
       "offer": "",
       "done_actions": [
@@ -1243,11 +2503,48 @@
         "clear_flag:drone_active"
       ],
       "portrait": "portraits/terrell/_ref.png",
+      "speaker": [
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        ""
+      ],
+      "portrait_pc": "portraits/grayson/_ref.png",
       "voice": [
         "audio/fixers/terrell_debrief_00.mp3",
         "audio/fixers/terrell_debrief_01.mp3",
         "audio/fixers/terrell_debrief_02.mp3",
-        "audio/fixers/terrell_debrief_03.mp3"
+        "audio/fixers/terrell_debrief_03.mp3",
+        "audio/fixers/terrell_debrief_04.mp3",
+        "audio/fixers/terrell_debrief_05.mp3",
+        "audio/fixers/terrell_debrief_06.mp3",
+        "",
+        "audio/fixers/terrell_debrief_08.mp3",
+        "audio/fixers/terrell_debrief_09.mp3",
+        "audio/fixers/terrell_debrief_10.mp3",
+        "audio/fixers/terrell_debrief_11.mp3",
+        "audio/fixers/terrell_debrief_12.mp3",
+        "audio/fixers/terrell_debrief_13.mp3",
+        "audio/fixers/terrell_debrief_14.mp3",
+        "audio/fixers/terrell_debrief_15.mp3",
+        "audio/fixers/terrell_debrief_16.mp3",
+        "audio/fixers/terrell_debrief_17.mp3",
+        "audio/fixers/terrell_debrief_18.mp3"
       ]
     },
     {
@@ -1261,19 +2558,64 @@
         "terrell_epilogue_seen"
       ],
       "dialogue": [
-        "Still here? Fine. You want to know what the official history will say, don't you.",
-        "Goodin drafted three versions. One credits the fleet. One credits 'classified assets'. And one - her personal favorite - credits 'an unnamed civilian contractor with an unregistered antique'.",
-        "I signed the first one. The Confederation does not lose to a drone, privateer - and it CERTAINLY does not get rescued from one by a freelancer behind on his ship payments. Now get out of my office. And... good hunting."
+        "Admiral.",
+        "Still here? Fine.",
+        "I want to know what the official history will say.",
+        "Of course you do. Goodin drafted three versions.",
+        "Three.",
+        "One credits the fleet. One credits classified assets.",
+        "And the third?",
+        "Her personal favorite. It credits an unnamed civilian contractor with an unregistered antique.",
+        "...",
+        "I signed the first one.",
+        "Naturally.",
+        "The Confederation does not lose to a drone, privateer. And it CERTAINLY does not get rescued from one by a freelancer behind on his ship payments.",
+        "So none of it happened.",
+        "You happened. There just isn't a form for it.",
+        "...",
+        "Now get out of my office. And -- good hunting."
       ],
       "offer": "",
       "done_actions": [
         "set_flag:terrell_epilogue_seen"
       ],
       "portrait": "portraits/terrell/_ref.png",
+      "speaker": [
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        "pc",
+        ""
+      ],
+      "portrait_pc": "portraits/grayson/_ref.png",
       "voice": [
         "audio/fixers/terrell_epilogue_00.mp3",
         "audio/fixers/terrell_epilogue_01.mp3",
-        "audio/fixers/terrell_epilogue_02.mp3"
+        "audio/fixers/terrell_epilogue_02.mp3",
+        "audio/fixers/terrell_epilogue_03.mp3",
+        "audio/fixers/terrell_epilogue_04.mp3",
+        "audio/fixers/terrell_epilogue_05.mp3",
+        "audio/fixers/terrell_epilogue_06.mp3",
+        "audio/fixers/terrell_epilogue_07.mp3",
+        "",
+        "audio/fixers/terrell_epilogue_09.mp3",
+        "audio/fixers/terrell_epilogue_10.mp3",
+        "audio/fixers/terrell_epilogue_11.mp3",
+        "audio/fixers/terrell_epilogue_12.mp3",
+        "audio/fixers/terrell_epilogue_13.mp3",
+        "",
+        "audio/fixers/terrell_epilogue_15.mp3"
       ]
     }
   ]
