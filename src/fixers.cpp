@@ -253,6 +253,11 @@ bool is_beat(const std::string& text) {
     return !text.empty();
 }
 
+// Breathing room after a voice clip ends, before the next line starts. Long
+// enough that delivery doesn't run together, short enough to keep the scene
+// moving.
+constexpr float k_post_clip_beat = 0.45f;
+
 // ~14 chars/sec is a comfortable subtitle rate; clamp so one-liners still
 // linger and long paragraphs don't overstay if their clip is missing.
 // Silent beats get a short fixed hold -- long enough to read as a reaction,
@@ -265,12 +270,20 @@ float read_time_for(const std::string& text) {
 // True once the current paragraph has had its say.
 bool paragraph_done() {
     float l = 0.0f, r = 0.0f;
-    if (g_voice && audio::voice_gains(g_voice, &l, &r))
-        return false;                       // clip still playing
-    if (g_voice) {                          // clip finished -> small beat
-        return g_para_elapsed >= 0.35f;
+    if (g_voice) {
+        if (audio::voice_gains(g_voice, &l, &r))
+            return false;                   // clip still playing
+        // The clip has finished. Retire the id NOW and restart the clock, so
+        // the trailing pause is measured from the end of the audio rather
+        // than from the start of the line (g_para_elapsed is already several
+        // seconds by this point). Without this the beat is zero-length and
+        // lines snap past each other the instant the voice stops.
+        g_voice = 0;
+        g_para_elapsed = 0.0f;
+        g_para_hold = k_post_clip_beat;
+        return false;
     }
-    return g_para_elapsed >= g_para_hold;   // unvoiced: read-time
+    return g_para_elapsed >= g_para_hold;   // unvoiced (or post-clip beat)
 }
 
 const TextureSlot& portrait_texture(const std::string& rel_path) {

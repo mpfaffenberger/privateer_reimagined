@@ -169,6 +169,20 @@ int main() {
         check(t && t->accept_dialogue.empty() && t->refuse_dialogue.empty() &&
                   t->prop.empty(),
               "epilogue/prop: absent fields default empty (old entries valid)");
+
+        // Every entry that shows a REFUSE button should have something to say
+        // when it is pressed. Silently closing the panel is the least
+        // interesting possible outcome of turning down a job.
+        int offers = 0, refusals = 0;
+        for (const char* id : { "sandoval_offer" }) {
+            const fixers::FixerDef* e = fixers::find(id);
+            if (e && !e->offer_text.empty()) {
+                ++offers;
+                if (!e->refuse_dialogue.empty()) ++refusals;
+            }
+        }
+        check(offers > 0 && offers == refusals,
+              "every offer in the test table has a refuse epilogue");
         check(s && s->portrait == "portraits/sandoval/_ref.png",
               "portrait: parsed when present");
         check(s && s->voice.size() == 1 &&

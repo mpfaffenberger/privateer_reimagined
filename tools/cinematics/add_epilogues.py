@@ -265,6 +265,206 @@ EPILOGUES: dict[str, dict[str, list[tuple[str, str]]]] = {
  ],
 },
 
+"tayla_m03_offer": {
+ "accept": [
+  (F, "Good. It's loaded in the false floor, not the hold."),
+  (P, "You loaded it before I said yes."),
+  (F, "I loaded it before I asked. Burn past the militia and don't be clever."),
+ ],
+ "refuse": [
+  (F, "Brilliance scares you."),
+  (P, "Militia scanners scare me. There's a difference."),
+  (F, "Not to a customs officer there isn't."),
+  (P, "..."),
+  (F, "Come back when you've decided which kind of pilot you are."),
+ ],
+},
+
+"tayla_m04_offer": {
+ "accept": [
+  (F, "Twenty-five units, straight to the capital. You're moving up."),
+  (P, "That's not the word I'd use."),
+  (F, "It's the word your account balance would use. Go."),
+ ],
+ "refuse": [
+  (F, "The bribes are already paid, $CS."),
+  (P, "Then you're out the money."),
+  (F, "I'm out the money either way. What I'm short of is a pilot."),
+  (P, "..."),
+  (F, "Find your nerve and come back. The route doesn't stay bought forever."),
+ ],
+},
+
+"lynch_m07_offer": {
+ "accept": [
+  (F, "Splendid. The crates are aboard."),
+  (P, "Of course they are."),
+  (F, "Do give Mr. Kroiz my regards, should he insist on introducing himself."),
+ ],
+ "refuse": [
+  (F, "You'll find your access to the investigation... severely impeded."),
+  (P, "That's a threat."),
+  (F, "That is a monopoly. I have the only people in this sector who can read "
+      "your artifact, and they answer to me."),
+  (P, "..."),
+  (F, "Mark my words. You'll be back."),
+ ],
+},
+
+"lynch_m09_offer": {
+ "accept": [
+  (F, "Good. Liverpool, then. Mr. Smythe knows your ship's registry."),
+  (P, "He knows my registry."),
+  (F, "I am thorough, Captain. It is why you are still alive."),
+ ],
+ "refuse": [
+  (F, "After everything, you balk at a passenger."),
+  (P, "After everything, I've stopped believing your job descriptions."),
+  (F, "..."),
+  (F, "Smythe has what you want. Not I -- him. Refuse me and the answer stays "
+      "on a rock in Newcastle."),
+  (P, "Then it stays there."),
+  (F, "You'll be back, Captain. You always are."),
+ ],
+},
+
+"masterson_m11_offer": {
+ "accept": [
+  (F, "Second installment, pending. Do find the wretched thing."),
+  (P, "It's a converted Galaxy. How hidden can it be?"),
+  (F, "It has been hidden for six weeks. Prove me wrong."),
+ ],
+ "refuse": [
+  (F, "Then our arrangement stalls at one installment of four."),
+  (P, "I noticed."),
+  (F, "They are draining our mainframe as we speak. Every hour costs the "
+      "university more than your fee."),
+  (P, "..."),
+  (F, "The offer remains. So, regrettably, does the lock on the archive."),
+ ],
+},
+
+"masterson_m12_offer": {
+ "accept": [
+  (F, "Brave. Or mercenary. I have stopped distinguishing."),
+  (P, "Both pay the same."),
+  (F, "Indeed. The Forge lands first. Do try to as well."),
+ ],
+ "refuse": [
+  (F, "You object to being the target."),
+  (P, "I object to being told about it afterward. You told me first, so "
+      "that's something."),
+  (F, "Then object and accept, like a professional."),
+  (P, "Not today."),
+  (F, "..."),
+  (F, "Three installments remain outstanding. Good day."),
+ ],
+},
+
+"masterson_m13_offer": {
+ "accept": [
+  (F, "The last one. I confess I did not expect you to reach it."),
+  (P, "Neither did I."),
+  (F, "Bring her home and the archive is yours. My word, for whatever you "
+      "judge it to be worth."),
+ ],
+ "refuse": [
+  (F, "One favor from the archive and you walk away."),
+  (P, "That freighter's plating would embarrass a shuttle. Your words."),
+  (F, "My words, and still true. That is why I need someone competent."),
+  (P, "..."),
+  (F, "Three installments paid, one owed, and nothing to show. Think about "
+      "that on your way out."),
+ ],
+},
+
+"murphy_m15_offer": {
+ "accept": [
+  (F, "Good. Same field, worse company."),
+  (P, "I'll manage."),
+  (F, "They said that too, ace. Watch the Centurions -- they fly like they "
+      "mean to retire."),
+ ],
+ "refuse": [
+  (F, "Aces put you off?"),
+  (P, "Ten thousand for player-grade hulls put me off."),
+  (F, "I told you what's in the jar. I can't conjure more by being charming."),
+  (P, "..."),
+  (F, "Come back if the arithmetic improves. It won't, but come back anyway."),
+ ],
+},
+
+"murphy_m16_offer": {
+ "accept": [
+  (F, "Then it's tonight. I'll tell the Talons."),
+  (P, "Tell them to stay behind me."),
+  (F, "I'll tell them. They won't listen -- it's their planet down there."),
+ ],
+ "refuse": [
+  (F, "..."),
+  (F, "We go anyway. With you or without you."),
+  (P, "Two volunteers and no heavy support. That's not an assault, it's a "
+      "funeral."),
+  (F, "It's the only one we can afford."),
+  (P, "..."),
+  (F, "If you change your mind, we launch at the next shift change. After "
+      "that there won't be anyone left to launch with."),
+ ],
+},
+
+"cross_m18_offer": {
+ "accept": [
+  (F, "Welcome to Exploratory Services. Try not to make me regret the "
+      "paperwork."),
+  (P, "No promises."),
+  (F, "Four navs, full sweep. Bring the disc back and we'll talk about Beta."),
+ ],
+ "refuse": [
+  (F, "Second thoughts already?"),
+  (P, "It's the first system on a map that's gotten everyone who held it "
+      "killed."),
+  (F, "..."),
+  (F, "That's fair. It's also the only way to find out why."),
+  (P, "..."),
+  (F, "I'll keep the contract open. Frontier work doesn't attract a queue."),
+ ],
+},
+
+"cross_m20_offer": {
+ "accept": [
+  (F, "Thank you. I'll flag the Kilrathi signatures to Fleet, for all the "
+      "good it does."),
+  (P, "They won't act on it."),
+  (F, "They will not. Conserve your missiles for the last nav."),
+ ],
+ "refuse": [
+  (F, "Kilrathi put you off."),
+  (P, "A lot of Kilrathi put me off."),
+  (F, "Then we never learn what broke Garrovick, and the next pilot who flies "
+      "that route finds out the same way he did."),
+  (P, "..."),
+  (F, "That was unfair of me. The contract's open when you want it."),
+ ],
+},
+
+"cross_m21_offer": {
+ "accept": [
+  (F, "Last one. Then this sector's charted and we can all go home."),
+  (P, "You don't sound convinced."),
+  (F, "I'm not. Survey it and come home, $CS. Don't touch anything."),
+ ],
+ "refuse": [
+  (F, "One nav point. That's all that's left."),
+  (P, "One nav point with something kilometers long sitting cold in it, on "
+      "the heading that took your best pilot's mind."),
+  (F, "..."),
+  (F, "When you put it that way I'd refuse it myself."),
+  (P, "..."),
+  (F, "But somebody's going to fly it eventually. I'd rather it were someone "
+      "who's read the file."),
+ ],
+},
+
 "goodin_offer": {
  "accept": [
   (F, "Sensible. I'll signal ahead."),

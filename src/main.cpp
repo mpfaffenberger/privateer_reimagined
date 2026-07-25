@@ -1692,6 +1692,11 @@ void build_system_scene(bool first_time) {
                              id.c_str(), bs.base_id.c_str());
                 return;
             }
+            // NOTE: this deliberately bypasses the Bar panel's post-decision
+            // exchange and applies the outcome immediately. /fixer is the
+            // automation seam -- a scripted run or agentic judge wants the
+            // state change, not six lines of voiced epilogue. Players get the
+            // full scene through the UI path in fixers.cpp.
             if      (verb == "accept") fixers::accept(*f, g.player);
             else if (verb == "refuse") fixers::refuse(*f, g.player);
             else if (verb == "done")   fixers::dialogue_done(*f, g.player);

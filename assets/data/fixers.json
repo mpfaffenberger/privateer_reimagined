@@ -551,6 +551,42 @@
         "audio/fixers/tayla_m03_offer_12.mp3",
         "audio/fixers/tayla_m03_offer_13.mp3",
         "audio/fixers/tayla_m03_offer_14.mp3"
+      ],
+      "accept_dialogue": [
+        "Good. It's loaded in the false floor, not the hold.",
+        "You loaded it before I said yes.",
+        "I loaded it before I asked. Burn past the militia and don't be clever."
+      ],
+      "accept_speaker": [
+        "",
+        "pc",
+        ""
+      ],
+      "refuse_dialogue": [
+        "Brilliance scares you.",
+        "Militia scanners scare me. There's a difference.",
+        "Not to a customs officer there isn't.",
+        "...",
+        "Come back when you've decided which kind of pilot you are."
+      ],
+      "refuse_speaker": [
+        "",
+        "pc",
+        "",
+        "pc",
+        ""
+      ],
+      "accept_voice": [
+        "audio/fixers/tayla_m03_offer_accept_00.mp3",
+        "audio/fixers/tayla_m03_offer_accept_01.mp3",
+        "audio/fixers/tayla_m03_offer_accept_02.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/tayla_m03_offer_refuse_00.mp3",
+        "audio/fixers/tayla_m03_offer_refuse_01.mp3",
+        "audio/fixers/tayla_m03_offer_refuse_02.mp3",
+        "",
+        "audio/fixers/tayla_m03_offer_refuse_04.mp3"
       ]
     },
     {
@@ -652,6 +688,42 @@
         "audio/fixers/tayla_m04_offer_08.mp3",
         "audio/fixers/tayla_m04_offer_09.mp3",
         "audio/fixers/tayla_m04_offer_10.mp3"
+      ],
+      "accept_dialogue": [
+        "Twenty-five units, straight to the capital. You're moving up.",
+        "That's not the word I'd use.",
+        "It's the word your account balance would use. Go."
+      ],
+      "accept_speaker": [
+        "",
+        "pc",
+        ""
+      ],
+      "refuse_dialogue": [
+        "The bribes are already paid, $CS.",
+        "Then you're out the money.",
+        "I'm out the money either way. What I'm short of is a pilot.",
+        "...",
+        "Find your nerve and come back. The route doesn't stay bought forever."
+      ],
+      "refuse_speaker": [
+        "",
+        "pc",
+        "",
+        "pc",
+        ""
+      ],
+      "accept_voice": [
+        "audio/fixers/tayla_m04_offer_accept_00.mp3",
+        "audio/fixers/tayla_m04_offer_accept_01.mp3",
+        "audio/fixers/tayla_m04_offer_accept_02.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/tayla_m04_offer_refuse_00.mp3",
+        "audio/fixers/tayla_m04_offer_refuse_01.mp3",
+        "audio/fixers/tayla_m04_offer_refuse_02.mp3",
+        "",
+        "audio/fixers/tayla_m04_offer_refuse_04.mp3"
       ]
     },
     {
@@ -1188,6 +1260,42 @@
         "audio/fixers/lynch_m07_offer_12.mp3",
         "audio/fixers/lynch_m07_offer_13.mp3",
         "audio/fixers/lynch_m07_offer_14.mp3"
+      ],
+      "accept_dialogue": [
+        "Splendid. The crates are aboard.",
+        "Of course they are.",
+        "Do give Mr. Kroiz my regards, should he insist on introducing himself."
+      ],
+      "accept_speaker": [
+        "",
+        "pc",
+        ""
+      ],
+      "refuse_dialogue": [
+        "You'll find your access to the investigation... severely impeded.",
+        "That's a threat.",
+        "That is a monopoly. I have the only people in this sector who can read your artifact, and they answer to me.",
+        "...",
+        "Mark my words. You'll be back."
+      ],
+      "refuse_speaker": [
+        "",
+        "pc",
+        "",
+        "pc",
+        ""
+      ],
+      "accept_voice": [
+        "audio/fixers/lynch_m07_offer_accept_00.mp3",
+        "audio/fixers/lynch_m07_offer_accept_01.mp3",
+        "audio/fixers/lynch_m07_offer_accept_02.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/lynch_m07_offer_refuse_00.mp3",
+        "audio/fixers/lynch_m07_offer_refuse_01.mp3",
+        "audio/fixers/lynch_m07_offer_refuse_02.mp3",
+        "",
+        "audio/fixers/lynch_m07_offer_refuse_04.mp3"
       ]
     },
     {
@@ -1387,6 +1495,45 @@
         "audio/fixers/lynch_m09_offer_12.mp3",
         "audio/fixers/lynch_m09_offer_13.mp3",
         "audio/fixers/lynch_m09_offer_14.mp3"
+      ],
+      "accept_dialogue": [
+        "Good. Liverpool, then. Mr. Smythe knows your ship's registry.",
+        "He knows my registry.",
+        "I am thorough, Captain. It is why you are still alive."
+      ],
+      "accept_speaker": [
+        "",
+        "pc",
+        ""
+      ],
+      "refuse_dialogue": [
+        "After everything, you balk at a passenger.",
+        "After everything, I've stopped believing your job descriptions.",
+        "...",
+        "Smythe has what you want. Not I -- him. Refuse me and the answer stays on a rock in Newcastle.",
+        "Then it stays there.",
+        "You'll be back, Captain. You always are."
+      ],
+      "refuse_speaker": [
+        "",
+        "pc",
+        "",
+        "",
+        "pc",
+        ""
+      ],
+      "accept_voice": [
+        "audio/fixers/lynch_m09_offer_accept_00.mp3",
+        "audio/fixers/lynch_m09_offer_accept_01.mp3",
+        "audio/fixers/lynch_m09_offer_accept_02.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/lynch_m09_offer_refuse_00.mp3",
+        "audio/fixers/lynch_m09_offer_refuse_01.mp3",
+        "",
+        "audio/fixers/lynch_m09_offer_refuse_03.mp3",
+        "audio/fixers/lynch_m09_offer_refuse_04.mp3",
+        "audio/fixers/lynch_m09_offer_refuse_05.mp3"
       ]
     },
     {
@@ -1570,6 +1717,42 @@
         "audio/fixers/masterson_m11_offer_08.mp3",
         "audio/fixers/masterson_m11_offer_09.mp3",
         "audio/fixers/masterson_m11_offer_10.mp3"
+      ],
+      "accept_dialogue": [
+        "Second installment, pending. Do find the wretched thing.",
+        "It's a converted Galaxy. How hidden can it be?",
+        "It has been hidden for six weeks. Prove me wrong."
+      ],
+      "accept_speaker": [
+        "",
+        "pc",
+        ""
+      ],
+      "refuse_dialogue": [
+        "Then our arrangement stalls at one installment of four.",
+        "I noticed.",
+        "They are draining our mainframe as we speak. Every hour costs the university more than your fee.",
+        "...",
+        "The offer remains. So, regrettably, does the lock on the archive."
+      ],
+      "refuse_speaker": [
+        "",
+        "pc",
+        "",
+        "pc",
+        ""
+      ],
+      "accept_voice": [
+        "audio/fixers/masterson_m11_offer_accept_00.mp3",
+        "audio/fixers/masterson_m11_offer_accept_01.mp3",
+        "audio/fixers/masterson_m11_offer_accept_02.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/masterson_m11_offer_refuse_00.mp3",
+        "audio/fixers/masterson_m11_offer_refuse_01.mp3",
+        "audio/fixers/masterson_m11_offer_refuse_02.mp3",
+        "",
+        "audio/fixers/masterson_m11_offer_refuse_04.mp3"
       ]
     },
     {
@@ -1633,6 +1816,45 @@
         "audio/fixers/masterson_m12_offer_10.mp3",
         "audio/fixers/masterson_m12_offer_11.mp3",
         "audio/fixers/masterson_m12_offer_12.mp3"
+      ],
+      "accept_dialogue": [
+        "Brave. Or mercenary. I have stopped distinguishing.",
+        "Both pay the same.",
+        "Indeed. The Forge lands first. Do try to as well."
+      ],
+      "accept_speaker": [
+        "",
+        "pc",
+        ""
+      ],
+      "refuse_dialogue": [
+        "You object to being the target.",
+        "I object to being told about it afterward. You told me first, so that's something.",
+        "Then object and accept, like a professional.",
+        "Not today.",
+        "...",
+        "Three installments remain outstanding. Good day."
+      ],
+      "refuse_speaker": [
+        "",
+        "pc",
+        "",
+        "pc",
+        "",
+        ""
+      ],
+      "accept_voice": [
+        "audio/fixers/masterson_m12_offer_accept_00.mp3",
+        "audio/fixers/masterson_m12_offer_accept_01.mp3",
+        "audio/fixers/masterson_m12_offer_accept_02.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/masterson_m12_offer_refuse_00.mp3",
+        "audio/fixers/masterson_m12_offer_refuse_01.mp3",
+        "audio/fixers/masterson_m12_offer_refuse_02.mp3",
+        "audio/fixers/masterson_m12_offer_refuse_03.mp3",
+        "",
+        "audio/fixers/masterson_m12_offer_refuse_05.mp3"
       ]
     },
     {
@@ -1696,6 +1918,42 @@
         "audio/fixers/masterson_m13_offer_10.mp3",
         "audio/fixers/masterson_m13_offer_11.mp3",
         "audio/fixers/masterson_m13_offer_12.mp3"
+      ],
+      "accept_dialogue": [
+        "The last one. I confess I did not expect you to reach it.",
+        "Neither did I.",
+        "Bring her home and the archive is yours. My word, for whatever you judge it to be worth."
+      ],
+      "accept_speaker": [
+        "",
+        "pc",
+        ""
+      ],
+      "refuse_dialogue": [
+        "One favor from the archive and you walk away.",
+        "That freighter's plating would embarrass a shuttle. Your words.",
+        "My words, and still true. That is why I need someone competent.",
+        "...",
+        "Three installments paid, one owed, and nothing to show. Think about that on your way out."
+      ],
+      "refuse_speaker": [
+        "",
+        "pc",
+        "",
+        "pc",
+        ""
+      ],
+      "accept_voice": [
+        "audio/fixers/masterson_m13_offer_accept_00.mp3",
+        "audio/fixers/masterson_m13_offer_accept_01.mp3",
+        "audio/fixers/masterson_m13_offer_accept_02.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/masterson_m13_offer_refuse_00.mp3",
+        "audio/fixers/masterson_m13_offer_refuse_01.mp3",
+        "audio/fixers/masterson_m13_offer_refuse_02.mp3",
+        "",
+        "audio/fixers/masterson_m13_offer_refuse_04.mp3"
       ]
     },
     {
@@ -1988,6 +2246,42 @@
         "audio/fixers/murphy_m15_offer_08.mp3",
         "",
         "audio/fixers/murphy_m15_offer_10.mp3"
+      ],
+      "accept_dialogue": [
+        "Good. Same field, worse company.",
+        "I'll manage.",
+        "They said that too, ace. Watch the Centurions -- they fly like they mean to retire."
+      ],
+      "accept_speaker": [
+        "",
+        "pc",
+        ""
+      ],
+      "refuse_dialogue": [
+        "Aces put you off?",
+        "Ten thousand for player-grade hulls put me off.",
+        "I told you what's in the jar. I can't conjure more by being charming.",
+        "...",
+        "Come back if the arithmetic improves. It won't, but come back anyway."
+      ],
+      "refuse_speaker": [
+        "",
+        "pc",
+        "",
+        "pc",
+        ""
+      ],
+      "accept_voice": [
+        "audio/fixers/murphy_m15_offer_accept_00.mp3",
+        "audio/fixers/murphy_m15_offer_accept_01.mp3",
+        "audio/fixers/murphy_m15_offer_accept_02.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/murphy_m15_offer_refuse_00.mp3",
+        "audio/fixers/murphy_m15_offer_refuse_01.mp3",
+        "audio/fixers/murphy_m15_offer_refuse_02.mp3",
+        "",
+        "audio/fixers/murphy_m15_offer_refuse_04.mp3"
       ]
     },
     {
@@ -2104,6 +2398,45 @@
         "audio/fixers/murphy_m16_offer_12.mp3",
         "audio/fixers/murphy_m16_offer_13.mp3",
         "audio/fixers/murphy_m16_offer_14.mp3"
+      ],
+      "accept_dialogue": [
+        "Then it's tonight. I'll tell the Talons.",
+        "Tell them to stay behind me.",
+        "I'll tell them. They won't listen -- it's their planet down there."
+      ],
+      "accept_speaker": [
+        "",
+        "pc",
+        ""
+      ],
+      "refuse_dialogue": [
+        "...",
+        "We go anyway. With you or without you.",
+        "Two volunteers and no heavy support. That's not an assault, it's a funeral.",
+        "It's the only one we can afford.",
+        "...",
+        "If you change your mind, we launch at the next shift change. After that there won't be anyone left to launch with."
+      ],
+      "refuse_speaker": [
+        "",
+        "",
+        "pc",
+        "",
+        "pc",
+        ""
+      ],
+      "accept_voice": [
+        "audio/fixers/murphy_m16_offer_accept_00.mp3",
+        "audio/fixers/murphy_m16_offer_accept_01.mp3",
+        "audio/fixers/murphy_m16_offer_accept_02.mp3"
+      ],
+      "refuse_voice": [
+        "",
+        "audio/fixers/murphy_m16_offer_refuse_01.mp3",
+        "audio/fixers/murphy_m16_offer_refuse_02.mp3",
+        "audio/fixers/murphy_m16_offer_refuse_03.mp3",
+        "",
+        "audio/fixers/murphy_m16_offer_refuse_05.mp3"
       ]
     },
     {
@@ -2448,6 +2781,45 @@
         "audio/fixers/cross_m18_offer_10.mp3",
         "audio/fixers/cross_m18_offer_11.mp3",
         "audio/fixers/cross_m18_offer_12.mp3"
+      ],
+      "accept_dialogue": [
+        "Welcome to Exploratory Services. Try not to make me regret the paperwork.",
+        "No promises.",
+        "Four navs, full sweep. Bring the disc back and we'll talk about Beta."
+      ],
+      "accept_speaker": [
+        "",
+        "pc",
+        ""
+      ],
+      "refuse_dialogue": [
+        "Second thoughts already?",
+        "It's the first system on a map that's gotten everyone who held it killed.",
+        "...",
+        "That's fair. It's also the only way to find out why.",
+        "...",
+        "I'll keep the contract open. Frontier work doesn't attract a queue."
+      ],
+      "refuse_speaker": [
+        "",
+        "pc",
+        "",
+        "",
+        "pc",
+        ""
+      ],
+      "accept_voice": [
+        "audio/fixers/cross_m18_offer_accept_00.mp3",
+        "audio/fixers/cross_m18_offer_accept_01.mp3",
+        "audio/fixers/cross_m18_offer_accept_02.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/cross_m18_offer_refuse_00.mp3",
+        "audio/fixers/cross_m18_offer_refuse_01.mp3",
+        "",
+        "audio/fixers/cross_m18_offer_refuse_03.mp3",
+        "",
+        "audio/fixers/cross_m18_offer_refuse_05.mp3"
       ]
     },
     {
@@ -2725,6 +3097,42 @@
         "audio/fixers/cross_m20_offer_08.mp3",
         "",
         "audio/fixers/cross_m20_offer_10.mp3"
+      ],
+      "accept_dialogue": [
+        "Thank you. I'll flag the Kilrathi signatures to Fleet, for all the good it does.",
+        "They won't act on it.",
+        "They will not. Conserve your missiles for the last nav."
+      ],
+      "accept_speaker": [
+        "",
+        "pc",
+        ""
+      ],
+      "refuse_dialogue": [
+        "Kilrathi put you off.",
+        "A lot of Kilrathi put me off.",
+        "Then we never learn what broke Garrovick, and the next pilot who flies that route finds out the same way he did.",
+        "...",
+        "That was unfair of me. The contract's open when you want it."
+      ],
+      "refuse_speaker": [
+        "",
+        "pc",
+        "",
+        "pc",
+        ""
+      ],
+      "accept_voice": [
+        "audio/fixers/cross_m20_offer_accept_00.mp3",
+        "audio/fixers/cross_m20_offer_accept_01.mp3",
+        "audio/fixers/cross_m20_offer_accept_02.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/cross_m20_offer_refuse_00.mp3",
+        "audio/fixers/cross_m20_offer_refuse_01.mp3",
+        "audio/fixers/cross_m20_offer_refuse_02.mp3",
+        "",
+        "audio/fixers/cross_m20_offer_refuse_04.mp3"
       ]
     },
     {
@@ -2852,6 +3260,45 @@
         "audio/fixers/cross_m21_offer_10.mp3",
         "",
         "audio/fixers/cross_m21_offer_12.mp3"
+      ],
+      "accept_dialogue": [
+        "Last one. Then this sector's charted and we can all go home.",
+        "You don't sound convinced.",
+        "I'm not. Survey it and come home, $CS. Don't touch anything."
+      ],
+      "accept_speaker": [
+        "",
+        "pc",
+        ""
+      ],
+      "refuse_dialogue": [
+        "One nav point. That's all that's left.",
+        "One nav point with something kilometers long sitting cold in it, on the heading that took your best pilot's mind.",
+        "...",
+        "When you put it that way I'd refuse it myself.",
+        "...",
+        "But somebody's going to fly it eventually. I'd rather it were someone who's read the file."
+      ],
+      "refuse_speaker": [
+        "",
+        "pc",
+        "",
+        "",
+        "pc",
+        ""
+      ],
+      "accept_voice": [
+        "audio/fixers/cross_m21_offer_accept_00.mp3",
+        "audio/fixers/cross_m21_offer_accept_01.mp3",
+        "audio/fixers/cross_m21_offer_accept_02.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/cross_m21_offer_refuse_00.mp3",
+        "audio/fixers/cross_m21_offer_refuse_01.mp3",
+        "",
+        "audio/fixers/cross_m21_offer_refuse_03.mp3",
+        "",
+        "audio/fixers/cross_m21_offer_refuse_05.mp3"
       ]
     },
     {
