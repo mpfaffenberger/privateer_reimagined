@@ -49,16 +49,23 @@ MODEL = "speech-2.8-hd"
 # character-bible id -> cloned MiniMax voice_id. These are the game's cloned
 # cast voices (see tools/synth_scenario_voices.py VOICE_MAP). A character may
 # override this with a "voice_id" field in assets/data/characters.json.
+# NOTE: the named bar cast map to their ORIGINAL 1993 actors, cloned from the
+# extracted CONV/*.VPK bar speech (assets/speech/bar_by_speaker/<voice>/, see
+# assets/speech/clone_tests/results.json). Do NOT point these at the generic
+# PrivFlight* pilot-chatter voices — those are anonymous NPC wingmen and three
+# of the women previously collided on a single synth voice.
 DEFAULT_VOICE_MAP = {
     "grayson":       "PrivBarPc01",       # the player-character
-    "sandoval":      "PrivFlightV1401",   # smooth merchant-ish male
-    "tayla":         "PrivMerchantFem01", # hard female
-    "lynch":         "PrivFlightV0801",   # cold authority
-    "masterson":     "PrivFlightV0401",   # prim academic
-    "murphy":        "PrivMerchantFem01",
-    "monkhouse":     "PrivFlightV1001",   # eccentric
-    "cross":         "PrivMerchantFem01",
-    "terrell":       "PrivFlightV0801",   # confed admiral
+    "sandoval":      "PrivBarMonte01",    # original actor ('monte')
+    "tayla":         "PrivBarTayla01",    # original actor
+    "lynch":         "PrivBarRoman01",    # original actor ('roman')
+    "masterson":     "PrivBarMastersn01", # original actor
+    "murphy":        "PrivBarLynn01",     # original actor ('lynn')
+    "monkhouse":     "PrivBarMonkhous01", # original actor
+    "cross":         "PrivBarTaryn01",    # original actor ('taryn')
+    "terrell":       "PrivBarTerrel01",   # original actor
+    "goodin":        "PrivBarSandra01",   # original actor ('sandra')
+    "miggs":         "PrivBarMiggs01",    # original actor
     "pirate":        "PrivFlightV1501",   # raider
     "militia":       "PrivFlightV0101",
     "confed":        "PrivFlightV0801",

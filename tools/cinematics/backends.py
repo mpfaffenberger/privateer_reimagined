@@ -6,9 +6,27 @@ drop in local SD/ComfyUI later without touching the CLI.
 
 Backends
 --------
+* ``CodexBackend``    — gpt-image-2 via the ChatGPT **OAuth** backend
+  (``https://chatgpt.com/backend-api/codex``). Uses the existing Codex/ChatGPT
+  subscription login rather than a metered ``OPENAI_API_KEY``, so generation
+  costs nothing extra. This is the DEFAULT when logged in, and it supports
+  BOTH ``txt2img`` and true reference-conditioned ``img2img``.
+
+  The OAuth image API shape (reverse-engineered against the live endpoint,
+  2026-07 — the code_puppy ``codex_imagegen`` tool only ever exposed t2i):
+
+  * ``POST /images/generations`` — JSON ``{model, prompt, size, quality,
+    background}``, returns ``data[0].b64_json``.
+  * ``POST /images/edits`` — JSON ``{model, prompt, images: [{image_url:
+    "data:image/png;base64,..."}], size, quality}``. The ``images`` array is
+    REQUIRED and its entries MUST be objects whose only accepted key is
+    ``image_url``, holding a data-URL **string**. Multipart uploads are
+    rejected (HTTP 400). Verified conditioning: a solid-green reference plus
+    "reproduce the input's fill color" returns rgb(24,186,66).
 * ``OpenAIBackend``   — gpt-image-2 (/v1/images/generations + /v1/images/edits),
   the SAME model + endpoints the ship-sprite / concourse generators use
-  (tools/pixelart/generate_sprite.py, tools/gen_concourse_ai.py).
+  (tools/pixelart/generate_sprite.py, tools/gen_concourse_ai.py). Metered:
+  spends against ``OPENAI_API_KEY``. Use for reference-conditioned gen-line.
 * ``GeminiBackend``   — Google Gemini image generation (REST, no SDK required)
 * ``PlaceholderBackend`` — always available; draws an obvious solid-color
   512x640 card with the character name + line text via Pillow. This is the
@@ -93,6 +111,112 @@ class ImageBackend(ABC):
     @abstractmethod
     def img2img(self, prompt: str, ref_path: Path, timeout: float = 180.0) -> bytes:
         """Return PNG bytes for a reference-conditioned edit of ``ref_path``."""
+
+
+# ---------------------------------------------------------------------------
+# Codex / ChatGPT OAuth (gpt-image-2, subscription auth — no metered API key)
+# ---------------------------------------------------------------------------
+class CodexBackend(ImageBackend):
+    """gpt-image-2 through the ChatGPT/Codex OAuth backend.
+
+    Costs nothing beyond the existing ChatGPT/Codex subscription. Supports both
+    text-to-image and TRUE reference-conditioned image edits — see the module
+    docstring for the exact request shape.
+    """
+
+    name = "codex"
+
+    def _auth(self):
+        """Return (base_url, headers) for the OAuth image API.
+
+        Imported lazily so this module still works without code_puppy present.
+        """
+        from code_puppy.plugins.chatgpt_oauth.config import CHATGPT_OAUTH_CONFIG
+        from code_puppy.plugins.chatgpt_oauth.utils import (
+            get_valid_access_token,
+            load_stored_tokens,
+        )
+
+        token = get_valid_access_token()
+        account_id = str((load_stored_tokens() or {}).get("account_id", "")).strip()
+        if not token or not account_id:
+            raise RuntimeError(
+                "Codex OAuth not logged in (no access token / account id)."
+            )
+        originator = CHATGPT_OAUTH_CONFIG.get("originator", "codex_cli_rs")
+        version = CHATGPT_OAUTH_CONFIG.get("client_version", "unknown")
+        base = str(CHATGPT_OAUTH_CONFIG["api_base_url"]).rstrip("/")
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "ChatGPT-Account-Id": account_id,
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "originator": originator,
+            "User-Agent": f"{originator}/{version}",
+        }
+        return base, headers
+
+    def available(self) -> bool:
+        try:
+            self._auth()
+            return True
+        except Exception:
+            return False
+
+    @staticmethod
+    def _first_image(body: dict) -> bytes:
+        data = body.get("data")
+        encoded = data[0].get("b64_json") if isinstance(data, list) and data else None
+        if not isinstance(encoded, str) or not encoded:
+            raise RuntimeError(f"Codex image API returned no image data: {body}")
+        return base64.b64decode(encoded)
+
+    def _post(self, url: str, payload: dict, timeout: float) -> bytes:
+        import httpx
+
+        base, headers = self._auth()
+        with httpx.Client(timeout=timeout) as client:
+            resp = client.post(f"{base}{url}", json=payload, headers=headers)
+            if resp.status_code != 200:
+                raise RuntimeError(
+                    f"Codex image API error {resp.status_code} on {url}: "
+                    f"{resp.text[:500]}"
+                )
+            return self._first_image(resp.json())
+
+    def txt2img(self, prompt: str, timeout: float = 180.0) -> bytes:
+        return self._post(
+            "/images/generations",
+            {
+                "model": "gpt-image-2",
+                "prompt": prompt,
+                "size": "auto",
+                "quality": "auto",
+                "background": "auto",
+            },
+            timeout,
+        )
+
+    def img2img(self, prompt: str, ref_path: Path, timeout: float = 180.0) -> bytes:
+        """Reference-conditioned edit — the identity anchor for gen-line.
+
+        ``images[]`` entries must be objects whose ONLY accepted key is
+        ``image_url``, holding a base64 data-URL string. Multipart is rejected.
+        """
+        mime, _ = mimetypes.guess_type(str(ref_path))
+        mime = mime or "image/png"
+        b64 = base64.b64encode(Path(ref_path).read_bytes()).decode("ascii")
+        return self._post(
+            "/images/edits",
+            {
+                "model": "gpt-image-2",
+                "prompt": prompt,
+                "images": [{"image_url": f"data:{mime};base64,{b64}"}],
+                "size": "auto",
+                "quality": "auto",
+            },
+            timeout,
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -340,17 +464,27 @@ def _split_label(prompt: str) -> tuple:
 # ---------------------------------------------------------------------------
 # Factory
 # ---------------------------------------------------------------------------
-_REAL_BACKENDS = {"openai": OpenAIBackend, "gemini": GeminiBackend}
+_REAL_BACKENDS = {
+    "codex": CodexBackend,
+    "openai": OpenAIBackend,
+    "gemini": GeminiBackend,
+}
 
 
 def get_backend(name: Optional[str] = None, allow_placeholder: bool = True) -> ImageBackend:
     """Pick a backend.
 
-    * ``name`` explicit ("openai" / "gemini" / "placeholder") — honored, but a
-      real backend with no key gracefully degrades to placeholder (unless
-      ``allow_placeholder=False``, which raises instead).
-    * ``name`` None — auto: OpenAI if keyed, else Gemini if keyed, else
+    * ``name`` explicit ("codex" / "openai" / "gemini" / "placeholder") —
+      honored, but a real backend that is unavailable (no key / not logged in)
+      gracefully degrades to placeholder (unless ``allow_placeholder=False``,
+      which raises instead).
+    * ``name`` None — auto: **Codex OAuth first** (subscription auth, no
+      metered spend), then OpenAI if keyed, then Gemini if keyed, else
       placeholder.
+
+    The auto order deliberately prefers Codex so routine portrait work does not
+    bill an ``OPENAI_API_KEY``. Reach for ``--backend openai`` explicitly when
+    you need reference-conditioned ``img2img`` (see the module docstring).
     """
     if name == "placeholder":
         return PlaceholderBackend()
@@ -361,12 +495,13 @@ def get_backend(name: Optional[str] = None, allow_placeholder: bool = True) -> I
             return backend
         if not allow_placeholder:
             raise RuntimeError(
-                f"Backend '{name}' selected but its API key env var is not set."
+                f"Backend '{name}' selected but it is unavailable "
+                "(missing API key, or not logged in for 'codex')."
             )
         return PlaceholderBackend(label=f"NO {name.upper()} KEY")
 
-    # auto
-    for cls in (OpenAIBackend, GeminiBackend):
+    # auto — Codex OAuth first so we don't spend a metered key by default.
+    for cls in (CodexBackend, OpenAIBackend, GeminiBackend):
         b = cls()
         if b.available():
             return b

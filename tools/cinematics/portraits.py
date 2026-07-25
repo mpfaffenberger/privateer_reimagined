@@ -272,9 +272,12 @@ def build_parser() -> argparse.ArgumentParser:
         prog="tools.cinematics.portraits",
         description="Cinematic portrait generation pipeline (Phase 3).",
     )
-    p.add_argument("--backend", choices=["openai", "gemini", "placeholder"],
-                   default=None, help="Force a backend. Default: auto (keyed "
-                   "real backend, else placeholder).")
+    p.add_argument("--backend",
+                   choices=["codex", "openai", "gemini", "placeholder"],
+                   default=None, help="Force a backend. Default: auto — codex "
+                   "(ChatGPT OAuth, no metered spend) if logged in, else a "
+                   "keyed real backend, else placeholder. 'codex' supports "
+                   "both txt2img and reference-conditioned img2img.")
     p.add_argument("--timeout", type=float, default=180.0)
     sub = p.add_subparsers(dest="cmd", required=True)
 
