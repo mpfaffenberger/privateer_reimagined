@@ -89,6 +89,16 @@ std::vector<const FixerDef*> present_at(const std::string& base_id,
 // Look up by id (regardless of placement/gate). nullptr on miss.
 const FixerDef* find(const std::string& id);
 
+// Expand the original Privateer dialogue substitution tokens in authored
+// text. The 1993 script (and therefore the extracted VO transcripts in
+// assets/speech/) addresses the player as:
+//   $NM  surname     — formal address ("Ah, Captain $NM.")
+//   $CS  callsign    — familiar address ("Feel lucky, $CS?")
+// Keeping the tokens in fixers.json means authored lines stay drop-in
+// compatible with verbatim vanilla lines lifted from bar_speakers.json.
+// Unknown '$' sequences are passed through untouched.
+std::string expand_tokens(const std::string& text);
+
 // Run a fixer's accept/refuse/done action list against the player.
 // Exposed for the headless test + the campaign layer; the bar UI calls
 // these on button press. Each also fires the observer.

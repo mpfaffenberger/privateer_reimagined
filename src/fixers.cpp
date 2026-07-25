@@ -116,6 +116,28 @@ const FixerDef* find(const std::string& id) {
     return nullptr;
 }
 
+// The player-character is fixed (Grayson Burrows, assets/data/characters.json),
+// so these are constants rather than save-state. If a player-chosen name is
+// ever added, this is the single seam that needs to read it.
+std::string expand_tokens(const std::string& text) {
+    static const std::string k_surname  = "Burrows";
+    static const std::string k_callsign = "Grayson";
+    if (text.find('$') == std::string::npos) return text;  // fast path
+
+    std::string out;
+    out.reserve(text.size() + 16);
+    for (size_t i = 0; i < text.size(); ) {
+        if (text[i] == '$' && text.compare(i, 3, "$NM") == 0) {
+            out += k_surname;  i += 3;
+        } else if (text[i] == '$' && text.compare(i, 3, "$CS") == 0) {
+            out += k_callsign; i += 3;
+        } else {
+            out += text[i++];
+        }
+    }
+    return out;
+}
+
 void accept(const FixerDef& f, PlayerState& player) {
     std::printf("[fixers] ACCEPT '%s'\n", f.id.c_str());
     plot::run_actions(player, f.accept_actions);
@@ -226,8 +248,8 @@ void draw_bar_body(BaseContext& ctx) {
     const bool last_para    = !has_dialogue ||
                               g_paragraph + 1 >= f->dialogue.size();
     if (has_dialogue) {
-        const std::string& text = f->dialogue[std::min(g_paragraph,
-                                                       f->dialogue.size() - 1)];
+        const std::string text = expand_tokens(
+            f->dialogue[std::min(g_paragraph, f->dialogue.size() - 1)]);
         // Wrapped body text via ImGui (draw-list text doesn't wrap).
         ImGui::SetCursorScreenPos(ImVec2(px + 18, py + 48));
         ImGui::PushTextWrapPos(px + pw - 18);
@@ -240,10 +262,11 @@ void draw_bar_body(BaseContext& ctx) {
     // Offer line, shown with the final paragraph.
     const bool offering = last_para && !f->offer_text.empty();
     if (offering) {
+        const std::string offer = expand_tokens(f->offer_text);
         ImGui::SetCursorScreenPos(ImVec2(px + 18, py + ph - 92));
         ImGui::PushTextWrapPos(px + pw - 18);
         ImGui::PushStyleColor(ImGuiCol_Text, kAmber);
-        ImGui::TextUnformatted(f->offer_text.c_str());
+        ImGui::TextUnformatted(offer.c_str());
         ImGui::PopStyleColor();
         ImGui::PopTextWrapPos();
     }

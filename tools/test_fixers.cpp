@@ -138,6 +138,25 @@ int main() {
               "dialogue_done: second action ran in order");
     }
 
+    // ---- 4b. $NM / $CS token expansion -------------------------------------
+    {
+        check(fixers::expand_tokens("Ah, Captain $NM.") == "Ah, Captain Burrows.",
+              "expand_tokens: $NM -> surname");
+        check(fixers::expand_tokens("Feel lucky, $CS?") == "Feel lucky, Grayson?",
+              "expand_tokens: $CS -> callsign");
+        check(fixers::expand_tokens("$CS, $NM, $CS") ==
+                  "Grayson, Burrows, Grayson",
+              "expand_tokens: repeated tokens all expand");
+        check(fixers::expand_tokens("no tokens here") == "no tokens here",
+              "expand_tokens: passthrough when no '$'");
+        check(fixers::expand_tokens("cost $500 and $XX") == "cost $500 and $XX",
+              "expand_tokens: unknown '$' sequences untouched");
+        check(fixers::expand_tokens("trailing $") == "trailing $",
+              "expand_tokens: trailing '$' does not overrun");
+        check(fixers::expand_tokens("$N") == "$N",
+              "expand_tokens: truncated token does not overrun");
+    }
+
     // ---- 5. bad table is non-fatal ----------------------------------------
     check(fixers::load("/tmp/does_not_exist_fixers.json") == 0,
           "missing file -> empty registry, no crash");
