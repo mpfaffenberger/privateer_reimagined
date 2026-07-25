@@ -71,8 +71,12 @@ def _character(bible: dict, char_id: str) -> dict:
     return bible[char_id]
 
 
+def _portraits_root() -> Path:
+    return repo_root() / "assets" / "cinematics" / "portraits"
+
+
 def _portraits_dir(char_id: str) -> Path:
-    return repo_root() / "assets" / "cinematics" / "portraits" / char_id
+    return _portraits_root() / char_id
 
 
 def build_ref_prompt(char: dict) -> str:
@@ -83,6 +87,34 @@ def build_ref_prompt(char: dict) -> str:
         f"Neutral, purposeful expression (canonical reference headshot)."
         f"{NEGATIVE}"
         # placeholder hints (stripped by real backends' prompts naturally):
+        f" ||NAME||{char['display_name']}|| ||LINE||reference||"
+    )
+
+
+def build_canon_ref_prompt(char: dict) -> str:
+    """Prompt for REPAINTING a canonical source plate into our house style.
+
+    Deliberately different from ``build_ref_prompt``: when conditioning on the
+    original 1993 portrait, the likeness must come from the IMAGE, not from
+    prose. Re-describing the face in detail makes the model average our words
+    against the reference and drift back toward a generic invention -- the
+    exact failure this pipeline is meant to fix. So this prompt asks for a
+    faithful medium/style lift and names only the identity-critical anchors.
+    """
+    return (
+        f"{STYLE_PREFIX}"
+        "Repaint the person in the provided reference image as a high-quality "
+        "modern painted sci-fi character portrait. This is the SAME individual: "
+        "preserve their exact facial structure, age, skin tone, hair colour, "
+        "hair length and style, facial hair, eye colour, and clothing colours "
+        "and design. Do not beautify, do not slim, do not change their age, and "
+        "do not invent accessories such as glasses, scars, jewellery, or "
+        "tattoos that are not visible in the reference. "
+        f"Identity anchors: {char['appearance']} Wardrobe: {char['wardrobe']} "
+        "Keep the neutral, purposeful expression. Upgrade only the rendering: "
+        "replace the low-resolution pixel art with smooth painted detail, "
+        "realistic skin and fabric texture, and cinematic key lighting."
+        f"{NEGATIVE}"
         f" ||NAME||{char['display_name']}|| ||LINE||reference||"
     )
 
@@ -106,6 +138,28 @@ def build_line_prompt(char: dict, text: str, emotion: str,
 # ---------------------------------------------------------------------------
 # Commands
 # ---------------------------------------------------------------------------
+def canon_reference(char: dict) -> Optional[Path]:
+    """Resolve a character's canonical source plate, if the bible names one.
+
+    ``reference_image`` is a path relative to assets/cinematics/portraits/ --
+    normally something under ``_wcnews_refs/`` mirrored by
+    tools/download_wcnews_character_refs.py. When present, gen-ref conditions
+    on it (img2img) instead of generating the face from prose, which is the
+    only reliable way to land the ACTUAL 1993 likeness rather than a plausible
+    invention. Returns None when unset or missing on disk.
+    """
+    rel = char.get("reference_image")
+    if not rel:
+        return None
+    path = _portraits_root() / rel
+    if not path.is_file():
+        print(f"[gen-ref] WARNING: reference_image {rel!r} not found on disk; "
+              "falling back to text-only generation (likeness will drift). "
+              "Run tools/download_wcnews_character_refs.py to mirror it.")
+        return None
+    return path
+
+
 def cmd_gen_ref(args) -> int:
     bible = load_bible()
     char = _character(bible, args.character)
@@ -113,9 +167,15 @@ def cmd_gen_ref(args) -> int:
     out = _portraits_dir(args.character) / "_ref.png"
     out.parent.mkdir(parents=True, exist_ok=True)
 
-    prompt = build_ref_prompt(char)
-    print(f"[gen-ref] {args.character} via {backend.name}")
-    raw = backend.txt2img(prompt, timeout=args.timeout)
+    canon = None if getattr(args, "no_canon", False) else canon_reference(char)
+    prompt = build_canon_ref_prompt(char) if canon else build_ref_prompt(char)
+    if canon is not None:
+        print(f"[gen-ref] {args.character} via {backend.name} "
+              f"(conditioned on {canon.name})")
+        raw = backend.img2img(prompt, canon, timeout=args.timeout)
+    else:
+        print(f"[gen-ref] {args.character} via {backend.name} (text-only)")
+        raw = backend.txt2img(prompt, timeout=args.timeout)
     png = finalize_portrait(raw)
     out.write_bytes(png)
     print(f"[gen-ref] wrote {out}  ({PORTRAIT_SIZE[0]}x{PORTRAIT_SIZE[1]} RGBA)")
@@ -283,6 +343,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     r = sub.add_parser("gen-ref", help="Generate a character's canonical _ref.png")
     r.add_argument("character")
+    r.add_argument("--no-canon", action="store_true",
+                   help="ignore the bible's reference_image and generate the "
+                        "face from prose alone (likeness will drift)")
     r.set_defaults(func=cmd_gen_ref)
 
     g = sub.add_parser("gen-line", help="Generate a per-line reference-conditioned portrait")

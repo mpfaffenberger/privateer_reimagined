@@ -1,7 +1,7 @@
 {
   "_doc": [
     "Character bible for the cinematic portrait pipeline (Phase 3, tools/cinematics/).",
-    "The ENGINE never reads this file — it only loads pre-generated 512x640 PNGs by",
+    "The ENGINE never reads this file \u2014 it only loads pre-generated 512x640 PNGs by",
     "path. This bible is authoring-time data: it feeds prompt conditioning for the",
     "portrait generator (tools/cinematics/portraits.py). Cast + roles are pulled from",
     "the real campaign (src/campaign.h, assets/data/fixers.json).",
@@ -10,11 +10,12 @@
     "  id               stable key; also the portraits/<id>/ folder name",
     "  display_name     nameplate string shown in the cinematic line cue",
     "  role             one-line story role (for the author, not the prompt)",
-    "  appearance       DETAILED physical description — the identity anchor that",
+    "  appearance       DETAILED physical description \u2014 the identity anchor that",
     "                   conditions every generation for this character",
     "  personality      demeanor cues that steer expression/pose",
     "  wardrobe         clothing/gear description",
-    "  reference_image  canonical headshot path; gen-line conditions ON this file"
+    "  reference_image  canonical headshot path; gen-line conditions ON this file",
+    "CANON NOTE: appearance/wardrobe for the Privateer fixer cast are transcribed from the original 1993 in-game portraits mirrored under assets/cinematics/portraits/_wcnews_refs/ (gitignored, Origin IP). reference_image points at the canonical plate to condition on. Do NOT re-infer these from dialogue -- that is how they drifted the first time."
   ],
   "characters": {
     "grayson": {
@@ -30,80 +31,80 @@
       "id": "sandoval",
       "display_name": "Ernesto Sandoval",
       "role": "First fixer at New Detroit; hands over the Steltek artifact as collateral, then turns up dead.",
-      "appearance": "Human man in his 50s, heavyset with a broad face, olive complexion, and a thick greying moustache. Small dark eyes that dart. Sweating slightly, the look of a man who owes the wrong people money.",
+      "appearance": "Human man in his late 50s, lean and hard-faced, fair complexion, straight steel-grey hair combed back from a high forehead. Clean-shaven. Deep-set pale eyes, heavy horizontal brow lines, a thin unsmiling mouth. Looks like a man who has been handsome and is now mostly tired.",
       "personality": "Smooth-talking, ingratiating, nervous underneath. A dealer in 'acquisitions' who over-promises and never pays.",
-      "wardrobe": "A rumpled once-expensive maroon jacket with a loud collar, a gaudy ring, an open shirt. Cheap flash trying to look like real money.",
-      "reference_image": "assets/cinematics/portraits/sandoval/_ref.png"
+      "wardrobe": "Charcoal-grey suit jacket over a lighter grey open-collar shirt. Plain, businesslike, no jewellery.",
+      "reference_image": "_wcnews_refs/sandoval/Sandoval_-_Portrait.png"
     },
     "tayla": {
       "id": "tayla",
       "display_name": "Tayla",
       "role": "Smuggling contact who employs the player across the Tayla arc; hard, professional, honest about being dishonest.",
-      "appearance": "Human woman in her 40s, athletic and hard-edged, medium-brown skin, close-cropped black hair with a shaved side. High cheekbones, a level unsmiling gaze, dark brown eyes. A thin scar along the jaw.",
+      "appearance": "Human woman in her 30s, fair-skinned with a broad face and strong jaw. Long copper-red hair worn loose and full, swept back off the forehead. Level green-hazel eyes under straight brows, no-nonsense expression.",
       "personality": "Cool, transactional, dangerous. Says exactly what she means. Respects competence, has zero patience for excuses.",
-      "wardrobe": "A fitted dark tactical jacket with subtle armor panels, a high collar, a comm earpiece. Muted greys and gunmetal. All business.",
-      "reference_image": "assets/cinematics/portraits/tayla/_ref.png"
+      "wardrobe": "Brown leather flight jacket, collar up, over a rust-orange ribbed turtleneck.",
+      "reference_image": "_wcnews_refs/tayla/Tayla_-_Portrait.png"
     },
     "lynch": {
       "id": "lynch",
       "display_name": "Roman Lynch",
       "role": "New Constantinople crime boss who takes the artifact 'for study' and runs the player on increasingly ugly errands.",
-      "appearance": "Human man in his 60s, silver-haired and immaculately groomed, pale, with cold pale-grey eyes and a thin cruel mouth. The composed stillness of a man used to being obeyed. Manicured.",
+      "appearance": "Human man in his 50s, heavy-set and broad-shouldered with a thick neck and a fleshy, tanned face. Dark hair going grey at the temples, swept back. Small dark eyes, a broad nose, jowls, a flat unimpressed mouth. The look of a man who is comfortable and dangerous.",
       "personality": "Urbane, patronizing, casually ruthless. Speaks softly and threatens with a smile.",
-      "wardrobe": "A tailored charcoal suit with a dark silk cravat, a subtle metallic lapel pin. Old-money mobster elegance.",
-      "reference_image": "assets/cinematics/portraits/lynch/_ref.png"
+      "wardrobe": "Well-cut black business suit, white shirt, dark tie. Immaculate, expensive, mob-formal.",
+      "reference_image": "_wcnews_refs/lynch/Lynch_-_Portrait.png"
     },
     "masterson": {
       "id": "masterson",
       "display_name": "Masterson",
       "role": "Oxford university administrator; gatekeeps the library archive behind four 'favors'.",
-      "appearance": "Human man in his late 50s, thin and prim, balding with neat greying hair at the sides, wire-rimmed spectacles, a pinched disapproving expression and a narrow nose. Bloodless academic pallor.",
+      "appearance": "Human man in his 50s, olive-complexioned with a square jaw and a lined, weathered face. Full head of grey-brown hair combed back, and a THICK dark moustache. Dark eyes, heavy brows, a stern set to the mouth. No spectacles.",
       "personality": "Fussy, transactional, self-important. A petty bureaucrat who enjoys the leverage his archive gives him.",
-      "wardrobe": "A stiff high-collared academic tunic in deep blue with a university crest, a thin scarf. Formal, humorless.",
-      "reference_image": "assets/cinematics/portraits/masterson/_ref.png"
+      "wardrobe": "Navy-blue ribbed crewneck sweater over a collared shirt. Academic but unfussy.",
+      "reference_image": "_wcnews_refs/masterson/Masterson_-_Portrait.png"
     },
     "murphy": {
       "id": "murphy",
       "display_name": "Lynn Murphy",
       "role": "Runs the Palan resistance from the Basra refinery; sends the player against the bounty-hunter blockade.",
-      "appearance": "Human woman in her late 30s, wiry and tired, freckled fair skin, red hair pulled back in a rough braid with loose strands, sharp green eyes with dark circles. The lean look of someone running a losing fight on no sleep.",
+      "appearance": "Human woman in her early 30s, fair-skinned with a soft oval face and a small straight nose. SHORT strawberry-blonde hair, cut close and swept back off the face. Pale blue-green eyes, faint freckles, a calm and slightly guarded expression.",
       "personality": "Blunt, weary, determined. A idealist grinding on fumes; grateful but braced for more bad news.",
-      "wardrobe": "A patched orange-and-grey refinery work coverall with rolled sleeves, a bandolier of tools, a resistance armband. Practical, grimy.",
-      "reference_image": "assets/cinematics/portraits/murphy/_ref.png"
+      "wardrobe": "Tan/khaki utility shirt with a collar, plain and hard-worn.",
+      "reference_image": "_wcnews_refs/murphy/Murphy_-_Portrait.png"
     },
     "monkhouse": {
       "id": "monkhouse",
       "display_name": "Dr. Lemuel Monkhouse",
       "role": "Xenoarchaeologist marooned on Palan; his artifact fragment completes the Steltek map.",
-      "appearance": "Human man in his late 60s, frail and excitable, wild white hair, round wire glasses, a short white beard, deep smile lines, bright over-caffeinated pale-blue eyes. Bookish and thin.",
+      "appearance": "Human man in his 60s, BALD on top with only a fringe of hair at the sides, fair-skinned, round-faced and jowly. A thick dark-grey moustache. Pale blue eyes under drooping lids, a mild scholarly expression.",
       "personality": "Eccentric, brilliant, endlessly enthusiastic. Talks too fast about ancient civilizations, nervous about the 'someone with fur' hunting him.",
-      "wardrobe": "A rumpled sand-colored field jacket with too many pockets, a data-slate on a lanyard, a scarf against station chill. Dusty academic-explorer.",
-      "reference_image": "assets/cinematics/portraits/monkhouse/_ref.png"
+      "wardrobe": "Light grey blazer over a powder-blue turtleneck.",
+      "reference_image": "_wcnews_refs/monkhouse/Monkhouse_-_Portrait.png"
     },
     "cross": {
       "id": "cross",
       "display_name": "Taryn Cross",
       "role": "Exploratory Services handler at Rygannon who runs the player through the frontier survey arc.",
-      "appearance": "Human woman in her 40s, calm and capable, warm brown skin, black hair in a tight professional bun, steady dark eyes, a faint pilot's tan-line across the brow. Composed.",
+      "appearance": "Human woman in her 30s, fair-skinned with a heart-shaped face and delicate features. Shoulder-length curly chestnut-brown hair, full and slightly wild. Wide green eyes, dark arched brows, an alert and direct expression.",
       "personality": "Measured, professional, quietly protective of her survey pilots. Even-keeled even delivering bad news.",
-      "wardrobe": "A clean teal Exploratory Services flight uniform with a survey-net shoulder patch, a headset resting on the collar. Corporate-scientific.",
-      "reference_image": "assets/cinematics/portraits/cross/_ref.png"
+      "wardrobe": "Brown leather jacket over a blue-grey ribbed turtleneck.",
+      "reference_image": "_wcnews_refs/cross/Privateer_-_Screenshot_-_Mining_Base_-_Bar_-_Taryn_Cross_CU.png"
     },
     "terrell": {
       "id": "terrell",
       "display_name": "Admiral Terrell",
       "role": "Confederation admiral at Perry Naval Base; commands the fleet against the Steltek drone in the finale.",
-      "appearance": "Human man in his 60s, broad-shouldered and imposing, dark skin, close-cropped grey hair and a neat grey beard, heavy brows over stern deep-set eyes. The bearing of decades of command.",
+      "appearance": "Human man in his 50s, fair-skinned with a broad heavy-browed face and a strong nose. Auburn/reddish-brown hair, short and neatly combed. Piercing pale blue eyes, deep frown lines between the brows, a firm downturned mouth. Clean-shaven.",
       "personality": "Gruff, blunt, contemptuous of civilians and paperwork alike. Grudgingly fair.",
-      "wardrobe": "A crisp navy-blue Confederation admiral's dress uniform, gold braid at the shoulders, a chestful of service ribbons, high stiff collar.",
-      "reference_image": "assets/cinematics/portraits/terrell/_ref.png"
+      "wardrobe": "White Confederation admiral's dress uniform with gold shoulder boards, a gold winged insignia at the breast, and a multi-row ribbon rack. Name tape reads TERRELL.",
+      "reference_image": "_wcnews_refs/terrell/Privateer_-_Sprite_Sheet_-_Terrell_-_Eyes.png"
     },
     "vance": {
       "id": "vance",
       "display_name": "Captain Vance",
       "role": "Merchant hauler captain leading a two-drayman convoy through Pender's Star; a lifer who has run this lane for decades.",
       "appearance": "Human man in his 50s, broad and grizzled, ruddy weather-worn skin, a heavy salt-and-pepper beard, tired pale-blue eyes set in deep bags, a balding crown with close grey at the sides. The thick neck and slouch of a man who has spent his life strapped into a cargo hauler's seat.",
-      "personality": "Gruff, fatalistic, unshakeably steady — seen it all, spooked by little, which makes his unease on this run land all the harder.",
+      "personality": "Gruff, fatalistic, unshakeably steady \u2014 seen it all, spooked by little, which makes his unease on this run land all the harder.",
       "wardrobe": "A faded olive-drab merchant-marine jumpsuit with a cargo-guild patch on the shoulder, a grease-smudged open collar, a battered headset hooked over one ear.",
       "voice_id": "PrivFlightV1401",
       "reference_image": "assets/cinematics/portraits/vance/_ref.png"
@@ -113,7 +114,7 @@
       "display_name": "Reesa Kort",
       "role": "Young co-pilot on the second drayman of Vance's convoy; the first to say out loud what everyone is feeling.",
       "appearance": "Human woman in her late 20s, slight and wiry, warm brown skin, tightly-coiled black hair pulled back under a headset, wide anxious dark eyes, a light scatter of freckles across the nose. A young spacer who has not yet grown the calluses for this run.",
-      "personality": "Jumpy, earnest, quick-witted — apprehensive and honest about it, voicing the dread the older crews swallow.",
+      "personality": "Jumpy, earnest, quick-witted \u2014 apprehensive and honest about it, voicing the dread the older crews swallow.",
       "wardrobe": "A slightly-too-big grey merchant flight jacket with rolled cuffs over a rust-orange undershirt, a guild lanyard around the neck, a comm headset.",
       "voice_id": "PrivMerchantFem01",
       "reference_image": "assets/cinematics/portraits/kort/_ref.png"
@@ -150,7 +151,7 @@
       "display_name": "Bounty Hunter",
       "role": "Generic archetype: Mercenaries' Guild bounty hunter; enforcers of the Palan blockade and later grudge-holders.",
       "appearance": "Human mercenary of hard middle age, weathered and muscular, a squared-off jaw, a full-face targeting scanner monocle over one eye, a shaved scarred scalp, a flat professional stare.",
-      "personality": "Cold, methodical, professional. No taunts, no mercy — this is a contract.",
+      "personality": "Cold, methodical, professional. No taunts, no mercy \u2014 this is a contract.",
       "wardrobe": "Heavy matte-black composite armor with a Mercenaries' Guild sigil, reinforced shoulder pauldrons, tactical webbing, a slung sidearm. Serious kit.",
       "reference_image": "assets/cinematics/portraits/bounty_hunter/_ref.png"
     },
@@ -178,9 +179,9 @@
       "id": "sian",
       "display_name": "Sian Turner",
       "role": "Drayman captain hauling luxury goods on the Oxford <-> New Constantinople run (Potter quadrant, 8-day loop). The youngest Drayman captain on the books in five years.",
-      "appearance": "Korean-American woman in her early 30s — born Seoul, raised on New Constantinople's trading floors, which explains both the accent and the poker face. Sharp angular features softened by a permanent half-smirk that says she has already read the last page of your offer. Jet-black hair in a tight chignon held by worn tortoiseshell chopsticks; warm amber-brown eyes behind gold-rimmed spectacles; a small scar above her right eyebrow from a childhood docking accident she refuses to get smoothed.",
+      "appearance": "Korean-American woman in her early 30s \u2014 born Seoul, raised on New Constantinople's trading floors, which explains both the accent and the poker face. Sharp angular features softened by a permanent half-smirk that says she has already read the last page of your offer. Jet-black hair in a tight chignon held by worn tortoiseshell chopsticks; warm amber-brown eyes behind gold-rimmed spectacles; a small scar above her right eyebrow from a childhood docking accident she refuses to get smoothed.",
       "wardrobe": "Immaculate deep-teal Drayman longcoat with the guild pin at the throat, specs pushed up into her hair when a manifest needs disagreeing with, tailored dark gloves she replaces the day they scuff.",
-      "personality": "Dry, sharp-tongued, quietly warm — in that order, and you earn each layer. Lets the silence remind you she is the youngest Drayman captain in five years. Treats every docking like an audition she intends to win, every contract like a duel she already has. Genuinely fond of pilots who arrive with their paperwork in order.",
+      "personality": "Dry, sharp-tongued, quietly warm \u2014 in that order, and you earn each layer. Lets the silence remind you she is the youngest Drayman captain in five years. Treats every docking like an audition she intends to win, every contract like a duel she already has. Genuinely fond of pilots who arrive with their paperwork in order.",
       "voice_id": "PrivCustomSian02",
       "reference_image": "assets/cinematics/portraits/sian/_ref.png"
     }
