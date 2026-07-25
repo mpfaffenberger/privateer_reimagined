@@ -72,7 +72,7 @@ const char* kTable = R"json({
       "archetypes": ["mining"],
       "exclude_bases": ["rygannon"],
       "requires_flags": ["cross_done"],
-      "dialogue": ["Admiral Terrell wants to see you."],
+      "dialogue": ["Admiral Terrell wants to see you.", "..."],
       "done_actions": ["set_flag:goodin_done"] }
   ]
 })json";
@@ -146,6 +146,7 @@ int main() {
     {
         const fixers::FixerDef* s = fixers::find("sandoval_offer");
         const fixers::FixerDef* t = fixers::find("tayla_intro");
+        const fixers::FixerDef* g = fixers::find("goodin");
         check(s && s->portrait == "portraits/sandoval/_ref.png",
               "portrait: parsed when present");
         check(s && s->voice.size() == 1 &&

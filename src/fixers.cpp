@@ -226,9 +226,22 @@ float g_para_elapsed = 0.0f;   // seconds shown
 float g_para_hold    = 0.0f;   // read-time estimate for the current paragraph
 bool  g_auto_advance = true;   // player can pin a paragraph (see controls)
 
+// A BEAT is a silent reaction line, authored as "...": the character says
+// nothing but the moment needs to land (being handed an alien artifact; being
+// shown a dead colleague's gun-camera footage). Rendered as a held pause with
+// the speaker's portrait still up, rather than printing literal dots.
+bool is_beat(const std::string& text) {
+    for (char c : text)
+        if (c != '.' && c != ' ') return false;
+    return !text.empty();
+}
+
 // ~14 chars/sec is a comfortable subtitle rate; clamp so one-liners still
 // linger and long paragraphs don't overstay if their clip is missing.
+// Silent beats get a short fixed hold -- long enough to read as a reaction,
+// short enough not to stall the scene.
 float read_time_for(const std::string& text) {
+    if (is_beat(text)) return 1.1f;
     return std::clamp(1.6f + (float)text.size() / 14.0f, 2.2f, 11.0f);
 }
 
@@ -383,8 +396,10 @@ void draw_bar_body(BaseContext& ctx) {
     const bool last_para    = !has_dialogue ||
                               g_paragraph + 1 >= f->dialogue.size();
     if (has_dialogue) {
-        const std::string text = expand_tokens(
-            f->dialogue[std::min(g_paragraph, f->dialogue.size() - 1)]);
+        const std::string raw =
+            f->dialogue[std::min(g_paragraph, f->dialogue.size() - 1)];
+        // A beat prints nothing -- the portrait and the silence do the work.
+        const std::string text = is_beat(raw) ? std::string() : expand_tokens(raw);
         // Wrapped body text via ImGui (draw-list text doesn't wrap).
         ImGui::SetCursorScreenPos(ImVec2(tx, py + 48));
         ImGui::PushTextWrapPos(px + pw - 18);

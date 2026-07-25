@@ -70,6 +70,18 @@ def voice_rel_path(fixer_id: str, idx: int | str) -> str:
     return f"audio/fixers/{fixer_id}_{idx}.mp3"
 
 
+def is_beat(text: str) -> bool:
+    """A BEAT is a silent reaction line -- '...' -- not speech.
+
+    Written into the script where a character says nothing but the moment
+    needs to land (Grayson being handed an alien artifact, Cross being shown
+    her best pilot's gun-camera footage). TTS would read it aloud as "dot dot
+    dot", so beats are never synthesized; the engine holds them for a short
+    read-time instead.
+    """
+    return text.strip().strip(".… ") == ""
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--fixer", help="only ids starting with this prefix")
@@ -109,6 +121,10 @@ def main(argv: list[str] | None = None) -> int:
             who = "grayson" if is_pc else speaker
             rel = voice_rel_path(fid, f"{i:02d}")
             text = speakable(line)
+            if is_beat(line):
+                clips.append("")     # silent beat: index-aligned, no audio
+                skipped += 1
+                continue
             if args.dry_run:
                 print(f"  {who:<10} {rel}  {text[:70]}")
                 clips.append(rel)
