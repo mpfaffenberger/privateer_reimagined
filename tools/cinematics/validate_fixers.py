@@ -114,6 +114,15 @@ def main() -> int:
         if entry.get("offer") and not entry.get("accept_dialogue"):
             warnings.append(f"{fid}: has an offer but no accept dialogue")
 
+        # A dialogue without a parallel voice array plays SILENT in-game.
+        # expand_dialogue resets voice on rewrite; forgetting the full
+        # gen_fixer_voices pass afterwards devoices the scene (issue #268).
+        n_dlg, n_vox = len(entry.get("dialogue", [])), len(entry.get("voice", []))
+        if n_dlg and n_vox < n_dlg:
+            warnings.append(
+                f"{fid}: voice array covers {n_vox}/{n_dlg} dialogue lines "
+                "(scene will play silent) -- run gen_fixer_voices")
+
     for w in warnings:
         print(f"  WARN  {w}")
     for e in errors:
