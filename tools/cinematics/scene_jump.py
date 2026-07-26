@@ -181,7 +181,7 @@ def jump(entry: dict, fixers: dict) -> None:
     time.sleep(7)
     post("/dock", {"base": base})
     time.sleep(5)
-    post("/base/screen", {"name": "Bar"})
+    post("/base/screen", {"name": entry.get("screen", "Bar")})
     time.sleep(1.5)
 
     st = get("/base")

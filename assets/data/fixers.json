@@ -1826,7 +1826,8 @@
         "audio/fixers/masterson_m10_offer_22.mp3",
         "audio/fixers/masterson_m10_offer_23.mp3",
         "audio/fixers/masterson_m10_offer_24.mp3"
-      ]
+      ],
+      "screen": "Library"
     },
     {
       "id": "masterson_m11_offer",
@@ -1937,7 +1938,8 @@
         "audio/fixers/masterson_m11_offer_14.mp3",
         "audio/fixers/masterson_m11_offer_15.mp3",
         "audio/fixers/masterson_m11_offer_16.mp3"
-      ]
+      ],
+      "screen": "Library"
     },
     {
       "id": "masterson_m12_offer",
@@ -2048,7 +2050,8 @@
         "audio/fixers/masterson_m12_offer_13.mp3",
         "audio/fixers/masterson_m12_offer_14.mp3",
         "audio/fixers/masterson_m12_offer_15.mp3"
-      ]
+      ],
+      "screen": "Library"
     },
     {
       "id": "masterson_m13_offer",
@@ -2156,7 +2159,8 @@
         "audio/fixers/masterson_m13_offer_13.mp3",
         "audio/fixers/masterson_m13_offer_14.mp3",
         "audio/fixers/masterson_m13_offer_15.mp3"
-      ]
+      ],
+      "screen": "Library"
     },
     {
       "id": "oxford_library_scene",
