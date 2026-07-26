@@ -167,7 +167,7 @@ authoring scripts and re-run.
 > **TAYLA:** Now the real work.
 > **GRAYSON:** The milk run's over, then. Shame. I was just getting attached to honest fraud.
 > **TAYLA:** Then you'll enjoy this. Brilliance -- yes, that Brilliance -- to Hector, the mining base in Troy.
-> **GRAYSON:** That's not a manifest problem, that's a sentencing hearing. My lawyer would object, if I could afford one.
+> **GRAYSON:** That's not a manifest problem, that's a prison sentence. My lawyer would object, if I could afford one.
 > **TAYLA:** Fifteen units. It'll fit where nobody looks -- I checked your dimensions personally. And you'll afford the lawyer after this one.
 > **GRAYSON:** Oh really? Were you looking for length, or girth?
 > **TAYLA:** Cargo capacity. Though your confidence is noted -- and filed.

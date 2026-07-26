@@ -167,7 +167,7 @@ SCENES: dict[str, list[tuple[str, str]]] = {
      "honest fraud."),
  (F, "Then you'll enjoy this. Brilliance -- yes, that Brilliance -- to "
      "Hector, the mining base in Troy."),
- (P, "That's not a manifest problem, that's a sentencing hearing. My lawyer "
+ (P, "That's not a manifest problem, that's a prison sentence. My lawyer "
      "would object, if I could afford one."),
  (F, "Fifteen units. It'll fit where nobody looks -- I checked your "
      "dimensions personally. And you'll afford the lawyer after this one."),
