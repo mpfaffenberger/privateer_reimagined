@@ -279,6 +279,7 @@
         "",
         ""
       ],
+      "music": 6,
       "voice": [
         "audio/fixers/tayla_artifact_handoff_00.mp3",
         "audio/fixers/tayla_artifact_handoff_01.mp3",
@@ -308,8 +309,7 @@
         "audio/fixers/tayla_artifact_handoff_25.mp3",
         "audio/fixers/tayla_artifact_handoff_26.mp3",
         "audio/fixers/tayla_artifact_handoff_27.mp3"
-      ],
-      "music": 6
+      ]
     },
     {
       "id": "tayla_m02_offer",
@@ -406,20 +406,7 @@
         "pc",
         ""
       ],
-      "accept_voice": [
-        "audio/fixers/tayla_m02_offer_accept_00.mp3",
-        "audio/fixers/tayla_m02_offer_accept_01.mp3",
-        "audio/fixers/tayla_m02_offer_accept_02.mp3",
-        "audio/fixers/tayla_m02_offer_accept_03.mp3",
-        "audio/fixers/tayla_m02_offer_accept_04.mp3"
-      ],
-      "refuse_voice": [
-        "audio/fixers/tayla_m02_offer_refuse_00.mp3",
-        "audio/fixers/tayla_m02_offer_refuse_01.mp3",
-        "audio/fixers/tayla_m02_offer_refuse_02.mp3",
-        "",
-        "audio/fixers/tayla_m02_offer_refuse_04.mp3"
-      ],
+      "music": 6,
       "voice": [
         "audio/fixers/tayla_m02_offer_00.mp3",
         "audio/fixers/tayla_m02_offer_01.mp3",
@@ -445,7 +432,20 @@
         "audio/fixers/tayla_m02_offer_21.mp3",
         "audio/fixers/tayla_m02_offer_22.mp3"
       ],
-      "music": 6
+      "accept_voice": [
+        "audio/fixers/tayla_m02_offer_accept_00.mp3",
+        "audio/fixers/tayla_m02_offer_accept_01.mp3",
+        "audio/fixers/tayla_m02_offer_accept_02.mp3",
+        "audio/fixers/tayla_m02_offer_accept_03.mp3",
+        "audio/fixers/tayla_m02_offer_accept_04.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/tayla_m02_offer_refuse_00.mp3",
+        "audio/fixers/tayla_m02_offer_refuse_01.mp3",
+        "audio/fixers/tayla_m02_offer_refuse_02.mp3",
+        "",
+        "audio/fixers/tayla_m02_offer_refuse_04.mp3"
+      ]
     },
     {
       "id": "tayla_m03_offer",
@@ -461,19 +461,19 @@
       ],
       "dialogue": [
         "Now the real work.",
-        "The milk run's over, then.",
+        "The milk run's over, then. Shame. I was just getting attached to honest fraud.",
         "Brilliance. Yes -- that Brilliance. To Hector, the mining base in Troy.",
-        "That's not a manifest problem. That's a prison sentence.",
-        "Fifteen units. It'll fit where nobody looks.",
-        "Troy's crawling with militia.",
+        "That's not a manifest problem, that's a sentencing hearing. My lawyer would object, if I could afford one.",
+        "Fifteen units. It'll fit where nobody looks. I checked your dimensions personally.",
+        "Troy's crawling with militia, and my ship's top speed is best described as 'eventual.'",
         "It is. Talons, and they scan everything that moves.",
-        "You're sending me through a checkpoint with contraband in the hold.",
+        "So the plan is me, a hold full of felony, and a checkpoint that scans everything that moves. I'm sensing a theme in your courtship.",
         "I'm sending you through it fast. Do not stop. Do not fight. Burn past them and dock.",
-        "And if they light me up?",
-        "Then you run, and you don't lead them back here.",
-        "Charming.",
+        "And if they light me up? Asking for me, specifically.",
+        "Then you run, and you don't lead them back here. I'd hate to lose the base. I'd almost hate to lose you.",
+        "Charming. You nearly said something sweet just then -- careful, I'll get ideas.",
         "Fifteen thousand on delivery at Hector. Then come back here in one piece, hotshot.",
-        "And another piece of the story.",
+        "And another piece of the story. You still owe me the middle chapters, and I'm starting to think you like me in installments.",
         "You're earning more every run, love. Even when you don't notice."
       ],
       "offer": "Smuggle 15 units of Brilliance to Hector (Troy system) for 15,000 credits, then return to Oakham. In?",
@@ -523,18 +523,7 @@
         "pc",
         ""
       ],
-      "accept_voice": [
-        "audio/fixers/tayla_m03_offer_accept_00.mp3",
-        "audio/fixers/tayla_m03_offer_accept_01.mp3",
-        "audio/fixers/tayla_m03_offer_accept_02.mp3"
-      ],
-      "refuse_voice": [
-        "audio/fixers/tayla_m03_offer_refuse_00.mp3",
-        "audio/fixers/tayla_m03_offer_refuse_01.mp3",
-        "audio/fixers/tayla_m03_offer_refuse_02.mp3",
-        "",
-        "audio/fixers/tayla_m03_offer_refuse_04.mp3"
-      ],
+      "music": 12,
       "voice": [
         "audio/fixers/tayla_m03_offer_00.mp3",
         "audio/fixers/tayla_m03_offer_01.mp3",
@@ -552,7 +541,18 @@
         "audio/fixers/tayla_m03_offer_13.mp3",
         "audio/fixers/tayla_m03_offer_14.mp3"
       ],
-      "music": 12
+      "accept_voice": [
+        "audio/fixers/tayla_m03_offer_accept_00.mp3",
+        "audio/fixers/tayla_m03_offer_accept_01.mp3",
+        "audio/fixers/tayla_m03_offer_accept_02.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/tayla_m03_offer_refuse_00.mp3",
+        "audio/fixers/tayla_m03_offer_refuse_01.mp3",
+        "audio/fixers/tayla_m03_offer_refuse_02.mp3",
+        "",
+        "audio/fixers/tayla_m03_offer_refuse_04.mp3"
+      ]
     },
     {
       "id": "tayla_m03_debrief",
@@ -566,11 +566,11 @@
       ],
       "dialogue": [
         "You made it past the militia with the goods and your hull.",
-        "It was close at the second nav point.",
+        "It was close at the second nav point. Close enough to read hull numbers. Close enough to start drafting a confession.",
         "I'm almost impressed.",
-        "Almost is bad. Almost is bait.",
+        "'Almost' again. You keep dangling that word like it's on a string.",
         "Earned, then. Catch your breath, $NM. The next run makes Troy look like a pleasure cruise.",
-        "You said that about the last one.",
+        "You said that about the last one, and your pleasure cruises keep involving people who shoot at me.",
         "And I was wrong. This time I'm not."
       ],
       "done_actions": [
@@ -587,6 +587,7 @@
         ""
       ],
       "portrait_pc": "portraits/grayson/_ref.png",
+      "music": 12,
       "voice": [
         "audio/fixers/tayla_m03_debrief_00.mp3",
         "audio/fixers/tayla_m03_debrief_01.mp3",
@@ -595,8 +596,7 @@
         "audio/fixers/tayla_m03_debrief_04.mp3",
         "audio/fixers/tayla_m03_debrief_05.mp3",
         "audio/fixers/tayla_m03_debrief_06.mp3"
-      ],
-      "music": 12
+      ]
     },
     {
       "id": "tayla_m04_offer",
@@ -612,16 +612,16 @@
       ],
       "dialogue": [
         "Bigger load this time, hotshot. Brilliance to New Constantinople itself.",
-        "The capital. You're not serious.",
+        "The capital. You're not serious. That's like shoplifting from a police station.",
         "Twenty-five units.",
-        "That's Confed's front porch, Tayla.",
+        "That's Confed's front porch, Tayla. They keep the porch light on and everything.",
         "Before you say no -- I have friends on the route. They owe me.",
         "You bribed them.",
         "Generously.",
-        "Bribed patrols. You'll forgive me if I keep my guns hot.",
+        "'Generously.' Now I'm jealous of a customs officer. You'll forgive me if I keep my guns hot anyway.",
         "I cleared the route myself, $NM. If anyone lights you up, it wasn't my people.",
-        "Every time you say that it costs me hull.",
-        "Twenty thousand on delivery. Then come straight back."
+        "Every time you tell me a route is clean it costs me hull plates. I've started pricing you into the repair budget. Line item: 'Tayla.'",
+        "Twenty thousand on delivery. Then come straight back -- I get bored when you're not in danger."
       ],
       "offer": "Smuggle 25 units of Brilliance to New Constantinople for 20,000 credits, then return to Oakham. Deal?",
       "accept_actions": [
@@ -644,7 +644,7 @@
       "portrait_pc": "portraits/grayson/_ref.png",
       "accept_dialogue": [
         "Twenty-five units, straight to the capital. You're moving up.",
-        "That's not the word I'd use.",
+        "That's not the word I'd use. 'Descending with style,' maybe.",
         "It's the word your account balance would use. Go."
       ],
       "accept_speaker": [
@@ -666,18 +666,7 @@
         "pc",
         ""
       ],
-      "accept_voice": [
-        "audio/fixers/tayla_m04_offer_accept_00.mp3",
-        "audio/fixers/tayla_m04_offer_accept_01.mp3",
-        "audio/fixers/tayla_m04_offer_accept_02.mp3"
-      ],
-      "refuse_voice": [
-        "audio/fixers/tayla_m04_offer_refuse_00.mp3",
-        "audio/fixers/tayla_m04_offer_refuse_01.mp3",
-        "audio/fixers/tayla_m04_offer_refuse_02.mp3",
-        "",
-        "audio/fixers/tayla_m04_offer_refuse_04.mp3"
-      ],
+      "music": 12,
       "voice": [
         "audio/fixers/tayla_m04_offer_00.mp3",
         "audio/fixers/tayla_m04_offer_01.mp3",
@@ -691,7 +680,18 @@
         "audio/fixers/tayla_m04_offer_09.mp3",
         "audio/fixers/tayla_m04_offer_10.mp3"
       ],
-      "music": 12
+      "accept_voice": [
+        "audio/fixers/tayla_m04_offer_accept_00.mp3",
+        "audio/fixers/tayla_m04_offer_accept_01.mp3",
+        "audio/fixers/tayla_m04_offer_accept_02.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/tayla_m04_offer_refuse_00.mp3",
+        "audio/fixers/tayla_m04_offer_refuse_01.mp3",
+        "audio/fixers/tayla_m04_offer_refuse_02.mp3",
+        "",
+        "audio/fixers/tayla_m04_offer_refuse_04.mp3"
+      ]
     },
     {
       "id": "tayla_m04_debrief",
@@ -704,19 +704,19 @@
         "tayla_3_done"
       ],
       "dialogue": [
-        "Bribed patrols, you said.",
+        "Bribed patrols, you said. 'They owe me,' you said.",
         "I did say that.",
-        "Stilettos and Broadswords at every jump point.",
+        "Stilettos and Broadswords at every jump point. Your friends have a strange way of owing you.",
         "Huh. Must have been a clerical error.",
-        "I lost half my shields to a clerical error.",
+        "I lost half my shields to a clerical error. The clerical error had missile lock.",
         "Stop scowling. To make it up to you, my people just installed something in your ship. While you were docked.",
-        "You went into my ship.",
+        "You went into my ship. I feel like there are stages to this kind of thing, and you skipped several.",
         "A smuggler's compartment. Twenty units, invisible to any scanner ever built.",
-        "So that's what the noise was.",
+        "So that's what the noise was. I assumed the dock crew was stealing something. Silly me -- they were installing the crime.",
         "Consider it a promotion, love. The contractors I trust do that on the side.",
         "...",
         "You'd rather have the apology?",
-        "I'd rather have been asked.",
+        "I'd rather have been asked. Call me old-fashioned -- I like a little conversation before someone's inside my ship.",
         "One more run, $NM. Then we're square -- and then we'll see."
       ],
       "done_actions": [
@@ -741,6 +741,7 @@
         ""
       ],
       "portrait_pc": "portraits/grayson/_ref.png",
+      "music": 12,
       "voice": [
         "audio/fixers/tayla_m04_debrief_00.mp3",
         "audio/fixers/tayla_m04_debrief_01.mp3",
@@ -756,8 +757,7 @@
         "audio/fixers/tayla_m04_debrief_11.mp3",
         "audio/fixers/tayla_m04_debrief_12.mp3",
         "audio/fixers/tayla_m04_debrief_13.mp3"
-      ],
-      "music": 12
+      ]
     },
     {
       "id": "tayla_m05_offer",
@@ -775,20 +775,20 @@
         "Let me guess... I'm running a shipment of catnip to Kilrah.",
         "...!",
         "You're still funny, hotshot. I save the interesting runs for the pilots I trust.",
-        "Generous.",
+        "Generous. Most people just buy me a drink first.",
         "I think of it as an investment. The question is whether you're done being a courier.",
-        "What else would I be?",
-        "Fly my missions and we'll talk more, hotshot.",
-        "Fits the new compartment exactly.",
+        "What else would I be? Careful with the job titles -- the last one you gave me came with a hidden compartment.",
+        "Fly my missions and we'll talk more, love. I'm still deciding what you're for.",
+        "Twenty units. Fits the new compartment exactly. Almost like somebody measured me for it.",
         "Poetic, no?",
-        "Convenient. There's a difference.",
+        "Convenient. There's a difference. Poetry doesn't usually end in a strip search.",
         "One thing before you go. William Riordian.",
         "Should that name mean something?",
         "He flew these runs before you showed up. Then he let a few friends talk him out of his nerve.",
-        "And now he's behind me.",
+        "And now he's behind me. Wonderful. I've inherited an ex.",
         "And now he's telling strangers what your docking pattern looks like. Your compartment stays closed, love. The contractors know that.",
         "Ten thousand. After this I'll tell you everything I know about that trinket of yours.",
-        "Everything, please.",
+        "Everything, please. I've earned the director's cut.",
         "Everything I have, partner. Come back in one piece."
       ],
       "offer": "One final run: 20 units of Brilliance to New Constantinople for 10,000 credits. Finish the job?",
@@ -819,7 +819,7 @@
       "portrait_pc": "portraits/grayson/_ref.png",
       "accept_dialogue": [
         "Last one. Then I pay out in full -- credits and story both.",
-        "I'll hold you to the second half.",
+        "I'll hold you to the second half. The credits spend -- the story's the part I've been flying for.",
         "You've earned it. Watch for Riordian on the way out.",
         "You said he was just talking.",
         "Men who just talk don't fuel their ships at three in the morning."
@@ -845,20 +845,7 @@
         "pc",
         ""
       ],
-      "accept_voice": [
-        "audio/fixers/tayla_m05_offer_accept_00.mp3",
-        "audio/fixers/tayla_m05_offer_accept_01.mp3",
-        "audio/fixers/tayla_m05_offer_accept_02.mp3",
-        "audio/fixers/tayla_m05_offer_accept_03.mp3",
-        "audio/fixers/tayla_m05_offer_accept_04.mp3"
-      ],
-      "refuse_voice": [
-        "audio/fixers/tayla_m05_offer_refuse_00.mp3",
-        "audio/fixers/tayla_m05_offer_refuse_01.mp3",
-        "audio/fixers/tayla_m05_offer_refuse_02.mp3",
-        "",
-        "audio/fixers/tayla_m05_offer_refuse_04.mp3"
-      ],
+      "music": 12,
       "voice": [
         "audio/fixers/tayla_m05_offer_00.mp3",
         "audio/fixers/tayla_m05_offer_01.mp3",
@@ -879,7 +866,20 @@
         "audio/fixers/tayla_m05_offer_16.mp3",
         "audio/fixers/tayla_m05_offer_17.mp3"
       ],
-      "music": 12
+      "accept_voice": [
+        "audio/fixers/tayla_m05_offer_accept_00.mp3",
+        "audio/fixers/tayla_m05_offer_accept_01.mp3",
+        "audio/fixers/tayla_m05_offer_accept_02.mp3",
+        "audio/fixers/tayla_m05_offer_accept_03.mp3",
+        "audio/fixers/tayla_m05_offer_accept_04.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/tayla_m05_offer_refuse_00.mp3",
+        "audio/fixers/tayla_m05_offer_refuse_01.mp3",
+        "audio/fixers/tayla_m05_offer_refuse_02.mp3",
+        "",
+        "audio/fixers/tayla_m05_offer_refuse_04.mp3"
+      ]
     },
     {
       "id": "tayla_m05_debrief",
@@ -893,21 +893,21 @@
       ],
       "dialogue": [
         "Riordian, hm?",
-        "He found me at the jump point. He wasn't alone.",
-        "He always was a jealous idiot. You did fine.",
-        "You owe me a story, Tayla.",
+        "He found me at the jump point. He wasn't alone, and he wasn't there to compare compartments.",
+        "He always was a jealous idiot. Jealous of the runs, jealous of the pilot. You did fine.",
+        "You owe me a story, Tayla. I've been paid in cliffhangers for a month.",
         "Here's the rest of what I owe you, first.",
         "...",
         "Before Sandoval, it belonged to a spice merchant named Deiter.",
-        "And before him?",
+        "And before him? I'm invested now. Emotionally. Possibly terminally.",
         "Deiter had it from his own father. Every owner I can name died holding it.",
-        "That's a pattern, not a story.",
+        "That's a pattern, not a story. Patterns are what coroners find.",
         "That's where my thread runs out. I've sent the holo on to someone who can actually read it.",
         "Who?",
         "Roman Lynch. New Constantinople. A thug -- but an expert on exotic and valuable things.",
-        "A thug.",
+        "A thug. You're sending me to a thug. Should I be flattered you think I'll survive him?",
         "The polite kind. He's expecting you in the bar there.",
-        "And that squares us.",
+        "And that squares us. Funny -- being square with you feels a lot like being in deeper.",
         "That squares us. It's been profitable, partner. Try not to die -- the next drink's on me."
       ],
       "done_actions": [
@@ -935,6 +935,7 @@
         ""
       ],
       "portrait_pc": "portraits/grayson/_ref.png",
+      "music": 12,
       "voice": [
         "audio/fixers/tayla_m05_debrief_00.mp3",
         "audio/fixers/tayla_m05_debrief_01.mp3",
@@ -953,8 +954,7 @@
         "audio/fixers/tayla_m05_debrief_14.mp3",
         "audio/fixers/tayla_m05_debrief_15.mp3",
         "audio/fixers/tayla_m05_debrief_16.mp3"
-      ],
-      "music": 12
+      ]
     },
     {
       "id": "lynch_m06_offer",

@@ -163,106 +163,134 @@ SCENES: dict[str, list[tuple[str, str]]] = {
 ],
 "tayla_m03_offer": [
  (F, "Now the real work."),
- (P, "The milk run's over, then."),
+ (P, "The milk run's over, then. Shame. I was just getting attached to "
+     "honest fraud."),
  (F, "Brilliance. Yes -- that Brilliance. To Hector, the mining base in Troy."),
- (P, "That's not a manifest problem. That's a prison sentence."),
- (F, "Fifteen units. It'll fit where nobody looks."),
- (P, "Troy's crawling with militia."),
+ (P, "That's not a manifest problem, that's a sentencing hearing. My lawyer "
+     "would object, if I could afford one."),
+ (F, "Fifteen units. It'll fit where nobody looks. I checked your dimensions "
+     "personally."),
+ (P, "Troy's crawling with militia, and my ship's top speed is best "
+     "described as 'eventual.'"),
  (F, "It is. Talons, and they scan everything that moves."),
- (P, "You're sending me through a checkpoint with contraband in the hold."),
+ (P, "So the plan is me, a hold full of felony, and a checkpoint that scans "
+     "everything that moves. I'm sensing a theme in your courtship."),
  (F, "I'm sending you through it fast. Do not stop. Do not fight. Burn past "
      "them and dock."),
- (P, "And if they light me up?"),
- (F, "Then you run, and you don't lead them back here."),
- (P, "Charming."),
+ (P, "And if they light me up? Asking for me, specifically."),
+ (F, "Then you run, and you don't lead them back here. I'd hate to lose the "
+     "base. I'd almost hate to lose you."),
+ (P, "Charming. You nearly said something sweet just then -- careful, I'll "
+     "get ideas."),
  (F, "Fifteen thousand on delivery at Hector. Then come back here in "
      "one piece, hotshot."),
- (P, "And another piece of the story."),
+ (P, "And another piece of the story. You still owe me the middle chapters, "
+     "and I'm starting to think you like me in installments."),
  (F, "You're earning more every run, love. Even when you don't notice."),
 ],
 "tayla_m03_debrief": [
  (F, "You made it past the militia with the goods and your hull."),
- (P, "It was close at the second nav point."),
+ (P, "It was close at the second nav point. Close enough to read hull "
+     "numbers. Close enough to start drafting a confession."),
  (F, "I'm almost impressed."),
- (P, "Almost is bad. Almost is bait."),
+ (P, "'Almost' again. You keep dangling that word like it's on a string."),
  (F, "Earned, then. Catch your breath, $NM. The next run makes Troy look like a "
      "pleasure cruise."),
- (P, "You said that about the last one."),
+ (P, "You said that about the last one, and your pleasure cruises keep "
+     "involving people who shoot at me."),
  (F, "And I was wrong. This time I'm not."),
 ],
 "tayla_m04_offer": [
  (F, "Bigger load this time, hotshot. Brilliance to New Constantinople itself."),
- (P, "The capital. You're not serious."),
+ (P, "The capital. You're not serious. That's like shoplifting from a police "
+     "station."),
  (F, "Twenty-five units."),
- (P, "That's Confed's front porch, Tayla."),
+ (P, "That's Confed's front porch, Tayla. They keep the porch light on and "
+     "everything."),
  (F, "Before you say no -- I have friends on the route. They owe me."),
  (P, "You bribed them."),
  (F, "Generously."),
- (P, "Bribed patrols. You'll forgive me if I keep my guns hot."),
+ (P, "'Generously.' Now I'm jealous of a customs officer. You'll forgive me "
+     "if I keep my guns hot anyway."),
  (F, "I cleared the route myself, $NM. If anyone lights you up, it wasn't my people."),
- (P, "Every time you say that it costs me hull."),
- (F, "Twenty thousand on delivery. Then come straight back."),
+ (P, "Every time you tell me a route is clean it costs me hull plates. I've "
+     "started pricing you into the repair budget. Line item: 'Tayla.'"),
+ (F, "Twenty thousand on delivery. Then come straight back -- I get bored "
+     "when you're not in danger."),
 ],
 "tayla_m04_debrief": [
- (P, "Bribed patrols, you said."),
+ (P, "Bribed patrols, you said. 'They owe me,' you said."),
  (F, "I did say that."),
- (P, "Stilettos and Broadswords at every jump point."),
+ (P, "Stilettos and Broadswords at every jump point. Your friends have a "
+     "strange way of owing you."),
  (F, "Huh. Must have been a clerical error."),
- (P, "I lost half my shields to a clerical error."),
+ (P, "I lost half my shields to a clerical error. The clerical error had "
+     "missile lock."),
  (F, "Stop scowling. To make it up to you, my people just installed something "
      "in your ship. While you were docked."),
- (P, "You went into my ship."),
+ (P, "You went into my ship. I feel like there are stages to this kind of "
+     "thing, and you skipped several."),
  (F, "A smuggler's compartment. Twenty units, invisible to any scanner ever "
      "built."),
- (P, "So that's what the noise was."),
+ (P, "So that's what the noise was. I assumed the dock crew was stealing "
+     "something. Silly me -- they were installing the crime."),
  (F, "Consider it a promotion, love. The contractors I trust do that on the side."),
  (P, "..."),
  (F, "You'd rather have the apology?"),
- (P, "I'd rather have been asked."),
+ (P, "I'd rather have been asked. Call me old-fashioned -- I like a little "
+     "conversation before someone's inside my ship."),
  (F, "One more run, $NM. Then we're square -- and then we'll see."),
 ],
 "tayla_m05_offer": [
  (P, "Let me guess... I'm running a shipment of catnip to Kilrah."),
  (F, "...!"),
  (F, "You're still funny, hotshot. I save the interesting runs for the pilots I trust."),
- (P, "Generous."),
+ (P, "Generous. Most people just buy me a drink first."),
  (F, "I think of it as an investment. The question is whether you're done being a courier."),
- (P, "What else would I be?"),
- (F, "Fly my missions and we'll talk more, hotshot."),
- (P, "Fits the new compartment exactly."),
+ (P, "What else would I be? Careful with the job titles -- the last one you "
+     "gave me came with a hidden compartment."),
+ (F, "Fly my missions and we'll talk more, love. I'm still deciding what "
+     "you're for."),
+ (P, "Twenty units. Fits the new compartment exactly. Almost like somebody "
+     "measured me for it."),
  (F, "Poetic, no?"),
- (P, "Convenient. There's a difference."),
+ (P, "Convenient. There's a difference. Poetry doesn't usually end in a "
+     "strip search."),
  (F, "One thing before you go. William Riordian."),
  (P, "Should that name mean something?"),
  (F, "He flew these runs before you showed up. Then he let a few friends "
      "talk him out of his nerve."),
- (P, "And now he's behind me."),
+ (P, "And now he's behind me. Wonderful. I've inherited an ex."),
  (F, "And now he's telling strangers what your docking pattern looks like. "
      "Your compartment stays closed, love. The contractors know that."),
  (F, "Ten thousand. After this I'll tell you everything I know about that "
      "trinket of yours."),
- (P, "Everything, please."),
+ (P, "Everything, please. I've earned the director's cut."),
  (F, "Everything I have, partner. Come back in one piece."),
 ],
 "tayla_m05_debrief": [
  (F, "Riordian, hm?"),
- (P, "He found me at the jump point. He wasn't alone."),
- (F, "He always was a jealous idiot. You did fine."),
- (P, "You owe me a story, Tayla."),
+ (P, "He found me at the jump point. He wasn't alone, and he wasn't there to "
+     "compare compartments."),
+ (F, "He always was a jealous idiot. Jealous of the runs, jealous of the "
+     "pilot. You did fine."),
+ (P, "You owe me a story, Tayla. I've been paid in cliffhangers for a month."),
  (F, "Here's the rest of what I owe you, first."),
  (P, "..."),
  (F, "Before Sandoval, it belonged to a spice merchant named Deiter."),
- (P, "And before him?"),
+ (P, "And before him? I'm invested now. Emotionally. Possibly terminally."),
  (F, "Deiter had it from his own father. Every owner I can name died holding it."),
- (P, "That's a pattern, not a story."),
+ (P, "That's a pattern, not a story. Patterns are what coroners find."),
  (F, "That's where my thread runs out. I've sent the holo on to someone who "
      "can actually read it."),
  (P, "Who?"),
  (F, "Roman Lynch. New Constantinople. A thug -- but an expert on exotic and "
      "valuable things."),
- (P, "A thug."),
+ (P, "A thug. You're sending me to a thug. Should I be flattered you think "
+     "I'll survive him?"),
  (F, "The polite kind. He's expecting you in the bar there."),
- (P, "And that squares us."),
+ (P, "And that squares us. Funny -- being square with you feels a lot like "
+     "being in deeper."),
  (F, "That squares us. It's been profitable, partner. Try not to die -- "
      "the next drink's on me."),
 ],

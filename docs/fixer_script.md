@@ -165,19 +165,19 @@ authoring scripts and re-run.
 *Appears when:* requires `tayla_1_done`; blocked by `m03_active`, `m03_delivered`, `tayla_2_done`
 
 > **TAYLA:** Now the real work.
-> **GRAYSON:** The milk run's over, then.
+> **GRAYSON:** The milk run's over, then. Shame. I was just getting attached to honest fraud.
 > **TAYLA:** Brilliance. Yes -- that Brilliance. To Hector, the mining base in Troy.
-> **GRAYSON:** That's not a manifest problem. That's a prison sentence.
-> **TAYLA:** Fifteen units. It'll fit where nobody looks.
-> **GRAYSON:** Troy's crawling with militia.
+> **GRAYSON:** That's not a manifest problem, that's a sentencing hearing. My lawyer would object, if I could afford one.
+> **TAYLA:** Fifteen units. It'll fit where nobody looks. I checked your dimensions personally.
+> **GRAYSON:** Troy's crawling with militia, and my ship's top speed is best described as 'eventual.'
 > **TAYLA:** It is. Talons, and they scan everything that moves.
-> **GRAYSON:** You're sending me through a checkpoint with contraband in the hold.
+> **GRAYSON:** So the plan is me, a hold full of felony, and a checkpoint that scans everything that moves. I'm sensing a theme in your courtship.
 > **TAYLA:** I'm sending you through it fast. Do not stop. Do not fight. Burn past them and dock.
-> **GRAYSON:** And if they light me up?
-> **TAYLA:** Then you run, and you don't lead them back here.
-> **GRAYSON:** Charming.
+> **GRAYSON:** And if they light me up? Asking for me, specifically.
+> **TAYLA:** Then you run, and you don't lead them back here. I'd hate to lose the base. I'd almost hate to lose you.
+> **GRAYSON:** Charming. You nearly said something sweet just then -- careful, I'll get ideas.
 > **TAYLA:** Fifteen thousand on delivery at Hector. Then come back here in one piece, hotshot.
-> **GRAYSON:** And another piece of the story.
+> **GRAYSON:** And another piece of the story. You still owe me the middle chapters, and I'm starting to think you like me in installments.
 > **TAYLA:** You're earning more every run, love. Even when you don't notice.
 
 **> OFFER:** Smuggle 15 units of Brilliance to Hector (Troy system) for 15,000 credits, then return to Oakham. In?
@@ -206,11 +206,11 @@ authoring scripts and re-run.
 *Appears when:* requires `m03_delivered`; blocked by `tayla_2_done`
 
 > **TAYLA:** You made it past the militia with the goods and your hull.
-> **GRAYSON:** It was close at the second nav point.
+> **GRAYSON:** It was close at the second nav point. Close enough to read hull numbers. Close enough to start drafting a confession.
 > **TAYLA:** I'm almost impressed.
-> **GRAYSON:** Almost is bad. Almost is bait.
+> **GRAYSON:** 'Almost' again. You keep dangling that word like it's on a string.
 > **TAYLA:** Earned, then. Catch your breath, $NM. The next run makes Troy look like a pleasure cruise.
-> **GRAYSON:** You said that about the last one.
+> **GRAYSON:** You said that about the last one, and your pleasure cruises keep involving people who shoot at me.
 > **TAYLA:** And I was wrong. This time I'm not.
 
 *Outcome:* `set_flag:tayla_2_done`
@@ -223,23 +223,23 @@ authoring scripts and re-run.
 *Appears when:* requires `tayla_2_done`; blocked by `m04_active`, `m04_delivered`, `tayla_3_done`
 
 > **TAYLA:** Bigger load this time, hotshot. Brilliance to New Constantinople itself.
-> **GRAYSON:** The capital. You're not serious.
+> **GRAYSON:** The capital. You're not serious. That's like shoplifting from a police station.
 > **TAYLA:** Twenty-five units.
-> **GRAYSON:** That's Confed's front porch, Tayla.
+> **GRAYSON:** That's Confed's front porch, Tayla. They keep the porch light on and everything.
 > **TAYLA:** Before you say no -- I have friends on the route. They owe me.
 > **GRAYSON:** You bribed them.
 > **TAYLA:** Generously.
-> **GRAYSON:** Bribed patrols. You'll forgive me if I keep my guns hot.
+> **GRAYSON:** 'Generously.' Now I'm jealous of a customs officer. You'll forgive me if I keep my guns hot anyway.
 > **TAYLA:** I cleared the route myself, $NM. If anyone lights you up, it wasn't my people.
-> **GRAYSON:** Every time you say that it costs me hull.
-> **TAYLA:** Twenty thousand on delivery. Then come straight back.
+> **GRAYSON:** Every time you tell me a route is clean it costs me hull plates. I've started pricing you into the repair budget. Line item: 'Tayla.'
+> **TAYLA:** Twenty thousand on delivery. Then come straight back -- I get bored when you're not in danger.
 
 **> OFFER:** Smuggle 25 units of Brilliance to New Constantinople for 20,000 credits, then return to Oakham. Deal?
 
 **— ACCEPT —**
 
 > **TAYLA:** Twenty-five units, straight to the capital. You're moving up.
-> **GRAYSON:** That's not the word I'd use.
+> **GRAYSON:** That's not the word I'd use. 'Descending with style,' maybe.
 > **TAYLA:** It's the word your account balance would use. Go.
 
 **— REFUSE —**
@@ -259,19 +259,19 @@ authoring scripts and re-run.
 *Location:* oakham  
 *Appears when:* requires `m04_delivered`; blocked by `tayla_3_done`
 
-> **GRAYSON:** Bribed patrols, you said.
+> **GRAYSON:** Bribed patrols, you said. 'They owe me,' you said.
 > **TAYLA:** I did say that.
-> **GRAYSON:** Stilettos and Broadswords at every jump point.
+> **GRAYSON:** Stilettos and Broadswords at every jump point. Your friends have a strange way of owing you.
 > **TAYLA:** Huh. Must have been a clerical error.
-> **GRAYSON:** I lost half my shields to a clerical error.
+> **GRAYSON:** I lost half my shields to a clerical error. The clerical error had missile lock.
 > **TAYLA:** Stop scowling. To make it up to you, my people just installed something in your ship. While you were docked.
-> **GRAYSON:** You went into my ship.
+> **GRAYSON:** You went into my ship. I feel like there are stages to this kind of thing, and you skipped several.
 > **TAYLA:** A smuggler's compartment. Twenty units, invisible to any scanner ever built.
-> **GRAYSON:** So that's what the noise was.
+> **GRAYSON:** So that's what the noise was. I assumed the dock crew was stealing something. Silly me -- they were installing the crime.
 > **TAYLA:** Consider it a promotion, love. The contractors I trust do that on the side.
 > **GRAYSON:** *(silence)*
 > **TAYLA:** You'd rather have the apology?
-> **GRAYSON:** I'd rather have been asked.
+> **GRAYSON:** I'd rather have been asked. Call me old-fashioned -- I like a little conversation before someone's inside my ship.
 > **TAYLA:** One more run, $NM. Then we're square -- and then we'll see.
 
 *Outcome:* `m04:install_compartment`, `set_flag:tayla_3_done`
@@ -286,20 +286,20 @@ authoring scripts and re-run.
 > **GRAYSON:** Let me guess... I'm running a shipment of catnip to Kilrah.
 > **TAYLA:** ...!
 > **TAYLA:** You're still funny, hotshot. I save the interesting runs for the pilots I trust.
-> **GRAYSON:** Generous.
+> **GRAYSON:** Generous. Most people just buy me a drink first.
 > **TAYLA:** I think of it as an investment. The question is whether you're done being a courier.
-> **GRAYSON:** What else would I be?
-> **TAYLA:** Fly my missions and we'll talk more, hotshot.
-> **GRAYSON:** Fits the new compartment exactly.
+> **GRAYSON:** What else would I be? Careful with the job titles -- the last one you gave me came with a hidden compartment.
+> **TAYLA:** Fly my missions and we'll talk more, love. I'm still deciding what you're for.
+> **GRAYSON:** Twenty units. Fits the new compartment exactly. Almost like somebody measured me for it.
 > **TAYLA:** Poetic, no?
-> **GRAYSON:** Convenient. There's a difference.
+> **GRAYSON:** Convenient. There's a difference. Poetry doesn't usually end in a strip search.
 > **TAYLA:** One thing before you go. William Riordian.
 > **GRAYSON:** Should that name mean something?
 > **TAYLA:** He flew these runs before you showed up. Then he let a few friends talk him out of his nerve.
-> **GRAYSON:** And now he's behind me.
+> **GRAYSON:** And now he's behind me. Wonderful. I've inherited an ex.
 > **TAYLA:** And now he's telling strangers what your docking pattern looks like. Your compartment stays closed, love. The contractors know that.
 > **TAYLA:** Ten thousand. After this I'll tell you everything I know about that trinket of yours.
-> **GRAYSON:** Everything, please.
+> **GRAYSON:** Everything, please. I've earned the director's cut.
 > **TAYLA:** Everything I have, partner. Come back in one piece.
 
 **> OFFER:** One final run: 20 units of Brilliance to New Constantinople for 10,000 credits. Finish the job?
@@ -307,7 +307,7 @@ authoring scripts and re-run.
 **— ACCEPT —**
 
 > **TAYLA:** Last one. Then I pay out in full -- credits and story both.
-> **GRAYSON:** I'll hold you to the second half.
+> **GRAYSON:** I'll hold you to the second half. The credits spend -- the story's the part I've been flying for.
 > **TAYLA:** You've earned it. Watch for Riordian on the way out.
 > **GRAYSON:** You said he was just talking.
 > **TAYLA:** Men who just talk don't fuel their ships at three in the morning.
@@ -330,21 +330,21 @@ authoring scripts and re-run.
 *Appears when:* requires `m05_delivered`; blocked by `tayla_done`
 
 > **TAYLA:** Riordian, hm?
-> **GRAYSON:** He found me at the jump point. He wasn't alone.
-> **TAYLA:** He always was a jealous idiot. You did fine.
-> **GRAYSON:** You owe me a story, Tayla.
+> **GRAYSON:** He found me at the jump point. He wasn't alone, and he wasn't there to compare compartments.
+> **TAYLA:** He always was a jealous idiot. Jealous of the runs, jealous of the pilot. You did fine.
+> **GRAYSON:** You owe me a story, Tayla. I've been paid in cliffhangers for a month.
 > **TAYLA:** Here's the rest of what I owe you, first.
 > **GRAYSON:** *(silence)*
 > **TAYLA:** Before Sandoval, it belonged to a spice merchant named Deiter.
-> **GRAYSON:** And before him?
+> **GRAYSON:** And before him? I'm invested now. Emotionally. Possibly terminally.
 > **TAYLA:** Deiter had it from his own father. Every owner I can name died holding it.
-> **GRAYSON:** That's a pattern, not a story.
+> **GRAYSON:** That's a pattern, not a story. Patterns are what coroners find.
 > **TAYLA:** That's where my thread runs out. I've sent the holo on to someone who can actually read it.
 > **GRAYSON:** Who?
 > **TAYLA:** Roman Lynch. New Constantinople. A thug -- but an expert on exotic and valuable things.
-> **GRAYSON:** A thug.
+> **GRAYSON:** A thug. You're sending me to a thug. Should I be flattered you think I'll survive him?
 > **TAYLA:** The polite kind. He's expecting you in the bar there.
-> **GRAYSON:** And that squares us.
+> **GRAYSON:** And that squares us. Funny -- being square with you feels a lot like being in deeper.
 > **TAYLA:** That squares us. It's been profitable, partner. Try not to die -- the next drink's on me.
 
 *Outcome:* `set_flag:tayla_done`, `clear_flag:tayla_employed`
