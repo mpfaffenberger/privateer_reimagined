@@ -59,6 +59,9 @@ _TOKENS = {"$NM": "Burrows", "$CS": "Grayson"}
 # authored spelling; cloned voices receive the same phonetic cue so names do
 # not drift between speakers.
 _PRONUNCIATIONS = {"Palan": "Pal-an"}
+# Surgical delivery overrides. Keep character defaults stable; only lines with
+# an explicit dramatic need should diverge.
+_LINE_SPEED = {("oxford_library_scene", 5): 0.86}
 
 # Extracted 1993 recordings beat synthesis every time. These paths are relative
 # to assets/cinematics/, matching the engine's voice-path contract.
@@ -156,7 +159,8 @@ def main(argv: list[str] | None = None) -> int:
                 made += 1
                 continue
             out = voices.gen_line_voice(
-                who, text, out_rel=rel, bible=bible, force=args.force
+                who, text, out_rel=rel, bible=bible, force=args.force,
+                speed=_LINE_SPEED.get((fid, i), 1.0)
             )
             if out:
                 clips.append(out)
