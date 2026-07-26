@@ -262,8 +262,8 @@ SCENES: dict[str, list[tuple[str, str]]] = {
      "Fly it and we'll talk more, love. I'm still deciding what you're for."),
  (P, "Twenty units. Fits the new compartment exactly. Almost like somebody "
      "measured me for it."),
- (F, "Poetic, no?"),
- (P, "Convenient. There's a difference. Poetry doesn't usually end in a "
+ (F, "Elegant, isn't it?"),
+ (P, "Convenient. There's a difference. Elegance doesn't usually end in a "
      "strip search."),
  (F, "Only if they catch you, and they won't. One thing before you go. "
      "William Riordian."),

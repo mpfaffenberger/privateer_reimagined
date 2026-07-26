@@ -293,8 +293,8 @@ authoring scripts and re-run.
 > **GRAYSON:** What else would I be? Careful with the job titles -- the last one you gave me came with a hidden compartment.
 > **TAYLA:** Twenty units of Brilliance to New Constantinople -- the last run. Fly it and we'll talk more, love. I'm still deciding what you're for.
 > **GRAYSON:** Twenty units. Fits the new compartment exactly. Almost like somebody measured me for it.
-> **TAYLA:** Poetic, no?
-> **GRAYSON:** Convenient. There's a difference. Poetry doesn't usually end in a strip search.
+> **TAYLA:** Elegant, isn't it?
+> **GRAYSON:** Convenient. There's a difference. Elegance doesn't usually end in a strip search.
 > **TAYLA:** Only if they catch you, and they won't. One thing before you go. William Riordian.
 > **GRAYSON:** Should that name mean something?
 > **TAYLA:** He flew these runs before you showed up. Then he let a few friends talk him out of his nerve.
