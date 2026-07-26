@@ -347,7 +347,10 @@ authoring scripts and re-run.
 > **GRAYSON:** You mean the famous mob boss who murders people and then bribes the authorities to stay out of prison? Gosh, Tayla, I didn't realize we'd made it this far in our relationship.
 > **TAYLA:** In my line of work, this is meeting the family. He's expecting you in the bar there -- mind your manners. Roman notices them.
 > **GRAYSON:** And that squares us. Funny -- being square with you feels a lot like being in deeper.
-> **TAYLA:** That's the idea. It's been profitable, partner. Try not to die -- the next drink's on me.
+> **TAYLA:** That's the idea. And one more thing, partner: if you ever crack the mystery of that trinket, don't send word. Fly back here and tell me the ending in person.
+> **TAYLA:** Fair warning -- watching you fly inspired me to dust off my old F-38 Talon. I thought I was retired for good. I'm reconsidering.
+> **GRAYSON:** I honestly can't tell which feeling is stronger: being flattered that you were watching my flying, or realizing you could have flown every one of these runs yourself.
+> **TAYLA:** Of course I could have. But then we'd never have gotten this close, Grayson. Try not to die -- the next drink's on me.
 
 *Outcome:* `set_flag:tayla_done`, `clear_flag:tayla_employed`
 

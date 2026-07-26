@@ -305,8 +305,16 @@ SCENES: dict[str, list[tuple[str, str]]] = {
      "in the bar there -- mind your manners. Roman notices them."),
  (P, "And that squares us. Funny -- being square with you feels a lot like "
      "being in deeper."),
- (F, "That's the idea. It's been profitable, partner. Try not to die -- "
-     "the next drink's on me."),
+ (F, "That's the idea. And one more thing, partner: if you ever crack the "
+     "mystery of that trinket, don't send word. Fly back here and tell me "
+     "the ending in person."),
+ (F, "Fair warning -- watching you fly inspired me to dust off my old F-38 "
+     "Talon. I thought I was retired for good. I'm reconsidering."),
+ (P, "I honestly can't tell which feeling is stronger: being flattered that "
+     "you were watching my flying, or realizing you could have flown every "
+     "one of these runs yourself."),
+ (F, "Of course I could have. But then we'd never have gotten this close, "
+     "Grayson. Try not to die -- the next drink's on me."),
 ],
 
 # ------------------------------------------------------------------- LYNCH --

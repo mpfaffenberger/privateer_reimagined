@@ -964,7 +964,10 @@
         "You mean the famous mob boss who murders people and then bribes the authorities to stay out of prison? Gosh, Tayla, I didn't realize we'd made it this far in our relationship.",
         "In my line of work, this is meeting the family. He's expecting you in the bar there -- mind your manners. Roman notices them.",
         "And that squares us. Funny -- being square with you feels a lot like being in deeper.",
-        "That's the idea. It's been profitable, partner. Try not to die -- the next drink's on me."
+        "That's the idea. And one more thing, partner: if you ever crack the mystery of that trinket, don't send word. Fly back here and tell me the ending in person.",
+        "Fair warning -- watching you fly inspired me to dust off my old F-38 Talon. I thought I was retired for good. I'm reconsidering.",
+        "I honestly can't tell which feeling is stronger: being flattered that you were watching my flying, or realizing you could have flown every one of these runs yourself.",
+        "Of course I could have. But then we'd never have gotten this close, Grayson. Try not to die -- the next drink's on me."
       ],
       "done_actions": [
         "set_flag:tayla_done",
@@ -988,6 +991,9 @@
         "pc",
         "",
         "pc",
+        "",
+        "",
+        "pc",
         ""
       ],
       "portrait_pc": "portraits/grayson/_ref.png",
@@ -1009,7 +1015,10 @@
         "audio/fixers/tayla_m05_debrief_13.mp3",
         "audio/fixers/tayla_m05_debrief_14.mp3",
         "audio/fixers/tayla_m05_debrief_15.mp3",
-        "audio/fixers/tayla_m05_debrief_16.mp3"
+        "audio/fixers/tayla_m05_debrief_16.mp3",
+        "audio/fixers/tayla_m05_debrief_17.mp3",
+        "audio/fixers/tayla_m05_debrief_18.mp3",
+        "audio/fixers/tayla_m05_debrief_19.mp3"
       ]
     },
     {
