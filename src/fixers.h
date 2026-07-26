@@ -132,6 +132,9 @@ struct FixerDef {
     // voice_offer: optional clip for the offer line shown with the final
     // paragraph (the ACCEPT/REFUSE beat).
     std::string              voice_offer;
+    // music: optional bar-pool track (1..14 = bar_music_NN) held for the
+    // duration of this conversation. 0/absent = keep the shuffled rotation.
+    int                      music = 0;
 
     // ---- actions (see grammar in the header comment) ----
     std::vector<std::string> accept_actions;

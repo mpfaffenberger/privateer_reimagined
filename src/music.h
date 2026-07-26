@@ -109,6 +109,14 @@ void load_all();
 // through update()'s mode edges, not this.)
 void play_track(Track t);
 
+// Force a specific bar-pool track (1..14 = bar_music_NN) instead of the
+// shuffled rotation. While an override is active the track repeats when it
+// ends. Pass 0 to clear the override and resume the shuffle. Used by fixer
+// conversations for per-scene music direction; no-op when the file is
+// missing (clean clone) or the player isn't in the Bar.
+void request_bar_track(int idx);
+int  bar_track_override();
+
 // Fire the 'entering automatic landing zone' sting (combat_09) once
 // (np-3dp.22). One-shot over whatever bed is playing; no-op if the track
 // isn't available in this build. Called by the docking proximity check.

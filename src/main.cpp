@@ -1702,6 +1702,10 @@ void build_system_scene(bool first_time) {
             else if (verb == "done")   fixers::dialogue_done(*f, g.player);
             else if (verb == "talk")   fixers::talk_to(*f);
         });
+        // POST /music — per-scene bar music audition (issue #263).
+        dev_remote::set_bar_music_hook([](int idx) {
+            music::request_bar_track(idx);
+        });
 
         // issue #103: register the dev_remote host hooks (the decoupling
         // seam, mirroring encounters' SpawnFn). dev_remote validates +

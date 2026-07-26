@@ -158,6 +158,7 @@ float   g_bar_elapsed = 0.0f;        // elapsed time on current bar track
 int     g_bar_idx = 0;               // current index in shuffled pool
 int     g_bar_count = 0;             // available files (0 means silent fallback)
 int     g_bar_pool[14] = {};         // shuffled track indices (0–13)
+int     g_bar_override = 0;          // 1..14 forces bar_music_NN; 0 = shuffle
 music::Track g_bar_prior = music::Track::None;  // what was playing before bar
 
 float wav_seconds(const char* path);
@@ -177,10 +178,15 @@ bool in_bar_screen() {
 }
 
 void play_next_bar_track() {
-    if (g_bar_count == 0) return;
+    if (g_bar_count == 0 && g_bar_override == 0) return;
 
-    int track_idx = g_bar_pool[g_bar_idx] + 1;  // 1..14
-    g_bar_idx = (g_bar_idx + 1) % g_bar_count;
+    int track_idx;
+    if (g_bar_override > 0) {
+        track_idx = g_bar_override;             // held for the scene
+    } else {
+        track_idx = g_bar_pool[g_bar_idx] + 1;  // 1..14
+        g_bar_idx = (g_bar_idx + 1) % g_bar_count;
+    }
 
     char path[256];
     std::snprintf(path, sizeof path, "assets/music/original/bar_music_%02d.wav", track_idx);
@@ -455,6 +461,18 @@ void play_track(Track t) {
 }
 
 void stop() { play_track(Track::None); }
+
+void request_bar_track(int idx) {
+    if (idx < 0 || idx > 14) idx = 0;
+    if (g_bar_override == idx) return;
+    g_bar_override = idx;
+    std::printf("[music] bar override -> %d%s\n", idx,
+                idx == 0 ? " (shuffle)" : "");
+    // Swap immediately if bar music is currently playing.
+    if (g_bar_voice != 0) play_next_bar_track();
+}
+
+int bar_track_override() { return g_bar_override; }
 
 void landing_approach() { play_sting(music::Track::StingLanding); }
 

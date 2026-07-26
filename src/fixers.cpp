@@ -15,6 +15,7 @@
 #ifndef FIXERS_HEADLESS
 #include "audio.h"        // audio::play_file / stop (per-paragraph voice)
 #include "base_screens.h"
+#include "music.h"        // request_bar_track (per-scene music direction)
 #include "material.h"     // TextureSlot + load_texture_png (portrait art)
 #include "sfx.h"
 #include "imgui.h"
@@ -89,7 +90,9 @@ int load(const std::string& path) {
                         ? e["portrait_pc"].string_or("") : "";
         read_string_array(e, "voice", f.voice);
         f.voice_offer = e.contains("voice_offer")
-                        ? e["voice_offer"].string_or("") : "";
+                            ? e["voice_offer"].string_or("") : "";
+        f.music = e.contains("music")
+                            ? (int)e["music"].number_or(0.0) : 0;
         read_string_array(e, "accept_actions", f.accept_actions);
         read_string_array(e, "refuse_actions", f.refuse_actions);
         read_string_array(e, "done_actions",   f.done_actions);
@@ -369,6 +372,7 @@ bool begin_phase(const FixerDef& f, Phase p) {
 
 void reset_conversation() {
     stop_voice();
+    music::request_bar_track(0);   // restore the shuffled bar rotation
     g_talking_to.clear();
     g_paragraph = 0;
     g_para_elapsed = 0.0f;
@@ -417,9 +421,7 @@ void draw_bar_body(BaseContext& ctx) {
             std::snprintf(label, sizeof(label), "Talk to %s", f->name.c_str());
             if (ImGui::Button(label, ImVec2(bw, 32))) {
                 sfx::ui_click();
-                g_talking_to = f->id;
-                g_paragraph  = 0;
-                play_paragraph_voice(*f, 0);
+                talk_to(*f);   // same seam as POST /fixer talk (music + voice)
             }
             by += 40.0f;
         }
@@ -601,6 +603,7 @@ void talk_to(const FixerDef& f) {
     g_auto_advance = true;
     g_phase = Phase::Main;
     g_actions_ran = false;
+    if (f.music > 0) music::request_bar_track(f.music);
     play_paragraph_voice(f, 0);
 }
 

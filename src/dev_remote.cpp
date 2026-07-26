@@ -70,7 +70,7 @@ struct Command {
                       Kill, SetTarget, TractorPull, InventorySell, InventoryGive,
                       InventoryInstall, InventoryEquip, SetPanel, CommsSelect,
                       Rumor, Plot, BaseScreenNav, Goto, Dock, Fixer,
-                      Autopilot, Jump, Damage,
+                      Autopilot, Jump, Damage, BarMusic,
                       CinematicPlay, CinematicStop, CinematicReload, CinematicSeek };
     Kind kind;
 
@@ -232,6 +232,7 @@ std::function<void(std::string)>                            g_base_screen_hook;
 std::function<void(std::string)>                            g_goto_hook;
 std::function<void(std::string)>                            g_dock_hook;
 std::function<void(std::string, std::string)>               g_fixer_hook;
+std::function<void(int)>                                    g_bar_music_hook;
 std::function<void(std::string)>                            g_autopilot_hook;
 std::function<void(std::string)>                            g_jump_hook;
 std::function<bool(const std::string&, std::string&)>       g_cinematic_play_hook;
@@ -776,6 +777,25 @@ void handle_fixer(int fd, const std::string& body) {
     c.kind        = Command::Kind::Fixer;
     c.str_arg     = id;
     c.plot_action = action;
+    {
+        std::lock_guard lk(g_queue_mu);
+        g_queue.push_back(c);
+    }
+    send_json(fd, "{\"ok\":true}");
+}
+
+// POST /music — force a bar-pool track (1..14 = bar_music_NN) or restore
+// the shuffle (0). Body { bar }. Applied on the main thread via the bar
+// music hook; audition seam for per-scene music direction.
+void handle_music(int fd, const std::string& body) {
+    float bar_f = -1.0f;
+    if (!extract_float(body, "bar", &bar_f) || bar_f < 0.0f || bar_f > 14.0f) {
+        send_json(fd, "{\"ok\":false,\"error\":\"bar must be 0..14 (0 = shuffle)\"}");
+        return;
+    }
+    Command c;
+    c.kind    = Command::Kind::BarMusic;
+    c.int_arg = (int)bar_f;
     {
         std::lock_guard lk(g_queue_mu);
         g_queue.push_back(c);
@@ -1505,6 +1525,7 @@ void handle_connection(int fd) {
     else if (method == "POST" && path == "/goto")       handle_goto(fd, body);
     else if (method == "POST" && path == "/dock")       handle_dock(fd, body);
     else if (method == "POST" && path == "/fixer")      handle_fixer(fd, body);
+    else if (method == "POST" && path == "/music")      handle_music(fd, body);
     else if (method == "POST" && path == "/autopilot")  handle_autopilot(fd, body);
     else if (method == "POST" && path == "/jump")       handle_jump(fd, body);
     else if (method == "GET"  && path == "/missions")   handle_missions(fd);
@@ -1859,6 +1880,16 @@ void drain_commands(Camera& cam) {
             if (hook) hook(c.str_arg);
             break;
         }
+        case Command::Kind::BarMusic: {
+            // Force/restore the bar-pool track (per-scene music audition).
+            std::function<void(int)> hook;
+            {
+                std::lock_guard lk(g_hooks_mu);
+                hook = g_bar_music_hook;
+            }
+            if (hook) hook(c.int_arg);
+            break;
+        }
         case Command::Kind::CinematicPlay:
         case Command::Kind::CinematicReload: {
             // Load+play / re-parse on the main thread. Both share the
@@ -2096,6 +2127,11 @@ void set_goto_hook(std::function<void(std::string)> hook) {
 void set_dock_hook(std::function<void(std::string)> hook) {
     std::lock_guard lk(g_hooks_mu);
     g_dock_hook = std::move(hook);
+}
+
+void set_bar_music_hook(std::function<void(int)> hook) {
+    std::lock_guard lk(g_hooks_mu);
+    g_bar_music_hook = std::move(hook);
 }
 
 void set_fixer_hook(std::function<void(std::string, std::string)> hook) {
