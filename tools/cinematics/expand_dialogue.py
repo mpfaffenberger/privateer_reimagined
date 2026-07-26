@@ -604,18 +604,46 @@ SCENES: dict[str, list[tuple[str, str]]] = {
 ],
 "oxford_library_scene": [
  (F, "Authorization accepted. Oxford Research Archive access granted."),
+ ("masterson", "There. Four favors, one library card, and no honorary "
+                "doctorate. The institution survives."),
+ (P, "I asked for archive access, not faculty supervision."),
+ ("masterson", "Your technique suggests you require both."),
  (F, "Scanner cradle active. Insert object for analysis."),
+ (P, "Easy..."),
+ ("masterson", "You are reassuring a rock."),
+ (P, "Shut up. Let me work."),
+ ("masterson", "At last -- the authentic voice of scholarship."),
  (F, "Analysis complete. Classification: Steltek."),
+ (P, "Steltek."),
  (F, "A precursor civilization. Starfaring while humanity was learning fire."),
+ ("masterson", "Monkhouse has argued that point for twenty years, usually "
+                "without being asked."),
+ (P, "You know Monkhouse?"),
+ ("masterson", "Every academic knows Monkhouse. Most wish they did not. "
+                "Brilliant, theatrical, and inclined to use footnotes as "
+                "weapons."),
  (F, "No verified contact in recorded history. No recovered vessels. No "
      "remains."),
+ (P, "So naturally I found their hardware in a bar."),
+ ("masterson", "Field research has declined."),
  (F, "The artifact is a power relay of unknown function."),
  (F, "Energy signature: dormant, but not dead."),
+ (P, "Dormant but not dead. Comforting."),
+ ("masterson", "The academic term is tenure."),
  (F, "Cross-reference: recent anomalous Steltek-band readings reported near "
-     "PALAN."),
- (F, "Appended note. Dr. Monkhouse, the sector's leading xenoarchaeologist, "
-     "has been asking the same questions you are."),
+     "Palan."),
+ (P, "Palan. You knew Monkhouse was there."),
+ ("masterson", "I knew he was asking expensive questions there. You had not "
+                "yet earned the expensive answer."),
+ (F, "Appended note. Doctor Monkhouse, the sector's leading "
+     "xenoarchaeologist, has been asking the same questions you are."),
+ (P, "There he is."),
+ ("masterson", "Do try not to encourage him. He mistakes attention for peer "
+                "review."),
  (F, "Last known location: the Palan system."),
+ (P, "Then Palan is next."),
+ ("masterson", "Take the library card. Leave the scanner. And Burrows -- try "
+                "not to embarrass Oxford in front of the alien civilization."),
 ],
 
 # ------------------------------------------------------------------ MURPHY --

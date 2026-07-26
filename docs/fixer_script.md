@@ -787,15 +787,36 @@ authoring scripts and re-run.
 *Appears when:* requires `masterson_done`; blocked by `library_access`
 
 > **OXFORD ARCHIVE COMPUTER:** Authorization accepted. Oxford Research Archive access granted.
-> **OXFORD ARCHIVE COMPUTER:** Scanner cradle active. Insert object for analysis.  *[steltek_artifact]*
-> **OXFORD ARCHIVE COMPUTER:** Analysis complete. Classification: Steltek.  *[steltek_artifact]*
-> **OXFORD ARCHIVE COMPUTER:** A precursor civilization. Starfaring while humanity was learning fire.  *[steltek_artifact]*
+> **MASTERSON:** There. Four favors, one library card, and no honorary doctorate. The institution survives.
+> **GRAYSON:** I asked for archive access, not faculty supervision.
+> **MASTERSON:** Your technique suggests you require both.
+> **OXFORD ARCHIVE COMPUTER:** Scanner cradle active. Insert object for analysis.
+> **GRAYSON:** Easy...
+> **MASTERSON:** You are reassuring a rock.
+> **GRAYSON:** Shut up. Let me work.
+> **MASTERSON:** At last -- the authentic voice of scholarship.
+> **OXFORD ARCHIVE COMPUTER:** Analysis complete. Classification: Steltek.
+> **GRAYSON:** Steltek.
+> **OXFORD ARCHIVE COMPUTER:** A precursor civilization. Starfaring while humanity was learning fire.
+> **MASTERSON:** Monkhouse has argued that point for twenty years, usually without being asked.
+> **GRAYSON:** You know Monkhouse?
+> **MASTERSON:** Every academic knows Monkhouse. Most wish they did not. Brilliant, theatrical, and inclined to use footnotes as weapons.
 > **OXFORD ARCHIVE COMPUTER:** No verified contact in recorded history. No recovered vessels. No remains.
-> **OXFORD ARCHIVE COMPUTER:** The artifact is a power relay of unknown function.  *[steltek_artifact]*
-> **OXFORD ARCHIVE COMPUTER:** Energy signature: dormant, but not dead.  *[steltek_artifact]*
-> **OXFORD ARCHIVE COMPUTER:** Cross-reference: recent anomalous Steltek-band readings reported near PALAN.
-> **OXFORD ARCHIVE COMPUTER:** Appended note. Dr. Monkhouse, the sector's leading xenoarchaeologist, has been asking the same questions you are.
+> **GRAYSON:** So naturally I found their hardware in a bar.
+> **MASTERSON:** Field research has declined.
+> **OXFORD ARCHIVE COMPUTER:** The artifact is a power relay of unknown function.
+> **OXFORD ARCHIVE COMPUTER:** Energy signature: dormant, but not dead.
+> **GRAYSON:** Dormant but not dead. Comforting.
+> **MASTERSON:** The academic term is tenure.
+> **OXFORD ARCHIVE COMPUTER:** Cross-reference: recent anomalous Steltek-band readings reported near Palan.
+> **GRAYSON:** Palan. You knew Monkhouse was there.
+> **MASTERSON:** I knew he was asking expensive questions there. You had not yet earned the expensive answer.
+> **OXFORD ARCHIVE COMPUTER:** Appended note. Doctor Monkhouse, the sector's leading xenoarchaeologist, has been asking the same questions you are.
+> **GRAYSON:** There he is.
+> **MASTERSON:** Do try not to encourage him. He mistakes attention for peer review.
 > **OXFORD ARCHIVE COMPUTER:** Last known location: the Palan system.
+> **GRAYSON:** Then Palan is next.
+> **MASTERSON:** Take the library card. Leave the scanner. And Burrows -- try not to embarrass Oxford in front of the alien civilization.
 
 *Outcome:* `set_flag:library_access`
 
