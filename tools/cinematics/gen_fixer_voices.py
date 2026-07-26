@@ -55,6 +55,10 @@ SPEAKER = {
 # fixers::expand_tokens, but TTS has to say something concrete. Speak the same
 # values the engine renders so the audio matches the on-screen text.
 _TOKENS = {"$NM": "Burrows", "$CS": "Grayson"}
+# TTS-only pronunciations for canonical proper nouns. Subtitles retain their
+# authored spelling; cloned voices receive the same phonetic cue so names do
+# not drift between speakers.
+_PRONUNCIATIONS = {"Palan": "Pal-an"}
 
 # Extracted 1993 recordings beat synthesis every time. These paths are relative
 # to assets/cinematics/, matching the engine's voice-path contract.
@@ -73,6 +77,9 @@ ORIGINAL_TEXT_CLIPS = {
 def speakable(text: str) -> str:
     for token, value in _TOKENS.items():
         text = text.replace(token, value)
+    for written, spoken in _PRONUNCIATIONS.items():
+        text = re.sub(rf"\b{re.escape(written)}\b", spoken, text,
+                      flags=re.IGNORECASE)
     # Collapse the ellipsis-heavy 1993 punctuation into something TTS paces
     # sensibly; "..." at a clause boundary otherwise reads as a long dead stop.
     text = text.replace("...", ", ")
