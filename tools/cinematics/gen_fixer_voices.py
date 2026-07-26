@@ -61,7 +61,7 @@ _TOKENS = {"$NM": "Burrows", "$CS": "Grayson"}
 _PRONUNCIATIONS = {"Palan": "Paylin"}
 # Surgical delivery overrides. Keep character defaults stable; only lines with
 # an explicit dramatic need should diverge.
-_LINE_SPEED = {("oxford_library_scene", 5): 0.86}
+_LINE_SPEED: dict[tuple[str, int], float] = {}
 
 # Extracted 1993 recordings beat synthesis every time. These paths are relative
 # to assets/cinematics/, matching the engine's voice-path contract.

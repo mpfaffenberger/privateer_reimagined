@@ -609,8 +609,8 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  (P, "I asked for archive access, not faculty supervision."),
  ("masterson", "Your technique suggests you require both."),
  (F, "Scanner cradle active. Insert object for analysis."),
- (P, "Very carefully now.<#0.5#> In you go, little creepy glowy murder "
-     "stone."),
+ (P, "Okay. Here goes nothing.<#0.4#> Very carefully now.<#0.3#> In you "
+     "go."),
  ("masterson", "You are reassuring a rock."),
  (P, "Shut up. Let me work."),
  ("masterson", "At last -- the authentic voice of scholarship."),
