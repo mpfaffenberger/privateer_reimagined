@@ -2318,16 +2318,12 @@ void build_system_scene(bool first_time) {
         if (i >= g.placed_ship_sprites.size()) break;   // atlas-load failure earlier
 
         // Inert mode — visual-only mannequin for atlas/capture scenes.
-        // alive=false makes perception/AI/firing/projectile-collision all
-        // skip this Ship, so the sprite renders but the simulation
-        // pretends it isn't there. The Ship::sprite pointer is the only
-        // sprite linkage (deque storage keeps it stable); registry slot
-        // order no longer needs to mirror sprite order.
+        // These sprites render directly from g.placed_ship_sprites and must
+        // NOT enter the combat ShipRegistry. A previous implementation
+        // registered fake Ships with alive=false; the normal NPC death reaper
+        // correctly treated all of them as fresh corpses, producing one
+        // explosion + stale despawn per mannequin every frame.
         if (sd.inert) {
-            Ship mannequin{};
-            mannequin.sprite = &g.placed_ship_sprites[i];
-            mannequin.alive  = false;
-            g.ships.spawn(std::move(mannequin));
             ++n_inert;
             continue;
         }
