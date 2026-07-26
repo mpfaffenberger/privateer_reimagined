@@ -52,22 +52,25 @@ void build() {
     ImGui::SetNextWindowSize(ImVec2(300, 0), ImGuiCond_FirstUseEver);
     if (ImGui::Begin("Bar DJ (Ctrl+B)", &g_visible,
                      ImGuiWindowFlags_AlwaysAutoResize)) {
+        const int pin = music::bar_track_pin();
         const int cur = music::bar_track_override();
 
-        if (cur > 0)
-            ImGui::Text("override: bar_music_%02d (held)", cur);
+        if (pin > 0)
+            ImGui::Text("pin: bar_music_%02d (manual)", pin);
+        else if (cur > 0)
+            ImGui::Text("scene: bar_music_%02d (authored)", cur);
         else
-            ImGui::TextDisabled("override: none (shuffled pool)");
+            ImGui::TextDisabled("shuffled pool");
 
-        // ---- cycle row ----
+        // ---- cycle row (drives the manual pin; wins over scene music) ----
         if (ImGui::Button("<< prev"))
-            music::request_bar_track(step(cur, -1));
+            music::pin_bar_track(step(cur, -1));
         ImGui::SameLine();
         if (ImGui::Button("next >>"))
-            music::request_bar_track(step(cur, +1));
+            music::pin_bar_track(step(cur, +1));
         ImGui::SameLine();
-        if (ImGui::Button("shuffle"))
-            music::request_bar_track(0);
+        if (ImGui::Button("release"))
+            music::pin_bar_track(0);
 
         ImGui::Separator();
 
@@ -78,16 +81,18 @@ void build() {
             const bool active = (cur == i);
             if (active)
                 ImGui::PushStyleColor(ImGuiCol_Button,
-                                      ImVec4(0.20f, 0.55f, 0.30f, 1.0f));
+                                      active && pin == i
+                                          ? ImVec4(0.20f, 0.55f, 0.30f, 1.0f)
+                                          : ImVec4(0.25f, 0.40f, 0.60f, 1.0f));
             if (ImGui::Button(label, ImVec2(34, 0)))
-                music::request_bar_track(active ? 0 : i);  // click again = off
+                music::pin_bar_track(pin == i ? 0 : i);   // click again = release
             if (active) ImGui::PopStyleColor();
             if (i % 7 != 0 && i != k_tracks) ImGui::SameLine();
         }
 
         ImGui::Separator();
-        ImGui::TextDisabled("plays in the Bar screen; overrides");
-        ImGui::TextDisabled("persist until shuffle / scene end");
+        ImGui::TextDisabled("green = manual pin, blue = authored scene");
+        ImGui::TextDisabled("track; release returns to scene/shuffle");
     }
     ImGui::End();
 }

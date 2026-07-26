@@ -372,7 +372,6 @@ bool begin_phase(const FixerDef& f, Phase p) {
 
 void reset_conversation() {
     stop_voice();
-    music::request_bar_track(0);   // restore the shuffled bar rotation
     g_talking_to.clear();
     g_paragraph = 0;
     g_para_elapsed = 0.0f;
@@ -406,6 +405,19 @@ void draw_bar_body(BaseContext& ctx) {
             g_noted.push_back(f->id);
             note_offered(*f, ctx.base_id);
         }
+    }
+
+    // Music direction is GAME STATE, not conversation state (issue #265):
+    // the first present (plot-gated) fixer with an authored track holds the
+    // bar's music for the whole visit -- before, during, and after the
+    // conversation panel. request_bar_track is idempotent, so calling every
+    // frame is free; when the plot advances and the roster changes, the
+    // music follows on the next frame.
+    {
+        int want = 0;
+        for (const FixerDef* f : present)
+            if (f->music > 0) { want = f->music; break; }
+        music::request_bar_track(want);
     }
 
     // ---- browsing: bartender flavor + one talk button per fixer ----------
@@ -603,7 +615,6 @@ void talk_to(const FixerDef& f) {
     g_auto_advance = true;
     g_phase = Phase::Main;
     g_actions_ran = false;
-    if (f.music > 0) music::request_bar_track(f.music);
     play_paragraph_voice(f, 0);
 }
 

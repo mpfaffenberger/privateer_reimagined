@@ -1703,9 +1703,10 @@ void build_system_scene(bool first_time) {
             else if (verb == "done")   fixers::dialogue_done(*f, g.player);
             else if (verb == "talk")   fixers::talk_to(*f);
         });
-        // POST /music — per-scene bar music audition (issue #263).
+        // POST /music — per-scene bar music audition (issue #263). Drives
+        // the manual PIN so it wins over authored scene music (#265).
         dev_remote::set_bar_music_hook([](int idx) {
-            music::request_bar_track(idx);
+            music::pin_bar_track(idx);
         });
         // POST /dj — remote toggle for the Bar DJ panel (issue #264).
         dev_remote::set_dj_panel_hook([](bool show) {

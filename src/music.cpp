@@ -158,7 +158,8 @@ float   g_bar_elapsed = 0.0f;        // elapsed time on current bar track
 int     g_bar_idx = 0;               // current index in shuffled pool
 int     g_bar_count = 0;             // available files (0 means silent fallback)
 int     g_bar_pool[14] = {};         // shuffled track indices (0–13)
-int     g_bar_override = 0;          // 1..14 forces bar_music_NN; 0 = shuffle
+int     g_bar_soft = 0;              // authored/game-state request (fixers)
+int     g_bar_pin  = 0;              // manual pin (DJ / POST /music); wins
 music::Track g_bar_prior = music::Track::None;  // what was playing before bar
 
 float wav_seconds(const char* path);
@@ -177,12 +178,15 @@ bool in_bar_screen() {
     return st.stack.back() == "Bar";
 }
 
+int effective_bar_override() { return g_bar_pin > 0 ? g_bar_pin : g_bar_soft; }
+
 void play_next_bar_track() {
-    if (g_bar_count == 0 && g_bar_override == 0) return;
+    const int held = effective_bar_override();
+    if (g_bar_count == 0 && held == 0) return;
 
     int track_idx;
-    if (g_bar_override > 0) {
-        track_idx = g_bar_override;             // held for the scene
+    if (held > 0) {
+        track_idx = held;                       // held for the scene / pin
     } else {
         track_idx = g_bar_pool[g_bar_idx] + 1;  // 1..14
         g_bar_idx = (g_bar_idx + 1) % g_bar_count;
@@ -464,15 +468,28 @@ void stop() { play_track(Track::None); }
 
 void request_bar_track(int idx) {
     if (idx < 0 || idx > 14) idx = 0;
-    if (g_bar_override == idx) return;
-    g_bar_override = idx;
-    std::printf("[music] bar override -> %d%s\n", idx,
+    if (g_bar_soft == idx) return;
+    const int before = effective_bar_override();
+    g_bar_soft = idx;
+    if (effective_bar_override() == before) return;   // masked by a pin
+    std::printf("[music] bar request -> %d%s\n", idx,
                 idx == 0 ? " (shuffle)" : "");
-    // Swap immediately if bar music is currently playing.
     if (g_bar_voice != 0) play_next_bar_track();
 }
 
-int bar_track_override() { return g_bar_override; }
+void pin_bar_track(int idx) {
+    if (idx < 0 || idx > 14) idx = 0;
+    if (g_bar_pin == idx) return;
+    const int before = effective_bar_override();
+    g_bar_pin = idx;
+    std::printf("[music] bar pin -> %d%s\n", idx,
+                idx == 0 ? " (released)" : "");
+    if (effective_bar_override() == before) return;
+    if (g_bar_voice != 0) play_next_bar_track();
+}
+
+int bar_track_override() { return effective_bar_override(); }
+int bar_track_pin()      { return g_bar_pin; }
 
 void landing_approach() { play_sting(music::Track::StingLanding); }
 

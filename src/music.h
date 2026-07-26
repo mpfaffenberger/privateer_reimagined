@@ -109,13 +109,18 @@ void load_all();
 // through update()'s mode edges, not this.)
 void play_track(Track t);
 
-// Force a specific bar-pool track (1..14 = bar_music_NN) instead of the
-// shuffled rotation. While an override is active the track repeats when it
-// ends. Pass 0 to clear the override and resume the shuffle. Used by fixer
-// conversations for per-scene music direction; no-op when the file is
-// missing (clean clone) or the player isn't in the Bar.
+// Bar-pool music direction, two priority levels (issue #265):
+//   request_bar_track — SOFT, game-state request (the Bar screen asks for
+//       the present fixer's authored track every frame; idempotent).
+//   pin_bar_track     — HARD, manual pin (DJ panel / POST /music); wins
+//       over the soft request until released with 0.
+// 1..14 = bar_music_NN, held tracks repeat on expiry; 0 = release that
+// level (shuffle resumes only when both levels are 0). No-op when the
+// files are missing (clean clone) or the player isn't in the Bar.
 void request_bar_track(int idx);
-int  bar_track_override();
+void pin_bar_track(int idx);
+int  bar_track_override();   // effective: pin > 0 ? pin : soft request
+int  bar_track_pin();        // the manual pin only (DJ panel display)
 
 // Fire the 'entering automatic landing zone' sting (combat_09) once
 // (np-3dp.22). One-shot over whatever bed is playing; no-op if the track
