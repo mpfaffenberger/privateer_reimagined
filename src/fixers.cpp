@@ -59,6 +59,7 @@ int load(const std::string& path) {
         f.id         = e.contains("id")   ? e["id"].string_or("")   : "";
         f.name       = e.contains("name") ? e["name"].string_or("") : "";
         f.base_id    = e.contains("base") ? e["base"].string_or("") : "";
+        f.screen     = e.contains("screen") ? e["screen"].string_or("Bar") : "Bar";
         read_string_array(e, "archetypes",     f.archetypes);
         read_string_array(e, "exclude_bases",  f.exclude_bases);
         read_string_array(e, "requires_flags", f.requires_flags);
@@ -386,9 +387,10 @@ bool is_pc_line(const FixerDef& f, size_t idx) {
     return idx < sp.size() && sp[idx] == "pc";
 }
 
-void draw_bar_body(BaseContext& ctx) {
-    if (ctx.base_id != g_last_base) {           // new bar visit
-        g_last_base = ctx.base_id;
+void draw_fixer_body(BaseContext& ctx, const std::string& screen) {
+    const std::string visit_key = ctx.base_id + ":" + screen;
+    if (visit_key != g_last_base) {             // new room visit
+        g_last_base = visit_key;
         reset_conversation();
         g_noted.clear();
     }
@@ -398,8 +400,11 @@ void draw_bar_body(BaseContext& ctx) {
     const ImVec2 disp = ImGui::GetIO().DisplaySize;
     ImDrawList* dl = ImGui::GetWindowDrawList();
 
-    const std::vector<const FixerDef*> present =
+    const std::vector<const FixerDef*> base_present =
         present_at(ctx.base_id, ctx.archetype, player);
+    std::vector<const FixerDef*> present;
+    for (const FixerDef* f : base_present)
+        if (f->screen == screen) present.push_back(f);
     for (const FixerDef* f : present) {
         if (std::find(g_noted.begin(), g_noted.end(), f->id) == g_noted.end()) {
             g_noted.push_back(f->id);
@@ -414,16 +419,21 @@ void draw_bar_body(BaseContext& ctx) {
     // an accept/refuse/done empties the roster mid-visit, the established
     // mood keeps playing; music.cpp clears the soft request when the player
     // actually leaves the Bar screen.
-    for (const FixerDef* f : present) {
-        if (f->music > 0) { music::request_bar_track(f->music); break; }
+    if (screen == "Bar") {
+        for (const FixerDef* f : present) {
+            if (f->music > 0) { music::request_bar_track(f->music); break; }
+        }
     }
 
     // ---- browsing: bartender flavor + one talk button per fixer ----------
     if (g_talking_to.empty()) {
         const float bx = 28.0f, bw = 300.0f;
         float by = disp.y - 96.0f - 40.0f * (float)present.size();
+        const char* empty_text = screen == "Library"
+            ? "The archive terminal waits in disciplined silence."
+            : "The bartender polishes a glass. Nothing new.";
         dl->AddText(ImVec2(bx, by - 26.0f), kDim,
-                    present.empty() ? "The bartender polishes a glass. Nothing new."
+                    present.empty() ? empty_text
                                     : "Someone here wants a word...");
         for (const FixerDef* f : present) {
             ImGui::SetCursorScreenPos(ImVec2(bx, by));
@@ -617,8 +627,11 @@ void talk_to(const FixerDef& f) {
 }
 
 void register_bar_screen() {
-    base_screens::register_screen(BaseScreen::Bar, draw_bar_body);
-    std::printf("[fixers] Bar screen body registered\n");
+    base_screens::register_screen(BaseScreen::Bar,
+        [](BaseContext& ctx) { draw_fixer_body(ctx, "Bar"); });
+    base_screens::register_screen(BaseScreen::Library,
+        [](BaseContext& ctx) { draw_fixer_body(ctx, "Library"); });
+    std::printf("[fixers] Bar + Library screen bodies registered\n");
 }
 #else
 void talk_to(const FixerDef&) {}

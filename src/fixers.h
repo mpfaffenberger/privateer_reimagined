@@ -82,6 +82,7 @@ struct FixerDef {
 
     // ---- placement (union of the two modes) ----
     std::string              base_id;        // "" = not base-placed
+    std::string              screen = "Bar"; // room placement within the base
     std::vector<std::string> archetypes;     // empty = not archetype-placed
     std::vector<std::string> exclude_bases;  // subtracted from archetype mode
 

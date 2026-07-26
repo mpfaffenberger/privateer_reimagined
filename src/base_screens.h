@@ -62,6 +62,7 @@ enum class BaseScreen {
     MercenariesGuild,   // #16 — paid combat-mission board
     MerchantsGuild,     // #16 — paid trade-mission board
     CargoHold,          // Phase 4f — sell loot/salvage from the unified hold
+    Library,            // Oxford archive building / story terminal
     Launch,
     LandingPad,         // hangar room shown on dock; door leads to Concourse
     // --- action zones (not navigable screens) -------------------------------

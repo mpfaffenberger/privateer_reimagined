@@ -200,6 +200,7 @@ const char* screen_name(BaseScreen s) {
         case BaseScreen::MercenariesGuild: return "Mercenaries' Guild";
         case BaseScreen::MerchantsGuild:   return "Merchants' Guild";
         case BaseScreen::CargoHold:        return "Cargo Hold";
+        case BaseScreen::Library:          return "Library";
         case BaseScreen::Launch:           return "Launch";
         case BaseScreen::LandingPad:       return "Landing Pad";
         default:                           return "?";
@@ -218,6 +219,7 @@ const char* target_token(BaseScreen s) {
         case BaseScreen::MercenariesGuild:  return "MercenariesGuild";
         case BaseScreen::MerchantsGuild:    return "MerchantsGuild";
         case BaseScreen::CargoHold:         return "CargoHold";
+        case BaseScreen::Library:           return "Library";
         case BaseScreen::Launch:            return "Launch";
         case BaseScreen::Concourse:         return "Concourse";
         case BaseScreen::LandingPad:         return "LandingPad";
@@ -252,6 +254,7 @@ const char* room_key(BaseScreen s) {
         case BaseScreen::MerchantsGuild:    return "merchguild";
         case BaseScreen::MissionComputer:   return "missions";
         case BaseScreen::CargoHold:         return "cargohold";
+        case BaseScreen::Library:           return "library";
         default:                            return "";
     }
 }
@@ -260,7 +263,7 @@ constexpr BaseScreen kArtRooms[] = {
     BaseScreen::Concourse, BaseScreen::LandingPad, BaseScreen::Bar,
     BaseScreen::CommodityExchange, BaseScreen::ShipDealer, BaseScreen::Equipment,
     BaseScreen::MercenariesGuild, BaseScreen::MerchantsGuild,
-    BaseScreen::MissionComputer, BaseScreen::CargoHold,
+    BaseScreen::MissionComputer, BaseScreen::CargoHold, BaseScreen::Library,
 };
 
 // Parse a base.json "target" enum-name into a BaseScreen. Returns false for
@@ -274,6 +277,7 @@ bool parse_target(const std::string& s, BaseScreen& out) {
     if (s == "MercenariesGuild")  { out = BaseScreen::MercenariesGuild;  return true; }
     if (s == "MerchantsGuild")    { out = BaseScreen::MerchantsGuild;    return true; }
     if (s == "CargoHold")         { out = BaseScreen::CargoHold;         return true; }
+    if (s == "Library")           { out = BaseScreen::Library;           return true; }
     if (s == "Launch")            { out = BaseScreen::Launch;            return true; }
     if (s == "Concourse")         { out = BaseScreen::Concourse;         return true; }
     if (s == "LandingPad")        { out = BaseScreen::LandingPad;        return true; }
