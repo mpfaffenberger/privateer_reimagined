@@ -605,7 +605,7 @@ SCENES: dict[str, list[tuple[str, str]]] = {
 "oxford_library_scene": [
  (F, "Authorization accepted. Oxford Research Archive access granted."),
  (F, "Scanner cradle active. Insert object for analysis."),
- (F, "MATCH FOUND. Classification: STELTEK."),
+ (F, "Analysis complete. Classification: Steltek."),
  (F, "A precursor civilization. Starfaring while humanity was learning fire."),
  (F, "No verified contact in recorded history. No recovered vessels. No "
      "remains."),

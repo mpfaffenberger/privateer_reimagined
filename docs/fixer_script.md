@@ -788,7 +788,7 @@ authoring scripts and re-run.
 
 > **OXFORD ARCHIVE COMPUTER:** Authorization accepted. Oxford Research Archive access granted.
 > **OXFORD ARCHIVE COMPUTER:** Scanner cradle active. Insert object for analysis.  *[steltek_artifact]*
-> **OXFORD ARCHIVE COMPUTER:** MATCH FOUND. Classification: STELTEK.  *[steltek_artifact]*
+> **OXFORD ARCHIVE COMPUTER:** Analysis complete. Classification: Steltek.  *[steltek_artifact]*
 > **OXFORD ARCHIVE COMPUTER:** A precursor civilization. Starfaring while humanity was learning fire.  *[steltek_artifact]*
 > **OXFORD ARCHIVE COMPUTER:** No verified contact in recorded history. No recovered vessels. No remains.
 > **OXFORD ARCHIVE COMPUTER:** The artifact is a power relay of unknown function.  *[steltek_artifact]*
