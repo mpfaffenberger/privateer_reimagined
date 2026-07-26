@@ -342,8 +342,8 @@ authoring scripts and re-run.
 > **TAYLA:** Terminal is the usual outcome. Dieter had it from his own father -- every owner I can name died holding it.
 > **GRAYSON:** That's a pattern, not a story. Patterns are what coroners find.
 > **TAYLA:** Coroners and I read the same reports. That's where my thread runs out. I've sent the holo on to someone who can actually read it.
-> **GRAYSON:** Who?
-> **TAYLA:** Roman Lynch. New Constantinople. A thug -- but an expert on exotic and valuable things.
+> **GRAYSON:** And who might that be? Let me guess... Confed's very own Admiral Tolwyn?
+> **TAYLA:** Someone with fewer medals and better manners. Roman Lynch. New Constantinople. A thug -- but an expert on exotic and valuable things.
 > **GRAYSON:** You mean the famous mob boss who murders people and then bribes the authorities to stay out of prison? Gosh, Tayla, I didn't realize we'd made it this far in our relationship.
 > **TAYLA:** In my line of work, this is meeting the family. He's expecting you in the bar there -- mind your manners. Roman notices them.
 > **GRAYSON:** And that squares us. Funny -- being square with you feels a lot like being in deeper.

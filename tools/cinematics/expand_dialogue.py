@@ -295,9 +295,10 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  (P, "That's a pattern, not a story. Patterns are what coroners find."),
  (F, "Coroners and I read the same reports. That's where my thread runs "
      "out. I've sent the holo on to someone who can actually read it."),
- (P, "Who?"),
- (F, "Roman Lynch. New Constantinople. A thug -- but an expert on exotic and "
-     "valuable things."),
+ (P, "And who might that be? Let me guess... Confed's very own Admiral "
+     "Tolwyn?"),
+ (F, "Someone with fewer medals and better manners. Roman Lynch. New "
+     "Constantinople. A thug -- but an expert on exotic and valuable things."),
  (P, "You mean the famous mob boss who murders people and then bribes the "
      "authorities to stay out of prison? Gosh, Tayla, I didn't realize we'd "
      "made it this far in our relationship."),
