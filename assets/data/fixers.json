@@ -551,7 +551,8 @@
         "audio/fixers/tayla_m03_offer_12.mp3",
         "audio/fixers/tayla_m03_offer_13.mp3",
         "audio/fixers/tayla_m03_offer_14.mp3"
-      ]
+      ],
+      "music": 12
     },
     {
       "id": "tayla_m03_debrief",
@@ -594,7 +595,8 @@
         "audio/fixers/tayla_m03_debrief_04.mp3",
         "audio/fixers/tayla_m03_debrief_05.mp3",
         "audio/fixers/tayla_m03_debrief_06.mp3"
-      ]
+      ],
+      "music": 12
     },
     {
       "id": "tayla_m04_offer",
@@ -688,7 +690,8 @@
         "audio/fixers/tayla_m04_offer_08.mp3",
         "audio/fixers/tayla_m04_offer_09.mp3",
         "audio/fixers/tayla_m04_offer_10.mp3"
-      ]
+      ],
+      "music": 12
     },
     {
       "id": "tayla_m04_debrief",
@@ -753,7 +756,8 @@
         "audio/fixers/tayla_m04_debrief_11.mp3",
         "audio/fixers/tayla_m04_debrief_12.mp3",
         "audio/fixers/tayla_m04_debrief_13.mp3"
-      ]
+      ],
+      "music": 12
     },
     {
       "id": "tayla_m05_offer",
@@ -874,7 +878,8 @@
         "audio/fixers/tayla_m05_offer_15.mp3",
         "audio/fixers/tayla_m05_offer_16.mp3",
         "audio/fixers/tayla_m05_offer_17.mp3"
-      ]
+      ],
+      "music": 12
     },
     {
       "id": "tayla_m05_debrief",
@@ -948,7 +953,8 @@
         "audio/fixers/tayla_m05_debrief_14.mp3",
         "audio/fixers/tayla_m05_debrief_15.mp3",
         "audio/fixers/tayla_m05_debrief_16.mp3"
-      ]
+      ],
+      "music": 12
     },
     {
       "id": "lynch_m06_offer",
