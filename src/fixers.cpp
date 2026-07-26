@@ -156,11 +156,20 @@ const FixerDef* find(const std::string& id) {
 std::string expand_tokens(const std::string& text) {
     static const std::string k_surname  = "Burrows";
     static const std::string k_callsign = "Grayson";
-    if (text.find('$') == std::string::npos) return text;  // fast path
+    const bool has_token = text.find('$') != std::string::npos;
+    const bool has_pause = text.find("<#") != std::string::npos;
+    if (!has_token && !has_pause) return text;  // fast path
 
     std::string out;
     out.reserve(text.size() + 16);
     for (size_t i = 0; i < text.size(); ) {
+        if (text.compare(i, 2, "<#") == 0) {
+            const size_t end = text.find("#>", i + 2);
+            if (end != std::string::npos) {
+                i = end + 2;  // TTS pause markup is audio-only, never subtitle text
+                continue;
+            }
+        }
         if (text[i] == '$' && text.compare(i, 3, "$NM") == 0) {
             out += k_surname;  i += 3;
         } else if (text[i] == '$' && text.compare(i, 3, "$CS") == 0) {

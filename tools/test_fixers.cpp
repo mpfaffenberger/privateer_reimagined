@@ -230,6 +230,15 @@ int main() {
               "expand_tokens: trailing '$' does not overrun");
         check(fixers::expand_tokens("$N") == "$N",
               "expand_tokens: truncated token does not overrun");
+        check(fixers::expand_tokens("Wait.<#0.4#> Now.") == "Wait. Now.",
+              "expand_tokens: strips one TTS pause tag from subtitles");
+        check(fixers::expand_tokens("A.<#0.2#> B.<#1.0#> C.") == "A. B. C.",
+              "expand_tokens: strips multiple TTS pause tags");
+        check(fixers::expand_tokens("$CS.<#0.5#> Welcome, $NM.") ==
+                  "Grayson. Welcome, Burrows.",
+              "expand_tokens: names and pauses work together");
+        check(fixers::expand_tokens("Keep <#broken text") == "Keep <#broken text",
+              "expand_tokens: malformed pause tag is preserved");
     }
 
     // ---- 5. bad table is non-fatal ----------------------------------------
