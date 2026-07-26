@@ -86,8 +86,8 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  (P, "He owed me fifteen thousand credits."),
  (F, "He owed a lot of people a lot of things. You're near the back of that line."),
  (P, "Who are you?"),
- (F, "Tayla. I keep track of who's breathing in this sector. It's a growth "
-     "industry lately."),
+ (F, "Tayla. I keep an eye on pilots in this sector. It's a cheerful way "
+     "to stay alive."),
  (P, "And you tracked me down why?"),
  (F, "Because Sandoval handed you a trinket before he died, and now the people "
      "he owed are very curious about where it went."),
@@ -108,8 +108,7 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  (P, "You know more than you're saying."),
  (F, "Of course I do. That's the only thing I sell."),
  (P, "What's the price?"),
- (F, "You fly for me. I'll trade the rest out a piece at a time, and you'll "
-     "earn every piece."),
+ (F, "Work for me, Captain. I'll trade the rest out a piece at a time, and you'll earn every one."),
  (P, "That's a long way of saying you own me."),
  (F, "It's a long way of saying you're the only one who can carry that thing "
      "without being searched. Come see me when you're ready to work."),
@@ -117,7 +116,7 @@ SCENES: dict[str, list[tuple[str, str]]] = {
 "tayla_m02_offer": [
  (F, "You've been staring at the artifact an hour. Point on the cargo -- what are you thinking?"),
  (P, "I'm thinking you sold me this job before you owned it."),
- (F, "I don't sell jobs. I assign them. Keep up."),
+ (F, "I don't sell to strangers, sweetheart. But I have an eye for pilots, and you came back."),
  (P, "Then I'm thinking the 'milk run' line would insult both of us."),
  (F, "First honest statement you've made. Ready to work?"),
  (P, "Nothing about the last week has been a milk run."),

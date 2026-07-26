@@ -80,7 +80,7 @@ authoring scripts and re-run.
 > **GRAYSON:** He owed me fifteen thousand credits.
 > **TAYLA:** He owed a lot of people a lot of things. You're near the back of that line.
 > **GRAYSON:** Who are you?
-> **TAYLA:** Tayla. I keep track of who's breathing in this sector. It's a growth industry lately.
+> **TAYLA:** Tayla. I keep an eye on pilots in this sector. It's a cheerful way to stay alive.
 > **GRAYSON:** And you tracked me down why?
 > **TAYLA:** Because Sandoval handed you a trinket before he died, and now the people he owed are very curious about where it went.
 > **GRAYSON:** It's collateral. It's his.
@@ -98,7 +98,7 @@ authoring scripts and re-run.
 > **GRAYSON:** You know more than you're saying.
 > **TAYLA:** Of course I do. That's the only thing I sell.
 > **GRAYSON:** What's the price?
-> **TAYLA:** You fly for me. I'll trade the rest out a piece at a time, and you'll earn every piece.
+> **TAYLA:** Work for me, Captain. I'll trade the rest out a piece at a time, and you'll earn every one.
 > **GRAYSON:** That's a long way of saying you own me.
 > **TAYLA:** It's a long way of saying you're the only one who can carry that thing without being searched. Come see me when you're ready to work.
 
@@ -115,7 +115,7 @@ authoring scripts and re-run.
 
 > **TAYLA:** You've been staring at the artifact an hour. Point on the cargo -- what are you thinking?
 > **GRAYSON:** I'm thinking you sold me this job before you owned it.
-> **TAYLA:** I don't sell jobs. I assign them. Keep up.
+> **TAYLA:** I don't sell to strangers, sweetheart. But I have an eye for pilots, and you came back.
 > **GRAYSON:** Then I'm thinking the 'milk run' line would insult both of us.
 > **TAYLA:** First honest statement you've made. Ready to work?
 > **GRAYSON:** Nothing about the last week has been a milk run.
