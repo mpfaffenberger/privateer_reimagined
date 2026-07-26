@@ -33,7 +33,6 @@ void notify(const std::string& what) {
     if (g_observer) g_observer(what);
 }
 
-// Read an array-of-strings field into `out` (missing/mistyped = empty).
 void read_string_array(const json::Value& obj, const char* key,
                        std::vector<std::string>& out) {
     if (const json::Value* a = obj.find(key); a && a->is_array()) {
@@ -65,6 +64,17 @@ int load(const std::string& path) {
         read_string_array(e, "forbids_flags",  f.forbids_flags);
         read_string_array(e, "dialogue",       f.dialogue);
         read_string_array(e, "speaker",        f.speaker);
+        if (const json::Value* cast = e.find("cast"); cast && cast->is_object()) {
+            for (const auto& [key, value] : cast->as_object()) {
+                if (!value.is_object()) continue;
+                CastMember member;
+                member.name = value.contains("name")
+                            ? value["name"].string_or(key) : key;
+                member.portrait = value.contains("portrait")
+                                ? value["portrait"].string_or("") : "";
+                f.cast.emplace(key, std::move(member));
+            }
+        }
         read_string_array(e, "prop",           f.prop);
         read_string_array(e, "accept_dialogue", f.accept_dialogue);
         read_string_array(e, "accept_speaker",  f.accept_speaker);
@@ -432,21 +442,21 @@ void draw_bar_body(BaseContext& ctx) {
         play_paragraph_voice(*f, g_paragraph);
     }
 
-    // Portrait (optional) sits inside the panel's left edge; when present the
-    // text column shifts right to clear it. A failed decode falls back to the
-    // original full-width text layout. On a "pc" line we swap in the player's
-    // portrait so the exchange reads as a conversation rather than a monologue.
-    // A PROP for this line (the artifact, a datapad) takes the frame instead
-    // of either portrait -- the object IS the subject at that beat.
     const std::vector<std::string>& props = phase_prop(*f);
     const bool has_prop = g_paragraph < props.size() &&
                           !props[g_paragraph].empty();
 
-    const bool pc_line = is_pc_line(*f, g_paragraph);
-    const std::string& art_rel =
-        has_prop ? props[g_paragraph]
-                 : ((pc_line && !f->portrait_pc.empty()) ? f->portrait_pc
-                                                         : f->portrait);
+    const std::vector<std::string>& speakers = phase_speaker(*f);
+    const std::string speaker_key = g_paragraph < speakers.size()
+                                  ? speakers[g_paragraph] : "";
+    const bool pc_line = speaker_key == "pc";
+    const auto cast_it = f->cast.find(speaker_key);
+    const bool cast_line = cast_it != f->cast.end();
+    const std::string art_rel = has_prop
+        ? props[g_paragraph]
+        : pc_line && !f->portrait_pc.empty() ? f->portrait_pc
+        : cast_line ? cast_it->second.portrait
+        : f->portrait;
     const TextureSlot* art = nullptr;
     if (!art_rel.empty()) {
         const TextureSlot& slot = portrait_texture(art_rel);
@@ -469,8 +479,9 @@ void draw_bar_body(BaseContext& ctx) {
     }
 
     const float tx = px + 18.0f + art_gutter;   // text column origin
-    // Nameplate follows the speaker so it is always clear who is talking.
-    const char* who = pc_line ? "Grayson Burrows" : f->name.c_str();
+    const char* who = pc_line ? "Grayson Burrows"
+                    : cast_line ? cast_it->second.name.c_str()
+                    : f->name.c_str();
     dl->AddText(ImVec2(tx, py + 14), pc_line ? kWhite : kAmber, who);
     dl->AddLine(ImVec2(tx, py + 36), ImVec2(px + pw - 18, py + 36), kDim);
 
@@ -478,9 +489,7 @@ void draw_bar_body(BaseContext& ctx) {
     const bool last_para    = !has_dialogue || g_paragraph + 1 >= dlg.size();
     if (has_dialogue) {
         const std::string raw = dlg[std::min(g_paragraph, dlg.size() - 1)];
-        // A beat prints nothing -- the portrait and the silence do the work.
         const std::string text = is_beat(raw) ? std::string() : expand_tokens(raw);
-        // Wrapped body text via ImGui (draw-list text doesn't wrap).
         ImGui::SetCursorScreenPos(ImVec2(tx, py + 48));
         ImGui::PushTextWrapPos(px + pw - 18);
         ImGui::PushStyleColor(ImGuiCol_Text, kWhite);

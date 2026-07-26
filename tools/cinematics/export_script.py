@@ -89,8 +89,11 @@ def render(entry: dict, out: list[str]) -> None:
         dlg = entry.get(dlg_key, [])
         spk = entry.get(spk_key, [])
         props = entry.get(prop_key, []) if prop_key else []
+        cast = entry.get("cast", {})
         for i, line in enumerate(dlg):
-            who = "GRAYSON" if i < len(spk) and spk[i] == "pc" else name.upper()
+            key = spk[i] if i < len(spk) else ""
+            who = ("GRAYSON" if key == "pc" else
+                   cast[key]["name"].upper() if key in cast else name.upper())
             shot = ""
             if i < len(props) and props[i]:
                 shot = f"  *[{Path(props[i]).stem}]*"

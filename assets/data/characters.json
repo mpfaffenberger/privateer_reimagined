@@ -184,6 +184,15 @@
       "personality": "Dry, sharp-tongued, quietly warm \u2014 in that order, and you earn each layer. Lets the silence remind you she is the youngest Drayman captain in five years. Treats every docking like an audition she intends to win, every contract like a duel she already has. Genuinely fond of pilots who arrive with their paperwork in order.",
       "voice_id": "PrivCustomSian02",
       "reference_image": "assets/cinematics/portraits/sian/_ref.png"
+    },
+    "miggs": {
+      "id": "miggs",
+      "display_name": "Miggs",
+      "role": "Roman Lynch's fiercely loyal enforcer and gatekeeper at the New Constantinople bar.",
+      "appearance": "A large, heavy-set human man in his 40s with an imposing square build, thick neck, broad round face, and completely bald head. Medium-brown skin, small narrowed dark eyes, broad flattened nose, heavy cheeks, and an uneven threatening grin. He faces people head-on and fills the frame like a wall.",
+      "personality": "Blunt, territorial, suspicious, and eager to intimidate. Loyal to Lynch and visibly enjoys making visitors uncomfortable.",
+      "wardrobe": "Dark charcoal business suit over a deep navy shirt with a plain grey tie. Mob muscle dressed formally, but the jacket strains across his broad shoulders.",
+      "reference_image": "_wcnews_refs/miggs/Privateer_-_Screenshot_-_New_Constantinople_-_Bar_-_Miggs_CU.png"
     }
   }
 }

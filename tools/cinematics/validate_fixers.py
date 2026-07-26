@@ -65,6 +65,13 @@ def main() -> int:
                     f"dialogue has {len(dlg)}"
                 )
 
+            cast = entry.get("cast", {})
+            for i, key in enumerate(spk):
+                if key not in ("", "pc") and key not in cast:
+                    errors.append(
+                        f"{fid}[{label}][{i}]: unknown speaker key {key!r}"
+                    )
+
             for i, clip in enumerate(vox):
                 line = dlg[i] if i < len(dlg) else ""
                 if clip and not (cine / clip).is_file():
@@ -94,6 +101,12 @@ def main() -> int:
             png = entry.get(field)
             if png and not (cine / png).is_file():
                 errors.append(f"{fid}: missing {field} {png}")
+        for key, member in entry.get("cast", {}).items():
+            png = member.get("portrait")
+            if not member.get("name"):
+                errors.append(f"{fid}: cast member {key!r} has no name")
+            if png and not (cine / png).is_file():
+                errors.append(f"{fid}: cast member {key!r} missing portrait {png}")
 
         # A REFUSE button with nothing behind it just blanks the panel.
         if entry.get("offer") and not entry.get("refuse_dialogue"):

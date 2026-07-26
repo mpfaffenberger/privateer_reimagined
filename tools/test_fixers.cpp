@@ -54,7 +54,9 @@ const char* kTable = R"json({
       "base": "new_detroit_industrial",
       "forbids_flags": ["sandoval_done"],
       "dialogue": ["I have a job.", "What's the pay?", "Iron to Liverpool."],
-      "speaker": ["", "pc", ""],
+      "speaker": ["miggs", "pc", ""],
+      "cast": { "miggs": { "name": "Miggs",
+                              "portrait": "portraits/miggs/_ref.png" } },
       "portrait": "portraits/sandoval/_ref.png",
       "portrait_pc": "portraits/grayson/_ref.png",
       "prop": ["", "props/steltek_artifact.png", ""],
@@ -194,10 +196,15 @@ int main() {
         check(t && t->portrait.empty() && t->voice.empty(),
               "portrait/voice: absent fields default to empty (text-only)");
 
-        // Two-hander: speaker[] marks which lines the player-character says.
+        // Speaker keys support PC, the default fixer, and named cast members.
         check(s && s->speaker.size() == 3 && s->speaker[1] == "pc" &&
-                  s->speaker[0].empty() && s->speaker[2].empty(),
-              "speaker: 'pc' marks player lines, '' marks the fixer");
+                  s->speaker[0] == "miggs" && s->speaker[2].empty(),
+              "speaker: supports named cast, PC, and default fixer lines");
+        const auto miggs = s ? s->cast.find("miggs") :
+                              decltype(s->cast.find("miggs")){};
+        check(s && miggs != s->cast.end() && miggs->second.name == "Miggs" &&
+                  miggs->second.portrait == "portraits/miggs/_ref.png",
+              "cast: named third speaker parses name and portrait");
         check(s && s->speaker.size() == s->dialogue.size(),
               "speaker: stays index-aligned with dialogue");
         check(s && s->portrait_pc == "portraits/grayson/_ref.png",

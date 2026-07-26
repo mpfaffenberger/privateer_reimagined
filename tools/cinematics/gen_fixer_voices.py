@@ -117,8 +117,8 @@ def main(argv: list[str] | None = None) -> int:
 
         clips: list[str] = []
         for i, line in enumerate(entry.get("dialogue", [])):
-            is_pc = i < len(speakers) and speakers[i] == "pc"
-            who = "grayson" if is_pc else speaker
+            speaker_key = speakers[i] if i < len(speakers) else ""
+            who = "grayson" if speaker_key == "pc" else speaker_key or speaker
             rel = voice_rel_path(fid, f"{i:02d}")
             text = speakable(line)
             if is_beat(line):
@@ -153,8 +153,8 @@ def main(argv: list[str] | None = None) -> int:
             ph_speakers = entry.get(f"{phase}_speaker", [])
             ph_clips: list[str] = []
             for i, line in enumerate(lines):
-                is_pc = i < len(ph_speakers) and ph_speakers[i] == "pc"
-                who = "grayson" if is_pc else speaker
+                speaker_key = ph_speakers[i] if i < len(ph_speakers) else ""
+                who = "grayson" if speaker_key == "pc" else speaker_key or speaker
                 rel = voice_rel_path(fid, f"{phase}_{i:02d}")
                 if is_beat(line):
                     ph_clips.append("")

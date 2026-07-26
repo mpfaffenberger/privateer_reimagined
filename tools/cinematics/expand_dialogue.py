@@ -240,9 +240,9 @@ SCENES: dict[str, list[tuple[str, str]]] = {
 
 # ------------------------------------------------------------------- LYNCH --
 "lynch_m06_offer": [
- (F, "You don't wanna talk to me, 'cause I don't wanna talk to you."),
+ ("miggs", "You don't wanna talk to me, 'cause I don't wanna talk to you."),
  (P, "I'm here to see Lynch."),
- (F, "Mr. Lynch, sittin' over there, HE'S the one you wanna talk to. So state "
+ ("miggs", "Mr. Lynch, sittin' over there, HE'S the one you wanna talk to. So state "
      "your bidness or take a hike, buddy."),
  (F, "Enough, Miggs."),
  (F, "Ah, Captain. I've been expecting you. I am Roman Lynch."),
@@ -812,6 +812,11 @@ def main(argv: list[str] | None = None) -> int:
         touched += 1
         entry["dialogue"] = [line for _, line in scene]
         entry["speaker"] = [who for who, _ in scene]
+        if any(who == "miggs" for who, _ in scene):
+            entry.setdefault("cast", {})["miggs"] = {
+                "name": "Miggs",
+                "portrait": "portraits/miggs/_ref.png",
+            }
         # Voice clips are keyed by index; the indices just changed.
         entry.pop("voice", None)
         if any(who == "pc" for who, _ in scene):

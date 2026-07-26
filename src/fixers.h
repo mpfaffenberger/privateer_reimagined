@@ -62,6 +62,7 @@
 
 #include <functional>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 struct PlayerState;
@@ -70,6 +71,11 @@ namespace fixers {
 
 // One authored fixer appearance (see header comment: one entry == one
 // gate-scoped appearance, not one character).
+struct CastMember {
+    std::string name;
+    std::string portrait;        // relative to assets/cinematics/
+};
+
 struct FixerDef {
     std::string id;              // unique: "sandoval_offer"
     std::string name;            // display: "Ernesto Sandoval"
@@ -90,7 +96,9 @@ struct FixerDef {
     // "pc" means the player-character. Keeping this parallel rather than
     // nesting means old single-voice entries stay valid untouched.
     std::vector<std::string> dialogue;       // linear paragraphs
-    std::vector<std::string> speaker;        // ""=fixer, "pc"=player
+    std::vector<std::string> speaker;        // ""=fixer, "pc"=player, else cast key
+    // Optional named third-party speakers (e.g. Miggs in Lynch's intro).
+    std::unordered_map<std::string, CastMember> cast;
     // prop[i] is a PNG (relative to assets/cinematics/) shown INSTEAD of the
     // speaker portrait for that line -- the object being discussed takes the
     // frame at the moment it matters, e.g. the Steltek artifact when Sandoval

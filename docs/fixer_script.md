@@ -349,9 +349,9 @@ authoring scripts and re-run.
 *Location:* new_constantinople  
 *Appears when:* requires `tayla_done`; blocked by `m06_active`, `m06_message_delivered`, `lynch_1_done`
 
-> **ROMAN LYNCH:** You don't wanna talk to me, 'cause I don't wanna talk to you.
+> **MIGGS:** You don't wanna talk to me, 'cause I don't wanna talk to you.
 > **GRAYSON:** I'm here to see Lynch.
-> **ROMAN LYNCH:** Mr. Lynch, sittin' over there, HE'S the one you wanna talk to. So state your bidness or take a hike, buddy.
+> **MIGGS:** Mr. Lynch, sittin' over there, HE'S the one you wanna talk to. So state your bidness or take a hike, buddy.
 > **ROMAN LYNCH:** Enough, Miggs.
 > **ROMAN LYNCH:** Ah, Captain. I've been expecting you. I am Roman Lynch.
 > **GRAYSON:** Tayla said you'd see me.
