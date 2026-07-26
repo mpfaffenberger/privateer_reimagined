@@ -288,9 +288,9 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  (P, "You owe me a story, Tayla. I've been paid in cliffhangers for a month."),
  (F, "Here's the rest of what I owe you, first."),
  (P, "..."),
- (F, "Before Sandoval, it belonged to a spice merchant named Deiter."),
+ (F, "Before Sandoval, it belonged to a spice merchant named Dieter."),
  (P, "And before him? I'm invested now. Emotionally. Possibly terminally."),
- (F, "Terminal is the usual outcome. Deiter had it from his own father -- "
+ (F, "Terminal is the usual outcome. Dieter had it from his own father -- "
      "every owner I can name died holding it."),
  (P, "That's a pattern, not a story. Patterns are what coroners find."),
  (F, "Coroners and I read the same reports. That's where my thread runs "

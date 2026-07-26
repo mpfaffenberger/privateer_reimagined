@@ -337,9 +337,9 @@ authoring scripts and re-run.
 > **GRAYSON:** You owe me a story, Tayla. I've been paid in cliffhangers for a month.
 > **TAYLA:** Here's the rest of what I owe you, first.
 > **GRAYSON:** *(silence)*
-> **TAYLA:** Before Sandoval, it belonged to a spice merchant named Deiter.
+> **TAYLA:** Before Sandoval, it belonged to a spice merchant named Dieter.
 > **GRAYSON:** And before him? I'm invested now. Emotionally. Possibly terminally.
-> **TAYLA:** Terminal is the usual outcome. Deiter had it from his own father -- every owner I can name died holding it.
+> **TAYLA:** Terminal is the usual outcome. Dieter had it from his own father -- every owner I can name died holding it.
 > **GRAYSON:** That's a pattern, not a story. Patterns are what coroners find.
 > **TAYLA:** Coroners and I read the same reports. That's where my thread runs out. I've sent the holo on to someone who can actually read it.
 > **GRAYSON:** Who?
