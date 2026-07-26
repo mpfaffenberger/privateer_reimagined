@@ -279,37 +279,7 @@
         "",
         ""
       ],
-      "music": 6,
-      "voice": [
-        "audio/fixers/tayla_artifact_handoff_00.mp3",
-        "audio/fixers/tayla_artifact_handoff_01.mp3",
-        "",
-        "audio/fixers/tayla_artifact_handoff_03.mp3",
-        "audio/fixers/tayla_artifact_handoff_04.mp3",
-        "audio/fixers/tayla_artifact_handoff_05.mp3",
-        "audio/fixers/tayla_artifact_handoff_06.mp3",
-        "audio/fixers/tayla_artifact_handoff_07.mp3",
-        "audio/fixers/tayla_artifact_handoff_08.mp3",
-        "audio/fixers/tayla_artifact_handoff_09.mp3",
-        "audio/fixers/tayla_artifact_handoff_10.mp3",
-        "audio/fixers/tayla_artifact_handoff_11.mp3",
-        "audio/fixers/tayla_artifact_handoff_12.mp3",
-        "audio/fixers/tayla_artifact_handoff_13.mp3",
-        "audio/fixers/tayla_artifact_handoff_14.mp3",
-        "audio/fixers/tayla_artifact_handoff_15.mp3",
-        "",
-        "audio/fixers/tayla_artifact_handoff_17.mp3",
-        "audio/fixers/tayla_artifact_handoff_18.mp3",
-        "audio/fixers/tayla_artifact_handoff_19.mp3",
-        "audio/fixers/tayla_artifact_handoff_20.mp3",
-        "audio/fixers/tayla_artifact_handoff_21.mp3",
-        "audio/fixers/tayla_artifact_handoff_22.mp3",
-        "audio/fixers/tayla_artifact_handoff_23.mp3",
-        "audio/fixers/tayla_artifact_handoff_24.mp3",
-        "audio/fixers/tayla_artifact_handoff_25.mp3",
-        "audio/fixers/tayla_artifact_handoff_26.mp3",
-        "audio/fixers/tayla_artifact_handoff_27.mp3"
-      ]
+      "music": 6
     },
     {
       "id": "tayla_m02_offer",
@@ -420,31 +390,6 @@
         "audio/fixers/tayla_m02_offer_refuse_02.mp3",
         "",
         "audio/fixers/tayla_m02_offer_refuse_04.mp3"
-      ],
-      "voice": [
-        "audio/fixers/tayla_m02_offer_00.mp3",
-        "audio/fixers/tayla_m02_offer_01.mp3",
-        "audio/fixers/tayla_m02_offer_02.mp3",
-        "audio/fixers/tayla_m02_offer_03.mp3",
-        "audio/fixers/tayla_m02_offer_04.mp3",
-        "audio/fixers/tayla_m02_offer_05.mp3",
-        "audio/fixers/tayla_m02_offer_06.mp3",
-        "audio/fixers/tayla_m02_offer_07.mp3",
-        "audio/fixers/tayla_m02_offer_08.mp3",
-        "audio/fixers/tayla_m02_offer_09.mp3",
-        "audio/fixers/tayla_m02_offer_10.mp3",
-        "audio/fixers/tayla_m02_offer_11.mp3",
-        "audio/fixers/tayla_m02_offer_12.mp3",
-        "audio/fixers/tayla_m02_offer_13.mp3",
-        "audio/fixers/tayla_m02_offer_14.mp3",
-        "",
-        "audio/fixers/tayla_m02_offer_16.mp3",
-        "audio/fixers/tayla_m02_offer_17.mp3",
-        "audio/fixers/tayla_m02_offer_18.mp3",
-        "audio/fixers/tayla_m02_offer_19.mp3",
-        "audio/fixers/tayla_m02_offer_20.mp3",
-        "audio/fixers/tayla_m02_offer_21.mp3",
-        "audio/fixers/tayla_m02_offer_22.mp3"
       ]
     },
     {
@@ -465,6 +410,8 @@
         "Then you'll enjoy this. Brilliance -- yes, that Brilliance -- to Hector, the mining base in Troy.",
         "That's not a manifest problem, that's a sentencing hearing. My lawyer would object, if I could afford one.",
         "Fifteen units. It'll fit where nobody looks -- I checked your dimensions personally. And you'll afford the lawyer after this one.",
+        "Oh really? Were you looking for length, or girth?",
+        "Cargo capacity. Though your confidence is noted -- and filed.",
         "Troy's crawling with militia, and my ship's top speed is best described as 'eventual.'",
         "It is. Talons, and they scan everything that moves -- even the eventual ones.",
         "So the plan is me, a hold full of felony, and a checkpoint that scans everything that moves. I'm sensing a theme in your courtship.",
@@ -482,6 +429,8 @@
       ],
       "portrait": "portraits/tayla/_ref.png",
       "speaker": [
+        "",
+        "pc",
         "",
         "pc",
         "",
@@ -551,7 +500,9 @@
         "audio/fixers/tayla_m03_offer_11.mp3",
         "audio/fixers/tayla_m03_offer_12.mp3",
         "audio/fixers/tayla_m03_offer_13.mp3",
-        "audio/fixers/tayla_m03_offer_14.mp3"
+        "audio/fixers/tayla_m03_offer_14.mp3",
+        "audio/fixers/tayla_m03_offer_15.mp3",
+        "audio/fixers/tayla_m03_offer_16.mp3"
       ]
     },
     {
@@ -587,16 +538,7 @@
         ""
       ],
       "portrait_pc": "portraits/grayson/_ref.png",
-      "music": 12,
-      "voice": [
-        "audio/fixers/tayla_m03_debrief_00.mp3",
-        "audio/fixers/tayla_m03_debrief_01.mp3",
-        "audio/fixers/tayla_m03_debrief_02.mp3",
-        "audio/fixers/tayla_m03_debrief_03.mp3",
-        "audio/fixers/tayla_m03_debrief_04.mp3",
-        "audio/fixers/tayla_m03_debrief_05.mp3",
-        "audio/fixers/tayla_m03_debrief_06.mp3"
-      ]
+      "music": 12
     },
     {
       "id": "tayla_m04_offer",
@@ -678,19 +620,6 @@
         "audio/fixers/tayla_m04_offer_refuse_02.mp3",
         "",
         "audio/fixers/tayla_m04_offer_refuse_04.mp3"
-      ],
-      "voice": [
-        "audio/fixers/tayla_m04_offer_00.mp3",
-        "audio/fixers/tayla_m04_offer_01.mp3",
-        "audio/fixers/tayla_m04_offer_02.mp3",
-        "audio/fixers/tayla_m04_offer_03.mp3",
-        "audio/fixers/tayla_m04_offer_04.mp3",
-        "audio/fixers/tayla_m04_offer_05.mp3",
-        "audio/fixers/tayla_m04_offer_06.mp3",
-        "audio/fixers/tayla_m04_offer_07.mp3",
-        "audio/fixers/tayla_m04_offer_08.mp3",
-        "audio/fixers/tayla_m04_offer_09.mp3",
-        "audio/fixers/tayla_m04_offer_10.mp3"
       ]
     },
     {
@@ -741,23 +670,7 @@
         ""
       ],
       "portrait_pc": "portraits/grayson/_ref.png",
-      "music": 12,
-      "voice": [
-        "audio/fixers/tayla_m04_debrief_00.mp3",
-        "audio/fixers/tayla_m04_debrief_01.mp3",
-        "audio/fixers/tayla_m04_debrief_02.mp3",
-        "audio/fixers/tayla_m04_debrief_03.mp3",
-        "audio/fixers/tayla_m04_debrief_04.mp3",
-        "audio/fixers/tayla_m04_debrief_05.mp3",
-        "audio/fixers/tayla_m04_debrief_06.mp3",
-        "audio/fixers/tayla_m04_debrief_07.mp3",
-        "audio/fixers/tayla_m04_debrief_08.mp3",
-        "audio/fixers/tayla_m04_debrief_09.mp3",
-        "",
-        "audio/fixers/tayla_m04_debrief_11.mp3",
-        "audio/fixers/tayla_m04_debrief_12.mp3",
-        "audio/fixers/tayla_m04_debrief_13.mp3"
-      ]
+      "music": 12
     },
     {
       "id": "tayla_m05_offer",
@@ -859,26 +772,6 @@
         "audio/fixers/tayla_m05_offer_refuse_02.mp3",
         "",
         "audio/fixers/tayla_m05_offer_refuse_04.mp3"
-      ],
-      "voice": [
-        "audio/fixers/tayla_m05_offer_00.mp3",
-        "audio/fixers/tayla_m05_offer_01.mp3",
-        "audio/fixers/tayla_m05_offer_02.mp3",
-        "audio/fixers/tayla_m05_offer_03.mp3",
-        "audio/fixers/tayla_m05_offer_04.mp3",
-        "audio/fixers/tayla_m05_offer_05.mp3",
-        "audio/fixers/tayla_m05_offer_06.mp3",
-        "audio/fixers/tayla_m05_offer_07.mp3",
-        "audio/fixers/tayla_m05_offer_08.mp3",
-        "audio/fixers/tayla_m05_offer_09.mp3",
-        "audio/fixers/tayla_m05_offer_10.mp3",
-        "audio/fixers/tayla_m05_offer_11.mp3",
-        "audio/fixers/tayla_m05_offer_12.mp3",
-        "audio/fixers/tayla_m05_offer_13.mp3",
-        "audio/fixers/tayla_m05_offer_14.mp3",
-        "audio/fixers/tayla_m05_offer_15.mp3",
-        "audio/fixers/tayla_m05_offer_16.mp3",
-        "audio/fixers/tayla_m05_offer_17.mp3"
       ]
     },
     {
@@ -935,26 +828,7 @@
         ""
       ],
       "portrait_pc": "portraits/grayson/_ref.png",
-      "music": 12,
-      "voice": [
-        "audio/fixers/tayla_m05_debrief_00.mp3",
-        "audio/fixers/tayla_m05_debrief_01.mp3",
-        "audio/fixers/tayla_m05_debrief_02.mp3",
-        "audio/fixers/tayla_m05_debrief_03.mp3",
-        "audio/fixers/tayla_m05_debrief_04.mp3",
-        "",
-        "audio/fixers/tayla_m05_debrief_06.mp3",
-        "audio/fixers/tayla_m05_debrief_07.mp3",
-        "audio/fixers/tayla_m05_debrief_08.mp3",
-        "audio/fixers/tayla_m05_debrief_09.mp3",
-        "audio/fixers/tayla_m05_debrief_10.mp3",
-        "audio/fixers/tayla_m05_debrief_11.mp3",
-        "audio/fixers/tayla_m05_debrief_12.mp3",
-        "audio/fixers/tayla_m05_debrief_13.mp3",
-        "audio/fixers/tayla_m05_debrief_14.mp3",
-        "audio/fixers/tayla_m05_debrief_15.mp3",
-        "audio/fixers/tayla_m05_debrief_16.mp3"
-      ]
+      "music": 12
     },
     {
       "id": "lynch_m06_offer",

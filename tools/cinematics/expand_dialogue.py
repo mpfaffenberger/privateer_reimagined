@@ -171,6 +171,8 @@ SCENES: dict[str, list[tuple[str, str]]] = {
      "would object, if I could afford one."),
  (F, "Fifteen units. It'll fit where nobody looks -- I checked your "
      "dimensions personally. And you'll afford the lawyer after this one."),
+ (P, "Oh really? Were you looking for length, or girth?"),
+ (F, "Cargo capacity. Though your confidence is noted -- and filed."),
  (P, "Troy's crawling with militia, and my ship's top speed is best "
      "described as 'eventual.'"),
  (F, "It is. Talons, and they scan everything that moves -- even the "
