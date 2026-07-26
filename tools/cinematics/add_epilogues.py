@@ -102,8 +102,8 @@ EPILOGUES: dict[str, dict[str, list[tuple[str, str]]]] = {
 "tayla_m05_offer": {
  "accept": [
   (F, "Last one. Then I pay out in full -- credits and story both."),
-  (P, "I'll hold you to the second half. The credits spend -- the story's "
-    "the part I've been flying for."),
+  (P, "I'll hold you to the second half. Credits I can earn anywhere -- the "
+    "story's what I've been flying for."),
   (F, "You've earned it. Watch for Riordian on the way out."),
   (P, "You said he was just talking."),
   (F, "Men who just talk don't fuel their ships at three in the morning."),

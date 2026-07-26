@@ -309,7 +309,7 @@ authoring scripts and re-run.
 **— ACCEPT —**
 
 > **TAYLA:** Last one. Then I pay out in full -- credits and story both.
-> **GRAYSON:** I'll hold you to the second half. The credits spend -- the story's the part I've been flying for.
+> **GRAYSON:** I'll hold you to the second half. Credits I can earn anywhere -- the story's what I've been flying for.
 > **TAYLA:** You've earned it. Watch for Riordian on the way out.
 > **GRAYSON:** You said he was just talking.
 > **TAYLA:** Men who just talk don't fuel their ships at three in the morning.
