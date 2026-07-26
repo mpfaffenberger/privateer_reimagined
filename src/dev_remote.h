@@ -130,6 +130,9 @@
 //                          bar 1..14 (bar_music_NN, held + repeated) or
 //                          0 to restore the shuffled rotation. The
 //                          audition seam for per-scene music direction.
+//   POST /dj             → show/hide the Bar DJ panel. Body { show }.
+//                          Remote-control seam for REST-staged sessions
+//                          where the title key-swallow eats Ctrl+B.
 //   POST /autopilot      → select a nav BY NAME + engage the nav
 //                          autopilot (the A key). Body { nav }. Hostile
 //                          gate applies; refusals show in the HUD banner
@@ -522,6 +525,10 @@ void set_fixer_hook(std::function<void(std::string id, std::string verb)> hook);
 // POST /music — main-thread hook receiving the bar-pool index (1..14;
 // 0 = restore shuffle). The host wires it to music::request_bar_track.
 void set_bar_music_hook(std::function<void(int idx)> hook);
+
+// POST /dj — main-thread hook receiving the desired panel visibility.
+// The host wires it to music_dj::set_visible.
+void set_dj_panel_hook(std::function<void(bool show)> hook);
 
 // POST /autopilot enqueues a command; drain_commands invokes this hook on
 // the main thread with the nav NAME. The host resolves it to a nav index

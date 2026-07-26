@@ -70,7 +70,7 @@ struct Command {
                       Kill, SetTarget, TractorPull, InventorySell, InventoryGive,
                       InventoryInstall, InventoryEquip, SetPanel, CommsSelect,
                       Rumor, Plot, BaseScreenNav, Goto, Dock, Fixer,
-                      Autopilot, Jump, Damage, BarMusic,
+                      Autopilot, Jump, Damage, BarMusic, DjPanel,
                       CinematicPlay, CinematicStop, CinematicReload, CinematicSeek };
     Kind kind;
 
@@ -233,6 +233,7 @@ std::function<void(std::string)>                            g_goto_hook;
 std::function<void(std::string)>                            g_dock_hook;
 std::function<void(std::string, std::string)>               g_fixer_hook;
 std::function<void(int)>                                    g_bar_music_hook;
+std::function<void(bool)>                                   g_dj_panel_hook;
 std::function<void(std::string)>                            g_autopilot_hook;
 std::function<void(std::string)>                            g_jump_hook;
 std::function<bool(const std::string&, std::string&)>       g_cinematic_play_hook;
@@ -796,6 +797,25 @@ void handle_music(int fd, const std::string& body) {
     Command c;
     c.kind    = Command::Kind::BarMusic;
     c.int_arg = (int)bar_f;
+    {
+        std::lock_guard lk(g_queue_mu);
+        g_queue.push_back(c);
+    }
+    send_json(fd, "{\"ok\":true}");
+}
+
+// POST /dj — show/hide the Bar DJ panel. Body { show }. REST-staged
+// sessions never dismiss the title screen, whose key-swallow eats the
+// Ctrl+B hotkey — this is the remote-control seam.
+void handle_dj(int fd, const std::string& body) {
+    bool show = false;
+    if (!extract_bool(body, "show", &show)) {
+        send_json(fd, "{\"ok\":false,\"error\":\"missing show (bool)\"}");
+        return;
+    }
+    Command c;
+    c.kind    = Command::Kind::DjPanel;
+    c.int_arg = show ? 1 : 0;
     {
         std::lock_guard lk(g_queue_mu);
         g_queue.push_back(c);
@@ -1526,6 +1546,7 @@ void handle_connection(int fd) {
     else if (method == "POST" && path == "/dock")       handle_dock(fd, body);
     else if (method == "POST" && path == "/fixer")      handle_fixer(fd, body);
     else if (method == "POST" && path == "/music")      handle_music(fd, body);
+    else if (method == "POST" && path == "/dj")         handle_dj(fd, body);
     else if (method == "POST" && path == "/autopilot")  handle_autopilot(fd, body);
     else if (method == "POST" && path == "/jump")       handle_jump(fd, body);
     else if (method == "GET"  && path == "/missions")   handle_missions(fd);
@@ -1890,6 +1911,16 @@ void drain_commands(Camera& cam) {
             if (hook) hook(c.int_arg);
             break;
         }
+        case Command::Kind::DjPanel: {
+            // Show/hide the Bar DJ panel remotely.
+            std::function<void(bool)> hook;
+            {
+                std::lock_guard lk(g_hooks_mu);
+                hook = g_dj_panel_hook;
+            }
+            if (hook) hook(c.int_arg != 0);
+            break;
+        }
         case Command::Kind::CinematicPlay:
         case Command::Kind::CinematicReload: {
             // Load+play / re-parse on the main thread. Both share the
@@ -2132,6 +2163,11 @@ void set_dock_hook(std::function<void(std::string)> hook) {
 void set_bar_music_hook(std::function<void(int)> hook) {
     std::lock_guard lk(g_hooks_mu);
     g_bar_music_hook = std::move(hook);
+}
+
+void set_dj_panel_hook(std::function<void(bool)> hook) {
+    std::lock_guard lk(g_hooks_mu);
+    g_dj_panel_hook = std::move(hook);
 }
 
 void set_fixer_hook(std::function<void(std::string, std::string)> hook) {

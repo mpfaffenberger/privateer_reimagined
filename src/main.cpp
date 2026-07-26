@@ -1707,6 +1707,10 @@ void build_system_scene(bool first_time) {
         dev_remote::set_bar_music_hook([](int idx) {
             music::request_bar_track(idx);
         });
+        // POST /dj — remote toggle for the Bar DJ panel (issue #264).
+        dev_remote::set_dj_panel_hook([](bool show) {
+            music_dj::set_visible(show);
+        });
 
         // issue #103: register the dev_remote host hooks (the decoupling
         // seam, mirroring encounters' SpawnFn). dev_remote validates +

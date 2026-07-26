@@ -35,9 +35,15 @@ bool handle_event(const sapp_event* e) {
         e->key_code == SAPP_KEYCODE_B &&
         (e->modifiers & SAPP_MODIFIER_CTRL)) {
         g_visible = !g_visible;
+        std::printf("[music_dj] Ctrl+B -> %s\n", g_visible ? "show" : "hide");
         return true;
     }
     return false;
+}
+
+void set_visible(bool v) {
+    g_visible = v;
+    std::printf("[music_dj] set_visible -> %s\n", v ? "show" : "hide");
 }
 
 void build() {

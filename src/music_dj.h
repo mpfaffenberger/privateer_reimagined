@@ -20,6 +20,10 @@ namespace music_dj {
 // Ctrl+B toggle. Returns true when the event was consumed.
 bool handle_event(const sapp_event* e);
 
+// Programmatic show/hide (POST /dj) — REST-staged sessions never clear the
+// title screen's key-swallow, so the hotkey can't reach us there.
+void set_visible(bool v);
+
 // Draw the window (no-op while hidden). Call once per frame from the ImGui
 // build pass, any mode.
 void build();

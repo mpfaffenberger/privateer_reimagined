@@ -67,6 +67,7 @@ void set_goto_hook(std::function<void(std::string)> /*hook*/)          {}
 void set_dock_hook(std::function<void(std::string)> /*hook*/)          {}
 void set_fixer_hook(std::function<void(std::string, std::string)> /*hook*/) {}
 void set_bar_music_hook(std::function<void(int)> /*hook*/) {}
+void set_dj_panel_hook(std::function<void(bool)> /*hook*/) {}
 void set_autopilot_hook(std::function<void(std::string)> /*hook*/)     {}
 void set_jump_hook(std::function<void(std::string)> /*hook*/)          {}
 
