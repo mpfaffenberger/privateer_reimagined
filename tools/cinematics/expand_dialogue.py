@@ -59,7 +59,8 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  (P, "Then we don't have a deal tonight."),
  (F, "Wait. I'll show you something better than credits."),
  (P, "..."),
- (F, "Here. Hold this. Collateral, until I pay."),
+ (F, "Take this as collateral. I'm sure you can tell it's rare -- and "
+     "valuable."),
  (P, "What is it?"),
  (F, "Don't ask me what it is."),
  (P, "It's warm."),

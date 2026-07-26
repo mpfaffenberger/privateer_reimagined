@@ -29,7 +29,7 @@ authoring scripts and re-run.
 > **GRAYSON:** Then we don't have a deal tonight.
 > **ERNESTO SANDOVAL:** Wait. I'll show you something better than credits.
 > **GRAYSON:** *(silence)*  *[steltek_artifact]*
-> **ERNESTO SANDOVAL:** Here. Hold this. Collateral, until I pay.  *[steltek_artifact]*
+> **ERNESTO SANDOVAL:** Take this as collateral. I'm sure you can tell it's rare -- and valuable.  *[steltek_artifact]*
 > **GRAYSON:** What is it?  *[steltek_artifact]*
 > **ERNESTO SANDOVAL:** Don't ask me what it is.  *[steltek_artifact]*
 > **GRAYSON:** It's warm.  *[steltek_artifact]*
@@ -52,7 +52,7 @@ authoring scripts and re-run.
 > **ERNESTO SANDOVAL:** The cargo's already aboard. It was aboard before you sat down.
 > **GRAYSON:** *(silence)*
 > **ERNESTO SANDOVAL:** I told you I'd rather pay for judgment. I didn't say I'd wait for it.
-> **GRAYSON:** One day someone's going to shoot you, Sandoval.
+> **GRAYSON:** Somebody is going to shoot you one of these days, Sandoval.
 > **ERNESTO SANDOVAL:** Fly safe, Captain. Come back to me.
 
 **— REFUSE —**

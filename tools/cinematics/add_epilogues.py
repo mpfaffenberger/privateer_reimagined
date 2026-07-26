@@ -65,7 +65,7 @@ EPILOGUES: dict[str, dict[str, list[tuple[str, str]]]] = {
   (F, "The cargo's already aboard. It was aboard before you sat down."),
   (P, "..."),
   (F, "I told you I'd rather pay for judgment. I didn't say I'd wait for it."),
-  (P, "One day someone's going to shoot you, Sandoval."),
+  (P, "Somebody is going to shoot you one of these days, Sandoval."),
   (F, "Fly safe, Captain. Come back to me."),
  ],
  "refuse": [

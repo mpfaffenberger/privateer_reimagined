@@ -50,7 +50,7 @@
         "Then we don't have a deal tonight.",
         "Wait. I'll show you something better than credits.",
         "...",
-        "Here. Hold this. Collateral, until I pay.",
+        "Take this as collateral. I'm sure you can tell it's rare -- and valuable.",
         "What is it?",
         "Don't ask me what it is.",
         "It's warm.",
@@ -144,7 +144,7 @@
         "The cargo's already aboard. It was aboard before you sat down.",
         "...",
         "I told you I'd rather pay for judgment. I didn't say I'd wait for it.",
-        "One day someone's going to shoot you, Sandoval.",
+        "Somebody is going to shoot you one of these days, Sandoval.",
         "Fly safe, Captain. Come back to me."
       ],
       "accept_speaker": [
@@ -172,23 +172,7 @@
         "pc",
         ""
       ],
-      "accept_voice": [
-        "audio/fixers/sandoval_offer_accept_00.mp3",
-        "audio/fixers/sandoval_offer_accept_01.mp3",
-        "audio/fixers/sandoval_offer_accept_02.mp3",
-        "",
-        "audio/fixers/sandoval_offer_accept_04.mp3",
-        "audio/fixers/sandoval_offer_accept_05.mp3",
-        "audio/fixers/sandoval_offer_accept_06.mp3"
-      ],
-      "refuse_voice": [
-        "",
-        "audio/fixers/sandoval_offer_refuse_01.mp3",
-        "audio/fixers/sandoval_offer_refuse_02.mp3",
-        "audio/fixers/sandoval_offer_refuse_03.mp3",
-        "audio/fixers/sandoval_offer_refuse_04.mp3",
-        "audio/fixers/sandoval_offer_refuse_05.mp3"
-      ],
+      "music": 13,
       "voice": [
         "audio/fixers/sandoval_offer_00.mp3",
         "audio/fixers/sandoval_offer_01.mp3",
@@ -222,7 +206,23 @@
         "audio/fixers/sandoval_offer_29.mp3",
         "audio/fixers/sandoval_offer_30.mp3"
       ],
-      "music": 13
+      "accept_voice": [
+        "audio/fixers/sandoval_offer_accept_00.mp3",
+        "audio/fixers/sandoval_offer_accept_01.mp3",
+        "audio/fixers/sandoval_offer_accept_02.mp3",
+        "",
+        "audio/fixers/sandoval_offer_accept_04.mp3",
+        "audio/fixers/sandoval_offer_accept_05.mp3",
+        "audio/fixers/sandoval_offer_accept_06.mp3"
+      ],
+      "refuse_voice": [
+        "",
+        "audio/fixers/sandoval_offer_refuse_01.mp3",
+        "audio/fixers/sandoval_offer_refuse_02.mp3",
+        "audio/fixers/sandoval_offer_refuse_03.mp3",
+        "audio/fixers/sandoval_offer_refuse_04.mp3",
+        "audio/fixers/sandoval_offer_refuse_05.mp3"
+      ]
     },
     {
       "id": "tayla_artifact_handoff",
@@ -458,20 +458,6 @@
         ""
       ],
       "music": 6,
-      "accept_voice": [
-        "audio/fixers/tayla_m02_offer_accept_00.mp3",
-        "audio/fixers/tayla_m02_offer_accept_01.mp3",
-        "audio/fixers/tayla_m02_offer_accept_02.mp3",
-        "audio/fixers/tayla_m02_offer_accept_03.mp3",
-        "audio/fixers/tayla_m02_offer_accept_04.mp3"
-      ],
-      "refuse_voice": [
-        "audio/fixers/tayla_m02_offer_refuse_00.mp3",
-        "audio/fixers/tayla_m02_offer_refuse_01.mp3",
-        "audio/fixers/tayla_m02_offer_refuse_02.mp3",
-        "",
-        "audio/fixers/tayla_m02_offer_refuse_04.mp3"
-      ],
       "voice": [
         "audio/fixers/tayla_m02_offer_00.mp3",
         "audio/fixers/tayla_m02_offer_01.mp3",
@@ -496,6 +482,20 @@
         "audio/fixers/tayla_m02_offer_20.mp3",
         "audio/fixers/tayla_m02_offer_21.mp3",
         "audio/fixers/tayla_m02_offer_22.mp3"
+      ],
+      "accept_voice": [
+        "audio/fixers/tayla_m02_offer_accept_00.mp3",
+        "audio/fixers/tayla_m02_offer_accept_01.mp3",
+        "audio/fixers/tayla_m02_offer_accept_02.mp3",
+        "audio/fixers/tayla_m02_offer_accept_03.mp3",
+        "audio/fixers/tayla_m02_offer_accept_04.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/tayla_m02_offer_refuse_00.mp3",
+        "audio/fixers/tayla_m02_offer_refuse_01.mp3",
+        "audio/fixers/tayla_m02_offer_refuse_02.mp3",
+        "",
+        "audio/fixers/tayla_m02_offer_refuse_04.mp3"
       ]
     },
     {
@@ -579,18 +579,6 @@
         ""
       ],
       "music": 12,
-      "accept_voice": [
-        "audio/fixers/tayla_m03_offer_accept_00.mp3",
-        "audio/fixers/tayla_m03_offer_accept_01.mp3",
-        "audio/fixers/tayla_m03_offer_accept_02.mp3"
-      ],
-      "refuse_voice": [
-        "audio/fixers/tayla_m03_offer_refuse_00.mp3",
-        "audio/fixers/tayla_m03_offer_refuse_01.mp3",
-        "audio/fixers/tayla_m03_offer_refuse_02.mp3",
-        "",
-        "audio/fixers/tayla_m03_offer_refuse_04.mp3"
-      ],
       "voice": [
         "audio/fixers/tayla_m03_offer_00.mp3",
         "audio/fixers/tayla_m03_offer_01.mp3",
@@ -609,6 +597,18 @@
         "audio/fixers/tayla_m03_offer_14.mp3",
         "audio/fixers/tayla_m03_offer_15.mp3",
         "audio/fixers/tayla_m03_offer_16.mp3"
+      ],
+      "accept_voice": [
+        "audio/fixers/tayla_m03_offer_accept_00.mp3",
+        "audio/fixers/tayla_m03_offer_accept_01.mp3",
+        "audio/fixers/tayla_m03_offer_accept_02.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/tayla_m03_offer_refuse_00.mp3",
+        "audio/fixers/tayla_m03_offer_refuse_01.mp3",
+        "audio/fixers/tayla_m03_offer_refuse_02.mp3",
+        "",
+        "audio/fixers/tayla_m03_offer_refuse_04.mp3"
       ]
     },
     {
@@ -724,18 +724,6 @@
         ""
       ],
       "music": 12,
-      "accept_voice": [
-        "audio/fixers/tayla_m04_offer_accept_00.mp3",
-        "audio/fixers/tayla_m04_offer_accept_01.mp3",
-        "audio/fixers/tayla_m04_offer_accept_02.mp3"
-      ],
-      "refuse_voice": [
-        "audio/fixers/tayla_m04_offer_refuse_00.mp3",
-        "audio/fixers/tayla_m04_offer_refuse_01.mp3",
-        "audio/fixers/tayla_m04_offer_refuse_02.mp3",
-        "",
-        "audio/fixers/tayla_m04_offer_refuse_04.mp3"
-      ],
       "voice": [
         "audio/fixers/tayla_m04_offer_00.mp3",
         "audio/fixers/tayla_m04_offer_01.mp3",
@@ -748,6 +736,18 @@
         "audio/fixers/tayla_m04_offer_08.mp3",
         "audio/fixers/tayla_m04_offer_09.mp3",
         "audio/fixers/tayla_m04_offer_10.mp3"
+      ],
+      "accept_voice": [
+        "audio/fixers/tayla_m04_offer_accept_00.mp3",
+        "audio/fixers/tayla_m04_offer_accept_01.mp3",
+        "audio/fixers/tayla_m04_offer_accept_02.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/tayla_m04_offer_refuse_00.mp3",
+        "audio/fixers/tayla_m04_offer_refuse_01.mp3",
+        "audio/fixers/tayla_m04_offer_refuse_02.mp3",
+        "",
+        "audio/fixers/tayla_m04_offer_refuse_04.mp3"
       ]
     },
     {
@@ -903,20 +903,6 @@
         ""
       ],
       "music": 3,
-      "accept_voice": [
-        "audio/fixers/tayla_m05_offer_accept_00.mp3",
-        "audio/fixers/tayla_m05_offer_accept_01.mp3",
-        "audio/fixers/tayla_m05_offer_accept_02.mp3",
-        "audio/fixers/tayla_m05_offer_accept_03.mp3",
-        "audio/fixers/tayla_m05_offer_accept_04.mp3"
-      ],
-      "refuse_voice": [
-        "audio/fixers/tayla_m05_offer_refuse_00.mp3",
-        "audio/fixers/tayla_m05_offer_refuse_01.mp3",
-        "audio/fixers/tayla_m05_offer_refuse_02.mp3",
-        "",
-        "audio/fixers/tayla_m05_offer_refuse_04.mp3"
-      ],
       "voice": [
         "audio/fixers/tayla_m05_offer_00.mp3",
         "audio/fixers/tayla_m05_offer_01.mp3",
@@ -936,6 +922,20 @@
         "audio/fixers/tayla_m05_offer_15.mp3",
         "audio/fixers/tayla_m05_offer_16.mp3",
         "audio/fixers/tayla_m05_offer_17.mp3"
+      ],
+      "accept_voice": [
+        "audio/fixers/tayla_m05_offer_accept_00.mp3",
+        "audio/fixers/tayla_m05_offer_accept_01.mp3",
+        "audio/fixers/tayla_m05_offer_accept_02.mp3",
+        "audio/fixers/tayla_m05_offer_accept_03.mp3",
+        "audio/fixers/tayla_m05_offer_accept_04.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/tayla_m05_offer_refuse_00.mp3",
+        "audio/fixers/tayla_m05_offer_refuse_01.mp3",
+        "audio/fixers/tayla_m05_offer_refuse_02.mp3",
+        "",
+        "audio/fixers/tayla_m05_offer_refuse_04.mp3"
       ]
     },
     {
@@ -1148,23 +1148,6 @@
           "portrait": "portraits/miggs/_ref.png"
         }
       },
-      "accept_voice": [
-        "audio/fixers/lynch_m06_offer_accept_00.mp3",
-        "audio/fixers/lynch_m06_offer_accept_01.mp3",
-        "audio/fixers/lynch_m06_offer_accept_02.mp3",
-        "",
-        "audio/fixers/lynch_m06_offer_accept_04.mp3",
-        "audio/fixers/lynch_m06_offer_accept_05.mp3",
-        "audio/fixers/lynch_m06_offer_accept_06.mp3"
-      ],
-      "refuse_voice": [
-        "audio/fixers/lynch_m06_offer_refuse_00.mp3",
-        "audio/fixers/lynch_m06_offer_refuse_01.mp3",
-        "audio/fixers/lynch_m06_offer_refuse_02.mp3",
-        "audio/fixers/lynch_m06_offer_refuse_03.mp3",
-        "",
-        "audio/fixers/lynch_m06_offer_refuse_05.mp3"
-      ],
       "voice": [
         "../speech/bar/MIGGS_000.wav",
         "../speech/bar/MIGGS_001.wav",
@@ -1198,6 +1181,23 @@
         "audio/fixers/lynch_m06_offer_29.mp3",
         "audio/fixers/lynch_m06_offer_30.mp3",
         "audio/fixers/lynch_m06_offer_31.mp3"
+      ],
+      "accept_voice": [
+        "audio/fixers/lynch_m06_offer_accept_00.mp3",
+        "audio/fixers/lynch_m06_offer_accept_01.mp3",
+        "audio/fixers/lynch_m06_offer_accept_02.mp3",
+        "",
+        "audio/fixers/lynch_m06_offer_accept_04.mp3",
+        "audio/fixers/lynch_m06_offer_accept_05.mp3",
+        "audio/fixers/lynch_m06_offer_accept_06.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/lynch_m06_offer_refuse_00.mp3",
+        "audio/fixers/lynch_m06_offer_refuse_01.mp3",
+        "audio/fixers/lynch_m06_offer_refuse_02.mp3",
+        "audio/fixers/lynch_m06_offer_refuse_03.mp3",
+        "",
+        "audio/fixers/lynch_m06_offer_refuse_05.mp3"
       ]
     },
     {
@@ -1356,18 +1356,6 @@
           "portrait": "portraits/miggs/_ref.png"
         }
       },
-      "accept_voice": [
-        "audio/fixers/lynch_m07_offer_accept_00.mp3",
-        "audio/fixers/lynch_m07_offer_accept_01.mp3",
-        "audio/fixers/lynch_m07_offer_accept_02.mp3"
-      ],
-      "refuse_voice": [
-        "audio/fixers/lynch_m07_offer_refuse_00.mp3",
-        "audio/fixers/lynch_m07_offer_refuse_01.mp3",
-        "audio/fixers/lynch_m07_offer_refuse_02.mp3",
-        "",
-        "audio/fixers/lynch_m07_offer_refuse_04.mp3"
-      ],
       "voice": [
         "audio/fixers/lynch_m07_offer_00.mp3",
         "audio/fixers/lynch_m07_offer_01.mp3",
@@ -1389,6 +1377,18 @@
         "audio/fixers/lynch_m07_offer_17.mp3",
         "audio/fixers/lynch_m07_offer_18.mp3",
         "audio/fixers/lynch_m07_offer_19.mp3"
+      ],
+      "accept_voice": [
+        "audio/fixers/lynch_m07_offer_accept_00.mp3",
+        "audio/fixers/lynch_m07_offer_accept_01.mp3",
+        "audio/fixers/lynch_m07_offer_accept_02.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/lynch_m07_offer_refuse_00.mp3",
+        "audio/fixers/lynch_m07_offer_refuse_01.mp3",
+        "audio/fixers/lynch_m07_offer_refuse_02.mp3",
+        "",
+        "audio/fixers/lynch_m07_offer_refuse_04.mp3"
       ]
     },
     {
@@ -1497,22 +1497,6 @@
           "portrait": "portraits/miggs/_ref.png"
         }
       },
-      "accept_voice": [
-        "audio/fixers/lynch_m08_offer_accept_00.mp3",
-        "audio/fixers/lynch_m08_offer_accept_01.mp3",
-        "audio/fixers/lynch_m08_offer_accept_02.mp3",
-        "",
-        "audio/fixers/lynch_m08_offer_accept_04.mp3",
-        "audio/fixers/lynch_m08_offer_accept_05.mp3"
-      ],
-      "refuse_voice": [
-        "audio/fixers/lynch_m08_offer_refuse_00.mp3",
-        "audio/fixers/lynch_m08_offer_refuse_01.mp3",
-        "audio/fixers/lynch_m08_offer_refuse_02.mp3",
-        "audio/fixers/lynch_m08_offer_refuse_03.mp3",
-        "",
-        "audio/fixers/lynch_m08_offer_refuse_05.mp3"
-      ],
       "voice": [
         "audio/fixers/lynch_m08_offer_00.mp3",
         "",
@@ -1537,6 +1521,22 @@
         "audio/fixers/lynch_m08_offer_20.mp3",
         "audio/fixers/lynch_m08_offer_21.mp3",
         "audio/fixers/lynch_m08_offer_22.mp3"
+      ],
+      "accept_voice": [
+        "audio/fixers/lynch_m08_offer_accept_00.mp3",
+        "audio/fixers/lynch_m08_offer_accept_01.mp3",
+        "audio/fixers/lynch_m08_offer_accept_02.mp3",
+        "",
+        "audio/fixers/lynch_m08_offer_accept_04.mp3",
+        "audio/fixers/lynch_m08_offer_accept_05.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/lynch_m08_offer_refuse_00.mp3",
+        "audio/fixers/lynch_m08_offer_refuse_01.mp3",
+        "audio/fixers/lynch_m08_offer_refuse_02.mp3",
+        "audio/fixers/lynch_m08_offer_refuse_03.mp3",
+        "",
+        "audio/fixers/lynch_m08_offer_refuse_05.mp3"
       ]
     },
     {
@@ -1620,19 +1620,6 @@
         "pc",
         ""
       ],
-      "accept_voice": [
-        "audio/fixers/lynch_m09_offer_accept_00.mp3",
-        "audio/fixers/lynch_m09_offer_accept_01.mp3",
-        "audio/fixers/lynch_m09_offer_accept_02.mp3"
-      ],
-      "refuse_voice": [
-        "audio/fixers/lynch_m09_offer_refuse_00.mp3",
-        "audio/fixers/lynch_m09_offer_refuse_01.mp3",
-        "",
-        "audio/fixers/lynch_m09_offer_refuse_03.mp3",
-        "audio/fixers/lynch_m09_offer_refuse_04.mp3",
-        "audio/fixers/lynch_m09_offer_refuse_05.mp3"
-      ],
       "voice": [
         "audio/fixers/lynch_m09_offer_00.mp3",
         "audio/fixers/lynch_m09_offer_01.mp3",
@@ -1651,6 +1638,19 @@
         "audio/fixers/lynch_m09_offer_14.mp3",
         "audio/fixers/lynch_m09_offer_15.mp3",
         "audio/fixers/lynch_m09_offer_16.mp3"
+      ],
+      "accept_voice": [
+        "audio/fixers/lynch_m09_offer_accept_00.mp3",
+        "audio/fixers/lynch_m09_offer_accept_01.mp3",
+        "audio/fixers/lynch_m09_offer_accept_02.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/lynch_m09_offer_refuse_00.mp3",
+        "audio/fixers/lynch_m09_offer_refuse_01.mp3",
+        "",
+        "audio/fixers/lynch_m09_offer_refuse_03.mp3",
+        "audio/fixers/lynch_m09_offer_refuse_04.mp3",
+        "audio/fixers/lynch_m09_offer_refuse_05.mp3"
       ]
     },
     {
@@ -1746,20 +1746,6 @@
         "pc",
         ""
       ],
-      "accept_voice": [
-        "audio/fixers/masterson_m10_offer_accept_00.mp3",
-        "audio/fixers/masterson_m10_offer_accept_01.mp3",
-        "audio/fixers/masterson_m10_offer_accept_02.mp3",
-        "audio/fixers/masterson_m10_offer_accept_03.mp3",
-        "audio/fixers/masterson_m10_offer_accept_04.mp3"
-      ],
-      "refuse_voice": [
-        "audio/fixers/masterson_m10_offer_refuse_00.mp3",
-        "audio/fixers/masterson_m10_offer_refuse_01.mp3",
-        "audio/fixers/masterson_m10_offer_refuse_02.mp3",
-        "",
-        "audio/fixers/masterson_m10_offer_refuse_04.mp3"
-      ],
       "voice": [
         "audio/fixers/masterson_m10_offer_00.mp3",
         "audio/fixers/masterson_m10_offer_01.mp3",
@@ -1783,6 +1769,20 @@
         "audio/fixers/masterson_m10_offer_19.mp3",
         "audio/fixers/masterson_m10_offer_20.mp3",
         "audio/fixers/masterson_m10_offer_21.mp3"
+      ],
+      "accept_voice": [
+        "audio/fixers/masterson_m10_offer_accept_00.mp3",
+        "audio/fixers/masterson_m10_offer_accept_01.mp3",
+        "audio/fixers/masterson_m10_offer_accept_02.mp3",
+        "audio/fixers/masterson_m10_offer_accept_03.mp3",
+        "audio/fixers/masterson_m10_offer_accept_04.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/masterson_m10_offer_refuse_00.mp3",
+        "audio/fixers/masterson_m10_offer_refuse_01.mp3",
+        "audio/fixers/masterson_m10_offer_refuse_02.mp3",
+        "",
+        "audio/fixers/masterson_m10_offer_refuse_04.mp3"
       ]
     },
     {
@@ -1860,18 +1860,6 @@
         "pc",
         ""
       ],
-      "accept_voice": [
-        "audio/fixers/masterson_m11_offer_accept_00.mp3",
-        "audio/fixers/masterson_m11_offer_accept_01.mp3",
-        "audio/fixers/masterson_m11_offer_accept_02.mp3"
-      ],
-      "refuse_voice": [
-        "audio/fixers/masterson_m11_offer_refuse_00.mp3",
-        "audio/fixers/masterson_m11_offer_refuse_01.mp3",
-        "audio/fixers/masterson_m11_offer_refuse_02.mp3",
-        "",
-        "audio/fixers/masterson_m11_offer_refuse_04.mp3"
-      ],
       "voice": [
         "audio/fixers/masterson_m11_offer_00.mp3",
         "audio/fixers/masterson_m11_offer_01.mp3",
@@ -1888,6 +1876,18 @@
         "audio/fixers/masterson_m11_offer_12.mp3",
         "audio/fixers/masterson_m11_offer_13.mp3",
         "audio/fixers/masterson_m11_offer_14.mp3"
+      ],
+      "accept_voice": [
+        "audio/fixers/masterson_m11_offer_accept_00.mp3",
+        "audio/fixers/masterson_m11_offer_accept_01.mp3",
+        "audio/fixers/masterson_m11_offer_accept_02.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/masterson_m11_offer_refuse_00.mp3",
+        "audio/fixers/masterson_m11_offer_refuse_01.mp3",
+        "audio/fixers/masterson_m11_offer_refuse_02.mp3",
+        "",
+        "audio/fixers/masterson_m11_offer_refuse_04.mp3"
       ]
     },
     {
@@ -1967,19 +1967,6 @@
         "",
         ""
       ],
-      "accept_voice": [
-        "audio/fixers/masterson_m12_offer_accept_00.mp3",
-        "audio/fixers/masterson_m12_offer_accept_01.mp3",
-        "audio/fixers/masterson_m12_offer_accept_02.mp3"
-      ],
-      "refuse_voice": [
-        "audio/fixers/masterson_m12_offer_refuse_00.mp3",
-        "audio/fixers/masterson_m12_offer_refuse_01.mp3",
-        "audio/fixers/masterson_m12_offer_refuse_02.mp3",
-        "audio/fixers/masterson_m12_offer_refuse_03.mp3",
-        "",
-        "audio/fixers/masterson_m12_offer_refuse_05.mp3"
-      ],
       "voice": [
         "audio/fixers/masterson_m12_offer_00.mp3",
         "audio/fixers/masterson_m12_offer_01.mp3",
@@ -1996,6 +1983,19 @@
         "audio/fixers/masterson_m12_offer_12.mp3",
         "audio/fixers/masterson_m12_offer_13.mp3",
         "audio/fixers/masterson_m12_offer_14.mp3"
+      ],
+      "accept_voice": [
+        "audio/fixers/masterson_m12_offer_accept_00.mp3",
+        "audio/fixers/masterson_m12_offer_accept_01.mp3",
+        "audio/fixers/masterson_m12_offer_accept_02.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/masterson_m12_offer_refuse_00.mp3",
+        "audio/fixers/masterson_m12_offer_refuse_01.mp3",
+        "audio/fixers/masterson_m12_offer_refuse_02.mp3",
+        "audio/fixers/masterson_m12_offer_refuse_03.mp3",
+        "",
+        "audio/fixers/masterson_m12_offer_refuse_05.mp3"
       ]
     },
     {
@@ -2075,18 +2075,6 @@
         "pc",
         ""
       ],
-      "accept_voice": [
-        "audio/fixers/masterson_m13_offer_accept_00.mp3",
-        "audio/fixers/masterson_m13_offer_accept_01.mp3",
-        "audio/fixers/masterson_m13_offer_accept_02.mp3"
-      ],
-      "refuse_voice": [
-        "audio/fixers/masterson_m13_offer_refuse_00.mp3",
-        "audio/fixers/masterson_m13_offer_refuse_01.mp3",
-        "audio/fixers/masterson_m13_offer_refuse_02.mp3",
-        "",
-        "audio/fixers/masterson_m13_offer_refuse_04.mp3"
-      ],
       "voice": [
         "audio/fixers/masterson_m13_offer_00.mp3",
         "audio/fixers/masterson_m13_offer_01.mp3",
@@ -2104,6 +2092,18 @@
         "audio/fixers/masterson_m13_offer_13.mp3",
         "audio/fixers/masterson_m13_offer_14.mp3",
         "audio/fixers/masterson_m13_offer_15.mp3"
+      ],
+      "accept_voice": [
+        "audio/fixers/masterson_m13_offer_accept_00.mp3",
+        "audio/fixers/masterson_m13_offer_accept_01.mp3",
+        "audio/fixers/masterson_m13_offer_accept_02.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/masterson_m13_offer_refuse_00.mp3",
+        "audio/fixers/masterson_m13_offer_refuse_01.mp3",
+        "audio/fixers/masterson_m13_offer_refuse_02.mp3",
+        "",
+        "audio/fixers/masterson_m13_offer_refuse_04.mp3"
       ]
     },
     {
@@ -2249,22 +2249,6 @@
         "pc",
         ""
       ],
-      "accept_voice": [
-        "audio/fixers/murphy_m14_offer_accept_00.mp3",
-        "audio/fixers/murphy_m14_offer_accept_01.mp3",
-        "audio/fixers/murphy_m14_offer_accept_02.mp3",
-        "",
-        "audio/fixers/murphy_m14_offer_accept_04.mp3",
-        "audio/fixers/murphy_m14_offer_accept_05.mp3",
-        "audio/fixers/murphy_m14_offer_accept_06.mp3"
-      ],
-      "refuse_voice": [
-        "audio/fixers/murphy_m14_offer_refuse_00.mp3",
-        "audio/fixers/murphy_m14_offer_refuse_01.mp3",
-        "audio/fixers/murphy_m14_offer_refuse_02.mp3",
-        "",
-        "audio/fixers/murphy_m14_offer_refuse_04.mp3"
-      ],
       "voice": [
         "audio/fixers/murphy_m14_offer_00.mp3",
         "audio/fixers/murphy_m14_offer_01.mp3",
@@ -2285,6 +2269,22 @@
         "audio/fixers/murphy_m14_offer_16.mp3",
         "audio/fixers/murphy_m14_offer_17.mp3",
         "audio/fixers/murphy_m14_offer_18.mp3"
+      ],
+      "accept_voice": [
+        "audio/fixers/murphy_m14_offer_accept_00.mp3",
+        "audio/fixers/murphy_m14_offer_accept_01.mp3",
+        "audio/fixers/murphy_m14_offer_accept_02.mp3",
+        "",
+        "audio/fixers/murphy_m14_offer_accept_04.mp3",
+        "audio/fixers/murphy_m14_offer_accept_05.mp3",
+        "audio/fixers/murphy_m14_offer_accept_06.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/murphy_m14_offer_refuse_00.mp3",
+        "audio/fixers/murphy_m14_offer_refuse_01.mp3",
+        "audio/fixers/murphy_m14_offer_refuse_02.mp3",
+        "",
+        "audio/fixers/murphy_m14_offer_refuse_04.mp3"
       ]
     },
     {
@@ -2408,18 +2408,6 @@
         "pc",
         ""
       ],
-      "accept_voice": [
-        "audio/fixers/murphy_m15_offer_accept_00.mp3",
-        "audio/fixers/murphy_m15_offer_accept_01.mp3",
-        "audio/fixers/murphy_m15_offer_accept_02.mp3"
-      ],
-      "refuse_voice": [
-        "audio/fixers/murphy_m15_offer_refuse_00.mp3",
-        "audio/fixers/murphy_m15_offer_refuse_01.mp3",
-        "audio/fixers/murphy_m15_offer_refuse_02.mp3",
-        "",
-        "audio/fixers/murphy_m15_offer_refuse_04.mp3"
-      ],
       "voice": [
         "audio/fixers/murphy_m15_offer_00.mp3",
         "audio/fixers/murphy_m15_offer_01.mp3",
@@ -2432,6 +2420,18 @@
         "audio/fixers/murphy_m15_offer_08.mp3",
         "",
         "audio/fixers/murphy_m15_offer_10.mp3"
+      ],
+      "accept_voice": [
+        "audio/fixers/murphy_m15_offer_accept_00.mp3",
+        "audio/fixers/murphy_m15_offer_accept_01.mp3",
+        "audio/fixers/murphy_m15_offer_accept_02.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/murphy_m15_offer_refuse_00.mp3",
+        "audio/fixers/murphy_m15_offer_refuse_01.mp3",
+        "audio/fixers/murphy_m15_offer_refuse_02.mp3",
+        "",
+        "audio/fixers/murphy_m15_offer_refuse_04.mp3"
       ]
     },
     {
@@ -2558,19 +2558,6 @@
         "pc",
         ""
       ],
-      "accept_voice": [
-        "audio/fixers/murphy_m16_offer_accept_00.mp3",
-        "audio/fixers/murphy_m16_offer_accept_01.mp3",
-        "audio/fixers/murphy_m16_offer_accept_02.mp3"
-      ],
-      "refuse_voice": [
-        "",
-        "audio/fixers/murphy_m16_offer_refuse_01.mp3",
-        "audio/fixers/murphy_m16_offer_refuse_02.mp3",
-        "audio/fixers/murphy_m16_offer_refuse_03.mp3",
-        "",
-        "audio/fixers/murphy_m16_offer_refuse_05.mp3"
-      ],
       "voice": [
         "audio/fixers/murphy_m16_offer_00.mp3",
         "audio/fixers/murphy_m16_offer_01.mp3",
@@ -2587,6 +2574,19 @@
         "audio/fixers/murphy_m16_offer_12.mp3",
         "audio/fixers/murphy_m16_offer_13.mp3",
         "audio/fixers/murphy_m16_offer_14.mp3"
+      ],
+      "accept_voice": [
+        "audio/fixers/murphy_m16_offer_accept_00.mp3",
+        "audio/fixers/murphy_m16_offer_accept_01.mp3",
+        "audio/fixers/murphy_m16_offer_accept_02.mp3"
+      ],
+      "refuse_voice": [
+        "",
+        "audio/fixers/murphy_m16_offer_refuse_01.mp3",
+        "audio/fixers/murphy_m16_offer_refuse_02.mp3",
+        "audio/fixers/murphy_m16_offer_refuse_03.mp3",
+        "",
+        "audio/fixers/murphy_m16_offer_refuse_05.mp3"
       ]
     },
     {
@@ -2728,22 +2728,6 @@
         "pc",
         ""
       ],
-      "accept_voice": [
-        "audio/fixers/monkhouse_m17_offer_accept_00.mp3",
-        "audio/fixers/monkhouse_m17_offer_accept_01.mp3",
-        "audio/fixers/monkhouse_m17_offer_accept_02.mp3",
-        "audio/fixers/monkhouse_m17_offer_accept_03.mp3",
-        "",
-        "audio/fixers/monkhouse_m17_offer_accept_05.mp3",
-        "audio/fixers/monkhouse_m17_offer_accept_06.mp3"
-      ],
-      "refuse_voice": [
-        "audio/fixers/monkhouse_m17_offer_refuse_00.mp3",
-        "audio/fixers/monkhouse_m17_offer_refuse_01.mp3",
-        "audio/fixers/monkhouse_m17_offer_refuse_02.mp3",
-        "",
-        "audio/fixers/monkhouse_m17_offer_refuse_04.mp3"
-      ],
       "voice": [
         "audio/fixers/monkhouse_m17_offer_00.mp3",
         "audio/fixers/monkhouse_m17_offer_01.mp3",
@@ -2772,6 +2756,22 @@
         "audio/fixers/monkhouse_m17_offer_24.mp3",
         "audio/fixers/monkhouse_m17_offer_25.mp3",
         "audio/fixers/monkhouse_m17_offer_26.mp3"
+      ],
+      "accept_voice": [
+        "audio/fixers/monkhouse_m17_offer_accept_00.mp3",
+        "audio/fixers/monkhouse_m17_offer_accept_01.mp3",
+        "audio/fixers/monkhouse_m17_offer_accept_02.mp3",
+        "audio/fixers/monkhouse_m17_offer_accept_03.mp3",
+        "",
+        "audio/fixers/monkhouse_m17_offer_accept_05.mp3",
+        "audio/fixers/monkhouse_m17_offer_accept_06.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/monkhouse_m17_offer_refuse_00.mp3",
+        "audio/fixers/monkhouse_m17_offer_refuse_01.mp3",
+        "audio/fixers/monkhouse_m17_offer_refuse_02.mp3",
+        "",
+        "audio/fixers/monkhouse_m17_offer_refuse_04.mp3"
       ]
     },
     {
@@ -2943,19 +2943,6 @@
         "pc",
         ""
       ],
-      "accept_voice": [
-        "audio/fixers/cross_m18_offer_accept_00.mp3",
-        "audio/fixers/cross_m18_offer_accept_01.mp3",
-        "audio/fixers/cross_m18_offer_accept_02.mp3"
-      ],
-      "refuse_voice": [
-        "audio/fixers/cross_m18_offer_refuse_00.mp3",
-        "audio/fixers/cross_m18_offer_refuse_01.mp3",
-        "",
-        "audio/fixers/cross_m18_offer_refuse_03.mp3",
-        "",
-        "audio/fixers/cross_m18_offer_refuse_05.mp3"
-      ],
       "voice": [
         "audio/fixers/cross_m18_offer_00.mp3",
         "audio/fixers/cross_m18_offer_01.mp3",
@@ -2970,6 +2957,19 @@
         "audio/fixers/cross_m18_offer_10.mp3",
         "audio/fixers/cross_m18_offer_11.mp3",
         "audio/fixers/cross_m18_offer_12.mp3"
+      ],
+      "accept_voice": [
+        "audio/fixers/cross_m18_offer_accept_00.mp3",
+        "audio/fixers/cross_m18_offer_accept_01.mp3",
+        "audio/fixers/cross_m18_offer_accept_02.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/cross_m18_offer_refuse_00.mp3",
+        "audio/fixers/cross_m18_offer_refuse_01.mp3",
+        "",
+        "audio/fixers/cross_m18_offer_refuse_03.mp3",
+        "",
+        "audio/fixers/cross_m18_offer_refuse_05.mp3"
       ]
     },
     {
@@ -3098,6 +3098,19 @@
         "pc",
         ""
       ],
+      "voice": [
+        "audio/fixers/cross_m19_offer_00.mp3",
+        "audio/fixers/cross_m19_offer_01.mp3",
+        "audio/fixers/cross_m19_offer_02.mp3",
+        "audio/fixers/cross_m19_offer_03.mp3",
+        "audio/fixers/cross_m19_offer_04.mp3",
+        "audio/fixers/cross_m19_offer_05.mp3",
+        "audio/fixers/cross_m19_offer_06.mp3",
+        "",
+        "audio/fixers/cross_m19_offer_08.mp3",
+        "audio/fixers/cross_m19_offer_09.mp3",
+        "audio/fixers/cross_m19_offer_10.mp3"
+      ],
       "accept_voice": [
         "audio/fixers/cross_m19_offer_accept_00.mp3",
         "audio/fixers/cross_m19_offer_accept_01.mp3",
@@ -3111,19 +3124,6 @@
         "audio/fixers/cross_m19_offer_refuse_02.mp3",
         "",
         "audio/fixers/cross_m19_offer_refuse_04.mp3"
-      ],
-      "voice": [
-        "audio/fixers/cross_m19_offer_00.mp3",
-        "audio/fixers/cross_m19_offer_01.mp3",
-        "audio/fixers/cross_m19_offer_02.mp3",
-        "audio/fixers/cross_m19_offer_03.mp3",
-        "audio/fixers/cross_m19_offer_04.mp3",
-        "audio/fixers/cross_m19_offer_05.mp3",
-        "audio/fixers/cross_m19_offer_06.mp3",
-        "",
-        "audio/fixers/cross_m19_offer_08.mp3",
-        "audio/fixers/cross_m19_offer_09.mp3",
-        "audio/fixers/cross_m19_offer_10.mp3"
       ]
     },
     {
@@ -3259,18 +3259,6 @@
         "pc",
         ""
       ],
-      "accept_voice": [
-        "audio/fixers/cross_m20_offer_accept_00.mp3",
-        "audio/fixers/cross_m20_offer_accept_01.mp3",
-        "audio/fixers/cross_m20_offer_accept_02.mp3"
-      ],
-      "refuse_voice": [
-        "audio/fixers/cross_m20_offer_refuse_00.mp3",
-        "audio/fixers/cross_m20_offer_refuse_01.mp3",
-        "audio/fixers/cross_m20_offer_refuse_02.mp3",
-        "",
-        "audio/fixers/cross_m20_offer_refuse_04.mp3"
-      ],
       "voice": [
         "audio/fixers/cross_m20_offer_00.mp3",
         "audio/fixers/cross_m20_offer_01.mp3",
@@ -3283,6 +3271,18 @@
         "audio/fixers/cross_m20_offer_08.mp3",
         "",
         "audio/fixers/cross_m20_offer_10.mp3"
+      ],
+      "accept_voice": [
+        "audio/fixers/cross_m20_offer_accept_00.mp3",
+        "audio/fixers/cross_m20_offer_accept_01.mp3",
+        "audio/fixers/cross_m20_offer_accept_02.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/cross_m20_offer_refuse_00.mp3",
+        "audio/fixers/cross_m20_offer_refuse_01.mp3",
+        "audio/fixers/cross_m20_offer_refuse_02.mp3",
+        "",
+        "audio/fixers/cross_m20_offer_refuse_04.mp3"
       ]
     },
     {
@@ -3422,19 +3422,6 @@
         "pc",
         ""
       ],
-      "accept_voice": [
-        "audio/fixers/cross_m21_offer_accept_00.mp3",
-        "audio/fixers/cross_m21_offer_accept_01.mp3",
-        "audio/fixers/cross_m21_offer_accept_02.mp3"
-      ],
-      "refuse_voice": [
-        "audio/fixers/cross_m21_offer_refuse_00.mp3",
-        "audio/fixers/cross_m21_offer_refuse_01.mp3",
-        "",
-        "audio/fixers/cross_m21_offer_refuse_03.mp3",
-        "",
-        "audio/fixers/cross_m21_offer_refuse_05.mp3"
-      ],
       "voice": [
         "audio/fixers/cross_m21_offer_00.mp3",
         "audio/fixers/cross_m21_offer_01.mp3",
@@ -3449,6 +3436,19 @@
         "audio/fixers/cross_m21_offer_10.mp3",
         "",
         "audio/fixers/cross_m21_offer_12.mp3"
+      ],
+      "accept_voice": [
+        "audio/fixers/cross_m21_offer_accept_00.mp3",
+        "audio/fixers/cross_m21_offer_accept_01.mp3",
+        "audio/fixers/cross_m21_offer_accept_02.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/cross_m21_offer_refuse_00.mp3",
+        "audio/fixers/cross_m21_offer_refuse_01.mp3",
+        "",
+        "audio/fixers/cross_m21_offer_refuse_03.mp3",
+        "",
+        "audio/fixers/cross_m21_offer_refuse_05.mp3"
       ]
     },
     {
@@ -3532,20 +3532,6 @@
         "pc",
         ""
       ],
-      "accept_voice": [
-        "audio/fixers/goodin_offer_accept_00.mp3",
-        "audio/fixers/goodin_offer_accept_01.mp3",
-        "audio/fixers/goodin_offer_accept_02.mp3",
-        "audio/fixers/goodin_offer_accept_03.mp3",
-        "audio/fixers/goodin_offer_accept_04.mp3"
-      ],
-      "refuse_voice": [
-        "audio/fixers/goodin_offer_refuse_00.mp3",
-        "audio/fixers/goodin_offer_refuse_01.mp3",
-        "audio/fixers/goodin_offer_refuse_02.mp3",
-        "",
-        "audio/fixers/goodin_offer_refuse_04.mp3"
-      ],
       "voice": [
         "audio/fixers/goodin_offer_00.mp3",
         "audio/fixers/goodin_offer_01.mp3",
@@ -3560,6 +3546,20 @@
         "audio/fixers/goodin_offer_10.mp3",
         "audio/fixers/goodin_offer_11.mp3",
         "audio/fixers/goodin_offer_12.mp3"
+      ],
+      "accept_voice": [
+        "audio/fixers/goodin_offer_accept_00.mp3",
+        "audio/fixers/goodin_offer_accept_01.mp3",
+        "audio/fixers/goodin_offer_accept_02.mp3",
+        "audio/fixers/goodin_offer_accept_03.mp3",
+        "audio/fixers/goodin_offer_accept_04.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/goodin_offer_refuse_00.mp3",
+        "audio/fixers/goodin_offer_refuse_01.mp3",
+        "audio/fixers/goodin_offer_refuse_02.mp3",
+        "",
+        "audio/fixers/goodin_offer_refuse_04.mp3"
       ]
     },
     {
@@ -3654,24 +3654,6 @@
         "pc",
         ""
       ],
-      "accept_voice": [
-        "audio/fixers/terrell_offer_accept_00.mp3",
-        "audio/fixers/terrell_offer_accept_01.mp3",
-        "audio/fixers/terrell_offer_accept_02.mp3",
-        "",
-        "audio/fixers/terrell_offer_accept_04.mp3",
-        "audio/fixers/terrell_offer_accept_05.mp3",
-        "audio/fixers/terrell_offer_accept_06.mp3"
-      ],
-      "refuse_voice": [
-        "audio/fixers/terrell_offer_refuse_00.mp3",
-        "audio/fixers/terrell_offer_refuse_01.mp3",
-        "audio/fixers/terrell_offer_refuse_02.mp3",
-        "",
-        "audio/fixers/terrell_offer_refuse_04.mp3",
-        "audio/fixers/terrell_offer_refuse_05.mp3",
-        "audio/fixers/terrell_offer_refuse_06.mp3"
-      ],
       "voice": [
         "audio/fixers/terrell_offer_00.mp3",
         "audio/fixers/terrell_offer_01.mp3",
@@ -3690,6 +3672,24 @@
         "audio/fixers/terrell_offer_14.mp3",
         "audio/fixers/terrell_offer_15.mp3",
         "audio/fixers/terrell_offer_16.mp3"
+      ],
+      "accept_voice": [
+        "audio/fixers/terrell_offer_accept_00.mp3",
+        "audio/fixers/terrell_offer_accept_01.mp3",
+        "audio/fixers/terrell_offer_accept_02.mp3",
+        "",
+        "audio/fixers/terrell_offer_accept_04.mp3",
+        "audio/fixers/terrell_offer_accept_05.mp3",
+        "audio/fixers/terrell_offer_accept_06.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/terrell_offer_refuse_00.mp3",
+        "audio/fixers/terrell_offer_refuse_01.mp3",
+        "audio/fixers/terrell_offer_refuse_02.mp3",
+        "",
+        "audio/fixers/terrell_offer_refuse_04.mp3",
+        "audio/fixers/terrell_offer_refuse_05.mp3",
+        "audio/fixers/terrell_offer_refuse_06.mp3"
       ]
     },
     {
