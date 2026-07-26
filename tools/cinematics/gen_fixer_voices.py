@@ -64,6 +64,10 @@ ORIGINAL_CLIPS = {
     ("lynch_m06_offer", 3): "../speech/bar/MIGGS_002.wav",
     ("lynch_m06_offer", 4): "../speech/bar/MIGGS_003.wav",
 }
+ORIGINAL_TEXT_CLIPS = {
+    "Let me guess...I'm running a shipment of catnip to Kilrah.":
+        "../speech/bar/S1MDC1_010.wav",
+}
 
 
 def speakable(text: str) -> str:
@@ -128,9 +132,10 @@ def main(argv: list[str] | None = None) -> int:
         for i, line in enumerate(entry.get("dialogue", [])):
             speaker_key = speakers[i] if i < len(speakers) else ""
             who = "grayson" if speaker_key == "pc" else speaker_key or speaker
-            rel = ORIGINAL_CLIPS.get((fid, i), voice_rel_path(fid, f"{i:02d}"))
+            original = ORIGINAL_CLIPS.get((fid, i)) or ORIGINAL_TEXT_CLIPS.get(line)
+            rel = original or voice_rel_path(fid, f"{i:02d}")
             text = speakable(line)
-            if (fid, i) in ORIGINAL_CLIPS:
+            if original:
                 clips.append(rel)
                 skipped += 1
                 continue

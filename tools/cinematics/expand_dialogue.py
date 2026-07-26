@@ -115,6 +115,10 @@ SCENES: dict[str, list[tuple[str, str]]] = {
      "without being searched. Come see me when you're ready to work."),
 ],
 "tayla_m02_offer": [
+ (F, "You always flirt when you're cornered?"),
+ (P, "Only when the corner has good eyes."),
+ (F, "Fly the job, Captain. Then maybe I'll let you buy me a drink."),
+ (P, "That's the first honest incentive you've offered."),
  (F, "Ready to work? Good. First job's a milk run."),
  (P, "Nothing about the last week has been a milk run."),
  (F, "Thirty units of plastics. Completely legal, nothing to hide."),
@@ -162,7 +166,9 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  (F, "You made it past the militia with the goods and your hull."),
  (P, "It was close at the second nav point."),
  (F, "I'm almost impressed."),
- (P, "Almost."),
+ (P, "Almost? I was hoping for recklessly attracted."),
+ (F, "Survive two more runs and I'll consider upgrading you to tolerable."),
+ (P, "I'll take tolerable."),
  (F, "Don't fish. Catch your breath -- the next run makes Troy look like a "
      "pleasure cruise."),
  (P, "You said that about the last one."),
@@ -192,6 +198,8 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  (P, "You went into my ship."),
  (F, "A smuggler's compartment. Twenty units, invisible to any scanner ever "
      "built."),
+ (P, "Most women buy me a drink before they start rearranging my interior."),
+ (F, "Most men don't have twenty units of hidden cargo space."),
  (P, "..."),
  (F, "You'd rather have the apology?"),
  (P, "I'd rather have been asked."),
@@ -199,6 +207,8 @@ SCENES: dict[str, list[tuple[str, str]]] = {
      "and we're square."),
 ],
 "tayla_m05_offer": [
+ (P, "Let me guess...I'm running a shipment of catnip to Kilrah."),
+ (F, "Catnip pays better. Kilrathi tip."),
  (F, "Last run. Twenty units of Brilliance to New Constantinople."),
  (P, "Fits the new compartment exactly."),
  (F, "Poetic, no?"),
@@ -236,6 +246,10 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  (F, "The polite kind. He's expecting you in the bar there."),
  (P, "And that squares us."),
  (F, "That squares us. It's been profitable, pilot. Try not to die."),
+ (P, "So no drink?"),
+ (F, "I said maybe. You survived. That's not the same as becoming charming."),
+ (P, "Close enough to keep trying."),
+ (F, "I was afraid of that."),
 ],
 
 # ------------------------------------------------------------------- LYNCH --
@@ -266,6 +280,9 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  (P, "And?"),
  (F, "Deliver a message. Tell him how profoundly disappointed I am in him. "
      "Verbatim, please."),
+ (P, "And if I say no? Miggs alphabetizes my bones?"),
+ ("miggs", "Too many little pieces. Maybe I just throw you out the airlock."),
+ (F, "Miggs dislikes clerical work."),
  (P, "That's all. Words."),
  (F, "Words, Captain. I am a businessman."),
  (P, "Businessmen don't need couriers for a comm channel."),
@@ -303,6 +320,12 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  (P, "..."),
  (F, "Meanwhile: twenty units of weaponry to Siva, the agricultural base in "
      "Rikel. Fifteen thousand on delivery."),
+ (P, "So I smuggle guns onto a farm, irritate a rival mobster, and pretend this "
+     "is artifact research."),
+ (F, "At last, you're learning interdisciplinary work."),
+ ("miggs", "Keep smiling. I can fix that."),
+ (P, "Does he come with the weapons, or is the threat package complimentary?"),
+ (F, "Complimentary."),
  (P, "Weapons to a farming world."),
  (F, "Farmers have enemies too."),
  (P, "There's a wrinkle. There's always a wrinkle."),
@@ -323,6 +346,10 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  (F, "Before we discuss it further, I need a favor."),
  (P, "Of course you do."),
  (F, "My cousin Regis has been subpoenaed in a murder trial."),
+ (P, "Witness relocation. Very civic-minded."),
+ (F, "My family has always believed in public service."),
+ (P, "Mostly the part where the public serves your family."),
+ ("miggs", "Maybe I throw you out the airlock now and save us all some time."),
  (P, "Whose murder?"),
  (F, "A tedious man's. It would be best for everyone if Regis simply "
      "disappeared before he testifies."),
@@ -347,7 +374,9 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  (F, "He will not put it on a relay. He was quite insistent about that."),
  (P, "..."),
  (F, "Pick him up. Bring him here. Thirty thousand for a taxi run."),
- (P, "A taxi run. Nothing about this has been a taxi run."),
+ (P, "Smythe retrieval. Which crime am I committing this time?"),
+ (F, "Rescue, Captain. Try to keep up."),
+ (P, "Kidnapping with better branding. Got it."),
  (F, "You may notice Miggs is elsewhere tonight. Errands of his own."),
  (P, "Should that worry me?"),
  (F, "It should worry someone. Go on then. Liverpool. Newcastle system."),
@@ -367,6 +396,9 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  (P, "Then what's interesting?"),
  (F, "Service. The university needs work done, and I am nothing if not "
      "transactional."),
+ (P, "As an academic, isn't the pursuit of knowledge supposed to be its own "
+     "reward?"),
+ (F, "The pursuit, certainly. Access to the results is billed separately."),
  (P, "How much work?"),
  (F, "Access is an endowment, paid in four installments. Complete them and I "
      "unlock the archive myself."),
@@ -396,6 +428,10 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  (P, "Somewhere in-system is not a location."),
  (F, "Then patrol the jump points until it becomes one, and make it stop "
      "existing."),
+ (P, "Oxford's answer to stolen knowledge is to shoot the thieves?"),
+ (F, "We attempted a strongly worded citation. They deleted it."),
+ (P, "Peer review has gotten rough."),
+ (F, "Standards have declined."),
  (P, "The escorts?"),
  (F, "Optional. The Rhombus is not."),
  (P, "Ten thousand?"),
@@ -414,6 +450,9 @@ SCENES: dict[str, list[tuple[str, str]]] = {
      "ESCORT."),
  (P, "..."),
  (F, "That would be you."),
+ (P, "Rare books, hired guns, and me as bait. Academia's more exciting than "
+     "the brochures."),
+ (F, "The brochures omit donor relations."),
  (P, "So the freighter is bait, and I'm the target."),
  (F, "The Demons will ignore the freighter entirely. I thought you would "
      "prefer to know."),
@@ -438,6 +477,9 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  (P, "And then?"),
  (F, "Then the library opens. Ten thousand, and my genuine respect -- which I "
      "assure you is rarer."),
+ (P, "When this is done, I want a library card and a plaque."),
+ (F, "The card is possible."),
+ (P, "Good. I'd hate for recognition to cheapen the pursuit of knowledge."),
 ],
 "oxford_library_scene": [
  (F, "The archive terminal accepts Masterson's authorization."),
