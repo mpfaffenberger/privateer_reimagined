@@ -1210,7 +1210,8 @@
         "audio/fixers/lynch_m06_offer_33.mp3",
         "audio/fixers/lynch_m06_offer_34.mp3",
         "audio/fixers/lynch_m06_offer_35.mp3"
-      ]
+      ],
+      "music": 13
     },
     {
       "id": "lynch_m06_debrief",
