@@ -365,35 +365,36 @@ authoring scripts and re-run.
 
 > **MIGGS:** You don't wanna talk to me, 'cause I don't wanna talk to you.
 > **MIGGS:** And anyone that makes me do what I don't wanna do gets hurt, painwise, get me?
-> **GRAYSON:** I'm here to see Lynch.
+> **GRAYSON:** Relax. I'm here to see Lynch. I'll try to remember I'm inside of Thugs R Us.
 > **MIGGS:** Mr. Lynch, sitting over there, HE'S the one you wanna talk to...
 > **MIGGS:** ...so either state your bidness or take a hike, buddy.
 > **ROMAN LYNCH:** Enough, Miggs.
 > **ROMAN LYNCH:** Ah, Captain. I've been expecting you. I am Roman Lynch.
-> **GRAYSON:** Tayla said you'd see me.
+> **GRAYSON:** Tayla said you'd see me. She called you the polite kind of thug. I can see the polish from here.
 > **ROMAN LYNCH:** You may speak freely around my assistant. He is exceedingly loyal.
-> **GRAYSON:** He's exceedingly something.
+> **GRAYSON:** He's exceedingly something. I'm going to guess it isn't 'certified in conflict de-escalation.'
 > **ROMAN LYNCH:** Your artifact interests me, $NM.
-> **GRAYSON:** Everyone finds it interesting. Nobody will tell me what it is.
+> **GRAYSON:** Everyone finds it interesting. So far the interest has a body count and zero explanations, so you'll forgive my enthusiasm.
 > **ROMAN LYNCH:** There is a hologram inside it. Did you know?
-> **GRAYSON:** A hologram. And you'd know that how?
+> **GRAYSON:** A hologram. Inside the rock I've been sleeping next to for a month. And you'd know that how?
 > **ROMAN LYNCH:** Because Tayla sent me an image, and my people are thorough. It is a map, or something that behaves like one.
-> **GRAYSON:** A map to what?
+> **GRAYSON:** A map. Of course it's a map. Fine -- a map to what?
 > **ROMAN LYNCH:** That is precisely the question I intend to answer -- while you make yourself useful.
-> **GRAYSON:** There it is.
+> **GRAYSON:** There it is. I was starting to worry this meeting was free.
 > **ROMAN LYNCH:** A certain Captain Seelig is loitering at Nav 3 in Pentonville. His ship is the Hooded Hawk.
-> **GRAYSON:** And?
+> **GRAYSON:** And? People loiter. It's a hobby. Why do I care about Captain Seelig's?
 > **ROMAN LYNCH:** Deliver a message. Tell him how profoundly disappointed I am in him. Verbatim, please.
 > **GRAYSON:** And if I say no? Miggs alphabetizes my bones?
 > **MIGGS:** Too many little pieces. Maybe I just throw you out the airlock.
+> **GRAYSON:** Airlock. Noted. You really are a full-service operation.
 > **ROMAN LYNCH:** Miggs dislikes clerical work.
-> **GRAYSON:** That's all. Words.
+> **GRAYSON:** So, to recap: I fly to Pentonville, recite a disappointed speech at an armed stranger, and fly home. That's all. Words.
 > **ROMAN LYNCH:** Words, Captain. I am a businessman.
-> **GRAYSON:** Businessmen don't need couriers for a comm channel.
+> **GRAYSON:** Businessmen don't need couriers for a comm channel. Businessmen also don't usually come with a Miggs.
 > **ROMAN LYNCH:** Some messages lose their meaning over a relay. Ten thousand when you get back.
 > **GRAYSON:** And the artifact?
 > **ROMAN LYNCH:** Stays with you. I want it studied, not stolen -- and frankly it is safer in a ship than in my safe.
-> **GRAYSON:** A simple courier run.
+> **GRAYSON:** A simple courier run. The last person who told me that is dead, and now I own a haunted paperweight and a smuggling compartment.
 > **ROMAN LYNCH:** What could go wrong?
 
 **> OFFER:** Deliver Lynch's message to Seelig at Pentonville Nav 3, then return to New Constantinople for 10,000 credits. Accept?
@@ -427,9 +428,9 @@ authoring scripts and re-run.
 *Appears when:* requires `m06_message_delivered`; blocked by `lynch_1_done`
 
 > **ROMAN LYNCH:** Ah. You're breathing. How did Captain Seelig take my chastisement?
-> **GRAYSON:** He opened fire before I finished the sentence.
+> **GRAYSON:** He opened fire before I finished the sentence. Apparently 'profoundly' was the trigger word.
 > **ROMAN LYNCH:** Took it badly? Shocking.
-> **GRAYSON:** You knew he would.
+> **GRAYSON:** You knew he would. You sent me to deliver a eulogy and let me think it was a memo.
 > **ROMAN LYNCH:** I suspected. Some men simply cannot accept a severance package.
 > **GRAYSON:** You used me as a trigger, Lynch.
 > **ROMAN LYNCH:** I used you as a messenger. What he did with the message was his choice.
@@ -437,7 +438,7 @@ authoring scripts and re-run.
 > **ROMAN LYNCH:** Your ten thousand, as agreed.
 > **GRAYSON:** And the artifact?
 > **ROMAN LYNCH:** The hologram is resisting analysis. My people need more time.
-> **GRAYSON:** How much time?
+> **GRAYSON:** How much time? People who stand near this thing keep achieving 'former employee' status.
 > **ROMAN LYNCH:** As much as I am willing to buy. And I have more work.
 
 *Outcome:* `pay:10000`, `set_flag:lynch_1_done`, `clear_flag:m06_active`, `clear_flag:m06_message_delivered`
@@ -450,9 +451,9 @@ authoring scripts and re-run.
 *Appears when:* requires `lynch_1_done`; blocked by `m07_active`, `m07_delivered`, `lynch_2_done`
 
 > **ROMAN LYNCH:** The artifact investigation has hit complications.
-> **GRAYSON:** Meaning what?
+> **GRAYSON:** Meaning what? With you, 'complications' usually comes with a casualty column.
 > **ROMAN LYNCH:** People keep dying around it. Fascinating, really.
-> **GRAYSON:** You say that like it's weather.
+> **GRAYSON:** You say that like it's weather. 'Partly fatal, with a chance of clerks.'
 > **ROMAN LYNCH:** At my age one becomes philosophical about other people's mortality.
 > **GRAYSON:** Which people?
 > **ROMAN LYNCH:** Two analysts and a records clerk. All quite unrelated, I'm sure.
@@ -463,11 +464,13 @@ authoring scripts and re-run.
 > **MIGGS:** Keep smiling. I can fix that.
 > **GRAYSON:** Does he come with the weapons, or is the threat package complimentary?
 > **ROMAN LYNCH:** Complimentary.
-> **GRAYSON:** Weapons to a farming world.
+> **MIGGS:** First one's free. Second one leaves marks.
+> **GRAYSON:** I'll leave a five-star review. 'Ambiance: menacing. Staff: bitey.'
+> **GRAYSON:** Back to business. Weapons to a farming world. What are they growing out there, casualties?
 > **ROMAN LYNCH:** Farmers have enemies too.
 > **GRAYSON:** There's a wrinkle. There's always a wrinkle.
 > **ROMAN LYNCH:** Salman Kroiz runs guns on that route and considers it his.
-> **GRAYSON:** And he'll object.
+> **GRAYSON:** And he'll object the way everyone in your life objects -- with guns.
 > **ROMAN LYNCH:** He flies a Demon. So do his friends. Handle it appropriately.
 
 **> OFFER:** Run 20 units of weaponry to Siva (Rikel system) for 15,000 credits, past Kroiz's gang. Accept?
@@ -504,15 +507,16 @@ authoring scripts and re-run.
 > **ROMAN LYNCH:** Their positions, Captain. What did you think I meant?
 > **GRAYSON:** *(silence)*
 > **ROMAN LYNCH:** Before we discuss it further, I need a favor.
-> **GRAYSON:** Of course you do.
+> **GRAYSON:** Of course you do. Your favors have a way of metastasizing.
 > **ROMAN LYNCH:** My cousin Regis has been subpoenaed in a murder trial.
 > **GRAYSON:** Witness relocation. Very civic-minded.
 > **ROMAN LYNCH:** My family has always believed in public service.
 > **GRAYSON:** Mostly the part where the public serves your family.
 > **MIGGS:** Maybe I throw you out the airlock now and save us all some time.
+> **GRAYSON:** You really do only have the one idea. Honestly, I respect the commitment.
 > **GRAYSON:** Whose murder?
 > **ROMAN LYNCH:** A tedious man's. It would be best for everyone if Regis simply disappeared before he testifies.
-> **GRAYSON:** You want me to disappear a witness.
+> **GRAYSON:** You want me to disappear a witness. I'm fairly sure the bar association has a word for that. Several. With sentencing guidelines.
 > **ROMAN LYNCH:** I want you to give a relative a ride. The distinction matters to lawyers, so it should matter to you.
 > **GRAYSON:** Where?
 > **ROMAN LYNCH:** He favors the Romulus mining base in Castor. Get him out of New Constantinople and take him there.
@@ -549,7 +553,7 @@ authoring scripts and re-run.
 *Appears when:* requires `lynch_3_done`; blocked by `m09_active`, `lynch_done`
 
 > **ROMAN LYNCH:** One last job, Captain.
-> **GRAYSON:** You've said that before.
+> **GRAYSON:** You've said that before. Twice. I keep a list now. It's laminated.
 > **ROMAN LYNCH:** This time I mean it, because this time it ends the question.
 > **GRAYSON:** Go on.
 > **ROMAN LYNCH:** A Mr. Smythe on Liverpool claims he found something about your artifact in the Oxford library archives.
@@ -561,7 +565,7 @@ authoring scripts and re-run.
 > **ROMAN LYNCH:** Rescue, Captain. Try to keep up.
 > **GRAYSON:** Kidnapping with better branding. Got it.
 > **ROMAN LYNCH:** You may notice Miggs is elsewhere tonight. Errands of his own.
-> **GRAYSON:** Should that worry me?
+> **GRAYSON:** Should that worry me? I've gotten used to being threatened on a schedule. It's like a hotel wake-up call.
 > **ROMAN LYNCH:** It should worry someone. Go on then. Liverpool. Newcastle system.
 > **GRAYSON:** And Smythe is waiting.
 > **ROMAN LYNCH:** Mr. Smythe is waiting.

@@ -324,48 +324,60 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  ("miggs", "You don't wanna talk to me, 'cause I don't wanna talk to you."),
  ("miggs", "And anyone that makes me do what I don't wanna do gets hurt, "
             "painwise, get me?"),
- (P, "I'm here to see Lynch."),
+ (P, "Relax. I'm here to see Lynch. I'll try to remember I'm inside of "
+     "Thugs R Us."),
  ("miggs", "Mr. Lynch, sitting over there, HE'S the one you wanna talk to..."),
  ("miggs", "...so either state your bidness or take a hike, buddy."),
  (F, "Enough, Miggs."),
  (F, "Ah, Captain. I've been expecting you. I am Roman Lynch."),
- (P, "Tayla said you'd see me."),
+ (P, "Tayla said you'd see me. She called you the polite kind of thug. I "
+     "can see the polish from here."),
  (F, "You may speak freely around my assistant. He is exceedingly loyal."),
- (P, "He's exceedingly something."),
+ (P, "He's exceedingly something. I'm going to guess it isn't 'certified "
+     "in conflict de-escalation.'"),
  (F, "Your artifact interests me, $NM."),
- (P, "Everyone finds it interesting. Nobody will tell me what it is."),
+ (P, "Everyone finds it interesting. So far the interest has a body count "
+     "and zero explanations, so you'll forgive my enthusiasm."),
  (F, "There is a hologram inside it. Did you know?"),
- (P, "A hologram. And you'd know that how?"),
+ (P, "A hologram. Inside the rock I've been sleeping next to for a month. "
+     "And you'd know that how?"),
  (F, "Because Tayla sent me an image, and my people are thorough. It is a map, "
      "or something that behaves like one."),
- (P, "A map to what?"),
+ (P, "A map. Of course it's a map. Fine -- a map to what?"),
  (F, "That is precisely the question I intend to answer -- while you make "
      "yourself useful."),
- (P, "There it is."),
+ (P, "There it is. I was starting to worry this meeting was free."),
  (F, "A certain Captain Seelig is loitering at Nav 3 in Pentonville. His ship "
      "is the Hooded Hawk."),
- (P, "And?"),
+ (P, "And? People loiter. It's a hobby. Why do I care about Captain "
+     "Seelig's?"),
  (F, "Deliver a message. Tell him how profoundly disappointed I am in him. "
      "Verbatim, please."),
  (P, "And if I say no? Miggs alphabetizes my bones?"),
  ("miggs", "Too many little pieces. Maybe I just throw you out the airlock."),
+ (P, "Airlock. Noted. You really are a full-service operation."),
  (F, "Miggs dislikes clerical work."),
- (P, "That's all. Words."),
+ (P, "So, to recap: I fly to Pentonville, recite a disappointed speech at an "
+     "armed stranger, and fly home. That's all. Words."),
  (F, "Words, Captain. I am a businessman."),
- (P, "Businessmen don't need couriers for a comm channel."),
+ (P, "Businessmen don't need couriers for a comm channel. Businessmen also "
+     "don't usually come with a Miggs."),
  (F, "Some messages lose their meaning over a relay. Ten thousand when you get "
      "back."),
  (P, "And the artifact?"),
  (F, "Stays with you. I want it studied, not stolen -- and frankly it is safer "
      "in a ship than in my safe."),
- (P, "A simple courier run."),
+ (P, "A simple courier run. The last person who told me that is dead, and "
+     "now I own a haunted paperweight and a smuggling compartment."),
  (F, "What could go wrong?"),
 ],
 "lynch_m06_debrief": [
  (F, "Ah. You're breathing. How did Captain Seelig take my chastisement?"),
- (P, "He opened fire before I finished the sentence."),
+ (P, "He opened fire before I finished the sentence. Apparently "
+     "'profoundly' was the trigger word."),
  (F, "Took it badly? Shocking."),
- (P, "You knew he would."),
+ (P, "You knew he would. You sent me to deliver a eulogy and let me think "
+     "it was a memo."),
  (F, "I suspected. Some men simply cannot accept a severance package."),
  (P, "You used me as a trigger, Lynch."),
  (F, "I used you as a messenger. What he did with the message was his choice."),
@@ -373,14 +385,17 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  (F, "Your ten thousand, as agreed."),
  (P, "And the artifact?"),
  (F, "The hologram is resisting analysis. My people need more time."),
- (P, "How much time?"),
+ (P, "How much time? People who stand near this thing keep achieving "
+     "'former employee' status."),
  (F, "As much as I am willing to buy. And I have more work."),
 ],
 "lynch_m07_offer": [
  (F, "The artifact investigation has hit complications."),
- (P, "Meaning what?"),
+ (P, "Meaning what? With you, 'complications' usually comes with a "
+     "casualty column."),
  (F, "People keep dying around it. Fascinating, really."),
- (P, "You say that like it's weather."),
+ (P, "You say that like it's weather. 'Partly fatal, with a chance of "
+     "clerks.'"),
  (F, "At my age one becomes philosophical about other people's mortality."),
  (P, "Which people?"),
  (F, "Two analysts and a records clerk. All quite unrelated, I'm sure."),
@@ -393,11 +408,14 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  ("miggs", "Keep smiling. I can fix that."),
  (P, "Does he come with the weapons, or is the threat package complimentary?"),
  (F, "Complimentary."),
- (P, "Weapons to a farming world."),
+ ("miggs", "First one's free. Second one leaves marks."),
+ (P, "I'll leave a five-star review. 'Ambiance: menacing. Staff: bitey.'"),
+ (P, "Back to business. Weapons to a farming world. What are they growing "
+     "out there, casualties?"),
  (F, "Farmers have enemies too."),
  (P, "There's a wrinkle. There's always a wrinkle."),
  (F, "Salman Kroiz runs guns on that route and considers it his."),
- (P, "And he'll object."),
+ (P, "And he'll object the way everyone in your life objects -- with guns."),
  (F, "He flies a Demon. So do his friends. Handle it appropriately."),
 ],
 "lynch_m08_offer": [
@@ -411,16 +429,19 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  (F, "Their positions, Captain. What did you think I meant?"),
  (P, "..."),
  (F, "Before we discuss it further, I need a favor."),
- (P, "Of course you do."),
+ (P, "Of course you do. Your favors have a way of metastasizing."),
  (F, "My cousin Regis has been subpoenaed in a murder trial."),
  (P, "Witness relocation. Very civic-minded."),
  (F, "My family has always believed in public service."),
  (P, "Mostly the part where the public serves your family."),
  ("miggs", "Maybe I throw you out the airlock now and save us all some time."),
+ (P, "You really do only have the one idea. Honestly, I respect the "
+     "commitment."),
  (P, "Whose murder?"),
  (F, "A tedious man's. It would be best for everyone if Regis simply "
      "disappeared before he testifies."),
- (P, "You want me to disappear a witness."),
+ (P, "You want me to disappear a witness. I'm fairly sure the bar "
+     "association has a word for that. Several. With sentencing guidelines."),
  (F, "I want you to give a relative a ride. The distinction matters to lawyers, "
      "so it should matter to you."),
  (P, "Where?"),
@@ -432,7 +453,7 @@ SCENES: dict[str, list[tuple[str, str]]] = {
 ],
 "lynch_m09_offer": [
  (F, "One last job, Captain."),
- (P, "You've said that before."),
+ (P, "You've said that before. Twice. I keep a list now. It's laminated."),
  (F, "This time I mean it, because this time it ends the question."),
  (P, "Go on."),
  (F, "A Mr. Smythe on Liverpool claims he found something about your artifact "
@@ -445,7 +466,8 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  (F, "Rescue, Captain. Try to keep up."),
  (P, "Kidnapping with better branding. Got it."),
  (F, "You may notice Miggs is elsewhere tonight. Errands of his own."),
- (P, "Should that worry me?"),
+ (P, "Should that worry me? I've gotten used to being threatened on a "
+     "schedule. It's like a hotel wake-up call."),
  (F, "It should worry someone. Go on then. Liverpool. Newcastle system."),
  (P, "And Smythe is waiting."),
  (F, "Mr. Smythe is waiting."),
