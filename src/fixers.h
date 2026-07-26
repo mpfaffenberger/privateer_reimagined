@@ -172,6 +172,11 @@ void accept(const FixerDef& f, PlayerState& player);
 void refuse(const FixerDef& f, PlayerState& player);
 void dialogue_done(const FixerDef& f, PlayerState& player);
 
+// Begin talking to a fixer (dev_remote / automation seam). Same entry
+// point as clicking "Talk to <name>" in the bar: sets g_talking_to,
+// resets the paragraph cursor, and plays the first voice clip.
+void talk_to(const FixerDef& f);
+
 // Observability seam (main.cpp -> dev_remote /events, category "fixer"):
 // "offered: sandoval_offer @ new_detroit_industrial" / "accepted: ..." /
 // "refused: ..." / "dialogue_done: ...".

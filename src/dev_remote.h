@@ -119,10 +119,13 @@
 //                          docking::land_now — autosave + campaign dock
 //                          settles fire exactly like a real landing.
 //   POST /fixer          → drive a bar-fixer conversation. Body
-//                          { id, action } with action accept|refuse|done.
-//                          Only works when the fixer is actually present
-//                          at the current base for this player (same
-//                          present_at gate the Bar screen renders from).
+//                          { id, action } with action talk|accept|refuse|done.
+//                          "talk" begins the dialogue (same as clicking
+//                          "Talk to <name>" in the bar); accept/refuse/done
+//                          apply the outcome. Only works when the fixer is
+//                          actually present at the current base for this
+//                          player (same present_at gate the Bar screen
+//                          renders from).
 //   POST /autopilot      → select a nav BY NAME + engage the nav
 //                          autopilot (the A key). Body { nav }. Hostile
 //                          gate applies; refusals show in the HUD banner

@@ -595,10 +595,22 @@ void draw_bar_body(BaseContext& ctx) {
 
 } // namespace
 
+void talk_to(const FixerDef& f) {
+    g_talking_to = f.id;
+    g_paragraph  = 0;
+    g_auto_advance = true;
+    g_phase = Phase::Main;
+    g_actions_ran = false;
+    play_paragraph_voice(f, 0);
+}
+
 void register_bar_screen() {
     base_screens::register_screen(BaseScreen::Bar, draw_bar_body);
     std::printf("[fixers] Bar screen body registered\n");
 }
+#else
+void talk_to(const FixerDef&) {}
+void register_bar_screen() {}
 #endif // FIXERS_HEADLESS
 
 } // namespace fixers

@@ -1700,6 +1700,7 @@ void build_system_scene(bool first_time) {
             if      (verb == "accept") fixers::accept(*f, g.player);
             else if (verb == "refuse") fixers::refuse(*f, g.player);
             else if (verb == "done")   fixers::dialogue_done(*f, g.player);
+            else if (verb == "talk")   fixers::talk_to(*f);
         });
 
         // issue #103: register the dev_remote host hooks (the decoupling
