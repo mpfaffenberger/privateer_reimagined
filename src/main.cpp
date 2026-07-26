@@ -113,6 +113,7 @@ HMM_Mat4 model_matrix(HMM_Vec3 pos, HMM_Vec3 euler_deg, float s);
 #include "sprite_light_editor.h"
 #include "sprite_generation_tool.h"
 #include "mesh_orient_editor.h"
+#include "music_dj.h"
 #include "navmap_auditor.h"
 
 #include <unordered_map>
@@ -6321,6 +6322,8 @@ void frame_cb() {
     mesh_orient_editor::build(g.placed_meshes);
     // F10 — navmap auditor. Read-only map/coordinate inspection across systems.
     navmap_auditor::build();
+    // Ctrl+B — bar-music DJ. Audition/hold bar pool tracks (issue #264).
+    music_dj::build();
     // F4 — atlas grid viewer. Mutates ShipSpriteFrame fields directly,
     // so changes flow into the next render frame with no apply step.
     atlas_grid_viewer::build(g.ship_sprite_atlases);
@@ -7077,6 +7080,8 @@ void event_cb(const sapp_event* ev) {
     if (mesh_orient_editor::handle_event(ev))    return;
     // F10 — navmap auditor. Same focus-beating toggle behavior.
     if (navmap_auditor::handle_event(ev))        return;
+    // Ctrl+B — bar-music DJ. Same focus-beating toggle behavior.
+    if (music_dj::handle_event(ev))              return;
     // Ctrl+K — Cinematic Studio. Ahead of debug_panel so the toggle beats
     // ImGui widget focus, same trick as the F-key tools above.
     if (cinematic::studio::handle_event(ev))     return;

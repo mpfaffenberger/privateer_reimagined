@@ -160,6 +160,7 @@ add_executable(new_privateer
     src/audio.cpp
     src/sfx.cpp
     src/music.cpp
+    src/music_dj.cpp
     src/tracelog.cpp
     src/camera.cpp
     src/skybox.cpp

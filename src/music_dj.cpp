@@ -1,0 +1,89 @@
+// -----------------------------------------------------------------------------
+// music_dj.cpp — tiny bar-music DJ panel (see music_dj.h; issue #264).
+// -----------------------------------------------------------------------------
+#include "music_dj.h"
+
+#include "imgui.h"
+#include "music.h"
+#include "sokol_app.h"
+
+#include <cstdio>
+
+namespace music_dj {
+namespace {
+
+bool g_visible = false;
+
+constexpr int k_tracks = 14;   // bar_music_01..14
+
+// Cycle helper: current override -> prev/next track id (1..14). From the
+// shuffle state (override 0), Next lands on 1 and Prev lands on 14.
+int step(int cur, int dir) {
+    if (cur <= 0) return dir > 0 ? 1 : k_tracks;
+    int n = cur + dir;
+    if (n < 1) n = k_tracks;
+    if (n > k_tracks) n = 1;
+    return n;
+}
+
+} // namespace
+
+bool handle_event(const sapp_event* e) {
+    // Ctrl+B, intercepted before ImGui focus can eat it — same reasoning as
+    // cinematic_studio's Ctrl+K / debug_panel's Ctrl+M.
+    if (e->type == SAPP_EVENTTYPE_KEY_DOWN &&
+        e->key_code == SAPP_KEYCODE_B &&
+        (e->modifiers & SAPP_MODIFIER_CTRL)) {
+        g_visible = !g_visible;
+        return true;
+    }
+    return false;
+}
+
+void build() {
+    if (!g_visible) return;
+
+    ImGui::SetNextWindowSize(ImVec2(300, 0), ImGuiCond_FirstUseEver);
+    if (ImGui::Begin("Bar DJ (Ctrl+B)", &g_visible,
+                     ImGuiWindowFlags_AlwaysAutoResize)) {
+        const int cur = music::bar_track_override();
+
+        if (cur > 0)
+            ImGui::Text("override: bar_music_%02d (held)", cur);
+        else
+            ImGui::TextDisabled("override: none (shuffled pool)");
+
+        // ---- cycle row ----
+        if (ImGui::Button("<< prev"))
+            music::request_bar_track(step(cur, -1));
+        ImGui::SameLine();
+        if (ImGui::Button("next >>"))
+            music::request_bar_track(step(cur, +1));
+        ImGui::SameLine();
+        if (ImGui::Button("shuffle"))
+            music::request_bar_track(0);
+
+        ImGui::Separator();
+
+        // ---- direct pick: 14 numbered buttons, 7 per row ----
+        for (int i = 1; i <= k_tracks; ++i) {
+            char label[8];
+            std::snprintf(label, sizeof label, "%02d", i);
+            const bool active = (cur == i);
+            if (active)
+                ImGui::PushStyleColor(ImGuiCol_Button,
+                                      ImVec4(0.20f, 0.55f, 0.30f, 1.0f));
+            if (ImGui::Button(label, ImVec2(34, 0)))
+                music::request_bar_track(active ? 0 : i);  // click again = off
+            if (active) ImGui::PopStyleColor();
+            if (i % 7 != 0 && i != k_tracks) ImGui::SameLine();
+        }
+
+        ImGui::Separator();
+        ImGui::TextDisabled("plays in the Bar screen; overrides");
+        ImGui::TextDisabled("persist until shuffle / scene end");
+    }
+    ImGui::End();
+}
+
+} // namespace music_dj
