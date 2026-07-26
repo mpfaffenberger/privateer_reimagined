@@ -298,10 +298,11 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  (P, "Who?"),
  (F, "Roman Lynch. New Constantinople. A thug -- but an expert on exotic and "
      "valuable things."),
- (P, "A thug. You're sending me to a thug. Should I be flattered you think "
-     "I'll survive him?"),
- (F, "The polite kind. And yes -- take the flattery. He's expecting you in "
-     "the bar there."),
+ (P, "You mean the famous mob boss who murders people and then bribes the "
+     "authorities to stay out of prison? Gosh, Tayla, I didn't realize we'd "
+     "made it this far in our relationship."),
+ (F, "In my line of work, this is meeting the family. He's expecting you "
+     "in the bar there -- mind your manners. Roman notices them."),
  (P, "And that squares us. Funny -- being square with you feels a lot like "
      "being in deeper."),
  (F, "That's the idea. It's been profitable, partner. Try not to die -- "

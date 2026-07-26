@@ -344,8 +344,8 @@ authoring scripts and re-run.
 > **TAYLA:** Coroners and I read the same reports. That's where my thread runs out. I've sent the holo on to someone who can actually read it.
 > **GRAYSON:** Who?
 > **TAYLA:** Roman Lynch. New Constantinople. A thug -- but an expert on exotic and valuable things.
-> **GRAYSON:** A thug. You're sending me to a thug. Should I be flattered you think I'll survive him?
-> **TAYLA:** The polite kind. And yes -- take the flattery. He's expecting you in the bar there.
+> **GRAYSON:** You mean the famous mob boss who murders people and then bribes the authorities to stay out of prison? Gosh, Tayla, I didn't realize we'd made it this far in our relationship.
+> **TAYLA:** In my line of work, this is meeting the family. He's expecting you in the bar there -- mind your manners. Roman notices them.
 > **GRAYSON:** And that squares us. Funny -- being square with you feels a lot like being in deeper.
 > **TAYLA:** That's the idea. It's been profitable, partner. Try not to die -- the next drink's on me.
 
