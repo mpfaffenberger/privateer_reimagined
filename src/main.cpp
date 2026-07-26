@@ -3650,6 +3650,9 @@ void frame_stub() {
     }
     // Draw after the full-screen base window so the F11 Studio remains on top.
     base_art_studio::build();
+    // Ctrl+B bar-music DJ — after base_screens for the same on-top reason;
+    // this is the panel's PRIMARY home (auditioning tracks in the Bar).
+    music_dj::build();
 
     sg_pass p{};
     p.swapchain = sglue_swapchain();
