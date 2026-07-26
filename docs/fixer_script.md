@@ -407,6 +407,10 @@ authoring scripts and re-run.
 > **ROMAN LYNCH:** Excellent. Miggs will see you to the door.
 > **GRAYSON:** I can find a door.
 > **ROMAN LYNCH:** Miggs enjoys the walk.
+> **MIGGS:** One wrong step on the way out, buddy, and maybe the door finds YOU.
+> **GRAYSON:** You know what? Come and get some. Right now. You're obviously all talk -- we can throw down any time you want, big man.
+> **MIGGS:** Oh, that's IT --
+> **ROMAN LYNCH:** Gentlemen. The furniture is Kilrathi walnut and the Captain is employed. Both are expensive to replace.
 > **GRAYSON:** *(silence)*
 > **ROMAN LYNCH:** One more thing, Captain. When Seelig reacts -- and he will react -- remember that I asked for words, not for what follows.
 > **GRAYSON:** You're building an alibi.

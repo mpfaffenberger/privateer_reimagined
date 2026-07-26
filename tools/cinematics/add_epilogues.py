@@ -123,6 +123,13 @@ EPILOGUES: dict[str, dict[str, list[tuple[str, str]]]] = {
   (F, "Excellent. Miggs will see you to the door."),
   (P, "I can find a door."),
   (F, "Miggs enjoys the walk."),
+  ("miggs", "One wrong step on the way out, buddy, and maybe the door finds "
+            "YOU."),
+  (P, "You know what? Come and get some. Right now. You're obviously all "
+     "talk -- we can throw down any time you want, big man."),
+  ("miggs", "Oh, that's IT --"),
+  (F, "Gentlemen. The furniture is Kilrathi walnut and the Captain is "
+      "employed. Both are expensive to replace."),
   (P, "..."),
   (F, "One more thing, Captain. When Seelig reacts -- and he will react -- "
       "remember that I asked for words, not for what follows."),
