@@ -372,10 +372,6 @@
         "tayla_1_done"
       ],
       "dialogue": [
-        "Ah, $NM. You look just like your picture. Too bad.",
-        "After a few drinks you'll change your mind.",
-        "Buy me one after the run and we'll test that theory.",
-        "Now there's a mission objective.",
         "Ready to work? Good. First job's a milk run.",
         "Nothing about the last week has been a milk run.",
         "Thirty units of plastics. Completely legal, nothing to hide.",
@@ -402,10 +398,6 @@
       ],
       "portrait": "portraits/tayla/_ref.png",
       "speaker": [
-        "",
-        "pc",
-        "",
-        "pc",
         "",
         "pc",
         "",
@@ -470,8 +462,8 @@
         "audio/fixers/tayla_m02_offer_refuse_04.mp3"
       ],
       "voice": [
-        "../speech/bar/S1MAC1_000.wav",
-        "../speech/bar/S1MAC1_001.wav",
+        "audio/fixers/tayla_m02_offer_00.mp3",
+        "audio/fixers/tayla_m02_offer_01.mp3",
         "audio/fixers/tayla_m02_offer_02.mp3",
         "audio/fixers/tayla_m02_offer_03.mp3",
         "audio/fixers/tayla_m02_offer_04.mp3",
@@ -481,18 +473,14 @@
         "audio/fixers/tayla_m02_offer_08.mp3",
         "audio/fixers/tayla_m02_offer_09.mp3",
         "audio/fixers/tayla_m02_offer_10.mp3",
-        "audio/fixers/tayla_m02_offer_11.mp3",
+        "",
         "audio/fixers/tayla_m02_offer_12.mp3",
         "audio/fixers/tayla_m02_offer_13.mp3",
         "audio/fixers/tayla_m02_offer_14.mp3",
-        "",
+        "audio/fixers/tayla_m02_offer_15.mp3",
         "audio/fixers/tayla_m02_offer_16.mp3",
         "audio/fixers/tayla_m02_offer_17.mp3",
-        "audio/fixers/tayla_m02_offer_18.mp3",
-        "audio/fixers/tayla_m02_offer_19.mp3",
-        "audio/fixers/tayla_m02_offer_20.mp3",
-        "audio/fixers/tayla_m02_offer_21.mp3",
-        "audio/fixers/tayla_m02_offer_22.mp3"
+        "audio/fixers/tayla_m02_offer_18.mp3"
       ]
     },
     {
@@ -810,12 +798,6 @@
         "tayla_done"
       ],
       "dialogue": [
-        "$CS, you look like hell.",
-        "I can't understand why a woman as attractive as you...",
-        "...has to pay for the company of men in bars.",
-        "I see it as an investment...with a penalty for early withdrawal.",
-        "Let me guess...I'm running a shipment of catnip to Kilrah.",
-        "Nope, I save the really lucrative jobs for myself.",
         "Last run. Twenty units of Brilliance to New Constantinople.",
         "Fits the new compartment exactly.",
         "Poetic, no?",
@@ -838,12 +820,6 @@
       ],
       "portrait": "portraits/tayla/_ref.png",
       "speaker": [
-        "",
-        "pc",
-        "pc",
-        "",
-        "pc",
-        "",
         "",
         "pc",
         "",
@@ -904,27 +880,21 @@
         "audio/fixers/tayla_m05_offer_refuse_04.mp3"
       ],
       "voice": [
-        "../speech/bar/S1MDC1_000.wav",
-        "../speech/bar/S1MDC1_003.wav",
-        "../speech/bar/S1MDC1_004.wav",
-        "../speech/bar/S1MDC1_005.wav",
-        "../speech/bar/S1MDC1_010.wav",
-        "../speech/bar/S1MDC1_011.wav",
+        "audio/fixers/tayla_m05_offer_00.mp3",
+        "audio/fixers/tayla_m05_offer_01.mp3",
+        "audio/fixers/tayla_m05_offer_02.mp3",
+        "audio/fixers/tayla_m05_offer_03.mp3",
+        "audio/fixers/tayla_m05_offer_04.mp3",
+        "audio/fixers/tayla_m05_offer_05.mp3",
         "audio/fixers/tayla_m05_offer_06.mp3",
         "audio/fixers/tayla_m05_offer_07.mp3",
         "audio/fixers/tayla_m05_offer_08.mp3",
         "audio/fixers/tayla_m05_offer_09.mp3",
         "audio/fixers/tayla_m05_offer_10.mp3",
-        "audio/fixers/tayla_m05_offer_11.mp3",
+        "",
         "audio/fixers/tayla_m05_offer_12.mp3",
         "audio/fixers/tayla_m05_offer_13.mp3",
-        "audio/fixers/tayla_m05_offer_14.mp3",
-        "audio/fixers/tayla_m05_offer_15.mp3",
-        "audio/fixers/tayla_m05_offer_16.mp3",
-        "",
-        "audio/fixers/tayla_m05_offer_18.mp3",
-        "audio/fixers/tayla_m05_offer_19.mp3",
-        "audio/fixers/tayla_m05_offer_20.mp3"
+        "audio/fixers/tayla_m05_offer_14.mp3"
       ]
     },
     {
@@ -1033,9 +1003,6 @@
         "That is precisely the question I intend to answer -- while you make yourself useful.",
         "There it is.",
         "A certain Captain Seelig is loitering at Nav 3 in Pentonville. His ship is the Hooded Hawk.",
-        "You must be joking. I'm no assassin.",
-        "You want I should take $NM outside the airlock and teach him how to suck vacuum?",
-        "Gentlemen, please, let us remain professional.",
         "And?",
         "Deliver a message. Tell him how profoundly disappointed I am in him. Verbatim, please.",
         "That's all. Words.",
@@ -1071,9 +1038,6 @@
         "pc",
         "",
         "pc",
-        "",
-        "pc",
-        "miggs",
         "",
         "pc",
         "",
@@ -1150,7 +1114,7 @@
         "audio/fixers/lynch_m06_offer_02.mp3",
         "../speech/bar/MIGGS_002.wav",
         "../speech/bar/MIGGS_003.wav",
-        "../speech/bar/S2MBC1_013.wav",
+        "audio/fixers/lynch_m06_offer_05.mp3",
         "audio/fixers/lynch_m06_offer_06.mp3",
         "audio/fixers/lynch_m06_offer_07.mp3",
         "audio/fixers/lynch_m06_offer_08.mp3",
@@ -1164,19 +1128,16 @@
         "audio/fixers/lynch_m06_offer_16.mp3",
         "audio/fixers/lynch_m06_offer_17.mp3",
         "audio/fixers/lynch_m06_offer_18.mp3",
-        "../speech/bar/S2MAC1_009.wav",
-        "../speech/bar/S2MAC1_010.wav",
-        "../speech/bar/S2MAC1_011.wav",
+        "audio/fixers/lynch_m06_offer_19.mp3",
+        "audio/fixers/lynch_m06_offer_20.mp3",
+        "audio/fixers/lynch_m06_offer_21.mp3",
         "audio/fixers/lynch_m06_offer_22.mp3",
         "audio/fixers/lynch_m06_offer_23.mp3",
         "audio/fixers/lynch_m06_offer_24.mp3",
         "audio/fixers/lynch_m06_offer_25.mp3",
         "audio/fixers/lynch_m06_offer_26.mp3",
         "audio/fixers/lynch_m06_offer_27.mp3",
-        "audio/fixers/lynch_m06_offer_28.mp3",
-        "audio/fixers/lynch_m06_offer_29.mp3",
-        "audio/fixers/lynch_m06_offer_30.mp3",
-        "audio/fixers/lynch_m06_offer_31.mp3"
+        "audio/fixers/lynch_m06_offer_28.mp3"
       ]
     },
     {
@@ -1265,10 +1226,6 @@
         "Two analysts and a records clerk. All quite unrelated, I'm sure.",
         "...",
         "Meanwhile: twenty units of weaponry to Siva, the agricultural base in Rikel. Fifteen thousand on delivery.",
-        "Another chump job, Lynch?",
-        "Ever seen your lungs? Keep crackin' wise, I'll show them to ya...up-close, like.",
-        "Jeez, where do you get your dialogue, Thugs-R-Us?",
-        "Enough, Miggs.",
         "Weapons to a farming world.",
         "Farmers have enemies too.",
         "There's a wrinkle. There's always a wrinkle.",
@@ -1289,10 +1246,6 @@
         "",
         "pc",
         "",
-        "pc",
-        "",
-        "pc",
-        "miggs",
         "pc",
         "",
         "pc",
@@ -1339,12 +1292,6 @@
         "",
         "audio/fixers/lynch_m07_offer_refuse_04.mp3"
       ],
-      "cast": {
-        "miggs": {
-          "name": "Miggs",
-          "portrait": "portraits/miggs/_ref.png"
-        }
-      },
       "voice": [
         "audio/fixers/lynch_m07_offer_00.mp3",
         "audio/fixers/lynch_m07_offer_01.mp3",
@@ -1355,16 +1302,12 @@
         "audio/fixers/lynch_m07_offer_06.mp3",
         "",
         "audio/fixers/lynch_m07_offer_08.mp3",
-        "../speech/bar/S2MBC1_010.wav",
-        "../speech/bar/S2MBC1_011.wav",
-        "../speech/bar/S2MBC1_012.wav",
-        "../speech/bar/S2MBC1_013.wav",
+        "audio/fixers/lynch_m07_offer_09.mp3",
+        "audio/fixers/lynch_m07_offer_10.mp3",
+        "audio/fixers/lynch_m07_offer_11.mp3",
+        "audio/fixers/lynch_m07_offer_12.mp3",
         "audio/fixers/lynch_m07_offer_13.mp3",
-        "audio/fixers/lynch_m07_offer_14.mp3",
-        "audio/fixers/lynch_m07_offer_15.mp3",
-        "audio/fixers/lynch_m07_offer_16.mp3",
-        "audio/fixers/lynch_m07_offer_17.mp3",
-        "audio/fixers/lynch_m07_offer_18.mp3"
+        "audio/fixers/lynch_m07_offer_14.mp3"
       ]
     },
     {
@@ -1389,10 +1332,6 @@
         "...",
         "Before we discuss it further, I need a favor.",
         "Of course you do.",
-        "Mr. Lynch did you a favor, pal.",
-        "Better get grateful quick-like...while you can still walk.",
-        "I could always get crutches, Miggs...but there's no cure for ugliness.",
-        "I urge you to observe caution with Miggs. My control over him extends only so far.",
         "My cousin Regis has been subpoenaed in a murder trial.",
         "Whose murder?",
         "A tedious man's. It would be best for everyone if Regis simply disappeared before he testifies.",
@@ -1420,10 +1359,6 @@
         "pc",
         "",
         "pc",
-        "miggs",
-        "miggs",
-        "pc",
-        "",
         "",
         "pc",
         "",
@@ -1483,12 +1418,6 @@
         "",
         "audio/fixers/lynch_m08_offer_refuse_05.mp3"
       ],
-      "cast": {
-        "miggs": {
-          "name": "Miggs",
-          "portrait": "portraits/miggs/_ref.png"
-        }
-      },
       "voice": [
         "audio/fixers/lynch_m08_offer_00.mp3",
         "",
@@ -1500,19 +1429,15 @@
         "",
         "audio/fixers/lynch_m08_offer_08.mp3",
         "audio/fixers/lynch_m08_offer_09.mp3",
-        "../speech/bar/S2MCC1_006.wav",
-        "../speech/bar/S2MCC1_007.wav",
-        "../speech/bar/S2MCC1_008.wav",
-        "../speech/bar/S2MCC1_009.wav",
+        "audio/fixers/lynch_m08_offer_10.mp3",
+        "audio/fixers/lynch_m08_offer_11.mp3",
+        "audio/fixers/lynch_m08_offer_12.mp3",
+        "audio/fixers/lynch_m08_offer_13.mp3",
         "audio/fixers/lynch_m08_offer_14.mp3",
         "audio/fixers/lynch_m08_offer_15.mp3",
         "audio/fixers/lynch_m08_offer_16.mp3",
         "audio/fixers/lynch_m08_offer_17.mp3",
-        "audio/fixers/lynch_m08_offer_18.mp3",
-        "audio/fixers/lynch_m08_offer_19.mp3",
-        "audio/fixers/lynch_m08_offer_20.mp3",
-        "audio/fixers/lynch_m08_offer_21.mp3",
-        "audio/fixers/lynch_m08_offer_22.mp3"
+        "audio/fixers/lynch_m08_offer_18.mp3"
       ]
     },
     {
@@ -1538,9 +1463,8 @@
         "Pick him up. Bring him here. Thirty thousand for a taxi run.",
         "A taxi run. Nothing about this has been a taxi run.",
         "You may notice Miggs is elsewhere tonight. Errands of his own.",
-        "I hate to run off without giving Miggs a kiss. Where is he?",
-        "Miggs is currently eliminating a...labor difficulty. I'll convey your regards.",
-        "Go on then. Liverpool. Newcastle system.",
+        "Should that worry me?",
+        "It should worry someone. Go on then. Liverpool. Newcastle system.",
         "And Smythe is waiting.",
         "Mr. Smythe is waiting."
       ],
@@ -1562,7 +1486,6 @@
         "pc",
         "",
         "pc",
-        "",
         "",
         "pc",
         ""
@@ -1619,11 +1542,10 @@
         "audio/fixers/lynch_m09_offer_08.mp3",
         "audio/fixers/lynch_m09_offer_09.mp3",
         "audio/fixers/lynch_m09_offer_10.mp3",
-        "../speech/bar/S2MDC1_015.wav",
-        "../speech/bar/S2MDC1_016.wav",
+        "audio/fixers/lynch_m09_offer_11.mp3",
+        "audio/fixers/lynch_m09_offer_12.mp3",
         "audio/fixers/lynch_m09_offer_13.mp3",
-        "audio/fixers/lynch_m09_offer_14.mp3",
-        "audio/fixers/lynch_m09_offer_15.mp3"
+        "audio/fixers/lynch_m09_offer_14.mp3"
       ]
     },
     {
@@ -1646,8 +1568,6 @@
         "Everyone can pay. That is what makes payment uninteresting.",
         "Then what's interesting?",
         "Service. The university needs work done, and I am nothing if not transactional.",
-        "As an academic, isn't the pursuit of knowledge supposed to be its own reward?",
-        "The pursuit, certainly. Access to the results is billed separately.",
         "How much work?",
         "Access is an endowment, paid in four installments. Complete them and I unlock the archive myself.",
         "Four favors for a library card. That's quite a fee.",
@@ -1667,8 +1587,6 @@
       ],
       "portrait": "portraits/masterson/_ref.png",
       "speaker": [
-        "pc",
-        "",
         "pc",
         "",
         "pc",
@@ -1746,16 +1664,14 @@
         "audio/fixers/masterson_m10_offer_09.mp3",
         "audio/fixers/masterson_m10_offer_10.mp3",
         "audio/fixers/masterson_m10_offer_11.mp3",
-        "audio/fixers/masterson_m10_offer_12.mp3",
-        "audio/fixers/masterson_m10_offer_13.mp3",
         "",
+        "audio/fixers/masterson_m10_offer_13.mp3",
+        "audio/fixers/masterson_m10_offer_14.mp3",
         "audio/fixers/masterson_m10_offer_15.mp3",
         "audio/fixers/masterson_m10_offer_16.mp3",
         "audio/fixers/masterson_m10_offer_17.mp3",
         "audio/fixers/masterson_m10_offer_18.mp3",
-        "audio/fixers/masterson_m10_offer_19.mp3",
-        "audio/fixers/masterson_m10_offer_20.mp3",
-        "audio/fixers/masterson_m10_offer_21.mp3"
+        "audio/fixers/masterson_m10_offer_19.mp3"
       ]
     },
     {
@@ -1780,10 +1696,7 @@
         "The escorts?",
         "Optional. The Rhombus is not.",
         "Ten thousand?",
-        "Yeah, I can tell how strapped Oxford is for capital...",
-        "...ever since you started letting smugglers like me make endowments.",
-        "Your concern for our finances is touching. Do check your ammunition -- I have seen your invoices.",
-        "Ten thousand on your return."
+        "Ten thousand on your return. Do check your ammunition first -- I have seen your invoices."
       ],
       "offer": "Hunt down and destroy the Black Rhombus somewhere at Oxford's jump points, then return. 10,000 credits. Accept?",
       "accept_actions": [
@@ -1801,9 +1714,6 @@
         "pc",
         "",
         "pc",
-        "pc",
-        "pc",
-        "",
         ""
       ],
       "portrait_pc": "portraits/grayson/_ref.png",
@@ -1854,10 +1764,7 @@
         "audio/fixers/masterson_m11_offer_07.mp3",
         "audio/fixers/masterson_m11_offer_08.mp3",
         "audio/fixers/masterson_m11_offer_09.mp3",
-        "../speech/bar/S3MBC1_012.wav",
-        "../speech/bar/S3MBC1_013.wav",
-        "audio/fixers/masterson_m11_offer_12.mp3",
-        "audio/fixers/masterson_m11_offer_13.mp3"
+        "audio/fixers/masterson_m11_offer_10.mp3"
       ]
     },
     {
@@ -1986,10 +1893,7 @@
         "Wonderful.",
         "Keep the Talons OFF her. She lands first. Then you.",
         "And then?",
-        "Then the library opens. Ten thousand, and my genuine respect -- which I assure you is rarer.",
-        "Hell, you better name an entire wing after me.",
-        "Stop stalling and save that freighter, damn it!",
-        "Touchy, touchy..."
+        "Then the library opens. Ten thousand, and my genuine respect -- which I assure you is rarer."
       ],
       "offer": "Escort the final Drayman from the XXN-1927 Jump to Oxford - she is fragile and the pirates want her badly. 10,000 credits. Accept?",
       "accept_actions": [
@@ -2009,10 +1913,7 @@
         "pc",
         "",
         "pc",
-        "",
-        "pc",
-        "",
-        "pc"
+        ""
       ],
       "portrait_pc": "portraits/grayson/_ref.png",
       "accept_dialogue": [
@@ -2064,10 +1965,7 @@
         "audio/fixers/masterson_m13_offer_09.mp3",
         "audio/fixers/masterson_m13_offer_10.mp3",
         "audio/fixers/masterson_m13_offer_11.mp3",
-        "audio/fixers/masterson_m13_offer_12.mp3",
-        "../speech/bar/S3MDC1_010.wav",
-        "../speech/bar/S3MDC1_011.wav",
-        "../speech/bar/S3MDC1_012.wav"
+        "audio/fixers/masterson_m13_offer_12.mp3"
       ]
     },
     {
