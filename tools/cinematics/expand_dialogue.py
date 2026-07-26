@@ -479,64 +479,84 @@ SCENES: dict[str, list[tuple[str, str]]] = {
 
 # --------------------------------------------------------------- MASTERSON --
 "masterson_m10_offer": [
- (P, "I need access to the Oxford archive."),
+ (P, "I need access to the Oxford archive. Don't worry -- I've read a book "
+     "before. I even finished it."),
  (F, "Ah. The pilot with the artifact and the trail of dead mobsters."),
- (P, "News travels."),
+ (P, "News travels. Nice to know the ivory tower gets gossip along with the "
+     "grant money."),
  (F, "Masterson. University administration. And no -- the library is CLOSED "
      "to you."),
- (P, "I can pay."),
+ (P, "I can pay. In actual money -- the stuff your endowment office "
+     "pretends not to think about."),
  (F, "Everyone can pay. That is what makes payment uninteresting."),
  (P, "Then what's interesting?"),
  (F, "Service. The university needs work done, and I am nothing if not "
      "transactional."),
- (P, "As an academic, isn't the pursuit of knowledge supposed to be its own "
-     "reward?"),
+ (P, "Isn't the pursuit of knowledge supposed to be its own reward? I read "
+     "that somewhere. Probably on one of your fundraising brochures."),
  (F, "The pursuit, certainly. Access to the results is billed separately."),
- (P, "How much work?"),
+ (P, "Of course it is. Fine -- how much work?"),
  (F, "Access is an endowment, paid in four installments. Complete them and I "
      "unlock the archive myself."),
- (P, "Four favors for a library card. That's quite a fee."),
+ (P, "Four favors for a library card. Most schools just want alumni "
+     "donations and your dignity."),
  (F, "It is quite a library."),
- (P, "..."),
+ (P, "And while we're negotiating: when this is done, I want an honorary "
+     "doctorate. Doctor Burrows. I'll wait while you faint."),
+ (F, "An honorary doctorate. From Oxford. For a man whose collected works "
+     "are invoices."),
+ (P, "I'd like the robe as well. The floppy hat is non-negotiable."),
+ (F, "The university has survived plagues, wars, and budget committees. It "
+     "will survive your ambitions."),
  (F, "First installment. Hunter Toth is inbound in a Drayman at the Saxtogue "
      "jump point."),
- (P, "Who is he?"),
+ (P, "Who is he? Visiting faculty, or someone who works for a living?"),
  (F, "A journalist. He wrote unkind truths about the Retros, and Retros hold "
      "grudges with unusual sincerity."),
- (P, "So they'll be waiting for him."),
+ (P, "So they'll be waiting for him. Nothing says 'letter to the editor' "
+     "like a Retro strike wing."),
  (F, "Meet him there and see him to the planet. He must be ON THE GROUND "
      "before you land."),
- (P, "Before I land."),
+ (P, "Before I land. You're very invested in the order of operations for a "
+     "man who never leaves his desk."),
  (F, "I will not pay for a corpse with an honor guard. Ten thousand, and one "
      "installment struck from your debt."),
 ],
 "masterson_m11_offer": [
  (F, "Favor two."),
- (P, "Installment two, I thought."),
+ (P, "Installment two. And if we're using endowment language, I want naming "
+     "rights to something. A bench. A small shrub."),
  (F, "Don't be smart, it doesn't suit pilots. Data pirates are draining our "
      "mainframe."),
- (P, "From where?"),
+ (P, "Someone stealing knowledge from the people who charge admission to "
+     "it. The irony must sting. From where?"),
  (F, "A ship parked somewhere in-system. The Black Rhombus -- a converted "
      "Galaxy, bristling with turrets."),
- (P, "Somewhere in-system is not a location."),
+ (P, "'Somewhere in-system' is not a location. It's an abstract. You people "
+     "love those."),
  (F, "Then patrol the jump points until it becomes one, and make it stop "
      "existing."),
  (P, "Oxford's answer to stolen knowledge is to shoot the thieves?"),
  (F, "We attempted a strongly worded citation. They deleted it."),
  (P, "Peer review has gotten rough."),
  (F, "Standards have declined."),
- (P, "The escorts?"),
+ (P, "And the escorts? Or are they what you'd call supplementary reading?"),
  (F, "Optional. The Rhombus is not."),
- (P, "Ten thousand?"),
+ (P, "Ten thousand? Call it a research stipend and I'll feel like real "
+     "faculty."),
  (F, "Ten thousand on your return. Do check your ammunition first -- I have "
      "seen your invoices."),
+ (P, "Noted, Professor. Put the change toward my doctorate."),
+ (F, "Honorary degrees are conferred, Captain. Not accrued."),
 ],
 "masterson_m12_offer": [
  (F, "Favor three, and this one is genuinely unpleasant."),
- (P, "You've been saving it."),
+ (P, "You've been saving it. Like a good vintage, or a grudge. Academia "
+     "excels at both."),
  (F, "My book shipment arrives on the Drayman Vulcan's Forge at the Saxtogue "
      "jump point."),
- (P, "Books again."),
+ (P, "Books again. You people would die for paper. Wait -- that's the job, "
+     "isn't it. I would die for paper."),
  (F, "A rival collector hired bounty hunters to divert it."),
  (P, "Then I fly escort. Same as Toth."),
  (F, "Not the same. Here is the wrinkle: the hunters were paid to remove the "
@@ -546,32 +566,40 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  (P, "Rare books, hired guns, and me as bait. Academia's more exciting than "
      "the brochures."),
  (F, "The brochures omit donor relations."),
- (P, "So the freighter is bait, and I'm the target."),
+ (P, "Let me get the syllabus straight: the freighter is a decoy, I'm the "
+     "assigned reading, and the Demons are the discussion section."),
  (F, "The Demons will ignore the freighter entirely. I thought you would "
      "prefer to know."),
- (P, "I'd prefer a different job."),
+ (P, "I'd prefer a different job. Or hazard pay. Or -- and hear me out -- "
+     "that doctorate."),
  (F, "Same terms. The Forge lands first, then you. Ten thousand."),
+ (P, "Ten thousand and no tenure. The adjunct life is real."),
 ],
 "masterson_m13_offer": [
  (F, "Last favor."),
- (P, "Then the archive opens."),
+ (P, "Then the archive opens, and I finally learn what everyone keeps dying "
+     "over. Literally. This thing has a body count and a bibliography."),
  (F, "Then the archive opens. One more Drayman, inbound at the XXN-1927 jump "
      "point."),
  (P, "Carrying?"),
  (F, "Let us say pirate bait. They know what is in the hold and they want it "
      "badly."),
- (P, "That's not an answer."),
+ (P, "That's not an answer. That's a footnote wearing an answer's clothes."),
  (F, "It is the only one you're getting, and I will be honest with you about "
      "the rest."),
  (P, "Go ahead."),
  (F, "This freighter is a rust bucket. Her plating would embarrass a shuttle."),
- (P, "Wonderful."),
+ (P, "Wonderful. A flying grant proposal -- structurally unsound and "
+     "somehow still funded."),
  (F, "Keep the Talons OFF her. She lands first. Then you."),
  (P, "And then?"),
  (F, "Then the library opens. Ten thousand, and my genuine respect -- which I "
      "assure you is rarer."),
- (P, "When this is done, I want a library card and a plaque."),
- (F, "The card is possible."),
+ (P, "When this is done, I want the library card, a plaque, and the "
+     "honorary doctorate. I've earned tenure in getting shot at."),
+ (F, "The card is possible. The plaque is unlikely. The doctorate would "
+     "require a faculty vote, and I would have to describe you to the "
+     "faculty."),
  (P, "Good. I'd hate for recognition to cheapen the pursuit of knowledge."),
 ],
 "oxford_library_scene": [

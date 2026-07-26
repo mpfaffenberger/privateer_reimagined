@@ -605,27 +605,30 @@ authoring scripts and re-run.
 *Location:* oxford  
 *Appears when:* requires `lynch_done`; blocked by `m10_active`, `masterson_1_done`
 
-> **GRAYSON:** I need access to the Oxford archive.
+> **GRAYSON:** I need access to the Oxford archive. Don't worry -- I've read a book before. I even finished it.
 > **MASTERSON:** Ah. The pilot with the artifact and the trail of dead mobsters.
-> **GRAYSON:** News travels.
+> **GRAYSON:** News travels. Nice to know the ivory tower gets gossip along with the grant money.
 > **MASTERSON:** Masterson. University administration. And no -- the library is CLOSED to you.
-> **GRAYSON:** I can pay.
+> **GRAYSON:** I can pay. In actual money -- the stuff your endowment office pretends not to think about.
 > **MASTERSON:** Everyone can pay. That is what makes payment uninteresting.
 > **GRAYSON:** Then what's interesting?
 > **MASTERSON:** Service. The university needs work done, and I am nothing if not transactional.
-> **GRAYSON:** As an academic, isn't the pursuit of knowledge supposed to be its own reward?
+> **GRAYSON:** Isn't the pursuit of knowledge supposed to be its own reward? I read that somewhere. Probably on one of your fundraising brochures.
 > **MASTERSON:** The pursuit, certainly. Access to the results is billed separately.
-> **GRAYSON:** How much work?
+> **GRAYSON:** Of course it is. Fine -- how much work?
 > **MASTERSON:** Access is an endowment, paid in four installments. Complete them and I unlock the archive myself.
-> **GRAYSON:** Four favors for a library card. That's quite a fee.
+> **GRAYSON:** Four favors for a library card. Most schools just want alumni donations and your dignity.
 > **MASTERSON:** It is quite a library.
-> **GRAYSON:** *(silence)*
+> **GRAYSON:** And while we're negotiating: when this is done, I want an honorary doctorate. Doctor Burrows. I'll wait while you faint.
+> **MASTERSON:** An honorary doctorate. From Oxford. For a man whose collected works are invoices.
+> **GRAYSON:** I'd like the robe as well. The floppy hat is non-negotiable.
+> **MASTERSON:** The university has survived plagues, wars, and budget committees. It will survive your ambitions.
 > **MASTERSON:** First installment. Hunter Toth is inbound in a Drayman at the Saxtogue jump point.
-> **GRAYSON:** Who is he?
+> **GRAYSON:** Who is he? Visiting faculty, or someone who works for a living?
 > **MASTERSON:** A journalist. He wrote unkind truths about the Retros, and Retros hold grudges with unusual sincerity.
-> **GRAYSON:** So they'll be waiting for him.
+> **GRAYSON:** So they'll be waiting for him. Nothing says 'letter to the editor' like a Retro strike wing.
 > **MASTERSON:** Meet him there and see him to the planet. He must be ON THE GROUND before you land.
-> **GRAYSON:** Before I land.
+> **GRAYSON:** Before I land. You're very invested in the order of operations for a man who never leaves his desk.
 > **MASTERSON:** I will not pay for a corpse with an honor guard. Ten thousand, and one installment struck from your debt.
 
 **> OFFER:** Escort Toth's Drayman from the Saxtogue Jump to Oxford for 10,000 credits. He lands first. Accept?
@@ -656,20 +659,22 @@ authoring scripts and re-run.
 *Appears when:* requires `masterson_1_done`; blocked by `m11_active`, `masterson_2_done`
 
 > **MASTERSON:** Favor two.
-> **GRAYSON:** Installment two, I thought.
+> **GRAYSON:** Installment two. And if we're using endowment language, I want naming rights to something. A bench. A small shrub.
 > **MASTERSON:** Don't be smart, it doesn't suit pilots. Data pirates are draining our mainframe.
-> **GRAYSON:** From where?
+> **GRAYSON:** Someone stealing knowledge from the people who charge admission to it. The irony must sting. From where?
 > **MASTERSON:** A ship parked somewhere in-system. The Black Rhombus -- a converted Galaxy, bristling with turrets.
-> **GRAYSON:** Somewhere in-system is not a location.
+> **GRAYSON:** 'Somewhere in-system' is not a location. It's an abstract. You people love those.
 > **MASTERSON:** Then patrol the jump points until it becomes one, and make it stop existing.
 > **GRAYSON:** Oxford's answer to stolen knowledge is to shoot the thieves?
 > **MASTERSON:** We attempted a strongly worded citation. They deleted it.
 > **GRAYSON:** Peer review has gotten rough.
 > **MASTERSON:** Standards have declined.
-> **GRAYSON:** The escorts?
+> **GRAYSON:** And the escorts? Or are they what you'd call supplementary reading?
 > **MASTERSON:** Optional. The Rhombus is not.
-> **GRAYSON:** Ten thousand?
+> **GRAYSON:** Ten thousand? Call it a research stipend and I'll feel like real faculty.
 > **MASTERSON:** Ten thousand on your return. Do check your ammunition first -- I have seen your invoices.
+> **GRAYSON:** Noted, Professor. Put the change toward my doctorate.
+> **MASTERSON:** Honorary degrees are conferred, Captain. Not accrued.
 
 **> OFFER:** Hunt down and destroy the Black Rhombus somewhere at Oxford's jump points, then return. 10,000 credits. Accept?
 
@@ -697,9 +702,9 @@ authoring scripts and re-run.
 *Appears when:* requires `masterson_2_done`; blocked by `m12_active`, `masterson_3_done`
 
 > **MASTERSON:** Favor three, and this one is genuinely unpleasant.
-> **GRAYSON:** You've been saving it.
+> **GRAYSON:** You've been saving it. Like a good vintage, or a grudge. Academia excels at both.
 > **MASTERSON:** My book shipment arrives on the Drayman Vulcan's Forge at the Saxtogue jump point.
-> **GRAYSON:** Books again.
+> **GRAYSON:** Books again. You people would die for paper. Wait -- that's the job, isn't it. I would die for paper.
 > **MASTERSON:** A rival collector hired bounty hunters to divert it.
 > **GRAYSON:** Then I fly escort. Same as Toth.
 > **MASTERSON:** Not the same. Here is the wrinkle: the hunters were paid to remove the ESCORT.
@@ -707,10 +712,11 @@ authoring scripts and re-run.
 > **MASTERSON:** That would be you.
 > **GRAYSON:** Rare books, hired guns, and me as bait. Academia's more exciting than the brochures.
 > **MASTERSON:** The brochures omit donor relations.
-> **GRAYSON:** So the freighter is bait, and I'm the target.
+> **GRAYSON:** Let me get the syllabus straight: the freighter is a decoy, I'm the assigned reading, and the Demons are the discussion section.
 > **MASTERSON:** The Demons will ignore the freighter entirely. I thought you would prefer to know.
-> **GRAYSON:** I'd prefer a different job.
+> **GRAYSON:** I'd prefer a different job. Or hazard pay. Or -- and hear me out -- that doctorate.
 > **MASTERSON:** Same terms. The Forge lands first, then you. Ten thousand.
+> **GRAYSON:** Ten thousand and no tenure. The adjunct life is real.
 
 **> OFFER:** Escort Vulcan's Forge from the Saxtogue Jump to Oxford - the Demons will hunt YOU. 10,000 credits. Accept?
 
@@ -739,20 +745,20 @@ authoring scripts and re-run.
 *Appears when:* requires `masterson_3_done`; blocked by `m13_active`, `masterson_done`
 
 > **MASTERSON:** Last favor.
-> **GRAYSON:** Then the archive opens.
+> **GRAYSON:** Then the archive opens, and I finally learn what everyone keeps dying over. Literally. This thing has a body count and a bibliography.
 > **MASTERSON:** Then the archive opens. One more Drayman, inbound at the XXN-1927 jump point.
 > **GRAYSON:** Carrying?
 > **MASTERSON:** Let us say pirate bait. They know what is in the hold and they want it badly.
-> **GRAYSON:** That's not an answer.
+> **GRAYSON:** That's not an answer. That's a footnote wearing an answer's clothes.
 > **MASTERSON:** It is the only one you're getting, and I will be honest with you about the rest.
 > **GRAYSON:** Go ahead.
 > **MASTERSON:** This freighter is a rust bucket. Her plating would embarrass a shuttle.
-> **GRAYSON:** Wonderful.
+> **GRAYSON:** Wonderful. A flying grant proposal -- structurally unsound and somehow still funded.
 > **MASTERSON:** Keep the Talons OFF her. She lands first. Then you.
 > **GRAYSON:** And then?
 > **MASTERSON:** Then the library opens. Ten thousand, and my genuine respect -- which I assure you is rarer.
-> **GRAYSON:** When this is done, I want a library card and a plaque.
-> **MASTERSON:** The card is possible.
+> **GRAYSON:** When this is done, I want the library card, a plaque, and the honorary doctorate. I've earned tenure in getting shot at.
+> **MASTERSON:** The card is possible. The plaque is unlikely. The doctorate would require a faculty vote, and I would have to describe you to the faculty.
 > **GRAYSON:** Good. I'd hate for recognition to cheapen the pursuit of knowledge.
 
 **> OFFER:** Escort the final Drayman from the XXN-1927 Jump to Oxford - she is fragile and the pirates want her badly. 10,000 credits. Accept?
