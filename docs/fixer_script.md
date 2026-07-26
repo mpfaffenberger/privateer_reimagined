@@ -113,11 +113,11 @@ authoring scripts and re-run.
 *Location:* new_detroit  
 *Appears when:* requires `sandoval_done`; blocked by `m02_active`, `tayla_1_done`
 
-> **TAYLA:** You always flirt when you're cornered?
-> **GRAYSON:** Only when the corner has good eyes.
-> **TAYLA:** Fly the job, Captain. Then maybe I'll let you buy me a drink.
-> **GRAYSON:** That's the first honest incentive you've offered.
-> **TAYLA:** Ready to work? Good. First job's a milk run.
+> **TAYLA:** You've been staring at the artifact an hour. Point on the cargo -- what are you thinking?
+> **GRAYSON:** I'm thinking you sold me this job before you owned it.
+> **TAYLA:** I don't sell jobs. I assign them. Keep up.
+> **GRAYSON:** Then I'm thinking the 'milk run' line would insult both of us.
+> **TAYLA:** First honest statement you've made. Ready to work?
 > **GRAYSON:** Nothing about the last week has been a milk run.
 > **TAYLA:** Thirty units of plastics. Completely legal, nothing to hide.
 > **GRAYSON:** Then why are you smiling?
@@ -208,10 +208,8 @@ authoring scripts and re-run.
 > **TAYLA:** You made it past the militia with the goods and your hull.
 > **GRAYSON:** It was close at the second nav point.
 > **TAYLA:** I'm almost impressed.
-> **GRAYSON:** Almost? I was hoping for recklessly attracted.
-> **TAYLA:** Survive two more runs and I'll consider upgrading you to tolerable.
-> **GRAYSON:** I'll take tolerable.
-> **TAYLA:** Don't fish. Catch your breath -- the next run makes Troy look like a pleasure cruise.
+> **GRAYSON:** Almost is bad. Almost is bait.
+> **TAYLA:** Earned, then. Catch your breath. The next run makes Troy look like a pleasure cruise.
 > **GRAYSON:** You said that about the last one.
 > **TAYLA:** And I was wrong. This time I'm not.
 
@@ -269,8 +267,8 @@ authoring scripts and re-run.
 > **TAYLA:** Stop scowling. To make it up to you, my people just installed something in your ship.
 > **GRAYSON:** You went into my ship.
 > **TAYLA:** A smuggler's compartment. Twenty units, invisible to any scanner ever built.
-> **GRAYSON:** Most women buy me a drink before they start rearranging my interior.
-> **TAYLA:** Most men don't have twenty units of hidden cargo space.
+> **GRAYSON:** So that's what the noise was.
+> **TAYLA:** Your ship, my contractors. The usual arrangement.
 > **GRAYSON:** *(silence)*
 > **TAYLA:** You'd rather have the apology?
 > **GRAYSON:** I'd rather have been asked.
@@ -285,9 +283,8 @@ authoring scripts and re-run.
 *Location:* oakham  
 *Appears when:* requires `tayla_3_done`; blocked by `m05_active`, `m05_delivered`, `tayla_done`
 
-> **GRAYSON:** Let me guess...I'm running a shipment of catnip to Kilrah.
-> **TAYLA:** Catnip pays better. Kilrathi tip.
-> **TAYLA:** Last run. Twenty units of Brilliance to New Constantinople.
+> **GRAYSON:** Let me guess... I'm running a shipment of catnip to Kilrah.
+> **TAYLA:** Catnip. Last run. Twenty units of Brilliance to New Constantinople.
 > **GRAYSON:** Fits the new compartment exactly.
 > **TAYLA:** Poetic, no?
 > **GRAYSON:** Convenient. There's a difference.
@@ -295,12 +292,12 @@ authoring scripts and re-run.
 > **GRAYSON:** Should that name mean something?
 > **TAYLA:** He flew these runs before you showed up.
 > **GRAYSON:** And now he doesn't.
-> **TAYLA:** Now he's been drinking, and talking. Mostly about you.
-> **GRAYSON:** Should I be watching my back?
-> **TAYLA:** You should always be watching your back. But yes -- more than usual.
+> **TAYLA:** Now he's angry. Now he's talking. Talking tends to attract the wrong kind of listener on Palan.
+> **GRAYSON:** He'll shoot his mouth off when?
+> **TAYLA:** He already has. Your docking pattern's been previewed.
 > **GRAYSON:** *(silence)*
-> **TAYLA:** Ten thousand. And after this I'll tell you everything I know about your trinket.
-> **GRAYSON:** Everything.
+> **TAYLA:** Ten thousand. After this I'll tell you everything I know about that trinket of yours.
+> **GRAYSON:** Everything, please.
 > **TAYLA:** Everything I have. Watch yourself out there.
 
 **> OFFER:** One final run: 20 units of Brilliance to New Constantinople for 10,000 credits. Finish the job?
@@ -347,10 +344,6 @@ authoring scripts and re-run.
 > **TAYLA:** The polite kind. He's expecting you in the bar there.
 > **GRAYSON:** And that squares us.
 > **TAYLA:** That squares us. It's been profitable, pilot. Try not to die.
-> **GRAYSON:** So no drink?
-> **TAYLA:** I said maybe. You survived. That's not the same as becoming charming.
-> **GRAYSON:** Close enough to keep trying.
-> **TAYLA:** I was afraid of that.
 
 *Outcome:* `set_flag:tayla_done`, `clear_flag:tayla_employed`
 

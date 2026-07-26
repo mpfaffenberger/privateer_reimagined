@@ -115,11 +115,11 @@ SCENES: dict[str, list[tuple[str, str]]] = {
      "without being searched. Come see me when you're ready to work."),
 ],
 "tayla_m02_offer": [
- (F, "You always flirt when you're cornered?"),
- (P, "Only when the corner has good eyes."),
- (F, "Fly the job, Captain. Then maybe I'll let you buy me a drink."),
- (P, "That's the first honest incentive you've offered."),
- (F, "Ready to work? Good. First job's a milk run."),
+ (F, "You've been staring at the artifact an hour. Point on the cargo -- what are you thinking?"),
+ (P, "I'm thinking you sold me this job before you owned it."),
+ (F, "I don't sell jobs. I assign them. Keep up."),
+ (P, "Then I'm thinking the 'milk run' line would insult both of us."),
+ (F, "First honest statement you've made. Ready to work?"),
  (P, "Nothing about the last week has been a milk run."),
  (F, "Thirty units of plastics. Completely legal, nothing to hide."),
  (P, "Then why are you smiling?"),
@@ -166,10 +166,8 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  (F, "You made it past the militia with the goods and your hull."),
  (P, "It was close at the second nav point."),
  (F, "I'm almost impressed."),
- (P, "Almost? I was hoping for recklessly attracted."),
- (F, "Survive two more runs and I'll consider upgrading you to tolerable."),
- (P, "I'll take tolerable."),
- (F, "Don't fish. Catch your breath -- the next run makes Troy look like a "
+ (P, "Almost is bad. Almost is bait."),
+ (F, "Earned, then. Catch your breath. The next run makes Troy look like a "
      "pleasure cruise."),
  (P, "You said that about the last one."),
  (F, "And I was wrong. This time I'm not."),
@@ -198,8 +196,8 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  (P, "You went into my ship."),
  (F, "A smuggler's compartment. Twenty units, invisible to any scanner ever "
      "built."),
- (P, "Most women buy me a drink before they start rearranging my interior."),
- (F, "Most men don't have twenty units of hidden cargo space."),
+ (P, "So that's what the noise was."),
+ (F, "Your ship, my contractors. The usual arrangement."),
  (P, "..."),
  (F, "You'd rather have the apology?"),
  (P, "I'd rather have been asked."),
@@ -207,9 +205,8 @@ SCENES: dict[str, list[tuple[str, str]]] = {
      "and we're square."),
 ],
 "tayla_m05_offer": [
- (P, "Let me guess...I'm running a shipment of catnip to Kilrah."),
- (F, "Catnip pays better. Kilrathi tip."),
- (F, "Last run. Twenty units of Brilliance to New Constantinople."),
+ (P, "Let me guess... I'm running a shipment of catnip to Kilrah."),
+ (F, "Catnip. Last run. Twenty units of Brilliance to New Constantinople."),
  (P, "Fits the new compartment exactly."),
  (F, "Poetic, no?"),
  (P, "Convenient. There's a difference."),
@@ -217,13 +214,14 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  (P, "Should that name mean something?"),
  (F, "He flew these runs before you showed up."),
  (P, "And now he doesn't."),
- (F, "Now he's been drinking, and talking. Mostly about you."),
- (P, "Should I be watching my back?"),
- (F, "You should always be watching your back. But yes -- more than usual."),
+ (F, "Now he's angry. Now he's talking. Talking tends to attract the "
+     "wrong kind of listener on Palan."),
+ (P, "He'll shoot his mouth off when?"),
+ (F, "He already has. Your docking pattern's been previewed."),
  (P, "..."),
- (F, "Ten thousand. And after this I'll tell you everything I know about your "
-     "trinket."),
- (P, "Everything."),
+ (F, "Ten thousand. After this I'll tell you everything I know about that "
+     "trinket of yours."),
+ (P, "Everything, please."),
  (F, "Everything I have. Watch yourself out there."),
 ],
 "tayla_m05_debrief": [
@@ -246,10 +244,6 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  (F, "The polite kind. He's expecting you in the bar there."),
  (P, "And that squares us."),
  (F, "That squares us. It's been profitable, pilot. Try not to die."),
- (P, "So no drink?"),
- (F, "I said maybe. You survived. That's not the same as becoming charming."),
- (P, "Close enough to keep trying."),
- (F, "I was afraid of that."),
 ],
 
 # ------------------------------------------------------------------- LYNCH --
