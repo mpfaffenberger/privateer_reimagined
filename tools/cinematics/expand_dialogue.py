@@ -165,26 +165,27 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  (F, "Now the real work."),
  (P, "The milk run's over, then. Shame. I was just getting attached to "
      "honest fraud."),
- (F, "Brilliance. Yes -- that Brilliance. To Hector, the mining base in Troy."),
+ (F, "Then you'll enjoy this. Brilliance -- yes, that Brilliance -- to "
+     "Hector, the mining base in Troy."),
  (P, "That's not a manifest problem, that's a sentencing hearing. My lawyer "
      "would object, if I could afford one."),
- (F, "Fifteen units. It'll fit where nobody looks. I checked your dimensions "
-     "personally."),
+ (F, "Fifteen units. It'll fit where nobody looks -- I checked your "
+     "dimensions personally. And you'll afford the lawyer after this one."),
  (P, "Troy's crawling with militia, and my ship's top speed is best "
      "described as 'eventual.'"),
  (F, "It is. Talons, and they scan everything that moves -- even the "
      "eventual ones."),
  (P, "So the plan is me, a hold full of felony, and a checkpoint that scans "
      "everything that moves. I'm sensing a theme in your courtship."),
- (F, "I'm sending you through it fast. Do not stop. Do not fight. Burn past "
-     "them and dock."),
+ (F, "If this were courtship, you'd be in far more trouble. The plan is "
+     "speed: do not stop, do not fight, burn past them and dock."),
  (P, "And if they light me up? Asking for me, specifically."),
  (F, "Then you run, and you don't lead them back here. I'd hate to lose the "
      "base. I'd almost hate to lose you."),
  (P, "Charming. You nearly said something sweet just then -- careful, I'll "
      "get ideas."),
- (F, "Get them on your own time. Fifteen thousand on delivery at Hector -- "
-     "and come back here in one piece, hotshot."),
+ (F, "Good. Ideas look good on you. Fifteen thousand on delivery at "
+     "Hector -- come back in one piece, hotshot."),
  (P, "And another piece of the story. You still owe me the middle chapters, "
      "and I'm starting to think you like me in installments."),
  (F, "You're earning more every run, love. Even when you don't notice."),
@@ -195,11 +196,12 @@ SCENES: dict[str, list[tuple[str, str]]] = {
      "numbers. Close enough to start drafting a confession."),
  (F, "I'm almost impressed."),
  (P, "'Almost' again. You keep dangling that word like it's on a string."),
- (F, "Earned, then. Catch your breath, $NM. The next run makes Troy look like a "
-     "pleasure cruise."),
+ (F, "Fine -- impressed, fully. Don't let it go to your head. Catch your "
+     "breath, $NM: the next run makes Troy look like a pleasure cruise."),
  (P, "You said that about the last one, and your pleasure cruises keep "
      "involving people who shoot at me."),
- (F, "And I was wrong. This time I'm not."),
+ (F, "The shooting is how you know it's a cruise and not a vacation. And I "
+     "was wrong last time. This time I'm not."),
 ],
 "tayla_m04_offer": [
  (F, "Bigger load this time, hotshot. Brilliance to New Constantinople itself."),
@@ -213,11 +215,13 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  (F, "Generously."),
  (P, "'Generously.' Now I'm jealous of a customs officer. You'll forgive me "
      "if I keep my guns hot anyway."),
- (F, "I cleared the route myself, $NM. If anyone lights you up, it wasn't my people."),
+ (F, "Don't be jealous -- all they got was money. I cleared the route "
+     "myself, $NM. If anyone lights you up, it wasn't my people."),
  (P, "Every time you tell me a route is clean it costs me hull plates. I've "
      "started pricing you into the repair budget. Line item: 'Tayla.'"),
- (F, "Twenty thousand on delivery. Then come straight back -- I get bored "
-     "when you're not in danger."),
+ (F, "Put me under 'maintenance' -- I'm recurring. Twenty thousand on "
+     "delivery, then come straight back. I get bored when you're not in "
+     "danger."),
 ],
 "tayla_m04_debrief": [
  (P, "Bribed patrols, you said. 'They owe me,' you said."),
@@ -240,30 +244,34 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  (F, "You'd rather have the apology?"),
  (P, "I'd rather have been asked. Call me old-fashioned -- I like a little "
      "conversation before someone's inside my ship."),
- (F, "One more run, $NM. Then we're square -- and then we'll see."),
+ (F, "This is the conversation, $NM. One more run. Then we're square -- "
+     "and then we'll see."),
 ],
 "tayla_m05_offer": [
  (P, "Let me guess... I'm running a shipment of catnip to Kilrah."),
  (F, "...!"),
  (F, "You're still funny, hotshot. I save the interesting runs for the pilots I trust."),
  (P, "Generous. Most people just buy me a drink first."),
- (F, "I think of it as an investment. The question is whether you're done being a courier."),
+ (F, "Drinks are for marks. You're an investment. The question is whether "
+     "you're done being a courier."),
  (P, "What else would I be? Careful with the job titles -- the last one you "
      "gave me came with a hidden compartment."),
- (F, "Fly my missions and we'll talk more, love. I'm still deciding what "
-     "you're for."),
+ (F, "Twenty units of Brilliance to New Constantinople -- the last run. "
+     "Fly it and we'll talk more, love. I'm still deciding what you're for."),
  (P, "Twenty units. Fits the new compartment exactly. Almost like somebody "
      "measured me for it."),
  (F, "Poetic, no?"),
  (P, "Convenient. There's a difference. Poetry doesn't usually end in a "
      "strip search."),
- (F, "One thing before you go. William Riordian."),
+ (F, "Only if they catch you, and they won't. One thing before you go. "
+     "William Riordian."),
  (P, "Should that name mean something?"),
  (F, "He flew these runs before you showed up. Then he let a few friends "
      "talk him out of his nerve."),
  (P, "And now he's behind me. Wonderful. I've inherited an ex."),
- (F, "And now he's telling strangers what your docking pattern looks like. "
-     "Your compartment stays closed, love. The contractors know that."),
+ (F, "An ex with your schedule. He's telling strangers what your docking "
+     "pattern looks like. Your compartment stays closed, love -- the "
+     "contractors know that."),
  (F, "Ten thousand. After this I'll tell you everything I know about that "
      "trinket of yours."),
  (P, "Everything, please. I've earned the director's cut."),
@@ -280,10 +288,11 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  (P, "..."),
  (F, "Before Sandoval, it belonged to a spice merchant named Deiter."),
  (P, "And before him? I'm invested now. Emotionally. Possibly terminally."),
- (F, "Deiter had it from his own father. Every owner I can name died holding it."),
+ (F, "Terminal is the usual outcome. Deiter had it from his own father -- "
+     "every owner I can name died holding it."),
  (P, "That's a pattern, not a story. Patterns are what coroners find."),
- (F, "That's where my thread runs out. I've sent the holo on to someone who "
-     "can actually read it."),
+ (F, "Coroners and I read the same reports. That's where my thread runs "
+     "out. I've sent the holo on to someone who can actually read it."),
  (P, "Who?"),
  (F, "Roman Lynch. New Constantinople. A thug -- but an expert on exotic and "
      "valuable things."),
@@ -293,7 +302,7 @@ SCENES: dict[str, list[tuple[str, str]]] = {
      "the bar there."),
  (P, "And that squares us. Funny -- being square with you feels a lot like "
      "being in deeper."),
- (F, "That squares us. It's been profitable, partner. Try not to die -- "
+ (F, "That's the idea. It's been profitable, partner. Try not to die -- "
      "the next drink's on me."),
 ],
 
