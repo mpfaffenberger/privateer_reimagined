@@ -208,7 +208,7 @@
         "He owed me fifteen thousand credits.",
         "He owed a lot of people a lot of things. You're near the back of that line.",
         "Who are you?",
-        "Tayla. I keep an eye on pilots in this sector. It's a cheerful way to stay alive.",
+        "Tayla. A friend to pilots -- if they survive long enough.",
         "And you tracked me down why?",
         "Because Sandoval handed you a trinket before he died, and now the people he owed are very curious about where it went.",
         "It's collateral. It's his.",
@@ -220,15 +220,15 @@
         "...",
         "He got it by killing the man who owned it.",
         "You're telling me I'm carrying a murder motive.",
-        "I'm telling you death follows it, $CS. Feel lucky?",
+        "I'm telling you people have died for that thing, flyboy. Keep it close.",
         "Not particularly.",
         "Good. Lucky men die out here first.",
         "You know more than you're saying.",
         "Of course I do. That's the only thing I sell.",
         "What's the price?",
-        "Work for me, Captain. I'll trade the rest out a piece at a time, and you'll earn every one.",
+        "Work for me, $NM. I'll trade the rest out a piece at a time, and you'll earn every one.",
         "That's a long way of saying you own me.",
-        "It's a long way of saying you're the only one who can carry that thing without being searched. Come see me when you're ready to work."
+        "It's a long way of saying you're the only one I trust with it. Come back when you're ready."
       ],
       "done_actions": [
         "give_item:steltek_artifact",
@@ -341,7 +341,7 @@
       "dialogue": [
         "You've been staring at the artifact an hour. Point on the cargo -- what are you thinking?",
         "I'm thinking you sold me this job before you owned it.",
-        "I don't sell to strangers, sweetheart. But I have an eye for pilots, and you came back.",
+        "Sweetheart, I don't sell to strangers. But I have an eye for pilots, and you came back.",
         "Then I'm thinking the 'milk run' line would insult both of us.",
         "First honest statement you've made. Ready to work?",
         "Nothing about the last week has been a milk run.",
@@ -355,7 +355,7 @@
         "And if they check the flight recorder?",
         "Then you're a pilot who got lost. It happens.",
         "...",
-        "Oakham sits in an asteroid field. Mind your speed on approach -- I've lost two people to rocks and none to guns.",
+        "Oakham sits in an asteroid field. Mind your speed on approach -- I've lost two pilots to those rocks and none to guns.",
         "The pirates don't shoot?",
         "While you fly for me, Pentonville's pirates keep their guns to themselves. That's what you're really buying.",
         "Ten thousand?",
@@ -487,9 +487,9 @@
         "And if they light me up?",
         "Then you run, and you don't lead them back here.",
         "Charming.",
-        "Fifteen thousand on delivery at Hector. Then get yourself back here in one piece.",
+        "Fifteen thousand on delivery at Hector. Then come back here in one piece, hotshot.",
         "And another piece of the story.",
-        "You're learning."
+        "You're earning more every run, love. Even when you don't notice."
       ],
       "offer": "Smuggle 15 units of Brilliance to Hector (Troy system) for 15,000 credits, then return to Oakham. In?",
       "accept_actions": [
@@ -583,7 +583,7 @@
         "It was close at the second nav point.",
         "I'm almost impressed.",
         "Almost is bad. Almost is bait.",
-        "Earned, then. Catch your breath. The next run makes Troy look like a pleasure cruise.",
+        "Earned, then. Catch your breath, $NM. The next run makes Troy look like a pleasure cruise.",
         "You said that about the last one.",
         "And I was wrong. This time I'm not."
       ],
@@ -624,15 +624,15 @@
         "tayla_3_done"
       ],
       "dialogue": [
-        "Bigger load this time. Brilliance to New Constantinople itself.",
+        "Bigger load this time, flyboy. Brilliance to New Constantinople itself.",
         "The capital. You're not serious.",
         "Twenty-five units.",
         "That's Confed's front porch, Tayla.",
-        "Before you say no -- I bribed the patrols on the route.",
+        "Before you say no -- I have friends on the route. They owe me.",
         "You bribed them.",
         "Generously.",
         "Bribed patrols. You'll forgive me if I keep my guns hot.",
-        "Keep them hot. You won't need them. Trust me.",
+        "Trust me, $NM. I'll know inside an hour if the route wasn't clean.",
         "Every time you say that it costs me hull.",
         "Twenty thousand on delivery. Then come straight back."
       ],
@@ -721,15 +721,15 @@
         "Stilettos and Broadswords at every jump point.",
         "Huh. Must have been a clerical error.",
         "I lost half my shields to a clerical error.",
-        "Stop scowling. To make it up to you, my people just installed something in your ship.",
+        "Stop scowling. To make it up to you, my people just installed something in your ship. While you were docked.",
         "You went into my ship.",
         "A smuggler's compartment. Twenty units, invisible to any scanner ever built.",
         "So that's what the noise was.",
-        "Your ship, my contractors. The usual arrangement.",
+        "Consider it a promotion, flyboy. The contractors I trust do that on the side.",
         "...",
         "You'd rather have the apology?",
         "I'd rather have been asked.",
-        "Contraband only -- the baffles foul anything legitimate. One more run and we're square."
+        "I'd rather have known you a year ago, $NM. One more run, and we're square."
       ],
       "done_actions": [
         "m04:install_compartment",
@@ -784,21 +784,18 @@
       ],
       "dialogue": [
         "Let me guess... I'm running a shipment of catnip to Kilrah.",
-        "Catnip. Last run. Twenty units of Brilliance to New Constantinople.",
+        "If only, hotshot. Last run. Twenty units of Brilliance to New Constantinople.",
         "Fits the new compartment exactly.",
         "Poetic, no?",
         "Convenient. There's a difference.",
         "One thing before you go. William Riordian.",
         "Should that name mean something?",
-        "He flew these runs before you showed up.",
-        "And now he doesn't.",
-        "Now he's angry. Now he's talking. Talking tends to attract the wrong kind of listener on Palan.",
-        "He'll shoot his mouth off when?",
-        "He already has. Your docking pattern's been previewed.",
-        "...",
+        "He flew these runs before you showed up. Then he let a few friends talk him out of his nerve.",
+        "And now he's behind me.",
+        "And now he's telling strangers what your docking pattern looks like. Your compartment stays closed, love. The contractors know that.",
         "Ten thousand. After this I'll tell you everything I know about that trinket of yours.",
         "Everything, please.",
-        "Everything I have. Watch yourself out there."
+        "Everything I have, partner. I'm asking -- not telling, asking -- for you to come back in one piece."
       ],
       "offer": "One final run: 20 units of Brilliance to New Constantinople for 10,000 credits. Finish the job?",
       "accept_actions": [
@@ -816,9 +813,6 @@
         "",
         "pc",
         "",
-        "pc",
-        "",
-        "pc",
         "",
         "pc",
         ""
@@ -879,10 +873,7 @@
         "audio/fixers/tayla_m05_offer_09.mp3",
         "audio/fixers/tayla_m05_offer_10.mp3",
         "audio/fixers/tayla_m05_offer_11.mp3",
-        "",
-        "audio/fixers/tayla_m05_offer_13.mp3",
-        "audio/fixers/tayla_m05_offer_14.mp3",
-        "audio/fixers/tayla_m05_offer_15.mp3"
+        "audio/fixers/tayla_m05_offer_12.mp3"
       ]
     },
     {
@@ -912,7 +903,7 @@
         "A thug.",
         "The polite kind. He's expecting you in the bar there.",
         "And that squares us.",
-        "That squares us. It's been profitable, pilot. Try not to die."
+        "That squares us. It's been profitable, partner. Try not to die -- and come back when you've thought about what 'partner' means."
       ],
       "done_actions": [
         "set_flag:tayla_done",
