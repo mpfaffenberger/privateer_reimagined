@@ -113,6 +113,10 @@ authoring scripts and re-run.
 *Location:* new_detroit  
 *Appears when:* requires `sandoval_done`; blocked by `m02_active`, `tayla_1_done`
 
+> **TAYLA:** Ah, $NM. You look just like your picture. Too bad.
+> **GRAYSON:** After a few drinks you'll change your mind.
+> **TAYLA:** Buy me one after the run and we'll test that theory.
+> **GRAYSON:** Now there's a mission objective.
 > **TAYLA:** Ready to work? Good. First job's a milk run.
 > **GRAYSON:** Nothing about the last week has been a milk run.
 > **TAYLA:** Thirty units of plastics. Completely legal, nothing to hide.
@@ -277,6 +281,12 @@ authoring scripts and re-run.
 *Location:* oakham  
 *Appears when:* requires `tayla_3_done`; blocked by `m05_active`, `m05_delivered`, `tayla_done`
 
+> **TAYLA:** $CS, you look like hell.
+> **GRAYSON:** I can't understand why a woman as attractive as you...
+> **GRAYSON:** ...has to pay for the company of men in bars.
+> **TAYLA:** I see it as an investment...with a penalty for early withdrawal.
+> **GRAYSON:** Let me guess...I'm running a shipment of catnip to Kilrah.
+> **TAYLA:** Nope, I save the really lucrative jobs for myself.
 > **TAYLA:** Last run. Twenty units of Brilliance to New Constantinople.
 > **GRAYSON:** Fits the new compartment exactly.
 > **TAYLA:** Poetic, no?
@@ -368,6 +378,9 @@ authoring scripts and re-run.
 > **ROMAN LYNCH:** That is precisely the question I intend to answer -- while you make yourself useful.
 > **GRAYSON:** There it is.
 > **ROMAN LYNCH:** A certain Captain Seelig is loitering at Nav 3 in Pentonville. His ship is the Hooded Hawk.
+> **GRAYSON:** You must be joking. I'm no assassin.
+> **MIGGS:** You want I should take $NM outside the airlock and teach him how to suck vacuum?
+> **ROMAN LYNCH:** Gentlemen, please, let us remain professional.
 > **GRAYSON:** And?
 > **ROMAN LYNCH:** Deliver a message. Tell him how profoundly disappointed I am in him. Verbatim, please.
 > **GRAYSON:** That's all. Words.
@@ -441,6 +454,10 @@ authoring scripts and re-run.
 > **ROMAN LYNCH:** Two analysts and a records clerk. All quite unrelated, I'm sure.
 > **GRAYSON:** *(silence)*
 > **ROMAN LYNCH:** Meanwhile: twenty units of weaponry to Siva, the agricultural base in Rikel. Fifteen thousand on delivery.
+> **GRAYSON:** Another chump job, Lynch?
+> **MIGGS:** Ever seen your lungs? Keep crackin' wise, I'll show them to ya...up-close, like.
+> **GRAYSON:** Jeez, where do you get your dialogue, Thugs-R-Us?
+> **ROMAN LYNCH:** Enough, Miggs.
 > **GRAYSON:** Weapons to a farming world.
 > **ROMAN LYNCH:** Farmers have enemies too.
 > **GRAYSON:** There's a wrinkle. There's always a wrinkle.
@@ -483,6 +500,10 @@ authoring scripts and re-run.
 > **GRAYSON:** *(silence)*
 > **ROMAN LYNCH:** Before we discuss it further, I need a favor.
 > **GRAYSON:** Of course you do.
+> **MIGGS:** Mr. Lynch did you a favor, pal.
+> **MIGGS:** Better get grateful quick-like...while you can still walk.
+> **GRAYSON:** I could always get crutches, Miggs...but there's no cure for ugliness.
+> **ROMAN LYNCH:** I urge you to observe caution with Miggs. My control over him extends only so far.
 > **ROMAN LYNCH:** My cousin Regis has been subpoenaed in a murder trial.
 > **GRAYSON:** Whose murder?
 > **ROMAN LYNCH:** A tedious man's. It would be best for everyone if Regis simply disappeared before he testifies.
@@ -533,8 +554,9 @@ authoring scripts and re-run.
 > **ROMAN LYNCH:** Pick him up. Bring him here. Thirty thousand for a taxi run.
 > **GRAYSON:** A taxi run. Nothing about this has been a taxi run.
 > **ROMAN LYNCH:** You may notice Miggs is elsewhere tonight. Errands of his own.
-> **GRAYSON:** Should that worry me?
-> **ROMAN LYNCH:** It should worry someone. Go on then. Liverpool. Newcastle system.
+> **GRAYSON:** I hate to run off without giving Miggs a kiss. Where is he?
+> **ROMAN LYNCH:** Miggs is currently eliminating a...labor difficulty. I'll convey your regards.
+> **ROMAN LYNCH:** Go on then. Liverpool. Newcastle system.
 > **GRAYSON:** And Smythe is waiting.
 > **ROMAN LYNCH:** Mr. Smythe is waiting.
 
@@ -574,6 +596,8 @@ authoring scripts and re-run.
 > **MASTERSON:** Everyone can pay. That is what makes payment uninteresting.
 > **GRAYSON:** Then what's interesting?
 > **MASTERSON:** Service. The university needs work done, and I am nothing if not transactional.
+> **GRAYSON:** As an academic, isn't the pursuit of knowledge supposed to be its own reward?
+> **MASTERSON:** The pursuit, certainly. Access to the results is billed separately.
 > **GRAYSON:** How much work?
 > **MASTERSON:** Access is an endowment, paid in four installments. Complete them and I unlock the archive myself.
 > **GRAYSON:** Four favors for a library card. That's quite a fee.
@@ -624,7 +648,10 @@ authoring scripts and re-run.
 > **GRAYSON:** The escorts?
 > **MASTERSON:** Optional. The Rhombus is not.
 > **GRAYSON:** Ten thousand?
-> **MASTERSON:** Ten thousand on your return. Do check your ammunition first -- I have seen your invoices.
+> **GRAYSON:** Yeah, I can tell how strapped Oxford is for capital...
+> **GRAYSON:** ...ever since you started letting smugglers like me make endowments.
+> **MASTERSON:** Your concern for our finances is touching. Do check your ammunition -- I have seen your invoices.
+> **MASTERSON:** Ten thousand on your return.
 
 **> OFFER:** Hunt down and destroy the Black Rhombus somewhere at Oxford's jump points, then return. 10,000 credits. Accept?
 
@@ -704,6 +731,9 @@ authoring scripts and re-run.
 > **MASTERSON:** Keep the Talons OFF her. She lands first. Then you.
 > **GRAYSON:** And then?
 > **MASTERSON:** Then the library opens. Ten thousand, and my genuine respect -- which I assure you is rarer.
+> **GRAYSON:** Hell, you better name an entire wing after me.
+> **MASTERSON:** Stop stalling and save that freighter, damn it!
+> **GRAYSON:** Touchy, touchy...
 
 **> OFFER:** Escort the final Drayman from the XXN-1927 Jump to Oxford - she is fragile and the pirates want her badly. 10,000 credits. Accept?
 

@@ -56,13 +56,42 @@ SPEAKER = {
 # values the engine renders so the audio matches the on-screen text.
 _TOKENS = {"$NM": "Burrows", "$CS": "Grayson"}
 
-# Extracted 1993 recordings beat synthesis every time. These paths are relative
-# to assets/cinematics/, matching the engine's voice-path contract.
-ORIGINAL_CLIPS = {
-    ("lynch_m06_offer", 0): "../speech/bar/MIGGS_000.wav",
-    ("lynch_m06_offer", 1): "../speech/bar/MIGGS_001.wav",
-    ("lynch_m06_offer", 3): "../speech/bar/MIGGS_002.wav",
-    ("lynch_m06_offer", 4): "../speech/bar/MIGGS_003.wav",
+# Extracted 1993 recordings beat synthesis every time. Key by exact authored
+# text so inserting another paragraph cannot silently shift the binding.
+ORIGINAL_TEXT_CLIPS = {
+    "You don't wanna talk to me, 'cause I don't wanna talk to you.": "MIGGS_000",
+    "And anyone that makes me do what I don't wanna do gets hurt, painwise, get me?": "MIGGS_001",
+    "Mr. Lynch, sitting over there, HE'S the one you wanna talk to...": "MIGGS_002",
+    "...so either state your bidness or take a hike, buddy.": "MIGGS_003",
+    "Ah, $NM. You look just like your picture. Too bad.": "S1MAC1_000",
+    "After a few drinks you'll change your mind.": "S1MAC1_001",
+    "$CS, you look like hell.": "S1MDC1_000",
+    "I can't understand why a woman as attractive as you...": "S1MDC1_003",
+    "...has to pay for the company of men in bars.": "S1MDC1_004",
+    "I see it as an investment...with a penalty for early withdrawal.": "S1MDC1_005",
+    "Let me guess...I'm running a shipment of catnip to Kilrah.": "S1MDC1_010",
+    "Nope, I save the really lucrative jobs for myself.": "S1MDC1_011",
+    "You must be joking. I'm no assassin.": "S2MAC1_009",
+    "You want I should take $NM outside the airlock and teach him how to suck vacuum?": "S2MAC1_010",
+    "Gentlemen, please, let us remain professional.": "S2MAC1_011",
+    "Another chump job, Lynch?": "S2MBC1_010",
+    "Ever seen your lungs? Keep crackin' wise, I'll show them to ya...up-close, like.": "S2MBC1_011",
+    "Jeez, where do you get your dialogue, Thugs-R-Us?": "S2MBC1_012",
+    "Enough, Miggs.": "S2MBC1_013",
+    "Mr. Lynch did you a favor, pal.": "S2MCC1_006",
+    "Better get grateful quick-like...while you can still walk.": "S2MCC1_007",
+    "I could always get crutches, Miggs...but there's no cure for ugliness.": "S2MCC1_008",
+    "I urge you to observe caution with Miggs. My control over him extends only so far.": "S2MCC1_009",
+    "I hate to run off without giving Miggs a kiss. Where is he?": "S2MDC1_015",
+    "Miggs is currently eliminating a...labor difficulty. I'll convey your regards.": "S2MDC1_016",
+    "Yeah, I can tell how strapped Oxford is for capital...": "S3MBC1_012",
+    "...ever since you started letting smugglers like me make endowments.": "S3MBC1_013",
+    "Hell, you better name an entire wing after me.": "S3MDC1_010",
+    "Stop stalling and save that freighter, damn it!": "S3MDC1_011",
+    "Touchy, touchy...": "S3MDC1_012",
+}
+ORIGINAL_TEXT_CLIPS = {
+    text: f"../speech/bar/{stem}.wav" for text, stem in ORIGINAL_TEXT_CLIPS.items()
 }
 
 
@@ -128,9 +157,9 @@ def main(argv: list[str] | None = None) -> int:
         for i, line in enumerate(entry.get("dialogue", [])):
             speaker_key = speakers[i] if i < len(speakers) else ""
             who = "grayson" if speaker_key == "pc" else speaker_key or speaker
-            rel = ORIGINAL_CLIPS.get((fid, i), voice_rel_path(fid, f"{i:02d}"))
+            rel = ORIGINAL_TEXT_CLIPS.get(line, voice_rel_path(fid, f"{i:02d}"))
             text = speakable(line)
-            if (fid, i) in ORIGINAL_CLIPS:
+            if line in ORIGINAL_TEXT_CLIPS:
                 clips.append(rel)
                 skipped += 1
                 continue
