@@ -48,6 +48,7 @@ const char* k_track_file[(int)music::Track::Count] = {
     "combat_10",    // StingDeath       — game over (one-shot)
     "basetune_00",  // BaseAgricultural — agricultural base tune
     "basetune_04",  // BaseMining       — mining base tune
+    "oxford_theme", // BaseOxford       — Oxford-specific loop (looped, overrides bar pool)
     "bar_music_01", // BaseBar          — first track in the bar pool (14 total)
     "menu",         // Menu             — title/menu loop (assets/music/original/menu.wav, custom bed)
 };
@@ -309,7 +310,13 @@ music::Track base_track_for(const char* base_id) {
         const json::Value root =
             json::parse_file("assets/bases/" + folder + "/base.json");
         if (root.is_object()) {
-            if (const json::Value* m = root.find("market");
+            // Oxford is a per-base exception: it has its own loopbed
+            // (oxford_theme.wav) and overrides the bar pool shuffle at
+            // Oxford too -- Masterson's whole arc plays this track
+            // whether the player is on the concourse or in the bar.
+            if (folder == "oxford") {
+                g_cached_base_track = music::Track::BaseOxford;
+            } else if (const json::Value* m = root.find("market");
                 m && m->is_object() && m->contains("archetype")) {
                 const std::string arch = (*m)["archetype"].string_or("");
                 // Issue #110: only "agricultural" should get the farm bed.
@@ -539,12 +546,18 @@ void update(GameMode mode, HMM_Vec3 player_pos, const char* base_id, float dt) {
     // Bar music replaces (never overlays) the landed bed.
     if (mode == GameMode::Landed) {
         if (bar_open && g_bar_voice == 0) {
-            g_bar_prior = desired;
-            if (g_active.voice != 0) { audio::stop(g_active.voice); g_active.voice = 0; }
-            if (g_prev.voice != 0) { audio::stop(g_prev.voice); g_prev.voice = 0; }
-            g_target = Track::None;
-            play_next_bar_track();
-            desired = Track::None;   // override switch result
+            // Oxford's bar plays the Oxford loop too (the player requested
+            // a dedicated theme for the whole base). Any other base: shuffle.
+            if (base_track_for(base_id) == music::Track::BaseOxford) {
+                desired = music::Track::BaseOxford;
+            } else {
+                g_bar_prior = desired;
+                if (g_active.voice != 0) { audio::stop(g_active.voice); g_active.voice = 0; }
+                if (g_prev.voice != 0) { audio::stop(g_prev.voice); g_prev.voice = 0; }
+                g_target = Track::None;
+                play_next_bar_track();
+                desired = Track::None;   // override switch result
+            }
         } else if (!bar_open && g_bar_voice != 0) {
             if (g_bar_voice != 0) { audio::stop(g_bar_voice); g_bar_voice = 0; }
             // Leaving the bar ends the visit: release the authored scene
@@ -636,6 +649,7 @@ const char* to_name(Track t) {
         case Track::StingDeath:       return "sting_death";
         case Track::BaseAgricultural: return "base_agricultural";
         case Track::BaseMining:       return "base_mining";
+        case Track::BaseOxford:       return "base_oxford";
         case Track::BaseBar:          return "base_bar";
         case Track::Menu:             return "menu";
         default:                      return "?";

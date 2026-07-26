@@ -90,6 +90,7 @@ enum class Track {
     // ---- landed per-base tunes (BASETUNE.ADL sub-songs) ----
     BaseAgricultural, // basetune_00 — agricultural base (Helen)
     BaseMining,       // basetune_04 — mining base (Achilles, Hector)
+    BaseOxford,       // oxford_theme  — Oxford (academic hub); overrides the bar pool
     BaseBar,          // bar_music_01..14 — Freelancer bar pool (shuffled, non-looping)
     // ---- menu (BASETUNE.ADL sub-song 01) ----
     Menu,             // menu       — title/menu loop (custom bed, assets/music/original/menu.wav)
