@@ -127,7 +127,7 @@ EPILOGUES: dict[str, dict[str, list[tuple[str, str]]]] = {
             "YOU."),
   (P, "You know what? Come and get some. Right now. You're obviously all "
      "talk -- we can throw down any time you want, big man."),
-  ("miggs", "Oh, that's IT --"),
+  ("miggs", "Oh, that does it, buddy --"),
   (F, "Gentlemen. The furniture is Kilrathi walnut and the Captain is "
       "employed. Both are expensive to replace."),
   (P, "..."),
