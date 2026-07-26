@@ -11,6 +11,7 @@
 #include "music.h"
 
 #include "audio.h"
+#include "base_screens.h"
 #include "json.h"
 #include "threat.h"
 
@@ -21,7 +22,9 @@
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <random>
 #include <string>
+#include <vector>
 
 namespace {
 
@@ -45,6 +48,7 @@ const char* k_track_file[(int)music::Track::Count] = {
     "combat_10",    // StingDeath       — game over (one-shot)
     "basetune_00",  // BaseAgricultural — agricultural base tune
     "basetune_04",  // BaseMining       — mining base tune
+    "bar_music_01", // BaseBar          — first track in the bar pool (14 total)
     "menu",         // Menu             — title/menu loop (assets/music/original/menu.wav, custom bed)
 };
 
@@ -57,6 +61,8 @@ bool is_loop(music::Track t) {
         case music::Track::StingLanding:
         case music::Track::StingDeath:
             return false;          // one-shots
+        case music::Track::BaseBar:
+            return false;          // bar music is a non-looping pool
         default:
             return true;           // every bed (incl. None handled by caller)
     }
@@ -145,11 +151,65 @@ bool    g_active_sting_fading = false;  // true = bed swap marked us to fade
 // hard cut. Same rate fades the master/mute changes.
 constexpr float k_fade_rate = 1.5f;
 
+// Bar tracks are a shuffled one-shot pool, separate from the looping bed.
+
+VoiceId g_bar_voice = 0;             // current bar music one-shot voice
+float   g_bar_elapsed = 0.0f;        // elapsed time on current bar track
+int     g_bar_idx = 0;               // current index in shuffled pool
+int     g_bar_count = 0;             // available files (0 means silent fallback)
+int     g_bar_pool[14] = {};         // shuffled track indices (0–13)
+music::Track g_bar_prior = music::Track::None;  // what was playing before bar
+
+float wav_seconds(const char* path);
+
 float clamp01(float v) { return std::fmax(0.0f, std::fmin(1.0f, v)); }
 
 bool available(music::Track t) {
     const int i = (int)t;
     return i > 0 && i < (int)music::Track::Count && g_samples[i] != 0;
+}
+
+// Is the player in the Bar screen right now?
+bool in_bar_screen() {
+    auto st = base_screens::dev_state();
+    if (st.stack.empty()) return false;
+    return st.stack.back() == "Bar";
+}
+
+void play_next_bar_track() {
+    if (g_bar_count == 0) return;
+
+    int track_idx = g_bar_pool[g_bar_idx] + 1;  // 1..14
+    g_bar_idx = (g_bar_idx + 1) % g_bar_count;
+
+    char path[256];
+    std::snprintf(path, sizeof path, "assets/music/original/bar_music_%02d.wav", track_idx);
+
+    SampleId sid = audio::load(path); // audio::load deduplicates by path
+    if (sid == 0) return;
+
+    float dur = wav_seconds(path);
+
+    if (g_bar_voice != 0) { audio::stop(g_bar_voice); g_bar_voice = 0; }
+
+    float gain = clamp01(g_master);
+    g_bar_voice = audio::play(sid, gain);
+    g_bar_elapsed = 0.0f;
+    std::printf("[music] bar track %02d (%.1fs)\n", track_idx, dur);
+}
+
+void update_bar_track(float dt) {
+    if (g_bar_voice == 0) return;
+
+    float fl = 0, fr = 0;
+    if (!audio::voice_gains(g_bar_voice, &fl, &fr)) {
+        play_next_bar_track();
+        return;
+    }
+
+    // Defensive cap in case a malformed voice never retires.
+    g_bar_elapsed += dt;
+    if (g_bar_elapsed > 300.0f) play_next_bar_track();
 }
 
 // ---- WAV duration (seconds) --------------------------------------------------
@@ -329,6 +389,10 @@ namespace music {
 void load_all() {
     int loaded = 0;
     for (int i = 1; i < (int)Track::Count; ++i) {
+        // Skip BaseBar — it's a pool of 14 non-looping files, not a single
+        // mapped stem. We handle it separately below.
+        if ((Track)i == Track::BaseBar) continue;
+
         char path[256];
         std::snprintf(path, sizeof path,
                       "assets/music/original/%s.wav", k_track_file[i]);
@@ -349,9 +413,37 @@ void load_all() {
                         to_name((Track)i), k_track_file[i]);
         }
     }
-    std::printf("[music] loaded %d/%d tracks; master vol %.2f%s\n",
-                loaded, (int)Track::Count - 1, g_master,
-                loaded == 0 ? " (no music — clean clone)" : "");
+
+    // ---- bar music pool (14 non-looping tracks) ----
+    // Build and shuffle the pool. Tracks that exist on disk are included;
+    // missing ones are skipped (clean clone has none and bar music is silent).
+    {
+        std::vector<int> pool;
+        for (int i = 0; i < 14; ++i) {
+            char path[256];
+            std::snprintf(path, sizeof path, "assets/music/original/bar_music_%02d.wav", i + 1);
+            if (std::ifstream(path).good()) pool.push_back(i);
+        }
+        if (!pool.empty()) {
+            // Fisher-Yates shuffle.
+            std::mt19937 rng(std::random_device{}());
+            std::shuffle(pool.begin(), pool.end(), rng);
+            g_bar_count = (int)pool.size();
+            g_bar_idx = 0;
+            for (int i = 0; i < g_bar_count; ++i)
+                g_bar_pool[i] = pool[i];
+            std::printf("[music] base_bar       <- bar_music_01..14 (%d tracks, shuffled)\n",
+                        (int)pool.size());
+        } else {
+            g_bar_count = 0;
+            std::memset(g_bar_pool, 0, sizeof(g_bar_pool));
+            std::printf("[music] base_bar       <- (no bar music; silent)\n");
+        }
+    }
+
+    std::printf("[music] loaded %d/%d beds/stings + %d bar tracks; master vol %.2f%s\n",
+                loaded, (int)Track::Count - 2, g_bar_count, g_master,
+                loaded == 0 && g_bar_count == 0 ? " (no music — clean clone)" : "");
 }
 
 void play_track(Track t) {
@@ -378,13 +470,19 @@ void update(GameMode mode, HMM_Vec3 player_pos, const char* base_id, float dt) {
 
     // ---- 1. state -> desired LOOP bed ---------------------------------------
     Track desired = g_target;
+    bool bar_open = false;
+
+    if (mode == GameMode::Landed)
+        bar_open = in_bar_screen();
+
     switch (mode) {
         case GameMode::Flight:
             desired = flight_desired(player_pos, dt);
             break;
         case GameMode::Landed:
             reset_combat_state();
-            desired = base_track_for(base_id);
+            if (!bar_open && g_bar_voice == 0)
+                desired = base_track_for(base_id);
             break;
         case GameMode::Dying:
             reset_combat_state();
@@ -402,10 +500,34 @@ void update(GameMode mode, HMM_Vec3 player_pos, const char* base_id, float dt) {
             // sting already overlays it); don't reselect.
             break;
     }
+
+    // Bar music replaces (never overlays) the landed bed.
+    if (mode == GameMode::Landed) {
+        if (bar_open && g_bar_voice == 0) {
+            g_bar_prior = desired;
+            if (g_active.voice != 0) { audio::stop(g_active.voice); g_active.voice = 0; }
+            if (g_prev.voice != 0) { audio::stop(g_prev.voice); g_prev.voice = 0; }
+            g_target = Track::None;
+            play_next_bar_track();
+            desired = Track::None;   // override switch result
+        } else if (!bar_open && g_bar_voice != 0) {
+            if (g_bar_voice != 0) { audio::stop(g_bar_voice); g_bar_voice = 0; }
+            play_track(g_bar_prior);
+            std::printf("[music] bar closed -> %s\n", to_name(g_bar_prior));
+            desired = g_bar_prior;  // override switch result
+        }
+    } else if (g_bar_voice != 0) {
+        if (g_bar_voice != 0) { audio::stop(g_bar_voice); g_bar_voice = 0; }
+    }
     // Only switch to an available bed (or to silence). Falling back keeps the
     // current bed if the desired one wasn't rendered in this clone.
     if (desired == Track::None || available(desired))
         play_track(desired);
+
+    // Bar is a one-shot voice, so advance it and apply bus gain explicitly.
+    update_bar_track(dt);
+    if (g_bar_voice != 0)
+        audio::set_voice_gain(g_bar_voice, g_muted ? 0.0f : clamp01(g_master));
 
     // ---- 2. advance the crossfade lerps -------------------------------------
     const float k = 1.0f - std::exp(-k_fade_rate * dt);
@@ -447,9 +569,10 @@ float master_volume() { return g_master; }
 void set_muted(bool m) { g_muted = m; }
 bool muted() { return g_muted; }
 
-Track current() { return g_target; }
+Track current() { return g_bar_voice != 0 ? Track::BaseBar : g_target; }
 
 bool any_loaded() {
+    if (g_bar_count > 0) return true;
     for (int i = 1; i < (int)Track::Count; ++i)
         if (g_samples[i] != 0) return true;
     return false;
@@ -467,6 +590,7 @@ const char* to_name(Track t) {
         case Track::StingDeath:       return "sting_death";
         case Track::BaseAgricultural: return "base_agricultural";
         case Track::BaseMining:       return "base_mining";
+        case Track::BaseBar:          return "base_bar";
         case Track::Menu:             return "menu";
         default:                      return "?";
     }
