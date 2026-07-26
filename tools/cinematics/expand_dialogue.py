@@ -79,65 +79,86 @@ SCENES: dict[str, list[tuple[str, str]]] = {
 
 # ------------------------------------------------------------------- TAYLA --
 "tayla_artifact_handoff": [
- (P, "I'm looking for Sandoval."),
+ (P, "I'm looking for Sandoval. He's got fifteen thousand reasons to be "
+     "happy to see me."),
  (F, "Don't bother. He's dead."),
  (P, "..."),
  (F, "Two nights ago. Word is it wasn't an accident."),
- (P, "He owed me fifteen thousand credits."),
+ (P, "Wonderful. He owed me fifteen thousand credits. I hauled his cargo "
+     "past three patrol sweeps for the privilege of hearing this."),
  (F, "He owed a lot of people a lot of things. You're near the back of that line."),
- (P, "Who are you?"),
+ (P, "And you are... what, the welcoming committee for stiffed couriers?"),
  (F, "Tayla. A friend to pilots -- if they survive long enough."),
- (P, "And you tracked me down why?"),
+ (P, "So you tracked me down out of pure kindness. In my experience, people "
+     "who find me in bars always want something."),
  (F, "Because Sandoval handed you a trinket before he died, and now the people "
      "he owed are very curious about where it went."),
- (P, "It's collateral. It's his."),
+ (P, "It's collateral on a debt he can now never pay. Which is perfect. "
+     "It's his, not mine."),
  (F, "It's yours. He's in no position to redeem it, and his fifteen grand died "
      "with him. Keep it, like it or not."),
- (P, "I'd rather hand it back and walk away clean."),
+ (P, "I'd rather hand it to whoever's asking, collect nothing, and fly away "
+     "clean. Call me old-fashioned -- I enjoy being alive and boring."),
  (F, "Hand it back to who? There's no one left to hand it to -- that's the "
      "point. You're holding it now. That's the whole story."),
- (P, "Then tell me what I'm holding."),
+ (P, "Fine. Then tell me what I'm holding, because right now it's either a "
+     "paperweight or a death sentence, and I'd like to file it correctly."),
  (F, "I'll tell you this much for free. Sandoval didn't buy that thing."),
  (P, "..."),
  (F, "He got it by killing the man who owned it."),
- (P, "You're telling me I'm carrying a murder motive."),
+ (P, "Better and better. So I'm carrying a murder motive with a strap. "
+     "Every pawn broker in the sector will be thrilled to see me coming."),
  (F, "I'm telling you people have died for that thing, flyboy. Feel lucky?"),
- (P, "Not particularly."),
+ (P, "Not particularly. This week my luck has produced one dead client and "
+     "one haunted paperweight."),
  (F, "Good. Lucky men die out here first."),
- (P, "You know more than you're saying."),
+ (P, "You know more than you're saying. I can tell -- it's the smile."),
  (F, "Of course I do. That's the only thing I sell."),
- (P, "What's the price?"),
+ (P, "All right, what's the price? And don't say 'we'll discuss it later' -- "
+     "that's exactly how I ended up owed fifteen grand by a corpse."),
  (F, "Work for me, $NM. I'll trade the rest out a piece at a time, and you'll earn every one."),
- (P, "That's a long way of saying you own me."),
+ (P, "That's a remarkably long way of saying you own me now. At least "
+     "Sandoval had the decency to be merely in debt."),
  (F, "It's a long way of saying you're the only one I trust with it. Come back when you're ready."),
 ],
 "tayla_m02_offer": [
  (F, "You've been staring at the artifact an hour. Point on the cargo -- what are you thinking?"),
- (P, "I'm thinking you sold me this job before you owned it."),
+ (P, "I'm thinking you planned this conversation three moves before I walked "
+     "in. You probably ordered my drink, too."),
  (F, "Sweetheart, I don't sell to strangers. But I have an eye for pilots, and you came back."),
- (P, "Then I'm thinking the 'milk run' line would insult both of us."),
+ (P, "Then let's skip the part where you call it a milk run. You'd be lying, "
+     "I'd pretend to believe you -- it would insult us both."),
  (F, "First honest statement you've made. Ready to work?"),
- (P, "Nothing about the last week has been a milk run."),
+ (P, "Nothing about the last week qualifies. My client died, my payday "
+     "evaporated, and a woman in a bar owns my immediate future. But sure. "
+     "Cargo."),
  (F, "Thirty units of plastics. Completely legal, nothing to hide."),
- (P, "Then why are you smiling?"),
+ (P, "Completely legal. Nothing to hide. Then why are you smiling like the "
+     "paperwork is the punchline?"),
  (F, "Because officially you're running it to Newcastle."),
- (P, "And actually?"),
+ (P, "And actually? There's always an 'actually' with you. It's becoming my "
+     "favorite part."),
  (F, "Actually you'll divert to Oakham. Hidden pirate base out in Pentonville."),
- (P, "A falsified manifest. That's a jump up from hauling iron."),
+ (P, "A falsified manifest. One week in, and I've graduated from hauling "
+     "iron to light document fraud. My career is really taking off."),
  (F, "The paperwork is for anyone watching. The cargo really is plastics -- if "
      "they board you, you're clean."),
- (P, "And if they check the flight recorder?"),
+ (P, "And when someone pulls my flight recorder and asks why 'Newcastle' "
+     "has an asteroid field and a pirate base?"),
  (F, "Then you're a pilot who got lost. It happens."),
  (P, "..."),
  (F, "Oakham sits in an asteroid field. Mind your speed on approach -- I've "
      "lost two pilots to those rocks and none to guns."),
- (P, "The pirates don't shoot?"),
+ (P, "None to guns? What do the pirates do, wave? That's either reassuring "
+     "or the worst safety briefing I've ever had."),
  (F, "While you fly for me, Pentonville's pirates keep their guns to "
      "themselves. That's what you're really buying."),
- (P, "Ten thousand?"),
+ (P, "Ten thousand for document fraud and a rock slalom. I notice you priced "
+     "it exactly high enough that I won't say no."),
  (F, "Ten thousand on delivery. Leave the ship docked and meet me in the "
      "Oakham bar. We'll talk more there."),
- (P, "More about the artifact."),
+ (P, "More about the artifact, you mean. You're rationing that story like "
+     "it's water on a life raft."),
  (F, "More about whatever you've earned by then."),
 ],
 "tayla_m03_offer": [

@@ -73,33 +73,33 @@ authoring scripts and re-run.
 *Location:* new_detroit  
 *Appears when:* requires `m01_delivered`; blocked by `sandoval_done`
 
-> **GRAYSON:** I'm looking for Sandoval.
+> **GRAYSON:** I'm looking for Sandoval. He's got fifteen thousand reasons to be happy to see me.
 > **TAYLA:** Don't bother. He's dead.
 > **GRAYSON:** *(silence)*
 > **TAYLA:** Two nights ago. Word is it wasn't an accident.
-> **GRAYSON:** He owed me fifteen thousand credits.
+> **GRAYSON:** Wonderful. He owed me fifteen thousand credits. I hauled his cargo past three patrol sweeps for the privilege of hearing this.
 > **TAYLA:** He owed a lot of people a lot of things. You're near the back of that line.
-> **GRAYSON:** Who are you?
+> **GRAYSON:** And you are... what, the welcoming committee for stiffed couriers?
 > **TAYLA:** Tayla. A friend to pilots -- if they survive long enough.
-> **GRAYSON:** And you tracked me down why?
+> **GRAYSON:** So you tracked me down out of pure kindness. In my experience, people who find me in bars always want something.
 > **TAYLA:** Because Sandoval handed you a trinket before he died, and now the people he owed are very curious about where it went.
-> **GRAYSON:** It's collateral. It's his.
+> **GRAYSON:** It's collateral on a debt he can now never pay. Which is perfect. It's his, not mine.
 > **TAYLA:** It's yours. He's in no position to redeem it, and his fifteen grand died with him. Keep it, like it or not.
-> **GRAYSON:** I'd rather hand it back and walk away clean.
+> **GRAYSON:** I'd rather hand it to whoever's asking, collect nothing, and fly away clean. Call me old-fashioned -- I enjoy being alive and boring.
 > **TAYLA:** Hand it back to who? There's no one left to hand it to -- that's the point. You're holding it now. That's the whole story.
-> **GRAYSON:** Then tell me what I'm holding.
+> **GRAYSON:** Fine. Then tell me what I'm holding, because right now it's either a paperweight or a death sentence, and I'd like to file it correctly.
 > **TAYLA:** I'll tell you this much for free. Sandoval didn't buy that thing.
 > **GRAYSON:** *(silence)*  *[steltek_artifact]*
 > **TAYLA:** He got it by killing the man who owned it.  *[steltek_artifact]*
-> **GRAYSON:** You're telling me I'm carrying a murder motive.  *[steltek_artifact]*
+> **GRAYSON:** Better and better. So I'm carrying a murder motive with a strap. Every pawn broker in the sector will be thrilled to see me coming.  *[steltek_artifact]*
 > **TAYLA:** I'm telling you people have died for that thing, flyboy. Feel lucky?
-> **GRAYSON:** Not particularly.
+> **GRAYSON:** Not particularly. This week my luck has produced one dead client and one haunted paperweight.
 > **TAYLA:** Good. Lucky men die out here first.
-> **GRAYSON:** You know more than you're saying.
+> **GRAYSON:** You know more than you're saying. I can tell -- it's the smile.
 > **TAYLA:** Of course I do. That's the only thing I sell.
-> **GRAYSON:** What's the price?
+> **GRAYSON:** All right, what's the price? And don't say 'we'll discuss it later' -- that's exactly how I ended up owed fifteen grand by a corpse.
 > **TAYLA:** Work for me, $NM. I'll trade the rest out a piece at a time, and you'll earn every one.
-> **GRAYSON:** That's a long way of saying you own me.
+> **GRAYSON:** That's a remarkably long way of saying you own me now. At least Sandoval had the decency to be merely in debt.
 > **TAYLA:** It's a long way of saying you're the only one I trust with it. Come back when you're ready.
 
 *Outcome:* `give_item:steltek_artifact`, `set_flag:sandoval_done`
@@ -114,27 +114,27 @@ authoring scripts and re-run.
 *Appears when:* requires `sandoval_done`; blocked by `m02_active`, `tayla_1_done`
 
 > **TAYLA:** You've been staring at the artifact an hour. Point on the cargo -- what are you thinking?
-> **GRAYSON:** I'm thinking you sold me this job before you owned it.
+> **GRAYSON:** I'm thinking you planned this conversation three moves before I walked in. You probably ordered my drink, too.
 > **TAYLA:** Sweetheart, I don't sell to strangers. But I have an eye for pilots, and you came back.
-> **GRAYSON:** Then I'm thinking the 'milk run' line would insult both of us.
+> **GRAYSON:** Then let's skip the part where you call it a milk run. You'd be lying, I'd pretend to believe you -- it would insult us both.
 > **TAYLA:** First honest statement you've made. Ready to work?
-> **GRAYSON:** Nothing about the last week has been a milk run.
+> **GRAYSON:** Nothing about the last week qualifies. My client died, my payday evaporated, and a woman in a bar owns my immediate future. But sure. Cargo.
 > **TAYLA:** Thirty units of plastics. Completely legal, nothing to hide.
-> **GRAYSON:** Then why are you smiling?
+> **GRAYSON:** Completely legal. Nothing to hide. Then why are you smiling like the paperwork is the punchline?
 > **TAYLA:** Because officially you're running it to Newcastle.
-> **GRAYSON:** And actually?
+> **GRAYSON:** And actually? There's always an 'actually' with you. It's becoming my favorite part.
 > **TAYLA:** Actually you'll divert to Oakham. Hidden pirate base out in Pentonville.
-> **GRAYSON:** A falsified manifest. That's a jump up from hauling iron.
+> **GRAYSON:** A falsified manifest. One week in, and I've graduated from hauling iron to light document fraud. My career is really taking off.
 > **TAYLA:** The paperwork is for anyone watching. The cargo really is plastics -- if they board you, you're clean.
-> **GRAYSON:** And if they check the flight recorder?
+> **GRAYSON:** And when someone pulls my flight recorder and asks why 'Newcastle' has an asteroid field and a pirate base?
 > **TAYLA:** Then you're a pilot who got lost. It happens.
 > **GRAYSON:** *(silence)*
 > **TAYLA:** Oakham sits in an asteroid field. Mind your speed on approach -- I've lost two pilots to those rocks and none to guns.
-> **GRAYSON:** The pirates don't shoot?
+> **GRAYSON:** None to guns? What do the pirates do, wave? That's either reassuring or the worst safety briefing I've ever had.
 > **TAYLA:** While you fly for me, Pentonville's pirates keep their guns to themselves. That's what you're really buying.
-> **GRAYSON:** Ten thousand?
+> **GRAYSON:** Ten thousand for document fraud and a rock slalom. I notice you priced it exactly high enough that I won't say no.
 > **TAYLA:** Ten thousand on delivery. Leave the ship docked and meet me in the Oakham bar. We'll talk more there.
-> **GRAYSON:** More about the artifact.
+> **GRAYSON:** More about the artifact, you mean. You're rationing that story like it's water on a life raft.
 > **TAYLA:** More about whatever you've earned by then.
 
 **> OFFER:** Haul 30 units of plastics to Oakham (Pentonville system) for 10,000 credits on landing. Deal?
