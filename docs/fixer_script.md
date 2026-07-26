@@ -392,7 +392,10 @@ authoring scripts and re-run.
 > **ROMAN LYNCH:** Words, Captain. I am a businessman.
 > **GRAYSON:** Businessmen don't need couriers for a comm channel. Businessmen also don't usually come with a Miggs.
 > **ROMAN LYNCH:** Some messages lose their meaning over a relay. Ten thousand when you get back.
-> **GRAYSON:** And the artifact?
+> **GRAYSON:** Yeah... I'm not entirely sure I want to be delivering messages for the mob.
+> **MIGGS:** Maybe I just break your legs instead. You can deliver it limping.
+> **ROMAN LYNCH:** Miggs. We do not damage the couriers before the delivery.
+> **GRAYSON:** 'Before.' Very comforting. And the artifact?
 > **ROMAN LYNCH:** Stays with you. I want it studied, not stolen -- and frankly it is safer in a ship than in my safe.
 > **GRAYSON:** A simple courier run. The last person who told me that is dead, and now I own a haunted paperweight and a smuggling compartment.
 > **ROMAN LYNCH:** What could go wrong?

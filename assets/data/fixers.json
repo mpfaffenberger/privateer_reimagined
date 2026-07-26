@@ -1064,7 +1064,10 @@
         "Words, Captain. I am a businessman.",
         "Businessmen don't need couriers for a comm channel. Businessmen also don't usually come with a Miggs.",
         "Some messages lose their meaning over a relay. Ten thousand when you get back.",
-        "And the artifact?",
+        "Yeah... I'm not entirely sure I want to be delivering messages for the mob.",
+        "Maybe I just break your legs instead. You can deliver it limping.",
+        "Miggs. We do not damage the couriers before the delivery.",
+        "'Before.' Very comforting. And the artifact?",
         "Stays with you. I want it studied, not stolen -- and frankly it is safer in a ship than in my safe.",
         "A simple courier run. The last person who told me that is dead, and now I own a haunted paperweight and a smuggling compartment.",
         "What could go wrong?"
@@ -1103,6 +1106,9 @@
         "pc",
         "",
         "pc",
+        "",
+        "pc",
+        "miggs",
         "",
         "pc",
         "",
@@ -1200,7 +1206,10 @@
         "audio/fixers/lynch_m06_offer_29.mp3",
         "audio/fixers/lynch_m06_offer_30.mp3",
         "audio/fixers/lynch_m06_offer_31.mp3",
-        "audio/fixers/lynch_m06_offer_32.mp3"
+        "audio/fixers/lynch_m06_offer_32.mp3",
+        "audio/fixers/lynch_m06_offer_33.mp3",
+        "audio/fixers/lynch_m06_offer_34.mp3",
+        "audio/fixers/lynch_m06_offer_35.mp3"
       ]
     },
     {

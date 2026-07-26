@@ -364,7 +364,11 @@ SCENES: dict[str, list[tuple[str, str]]] = {
      "don't usually come with a Miggs."),
  (F, "Some messages lose their meaning over a relay. Ten thousand when you get "
      "back."),
- (P, "And the artifact?"),
+ (P, "Yeah... I'm not entirely sure I want to be delivering messages for "
+     "the mob."),
+ ("miggs", "Maybe I just break your legs instead. You can deliver it limping."),
+ (F, "Miggs. We do not damage the couriers before the delivery."),
+ (P, "'Before.' Very comforting. And the artifact?"),
  (F, "Stays with you. I want it studied, not stolen -- and frankly it is safer "
      "in a ship than in my safe."),
  (P, "A simple courier run. The last person who told me that is dead, and "
