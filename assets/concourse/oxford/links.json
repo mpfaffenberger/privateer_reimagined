@@ -28,7 +28,11 @@
   "missions": [],
   "cargohold": [],
   "library": [
-    { "target": "Concourse", "rect": [0.00000, 0.55000, 0.20000, 0.45000] }
+    { "target": "Concourse", "rect": [0.00000, 0.55000, 0.20000, 0.45000] },
+    { "target": "ResearchComputer", "rect": [0.28000, 0.32000, 0.46000, 0.58000] }
+  ],
+  "researchcomputer": [
+    { "target": "Library", "rect": [0.00000, 0.55000, 0.18000, 0.45000] }
   ],
   "_ships": [
     { "class": "tarsus", "az": 35.00, "el": 10.00, "rect": [0.39039, 0.63458, 0.26844, 0.30979] },

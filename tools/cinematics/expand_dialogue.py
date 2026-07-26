@@ -603,8 +603,8 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  (P, "Good. I'd hate for recognition to cheapen the pursuit of knowledge."),
 ],
 "oxford_library_scene": [
- (F, "The archive terminal accepts Masterson's authorization."),
- (F, "You place the artifact in the scanner cradle. The cradle hums."),
+ (F, "Authorization accepted. Oxford Research Archive access granted."),
+ (F, "Scanner cradle active. Insert object for analysis."),
  (F, "MATCH FOUND. Classification: STELTEK."),
  (F, "A precursor civilization. Starfaring while humanity was learning fire."),
  (F, "No verified contact in recorded history. No recovered vessels. No "

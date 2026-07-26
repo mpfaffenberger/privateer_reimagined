@@ -781,21 +781,21 @@ authoring scripts and re-run.
 
 ---
 
-### Oxford Library — `oxford_library_scene`
+### Oxford Archive Computer — `oxford_library_scene`
 
 *Location:* oxford  
 *Appears when:* requires `masterson_done`; blocked by `library_access`
 
-> **OXFORD LIBRARY:** The archive terminal accepts Masterson's authorization.
-> **OXFORD LIBRARY:** You place the artifact in the scanner cradle. The cradle hums.  *[steltek_artifact]*
-> **OXFORD LIBRARY:** MATCH FOUND. Classification: STELTEK.  *[steltek_artifact]*
-> **OXFORD LIBRARY:** A precursor civilization. Starfaring while humanity was learning fire.  *[steltek_artifact]*
-> **OXFORD LIBRARY:** No verified contact in recorded history. No recovered vessels. No remains.
-> **OXFORD LIBRARY:** The artifact is a power relay of unknown function.  *[steltek_artifact]*
-> **OXFORD LIBRARY:** Energy signature: dormant, but not dead.  *[steltek_artifact]*
-> **OXFORD LIBRARY:** Cross-reference: recent anomalous Steltek-band readings reported near PALAN.
-> **OXFORD LIBRARY:** Appended note. Dr. Monkhouse, the sector's leading xenoarchaeologist, has been asking the same questions you are.
-> **OXFORD LIBRARY:** Last known location: the Palan system.
+> **OXFORD ARCHIVE COMPUTER:** Authorization accepted. Oxford Research Archive access granted.
+> **OXFORD ARCHIVE COMPUTER:** Scanner cradle active. Insert object for analysis.  *[steltek_artifact]*
+> **OXFORD ARCHIVE COMPUTER:** MATCH FOUND. Classification: STELTEK.  *[steltek_artifact]*
+> **OXFORD ARCHIVE COMPUTER:** A precursor civilization. Starfaring while humanity was learning fire.  *[steltek_artifact]*
+> **OXFORD ARCHIVE COMPUTER:** No verified contact in recorded history. No recovered vessels. No remains.
+> **OXFORD ARCHIVE COMPUTER:** The artifact is a power relay of unknown function.  *[steltek_artifact]*
+> **OXFORD ARCHIVE COMPUTER:** Energy signature: dormant, but not dead.  *[steltek_artifact]*
+> **OXFORD ARCHIVE COMPUTER:** Cross-reference: recent anomalous Steltek-band readings reported near PALAN.
+> **OXFORD ARCHIVE COMPUTER:** Appended note. Dr. Monkhouse, the sector's leading xenoarchaeologist, has been asking the same questions you are.
+> **OXFORD ARCHIVE COMPUTER:** Last known location: the Palan system.
 
 *Outcome:* `set_flag:library_access`
 

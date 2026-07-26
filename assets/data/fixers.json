@@ -1800,6 +1800,7 @@
         "",
         "audio/fixers/masterson_m10_offer_refuse_04.mp3"
       ],
+      "screen": "Library",
       "voice": [
         "audio/fixers/masterson_m10_offer_00.mp3",
         "audio/fixers/masterson_m10_offer_01.mp3",
@@ -1826,8 +1827,7 @@
         "audio/fixers/masterson_m10_offer_22.mp3",
         "audio/fixers/masterson_m10_offer_23.mp3",
         "audio/fixers/masterson_m10_offer_24.mp3"
-      ],
-      "screen": "Library"
+      ]
     },
     {
       "id": "masterson_m11_offer",
@@ -1920,6 +1920,7 @@
         "",
         "audio/fixers/masterson_m11_offer_refuse_04.mp3"
       ],
+      "screen": "Library",
       "voice": [
         "audio/fixers/masterson_m11_offer_00.mp3",
         "audio/fixers/masterson_m11_offer_01.mp3",
@@ -1938,8 +1939,7 @@
         "audio/fixers/masterson_m11_offer_14.mp3",
         "audio/fixers/masterson_m11_offer_15.mp3",
         "audio/fixers/masterson_m11_offer_16.mp3"
-      ],
-      "screen": "Library"
+      ]
     },
     {
       "id": "masterson_m12_offer",
@@ -2033,6 +2033,7 @@
         "",
         "audio/fixers/masterson_m12_offer_refuse_05.mp3"
       ],
+      "screen": "Library",
       "voice": [
         "audio/fixers/masterson_m12_offer_00.mp3",
         "audio/fixers/masterson_m12_offer_01.mp3",
@@ -2050,8 +2051,7 @@
         "audio/fixers/masterson_m12_offer_13.mp3",
         "audio/fixers/masterson_m12_offer_14.mp3",
         "audio/fixers/masterson_m12_offer_15.mp3"
-      ],
-      "screen": "Library"
+      ]
     },
     {
       "id": "masterson_m13_offer",
@@ -2142,6 +2142,7 @@
         "",
         "audio/fixers/masterson_m13_offer_refuse_04.mp3"
       ],
+      "screen": "Library",
       "voice": [
         "audio/fixers/masterson_m13_offer_00.mp3",
         "audio/fixers/masterson_m13_offer_01.mp3",
@@ -2159,12 +2160,11 @@
         "audio/fixers/masterson_m13_offer_13.mp3",
         "audio/fixers/masterson_m13_offer_14.mp3",
         "audio/fixers/masterson_m13_offer_15.mp3"
-      ],
-      "screen": "Library"
+      ]
     },
     {
       "id": "oxford_library_scene",
-      "name": "Oxford Library",
+      "name": "Oxford Archive Computer",
       "base": "oxford",
       "requires_flags": [
         "masterson_done"
@@ -2173,8 +2173,8 @@
         "library_access"
       ],
       "dialogue": [
-        "The archive terminal accepts Masterson's authorization.",
-        "You place the artifact in the scanner cradle. The cradle hums.",
+        "Authorization accepted. Oxford Research Archive access granted.",
+        "Scanner cradle active. Insert object for analysis.",
         "MATCH FOUND. Classification: STELTEK.",
         "A precursor civilization. Starfaring while humanity was learning fire.",
         "No verified contact in recorded history. No recovered vessels. No remains.",
@@ -2211,7 +2211,8 @@
         "",
         ""
       ],
-      "screen": "Library",
+      "screen": "ResearchComputer",
+      "portrait": "portraits/archive_computer/_ref.png",
       "voice": [
         "audio/fixers/oxford_library_scene_00.mp3",
         "audio/fixers/oxford_library_scene_01.mp3",

@@ -208,6 +208,34 @@
             0.2,
             0.45
           ]
+        },
+        {
+          "target": "ResearchComputer",
+          "rect": [
+            0.28,
+            0.32,
+            0.46,
+            0.58
+          ]
+        }
+      ]
+    },
+    "researchcomputer": {
+      "background": "research_computer_bg.png",
+      "bg_size": [
+        320,
+        200
+      ],
+      "overlays": [],
+      "links": [
+        {
+          "target": "Library",
+          "rect": [
+            0.0,
+            0.55,
+            0.18,
+            0.45
+          ]
         }
       ]
     }
