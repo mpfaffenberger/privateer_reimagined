@@ -308,7 +308,8 @@
         "audio/fixers/tayla_artifact_handoff_25.mp3",
         "audio/fixers/tayla_artifact_handoff_26.mp3",
         "audio/fixers/tayla_artifact_handoff_27.mp3"
-      ]
+      ],
+      "music": 6
     },
     {
       "id": "tayla_m02_offer",
