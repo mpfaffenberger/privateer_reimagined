@@ -58,7 +58,7 @@ _TOKENS = {"$NM": "Burrows", "$CS": "Grayson"}
 # TTS-only pronunciations for canonical proper nouns. Subtitles retain their
 # authored spelling; cloned voices receive the same phonetic cue so names do
 # not drift between speakers.
-_PRONUNCIATIONS = {"Palan": "Pal-an"}
+_PRONUNCIATIONS = {"Palan": "Paylin"}
 # Surgical delivery overrides. Keep character defaults stable; only lines with
 # an explicit dramatic need should diverge.
 _LINE_SPEED = {("oxford_library_scene", 5): 0.86}
