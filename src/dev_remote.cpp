@@ -757,7 +757,7 @@ void handle_dock(int fd, const std::string& body) {
 }
 
 // POST /fixer — drive a bar-fixer conversation. Body { id, action } with
-// action = accept | refuse | done. Verb validated HERE; presence + plot
+// action = talk | accept | refuse | done. Verb validated HERE; presence + plot
 // gating are enforced on the main thread (the hook re-runs present_at, so
 // a judge can't accept a fixer who isn't actually standing in this bar).
 void handle_fixer(int fd, const std::string& body) {
@@ -767,8 +767,9 @@ void handle_fixer(int fd, const std::string& body) {
         return;
     }
     if (!extract_string(body, "action", &action) ||
-        (action != "accept" && action != "refuse" && action != "done")) {
-        send_json(fd, "{\"ok\":false,\"error\":\"action must be accept|refuse|done\"}");
+        (action != "talk" && action != "accept" &&
+         action != "refuse" && action != "done")) {
+        send_json(fd, "{\"ok\":false,\"error\":\"action must be talk|accept|refuse|done\"}");
         return;
     }
     Command c;
