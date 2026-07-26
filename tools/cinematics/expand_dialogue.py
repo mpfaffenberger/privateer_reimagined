@@ -241,9 +241,11 @@ SCENES: dict[str, list[tuple[str, str]]] = {
 # ------------------------------------------------------------------- LYNCH --
 "lynch_m06_offer": [
  ("miggs", "You don't wanna talk to me, 'cause I don't wanna talk to you."),
+ ("miggs", "And anyone that makes me do what I don't wanna do gets hurt, "
+            "painwise, get me?"),
  (P, "I'm here to see Lynch."),
- ("miggs", "Mr. Lynch, sittin' over there, HE'S the one you wanna talk to. So state "
-     "your bidness or take a hike, buddy."),
+ ("miggs", "Mr. Lynch, sitting over there, HE'S the one you wanna talk to..."),
+ ("miggs", "...so either state your bidness or take a hike, buddy."),
  (F, "Enough, Miggs."),
  (F, "Ah, Captain. I've been expecting you. I am Roman Lynch."),
  (P, "Tayla said you'd see me."),

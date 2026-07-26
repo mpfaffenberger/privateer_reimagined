@@ -56,6 +56,15 @@ SPEAKER = {
 # values the engine renders so the audio matches the on-screen text.
 _TOKENS = {"$NM": "Burrows", "$CS": "Grayson"}
 
+# Extracted 1993 recordings beat synthesis every time. These paths are relative
+# to assets/cinematics/, matching the engine's voice-path contract.
+ORIGINAL_CLIPS = {
+    ("lynch_m06_offer", 0): "../speech/bar/MIGGS_000.wav",
+    ("lynch_m06_offer", 1): "../speech/bar/MIGGS_001.wav",
+    ("lynch_m06_offer", 3): "../speech/bar/MIGGS_002.wav",
+    ("lynch_m06_offer", 4): "../speech/bar/MIGGS_003.wav",
+}
+
 
 def speakable(text: str) -> str:
     for token, value in _TOKENS.items():
@@ -119,8 +128,12 @@ def main(argv: list[str] | None = None) -> int:
         for i, line in enumerate(entry.get("dialogue", [])):
             speaker_key = speakers[i] if i < len(speakers) else ""
             who = "grayson" if speaker_key == "pc" else speaker_key or speaker
-            rel = voice_rel_path(fid, f"{i:02d}")
+            rel = ORIGINAL_CLIPS.get((fid, i), voice_rel_path(fid, f"{i:02d}"))
             text = speakable(line)
+            if (fid, i) in ORIGINAL_CLIPS:
+                clips.append(rel)
+                skipped += 1
+                continue
             if is_beat(line):
                 clips.append("")     # silent beat: index-aligned, no audio
                 skipped += 1

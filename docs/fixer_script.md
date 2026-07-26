@@ -350,8 +350,10 @@ authoring scripts and re-run.
 *Appears when:* requires `tayla_done`; blocked by `m06_active`, `m06_message_delivered`, `lynch_1_done`
 
 > **MIGGS:** You don't wanna talk to me, 'cause I don't wanna talk to you.
+> **MIGGS:** And anyone that makes me do what I don't wanna do gets hurt, painwise, get me?
 > **GRAYSON:** I'm here to see Lynch.
-> **MIGGS:** Mr. Lynch, sittin' over there, HE'S the one you wanna talk to. So state your bidness or take a hike, buddy.
+> **MIGGS:** Mr. Lynch, sitting over there, HE'S the one you wanna talk to...
+> **MIGGS:** ...so either state your bidness or take a hike, buddy.
 > **ROMAN LYNCH:** Enough, Miggs.
 > **ROMAN LYNCH:** Ah, Captain. I've been expecting you. I am Roman Lynch.
 > **GRAYSON:** Tayla said you'd see me.
