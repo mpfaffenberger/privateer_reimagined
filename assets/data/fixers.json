@@ -2207,7 +2207,19 @@
         "",
         ""
       ],
-      "screen": "Library"
+      "screen": "Library",
+      "voice": [
+        "audio/fixers/oxford_library_scene_00.mp3",
+        "audio/fixers/oxford_library_scene_01.mp3",
+        "audio/fixers/oxford_library_scene_02.mp3",
+        "audio/fixers/oxford_library_scene_03.mp3",
+        "audio/fixers/oxford_library_scene_04.mp3",
+        "audio/fixers/oxford_library_scene_05.mp3",
+        "audio/fixers/oxford_library_scene_06.mp3",
+        "audio/fixers/oxford_library_scene_07.mp3",
+        "audio/fixers/oxford_library_scene_08.mp3",
+        "audio/fixers/oxford_library_scene_09.mp3"
+      ]
     },
     {
       "id": "murphy_m14_offer",

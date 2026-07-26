@@ -48,7 +48,7 @@ SPEAKER = {
     "cross": "cross",
     "terrell": "terrell",
     "goodin": "goodin",
-    "oxford": None,   # the library scene is narration, not a speaker
+    "oxford": "archive_computer",  # Oxford archive terminal voice
 }
 
 # The $NM/$CS substitution tokens are expanded at RUNTIME by

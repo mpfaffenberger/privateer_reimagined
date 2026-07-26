@@ -70,6 +70,7 @@ DEFAULT_VOICE_MAP = {
     "militia":       "PrivFlightV0101",
     "confed":        "PrivFlightV0801",
     "bounty_hunter": "PrivFlightV0501",
+    "archive_computer": "ttv-voice-2026072706022926-M38Ep5YM",  # designed Oxford terminal
     # Phase-2 cast (#176 / #178 auditions, 2026-07)
     "quist":         "PrivBarMercgirl01", # flashy ace (won audition - shared w/ krieg)
     "sian":          "PrivCustomSian02",  # real-life clone (noise-reduced), Drayman captain
