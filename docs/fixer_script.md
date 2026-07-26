@@ -791,7 +791,7 @@ authoring scripts and re-run.
 > **GRAYSON:** I asked for archive access, not faculty supervision.
 > **MASTERSON:** Your technique suggests you require both.
 > **OXFORD ARCHIVE COMPUTER:** Scanner cradle active. Insert object for analysis.
-> **GRAYSON:** Easy...
+> **GRAYSON:** Very carefully now. In you go, little creepy glowy murder stone.
 > **MASTERSON:** You are reassuring a rock.
 > **GRAYSON:** Shut up. Let me work.
 > **MASTERSON:** At last -- the authentic voice of scholarship.
