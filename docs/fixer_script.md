@@ -142,10 +142,10 @@ authoring scripts and re-run.
 **— ACCEPT —**
 
 > **TAYLA:** Smart. The manifest's already filed.
-> **GRAYSON:** Of course it is.
+> **GRAYSON:** Naturally. Consent is mostly paperwork to you.
 > **TAYLA:** I don't waste time on people who say no. I waste it on people who say yes slowly.
-> **GRAYSON:** I'll be at Oakham.
-> **TAYLA:** Don't scratch my plastics.
+> **GRAYSON:** Here I am, talking dirty with a pirate girlboss instead of collecting fifteen thousand from a dead man. The universe is interesting.
+> **TAYLA:** Keep saying yes slowly and it may get more interesting. Don't scratch my plastics.
 
 **— REFUSE —**
 

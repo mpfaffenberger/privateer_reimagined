@@ -81,11 +81,13 @@ EPILOGUES: dict[str, dict[str, list[tuple[str, str]]]] = {
 "tayla_m02_offer": {
  "accept": [
   (F, "Smart. The manifest's already filed."),
-  (P, "Of course it is."),
+  (P, "Naturally. Consent is mostly paperwork to you."),
   (F, "I don't waste time on people who say no. I waste it on people who say "
       "yes slowly."),
-  (P, "I'll be at Oakham."),
-  (F, "Don't scratch my plastics."),
+  (P, "Here I am, talking dirty with a pirate girlboss instead of collecting "
+      "fifteen thousand from a dead man. The universe is interesting."),
+  (F, "Keep saying yes slowly and it may get more interesting. Don't scratch "
+      "my plastics."),
  ],
  "refuse": [
   (F, "Suit yourself."),
