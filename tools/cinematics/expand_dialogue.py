@@ -101,7 +101,7 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  (P, "..."),
  (F, "He got it by killing the man who owned it."),
  (P, "You're telling me I'm carrying a murder motive."),
- (F, "I'm telling you people have died for that thing, flyboy. Keep it close."),
+ (F, "I'm telling you people have died for that thing, flyboy. Feel lucky?"),
  (P, "Not particularly."),
  (F, "Good. Lucky men die out here first."),
  (P, "You know more than you're saying."),
@@ -170,7 +170,7 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  (F, "And I was wrong. This time I'm not."),
 ],
 "tayla_m04_offer": [
- (F, "Bigger load this time, flyboy. Brilliance to New Constantinople itself."),
+ (F, "Bigger load this time, hotshot. Brilliance to New Constantinople itself."),
  (P, "The capital. You're not serious."),
  (F, "Twenty-five units."),
  (P, "That's Confed's front porch, Tayla."),
@@ -178,7 +178,7 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  (P, "You bribed them."),
  (F, "Generously."),
  (P, "Bribed patrols. You'll forgive me if I keep my guns hot."),
- (F, "Trust me, $NM. I'll know inside an hour if the route wasn't clean."),
+ (F, "I cleared the route myself, $NM. If anyone lights you up, it wasn't my people."),
  (P, "Every time you say that it costs me hull."),
  (F, "Twenty thousand on delivery. Then come straight back."),
 ],
@@ -194,19 +194,19 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  (F, "A smuggler's compartment. Twenty units, invisible to any scanner ever "
      "built."),
  (P, "So that's what the noise was."),
- (F, "Consider it a promotion, flyboy. The contractors I trust do that on the side."),
+ (F, "Consider it a promotion, love. The contractors I trust do that on the side."),
  (P, "..."),
  (F, "You'd rather have the apology?"),
  (P, "I'd rather have been asked."),
- (F, "I'd rather have known you a year ago, $NM. One more run, and we're square."),
+ (F, "One more run, $NM. Then we're square -- and then we'll see."),
 ],
 "tayla_m05_offer": [
  (P, "Let me guess... I'm running a shipment of catnip to Kilrah."),
  (F, "...!"),
- (F, "You're still funny, flyboy. I save the most lucrative runs for myself."),
+ (F, "You're still funny, hotshot. I save the interesting runs for the pilots I trust."),
  (P, "Generous."),
- (F, "I think of it as an investment. Looking for a wingman?"),
- (P, "Wingman? I'm a courier."),
+ (F, "I think of it as an investment. The question is whether you're done being a courier."),
+ (P, "What else would I be?"),
  (F, "Fly my missions and we'll talk more, hotshot."),
  (P, "Fits the new compartment exactly."),
  (F, "Poetic, no?"),
@@ -221,8 +221,7 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  (F, "Ten thousand. After this I'll tell you everything I know about that "
      "trinket of yours."),
  (P, "Everything, please."),
- (F, "Everything I have, partner. I'm asking -- not telling, asking -- for "
-     "you to come back in one piece."),
+ (F, "Everything I have, partner. Come back in one piece."),
 ],
 "tayla_m05_debrief": [
  (F, "Riordian, hm?"),
@@ -244,7 +243,7 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  (F, "The polite kind. He's expecting you in the bar there."),
  (P, "And that squares us."),
  (F, "That squares us. It's been profitable, partner. Try not to die -- "
-     "and come back when you've thought about what 'partner' means."),
+     "the next drink's on me."),
 ],
 
 # ------------------------------------------------------------------- LYNCH --

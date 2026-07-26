@@ -92,7 +92,7 @@ authoring scripts and re-run.
 > **GRAYSON:** *(silence)*  *[steltek_artifact]*
 > **TAYLA:** He got it by killing the man who owned it.  *[steltek_artifact]*
 > **GRAYSON:** You're telling me I'm carrying a murder motive.  *[steltek_artifact]*
-> **TAYLA:** I'm telling you people have died for that thing, flyboy. Keep it close.
+> **TAYLA:** I'm telling you people have died for that thing, flyboy. Feel lucky?
 > **GRAYSON:** Not particularly.
 > **TAYLA:** Good. Lucky men die out here first.
 > **GRAYSON:** You know more than you're saying.
@@ -222,7 +222,7 @@ authoring scripts and re-run.
 *Location:* oakham  
 *Appears when:* requires `tayla_2_done`; blocked by `m04_active`, `m04_delivered`, `tayla_3_done`
 
-> **TAYLA:** Bigger load this time, flyboy. Brilliance to New Constantinople itself.
+> **TAYLA:** Bigger load this time, hotshot. Brilliance to New Constantinople itself.
 > **GRAYSON:** The capital. You're not serious.
 > **TAYLA:** Twenty-five units.
 > **GRAYSON:** That's Confed's front porch, Tayla.
@@ -230,7 +230,7 @@ authoring scripts and re-run.
 > **GRAYSON:** You bribed them.
 > **TAYLA:** Generously.
 > **GRAYSON:** Bribed patrols. You'll forgive me if I keep my guns hot.
-> **TAYLA:** Trust me, $NM. I'll know inside an hour if the route wasn't clean.
+> **TAYLA:** I cleared the route myself, $NM. If anyone lights you up, it wasn't my people.
 > **GRAYSON:** Every time you say that it costs me hull.
 > **TAYLA:** Twenty thousand on delivery. Then come straight back.
 
@@ -268,11 +268,11 @@ authoring scripts and re-run.
 > **GRAYSON:** You went into my ship.
 > **TAYLA:** A smuggler's compartment. Twenty units, invisible to any scanner ever built.
 > **GRAYSON:** So that's what the noise was.
-> **TAYLA:** Consider it a promotion, flyboy. The contractors I trust do that on the side.
+> **TAYLA:** Consider it a promotion, love. The contractors I trust do that on the side.
 > **GRAYSON:** *(silence)*
 > **TAYLA:** You'd rather have the apology?
 > **GRAYSON:** I'd rather have been asked.
-> **TAYLA:** I'd rather have known you a year ago, $NM. One more run, and we're square.
+> **TAYLA:** One more run, $NM. Then we're square -- and then we'll see.
 
 *Outcome:* `m04:install_compartment`, `set_flag:tayla_3_done`
 
@@ -285,10 +285,10 @@ authoring scripts and re-run.
 
 > **GRAYSON:** Let me guess... I'm running a shipment of catnip to Kilrah.
 > **TAYLA:** ...!
-> **TAYLA:** You're still funny, flyboy. I save the most lucrative runs for myself.
+> **TAYLA:** You're still funny, hotshot. I save the interesting runs for the pilots I trust.
 > **GRAYSON:** Generous.
-> **TAYLA:** I think of it as an investment. Looking for a wingman?
-> **GRAYSON:** Wingman? I'm a courier.
+> **TAYLA:** I think of it as an investment. The question is whether you're done being a courier.
+> **GRAYSON:** What else would I be?
 > **TAYLA:** Fly my missions and we'll talk more, hotshot.
 > **GRAYSON:** Fits the new compartment exactly.
 > **TAYLA:** Poetic, no?
@@ -300,7 +300,7 @@ authoring scripts and re-run.
 > **TAYLA:** And now he's telling strangers what your docking pattern looks like. Your compartment stays closed, love. The contractors know that.
 > **TAYLA:** Ten thousand. After this I'll tell you everything I know about that trinket of yours.
 > **GRAYSON:** Everything, please.
-> **TAYLA:** Everything I have, partner. I'm asking -- not telling, asking -- for you to come back in one piece.
+> **TAYLA:** Everything I have, partner. Come back in one piece.
 
 **> OFFER:** One final run: 20 units of Brilliance to New Constantinople for 10,000 credits. Finish the job?
 
@@ -345,7 +345,7 @@ authoring scripts and re-run.
 > **GRAYSON:** A thug.
 > **TAYLA:** The polite kind. He's expecting you in the bar there.
 > **GRAYSON:** And that squares us.
-> **TAYLA:** That squares us. It's been profitable, partner. Try not to die -- and come back when you've thought about what 'partner' means.
+> **TAYLA:** That squares us. It's been profitable, partner. Try not to die -- the next drink's on me.
 
 *Outcome:* `set_flag:tayla_done`, `clear_flag:tayla_employed`
 
