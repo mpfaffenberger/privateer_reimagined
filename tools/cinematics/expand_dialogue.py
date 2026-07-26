@@ -202,7 +202,12 @@ SCENES: dict[str, list[tuple[str, str]]] = {
 ],
 "tayla_m05_offer": [
  (P, "Let me guess... I'm running a shipment of catnip to Kilrah."),
- (F, "If only, hotshot. Last run. Twenty units of Brilliance to New Constantinople."),
+ (F, "...!"),
+ (F, "You're still funny, flyboy. I save the most lucrative runs for myself."),
+ (P, "Generous."),
+ (F, "I think of it as an investment. Looking for a wingman?"),
+ (P, "Wingman? I'm a courier."),
+ (F, "Fly my missions and we'll talk more, hotshot."),
  (P, "Fits the new compartment exactly."),
  (F, "Poetic, no?"),
  (P, "Convenient. There's a difference."),

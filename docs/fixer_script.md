@@ -284,7 +284,12 @@ authoring scripts and re-run.
 *Appears when:* requires `tayla_3_done`; blocked by `m05_active`, `m05_delivered`, `tayla_done`
 
 > **GRAYSON:** Let me guess... I'm running a shipment of catnip to Kilrah.
-> **TAYLA:** If only, hotshot. Last run. Twenty units of Brilliance to New Constantinople.
+> **TAYLA:** ...!
+> **TAYLA:** You're still funny, flyboy. I save the most lucrative runs for myself.
+> **GRAYSON:** Generous.
+> **TAYLA:** I think of it as an investment. Looking for a wingman?
+> **GRAYSON:** Wingman? I'm a courier.
+> **TAYLA:** Fly my missions and we'll talk more, hotshot.
 > **GRAYSON:** Fits the new compartment exactly.
 > **TAYLA:** Poetic, no?
 > **GRAYSON:** Convenient. There's a difference.
