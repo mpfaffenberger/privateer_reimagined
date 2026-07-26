@@ -178,7 +178,7 @@ authoring scripts and re-run.
 > **GRAYSON:** And if they light me up? Asking for me, specifically.
 > **TAYLA:** Then you run, and you don't lead them back here. I'd hate to lose the base. I'd almost hate to lose you.
 > **GRAYSON:** Charming. You nearly said something sweet just then -- careful, I'll get ideas.
-> **TAYLA:** Good. Ideas look good on you. Fifteen thousand on delivery at Hector -- come back in one piece, hotshot.
+> **TAYLA:** Keep the ideas coming, flyboy -- they suit you. Fifteen thousand on delivery at Hector. Come back in one piece.
 > **GRAYSON:** And another piece of the story. You still owe me the middle chapters, and I'm starting to think you like me in installments.
 > **TAYLA:** You're earning more every run, love. Even when you don't notice.
 

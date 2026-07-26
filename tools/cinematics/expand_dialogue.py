@@ -186,8 +186,8 @@ SCENES: dict[str, list[tuple[str, str]]] = {
      "base. I'd almost hate to lose you."),
  (P, "Charming. You nearly said something sweet just then -- careful, I'll "
      "get ideas."),
- (F, "Good. Ideas look good on you. Fifteen thousand on delivery at "
-     "Hector -- come back in one piece, hotshot."),
+ (F, "Keep the ideas coming, flyboy -- they suit you. Fifteen thousand on "
+     "delivery at Hector. Come back in one piece."),
  (P, "And another piece of the story. You still owe me the middle chapters, "
      "and I'm starting to think you like me in installments."),
  (F, "You're earning more every run, love. Even when you don't notice."),
