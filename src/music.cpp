@@ -547,12 +547,23 @@ void update(GameMode mode, HMM_Vec3 player_pos, const char* base_id, float dt) {
             desired = Track::None;   // override switch result
         } else if (!bar_open && g_bar_voice != 0) {
             if (g_bar_voice != 0) { audio::stop(g_bar_voice); g_bar_voice = 0; }
+            // Leaving the bar ends the visit: release the authored scene
+            // request so the next visit re-derives it from the roster
+            // (issue #267). The manual pin survives -- DJ's choice.
+            if (g_bar_soft != 0) {
+                g_bar_soft = 0;
+                std::printf("[music] bar request released (visit ended)\n");
+            }
             play_track(g_bar_prior);
             std::printf("[music] bar closed -> %s\n", to_name(g_bar_prior));
             desired = g_bar_prior;  // override switch result
         }
     } else if (g_bar_voice != 0) {
         if (g_bar_voice != 0) { audio::stop(g_bar_voice); g_bar_voice = 0; }
+        if (g_bar_soft != 0) {
+            g_bar_soft = 0;
+            std::printf("[music] bar request released (left base)\n");
+        }
     }
     // Only switch to an available bed (or to silence). Falling back keeps the
     // current bed if the desired one wasn't rendered in this clone.

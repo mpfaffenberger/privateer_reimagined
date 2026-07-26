@@ -410,14 +410,12 @@ void draw_bar_body(BaseContext& ctx) {
     // Music direction is GAME STATE, not conversation state (issue #265):
     // the first present (plot-gated) fixer with an authored track holds the
     // bar's music for the whole visit -- before, during, and after the
-    // conversation panel. request_bar_track is idempotent, so calling every
-    // frame is free; when the plot advances and the roster changes, the
-    // music follows on the next frame.
-    {
-        int want = 0;
-        for (const FixerDef* f : present)
-            if (f->music > 0) { want = f->music; break; }
-        music::request_bar_track(want);
+    // conversation panel. Only non-zero requests are made (issue #267): when
+    // an accept/refuse/done empties the roster mid-visit, the established
+    // mood keeps playing; music.cpp clears the soft request when the player
+    // actually leaves the Bar screen.
+    for (const FixerDef* f : present) {
+        if (f->music > 0) { music::request_bar_track(f->music); break; }
     }
 
     // ---- browsing: bartender flavor + one talk button per fixer ----------
