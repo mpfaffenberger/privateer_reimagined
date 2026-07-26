@@ -172,7 +172,8 @@ SCENES: dict[str, list[tuple[str, str]]] = {
      "personally."),
  (P, "Troy's crawling with militia, and my ship's top speed is best "
      "described as 'eventual.'"),
- (F, "It is. Talons, and they scan everything that moves."),
+ (F, "It is. Talons, and they scan everything that moves -- even the "
+     "eventual ones."),
  (P, "So the plan is me, a hold full of felony, and a checkpoint that scans "
      "everything that moves. I'm sensing a theme in your courtship."),
  (F, "I'm sending you through it fast. Do not stop. Do not fight. Burn past "
@@ -182,8 +183,8 @@ SCENES: dict[str, list[tuple[str, str]]] = {
      "base. I'd almost hate to lose you."),
  (P, "Charming. You nearly said something sweet just then -- careful, I'll "
      "get ideas."),
- (F, "Fifteen thousand on delivery at Hector. Then come back here in "
-     "one piece, hotshot."),
+ (F, "Get them on your own time. Fifteen thousand on delivery at Hector -- "
+     "and come back here in one piece, hotshot."),
  (P, "And another piece of the story. You still owe me the middle chapters, "
      "and I'm starting to think you like me in installments."),
  (F, "You're earning more every run, love. Even when you don't notice."),
@@ -204,7 +205,7 @@ SCENES: dict[str, list[tuple[str, str]]] = {
  (F, "Bigger load this time, hotshot. Brilliance to New Constantinople itself."),
  (P, "The capital. You're not serious. That's like shoplifting from a police "
      "station."),
- (F, "Twenty-five units."),
+ (F, "Twenty-five units of shoplifting."),
  (P, "That's Confed's front porch, Tayla. They keep the porch light on and "
      "everything."),
  (F, "Before you say no -- I have friends on the route. They owe me."),
@@ -230,8 +231,8 @@ SCENES: dict[str, list[tuple[str, str]]] = {
      "in your ship. While you were docked."),
  (P, "You went into my ship. I feel like there are stages to this kind of "
      "thing, and you skipped several."),
- (F, "A smuggler's compartment. Twenty units, invisible to any scanner ever "
-     "built."),
+ (F, "I don't do stages. A smuggler's compartment -- twenty units, "
+     "invisible to any scanner ever built."),
  (P, "So that's what the noise was. I assumed the dock crew was stealing "
      "something. Silly me -- they were installing the crime."),
  (F, "Consider it a promotion, love. The contractors I trust do that on the side."),
@@ -288,7 +289,8 @@ SCENES: dict[str, list[tuple[str, str]]] = {
      "valuable things."),
  (P, "A thug. You're sending me to a thug. Should I be flattered you think "
      "I'll survive him?"),
- (F, "The polite kind. He's expecting you in the bar there."),
+ (F, "The polite kind. And yes -- take the flattery. He's expecting you in "
+     "the bar there."),
  (P, "And that squares us. Funny -- being square with you feels a lot like "
      "being in deeper."),
  (F, "That squares us. It's been profitable, partner. Try not to die -- "

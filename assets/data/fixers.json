@@ -407,6 +407,20 @@
         ""
       ],
       "music": 6,
+      "accept_voice": [
+        "audio/fixers/tayla_m02_offer_accept_00.mp3",
+        "audio/fixers/tayla_m02_offer_accept_01.mp3",
+        "audio/fixers/tayla_m02_offer_accept_02.mp3",
+        "audio/fixers/tayla_m02_offer_accept_03.mp3",
+        "audio/fixers/tayla_m02_offer_accept_04.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/tayla_m02_offer_refuse_00.mp3",
+        "audio/fixers/tayla_m02_offer_refuse_01.mp3",
+        "audio/fixers/tayla_m02_offer_refuse_02.mp3",
+        "",
+        "audio/fixers/tayla_m02_offer_refuse_04.mp3"
+      ],
       "voice": [
         "audio/fixers/tayla_m02_offer_00.mp3",
         "audio/fixers/tayla_m02_offer_01.mp3",
@@ -431,20 +445,6 @@
         "audio/fixers/tayla_m02_offer_20.mp3",
         "audio/fixers/tayla_m02_offer_21.mp3",
         "audio/fixers/tayla_m02_offer_22.mp3"
-      ],
-      "accept_voice": [
-        "audio/fixers/tayla_m02_offer_accept_00.mp3",
-        "audio/fixers/tayla_m02_offer_accept_01.mp3",
-        "audio/fixers/tayla_m02_offer_accept_02.mp3",
-        "audio/fixers/tayla_m02_offer_accept_03.mp3",
-        "audio/fixers/tayla_m02_offer_accept_04.mp3"
-      ],
-      "refuse_voice": [
-        "audio/fixers/tayla_m02_offer_refuse_00.mp3",
-        "audio/fixers/tayla_m02_offer_refuse_01.mp3",
-        "audio/fixers/tayla_m02_offer_refuse_02.mp3",
-        "",
-        "audio/fixers/tayla_m02_offer_refuse_04.mp3"
       ]
     },
     {
@@ -466,13 +466,13 @@
         "That's not a manifest problem, that's a sentencing hearing. My lawyer would object, if I could afford one.",
         "Fifteen units. It'll fit where nobody looks. I checked your dimensions personally.",
         "Troy's crawling with militia, and my ship's top speed is best described as 'eventual.'",
-        "It is. Talons, and they scan everything that moves.",
+        "It is. Talons, and they scan everything that moves -- even the eventual ones.",
         "So the plan is me, a hold full of felony, and a checkpoint that scans everything that moves. I'm sensing a theme in your courtship.",
         "I'm sending you through it fast. Do not stop. Do not fight. Burn past them and dock.",
         "And if they light me up? Asking for me, specifically.",
         "Then you run, and you don't lead them back here. I'd hate to lose the base. I'd almost hate to lose you.",
         "Charming. You nearly said something sweet just then -- careful, I'll get ideas.",
-        "Fifteen thousand on delivery at Hector. Then come back here in one piece, hotshot.",
+        "Get them on your own time. Fifteen thousand on delivery at Hector -- and come back here in one piece, hotshot.",
         "And another piece of the story. You still owe me the middle chapters, and I'm starting to think you like me in installments.",
         "You're earning more every run, love. Even when you don't notice."
       ],
@@ -524,6 +524,18 @@
         ""
       ],
       "music": 12,
+      "accept_voice": [
+        "audio/fixers/tayla_m03_offer_accept_00.mp3",
+        "audio/fixers/tayla_m03_offer_accept_01.mp3",
+        "audio/fixers/tayla_m03_offer_accept_02.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/tayla_m03_offer_refuse_00.mp3",
+        "audio/fixers/tayla_m03_offer_refuse_01.mp3",
+        "audio/fixers/tayla_m03_offer_refuse_02.mp3",
+        "",
+        "audio/fixers/tayla_m03_offer_refuse_04.mp3"
+      ],
       "voice": [
         "audio/fixers/tayla_m03_offer_00.mp3",
         "audio/fixers/tayla_m03_offer_01.mp3",
@@ -540,18 +552,6 @@
         "audio/fixers/tayla_m03_offer_12.mp3",
         "audio/fixers/tayla_m03_offer_13.mp3",
         "audio/fixers/tayla_m03_offer_14.mp3"
-      ],
-      "accept_voice": [
-        "audio/fixers/tayla_m03_offer_accept_00.mp3",
-        "audio/fixers/tayla_m03_offer_accept_01.mp3",
-        "audio/fixers/tayla_m03_offer_accept_02.mp3"
-      ],
-      "refuse_voice": [
-        "audio/fixers/tayla_m03_offer_refuse_00.mp3",
-        "audio/fixers/tayla_m03_offer_refuse_01.mp3",
-        "audio/fixers/tayla_m03_offer_refuse_02.mp3",
-        "",
-        "audio/fixers/tayla_m03_offer_refuse_04.mp3"
       ]
     },
     {
@@ -613,7 +613,7 @@
       "dialogue": [
         "Bigger load this time, hotshot. Brilliance to New Constantinople itself.",
         "The capital. You're not serious. That's like shoplifting from a police station.",
-        "Twenty-five units.",
+        "Twenty-five units of shoplifting.",
         "That's Confed's front porch, Tayla. They keep the porch light on and everything.",
         "Before you say no -- I have friends on the route. They owe me.",
         "You bribed them.",
@@ -667,6 +667,18 @@
         ""
       ],
       "music": 12,
+      "accept_voice": [
+        "audio/fixers/tayla_m04_offer_accept_00.mp3",
+        "audio/fixers/tayla_m04_offer_accept_01.mp3",
+        "audio/fixers/tayla_m04_offer_accept_02.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/tayla_m04_offer_refuse_00.mp3",
+        "audio/fixers/tayla_m04_offer_refuse_01.mp3",
+        "audio/fixers/tayla_m04_offer_refuse_02.mp3",
+        "",
+        "audio/fixers/tayla_m04_offer_refuse_04.mp3"
+      ],
       "voice": [
         "audio/fixers/tayla_m04_offer_00.mp3",
         "audio/fixers/tayla_m04_offer_01.mp3",
@@ -679,18 +691,6 @@
         "audio/fixers/tayla_m04_offer_08.mp3",
         "audio/fixers/tayla_m04_offer_09.mp3",
         "audio/fixers/tayla_m04_offer_10.mp3"
-      ],
-      "accept_voice": [
-        "audio/fixers/tayla_m04_offer_accept_00.mp3",
-        "audio/fixers/tayla_m04_offer_accept_01.mp3",
-        "audio/fixers/tayla_m04_offer_accept_02.mp3"
-      ],
-      "refuse_voice": [
-        "audio/fixers/tayla_m04_offer_refuse_00.mp3",
-        "audio/fixers/tayla_m04_offer_refuse_01.mp3",
-        "audio/fixers/tayla_m04_offer_refuse_02.mp3",
-        "",
-        "audio/fixers/tayla_m04_offer_refuse_04.mp3"
       ]
     },
     {
@@ -711,7 +711,7 @@
         "I lost half my shields to a clerical error. The clerical error had missile lock.",
         "Stop scowling. To make it up to you, my people just installed something in your ship. While you were docked.",
         "You went into my ship. I feel like there are stages to this kind of thing, and you skipped several.",
-        "A smuggler's compartment. Twenty units, invisible to any scanner ever built.",
+        "I don't do stages. A smuggler's compartment -- twenty units, invisible to any scanner ever built.",
         "So that's what the noise was. I assumed the dock crew was stealing something. Silly me -- they were installing the crime.",
         "Consider it a promotion, love. The contractors I trust do that on the side.",
         "...",
@@ -846,6 +846,20 @@
         ""
       ],
       "music": 12,
+      "accept_voice": [
+        "audio/fixers/tayla_m05_offer_accept_00.mp3",
+        "audio/fixers/tayla_m05_offer_accept_01.mp3",
+        "audio/fixers/tayla_m05_offer_accept_02.mp3",
+        "audio/fixers/tayla_m05_offer_accept_03.mp3",
+        "audio/fixers/tayla_m05_offer_accept_04.mp3"
+      ],
+      "refuse_voice": [
+        "audio/fixers/tayla_m05_offer_refuse_00.mp3",
+        "audio/fixers/tayla_m05_offer_refuse_01.mp3",
+        "audio/fixers/tayla_m05_offer_refuse_02.mp3",
+        "",
+        "audio/fixers/tayla_m05_offer_refuse_04.mp3"
+      ],
       "voice": [
         "audio/fixers/tayla_m05_offer_00.mp3",
         "audio/fixers/tayla_m05_offer_01.mp3",
@@ -865,20 +879,6 @@
         "audio/fixers/tayla_m05_offer_15.mp3",
         "audio/fixers/tayla_m05_offer_16.mp3",
         "audio/fixers/tayla_m05_offer_17.mp3"
-      ],
-      "accept_voice": [
-        "audio/fixers/tayla_m05_offer_accept_00.mp3",
-        "audio/fixers/tayla_m05_offer_accept_01.mp3",
-        "audio/fixers/tayla_m05_offer_accept_02.mp3",
-        "audio/fixers/tayla_m05_offer_accept_03.mp3",
-        "audio/fixers/tayla_m05_offer_accept_04.mp3"
-      ],
-      "refuse_voice": [
-        "audio/fixers/tayla_m05_offer_refuse_00.mp3",
-        "audio/fixers/tayla_m05_offer_refuse_01.mp3",
-        "audio/fixers/tayla_m05_offer_refuse_02.mp3",
-        "",
-        "audio/fixers/tayla_m05_offer_refuse_04.mp3"
       ]
     },
     {
@@ -906,7 +906,7 @@
         "Who?",
         "Roman Lynch. New Constantinople. A thug -- but an expert on exotic and valuable things.",
         "A thug. You're sending me to a thug. Should I be flattered you think I'll survive him?",
-        "The polite kind. He's expecting you in the bar there.",
+        "The polite kind. And yes -- take the flattery. He's expecting you in the bar there.",
         "And that squares us. Funny -- being square with you feels a lot like being in deeper.",
         "That squares us. It's been profitable, partner. Try not to die -- the next drink's on me."
       ],

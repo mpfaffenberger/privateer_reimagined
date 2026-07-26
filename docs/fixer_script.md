@@ -170,13 +170,13 @@ authoring scripts and re-run.
 > **GRAYSON:** That's not a manifest problem, that's a sentencing hearing. My lawyer would object, if I could afford one.
 > **TAYLA:** Fifteen units. It'll fit where nobody looks. I checked your dimensions personally.
 > **GRAYSON:** Troy's crawling with militia, and my ship's top speed is best described as 'eventual.'
-> **TAYLA:** It is. Talons, and they scan everything that moves.
+> **TAYLA:** It is. Talons, and they scan everything that moves -- even the eventual ones.
 > **GRAYSON:** So the plan is me, a hold full of felony, and a checkpoint that scans everything that moves. I'm sensing a theme in your courtship.
 > **TAYLA:** I'm sending you through it fast. Do not stop. Do not fight. Burn past them and dock.
 > **GRAYSON:** And if they light me up? Asking for me, specifically.
 > **TAYLA:** Then you run, and you don't lead them back here. I'd hate to lose the base. I'd almost hate to lose you.
 > **GRAYSON:** Charming. You nearly said something sweet just then -- careful, I'll get ideas.
-> **TAYLA:** Fifteen thousand on delivery at Hector. Then come back here in one piece, hotshot.
+> **TAYLA:** Get them on your own time. Fifteen thousand on delivery at Hector -- and come back here in one piece, hotshot.
 > **GRAYSON:** And another piece of the story. You still owe me the middle chapters, and I'm starting to think you like me in installments.
 > **TAYLA:** You're earning more every run, love. Even when you don't notice.
 
@@ -224,7 +224,7 @@ authoring scripts and re-run.
 
 > **TAYLA:** Bigger load this time, hotshot. Brilliance to New Constantinople itself.
 > **GRAYSON:** The capital. You're not serious. That's like shoplifting from a police station.
-> **TAYLA:** Twenty-five units.
+> **TAYLA:** Twenty-five units of shoplifting.
 > **GRAYSON:** That's Confed's front porch, Tayla. They keep the porch light on and everything.
 > **TAYLA:** Before you say no -- I have friends on the route. They owe me.
 > **GRAYSON:** You bribed them.
@@ -266,7 +266,7 @@ authoring scripts and re-run.
 > **GRAYSON:** I lost half my shields to a clerical error. The clerical error had missile lock.
 > **TAYLA:** Stop scowling. To make it up to you, my people just installed something in your ship. While you were docked.
 > **GRAYSON:** You went into my ship. I feel like there are stages to this kind of thing, and you skipped several.
-> **TAYLA:** A smuggler's compartment. Twenty units, invisible to any scanner ever built.
+> **TAYLA:** I don't do stages. A smuggler's compartment -- twenty units, invisible to any scanner ever built.
 > **GRAYSON:** So that's what the noise was. I assumed the dock crew was stealing something. Silly me -- they were installing the crime.
 > **TAYLA:** Consider it a promotion, love. The contractors I trust do that on the side.
 > **GRAYSON:** *(silence)*
@@ -343,7 +343,7 @@ authoring scripts and re-run.
 > **GRAYSON:** Who?
 > **TAYLA:** Roman Lynch. New Constantinople. A thug -- but an expert on exotic and valuable things.
 > **GRAYSON:** A thug. You're sending me to a thug. Should I be flattered you think I'll survive him?
-> **TAYLA:** The polite kind. He's expecting you in the bar there.
+> **TAYLA:** The polite kind. And yes -- take the flattery. He's expecting you in the bar there.
 > **GRAYSON:** And that squares us. Funny -- being square with you feels a lot like being in deeper.
 > **TAYLA:** That squares us. It's been profitable, partner. Try not to die -- the next drink's on me.
 
