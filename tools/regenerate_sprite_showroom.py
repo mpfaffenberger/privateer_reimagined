@@ -100,7 +100,10 @@ def build_showroom(names: list[str], cols: int, spacing: float,
             f"{cols}x{rows} at {spacing}m. Each is a view-sphere billboard — "
             f"fly around and watch the atlas pick the nearest-angle cell."),
         "skybox_seed":         "troy",
-        "star":                {"preset": "yellow"},
+        # Keep the decorative sun far outside the inspection grid. The normal
+        # star hazard radius dwarfs this compact scene; at the default origin
+        # it fills the camera and repeatedly explodes the player on spawn.
+        "star":                {"preset": "yellow", "position": [0, -1000000, 0]},
         "studio_lighting":     True,
         "asteroid_fields":     [],
         "placed_meshes":       [],
