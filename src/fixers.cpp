@@ -399,6 +399,15 @@ bool is_pc_line(const FixerDef& f, size_t idx) {
 void draw_fixer_body(BaseContext& ctx, const std::string& screen) {
     const std::string visit_key = ctx.base_id + ":" + screen;
     if (visit_key != g_last_base) {             // new room visit
+        // Auto-resolve any abandoned accept/refuse epilogue so the fixer
+        // doesn't re-offer the mission if the player leaves without DONE.
+        if ((g_phase == Phase::Accepted || g_phase == Phase::Refused) &&
+            !g_talking_to.empty() && ctx.player) {
+            if (const FixerDef* f = find(g_talking_to)) {
+                if (g_phase == Phase::Accepted) accept(*f, *ctx.player);
+                else                            refuse(*f, *ctx.player);
+            }
+        }
         g_last_base = visit_key;
         reset_conversation();
         g_noted.clear();
@@ -618,6 +627,9 @@ void draw_fixer_body(BaseContext& ctx, const std::string& screen) {
         ImGui::SetCursorScreenPos(ImVec2(px + pw - 130, byy));
         if (ImGui::Button("LEAVE", ImVec2(112, 30))) {
             sfx::ui_click();
+            // Auto-resolve if the player abandons a post-decision epilogue.
+            if (g_phase == Phase::Accepted) accept(*f, player);
+            else if (g_phase == Phase::Refused) refuse(*f, player);
             dialogue_done(*f, player);
             reset_conversation();
         }

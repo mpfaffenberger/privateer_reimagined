@@ -7,6 +7,7 @@
 #include "comm.h"
 #include "faction.h"
 #include "gun.h"
+#include "missions.h"
 #include "player.h"
 #include "plot.h"
 #include "ship_class.h"
@@ -153,6 +154,21 @@ void cargo_accept(const CargoMission& m, PlayerState& p) {
     std::printf("[campaign] %s accepted: %d %s aboard%s\n",
                 m.token, m.units, m.commodity,
                 m.stow_in_compartment ? " (compartment)" : "");
+
+    // Also register an ActiveMission so the HUD draws the destination marker
+    // and the mission tracker can surface progress alongside sandbox jobs.
+    ActiveMission am;
+    am.id           = m.token;
+    am.type         = static_cast<int>(missions::MissionType::CargoDelivery);
+    am.source       = static_cast<int>(missions::MissionSource::MerchantsGuild);
+    am.giver_faction = "Fixer";
+    am.title        = std::string("Deliver ") + std::to_string(m.units) +
+                      " " + m.commodity + " to " + m.dest_base;
+    am.reward       = m.payout;
+    am.commodity_id = m.commodity;
+    am.units        = m.units;
+    am.dest_base    = m.dest_base;
+    p.missions.push_back(am);
 }
 
 // Dock checks for one destination mission. Delivery at the destination;
