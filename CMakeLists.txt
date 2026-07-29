@@ -270,12 +270,23 @@ src/bolt_art.cpp
 # binary. We can't use $TARGET_FILE_DIR in this POST_BUILD because of
 # how the build system is wired (the binary lives in build/, not in
 # CMAKE_BINARY_DIR's value at config time).
-add_custom_command(TARGET new_privateer POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E create_symlink
-            ${CMAKE_SOURCE_DIR}/assets
-            ${CMAKE_SOURCE_DIR}/build/assets
-    COMMENT "symlinking assets/ next to binary"
-)
+if(WIN32)
+    # Directory junctions work without administrator privileges, unlike
+    # symbolic links on Windows systems where Developer Mode is disabled.
+    add_custom_command(TARGET new_privateer POST_BUILD
+        COMMAND powershell -NoProfile -Command
+                "if (-not (Test-Path '${CMAKE_SOURCE_DIR}/build/assets')) { New-Item -ItemType Junction -Path '${CMAKE_SOURCE_DIR}/build/assets' -Target '${CMAKE_SOURCE_DIR}/assets' }"
+        COMMENT "junctioning assets/ next to binary"
+        VERBATIM
+    )
+else()
+    add_custom_command(TARGET new_privateer POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E create_symlink
+                ${CMAKE_SOURCE_DIR}/assets
+                ${CMAKE_SOURCE_DIR}/build/assets
+        COMMENT "symlinking assets/ next to binary"
+    )
+endif()
 
 target_include_directories(new_privateer PRIVATE
     ${CMAKE_SOURCE_DIR}/src

@@ -1,4 +1,4 @@
-# build_and_run.ps1 — configure + build new_privateer on Windows (MSVC + Ninja)
+# build_and_run.ps1 - configure + build new_privateer on Windows (MSVC + Ninja)
 # Run from the repo root: powershell -ExecutionPolicy Bypass -File scripts\build_and_run.ps1
 
 $ErrorActionPreference = "Stop"
@@ -26,15 +26,21 @@ Write-Host "[build] shdc: $((Get-Item $shdc).Length) bytes" -ForegroundColor Gre
 $buildDir = Join-Path $repoRoot 'build'
 Write-Host "[build] CMake configure..." -ForegroundColor Cyan
 cmake -B $buildDir -S $repoRoot -G "Ninja" -DCMAKE_BUILD_TYPE=Release
+if ($LASTEXITCODE -ne 0) {
+    throw "CMake configure failed with exit code $LASTEXITCODE"
+}
 
 # --- 4. Build ---
 Write-Host "[build] Building new_privateer..." -ForegroundColor Cyan
 cmake --build $buildDir --target new_privateer
+if ($LASTEXITCODE -ne 0) {
+    throw "Build failed with exit code $LASTEXITCODE"
+}
 
 $exe = Join-Path $buildDir 'new_privateer.exe'
 if (Test-Path $exe) {
     $sizeMB = [math]::Round((Get-Item $exe).Length / 1MB, 1)
     Write-Host "[build] SUCCESS! $exe ($sizeMB MB)" -ForegroundColor Green
 } else {
-    throw "Build failed — exe not found at $exe"
+    throw "Build failed - exe not found at $exe"
 }
