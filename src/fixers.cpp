@@ -219,9 +219,9 @@ namespace {
 // bar visit.
 // Which stretch of dialogue we're playing. MAIN runs up to the offer; ACCEPTED
 // and REFUSED are the short exchanges AFTER the player commits, so a scene
-// ends on a line rather than on a button press. The gameplay actions fire when
-// the epilogue finishes (or immediately, when a fixer has no epilogue authored)
-// -- never twice, guarded by g_actions_ran.
+// ends on a line rather than on a button press. Gameplay actions fire at the
+// decision itself; the epilogue is presentation only. g_actions_ran prevents
+// abandoned/finished epilogues from applying the decision twice.
 enum class Phase { Main, Accepted, Refused };
 Phase                    g_phase = Phase::Main;
 bool                     g_actions_ran = false;
@@ -370,7 +370,7 @@ void play_paragraph_voice(const FixerDef& f, size_t idx) {
 }
 
 // Enter a post-decision exchange. Returns false when the fixer has no lines
-// authored for that outcome, so the caller can just run the actions and close.
+// authored for that outcome, so the caller can close immediately.
 bool begin_phase(const FixerDef& f, Phase p) {
     g_phase = p;
     if (phase_dialogue(f).empty()) { g_phase = Phase::Main; return false; }
@@ -390,6 +390,13 @@ void reset_conversation() {
     g_actions_ran = false;
 }
 
+void run_decision_actions(const FixerDef& f, PlayerState& player, Phase phase) {
+    if (g_actions_ran || phase == Phase::Main) return;
+    g_actions_ran = true;
+    if (phase == Phase::Accepted) accept(f, player);
+    else                          refuse(f, player);
+}
+
 // Who speaks paragraph i -- "" (or past the end of the array) means the fixer.
 bool is_pc_line(const FixerDef& f, size_t idx) {
     const std::vector<std::string>& sp = phase_speaker(f);
@@ -399,14 +406,12 @@ bool is_pc_line(const FixerDef& f, size_t idx) {
 void draw_fixer_body(BaseContext& ctx, const std::string& screen) {
     const std::string visit_key = ctx.base_id + ":" + screen;
     if (visit_key != g_last_base) {             // new room visit
-        // Auto-resolve any abandoned accept/refuse epilogue so the fixer
-        // doesn't re-offer the mission if the player leaves without DONE.
+        // Safety net for legacy/injected conversation state. Normal button
+        // decisions already commit before their epilogue starts.
         if ((g_phase == Phase::Accepted || g_phase == Phase::Refused) &&
             !g_talking_to.empty() && ctx.player) {
-            if (const FixerDef* f = find(g_talking_to)) {
-                if (g_phase == Phase::Accepted) accept(*f, *ctx.player);
-                else                            refuse(*f, *ctx.player);
-            }
+            if (const FixerDef* f = find(g_talking_to))
+                run_decision_actions(*f, *ctx.player, g_phase);
         }
         g_last_base = visit_key;
         reset_conversation();
@@ -589,25 +594,20 @@ void draw_fixer_body(BaseContext& ctx, const std::string& screen) {
             dot_x += 11.0f;
         }
     } else if (offering) {
-        // Committing does NOT end the scene: it rolls into the post-decision
-        // exchange so the fixer can react and the player gets a last word.
-        // The gameplay actions run when that exchange finishes (below), or
-        // immediately here when none is authored.
+        // Commit gameplay state immediately, then roll into the post-decision
+        // exchange. Launching mid-epilogue must not leave an accepted offer
+        // active while omitting its mission from the player's mission list.
         ImGui::SetCursorScreenPos(ImVec2(px + pw - 262, byy));
         if (ImGui::Button("ACCEPT", ImVec2(120, 30))) {
             sfx::ui_click();
-            if (!begin_phase(*f, Phase::Accepted)) {
-                accept(*f, player);
-                reset_conversation();
-            }
+            run_decision_actions(*f, player, Phase::Accepted);
+            if (!begin_phase(*f, Phase::Accepted)) reset_conversation();
         }
         ImGui::SetCursorScreenPos(ImVec2(px + pw - 130, byy));
         if (ImGui::Button("REFUSE", ImVec2(112, 30))) {
             sfx::ui_click();
-            if (!begin_phase(*f, Phase::Refused)) {
-                refuse(*f, player);
-                reset_conversation();
-            }
+            run_decision_actions(*f, player, Phase::Refused);
+            if (!begin_phase(*f, Phase::Refused)) reset_conversation();
         }
     } else if (g_phase != Phase::Main) {
         // End of a post-decision exchange. Run the actions exactly once, then
@@ -616,20 +616,14 @@ void draw_fixer_body(BaseContext& ctx, const std::string& screen) {
         ImGui::SetCursorScreenPos(ImVec2(px + pw - 130, byy));
         if (ImGui::Button("DONE", ImVec2(112, 30))) {
             sfx::ui_click();
-            if (!g_actions_ran) {
-                g_actions_ran = true;
-                if (g_phase == Phase::Accepted) accept(*f, player);
-                else                            refuse(*f, player);
-            }
+            run_decision_actions(*f, player, g_phase);
             reset_conversation();
         }
     } else {
         ImGui::SetCursorScreenPos(ImVec2(px + pw - 130, byy));
         if (ImGui::Button("LEAVE", ImVec2(112, 30))) {
             sfx::ui_click();
-            // Auto-resolve if the player abandons a post-decision epilogue.
-            if (g_phase == Phase::Accepted) accept(*f, player);
-            else if (g_phase == Phase::Refused) refuse(*f, player);
+            run_decision_actions(*f, player, g_phase);
             dialogue_done(*f, player);
             reset_conversation();
         }

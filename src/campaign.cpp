@@ -47,6 +47,7 @@ struct CargoMission {
     int         units;
     const char* passenger_item; // plot item riding along ("" = none)
     const char* dest_base;    // bare base id (base_is-matched)
+    const char* dest_system;  // galaxy system id for HUD/nav-map routing
     int64_t     payout;       // credits on delivery (0 = fixer settles later)
     const char* accept_line;  // comm feed on accept (cargo rows only)
     const char* deliver_line; // comm feed on delivery
@@ -57,13 +58,13 @@ struct CargoMission {
 
 constexpr CargoMission k_cargo_missions[] = {
     // M01 Sandoval (#113): payment is the artifact, settled at the bar.
-    { "m01", "iron", 40, "", "liverpool", 0,
+    { "m01", "iron", 40, "", "liverpool", "newcastle", 0,
       "40 units of iron loaded. Destination: Liverpool, Newcastle system.",
       "Iron delivered. Sandoval promised payment back on New Detroit.",
       "", "", false },
     // M02 Tayla 1 (#114): plastics to Oakham, 10k on landing. Accept also
     // marks the player as Tayla's (tayla_employed -> pirate neutrality).
-    { "m02", "plastics", 30, "", "oakham", 10000,
+    { "m02", "plastics", 30, "", "oakham", "pentonville", 10000,
       "30 units of plastics loaded. Destination: Oakham, Pentonville system.",
       "Plastics delivered. 10,000 credits from Tayla's man on Oakham.",
       // No return leg / no debrief for M02: the chain milestone lands
@@ -71,32 +72,32 @@ constexpr CargoMission k_cargo_missions[] = {
       "tayla_employed", "tayla_1_done", false },
     // M03 Tayla 2 (#115): first Brilliance run, Hector (Troy). The Troy
     // militia heat is a scripted scenario gated on m03_active.
-    { "m03", "brilliance", 15, "", "hector", 15000,
+    { "m03", "brilliance", 15, "", "hector", "troy", 15000,
       "15 units of Brilliance aboard. Destination: Hector, Troy system. Fly casual.",
       "Brilliance delivered at Hector. 15,000 credits. Now get back to Oakham.",
       "", "", false },
     // M04 Tayla 3 (#116): Brilliance to New Constantinople. Confed pickets
     // are scripted scenarios gated on m04_active.
-    { "m04", "brilliance", 25, "", "new_constantinople", 20000,
+    { "m04", "brilliance", 25, "", "new_constantinople", "new_constantinople", 20000,
       "25 units of Brilliance aboard. Destination: New Constantinople. Tayla swears the patrols are bribed.",
       "Brilliance delivered. 20,000 credits. Tayla wants a word back at Oakham.",
       "", "", false },
     // M05 Tayla 4 (#117): final run, 20 units - exactly the secret
     // compartment's capacity. Riordian is scripted_encounters.json's job.
-    { "m05", "brilliance", 20, "", "new_constantinople", 10000,
+    { "m05", "brilliance", 20, "", "new_constantinople", "new_constantinople", 10000,
       "20 units of Brilliance stowed. Destination: New Constantinople. Watch your back.",
       "Final delivery made. 10,000 credits. Tayla is waiting at Oakham.",
       "", "", true },
     // M07 Lynch 2 (#119): weapons to Siva (Rikel). Kroiz's ambush + the
     // conditional re-ambush near Siva live in scripted_encounters.json.
-    { "m07", "weaponry", 20, "", "siva", 15000,
+    { "m07", "weaponry", 20, "", "siva", "rikel", 15000,
       "20 units of weaponry loaded. Destination: Siva, Rikel system. Kroiz's gang objects.",
       "Weapons delivered at Siva. 15,000 credits. Lynch will hear of it.",
       "", "lynch_2_done", false },
     // M08 Lynch 3 (#120): the cousin. Passenger plot item (no hold space,
     // can't be lost); Confed pursuit in Castor is scenario data. Completes
     // ON LANDING at Romulus.
-    { "m08", "", 0, "lynch_cousin", "romulus", 30000,
+    { "m08", "", 0, "lynch_cousin", "romulus", "castor", 30000,
       "",
       "Lynch's cousin slips away into Romulus. 30,000 credits, as promised.",
       "", "lynch_3_done", false },
@@ -105,7 +106,7 @@ constexpr CargoMission k_cargo_missions[] = {
     // scenario data). The mission RESOLVES by landing at Oxford; the
     // m09_reveal flag (set by the ambush dialogue) rewrites the objective
     // narratively over the comm feed.
-    { "m09", "", 0, "", "oxford", 0,
+    { "m09", "", 0, "", "oxford", "oxford", 0,
       "",
       "No Smythe. No payment. But the Oxford library is real - and someone here knows about your artifact.",
       "", "lynch_done", false },
@@ -113,7 +114,7 @@ constexpr CargoMission k_cargo_missions[] = {
     // and the four Demon waves are scenario data; the docking gate
     // (palan_blockaded) refuses the pad until the last wave dies and
     // sets palan_blockade_lifted.
-    { "m16", "", 0, "", "palan", 15000,
+    { "m16", "", 0, "", "palan", "palan", 15000,
       "",
       "Palan is free. Murphy's people transfer 15,000 credits - and a Dr. Monkhouse has been asking about you in the bar.",
       "", "murphy_done", false },
@@ -121,7 +122,7 @@ constexpr CargoMission k_cargo_missions[] = {
     // ambush sits on the direct-route nav only (scenario data) - flying
     // wide dodges it, vanilla-accurate. Chain milestone (monkhouse_done +
     // the steltek_map) lands in the bar debrief, not here.
-    { "m17", "", 0, "dr_monkhouse", "basra", 5000,
+    { "m17", "", 0, "dr_monkhouse", "basra", "palan", 5000,
       "",
       "Monkhouse bounds down the ramp, artifact piece clutched tight. 5,000 credits for the lift.",
       "", "", false },
@@ -129,6 +130,19 @@ constexpr CargoMission k_cargo_missions[] = {
 
 std::string flag_active(const CargoMission& m)    { return std::string(m.token) + "_active"; }
 std::string flag_delivered(const CargoMission& m) { return std::string(m.token) + "_delivered"; }
+
+void drop_active_mission(const CargoMission& m, PlayerState& p) {
+    for (size_t i = 0; i < p.missions.size(); ++i) {
+        const ActiveMission& active = p.missions[i];
+        const bool campaign_owned =
+            active.source == static_cast<int>(missions::MissionSource::Fixer) ||
+            active.giver_faction == "Fixer";  // backward compatibility
+        if (campaign_owned && active.id == m.token) {
+            p.missions.erase(p.missions.begin() + static_cast<long>(i));
+            return;
+        }
+    }
+}
 
 // Accept a consignment: load the goods (hold-space checked - a full hold
 // refuses WITHOUT setting the active flag, so the offer stays on the
@@ -160,7 +174,7 @@ void cargo_accept(const CargoMission& m, PlayerState& p) {
     ActiveMission am;
     am.id           = m.token;
     am.type         = static_cast<int>(missions::MissionType::CargoDelivery);
-    am.source       = static_cast<int>(missions::MissionSource::MerchantsGuild);
+    am.source       = static_cast<int>(missions::MissionSource::Fixer);
     am.giver_faction = "Fixer";
     am.title        = std::string("Deliver ") + std::to_string(m.units) +
                       " " + m.commodity + " to " + m.dest_base;
@@ -168,6 +182,7 @@ void cargo_accept(const CargoMission& m, PlayerState& p) {
     am.commodity_id = m.commodity;
     am.units        = m.units;
     am.dest_base    = m.dest_base;
+    am.dest_system  = m.dest_system;
     p.missions.push_back(am);
 }
 
@@ -200,6 +215,7 @@ void cargo_on_dock(const CargoMission& m, PlayerState& p,
             std::printf("[campaign] %s FAILED at %s (consignment missing)\n",
                         m.token, base_id.c_str());
         }
+        drop_active_mission(m, p);
         return;
     }
 
@@ -216,6 +232,7 @@ void cargo_on_dock(const CargoMission& m, PlayerState& p,
         comm::push("The consignment is gone. The job is blown.", false);
         std::printf("[campaign] %s FAILED at %s (consignment missing)\n",
                     m.token, base_id.c_str());
+        drop_active_mission(m, p);
     }
 }
 

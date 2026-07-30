@@ -205,6 +205,25 @@ int main() {
         check(last_comm() != fb, "CARGO: comm line pushed");
     }
 
+    // Campaign cargo is surfaced through ActiveMission for HUD/nav routing,
+    // but campaign.cpp exclusively owns its failure and completion rules.
+    {
+        PlayerState pp = mkp();
+        ActiveMission story;
+        story.id = "m01";
+        story.type = (int)missions::MissionType::CargoDelivery;
+        story.source = (int)missions::MissionSource::Fixer;
+        story.giver_faction = "Fixer";
+        story.commodity_id = "iron";
+        story.units = 40;
+        story.dest_base = "liverpool";
+        player::add_cargo(pp, "iron", 40, 0, cap);
+        pp.missions.push_back(story);
+        missions::fail_cargo_on_dock(pp, "achilles");
+        check(pp.missions.size() == 1 && player::cargo_units_used(pp) == 40,
+              "FIXER CARGO: generic dock failure leaves campaign mission alone");
+    }
+
     // Scout: complete when its single nav is marked reached.
     {
         PlayerState pp = mkp();

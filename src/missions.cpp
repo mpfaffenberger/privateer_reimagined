@@ -1000,6 +1000,12 @@ void fail_cargo_on_dock(PlayerState& p, const std::string& at_base) {
     for (size_t i = 0; i < p.missions.size(); /* manual */) {
         ActiveMission& am = p.missions[i];
         if (am.type != (int)MissionType::CargoDelivery) { ++i; continue; }
+        // Story deliveries own their failure/completion rules in campaign.cpp.
+        // Keep the giver check for saves made before MissionSource::Fixer.
+        if (am.source == (int)MissionSource::Fixer || am.giver_faction == "Fixer") {
+            ++i;
+            continue;
+        }
         if (am.dest_base == at_base) { ++i; continue; }   // at target — keep
         // Off-target dock: cargo goes (jettisoned), mission fails (no reward).
         const std::string title = am.title;
@@ -1259,6 +1265,7 @@ const char* source_label(MissionSource s) {
         case MissionSource::Computer:         return "Mission Computer";
         case MissionSource::MercenariesGuild: return "Mercenaries Guild";
         case MissionSource::MerchantsGuild:   return "Merchants Guild";
+        case MissionSource::Fixer:             return "Fixer";
     }
     return "?";
 }

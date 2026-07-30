@@ -72,6 +72,7 @@ enum class MissionSource : int {
     Computer         = 0,   // Mission Computer (cheapest, all merc-type jobs)
     MercenariesGuild = 1,   // attack/bounty/defend/patrol/scout, top of band
     MerchantsGuild   = 2,   // cargo/bounty, almost always cross-system
+    Fixer             = 3,   // story campaign; lifecycle owned by campaign.cpp
 };
 
 // Short uppercase label for a mission type — for the Mission Computer UI and

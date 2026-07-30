@@ -8,7 +8,7 @@
 //   1. the real fixers.json: Sandoval gates at New Detroit (bare AND
 //      suffixed base id), Tayla hidden until m01_delivered,
 //   2. accept: hold-space refusal leaves the offer re-takeable; success
-//      loads 40 iron + m01_active,
+//      loads 40 iron + m01_active and registers a routed ActiveMission,
 //   3. dock at Liverpool with the iron -> delivered flag, cargo removed,
 //   4. dock at Liverpool WITHOUT the iron -> failure clears m01_active,
 //   5. wrong-base docks are no-ops,
@@ -25,6 +25,7 @@
 #include "faction.h"
 #include "fixers.h"
 #include "gun.h"
+#include "missions.h"
 #include "player.h"
 #include "plot.h"
 #include "ship_class.h"
@@ -108,6 +109,13 @@ int main() {
         fixers::accept(*sand, p);
         check(plot::has_flag(p, "m01_active"), "accept: m01_active set");
         check(cargo_units(p, "iron") == 40,    "accept: 40 iron aboard");
+        check(p.missions.size() == 1,           "accept: one ActiveMission registered");
+        check(!p.missions.empty() && p.missions[0].id == "m01" &&
+                  p.missions[0].source == (int)missions::MissionSource::Fixer,
+              "accept: ActiveMission has campaign id and fixer ownership");
+        check(!p.missions.empty() && p.missions[0].dest_base == "liverpool" &&
+                  p.missions[0].dest_system == "newcastle",
+              "accept: ActiveMission routes to Liverpool, Newcastle");
         check(!fixer_here("new_detroit", p, "sandoval_offer"),
               "offer hidden while active");
     }
@@ -122,6 +130,7 @@ int main() {
     check(!plot::has_flag(p, "m01_active"),   "delivery clears m01_active");
     check(plot::has_flag(p, "m01_delivered"), "delivery sets m01_delivered");
     check(cargo_units(p, "iron") == 0,        "delivery removes the iron");
+    check(p.missions.empty(),                  "delivery retires the ActiveMission");
 
     // ---- 5. Tayla handoff --------------------------------------------------
     check(fixer_here("new_detroit", p, "tayla_artifact_handoff"),
@@ -151,6 +160,7 @@ int main() {
               "missing cargo at Liverpool clears m01_active (failed)");
         check(!plot::has_flag(f, "m01_delivered"),
               "failed run is NOT delivered");
+        check(f.missions.empty(), "failed run retires the ActiveMission");
         check(fixer_here("new_detroit", f, "sandoval_offer"),
               "failed run: Sandoval re-offers at New Detroit");
     }
