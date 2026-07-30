@@ -31,6 +31,7 @@ constexpr ImVec4 kBad(1.00f, 0.40f, 0.30f, 1.0f);
 Layout g_layout;
 std::string g_loaded_ship;
 std::string g_selected_id;
+std::string g_editor_ship;
 TextureSlot g_ship_texture;
 bool g_editing = false;
 bool g_category_selected = true;
@@ -59,7 +60,6 @@ void ensure_layout(const std::string& ship, int mounts) {
     g_selected_id = g_layout.zones.empty() ? std::string() : g_layout.zones.front().id;
     g_category_selected = true;
     g_category = Kind::Service;
-    g_editing = false;
     g_drag = DragMode::None;
     release_texture();
     if (!g_layout.sprite.empty() && !load_texture_png(g_layout.sprite, g_ship_texture))
@@ -82,15 +82,22 @@ ImVec4 kind_color(Kind kind) {
     return kAccent;
 }
 
-std::string zone_state(const PlayerState& player, const Zone& zone) {
+std::string zone_state(const PlayerState& player, const Zone& zone,
+                       const ShipClass* schematic_ship) {
     switch (zone.kind) {
         case Kind::Gun:
         case Kind::Turret:
+            if (g_editing && schematic_ship) {
+                if (zone.slot >= 0 && zone.slot < (int)schematic_ship->default_guns.size())
+                    return gun::to_name(schematic_ship->default_guns[(size_t)zone.slot].type);
+                return "EMPTY";
+            }
             if (zone.slot >= 0 && zone.slot < (int)player.gun_mounts.size() &&
                 !player.gun_mounts[(size_t)zone.slot].gun_id.empty())
                 return player.gun_mounts[(size_t)zone.slot].gun_id;
             return "EMPTY";
         case Kind::Launcher: {
+            if (g_editing) return "LAUNCHER HARDPOINT";
             const bool left = zone.slot == 0;
             const bool missile = left ? player.missile_launcher_left
                                       : player.missile_launcher_right;
@@ -121,8 +128,8 @@ bool contains(const ImVec2& p, const ImVec2& lo, const ImVec2& hi) {
     return p.x >= lo.x && p.y >= lo.y && p.x <= hi.x && p.y <= hi.y;
 }
 
-void draw_zone_overlay(PlayerState& player, const ImVec2& image_lo,
-                       const ImVec2& image_size) {
+void draw_zone_overlay(PlayerState& player, const ShipClass* schematic_ship,
+                       const ImVec2& image_lo, const ImVec2& image_size) {
     ImDrawList* dl = ImGui::GetWindowDrawList();
     ImGuiIO& io = ImGui::GetIO();
     const ImVec2 mouse = io.MousePos;
@@ -204,7 +211,7 @@ void draw_zone_overlay(PlayerState& player, const ImVec2& image_lo,
             dl->AddLine(ImVec2(elbow_x, label_y + 12.0f),
                         ImVec2(line_end, label_y + 12.0f), col, 1.5f);
             dl->AddCircleFilled(anchor, 3.5f, col);
-            std::string state = zone_state(player, *zone);
+            std::string state = zone_state(player, *zone, schematic_ship);
             for (char& c : state) {
                 if (c == '_') c = ' ';
                 else c = (char)std::toupper((unsigned char)c);
@@ -254,7 +261,7 @@ void draw_ship_schematic(PlayerState& player, const ShipClass* ship,
         else
             dl->AddText(ImVec2(image_lo.x + 20.0f, image_lo.y + 20.0f),
                         IM_COL32(240, 100, 80, 255), "TOP-DOWN SPRITE UNAVAILABLE");
-        draw_zone_overlay(player, image_lo, ImVec2(side, side));
+        draw_zone_overlay(player, ship, image_lo, ImVec2(side, side));
     }
     ImGui::EndChild();
     ImGui::PopStyleColor();
@@ -265,8 +272,25 @@ void sanitize_text(char* text) {
         if (*text == '"' || *text == '\\' || (unsigned char)*text < 32) *text = '_';
 }
 
-void draw_editor_panel() {
+void draw_editor_panel(const ShipClass* preview_ship) {
     ImGui::TextColored(kAccent, "HARDPOINT ZONE EDITOR");
+    ImGui::TextColored(kDim, "Preview and author any registered hull without changing your ship.");
+    ImGui::SetNextItemWidth(-1.0f);
+    const char* current_name = preview_ship ? preview_ship->display_name.c_str()
+                                            : g_layout.ship.c_str();
+    if (ImGui::BeginCombo("##editor_ship", current_name)) {
+        for (const ShipClass& candidate : ship_class::all()) {
+            const bool selected = candidate.name == g_layout.ship;
+            if (ImGui::Selectable(candidate.display_name.c_str(), selected)) {
+                g_editor_ship = candidate.name;
+                ensure_layout(candidate.name, (int)candidate.default_guns.size());
+            }
+            if (selected) ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+    }
+    ImGui::TextColored(kDim, "Editing: assets/ships/%s/equipment_hardpoints.json",
+                       g_layout.ship.c_str());
     ImGui::TextColored(kDim, "Drag a zone to move; drag its filled corner to resize.");
     ImGui::Separator();
     Zone* zone = selected_zone();
@@ -371,16 +395,22 @@ void draw_category_menu() {
 
 void draw_equipment_screen(BaseContext& ctx) {
     PlayerState& player = *ctx.player;
-    const ShipClass* ship = ship_class::find(player.ship_class_name);
-    const int mounts = ship ? (int)ship->default_guns.size() : (int)player.gun_mounts.size();
-    if ((int)player.gun_mounts.size() < mounts) player.gun_mounts.resize(mounts, MountSlot{});
-    ensure_layout(player.ship_class_name, mounts);
+    const ShipClass* owned_ship = ship_class::find(player.ship_class_name);
+    const int owned_mounts = owned_ship ? (int)owned_ship->default_guns.size()
+                                        : (int)player.gun_mounts.size();
+    if ((int)player.gun_mounts.size() < owned_mounts)
+        player.gun_mounts.resize(owned_mounts, MountSlot{});
 
     ImGuiIO& io = ImGui::GetIO();
     if (!io.WantTextInput && ImGui::IsKeyPressed(ImGuiKey_H)) {
         g_editing = !g_editing;
+        g_editor_ship = g_editing ? player.ship_class_name : std::string();
         g_drag = DragMode::None;
     }
+    const std::string& schematic_name = g_editing ? g_editor_ship : player.ship_class_name;
+    const ShipClass* ship = ship_class::find(schematic_name);
+    const int mounts = ship ? (int)ship->default_guns.size() : owned_mounts;
+    ensure_layout(schematic_name, mounts);
 
     const float dpi = sapp_dpi_scale();
     const float sw = (float)sapp_width() / dpi;
@@ -401,7 +431,7 @@ void draw_equipment_screen(BaseContext& ctx) {
         ImGui::TextColored(kGood, "%lld CR", (long long)player.credits);
         ImGui::Separator();
         if (g_editing) {
-            draw_editor_panel();
+            draw_editor_panel(ship);
         } else {
             draw_category_menu();
             if (g_category_selected) {
