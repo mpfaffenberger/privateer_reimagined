@@ -259,7 +259,13 @@ void draw_offer_list(MissionSource source, const BoardTheme& theme,
                                          theme.accent.z * 0.24f, 0.88f));
             ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.16f, 0.19f, 0.25f, 0.96f));
             ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.20f, 0.23f, 0.30f, 1.0f));
-            if (ImGui::Selectable("##offer", selected, 0, ImVec2(0.0f, 86.0f))) {
+            const float card_width = ImGui::GetContentRegionAvail().x;
+            const float text_width = std::max(40.0f, card_width - 20.0f);
+            const float title_height = ImGui::CalcTextSize(
+                mission.title.c_str(), nullptr, false, text_width).y;
+            const float card_height = std::max(86.0f, 41.0f + title_height);
+            if (ImGui::Selectable("##offer", selected, 0,
+                                  ImVec2(0.0f, card_height))) {
                 g_selected_offer[source_index(source)] = mission.id;
                 sfx::ui_click();
             }
@@ -268,6 +274,8 @@ void draw_offer_list(MissionSource source, const BoardTheme& theme,
             const ImVec2 lo = ImGui::GetItemRectMin();
             const ImVec2 hi = ImGui::GetItemRectMax();
             ImDrawList* dl = ImGui::GetWindowDrawList();
+            dl->PushClipRect(ImVec2(lo.x + 1.0f, lo.y + 1.0f),
+                             ImVec2(hi.x - 1.0f, hi.y - 1.0f), true);
             dl->AddText(ImVec2(lo.x + 10.0f, lo.y + 8.0f),
                         ImGui::ColorConvertFloat4ToU32(type_color(mission.type)),
                         type_label(mission.type));
@@ -276,11 +284,14 @@ void draw_offer_list(MissionSource source, const BoardTheme& theme,
             const float reward_w = ImGui::CalcTextSize(reward).x;
             dl->AddText(ImVec2(hi.x - reward_w - 10.0f, lo.y + 8.0f),
                         IM_COL32(120, 230, 140, 255), reward);
-            ImGui::SetCursorScreenPos(ImVec2(lo.x + 10.0f, lo.y + 31.0f));
-            ImGui::PushTextWrapPos(hi.x - 10.0f);
-            ImGui::TextUnformatted(mission.title.c_str());
-            ImGui::PopTextWrapPos();
-            ImGui::SetCursorScreenPos(ImVec2(lo.x, hi.y + 4.0f));
+            dl->AddText(ImGui::GetFont(), ImGui::GetFontSize(),
+                        ImVec2(lo.x + 10.0f, lo.y + 31.0f),
+                        IM_COL32(232, 235, 240, 255), mission.title.c_str(),
+                        nullptr, text_width);
+            dl->PopClipRect();
+            // Submit real layout space between cards. Never teleport the cursor
+            // to extend a child window: modern ImGui correctly asserts on that.
+            ImGui::Dummy(ImVec2(0.0f, 4.0f));
             ImGui::PopID();
         }
     }
