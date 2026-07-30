@@ -33,6 +33,7 @@ struct Layout {
 };
 
 const char* kind_name(Kind kind);
+bool is_physical_hardpoint(Kind kind);
 bool kind_from_name(const std::string& name, Kind& out);
 std::string layout_path(const std::string& ship);
 std::string find_top_down_sprite(const std::string& ship);

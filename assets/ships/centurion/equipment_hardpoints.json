@@ -2,19 +2,13 @@
   "ship": "centurion",
   "sprite": "assets/ships/centurion/sprites_3d/centurion_az000_el+090_3d.png",
   "zones": [
-    { "id": "gun_0", "label": "Forward Gun 1", "kind": "gun", "slot": 0, "rect": [0.32700, 0.67500, 0.10500, 0.10000] },
-    { "id": "gun_1", "label": "Forward Gun 2", "kind": "gun", "slot": 1, "rect": [0.56800, 0.67500, 0.10500, 0.10000] },
-    { "id": "gun_2", "label": "Forward Gun 3", "kind": "gun", "slot": 2, "rect": [0.39000, 0.62000, 0.10500, 0.10000] },
-    { "id": "gun_3", "label": "Forward Gun 4", "kind": "gun", "slot": 3, "rect": [0.50500, 0.62000, 0.10500, 0.10000] },
-    { "id": "turret_0", "label": "Turret Gun 1", "kind": "turret", "slot": 4, "rect": [0.39700, 0.12000, 0.10500, 0.11000] },
-    { "id": "turret_1", "label": "Turret Gun 2", "kind": "turret", "slot": 5, "rect": [0.50000, 0.12000, 0.10500, 0.11000] },
-    { "id": "launcher_left", "label": "Left Launcher", "kind": "launcher", "slot": 0, "rect": [0.15000, 0.41000, 0.17000, 0.13000] },
-    { "id": "launcher_right", "label": "Right Launcher", "kind": "launcher", "slot": 1, "rect": [0.68000, 0.41000, 0.17000, 0.13000] },
-    { "id": "engine", "label": "Engine Core", "kind": "engine", "slot": 0, "rect": [0.42500, 0.23500, 0.15000, 0.11500] },
-    { "id": "shield", "label": "Shield Generator", "kind": "shield", "slot": 0, "rect": [0.42500, 0.35500, 0.15000, 0.09500] },
-    { "id": "armor", "label": "Armor Package", "kind": "armor", "slot": 0, "rect": [0.35000, 0.45500, 0.30000, 0.12000] },
-    { "id": "cargo", "label": "Cargo Expansion", "kind": "cargo", "slot": 0, "rect": [0.40500, 0.56500, 0.19000, 0.09000] },
-    { "id": "systems", "label": "Ship Systems", "kind": "systems", "slot": 0, "rect": [0.41500, 0.77500, 0.17000, 0.10000] },
-    { "id": "service", "label": "Repair & Rearm", "kind": "service", "slot": 0, "rect": [0.02000, 0.82500, 0.25000, 0.12000] }
+    { "id": "gun_0", "label": "Forward Gun 1", "kind": "gun", "slot": 0, "rect": [0.32700, 0.22500, 0.10500, 0.10000] },
+    { "id": "gun_1", "label": "Forward Gun 2", "kind": "gun", "slot": 1, "rect": [0.56800, 0.22500, 0.10500, 0.10000] },
+    { "id": "gun_2", "label": "Forward Gun 3", "kind": "gun", "slot": 2, "rect": [0.39000, 0.28000, 0.10500, 0.10000] },
+    { "id": "gun_3", "label": "Forward Gun 4", "kind": "gun", "slot": 3, "rect": [0.50500, 0.28000, 0.10500, 0.10000] },
+    { "id": "turret_0", "label": "Turret Gun 1", "kind": "turret", "slot": 4, "rect": [0.39500, 0.77000, 0.10500, 0.11000] },
+    { "id": "turret_1", "label": "Turret Gun 2", "kind": "turret", "slot": 5, "rect": [0.50000, 0.77000, 0.10500, 0.11000] },
+    { "id": "launcher_left", "label": "Left Launcher", "kind": "launcher", "slot": 0, "rect": [0.15000, 0.46000, 0.17000, 0.13000] },
+    { "id": "launcher_right", "label": "Right Launcher", "kind": "launcher", "slot": 1, "rect": [0.68000, 0.46000, 0.17000, 0.13000] }
   ]
 }

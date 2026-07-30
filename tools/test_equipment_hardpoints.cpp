@@ -16,7 +16,8 @@ int main() {
     check(centurion.ship == "centurion", "layout keeps ship identity");
     check(centurion.sprite.find("el+090") != std::string::npos,
           "layout uses the exact +90-degree sprite");
-    check(centurion.zones.size() == 14, "Centurion exposes fourteen authored zones");
+    check(centurion.zones.size() == 8,
+          "Centurion authors only eight physical weapon hardpoints");
 
     int guns = 0, turrets = 0, launchers = 0;
     for (const Zone& zone : centurion.zones) {
@@ -36,7 +37,12 @@ int main() {
     check(!load("tarsus", 2, fallback_layout),
           "missing authored Tarsus file reports fallback use");
     check(!fallback_layout.sprite.empty(), "fallback resolves a top-down sprite");
-    check(fallback_layout.zones.size() >= 10, "fallback remains fully usable/editable");
+    check(fallback_layout.zones.size() == 4,
+          "two-gun fallback contains guns plus left/right launchers");
+    bool physical_only = true;
+    for (const Zone& zone : fallback_layout.zones)
+        physical_only &= is_physical_hardpoint(zone.kind);
+    check(physical_only, "fallback exposes physical hardpoints only");
 
     std::printf("\n=== %s ===\n", failures ? "FAILURES" : "ALL CHECKS PASSED");
     return failures ? 1 : 0;

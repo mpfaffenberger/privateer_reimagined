@@ -34,6 +34,10 @@ const char* kind_name(Kind kind) {
     return i >= 0 && i < static_cast<int>(std::size(k_names)) ? k_names[i] : "gun";
 }
 
+bool is_physical_hardpoint(Kind kind) {
+    return kind == Kind::Gun || kind == Kind::Turret || kind == Kind::Launcher;
+}
+
 bool kind_from_name(const std::string& name, Kind& out) {
     for (int i = 0; i < static_cast<int>(std::size(k_names)); ++i) {
         if (name == k_names[i]) { out = static_cast<Kind>(i); return true; }
@@ -82,19 +86,16 @@ Layout fallback(const std::string& ship, int gun_mounts) {
         char id[24], label[32];
         std::snprintf(id, sizeof id, "gun_%d", i);
         std::snprintf(label, sizeof label, "Gun %d", i + 1);
+        // The blueprint is rendered nose-up. Forward guns live toward the top;
+        // additional/turret mounts fan toward the aft edge.
         add_zone(out, id, label, i >= 4 ? Kind::Turret : Kind::Gun, i,
-                 0.20f + col * 0.17f, 0.62f - row * 0.48f, 0.12f, 0.10f);
+                 0.20f + col * 0.17f, i >= 4 ? 0.76f : 0.24f + row * 0.08f,
+                 0.10f, 0.08f);
     }
     add_zone(out, "launcher_left", "Left Launcher", Kind::Launcher, 0,
-             0.12f, 0.43f, 0.15f, 0.13f);
+             0.14f, 0.46f, 0.13f, 0.10f);
     add_zone(out, "launcher_right", "Right Launcher", Kind::Launcher, 1,
-             0.73f, 0.43f, 0.15f, 0.13f);
-    add_zone(out, "armor", "Armor", Kind::Armor, 0, 0.37f, 0.42f, 0.26f, 0.18f);
-    add_zone(out, "shield", "Shields", Kind::Shield, 0, 0.39f, 0.32f, 0.22f, 0.10f);
-    add_zone(out, "engine", "Engine", Kind::Engine, 0, 0.40f, 0.12f, 0.20f, 0.13f);
-    add_zone(out, "cargo", "Cargo", Kind::Cargo, 0, 0.42f, 0.52f, 0.16f, 0.10f);
-    add_zone(out, "systems", "Ship Systems", Kind::Systems, 0, 0.42f, 0.70f, 0.16f, 0.10f);
-    add_zone(out, "service", "Repair & Rearm", Kind::Service, 0, 0.02f, 0.82f, 0.24f, 0.12f);
+             0.73f, 0.46f, 0.13f, 0.10f);
     return out;
 }
 
@@ -115,7 +116,8 @@ bool load(const std::string& ship, int gun_mounts, Layout& out) {
         Zone zone;
         zone.id = item["id"].as_string();
         zone.label = item.contains("label") ? item["label"].as_string() : zone.id;
-        if (!kind_from_name(item["kind"].as_string(), zone.kind)) continue;
+        if (!kind_from_name(item["kind"].as_string(), zone.kind) ||
+            !is_physical_hardpoint(zone.kind)) continue;
         zone.slot = item.contains("slot") ? item["slot"].as_int() : 0;
         for (int i = 0; i < 4; ++i)
             zone.rect[i] = std::clamp(item["rect"].as_array()[i].as_float(), 0.0f, 1.0f);

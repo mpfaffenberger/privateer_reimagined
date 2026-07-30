@@ -10,9 +10,11 @@
 #include "sokol_imgui.h"
 
 #include <algorithm>
+#include <cctype>
 #include <cstdio>
 #include <cstring>
 #include <string>
+#include <vector>
 
 namespace outfitting::equipment_ui {
 namespace {
@@ -31,6 +33,8 @@ std::string g_loaded_ship;
 std::string g_selected_id;
 TextureSlot g_ship_texture;
 bool g_editing = false;
+bool g_category_selected = true;
+Kind g_category = Kind::Service;
 enum class DragMode { None, Move, Resize };
 DragMode g_drag = DragMode::None;
 
@@ -53,6 +57,8 @@ void ensure_layout(const std::string& ship, int mounts) {
     g_loaded_ship = ship;
     equipment_hardpoints::load(ship, mounts, g_layout);
     g_selected_id = g_layout.zones.empty() ? std::string() : g_layout.zones.front().id;
+    g_category_selected = true;
+    g_category = Kind::Service;
     g_editing = false;
     g_drag = DragMode::None;
     release_texture();
@@ -130,6 +136,7 @@ void draw_zone_overlay(PlayerState& player, const ImVec2& image_lo,
     }
     if (hovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
         g_selected_id = hovered->id;
+        g_category_selected = false;
         const ImVec2 hi = rect_max(*hovered, image_lo, image_size);
         const ImVec2 handle_lo(hi.x - 18.0f, hi.y - 18.0f);
         g_drag = g_editing && contains(mouse, handle_lo, hi)
@@ -155,23 +162,58 @@ void draw_zone_overlay(PlayerState& player, const ImVec2& image_lo,
         }
     }
 
+    // Blueprint callouts: markers stay on the hull; labels live at the margins
+    // and connect with leader lines, so long equipment names never overflow.
+    std::vector<Zone*> left, right;
     for (Zone& zone : g_layout.zones) {
         const ImVec2 lo = rect_min(zone, image_lo, image_size);
         const ImVec2 hi = rect_max(zone, image_lo, image_size);
-        const bool is_selected = selected && selected->id == zone.id;
+        const bool is_selected = !g_category_selected && selected && selected->id == zone.id;
         const bool is_hovered = hovered && hovered->id == zone.id;
         ImVec4 color = kind_color(zone.kind);
-        color.w = is_selected ? 0.98f : is_hovered ? 0.82f : 0.55f;
+        color.w = is_selected ? 1.0f : is_hovered ? 0.88f : 0.64f;
         const ImU32 col = ImGui::ColorConvertFloat4ToU32(color);
-        dl->AddRectFilled(lo, hi, IM_COL32(5, 10, 16, is_selected ? 105 : 60), 4.0f);
-        dl->AddRect(lo, hi, col, 4.0f, 0, is_selected ? 3.0f : 1.5f);
-        dl->AddText(ImVec2(lo.x + 5.0f, lo.y + 4.0f), col, zone.label.c_str());
-        const std::string state = zone_state(player, zone);
-        dl->AddText(ImVec2(lo.x + 5.0f, hi.y - 18.0f), IM_COL32(210, 218, 226, 230),
-                    state.c_str());
+        dl->AddRectFilled(lo, hi, IM_COL32(3, 13, 22, is_selected ? 145 : 85), 3.0f);
+        dl->AddRect(lo, hi, col, 3.0f, 0, is_selected ? 3.0f : 1.5f);
         if (g_editing && is_selected)
             dl->AddRectFilled(ImVec2(hi.x - 18.0f, hi.y - 18.0f), hi, col, 2.0f);
+        const float center_x = (lo.x + hi.x) * 0.5f;
+        (center_x < image_lo.x + image_size.x * 0.5f ? left : right).push_back(&zone);
     }
+
+    auto draw_callouts = [&](std::vector<Zone*>& zones, bool on_right) {
+        std::sort(zones.begin(), zones.end(), [&](const Zone* a, const Zone* b) {
+            return rect_min(*a, image_lo, image_size).y < rect_min(*b, image_lo, image_size).y;
+        });
+        float next_y = image_lo.y + 18.0f;
+        const float label_x = on_right ? image_lo.x + image_size.x - 205.0f
+                                       : image_lo.x + 12.0f;
+        const float elbow_x = on_right ? image_lo.x + image_size.x * 0.84f
+                                       : image_lo.x + image_size.x * 0.16f;
+        for (Zone* zone : zones) {
+            const ImVec2 lo = rect_min(*zone, image_lo, image_size);
+            const ImVec2 hi = rect_max(*zone, image_lo, image_size);
+            const ImVec2 anchor((lo.x + hi.x) * 0.5f, (lo.y + hi.y) * 0.5f);
+            const float label_y = std::max(anchor.y - 13.0f, next_y);
+            next_y = label_y + 42.0f;
+            const ImU32 col = ImGui::ColorConvertFloat4ToU32(kind_color(zone->kind));
+            const float line_end = on_right ? label_x - 7.0f : label_x + 193.0f;
+            dl->AddLine(anchor, ImVec2(elbow_x, label_y + 12.0f), col, 1.5f);
+            dl->AddLine(ImVec2(elbow_x, label_y + 12.0f),
+                        ImVec2(line_end, label_y + 12.0f), col, 1.5f);
+            dl->AddCircleFilled(anchor, 3.5f, col);
+            std::string state = zone_state(player, *zone);
+            for (char& c : state) {
+                if (c == '_') c = ' ';
+                else c = (char)std::toupper((unsigned char)c);
+            }
+            dl->AddText(ImVec2(label_x, label_y), col, zone->label.c_str());
+            dl->AddText(ImVec2(label_x, label_y + 18.0f),
+                        IM_COL32(214, 226, 238, 245), state.c_str());
+        }
+    };
+    draw_callouts(left, false);
+    draw_callouts(right, true);
 }
 
 void draw_ship_schematic(PlayerState& player, const ShipClass* ship,
@@ -201,7 +243,12 @@ void draw_ship_schematic(PlayerState& player, const ShipClass* ship,
                         IM_COL32(30, 55, 72, 90));
         }
         if (g_ship_texture.valid)
-            dl->AddImage(simgui_imtextureid(g_ship_texture.view), image_lo, image_hi);
+            // The source +90 captures face nose-down. Rotate the UVs 180° so
+            // every loadout blueprint reads naturally with the nose upward.
+            dl->AddImageQuad(simgui_imtextureid(g_ship_texture.view),
+                image_lo, ImVec2(image_hi.x, image_lo.y), image_hi,
+                ImVec2(image_lo.x, image_hi.y),
+                ImVec2(1, 1), ImVec2(0, 1), ImVec2(0, 0), ImVec2(1, 0));
         else
             dl->AddText(ImVec2(image_lo.x + 20.0f, image_lo.y + 20.0f),
                         IM_COL32(240, 100, 80, 255), "TOP-DOWN SPRITE UNAVAILABLE");
@@ -234,8 +281,7 @@ void draw_editor_panel() {
             sanitize_text(label); zone->label = label;
         }
         int kind = static_cast<int>(zone->kind);
-        const char* kinds[] = {"Gun", "Turret", "Launcher", "Armor", "Shield",
-                               "Engine", "Cargo", "Systems", "Service"};
+        const char* kinds[] = {"Gun", "Turret", "Launcher"};
         if (ImGui::Combo("Type", &kind, kinds, (int)std::size(kinds)))
             zone->kind = static_cast<Kind>(kind);
         ImGui::InputInt("Slot / side", &zone->slot);
@@ -273,7 +319,44 @@ void draw_editor_panel() {
         g_selected_id.clear();
     }
     ImGui::Spacing();
-    ImGui::TextWrapped("Launcher slot 0 is LEFT; slot 1 is RIGHT. Gun and turret slots index PlayerState gun mounts from zero.");
+    ImGui::TextWrapped("Only physical weapon hardpoints are authored here. Launcher slot 0 is LEFT; slot 1 is RIGHT. Gun and turret slots index PlayerState gun mounts from zero.");
+}
+
+const char* category_label(Kind kind) {
+    switch (kind) {
+        case Kind::Armor:   return "ARMOR";
+        case Kind::Shield:  return "SHIELDS";
+        case Kind::Engine:  return "ENGINE";
+        case Kind::Cargo:   return "CARGO";
+        case Kind::Systems: return "SYSTEMS";
+        case Kind::Service: return "SERVICE";
+        default:            return "EQUIPMENT";
+    }
+}
+
+void draw_category_menu() {
+    constexpr Kind categories[] = {
+        Kind::Armor, Kind::Shield, Kind::Engine,
+        Kind::Cargo, Kind::Systems, Kind::Service,
+    };
+    ImGui::TextColored(kDim, "SHIP EQUIPMENT");
+    const float gap = ImGui::GetStyle().ItemSpacing.x;
+    const float width = (ImGui::GetContentRegionAvail().x - gap * 2.0f) / 3.0f;
+    for (int i = 0; i < (int)std::size(categories); ++i) {
+        if (i % 3) ImGui::SameLine();
+        const Kind kind = categories[i];
+        const bool selected = g_category_selected && g_category == kind;
+        if (selected)
+            ImGui::PushStyleColor(ImGuiCol_Button,
+                ImVec4(kind_color(kind).x * 0.38f, kind_color(kind).y * 0.38f,
+                       kind_color(kind).z * 0.38f, 1.0f));
+        if (ImGui::Button(category_label(kind), ImVec2(width, 32.0f))) {
+            g_category = kind;
+            g_category_selected = true;
+        }
+        if (selected) ImGui::PopStyleColor();
+    }
+    ImGui::Separator();
 }
 
 } // namespace
@@ -311,11 +394,20 @@ void draw_equipment_screen(BaseContext& ctx) {
         ImGui::Separator();
         if (g_editing) {
             draw_editor_panel();
-        } else if (Zone* zone = selected_zone()) {
-            draw_purchase_panel({player, ctx.player_ship, ship, *zone});
         } else {
-            ImGui::TextDisabled("No hardpoint zones are defined for this ship.");
-            ImGui::TextWrapped("Press H to open the editor and add one.");
+            draw_category_menu();
+            if (g_category_selected) {
+                Zone category;
+                category.id = "ship_category";
+                category.label = category_label(g_category);
+                category.kind = g_category;
+                draw_purchase_panel({player, ctx.player_ship, ship, category});
+            } else if (Zone* zone = selected_zone()) {
+                draw_purchase_panel({player, ctx.player_ship, ship, *zone});
+            } else {
+                ImGui::TextDisabled("No weapon hardpoints are defined for this ship.");
+                ImGui::TextWrapped("Press H to open the editor and add one.");
+            }
         }
     }
     ImGui::EndChild();
