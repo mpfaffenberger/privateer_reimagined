@@ -10,7 +10,7 @@
 //   * upgrade shield + engine (and prove the hull cap refuses the next step),
 //   * buy cargo expansion and verify cargo_capacity() grows,
 //   * buy a new hull with trade-in math (and prove over-budget is refused),
-//   * show the engine_level -> effective top speed wiring changing.
+//   * prove engine upgrades preserve hull-defined top speed.
 //
 // Key injection isn't available over dev_remote, so this is the deterministic
 // numeric proof; the live game provides the docked-screen screenshots.
@@ -64,7 +64,7 @@ int main() {
     const long long c0 = p.credits;
     outfitting::buy_gun(p, "tachyon_cannon", 0, tarsus);
     std::printf("  credits %lld -> %lld\n", c0, (long long)p.credits);
-    std::printf("  mount0 now: %s\n", p.gun_mounts.empty() ? "(none)" : p.gun_mounts[0].c_str());
+    std::printf("  mount0 now: %s\n", p.gun_mounts.empty() ? "(none)" : p.gun_mounts[0].gun_id.c_str());
 
     std::printf("\n== Refuse a gun into an out-of-range mount (slot 9) ==\n");
     outfitting::buy_gun(p, "laser", 9, tarsus);
@@ -97,19 +97,20 @@ int main() {
                 before, (long long)p.credits, (long long)(p.credits - before), net);
     show(p, "centurion");
     std::printf("  loadout reset to %zu Centurion default mounts: ", p.gun_mounts.size());
-    for (const auto& g : p.gun_mounts) std::printf("%s ", g.c_str());
+    for (const auto& g : p.gun_mounts) std::printf("%s ", g.gun_id.c_str());
     std::printf("\n");
 
-    std::printf("\n== Engine -> speed on the Centurion (caps engine L2) ==\n");
+    std::printf("\n== Engine upgrades preserve hull-defined top speed ==\n");
     const ShipClass* cent = ship_class::find("centurion");
     const outfitting::SpeedCaps s0 = outfitting::effective_speed_caps(p);
+    p.credits += 30000; // ensure both power-plant rungs are affordable
     outfitting::upgrade_engine(p, cent);   // L0 -> L1
     outfitting::upgrade_engine(p, cent);   // L1 -> L2
     const outfitting::SpeedCaps s2 = outfitting::effective_speed_caps(p);
+    const bool speed_unchanged = s2.cruise0 == s0.cruise0 && s2.cruise1 == s0.cruise1;
     std::printf("  top speed L0 %.0f/%.0f -> L2 %.0f/%.0f  %s\n",
                 s0.cruise0, s0.cruise1, s2.cruise0, s2.cruise1,
-                s2.cruise0 > s0.cruise0 ? "PASS: engine_level raises speed"
-                                        : "FAIL");
+                speed_unchanged ? "PASS: speed remains a hull property" : "FAIL");
 
     std::printf("\n== Over-budget hull purchase is refused ==\n");
     PlayerState broke = player::new_game("troy");

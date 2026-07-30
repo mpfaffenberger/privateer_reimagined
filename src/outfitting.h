@@ -39,6 +39,7 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
 struct PlayerState;
 struct ShipClass;
@@ -50,6 +51,8 @@ namespace outfitting {
 int load(const std::string& ship_prices_path, const std::string& equip_prices_path);
 
 // ---- pricing queries (0 = unknown / not for sale) ---------------------------
+struct HullOffer { std::string id; int64_t price = 0; };
+const std::vector<HullOffer>& hull_catalog();
 int64_t hull_price(const std::string& hull_id);
 // Trade-in credit for owning `hull_id` (= price * trade_in_pct, floored).
 int64_t hull_trade_in(const std::string& hull_id);

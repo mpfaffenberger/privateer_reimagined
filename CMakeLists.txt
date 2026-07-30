@@ -189,6 +189,10 @@ add_executable(new_privateer
     src/commodity.cpp
     src/economy.cpp
     src/outfitting.cpp
+    src/dealer_ui.cpp
+    src/equipment_hardpoints.cpp
+    src/equipment_panels.cpp
+    src/equipment_ui.cpp
     src/inventory.cpp
     src/missions.cpp
     src/missions_ui.cpp
@@ -378,6 +382,22 @@ else()
     find_package(Threads REQUIRED)
     target_link_libraries(new_privateer PRIVATE OpenGL::GL ${X11_LIBRARIES} Threads::Threads ${CMAKE_DL_LIBS})
 endif()
+
+# Focused outfitting transaction harness + visual hardpoint data harness.
+add_executable(test_outfitting EXCLUDE_FROM_ALL
+    tools/test_outfitting.cpp
+    src/outfitting.cpp src/ship_class.cpp src/gun.cpp src/shield.cpp
+    src/armor.cpp src/player.cpp src/mobility.cpp src/faction.cpp src/json.cpp
+    src/commodity.cpp
+)
+target_include_directories(test_outfitting PRIVATE
+    ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party)
+target_compile_definitions(test_outfitting PRIVATE OUTFITTING_HEADLESS)
+
+add_executable(test_equipment_hardpoints EXCLUDE_FROM_ALL
+    tools/test_equipment_hardpoints.cpp src/equipment_hardpoints.cpp src/json.cpp)
+target_include_directories(test_equipment_hardpoints PRIVATE
+    ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party)
 
 # ---------------------------------------------------------------------------
 # Headless integration test harness: test_full_loop (np-zte.3)
