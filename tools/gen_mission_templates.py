@@ -64,6 +64,22 @@ def main() -> int:
 
     data = json.loads(src.read_text())
     types = data.get("types", {})
+    required = ("PTRL", "SCOU", "DFND", "CRGO", "ATAK", "BNTY", "ENMY", "CORP")
+    if not all(key in types for key in required):
+        # mission_text.json is an optional local extraction from the user's own
+        # game data. A checkout ships a valid fallback header; never replace it
+        # with an empty-but-successful header when the private catalog is absent.
+        existing = dst.read_text(encoding="utf-8") if dst.is_file() else ""
+        markers = ("k_corp", "k_enmy", "k_ptrl_summary", "k_scou_summary",
+                   "k_dfnd_summary", "k_crgo_summary", "k_atak_summary",
+                   "k_bnty_summary")
+        if all(marker in existing for marker in markers):
+            print(f"[gen_mission_templates] optional catalog incomplete; preserving fallback {dst}")
+            return 0
+        missing = ", ".join(key for key in required if key not in types)
+        sys.stderr.write(
+            f"[gen_mission_templates] incomplete input ({missing}) and no valid fallback: {dst}\n")
+        return 1
 
     # Build the output in one shot so the .h is atomic on disk.
     lines: list[str] = []
