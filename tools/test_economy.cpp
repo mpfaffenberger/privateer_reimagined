@@ -27,8 +27,7 @@
 
 #include <cstdio>
 
-// Mirror the live screen's buy/sell enforcement (which lives in the UI half
-// of economy.cpp, excluded under ECONOMY_HEADLESS). Same order of checks,
+// Mirror the live screen's buy/sell enforcement (commodity_ui.cpp). Same order of checks,
 // same player:: helpers — this is exactly what the buttons call.
 static bool buy(PlayerState& p, const char* base, const Commodity& c,
                 int qty, int cap) {
@@ -75,7 +74,17 @@ static void sell(PlayerState& p, const char* base, const Commodity& c,
 
 int main() {
     commodity::load("assets/data/privateer_db/cargo.toml");
-    economy::load("assets/data/commodity_prices.json", "assets/bases");
+    const int markets = economy::load("assets/data/commodity_prices.json", "assets/bases");
+
+    const Commodity* plastics = commodity::find("plastics");
+    const economy::Quote liverpool = plastics
+        ? economy::price("liverpool", plastics->id) : economy::Quote{};
+    const bool market_coverage = markets >= 50 && liverpool.valid &&
+                                 liverpool.available_units > 0;
+    std::printf("\n== Gemini market coverage ==\n");
+    std::printf("  bases=%d  Liverpool plastics valid=%d stock=%d  %s\n",
+                markets, liverpool.valid ? 1 : 0, liverpool.available_units,
+                market_coverage ? "PASS" : "FAIL");
 
     const Commodity* iron = commodity::find("iron");
     if (!iron) { std::printf("FAIL: no 'iron' in catalog\n"); return 1; }
@@ -115,5 +124,5 @@ int main() {
     std::printf("  %s\n", net > 0 ? "PASS: arbitrage nets positive credits"
                                    : "FAIL: arbitrage did not profit");
     (void)before;
-    return net > 0 ? 0 : 1;
+    return net > 0 && market_coverage ? 0 : 1;
 }

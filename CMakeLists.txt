@@ -188,6 +188,7 @@ add_executable(new_privateer
     src/galaxy.cpp
     src/commodity.cpp
     src/economy.cpp
+    src/commodity_ui.cpp
     src/outfitting.cpp
     src/dealer_ui.cpp
     src/equipment_hardpoints.cpp
@@ -382,6 +383,13 @@ else()
     find_package(Threads REQUIRED)
     target_link_libraries(new_privateer PRIVATE OpenGL::GL ${X11_LIBRARIES} Threads::Threads ${CMAKE_DL_LIBS})
 endif()
+
+# Focused commodity market discovery/pricing/transaction harness.
+add_executable(test_economy EXCLUDE_FROM_ALL
+    tools/test_economy.cpp src/economy.cpp src/commodity.cpp src/player.cpp src/json.cpp)
+target_include_directories(test_economy PRIVATE
+    ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party)
+target_compile_definitions(test_economy PRIVATE ECONOMY_HEADLESS)
 
 # Focused outfitting transaction harness + visual hardpoint data harness.
 add_executable(test_outfitting EXCLUDE_FROM_ALL

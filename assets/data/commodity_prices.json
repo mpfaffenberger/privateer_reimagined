@@ -82,6 +82,50 @@
         "RAWMAT":  { "price_mult": 1.50, "stock": 0   },
         "MICRO":   { "price_mult": 1.60, "stock": 0   }
       }
+    },
+    "refinery": {
+      "default": { "price_mult": 1.18, "stock": 0 },
+      "categories": {
+        "RAWMAT":  { "price_mult": 0.82, "stock": 180 },
+        "PROCESS": { "price_mult": 0.62, "stock": 600 },
+        "FUELS":   { "price_mult": 0.68, "stock": 450 },
+        "CAPGOOD": { "price_mult": 0.90, "stock": 220 },
+        "MICRO":   { "price_mult": 1.05, "stock": 100 },
+        "FOOD":    { "price_mult": 1.35, "stock": 60  }
+      }
+    },
+    "military": {
+      "default": { "price_mult": 1.20, "stock": 0 },
+      "categories": {
+        "WEAPONS": { "price_mult": 0.82, "stock": 240 },
+        "CAPGOOD": { "price_mult": 0.92, "stock": 260 },
+        "MICRO":   { "price_mult": 0.88, "stock": 220 },
+        "FUELS":   { "price_mult": 0.90, "stock": 320 },
+        "PROCESS": { "price_mult": 1.00, "stock": 160 },
+        "FOOD":    { "price_mult": 1.12, "stock": 180 }
+      }
+    },
+    "pirate": {
+      "default": { "price_mult": 1.35, "stock": 0 },
+      "categories": {
+        "WEAPONS": { "price_mult": 0.95, "stock": 220 },
+        "LUXURY":  { "price_mult": 0.86, "stock": 180 },
+        "SLAVES":  { "price_mult": 0.78, "stock": 120 },
+        "MAGIC":   { "price_mult": 0.92, "stock": 90  },
+        "FUELS":   { "price_mult": 1.08, "stock": 180 },
+        "FOOD":    { "price_mult": 1.28, "stock": 80  }
+      }
+    },
+    "newcon": {
+      "default": { "price_mult": 1.12, "stock": 0 },
+      "categories": {
+        "CAPGOOD": { "price_mult": 0.74, "stock": 500 },
+        "MICRO":   { "price_mult": 0.72, "stock": 420 },
+        "LUXURY":  { "price_mult": 0.90, "stock": 280 },
+        "PROCESS": { "price_mult": 0.88, "stock": 260 },
+        "FOOD":    { "price_mult": 1.00, "stock": 220 },
+        "FUELS":   { "price_mult": 1.05, "stock": 180 }
+      }
     }
   }
 }
