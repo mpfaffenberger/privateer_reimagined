@@ -42,6 +42,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shlex
 import shutil
 import subprocess
@@ -285,8 +286,17 @@ def _regen_voice(i: int, cue: dict, ov: dict, text: str,
 # ---------------------------------------------------------------------------
 # kind: "author" — hand the English to the cinematic-director agent
 # ---------------------------------------------------------------------------
+def author_cinematic_id(req: dict) -> str:
+    explicit = str(req.get("cinematic_id") or "").strip()
+    if explicit:
+        return explicit
+    request_id = re.sub(r"[^a-z0-9_]+", "_",
+                        str(req.get("id") or "untitled").lower()).strip("_")
+    return f"studio_{request_id or 'untitled'}"
+
+
 def build_author_prompt(req: dict) -> str:
-    cid = req.get("cinematic_id") or "penders_haulers"
+    cid = author_cinematic_id(req)
     parts = [
         f"Author a new in-game cinematic with id '{cid}' for new_privateer.",
         "First read docs/cinematic_studio.md and docs/cinematic_format.md — "
@@ -462,8 +472,8 @@ def process_author(req: dict, log: List[str]) -> str:
             + (f": {tail}" if tail else "")
             + f" — run manually: {display}")
 
-    cid = req.get("cinematic_id") or ""
-    return (f"agent finished; check assets/cinematics/{cid or '<id>'}.json, "
+    cid = author_cinematic_id(req)
+    return (f"agent finished; check assets/cinematics/{cid}.json, "
             f"then Reload + Play from the Studio panel")
 
 
@@ -479,7 +489,9 @@ def process_request(req_path: Path, rid: str) -> None:
         return
 
     kind = req.get("kind") or ""
-    cid = req.get("cinematic_id") or ""
+    cid = author_cinematic_id(req) if kind == "author" else str(req.get("cinematic_id") or "")
+    if kind == "author":
+        req["cinematic_id"] = cid
     log: List[str] = []
     _log(f"processing {rid} (kind={kind or '?'}, cinematic={cid or '-'})")
     write_response(rid, "working", "processing", cid, log)
