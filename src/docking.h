@@ -110,6 +110,13 @@ bool controls_locked(const Docking& d);
 // everything clear (the sandbox default).
 void set_clearance_gate(std::function<bool(const std::string& base_id)> gate);
 
+// Dock-commit seam. Called exactly once after docked/base fields are stamped
+// but BEFORE autosave, for both instant and approached landings. Main wires
+// mission/campaign settlement here so saves can never capture pre-settlement
+// state. Unset is valid for isolated docking tests/tools.
+void set_commit_handler(
+    std::function<void(PlayerState& player, const std::string& base_id)> handler);
+
 // Eligibility test, side-effect free. Player nav points are static so
 // "relative speed" is just |player_vel|. Call every frame to feed the
 // HUD prompt; request() runs the same check before committing.

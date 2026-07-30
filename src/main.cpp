@@ -249,6 +249,12 @@ struct AppState {
     // re-announces.
     bool           landing_zone_announced = false;
 
+    // One-shot landed debrief queued by the dock-commit campaign hook.
+    // Rendered as an ImGui modal over the destination base screen.
+    std::string    landing_notice_title;
+    std::string    landing_notice_body;
+    bool           landing_notice_pending = false;
+
     // Nav-point cruise autopilot (np-opa.3). Press A to fly to the
     // selected nav. Like docking it owns the camera while engaged
     // (controls_locked mutes pilot input), but it's a traversal
@@ -1108,6 +1114,24 @@ void build_system_scene(bool first_time) {
     // Campaign mission logic (epic #136): registers the plot action
     // handler that fixer accept_actions route through ("m01:accept").
     campaign::init();
+    // Settle every mission at the single docking commit point, before the
+    // autosave captures player state. The old later-in-frame latch could save
+    // an undelivered campaign mission and resurrect it on load (#294).
+    docking::set_commit_handler([](PlayerState& player,
+                                   const std::string& base_id) {
+        const bool delivering_m01 = plot::has_flag(player, "m01_active");
+        missions::fail_cargo_on_dock(player, base_id);
+        campaign::on_dock(player, base_id);
+        if (delivering_m01 && plot::has_flag(player, "m01_delivered")) {
+            g.landing_notice_title = "DELIVERY COMPLETE";
+            g.landing_notice_body =
+                "Liverpool has received all 40 units of iron. Sandoval promised "
+                "payment back on New Detroit, so that is your next destination.\n\n"
+                "There is no need to rush the return flight: the Mission Computer "
+                "and local guilds may have additional work along the way.";
+            g.landing_notice_pending = true;
+        }
+    });
     // Palan blockade (#126): every landing path consults this gate. The
     // gate owns the player-facing refusal line (rate-limited so the HUD
     // prompt spam doesn't flood the feed).
@@ -3648,6 +3672,35 @@ void frame_stub() {
         }
         base_screens::build(g.player, g.ships.player(), g.docking, g.camera, g.game,
                             g.sun.position);
+
+        constexpr const char* k_notice_popup = "##landing_campaign_notice";
+        if (g.landing_notice_pending) {
+            ImGui::OpenPopup(k_notice_popup);
+            g.landing_notice_pending = false;
+        }
+        ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(),
+                                ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+        ImGui::SetNextWindowSize(ImVec2(560.0f, 0.0f), ImGuiCond_Appearing);
+        if (ImGui::BeginPopupModal(k_notice_popup, nullptr,
+                                   ImGuiWindowFlags_AlwaysAutoResize |
+                                   ImGuiWindowFlags_NoSavedSettings)) {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.72f, 0.22f, 1.0f));
+            ImGui::TextUnformatted(g.landing_notice_title.c_str());
+            ImGui::PopStyleColor();
+            ImGui::Separator();
+            ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + 520.0f);
+            ImGui::TextUnformatted(g.landing_notice_body.c_str());
+            ImGui::PopTextWrapPos();
+            ImGui::Spacing();
+            const float button_w = 140.0f;
+            ImGui::SetCursorPosX((ImGui::GetContentRegionAvail().x - button_w) * 0.5f);
+            if (ImGui::Button("CONTINUE", ImVec2(button_w, 34.0f))) {
+                g.landing_notice_title.clear();
+                g.landing_notice_body.clear();
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
     }
     // Draw after the full-screen base window so the F11 Studio remains on top.
     base_art_studio::build();
@@ -4456,32 +4509,6 @@ void frame_cb() {
     // the post-launch cooldown. No-op in free flight. Runs after manual
     // physics so its pose is the one the audio listener + render see.
     docking::tick(g.docking, g.camera, g.game, g.player, dt);
-
-    // Issue #24 fail-on-land: any cargo consignment whose dest_base isn't
-    // the base we just docked at gets failed (cargo jettisoned, no reward).
-    // Idempotent — the moment we commit to the pad is the only time the
-    // "off-target" check kicks in; the function also no-ops on missions
-    // whose target is this dock (so Deliver still works) and on every
-    // non-cargo mission.
-    {
-        static std::string s_last_docked;
-        if (g.player.docked && !g.player.last_docked_base.empty()) {
-            if (s_last_docked != g.player.last_docked_base) {
-                missions::fail_cargo_on_dock(g.player, g.player.last_docked_base);
-                // Campaign dock settles (epic #136): plot-cargo deliveries +
-                // failure detection, same once-per-dock-commit cadence.
-                campaign::on_dock(g.player, g.player.last_docked_base);
-                s_last_docked = g.player.last_docked_base;
-            }
-        } else {
-            // In flight: re-arm the once-per-commit latch. Without this,
-            // launching and RE-docking at the same base skipped every
-            // dock settle (mission fail-on-land AND campaign deliveries)
-            // — bit the M12 escort payout at Oxford after M11 settled
-            // at Oxford too.
-            s_last_docked.clear();
-        }
-    }
 
     // Nav autopilot step (np-opa.3). While engaged it owns the camera:
     // orients toward the selected nav, winds up the cruise engine, and

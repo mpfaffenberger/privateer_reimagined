@@ -55,10 +55,23 @@ float ease_k(float rate, float dt) {
 // Campaign clearance gate (#126). Consulted by every landing path;
 // nullptr / false = clear. The gate owns its own messaging.
 std::function<bool(const std::string&)> g_clearance_gate;
+std::function<void(PlayerState&, const std::string&)> g_commit_handler;
 
 bool clearance_refused(const NavPointDef& nav) {
     return g_clearance_gate && !nav.base_id.empty() &&
            g_clearance_gate(nav.base_id);
+}
+
+void commit_landing(Docking& d, GameState& gs, PlayerState& player) {
+    player.docked           = true;
+    player.last_docked_base = d.base_id;
+    if (player.day < std::numeric_limits<int>::max()) ++player.day;
+    if (g_commit_handler) g_commit_handler(player, d.base_id);
+    game_state::request_mode(gs, GameMode::Landed);
+    if (!savegame::save_timestamped(player).empty()) {
+        std::printf("[save] autosaved at %s (%lld cr)\n",
+                    d.base_id.c_str(), (long long)player.credits);
+    }
 }
 
 } // namespace
@@ -67,6 +80,11 @@ namespace docking {
 
 void set_clearance_gate(std::function<bool(const std::string&)> gate) {
     g_clearance_gate = std::move(gate);
+}
+
+void set_commit_handler(
+    std::function<void(PlayerState&, const std::string&)> handler) {
+    g_commit_handler = std::move(handler);
 }
 
 bool controls_locked(const Docking& d) {
@@ -155,15 +173,8 @@ void land_now(Docking& d, GameState& gs, PlayerState& player,
     d.base_name             = nav.name;
     d.pad_pos               = nav.position;
     d.timer_s               = 0.0f;
-    player.docked           = true;
-    player.last_docked_base = nav.base_id;
-    if (player.day < std::numeric_limits<int>::max()) ++player.day;
-    game_state::request_mode(gs, GameMode::Landed);
+    commit_landing(d, gs, player);
     sfx::ui_click();
-    if (!savegame::save_timestamped(player).empty()) {
-        std::printf("[save] autosaved at %s (%lld cr)\n",
-                    nav.base_id.c_str(), (long long)player.credits);
-    }
     std::printf("[dock] AUTO-LAND zone -> instant land at %s\n",
                 d.base_id.empty() ? nav.name.c_str() : d.base_id.c_str());
 }
@@ -229,21 +240,9 @@ void tick(Docking& d, Camera& cam, GameState& gs, PlayerState& player, float dt)
         d.timer_s += dt;
         cam.velocity = HMM_V3(0.0f, 0.0f, 0.0f);   // parked
         if (d.timer_s >= k_docking_pause_s) {
-            d.state                 = DockingState::Docked;
-            player.docked           = true;
-            player.last_docked_base = d.base_id;
-            if (player.day < std::numeric_limits<int>::max()) ++player.day;
-            game_state::request_mode(gs, GameMode::Landed);
+            d.state = DockingState::Docked;
+            commit_landing(d, gs, player);
             std::printf("[dock] docked at %s\n", d.base_id.c_str());
-            // Autosave the moment we commit to the pad (np-ymp.1 / np-3dp.19):
-            // a NEW timestamped file every landing, so saves accumulate
-            // without bound and nothing is ever overwritten. Fired here
-            // (not on the Landed mode flip) so the saved
-            // `docked`/`last_docked_base` already reflect this dock.
-            if (!savegame::save_timestamped(player).empty()) {
-                std::printf("[save] autosaved at %s (%lld cr)\n",
-                            d.base_id.c_str(), (long long)player.credits);
-            }
         }
         break;
     }

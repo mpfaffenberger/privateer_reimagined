@@ -25,7 +25,11 @@
 // both so this deterministic harness never touches a real user's save folder.
 namespace sfx { void ui_click() { std::printf("[sfx] ui_click\n"); } }
 namespace savegame {
-std::string save_timestamped(const PlayerState&) { return "headless-autosave"; }
+int64_t saved_credits = -1;
+std::string save_timestamped(const PlayerState& player) {
+    saved_credits = player.credits;
+    return "headless-autosave";
+}
 }
 
 namespace {
@@ -54,6 +58,14 @@ int main() {
     GameState   gs;
     PlayerState player;
     Docking     dock;
+    int         commit_count = 0;
+    docking::set_commit_handler(
+        [&](PlayerState& p, const std::string& base_id) {
+            ++commit_count;
+            check(p.docked && p.last_docked_base == base_id,
+                  "commit hook sees stamped docking state");
+            p.credits += 123;
+        });
 
     std::printf("=== np-9cu.1 docking state-machine harness ===\n\n");
 
@@ -91,8 +103,13 @@ int main() {
     check(player.docked, "approach reaches the dock");
     check(player.last_docked_base == "achilles", "landing records the base");
     check(player.day == 1, "successful landing advances exactly one day");
+    check(commit_count == 1, "dock commit hook runs exactly once");
+    check(player.credits == 123, "dock commit hook settles player state");
+    check(savegame::saved_credits == 123,
+          "autosave captures post-settlement player state");
     for (int i = 0; i < 120; ++i) docking::tick(dock, cam, gs, player, dt);
     check(player.day == 1, "remaining docked does not advance extra days");
+    check(commit_count == 1, "remaining docked does not re-run commit hook");
 
     // ---- 5. launch back to flight -----------------------------------------
     std::printf("\n-- launch --\n");
