@@ -1,19 +1,9 @@
 // -----------------------------------------------------------------------------
-// missions.cpp — Mission Computer: generation, accept/complete, screen body.
+// missions.cpp — mission generation, acceptance, progress, and completion.
 //
-// See missions.h for the design (data-driven generation, the headless split,
-// board persistence policy, and the np-ma2.1 kill-path wiring). This file is
-// two halves, mirroring economy.cpp:
-//
-//   1. The MODEL — generate() / accept() / complete_delivery() / abandon() /
-//      on_target_destroyed(). Pure logic: it reads the commodity catalog, the
-//      galaxy graph + neighbouring system JSON (for real destination bases),
-//      moves credits/cargo ONLY through player:: helpers, and pushes comm
-//      lines. No ImGui, no audio — links into tools/test_missions.cpp.
-//
-//   2. The VIEW — the Mission Computer ImGui screen body, registered with
-//      base_screens via the np-9cu.4 hook seam. Compiled out under
-//      MISSIONS_HEADLESS so the offline harness needn't drag in the UI stack.
+// Pure model logic: reads catalogs/system data, moves credits and cargo through
+// player helpers, and pushes comm lines. The shared Mission Computer/guild view
+// lives in missions_ui.cpp so headless tests never drag in ImGui.
 //
 // ---- TUNING CONSTANTS (reward model #11; generation knobs #10) --------------
 // All knobs in one place so the unit tests in tools/test_missions.cpp can pin
@@ -38,14 +28,6 @@
 // re/mission_text.json. Keeping this a build artefact means we never hand-
 // paste briefing prose into source: the catalogue is the single source.
 #include "mission_templates.gen.h"
-
-#ifndef MISSIONS_HEADLESS
-#include "base_screens.h"
-#include "ship_class.h"
-#include "sfx.h"
-#include "imgui.h"
-#include "sokol_app.h"
-#endif
 
 #include <cmath>
 #include <cstdint>
@@ -874,28 +856,23 @@ static bool mission_is_out_of_system(const PlayerState& p, const Mission& m) {
     return false;
 }
 
-bool can_accept(const PlayerState& p, const Mission& m, int capacity) {
+AcceptBlock accept_block(const PlayerState& p, const Mission& m, int capacity) {
     // Don't accept a mission the player already has on the board —
-    // the board (or at least a re-rolled snapshot) may keep showing the
-    // same offer while the player can re-click Accept, which would
-    // otherwise double-add it.
-    for (const ActiveMission& am : p.missions) {
-        if (am.id == m.id) return false;
-    }
-    // Issue #24: 3-active cap. The Mission Computer can hold at most 3
-    // active missions; further accepts are blocked at the UI layer (the
-    // board still renders all offers, but Accept is greyed). We enforce
-    // it here as a hard rule so a future scripted accept can't bypass it.
-    if (p.missions.size() >= 3) return false;
-    // Hold-space gate for deliveries: the consignment must fit on accept.
+    // the board may keep showing the same offer after acceptance.
+    for (const ActiveMission& am : p.missions)
+        if (am.id == m.id) return AcceptBlock::AlreadyActive;
+    // Hard three-contract cap; every caller shares this model policy.
+    if (p.missions.size() >= 3) return AcceptBlock::ActiveLimit;
     if (m.type == MissionType::CargoDelivery &&
         player::cargo_units_used(p) + m.units > capacity)
-        return false;
-    // Jump-drive gate: refuse anything that lives outside the current system
-    // when the player can't jump (all six types, per the out-of-system rule).
+        return AcceptBlock::CargoSpace;
     if (!p.has_jump_drive && mission_is_out_of_system(p, m))
-        return false;
-    return true;
+        return AcceptBlock::JumpDrive;
+    return AcceptBlock::None;
+}
+
+bool can_accept(const PlayerState& p, const Mission& m, int capacity) {
+    return accept_block(p, m, capacity) == AcceptBlock::None;
 }
 
 bool accept(PlayerState& p, const Mission& m, int capacity) {
@@ -1270,335 +1247,8 @@ const char* source_label(MissionSource s) {
     return "?";
 }
 
-// ---- Mission Computer screen body -------------------------------------------
-#ifndef MISSIONS_HEADLESS
-
-namespace {
-
-// HUD palette echoing base_screens.cpp / economy.cpp.
-constexpr ImU32 kAmber = IM_COL32(255, 217,  77, 255);
-constexpr ImU32 kGreen = IM_COL32(120, 230, 120, 255);
-constexpr ImU32 kGrey  = IM_COL32(150, 158, 168, 255);
-
-// ---- column / progress text helpers ----------------------------------------
-
-// Count of nav points already reached on an active visit-a-nav mission.
-int navs_done(const ActiveMission& am) {
-    int n = 0;
-    for (uint8_t b : am.nav_done) if (b) ++n;
-    return n;
-}
-
-// The type-aware "Destination / Target" cell for an AVAILABLE offer.
-std::string board_target_text(const Mission& m) {
-    char buf[256];
-    switch (m.type) {
-        case MissionType::CargoDelivery:
-            std::snprintf(buf, sizeof buf, "%s (%s)",
-                          m.dest_base_name.c_str(), m.dest_system_name.c_str());
-            break;
-        case MissionType::Bounty: {
-            std::string region;
-            for (const std::string& r : m.bounty_region) {
-                if (r.empty()) continue;
-                if (!region.empty()) region += ", ";
-                region += r;
-            }
-            if (region.empty())
-                std::snprintf(buf, sizeof buf, "%d x %s",
-                              m.count_required, m.target_faction.c_str());
-            else
-                std::snprintf(buf, sizeof buf, "%d x %s  [%s]",
-                              m.count_required, m.target_faction.c_str(), region.c_str());
-            break;
-        }
-        case MissionType::Scout:
-        case MissionType::Attack:
-            std::snprintf(buf, sizeof buf, "%s (%s)",
-                          m.nav_targets.empty() ? "nav" : m.nav_targets.front().c_str(),
-                          m.target_system.c_str());
-            break;
-        case MissionType::Patrol:
-            std::snprintf(buf, sizeof buf, "%d nav points in %s",
-                          m.nav_count, m.target_system.c_str());
-            break;
-        case MissionType::DefendBase:
-            std::snprintf(buf, sizeof buf, "%s (%s)",
-                          m.target_base.c_str(), m.target_system.c_str());
-            break;
-        default:
-            std::snprintf(buf, sizeof buf, "-");
-            break;
-    }
-    return buf;
-}
-
-// The type-aware "Progress" cell for an ACTIVE mission. `good` => render it in
-// the green "objective met / ready" colour. Reads only #13/#15 state.
-struct ProgressCell { std::string text; bool good = false; };
-ProgressCell active_progress(const ActiveMission& am, const std::string& here_base) {
-    char buf[160];
-    switch ((MissionType)am.type) {
-        case MissionType::CargoDelivery:
-            if (am.dest_base == here_base) return { "ready to deliver", true };
-            std::snprintf(buf, sizeof buf, "-> %s", am.dest_base.c_str());
-            return { buf, false };
-        case MissionType::Bounty:
-            std::snprintf(buf, sizeof buf, "%d / %d kills", am.progress, am.count_required);
-            return { buf, am.count_required > 0 && am.progress >= am.count_required };
-        case MissionType::Scout: {
-            const bool done = !am.nav_done.empty() && am.nav_done[0];
-            return { done ? "surveyed" : "pending", done };
-        }
-        case MissionType::Patrol: {
-            const int total = am.nav_targets.empty() ? am.nav_count : (int)am.nav_targets.size();
-            const int done  = navs_done(am);
-            std::snprintf(buf, sizeof buf, "%d / %d nav points", done, total);
-            return { buf, total > 0 && done >= total };
-        }
-        case MissionType::Attack:
-        case MissionType::DefendBase: {
-            const int need = am.hostiles_required;
-            if (need > 0 && am.progress >= need) return { "area secured", true };
-            std::snprintf(buf, sizeof buf, "%d / %d destroyed", am.progress, need);
-            return { buf, false };
-        }
-    }
-    return { "-", false };
-}
-
-// ---- guild membership gate (#16) -------------------------------------------
-
-bool source_is_guild(MissionSource s) {
-    return s == MissionSource::MercenariesGuild || s == MissionSource::MerchantsGuild;
-}
-bool& guild_flag(PlayerState& p, MissionSource s) {
-    return (s == MissionSource::MercenariesGuild) ? p.merc_guild_member
-                                                  : p.merchant_guild_member;
-}
-int64_t guild_join_fee(MissionSource s) {
-    return (s == MissionSource::MercenariesGuild) ? player::k_merc_guild_fee
-                                                  : player::k_merchant_guild_fee;
-}
-
-// Non-member guild body: dues line + a JOIN button that pays via
-// player::spend_credits and flips the membership flag. Keeps the board hook
-// self-contained (gate lives WITH the board it guards) rather than relying on
-// the caller to have gated already.
-void draw_join_prompt(BaseContext& ctx, MissionSource source) {
-    PlayerState&  p      = *ctx.player;
-    bool&         member = guild_flag(p, source);
-    const int64_t fee    = guild_join_fee(source);
-    const char*   name   = source_label(source);
-
-    ImGui::SetCursorScreenPos(ImVec2(40, 96));
-    ImGui::PushStyleColor(ImGuiCol_Text, kAmber);
-    ImGui::Text("%s membership costs %lld cr (one-time).", name, (long long)fee);
-    ImGui::PopStyleColor();
-
-    ImGui::SetCursorScreenPos(ImVec2(40, 124));
-    ImGui::Text("Credits on hand: %lld", (long long)p.credits);
-
-    ImGui::SetCursorScreenPos(ImVec2(40, 160));
-    ImGui::BeginDisabled(p.credits < fee);
-    if (ImGui::Button("JOIN GUILD", ImVec2(160, 36))) {
-        if (player::spend_credits(p, fee)) {
-            member = true;
-            sfx::ui_click();
-            std::printf("[missions] joined %s (-%lld cr, %lld left)\n",
-                        name, (long long)fee, (long long)p.credits);
-        }
-    }
-    ImGui::EndDisabled();
-}
-
-// ---- the shared board renderer (Mission Computer + both guilds) ------------
-
-void draw_board(BaseContext& ctx, MissionSource source) {
-    PlayerState& p = *ctx.player;
-
-    // Guild screens gate on a paid membership (#16): show the dues/JOIN prompt
-    // until the player joins, then the board.
-    if (source_is_guild(source) && !guild_flag(p, source)) {
-        draw_join_prompt(ctx, source);
-        return;
-    }
-
-    const ShipClass* klass = ship_class::find(p.ship_class_name);
-    const int capacity = player::cargo_capacity(p, klass);
-    const int used     = player::cargo_units_used(p);
-
-    const float dpi = sapp_dpi_scale();
-    const float sw  = (float)sapp_width()  / dpi;
-    const float sh  = (float)sapp_height() / dpi;
-
-    // Totals strip.
-    ImGui::SetCursorScreenPos(ImVec2(28, 62));
-    ImGui::PushStyleColor(ImGuiCol_Text, kAmber);
-    ImGui::Text("CREDITS  %lld", (long long)p.credits);
-    ImGui::SameLine(260);
-    ImGui::Text("CARGO  %d / %d units", used, capacity);
-    ImGui::SameLine(520);
-    ImGui::Text("ACTIVE  %zu", p.missions.size());
-    ImGui::PopStyleColor();
-
-    // Split the screen height between the two panes (Available + Active).
-    // The vertical accounting must clear:
-    //   * 92  top reservation   — totals strip (62..92) and the "AVAILABLE MISSIONS" label (at y=92).
-    //   * 24  inter-pane gap    — gap between the bottom of pane #1 and the "ACTIVE MISSIONS" label at y=92+child_sz.y+24.
-    //   * 18  label line        — ~18 px for "ACTIVE MISSIONS" itself.
-    //   * 70  bottom reservation — BACK button at ss.h - 56 spanning 32 px, so clear with slack.
-    // The old formula (sh - 92 - 70) forgot the 24+18 gap-and-label, so the
-    // active child overlapped the BACK button and only its bottom sliver
-    // was clickable (issue #1).
-    const ImVec2 child_sz(sw - 56, (sh - 92 - 24 - 18 - 70) * 0.5f);
-
-
-    constexpr ImGuiTableFlags tflags =
-        ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerH |
-        ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit;
-
-    // ---- available board ----
-    ImGui::SetCursorScreenPos(ImVec2(28, 92));
-    ImGui::PushStyleColor(ImGuiCol_Text, kAmber);
-    ImGui::TextUnformatted("AVAILABLE MISSIONS");
-    ImGui::PopStyleColor();
-
-    // The mission board sits over detailed room art. Keep that atmosphere,
-    // but give both tables enough smoked-glass opacity for multiline mission
-    // text to remain legible instead of fighting every pixel underneath.
-    ImGui::PushStyleColor(ImGuiCol_ChildBg,       ImVec4(0.025f, 0.030f, 0.040f, 0.78f));
-    ImGui::PushStyleColor(ImGuiCol_TableHeaderBg, ImVec4(0.120f, 0.130f, 0.160f, 0.92f));
-    ImGui::PushStyleColor(ImGuiCol_TableRowBg,    ImVec4(0.035f, 0.040f, 0.052f, 0.72f));
-    ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, ImVec4(0.075f, 0.080f, 0.095f, 0.76f));
-
-    if (ImGui::BeginChild("##avail", child_sz, false) &&
-        ImGui::BeginTable("avail_tbl", 5, tflags, child_sz)) {
-        ImGui::TableSetupScrollFreeze(0, 1);
-        ImGui::TableSetupColumn("Mission", ImGuiTableColumnFlags_WidthStretch);
-        ImGui::TableSetupColumn("Type");
-        ImGui::TableSetupColumn("Destination / Target", ImGuiTableColumnFlags_WidthFixed, 280.0f);
-        ImGui::TableSetupColumn("Reward");
-        ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 110.0f);
-        ImGui::TableHeadersRow();
-
-        for (const Mission& m : board(source)) {
-            ImGui::TableNextRow();
-            ImGui::PushID(m.id.c_str());
-
-            ImGui::TableNextColumn(); ImGui::TextUnformatted(m.title.c_str());
-            if (ImGui::IsItemHovered() && !m.description.empty())
-                ImGui::SetTooltip("%s", m.description.c_str());
-
-            ImGui::TableNextColumn();
-            ImGui::PushStyleColor(ImGuiCol_Text, kGrey);
-            ImGui::TextUnformatted(type_label(m.type));
-            ImGui::PopStyleColor();
-
-            ImGui::TableNextColumn();
-            ImGui::TextUnformatted(board_target_text(m).c_str());
-
-            ImGui::TableNextColumn();
-            ImGui::PushStyleColor(ImGuiCol_Text, kGreen);
-            ImGui::Text("%lld", (long long)m.reward);
-            ImGui::PopStyleColor();
-
-            ImGui::TableNextColumn();
-            const bool ok = can_accept(p, m, capacity);
-            ImGui::BeginDisabled(!ok);
-            if (ImGui::SmallButton("Accept")) {
-                if (accept(p, m, capacity)) sfx::ui_click();
-            }
-            ImGui::EndDisabled();
-            if (!ok && ImGui::IsItemHovered())
-                ImGui::SetTooltip("Not enough cargo space");
-
-            ImGui::PopID();
-        }
-        ImGui::EndTable();
-    }
-    ImGui::EndChild();
-
-    // ---- active missions ----
-    ImGui::SetCursorScreenPos(ImVec2(28, 92 + child_sz.y + 24));
-    ImGui::PushStyleColor(ImGuiCol_Text, kAmber);
-    ImGui::TextUnformatted("ACTIVE MISSIONS");
-    ImGui::PopStyleColor();
-
-    if (ImGui::BeginChild("##active", child_sz, false) &&
-        ImGui::BeginTable("active_tbl", 4, tflags, child_sz)) {
-        ImGui::TableSetupScrollFreeze(0, 1);
-        ImGui::TableSetupColumn("Mission", ImGuiTableColumnFlags_WidthStretch);
-        ImGui::TableSetupColumn("Progress", ImGuiTableColumnFlags_WidthFixed, 200.0f);
-        ImGui::TableSetupColumn("Reward");
-        ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 200.0f);
-        ImGui::TableHeadersRow();
-
-        // Copy ids to act on after the loop — accept/deliver/abandon mutate
-        // p.missions, so we never erase mid-iteration of the draw.
-        std::string deliver_id, abandon_id;
-
-        for (const ActiveMission& am : p.missions) {
-            ImGui::TableNextRow();
-            ImGui::PushID(am.id.c_str());
-
-            ImGui::TableNextColumn(); ImGui::TextUnformatted(am.title.c_str());
-
-            ImGui::TableNextColumn();
-            {
-                const ProgressCell pc = active_progress(am, ctx.base_id);
-                if (pc.good)
-                    ImGui::TextColored(ImVec4(0.47f, 0.90f, 0.47f, 1.0f), "%s", pc.text.c_str());
-                else
-                    ImGui::TextUnformatted(pc.text.c_str());
-            }
-
-            ImGui::TableNextColumn();
-            ImGui::Text("%lld", (long long)am.reward);
-
-            ImGui::TableNextColumn();
-            if (am.type == (int)MissionType::CargoDelivery && am.dest_base == ctx.base_id) {
-                // Per-button PushID so each Deliver / Abandon gets a unique
-                // generated ID. The row already PushID's on am.id, but
-                // without these discriminator PushIDs Deliver and Abandon
-                // within the SAME row would collide.
-                ImGui::PushID("deliver");
-                if (ImGui::SmallButton("Deliver")) deliver_id = am.id;
-                ImGui::PopID();
-                ImGui::SameLine();
-            }
-            ImGui::PushID("abandon");
-            if (ImGui::SmallButton("Abandon")) abandon_id = am.id;
-            ImGui::PopID();
-
-            ImGui::PopID();
-        }
-        ImGui::EndTable();
-
-        if (!deliver_id.empty()) {
-            if (complete_delivery(p, deliver_id, ctx.base_id)) sfx::ui_click();
-        }
-        if (!abandon_id.empty()) {
-            if (abandon(p, abandon_id)) sfx::ui_click();
-        }
-    }
-    ImGui::EndChild();
-    ImGui::PopStyleColor(4);
-}
-
-} // namespace
-
-void register_screen() {
-  base_screens::register_screen(BaseScreen::MissionComputer,
-      [](BaseContext& c) { draw_board(c, MissionSource::Computer); });
-  base_screens::register_screen(BaseScreen::MercenariesGuild,
-      [](BaseContext& c) { draw_board(c, MissionSource::MercenariesGuild); });
-  base_screens::register_screen(BaseScreen::MerchantsGuild,
-      [](BaseContext& c) { draw_board(c, MissionSource::MerchantsGuild); });
-}
-
-#else  // MISSIONS_HEADLESS
-void register_screen() {}   // no-op in the offline harness
+#ifdef MISSIONS_HEADLESS
+void register_screen() {}   // UI lives in missions_ui.cpp in the game build.
 #endif
 
 } // namespace missions

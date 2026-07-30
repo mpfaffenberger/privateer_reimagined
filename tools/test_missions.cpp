@@ -414,6 +414,9 @@ int main() {
         ShipClass tiny; tiny.cargo_units = m.units - 1;
         PlayerState pp = mkp();
         const int tiny_cap = player::cargo_capacity(pp, &tiny);
+        check(missions::accept_block(pp, m, tiny_cap) ==
+                  missions::AcceptBlock::CargoSpace,
+              "REFUSE: model reports CargoSpace blocker");
         check(!missions::can_accept(pp, m, tiny_cap), "REFUSE: can_accept=false when hold too small");
         check(!missions::accept(pp, m, tiny_cap), "REFUSE: accept refused over-capacity");
         check(pp.missions.empty(), "REFUSE: refused accept tracks nothing");
@@ -431,8 +434,11 @@ int main() {
         check(found, "REFUSE: found a cross-system cargo job");
         PlayerState nojump = player::new_game("troy");   // has_jump_drive = false
         const std::string fb = last_comm();
+        check(missions::accept_block(nojump, cross, cap) ==
+                  missions::AcceptBlock::JumpDrive,
+              "REFUSE: model reports JumpDrive blocker");
         check(!missions::can_accept(nojump, cross, cap),
-              "REFUSE: out-of-system can_accept=false without jump drive");
+              "REFUSE: can_accept=false out-of-system without jump drive");
         check(!missions::accept(nojump, cross, cap),
               "REFUSE: out-of-system accept refused without jump drive");
         check(nojump.missions.empty(), "REFUSE: out-of-system tracks nothing");
@@ -941,4 +947,3 @@ int main() {
     std::printf("=================================================================\n");
     return g_fail == 0 ? 0 : 1;
 }
-

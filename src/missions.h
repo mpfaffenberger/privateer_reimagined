@@ -170,8 +170,19 @@ const std::vector<Mission>& board(MissionSource source = MissionSource::Computer
 
 // ---- accept / complete (all credit/cargo moves via player:: helpers) --------
 
-// Can this offer be accepted right now? For CargoDelivery this is a hold-
-// space check (units must fit in `capacity` - used); bounties always can.
+// Why an offer cannot be accepted. Kept in the model so every UI/automation
+// path explains the same policy instead of reverse-engineering can_accept().
+enum class AcceptBlock : uint8_t {
+    None = 0,
+    AlreadyActive,
+    ActiveLimit,
+    CargoSpace,
+    JumpDrive,
+};
+AcceptBlock accept_block(const PlayerState& p, const Mission& m, int capacity);
+
+// Can this offer be accepted right now? Thin convenience wrapper around
+// accept_block(); true only for AcceptBlock::None.
 bool can_accept(const PlayerState& p, const Mission& m, int capacity);
 
 // Accept `m`: append an ActiveMission to the player and, for a delivery,

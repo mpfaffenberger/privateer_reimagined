@@ -191,6 +191,7 @@ add_executable(new_privateer
     src/outfitting.cpp
     src/inventory.cpp
     src/missions.cpp
+    src/missions_ui.cpp
     src/mission_tracker.cpp
     src/faction.cpp
     src/comm.cpp
