@@ -40,6 +40,8 @@ std::string find_top_down_sprite(const std::string& ship);
 
 // Missing files are not errors: a generated fallback keeps every hull usable.
 Layout fallback(const std::string& ship, int gun_mounts);
+void set_category_dimensions(Layout& layout, Kind kind, float width, float height);
+void normalize_dimensions(Layout& layout);
 bool load(const std::string& ship, int gun_mounts, Layout& out);
 bool save(const Layout& layout);
 

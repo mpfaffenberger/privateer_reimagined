@@ -33,6 +33,22 @@ int main() {
     check(turrets == 2, "Centurion has two turret-gun zones");
     check(launchers == 2, "Centurion has left and right launcher zones");
 
+    // Editor resizing one zone must propagate to every marker in that category.
+    set_category_dimensions(centurion, Kind::Gun, 0.08f, 0.06f);
+    bool gun_sizes_match = true;
+    for (const Zone& zone : centurion.zones)
+        if (zone.kind == Kind::Gun || zone.kind == Kind::Turret)
+            gun_sizes_match &= zone.rect[2] == 0.08f && zone.rect[3] == 0.06f;
+    check(gun_sizes_match,
+          "resizing a gun normalizes forward and turret gun markers");
+
+    centurion.zones[1].rect[2] = 0.22f;
+    centurion.zones[1].rect[3] = 0.14f;
+    normalize_dimensions(centurion);
+    check(centurion.zones[1].rect[2] == centurion.zones[0].rect[2] &&
+          centurion.zones[1].rect[3] == centurion.zones[0].rect[3],
+          "layout normalization repairs inconsistent authored dimensions");
+
     Layout fallback_layout;
     check(!load("tarsus", 2, fallback_layout),
           "missing authored Tarsus file reports fallback use");

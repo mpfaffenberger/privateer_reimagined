@@ -159,6 +159,8 @@ void draw_zone_overlay(PlayerState& player, const ImVec2& image_lo,
                                            1.0f - selected->rect[0]);
             selected->rect[3] = std::clamp(selected->rect[3] + dy, 0.035f,
                                            1.0f - selected->rect[1]);
+            equipment_hardpoints::set_category_dimensions(
+                g_layout, selected->kind, selected->rect[2], selected->rect[3]);
         }
     }
 
@@ -282,15 +284,20 @@ void draw_editor_panel() {
         }
         int kind = static_cast<int>(zone->kind);
         const char* kinds[] = {"Gun", "Turret", "Launcher"};
-        if (ImGui::Combo("Type", &kind, kinds, (int)std::size(kinds)))
+        if (ImGui::Combo("Type", &kind, kinds, (int)std::size(kinds))) {
             zone->kind = static_cast<Kind>(kind);
+            equipment_hardpoints::normalize_dimensions(g_layout);
+        }
         ImGui::InputInt("Slot / side", &zone->slot);
         zone->slot = std::max(0, zone->slot);
-        ImGui::InputFloat4("Normalized rect", zone->rect, "%.4f");
+        const bool rect_changed = ImGui::InputFloat4("Normalized rect", zone->rect, "%.4f");
         zone->rect[0] = std::clamp(zone->rect[0], 0.0f, 0.965f);
         zone->rect[1] = std::clamp(zone->rect[1], 0.0f, 0.965f);
         zone->rect[2] = std::clamp(zone->rect[2], 0.035f, 1.0f - zone->rect[0]);
         zone->rect[3] = std::clamp(zone->rect[3], 0.035f, 1.0f - zone->rect[1]);
+        if (rect_changed)
+            equipment_hardpoints::set_category_dimensions(
+                g_layout, zone->kind, zone->rect[2], zone->rect[3]);
     }
 
     if (ImGui::Button("ADD ZONE", ImVec2(130.0f, 34.0f))) {
@@ -298,6 +305,7 @@ void draw_editor_panel() {
         added.id = "zone_" + std::to_string(g_layout.zones.size() + 1);
         added.label = "New Zone";
         g_layout.zones.push_back(added);
+        equipment_hardpoints::normalize_dimensions(g_layout);
         g_selected_id = added.id;
     }
     ImGui::SameLine();

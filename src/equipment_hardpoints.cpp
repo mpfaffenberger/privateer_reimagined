@@ -72,6 +72,37 @@ std::string find_top_down_sprite(const std::string& ship) {
     return "assets/" + (*best)["sprite"].as_string();
 }
 
+void set_category_dimensions(Layout& layout, Kind kind, float width, float height) {
+    width = std::clamp(width, 0.035f, 1.0f);
+    height = std::clamp(height, 0.035f, 1.0f);
+    const bool gun_family = kind == Kind::Gun || kind == Kind::Turret;
+    for (Zone& zone : layout.zones) {
+        const bool same_family = gun_family
+            ? zone.kind == Kind::Gun || zone.kind == Kind::Turret
+            : zone.kind == kind;
+        if (!same_family) continue;
+        zone.rect[2] = width;
+        zone.rect[3] = height;
+        zone.rect[0] = std::clamp(zone.rect[0], 0.0f, 1.0f - width);
+        zone.rect[1] = std::clamp(zone.rect[1], 0.0f, 1.0f - height);
+    }
+}
+
+void normalize_dimensions(Layout& layout) {
+    // Turret guns and forward guns share one visual marker family; launchers
+    // share another. The first authored marker in each family is canonical.
+    const auto first_gun = std::find_if(layout.zones.begin(), layout.zones.end(),
+        [](const Zone& zone) { return zone.kind == Kind::Gun || zone.kind == Kind::Turret; });
+    if (first_gun != layout.zones.end())
+        set_category_dimensions(layout, first_gun->kind,
+                                first_gun->rect[2], first_gun->rect[3]);
+    const auto first_launcher = std::find_if(layout.zones.begin(), layout.zones.end(),
+        [](const Zone& zone) { return zone.kind == Kind::Launcher; });
+    if (first_launcher != layout.zones.end())
+        set_category_dimensions(layout, Kind::Launcher,
+                                first_launcher->rect[2], first_launcher->rect[3]);
+}
+
 Layout fallback(const std::string& ship, int gun_mounts) {
     Layout out;
     out.ship = ship;
@@ -96,6 +127,7 @@ Layout fallback(const std::string& ship, int gun_mounts) {
              0.14f, 0.46f, 0.13f, 0.10f);
     add_zone(out, "launcher_right", "Right Launcher", Kind::Launcher, 1,
              0.73f, 0.46f, 0.13f, 0.10f);
+    normalize_dimensions(out);
     return out;
 }
 
@@ -125,6 +157,7 @@ bool load(const std::string& ship, int gun_mounts, Layout& out) {
         parsed.push_back(zone);
     }
     if (!parsed.empty()) out.zones = std::move(parsed);
+    normalize_dimensions(out);
     return true;
 }
 
