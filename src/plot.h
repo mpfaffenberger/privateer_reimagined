@@ -67,16 +67,18 @@ bool remove_item(PlayerState& p, std::string_view id);
 // One token, executed against the player:
 //   "set_flag:<f>" / "clear_flag:<f>" / "give_item:<i>" / "remove_item:<i>"
 // Anything else routes to the registered campaign handler (below). Unknown
-// + unhandled logs and no-ops. Shared by fixers (accept/refuse/done) and
-// scripted encounters (on_cleared) — ONE grammar, one executor.
-void run_action(PlayerState& p, const std::string& action);
-void run_actions(PlayerState& p, const std::vector<std::string>& actions);
+// + unhandled logs and no-ops. A rejected action stops its batch so later
+// actions cannot partially apply an offer whose prerequisite failed.
+enum class ActionResult { Unhandled, Applied, Rejected };
+bool run_action(PlayerState& p, const std::string& action);
+bool run_actions(PlayerState& p, const std::vector<std::string>& actions);
 
-// The campaign layer's seam: non-native tokens ("offer_mission:m01") land
-// here. Return true if consumed. One global handler — the campaign-mission
-// module owns it (registered once at startup).
-void set_action_handler(std::function<bool(const std::string& action,
-                                           PlayerState& player)> handler);
+// The campaign layer's seam: non-native tokens ("m01:accept") land here.
+// Applied/Rejected mean consumed; Unhandled falls through to the diagnostic.
+// One global handler — the campaign-mission module owns it at startup.
+void set_action_handler(
+    std::function<ActionResult(const std::string& action,
+                               PlayerState& player)> handler);
 
 // ---- observability (the dev_remote seam) --------------------------------
 

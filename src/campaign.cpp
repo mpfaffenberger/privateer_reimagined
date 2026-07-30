@@ -147,7 +147,7 @@ void drop_active_mission(const CargoMission& m, PlayerState& p) {
 // Accept a consignment: load the goods (hold-space checked - a full hold
 // refuses WITHOUT setting the active flag, so the offer stays on the
 // table), set <token>_active + any extra flag.
-void cargo_accept(const CargoMission& m, PlayerState& p) {
+bool cargo_accept(const CargoMission& m, PlayerState& p) {
     bool loaded;
     if (m.stow_in_compartment && plot::has_item(p, "secret_compartment")) {
         loaded = player::add_compartment_cargo(p, m.commodity, m.units);
@@ -160,7 +160,7 @@ void cargo_accept(const CargoMission& m, PlayerState& p) {
         comm::push("'Come back when you have room for the goods.'", true);
         std::printf("[campaign] %s accept refused: no space for %d %s\n",
                     m.token, m.units, m.commodity);
-        return;
+        return false;
     }
     plot::set_flag(p, flag_active(m));
     if (m.extra_accept_flag[0]) plot::set_flag(p, m.extra_accept_flag);
@@ -184,6 +184,7 @@ void cargo_accept(const CargoMission& m, PlayerState& p) {
     am.dest_base    = m.dest_base;
     am.dest_system  = m.dest_system;
     p.missions.push_back(am);
+    return true;
 }
 
 // Dock checks for one destination mission. Delivery at the destination;
@@ -426,24 +427,24 @@ void steltek_boost_tick(const PlayerState& p) {
 std::function<void(const std::string&)> g_cinematic_trigger;
 
 // ---- the one campaign action handler ---------------------------------------
-bool handle_action(const std::string& action, PlayerState& p) {
+plot::ActionResult handle_action(const std::string& action, PlayerState& p) {
+    using plot::ActionResult;
     for (const CargoMission& m : k_cargo_missions) {
-        if (m.commodity[0] && action == std::string(m.token) + ":accept") {
-            cargo_accept(m, p);
-            return true;
-        }
+        if (m.commodity[0] && action == std::string(m.token) + ":accept")
+            return cargo_accept(m, p) ? ActionResult::Applied
+                                      : ActionResult::Rejected;
     }
     if (action == "m04:install_compartment") {
         m04_install_compartment(p);
-        return true;
+        return ActionResult::Applied;
     }
     if (action == "m21:take_gun") {
         m21_take_gun(p);
-        return true;
+        return ActionResult::Applied;
     }
     if (action == "m23:boost_gun") {
         m23_boost_gun(p);
-        return true;
+        return ActionResult::Applied;
     }
     // "play_cinematic:<id>" (#143) — fire a data-driven cutscene. We can't
     // reach the live GameMode / director from here, so we hand the id to
@@ -455,7 +456,7 @@ bool handle_action(const std::string& action, PlayerState& p) {
         const std::string id = action.substr(15);
         if (id.empty()) {
             std::fprintf(stderr, "[campaign] play_cinematic: empty id\n");
-            return true;
+            return ActionResult::Applied;
         }
         if (g_cinematic_trigger) {
             g_cinematic_trigger(id);
@@ -464,7 +465,7 @@ bool handle_action(const std::string& action, PlayerState& p) {
                          "[campaign] play_cinematic:%s ignored "
                          "(no trigger wired)\n", id.c_str());
         }
-        return true;
+        return ActionResult::Applied;
     }
     // "pay:<credits>" — fixer-settled payouts (Lynch pays at the bar,
     // #118). Amount parsed as int64; garbage refuses loudly.
@@ -473,14 +474,14 @@ bool handle_action(const std::string& action, PlayerState& p) {
         if (amount <= 0) {
             std::fprintf(stderr, "[campaign] bad pay action '%s'\n",
                          action.c_str());
-            return true;
+            return ActionResult::Applied;
         }
         player::add_credits(p, amount);
         comm::push(std::to_string(amount) + " credits transferred.", false);
         std::printf("[campaign] paid %lld cr (fixer settle)\n", amount);
-        return true;
+        return ActionResult::Applied;
     }
-    return false;   // not a campaign token — plot logs it
+    return ActionResult::Unhandled;   // not a campaign token — plot logs it
 }
 
 } // namespace

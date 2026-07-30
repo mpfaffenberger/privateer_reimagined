@@ -98,9 +98,14 @@ int main() {
         player::add_cargo(full, "iron", 80, 0, 100);
         const fixers::FixerDef* sand = fixers::find("sandoval_offer");
         check(sand != nullptr, "find(sandoval_offer)");
-        fixers::accept(*sand, full);
+        check(!fixers::accept(*sand, full),
+              "full hold: accept reports rejection");
         check(!plot::has_flag(full, "m01_active"),
-              "full hold: accept refused, m01_active NOT set");
+              "full hold: m01_active NOT set");
+        check(!plot::has_item(full, "steltek_artifact"),
+              "full hold: later artifact action does not partially apply");
+        check(full.missions.empty(),
+              "full hold: no phantom ActiveMission registered");
         check(fixer_here("new_detroit", full, "sandoval_offer"),
               "full hold: offer still on the table");
     }

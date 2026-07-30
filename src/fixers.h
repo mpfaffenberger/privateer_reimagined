@@ -170,9 +170,10 @@ const FixerDef* find(const std::string& id);
 std::string expand_tokens(const std::string& text);
 
 // Run a fixer's accept/refuse/done action list against the player.
-// Exposed for the headless test + the campaign layer; the bar UI calls
-// these on button press. Each also fires the observer.
-void accept(const FixerDef& f, PlayerState& player);
+// Accept returns false when a prerequisite action rejects the batch (for
+// example, insufficient room for mission cargo); later actions do not run.
+// Exposed for headless tests; each successful outcome fires the observer.
+bool accept(const FixerDef& f, PlayerState& player);
 void refuse(const FixerDef& f, PlayerState& player);
 void dialogue_done(const FixerDef& f, PlayerState& player);
 

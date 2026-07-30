@@ -124,12 +124,13 @@ int main() {
     // ---- 4. action grammar -------------------------------------------------
     std::string handled;
     plot::set_action_handler(
-        [&](const std::string& action, PlayerState&) -> bool {
+        [&](const std::string& action, PlayerState&) -> plot::ActionResult {
             if (action.rfind("offer_mission:", 0) == 0) {
                 handled = action.substr(14);
-                return true;
+                return plot::ActionResult::Applied;
             }
-            return false;
+            if (action == "reject") return plot::ActionResult::Rejected;
+            return plot::ActionResult::Unhandled;
         });
     const fixers::FixerDef* sand = fixers::find("sandoval_offer");
     const fixers::FixerDef* tay  = fixers::find("tayla_intro");
@@ -140,6 +141,15 @@ int main() {
               "accept: native set_flag action ran");
         check(handled == "m01",
               "accept: campaign token routed to the handler seam");
+    }
+    {
+        fixers::FixerDef rejected;
+        rejected.id = "rejected_offer";
+        rejected.accept_actions = {"reject", "give_item:should_not_apply"};
+        check(!fixers::accept(rejected, p),
+              "accept: rejected campaign action rejects the whole batch");
+        check(!plot::has_item(p, "should_not_apply"),
+              "accept: actions after a rejection do not partially apply");
     }
     if (tay) {
         fixers::dialogue_done(*tay, p);

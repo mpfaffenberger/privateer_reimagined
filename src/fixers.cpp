@@ -181,10 +181,14 @@ std::string expand_tokens(const std::string& text) {
     return out;
 }
 
-void accept(const FixerDef& f, PlayerState& player) {
+bool accept(const FixerDef& f, PlayerState& player) {
     std::printf("[fixers] ACCEPT '%s'\n", f.id.c_str());
-    plot::run_actions(player, f.accept_actions);
+    if (!plot::run_actions(player, f.accept_actions)) {
+        notify("accept_rejected: " + f.id);
+        return false;
+    }
     notify("accepted: " + f.id);
+    return true;
 }
 
 void refuse(const FixerDef& f, PlayerState& player) {
@@ -225,6 +229,7 @@ namespace {
 enum class Phase { Main, Accepted, Refused };
 Phase                    g_phase = Phase::Main;
 bool                     g_actions_ran = false;
+std::string              g_decision_error;
 
 std::string              g_talking_to;     // fixer id, "" = browsing the bar
 size_t                   g_paragraph = 0;
@@ -388,13 +393,16 @@ void reset_conversation() {
     g_auto_advance = true;
     g_phase = Phase::Main;
     g_actions_ran = false;
+    g_decision_error.clear();
 }
 
-void run_decision_actions(const FixerDef& f, PlayerState& player, Phase phase) {
-    if (g_actions_ran || phase == Phase::Main) return;
+bool run_decision_actions(const FixerDef& f, PlayerState& player, Phase phase) {
+    if (g_actions_ran) return true;
+    if (phase == Phase::Main) return false;
+    if (phase == Phase::Accepted && !accept(f, player)) return false;
+    if (phase == Phase::Refused) refuse(f, player);
     g_actions_ran = true;
-    if (phase == Phase::Accepted) accept(f, player);
-    else                          refuse(f, player);
+    return true;
 }
 
 // Who speaks paragraph i -- "" (or past the end of the array) means the fixer.
@@ -559,11 +567,16 @@ void draw_fixer_body(BaseContext& ctx, const std::string& screen) {
         g_offer_voiced.clear();          // re-arm if they back out and return
     }
     if (offering) {
-        const std::string offer = expand_tokens(f->offer_text);
+        const std::string text = g_decision_error.empty()
+                               ? expand_tokens(f->offer_text)
+                               : g_decision_error;
         ImGui::SetCursorScreenPos(ImVec2(tx, py + ph - 92));
         ImGui::PushTextWrapPos(px + pw - 18);
-        ImGui::PushStyleColor(ImGuiCol_Text, kAmber);
-        ImGui::TextUnformatted(offer.c_str());
+        ImGui::PushStyleColor(ImGuiCol_Text,
+                              g_decision_error.empty()
+                                  ? ImGui::ColorConvertU32ToFloat4(kAmber)
+                                  : ImVec4(1.0f, 0.38f, 0.28f, 1.0f));
+        ImGui::TextUnformatted(text.c_str());
         ImGui::PopStyleColor();
         ImGui::PopTextWrapPos();
     }
@@ -600,8 +613,13 @@ void draw_fixer_body(BaseContext& ctx, const std::string& screen) {
         ImGui::SetCursorScreenPos(ImVec2(px + pw - 262, byy));
         if (ImGui::Button("ACCEPT", ImVec2(120, 30))) {
             sfx::ui_click();
-            run_decision_actions(*f, player, Phase::Accepted);
-            if (!begin_phase(*f, Phase::Accepted)) reset_conversation();
+            if (run_decision_actions(*f, player, Phase::Accepted)) {
+                g_decision_error.clear();
+                if (!begin_phase(*f, Phase::Accepted)) reset_conversation();
+            } else {
+                g_decision_error =
+                    "CAN'T ACCEPT: free enough cargo space for the consignment.";
+            }
         }
         ImGui::SetCursorScreenPos(ImVec2(px + pw - 130, byy));
         if (ImGui::Button("REFUSE", ImVec2(112, 30))) {
@@ -638,6 +656,7 @@ void talk_to(const FixerDef& f) {
     g_auto_advance = true;
     g_phase = Phase::Main;
     g_actions_ran = false;
+    g_decision_error.clear();
     play_paragraph_voice(f, 0);
 }
 
