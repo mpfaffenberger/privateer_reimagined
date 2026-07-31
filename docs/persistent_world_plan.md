@@ -98,15 +98,18 @@ fields: `faction`, `role`, `ship_class`, `home_base`, `schedule_id`,
 10. `voss` — Ilya Voss, professional, polite, hunts Krieg & Dekker on posted bounties
 11. `quist` — Marisol Quist, flashy Centurion ace, competes with the player for kills
 
+**Militia:**
+12. `velez` — Captain Tomas Velez, Basque-based Talon patrol commander; dry, fair, and suspicious of both privateers and distant Confed brass. Voice-ready as `PrivFlightV0101`; suited to inspections, patrol briefings, and civilian-protection scenes.
+
 **Confed:**
-12. `harker` — Cmdr. Dane Harker, Gilgamesh-class captain, patrols War/Perry corridor
-13. `ives` — Major "Songbird" Ives, Confed ace on rotation from the front, shell-shocked, drops hints the war is going badly
-14. `okafor` — Rear Adm. Chidi Okafor, Perry brass, only appears dockside
+13. `harker` — Cmdr. Dane Harker, Gilgamesh-class captain, patrols War/Perry corridor
+14. `ives` — Major "Songbird" Ives, Confed ace on rotation from the front, shell-shocked, drops hints the war is going badly
+15. `okafor` — Rear Adm. Chidi Okafor, Perry brass, only appears dockside
 
 **Kilrathi:**
-15. `nakhra` — Nak'hra nar Kiranka, rival ace, Dralthi wing, prowls Kilrathi-border jumps, develops a rivalry with Grayson (recurring duels, taunting hails)
-16. `vakka_kta` — Vakka'kta, Fralthi commander, raid-schedule incursions
-17. **`ghraffid` — Ghraffid nar Hhallas, THE DEFECTOR** ⭐
+16. `nakhra` — Nak'hra nar Kiranka, rival ace, Dralthi wing, prowls Kilrathi-border jumps, develops a rivalry with Grayson (recurring duels, taunting hails)
+17. `vakka_kta` — Vakka'kta, Fralthi commander, raid-schedule incursions
+18. **`ghraffid` — Ghraffid nar Hhallas, THE DEFECTOR** ⭐
 
 ### The Defector (marquee content)
 - **Ghraffid nar Hhallas**, a Kamekh corvette commander who refused an order

@@ -137,6 +137,21 @@
       "wardrobe": "A grey-green militia flight suit with a system patch, a light helmet with the visor up, a comm mic. Regional-military neat but low-budget.",
       "reference_image": "assets/cinematics/portraits/militia/_ref.png"
     },
+    "velez": {
+      "id": "velez",
+      "display_name": "Captain Tomas Velez",
+      "faction": "militia",
+      "role": "Basque-based Gemini militia Talon commander; patrol leader, inspection authority, and recurring local-security contact.",
+      "ship_class": "talon",
+      "home_base": "basque",
+      "schedule_id": "velez_pyrenees_watch",
+      "invulnerable": true,
+      "appearance": "Human man in his late 40s, lean and compact with warm medium-brown skin, a long angular face, close-cropped salt-and-pepper hair, and a neatly trimmed charcoal moustache. Deep-set dark-brown eyes with permanent fatigue beneath them, a narrow old scar along the right jaw, and the weathered complexion of a pilot who has spent decades flying poorly shielded frontier patrol craft.",
+      "personality": "Dry, observant, and stubbornly fair. Velez distrusts smugglers, privateers, and distant Confederation admirals in roughly equal measure. He follows procedure until procedure endangers civilians, speaks without wasted words, and gives competent pilots exactly one chance to do the right thing.",
+      "wardrobe": "Faded grey-green Gemini militia flight suit with reinforced olive shoulder panels, a worn Basque system patch, captain's bars stitched rather than polished, and a scratched open-face flight helmet tucked under one arm. Practical frontier kit repaired many times, distinctly less immaculate than Confederation Navy equipment.",
+      "voice_id": "PrivFlightV0101",
+      "reference_image": "assets/cinematics/portraits/velez/_ref.png"
+    },
     "confed": {
       "id": "confed",
       "display_name": "Confed Officer",
