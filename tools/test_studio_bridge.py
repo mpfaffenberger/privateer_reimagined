@@ -1,9 +1,14 @@
 """Regression tests for Cinematic Studio author request identity/arguments."""
 from __future__ import annotations
 
+import tempfile
 import unittest
+from pathlib import Path
+from types import SimpleNamespace
+from unittest import mock
 
 from tools.cinematics import studio_bridge as bridge
+from tools.cinematics import voices
 
 
 class StudioBridgeAuthorTests(unittest.TestCase):
@@ -25,6 +30,25 @@ class StudioBridgeAuthorTests(unittest.TestCase):
         self.assertEqual(len(command), 5)
         self.assertIn("Grayson's cargo isn't legal.", command[4])
         self.assertNotIn("'\"'\"'", command[4])
+
+    def test_successful_agent_exit_requires_cinematic_output(self) -> None:
+        request = {"id": "req_3", "kind": "author"}
+        with tempfile.TemporaryDirectory() as directory, \
+             mock.patch.object(bridge, "repo_root", return_value=Path(directory)), \
+             mock.patch.object(bridge.shutil, "which", return_value="code-puppy"), \
+             mock.patch.object(bridge.subprocess, "run", return_value=SimpleNamespace(
+                 returncode=0, stdout="director stopped safely", stderr="")):
+            with self.assertRaisesRegex(bridge.BridgeError, "did not create"):
+                bridge.process_author(request, [])
+
+    def test_minimax_http_200_logical_error_is_raised(self) -> None:
+        payload = {"base_resp": {"status_code": 1004, "status_msg": "login fail"}}
+        with self.assertRaisesRegex(RuntimeError, "1004: login fail"):
+            voices._decode_t2a_audio(payload)
+
+    def test_minimax_audio_hex_decodes(self) -> None:
+        payload = {"base_resp": {"status_code": 0}, "data": {"audio": "494433"}}
+        self.assertEqual(voices._decode_t2a_audio(payload), b"ID3")
 
 
 if __name__ == "__main__":

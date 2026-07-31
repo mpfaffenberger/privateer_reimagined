@@ -106,6 +106,16 @@ def voice_for(character: str, bible: Optional[dict] = None) -> str:
     return DEFAULT_VOICE_MAP.get(character, _FALLBACK_VOICE)
 
 
+def _decode_t2a_audio(payload: dict) -> Optional[bytes]:
+    base_resp = payload.get("base_resp") or {}
+    status = base_resp.get("status_code", 0)
+    if status not in (None, 0):
+        message = base_resp.get("status_msg") or "unknown MiniMax error"
+        raise RuntimeError(f"MiniMax t2a logical error {status}: {message}")
+    encoded = (payload.get("data") or {}).get("audio", "")
+    return bytes.fromhex(encoded) if encoded else None
+
+
 def _t2a(key: str, text: str, voice_id: str, speed: float,
          timeout: float, emotion: str = "") -> Optional[bytes]:
     import httpx
@@ -127,8 +137,7 @@ def _t2a(key: str, text: str, voice_id: str, speed: float,
         if r.status_code != 200:
             raise RuntimeError(f"MiniMax t2a error {r.status_code}: {r.text[:300]}")
         d = r.json()
-    h = (d.get("data") or {}).get("audio", "")
-    return bytes.fromhex(h) if h else None
+    return _decode_t2a_audio(d)
 
 
 def gen_line_voice(character: str, text: str, out_rel: Optional[str] = None, *,

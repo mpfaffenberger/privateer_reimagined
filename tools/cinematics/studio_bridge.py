@@ -473,6 +473,11 @@ def process_author(req: dict, log: List[str]) -> str:
             + f" — run manually: {display}")
 
     cid = author_cinematic_id(req)
+    output = repo_root() / "assets" / "cinematics" / f"{cid}.json"
+    if not output.is_file():
+        raise BridgeError(
+            f"agent exited 0 but did not create assets/cinematics/{cid}.json; "
+            "inspect the agent log for the aborted generation step")
     return (f"agent finished; check assets/cinematics/{cid}.json, "
             f"then Reload + Play from the Studio panel")
 
