@@ -81,6 +81,22 @@
           "troy_merchant_tour_seen"
         ]
       }
+    },
+    {
+      "cinematic": "studio_req_1785449208",
+      "once": true,
+      "cooldown_s": 0,
+      "when": {
+        "system": "troy",
+        "near_nav": {
+          "nav": "Pender's Star Jump",
+          "radius_m": 20000
+        },
+        "requires_flags": [],
+        "forbids_flags": [
+          "studio_req_1785449208_seen"
+        ]
+      }
     }
   ]
 }

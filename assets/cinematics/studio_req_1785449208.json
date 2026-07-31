@@ -1,0 +1,423 @@
+{
+  "id": "studio_req_1785449208",
+  "letterbox": true,
+  "skippable": true,
+  "location": {
+    "system": "troy",
+    "nav": "Pender's Star Jump"
+  },
+  "outcome": {
+    "player_at_nav": "Pender's Star Jump",
+    "spawns": [
+      {
+        "class": "talon",
+        "faction": "militia",
+        "count": 3,
+        "hostile": true
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "cmd": "spawn",
+      "actor": "grayson_ship",
+      "class": "$player",
+      "faction": "civilian",
+      "pos": [
+        100000.0,
+        133333.0,
+        -132700.0
+      ],
+      "t": 0.0
+    },
+    {
+      "cmd": "spawn",
+      "actor": "talon_lead",
+      "class": "talon",
+      "faction": "militia",
+      "pos": [
+        100850.0,
+        133450.0,
+        -131900.0
+      ],
+      "t": 0.0
+    },
+    {
+      "cmd": "spawn",
+      "actor": "talon_two",
+      "class": "talon",
+      "faction": "militia",
+      "pos": [
+        101200.0,
+        133050.0,
+        -131650.0
+      ],
+      "t": 0.0
+    },
+    {
+      "cmd": "spawn",
+      "actor": "talon_three",
+      "class": "talon",
+      "faction": "militia",
+      "pos": [
+        100500.0,
+        133850.0,
+        -131650.0
+      ],
+      "t": 0.0
+    },
+    {
+      "cmd": "fade_in",
+      "dur": 1.2,
+      "t": 0.0
+    },
+    {
+      "cmd": "music",
+      "file": "../music/original/combat_05.wav",
+      "t": 0.0
+    },
+    {
+      "cmd": "sfx",
+      "file": "../sfx/engine_hum.wav",
+      "t": 0.0
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 3.0,
+      "ease": "smooth",
+      "keys": [
+        {
+          "pos": [
+            101600.0,
+            134100.0,
+            -130900.0
+          ],
+          "look_at": [
+            100600.0,
+            133400.0,
+            -132000.0
+          ]
+        },
+        {
+          "pos": [
+            100900.0,
+            133800.0,
+            -131100.0
+          ],
+          "look_at": [
+            100350.0,
+            133350.0,
+            -132100.0
+          ]
+        }
+      ],
+      "t": 0.0
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "grayson_ship",
+      "dur": 20.0,
+      "keys": [
+        {
+          "pos": [
+            100000.0,
+            133333.0,
+            -132700.0
+          ]
+        },
+        {
+          "pos": [
+            99500.0,
+            133333.0,
+            -134100.0
+          ]
+        },
+        {
+          "pos": [
+            99000.0,
+            133333.0,
+            -135500.0
+          ]
+        }
+      ],
+      "t": 0.2
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "talon_lead",
+      "dur": 20.0,
+      "keys": [
+        {
+          "pos": [
+            100850.0,
+            133450.0,
+            -131900.0
+          ]
+        },
+        {
+          "pos": [
+            100250.0,
+            133450.0,
+            -133300.0
+          ]
+        },
+        {
+          "pos": [
+            99650.0,
+            133450.0,
+            -134700.0
+          ]
+        }
+      ],
+      "t": 0.2
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "talon_two",
+      "dur": 20.0,
+      "keys": [
+        {
+          "pos": [
+            101200.0,
+            133050.0,
+            -131650.0
+          ]
+        },
+        {
+          "pos": [
+            100600.0,
+            133050.0,
+            -133050.0
+          ]
+        },
+        {
+          "pos": [
+            100000.0,
+            133050.0,
+            -134450.0
+          ]
+        }
+      ],
+      "t": 0.2
+    },
+    {
+      "cmd": "actor_path",
+      "actor": "talon_three",
+      "dur": 20.0,
+      "keys": [
+        {
+          "pos": [
+            100500.0,
+            133850.0,
+            -131650.0
+          ]
+        },
+        {
+          "pos": [
+            99900.0,
+            133850.0,
+            -133050.0
+          ]
+        },
+        {
+          "pos": [
+            99300.0,
+            133850.0,
+            -134450.0
+          ]
+        }
+      ],
+      "t": 0.2
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 3.6,
+      "ease": "linear",
+      "keys": [
+        {
+          "pos": [
+            220.0,
+            85.0,
+            185.0
+          ],
+          "look_at": "ship:talon_lead"
+        }
+      ],
+      "t": 3.0,
+      "follow": "talon_lead"
+    },
+    {
+      "cmd": "line",
+      "speaker": "Militia Pilot",
+      "text": "Prepare to be searched. Maintain speed and course.",
+      "side": "right",
+      "dur": 3.6,
+      "portrait": "portraits/militia/studio_req_1785449208_01.png",
+      "voice_file": "audio/studio_req_1785449208_militia_01.mp3",
+      "t": 3.0
+    },
+    {
+      "cmd": "sfx",
+      "file": "../sfx/lock_seeking.wav",
+      "t": 6.7
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 3.8,
+      "ease": "linear",
+      "keys": [
+        {
+          "pos": [
+            -210.0,
+            95.0,
+            190.0
+          ],
+          "look_at": "ship:talon_lead"
+        }
+      ],
+      "t": 7.0,
+      "follow": "talon_lead"
+    },
+    {
+      "cmd": "line",
+      "speaker": "Militia Pilot",
+      "text": "Contraband detected! All units, open fire on the perp!",
+      "side": "right",
+      "dur": 3.8,
+      "portrait": "portraits/militia/studio_req_1785449208_02.png",
+      "voice_file": "audio/studio_req_1785449208_militia_02.mp3",
+      "t": 7.0
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 3.6,
+      "ease": "linear",
+      "keys": [
+        {
+          "pos": [
+            225.0,
+            75.0,
+            180.0
+          ],
+          "look_at": "ship:grayson_ship"
+        }
+      ],
+      "t": 10.9,
+      "follow": "grayson_ship"
+    },
+    {
+      "cmd": "line",
+      "speaker": "Grayson Burrows",
+      "text": "I swear, officer, it's for medicinal reasons only!",
+      "side": "left",
+      "dur": 3.6,
+      "portrait": "portraits/grayson/studio_req_1785449208_01.png",
+      "voice_file": "audio/studio_req_1785449208_grayson_01.mp3",
+      "t": 10.9
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 2.8,
+      "ease": "linear",
+      "keys": [
+        {
+          "pos": [
+            205.0,
+            90.0,
+            -195.0
+          ],
+          "look_at": "ship:talon_lead"
+        }
+      ],
+      "t": 14.6,
+      "follow": "talon_lead"
+    },
+    {
+      "cmd": "line",
+      "speaker": "Militia Pilot",
+      "text": "Shut up, you damn smuggler!",
+      "side": "right",
+      "dur": 2.8,
+      "portrait": "portraits/militia/studio_req_1785449208_03.png",
+      "voice_file": "audio/studio_req_1785449208_militia_03.mp3",
+      "t": 14.6
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 4.4,
+      "ease": "smooth",
+      "keys": [
+        {
+          "pos": [
+            0.0,
+            650.0,
+            1350.0
+          ],
+          "look_at": "ship:grayson_ship"
+        },
+        {
+          "pos": [
+            -450.0,
+            400.0,
+            1100.0
+          ],
+          "look_at": "ship:grayson_ship"
+        }
+      ],
+      "t": 17.4,
+      "follow": "talon_lead,talon_two,talon_three"
+    },
+    {
+      "cmd": "sfx",
+      "file": "../sfx/laser_fire.wav",
+      "pos": [
+        99650.0,
+        133450.0,
+        -134700.0
+      ],
+      "t": 17.6
+    },
+    {
+      "cmd": "sfx",
+      "file": "../sfx/laser_fire.wav",
+      "pos": [
+        100000.0,
+        133050.0,
+        -134450.0
+      ],
+      "t": 18.0
+    },
+    {
+      "cmd": "sfx",
+      "file": "../sfx/laser_fire.wav",
+      "pos": [
+        99300.0,
+        133850.0,
+        -134450.0
+      ],
+      "t": 18.4
+    },
+    {
+      "cmd": "sfx",
+      "file": "../sfx/impact_shield.wav",
+      "pos": [
+        99000.0,
+        133333.0,
+        -135500.0
+      ],
+      "t": 18.8
+    },
+    {
+      "cmd": "fade_out",
+      "dur": 1.2,
+      "t": 20.8
+    },
+    {
+      "cmd": "end",
+      "actions": [
+        "set_flag:studio_req_1785449208_seen"
+      ],
+      "t": 22.0
+    }
+  ]
+}
