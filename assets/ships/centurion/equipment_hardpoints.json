@@ -2,13 +2,13 @@
   "ship": "centurion",
   "sprite": "assets/ships/centurion/sprites_3d/centurion_az000_el+090_3d.png",
   "zones": [
-    { "id": "gun_0", "label": "Forward Gun 1", "kind": "gun", "slot": 0, "rect": [0.32700, 0.22500, 0.10500, 0.10000] },
-    { "id": "gun_1", "label": "Forward Gun 2", "kind": "gun", "slot": 1, "rect": [0.56800, 0.22500, 0.10500, 0.10000] },
-    { "id": "gun_2", "label": "Forward Gun 3", "kind": "gun", "slot": 2, "rect": [0.39000, 0.28000, 0.10500, 0.10000] },
-    { "id": "gun_3", "label": "Forward Gun 4", "kind": "gun", "slot": 3, "rect": [0.50500, 0.28000, 0.10500, 0.10000] },
-    { "id": "turret_0", "label": "Turret Gun 1", "kind": "turret", "slot": 4, "rect": [0.39500, 0.77000, 0.10500, 0.11000] },
-    { "id": "turret_1", "label": "Turret Gun 2", "kind": "turret", "slot": 5, "rect": [0.50000, 0.77000, 0.10500, 0.11000] },
-    { "id": "launcher_left", "label": "Left Launcher", "kind": "launcher", "slot": 0, "rect": [0.15000, 0.46000, 0.17000, 0.13000] },
-    { "id": "launcher_right", "label": "Right Launcher", "kind": "launcher", "slot": 1, "rect": [0.68000, 0.46000, 0.17000, 0.13000] }
+    { "id": "gun_0", "label": "Forward Gun 1", "kind": "gun", "slot": 0, "rect": [0.35410, 0.38758, 0.03629, 0.07677] },
+    { "id": "gun_1", "label": "Forward Gun 2", "kind": "gun", "slot": 1, "rect": [0.60929, 0.39790, 0.03629, 0.09742] },
+    { "id": "gun_2", "label": "Forward Gun 3", "kind": "gun", "slot": 2, "rect": [0.39387, 0.32774, 0.03500, 0.08710] },
+    { "id": "gun_3", "label": "Forward Gun 4", "kind": "gun", "slot": 3, "rect": [0.56565, 0.34323, 0.03790, 0.09097] },
+    { "id": "turret_0", "label": "Turret Gun 1", "kind": "turret", "slot": 4, "rect": [0.46081, 0.80226, 0.04565, 0.11129] },
+    { "id": "turret_1", "label": "Turret Gun 2", "kind": "turret", "slot": 5, "rect": [0.51032, 0.80355, 0.04145, 0.10742] },
+    { "id": "launcher_left", "label": "Left Launcher", "kind": "launcher", "slot": 0, "rect": [0.29194, 0.43677, 0.04355, 0.08613] },
+    { "id": "launcher_right", "label": "Right Launcher", "kind": "launcher", "slot": 1, "rect": [0.68129, 0.46516, 0.04226, 0.08613] }
   ]
 }
