@@ -140,8 +140,8 @@
 //   POST /jump           → approach the named jump gate (dev teleport,
 //                          same convenience as /dock) and attempt the
 //                          jump via the REAL eligibility path — campaign
-//                          route lock, hostile bubble, and jump-drive
-//                          check all apply. Body { nav }. Assert via
+//                          route lock, trigger range, and jump-drive checks
+//                          apply; hostiles do not. Body { nav }. Assert via
 //                          GET /player system change (or its absence).
 //   POST /cinematic/play   → load + play assets/cinematics/<id>.json. Body
 //                          { id }. Runs on the main thread; BLOCKS until it

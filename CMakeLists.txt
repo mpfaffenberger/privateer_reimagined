@@ -407,6 +407,13 @@ add_executable(test_equipment_hardpoints EXCLUDE_FROM_ALL
 target_include_directories(test_equipment_hardpoints PRIVATE
     ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party)
 
+# Focused jump-eligibility regression harness. Jump deliberately does not link
+# threat.cpp: combat proximity belongs to autopilot, not gate eligibility.
+add_executable(test_jump EXCLUDE_FROM_ALL
+    tools/test_jump.cpp src/jump.cpp src/galaxy.cpp src/json.cpp)
+target_include_directories(test_jump PRIVATE
+    ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party)
+
 # ---------------------------------------------------------------------------
 # Headless integration test harness: test_full_loop (np-zte.3)
 # ---------------------------------------------------------------------------
@@ -416,7 +423,7 @@ target_include_directories(test_equipment_hardpoints PRIVATE
 # test_missions / test_reputation) already use, then walks the whole loop
 # programmatically: new_game -> encounter spawn -> kill (rep + bounty) -> dock
 # + autosave -> commodity arbitrage -> outfitting -> missions -> repair ->
-# homing-missile kill + afterburner -> jump (round-trip + hostile gate) ->
+# homing-missile kill + afterburner -> jump (round-trip + escape under fire) ->
 # save/reload round-trip -> death/respawn. dev_remote can't inject keystrokes
 # (np-w68), so this is the scriptable proxy for the manual playtest.
 #

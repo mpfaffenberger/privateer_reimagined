@@ -1659,7 +1659,7 @@ void build_system_scene(bool first_time) {
                          nav.c_str());
         });
         // POST /jump — approach the named gate + attempt the jump via the
-        // REAL J-key path (route lock / hostiles / drive checks live).
+        // REAL J-key path (route lock / range / drive checks live).
         dev_remote::set_jump_hook([](std::string nav) {
             if (g.game.mode != GameMode::Flight) {
                 std::fprintf(stderr, "[dev_remote] /jump refused: not in Flight\n");
@@ -7290,12 +7290,13 @@ void event_cb(const sapp_event* ev) {
         }
         // J — jump through the selected jump gate (np-6al.3). Twin of the D
         // docking key: down-edge only, only acts when the selected nav is a
-        // surveyed jump point we're cleared to take (in range, no hostiles).
-        // On success we queue the destination + arrival gate and flip to the
+        // surveyed jump point we're cleared to take and inside its trigger range.
+        // Nearby hostiles block autopilot, not this gate escape. On success we
+        // queue the destination + arrival gate and flip to the
         // Loading hyperspace cinematic; execute_jump() does the warp once the
         // flash has held. Refusals log their reason (the HUD already shows it
         // via the jump prompt). Re-checks eligibility here so a stale prompt
-        // frame can't smuggle through an out-of-range / under-fire jump.
+        // frame can't smuggle through an out-of-range or newly locked jump.
         if (ev->key_code == SAPP_KEYCODE_J && g.autopilot.phase == AutopilotPhase::Idle) {
             const jump::Eligibility e = jump::evaluate(
                 g.camera, g.system, g.galaxy, g.player.current_system,

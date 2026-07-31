@@ -608,9 +608,9 @@ int main() {
     step_result("i", fi);
 
     // =======================================================================
-    // STEP j — jump: Troy<->Pyrenees round-trip + hostile-gate refusal.
+    // STEP j — jump: round-trip; combat blocks autopilot, not gate travel.
     // =======================================================================
-    int fj = g_fail; banner("j", "jump: round-trip + hostile gate");
+    int fj = g_fail; banner("j", "jump under fire + autopilot hostile gate");
     {
         // Reciprocal topology round-trip via the galaxy graph.
         const galaxy::JumpTarget out  = gal.jump_target("troy", "Pyrenees Jump");
@@ -636,7 +636,7 @@ int main() {
               "credits + cargo persist across the jump");
         player.current_system = sys_before;     // hop back for the rest of the harness
 
-        // Jump eligibility: at the Pyrenees gate, clear vs hostile-blocked.
+        // Jump eligibility remains ready under fire, while autopilot refuses.
         const int gate = nav_index(troy, "Pyrenees Jump");
         check(gate >= 0, "Pyrenees Jump gate found in Troy");
         if (gate >= 0) {
@@ -651,15 +651,22 @@ int main() {
             check(clear.status == jump::Status::Ready && ready,
                   "jump READY at the gate with no hostiles");
 
-            // Drop a pirate inside the gate's danger bubble -> jump refused.
+            // Drop a pirate nearby. The gate remains a valid escape, but the
+            // long-distance autopilot must still refuse to engage.
             const ShipClass* talon = ship_class::find("talon");
             if (talon) {
                 spawn_npc(w, *talon, Faction::Pirate,
                           HMM_AddV3(cam.position, HMM_V3(2000, 0, 0)));
-                const jump::Eligibility blocked = jump::evaluate(cam, troy, gal, "troy", gate,
-                                                                 /*has_jump_drive=*/true);
-                check(blocked.status == jump::Status::Hostiles,
-                      "jump REFUSED with a hostile in the bubble");
+                const jump::Eligibility under_fire = jump::evaluate(
+                    cam, troy, gal, "troy", gate, /*has_jump_drive=*/true);
+                check(under_fire.status == jump::Status::Ready,
+                      "jump remains READY with a hostile nearby");
+
+                Autopilot ap;
+                const EngageResult autopilot_result =
+                    autopilot::try_engage(ap, cam, troy, gate);
+                check(autopilot_result == EngageResult::Hostiles,
+                      "autopilot still REFUSES with a hostile nearby");
             }
             threat::set_world(nullptr, nullptr);
         }

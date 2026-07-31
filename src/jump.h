@@ -19,7 +19,9 @@
 //   1. the selected nav is kind=="jump"             (else: no prompt at all)
 //   2. it resolves to a real galaxy edge             (else: "JUMP: NO ROUTE")
 //   3. we're inside the trigger range of the gate    (else: "JUMP: TOO FAR")
-//   4. no hostiles inside the danger bubble          (else: "JUMP: HOSTILES NEAR")
+//
+// Hostiles are intentionally absent from this list. They block autopilot, not
+// jumping: reaching a valid gate under fire is a legitimate escape.
 //
 // Trigger range note (np-6al.3): the bead floated ~500u, but the nav autopilot
 // (autopilot.h) eases to a stop within k_arrival_radius_m == 5000u of its
@@ -47,10 +49,6 @@ namespace jump {
 // ---- tuning knobs -----------------------------------------------------------
 // Tight: you must be basically on top of the gate to jump (Privateer feel).
 constexpr float k_trigger_range_m = 3000.0f;
-// Hostile bubble for the gate — matches autopilot::k_threat_radius_m so a
-// furball that blocks the autopilot also blocks the jump (Privateer rule).
-constexpr float k_threat_radius_m = 8000.0f;
-
 // Verdict for a single (player, selected nav) pair.
 enum class Status : uint8_t {
     Ready = 0,    // good to jump — "PRESS J TO JUMP - <dest>"
@@ -60,7 +58,6 @@ enum class Status : uint8_t {
     Locked,       // link exists but the campaign hasn't opened it (#130)
                   // — "JUMP: UNSURVEYED"
     TooFar,       // outside trigger range — "JUMP: TOO FAR"
-    Hostiles,     // hostiles in the bubble — "JUMP: HOSTILES NEAR"
     NoDrive,      // player has no Jump Drive fitted — "JUMP: NO DRIVE"
 };
 
@@ -74,7 +71,7 @@ struct Eligibility {
 
 // Evaluate the jump verdict for `selected_nav` (index into
 // system.nav_points; -1 = none). Pure: reads the camera pose, the gate's
-// position, the galaxy topology, and the threat oracle — mutates nothing.
+// position, and the galaxy topology — mutates nothing.
 // Pass `has_jump_drive` so the verdict can include NoDrive.
 // Campaign route gate (#130, the locked frontier). When registered, a
 // truthy return for (from_system, to_system) turns a Ready link into

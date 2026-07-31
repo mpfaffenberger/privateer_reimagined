@@ -12,7 +12,6 @@
 #include "galaxy.h"
 #include "player.h"
 #include "system_def.h"
-#include "threat.h"
 
 #include <cstdio>
 #include <functional>
@@ -90,13 +89,9 @@ Eligibility evaluate(const Camera& cam, const StarSystem& system,
         return e;
     }
 
-    // 4. Hostile gate — same oracle the autopilot uses (threat.h). Stubbed
-    // false until the encounter director wires a world in; live thereafter.
-    if (threat::hostiles_near(cam.position, k_threat_radius_m)) {
-        e.status = Status::Hostiles;
-        return e;
-    }
-
+    // Hostiles deliberately do not participate in jump eligibility. They
+    // block long-distance autopilot travel, but a pilot who physically reaches
+    // a valid gate may jump away under fire.
     e.status = Status::Ready;
     return e;
 }
@@ -113,7 +108,6 @@ const char* prompt(const Eligibility& e, bool* ready) {
         case Status::NoRoute:  return "JUMP: NO ROUTE";
         case Status::Locked:   return "JUMP: UNSURVEYED";
         case Status::TooFar:   return "JUMP: TOO FAR";
-        case Status::Hostiles: return "JUMP: HOSTILES NEAR";
         case Status::NoDrive:  return "JUMP: NO DRIVE";
         case Status::NotJumpNav:
         default:               return nullptr;   // not a gate — no prompt
@@ -127,7 +121,6 @@ const char* status_str(Status s) {
         case Status::NoRoute:    return "no route";
         case Status::Locked:     return "locked (unsurveyed)";
         case Status::TooFar:     return "too far";
-        case Status::Hostiles:   return "hostiles near";
         case Status::NoDrive:    return "no drive";
         default:                 return "?";
     }

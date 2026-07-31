@@ -1,7 +1,7 @@
 // -----------------------------------------------------------------------------
 // tools/test_jump.cpp — offline driver for the np-6al.3 jump eligibility
 // oracle. Links the REAL jump.cpp + galaxy.cpp and walks every verdict the
-// HUD/J-key share (Ready / TooFar / NoRoute / NotJumpNav / Hostiles) plus the
+// HUD/J-key share (Ready / TooFar / NoRoute / NotJumpNav / NoDrive) plus the
 // reciprocal round-trip (Troy->Pyrenees->Troy lands back at the origin gate).
 //
 // Key injection isn't available over dev_remote, so this is the deterministic
@@ -19,13 +19,6 @@
 #include "system_def.h"
 
 #include <cstdio>
-
-// threat.cpp drags in the ship registry + faction tables; jump.cpp only calls
-// this one entry point, so stub it (toggle to exercise the hostile gate).
-namespace threat {
-bool g_force_hostiles = false;
-bool hostiles_near(HMM_Vec3, float) { return g_force_hostiles; }
-}
 
 // Build the Troy<->Pyrenees slice of the real galaxy.json topology in memory.
 static galaxy::Galaxy make_galaxy() {
@@ -61,11 +54,10 @@ int main() {
 
     std::printf("=== np-6al.3 jump eligibility harness ===\n\n");
 
-    // ---- 1. Ready: at the Pyrenees Jump gate, no hostiles -----------------
+    // ---- 1. Ready: at the Pyrenees Jump gate -------------------------------
     cam.position = troy.nav_points[0].position;   // sitting on the gate
-    threat::g_force_hostiles = false;
     {
-        const jump::Eligibility e = jump::evaluate(cam, troy, gal, "troy", 0);
+        const jump::Eligibility e = jump::evaluate(cam, troy, gal, "troy", 0, true);
         bool ready = false; const char* p = jump::prompt(e, &ready);
         const bool ok = e.status == jump::Status::Ready &&
                         e.dest_id == "pyrenees" && e.dest_name == "Pyrenees" &&
@@ -79,7 +71,7 @@ int main() {
     // ---- 2. TooFar: same gate, but 50k out --------------------------------
     cam.position = HMM_AddV3(troy.nav_points[0].position, HMM_V3(50000.0f, 0.0f, 0.0f));
     {
-        const jump::Eligibility e = jump::evaluate(cam, troy, gal, "troy", 0);
+        const jump::Eligibility e = jump::evaluate(cam, troy, gal, "troy", 0, true);
         bool ready = false; const char* p = jump::prompt(e, &ready);
         const bool ok = e.status == jump::Status::TooFar && !ready;
         std::printf("[2 TooFar]    status=%-9s dist=%.0fu (trigger %.0fu) prompt='%s'  %s\n",
@@ -91,7 +83,7 @@ int main() {
     // ---- 3. NoRoute: the dangling War Jump (no galaxy edge) ---------------
     cam.position = troy.nav_points[2].position;
     {
-        const jump::Eligibility e = jump::evaluate(cam, troy, gal, "troy", 2);
+        const jump::Eligibility e = jump::evaluate(cam, troy, gal, "troy", 2, true);
         const bool ok = e.status == jump::Status::NoRoute;
         std::printf("[3 NoRoute]   status=%-9s prompt='%s'  %s\n",
                     jump::status_str(e.status),
@@ -102,7 +94,7 @@ int main() {
     // ---- 4. NotJumpNav: a station nav -> no prompt ------------------------
     cam.position = troy.nav_points[1].position;
     {
-        const jump::Eligibility e = jump::evaluate(cam, troy, gal, "troy", 1);
+        const jump::Eligibility e = jump::evaluate(cam, troy, gal, "troy", 1, true);
         const bool ok = e.status == jump::Status::NotJumpNav &&
                         jump::prompt(e, nullptr) == nullptr;
         std::printf("[4 NotJump]   status=%-9s prompt=%s  %s\n",
@@ -111,18 +103,16 @@ int main() {
         fails += !ok;
     }
 
-    // ---- 5. Hostiles: at the gate but the threat oracle trips -------------
+    // ---- 5. NoDrive: a valid gate still requires fitted jump hardware -----
     cam.position = troy.nav_points[0].position;
-    threat::g_force_hostiles = true;
     {
-        const jump::Eligibility e = jump::evaluate(cam, troy, gal, "troy", 0);
+        const jump::Eligibility e = jump::evaluate(cam, troy, gal, "troy", 0, false);
         bool ready = false; const char* p = jump::prompt(e, &ready);
-        const bool ok = e.status == jump::Status::Hostiles && !ready;
-        std::printf("[5 Hostile]   status=%-9s prompt='%s' ready=%d  %s\n",
+        const bool ok = e.status == jump::Status::NoDrive && !ready;
+        std::printf("[5 NoDrive]   status=%-9s prompt='%s' ready=%d  %s\n",
                     jump::status_str(e.status), p ? p : "(null)", ready, PASS(ok));
         fails += !ok;
     }
-    threat::g_force_hostiles = false;
 
     // ---- 6. Reciprocal round-trip via the galaxy graph --------------------
     {
