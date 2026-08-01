@@ -2233,50 +2233,21 @@ void build_sector_navmap(const galaxy::Galaxy& galaxy,
     }
     dl->AddRect(map_p0, map_p1, green, 0.0f, 0, 2.5f);
 
-    // Each authored quadrant is its own local chart. A single galaxy-wide
-    // transform preserves the large gaps between clusters and crushes every
-    // cluster into a corner, so normalize each quadrant independently.
-    struct QuadrantBounds {
-        float min_x = 1e9f, max_x = -1e9f;
-        float min_y = 1e9f, max_y = -1e9f;
-    };
-    auto quadrant_for = [](const galaxy::SystemEntry& system) {
-        if (system.sector.find("Fariss") != std::string::npos) return 0;
-        if (system.sector.find("Clarke") != std::string::npos) return 1;
-        if (system.sector.find("Humboldt") != std::string::npos) return 2;
-        if (system.sector.find("Potter") != std::string::npos) return 3;
-        const bool right = system.galaxy_position.X >= 0.0f;
-        const bool bottom = system.galaxy_position.Y < 0.0f;
-        return (bottom ? 2 : 0) + (right ? 1 : 0);
-    };
-
-    QuadrantBounds bounds[4];
+    float min_x = 1e9f, max_x = -1e9f, min_y = 1e9f, max_y = -1e9f;
     for (const auto& system : galaxy.systems) {
-        QuadrantBounds& b = bounds[quadrant_for(system)];
-        b.min_x = fminf(b.min_x, system.galaxy_position.X);
-        b.max_x = fmaxf(b.max_x, system.galaxy_position.X);
-        b.min_y = fminf(b.min_y, system.galaxy_position.Y);
-        b.max_y = fmaxf(b.max_y, system.galaxy_position.Y);
+        min_x = fminf(min_x, system.galaxy_position.X);
+        max_x = fmaxf(max_x, system.galaxy_position.X);
+        min_y = fminf(min_y, system.galaxy_position.Y);
+        max_y = fmaxf(max_y, system.galaxy_position.Y);
     }
-
-    const float half_w = map_w * 0.5f;
-    const float half_h = map_h * 0.5f;
-    constexpr float kPlotInsetX = 54.0f;
-    constexpr float kPlotInsetTop = 42.0f;
-    constexpr float kPlotInsetBottom = 44.0f;
-    auto to_screen = [&](const galaxy::SystemEntry& system) {
-        const int q = quadrant_for(system);
-        const QuadrantBounds& b = bounds[q];
-        const float span_x = fmaxf(1.0f, b.max_x - b.min_x);
-        const float span_y = fmaxf(1.0f, b.max_y - b.min_y);
-        const float nx = (system.galaxy_position.X - b.min_x) / span_x;
-        const float ny = (system.galaxy_position.Y - b.min_y) / span_y;
-        const float qx = map_p0.x + (q % 2) * half_w;
-        const float qy = map_p0.y + (q / 2) * half_h;
-        const float plot_w = half_w - 2.0f * kPlotInsetX;
-        const float plot_h = half_h - kPlotInsetTop - kPlotInsetBottom;
-        return ImVec2(qx + kPlotInsetX + nx * plot_w,
-                      qy + kPlotInsetTop + (1.0f - ny) * plot_h);
+    const float world_cx = (min_x + max_x) * 0.5f;
+    const float world_cy = (min_y + max_y) * 0.5f;
+    float span = fmaxf(max_x - min_x, max_y - min_y);
+    if (span < 1.0f) span = 1.0f;
+    const float scale = 0.82f * fminf(map_w, map_h) / span;
+    auto to_screen = [&](HMM_Vec2 p) {
+        return ImVec2(map_ctr.x + (p.X - world_cx) * scale,
+                      map_ctr.y - (p.Y - world_cy) * scale);
     };
 
     // Lines are local only when both authored systems share a sector.
@@ -2285,7 +2256,7 @@ void build_sector_navmap(const galaxy::Galaxy& galaxy,
         const galaxy::SystemEntry* a = galaxy.find(jump.from);
         const galaxy::SystemEntry* b = galaxy.find(jump.to);
         if (!a || !b) continue;
-        dl->AddLine(to_screen(*a), to_screen(*b),
+        dl->AddLine(to_screen(a->galaxy_position), to_screen(b->galaxy_position),
                     a->sector == b->sector ? yellow : red, 1.1f);
     }
 
@@ -2309,7 +2280,7 @@ void build_sector_navmap(const galaxy::Galaxy& galaxy,
     // Nodes first, then labels. Labels try eight placements and choose the
     // candidate with the least overlap against labels already accepted.
     for (const auto& system : galaxy.systems) {
-        const ImVec2 p = to_screen(system);
+        const ImVec2 p = to_screen(system.galaxy_position);
         const bool current = system.id == current_system_id;
         dl->AddCircleFilled(p, current ? 5.0f : 2.5f,
                             current ? IM_COL32(170, 250, 255, 255)
@@ -2324,7 +2295,7 @@ void build_sector_navmap(const galaxy::Galaxy& galaxy,
     occupied.reserve(galaxy.systems.size());
     constexpr float kPad = 2.0f;
     for (const auto& system : galaxy.systems) {
-        const ImVec2 node = to_screen(system);
+        const ImVec2 node = to_screen(system.galaxy_position);
         const ImVec2 text_size = ImGui::CalcTextSize(system.display_name.c_str());
         const ImVec2 candidates[] = {
             {node.x + 7.0f, node.y - text_size.y * 0.5f},
