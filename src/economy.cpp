@@ -163,6 +163,14 @@ Quote price(const std::string& base_id, const std::string& commodity_id) {
     // sold some this session.
     const auto live = g_live_stock.find(stock_key(base_id, commodity_id));
     q.available_units = (live == g_live_stock.end()) ? m.stock : live->second;
+
+    // Contraband (Ultimate, Brilliance, ...) is only peddled at pirate
+    // bases. Anywhere else it is off the Buy list entirely (0 stock).
+    // Selling your hold still works everywhere -- sell_price drives that
+    // path, not available_units -- so you can always dump a hot cargo.
+    if (commodity::is_contraband(c->id) && ba->second != "pirate") {
+        q.available_units = 0;
+    }
     return q;
 }
 

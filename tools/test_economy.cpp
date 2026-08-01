@@ -74,6 +74,7 @@ static void sell(PlayerState& p, const char* base, const Commodity& c,
 
 int main() {
     commodity::load("assets/data/privateer_db/cargo.toml");
+    commodity::load_contraband("assets/data/contraband.json");
     const int markets = economy::load("assets/data/commodity_prices.json", "assets/bases");
 
     const Commodity* plastics = commodity::find("plastics");
@@ -123,6 +124,32 @@ int main() {
                 (long long)player::k_new_game_credits, (long long)p.credits, net);
     std::printf("  %s\n", net > 0 ? "PASS: arbitrage nets positive credits"
                                    : "FAIL: arbitrage did not profit");
+
+    // Contraband gate: Ultimate/Brilliance are FOOD-category, but must only
+    // be BUYABLE at pirate bases. A non-pirate base that otherwise stocks
+    // FOOD (Helen/agricultural sells 600 food units) must report 0 stock for
+    // them; a pirate base (Drake, food stock 80) must sell them. Selling a
+    // hot cargo still works anywhere via sell_price -- only the Buy path is
+    // gated, which is what available_units drives.
+    const char* const contraband_ids[] = { "ultimate", "brilliance" };
+    bool contraband_ok = true, found_contra = false;
+    std::printf("\n== Contraband availability (pirate-only sale) ==\n");
+    for (const char* id : contraband_ids) {
+        const Commodity* c = commodity::find(id);
+        if (!c) { std::printf("  (no '%s' in catalog)\n", id); continue; }
+        found_contra = true;
+        const economy::Quote agri  = economy::price("helen", c->id);  // agricultural
+        const economy::Quote pirate = economy::price("drake", c->id); // pirate
+        const bool nonpirate_blocked = !agri.valid || agri.available_units <= 0;
+        const bool pirate_sells      =  pirate.valid && pirate.available_units > 0;
+        std::printf("  %-10s contraband=%d helen(agri).avail=%-4d drake(pirate).avail=%d\n",
+                    id, commodity::is_contraband(c->id) ? 1 : 0,
+                    agri.available_units, pirate.available_units);
+        if (!(nonpirate_blocked && pirate_sells)) contraband_ok = false;
+    }
+    std::printf("  %s\n", (found_contra && contraband_ok)
+        ? "PASS: contraband only at pirate bases"
+        : "FAIL: contraband gate broken");
     (void)before;
-    return net > 0 && market_coverage ? 0 : 1;
+    return net > 0 && market_coverage && contraband_ok ? 0 : 1;
 }
