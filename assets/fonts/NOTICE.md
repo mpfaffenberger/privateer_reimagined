@@ -2,16 +2,11 @@
 
 ImGui UI font bundled for the game's Debug panel and in-app UI.
 
-## dosgame-pixel-font.ttf
+## Inter-Regular.ttf
 
-- **Font:** "DOS Game Pixel Font" (embedded name table, `Copyright SFO 2026`)
-- **Source / attribution:** **Friend Computer from the WCNews Discord**.
-  Provided via the project owner's local download
-  (`~/Downloads/dosgame-pixel-font.ttf`); no separate license file accompanied
-  the download.
+- **Font:** [Inter](https://github.com/rsms/inter) — Copyright (c) 2016
+  The Inter Project Authors (https://github.com/rsms/inter).
+- **License:** SIL Open Font License, Version 1.1 — see `LICENSE.txt` next to
+  this file (also available at http://scripts.sil.org/OFL).
 - **Use:** loaded by `src/debug_panel.cpp` as the ImGui default font via
-  `AddFontFromFileTTF`, replacing the previous Inter-Regular.ttf. A pixel font
-  chosen to match the game's DOS-era art style.
-- **Note:** no redistributable open license was published with the file. It is
-  included in this codebase at the owner's discretion; swap it out before any
-  public redistribution if its license cannot be confirmed.
+  `AddFontFromFileTTF` at 16px.
