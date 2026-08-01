@@ -2219,6 +2219,7 @@ void build_sector_navmap(const galaxy::Galaxy& galaxy,
     const ImU32 green = IM_COL32(20, 255, 55, 255);
     const ImU32 green_dim = IM_COL32(20, 170, 50, 120);
     const ImU32 yellow = IM_COL32(255, 225, 20, 225);
+    const ImU32 red = IM_COL32(235, 55, 35, 235);
     const ImU32 cyan = IM_COL32(50, 235, 255, 255);
     const ImU32 text = IM_COL32(210, 235, 210, 245);
     constexpr float kChartFont = 13.0f;
@@ -2260,16 +2261,16 @@ void build_sector_navmap(const galaxy::Galaxy& galaxy,
     const float source_h = fmaxf(1.0f, max_y - min_y);
     constexpr float kInsetX = 80.0f;
     constexpr float kInsetY = 62.0f;
-    const float scale = fminf((map_w - 2.0f * kInsetX) / source_w,
-                              (map_h - 2.0f * kInsetY) / source_h);
-    const float drawn_w = source_w * scale;
-    const float drawn_h = source_h * scale;
-    const float origin_x = map_p0.x + (map_w - drawn_w) * 0.5f;
-    const float origin_y = map_p0.y + (map_h - drawn_h) * 0.5f;
+    // This is a readability zoom, so scale each canonical chart axis to its
+    // available display axis. The original coordinate values remain intact.
+    const float scale_x = (map_w - 2.0f * kInsetX) / source_w;
+    const float scale_y = (map_h - 2.0f * kInsetY) / source_h;
+    const float origin_x = map_p0.x + kInsetX;
+    const float origin_y = map_p0.y + kInsetY;
     auto to_screen = [&](const galaxy::SystemEntry& system) {
         // The canonical chart's Y axis grows downward, like screen space.
-        return ImVec2(origin_x + (system.galaxy_position.X - min_x) * scale,
-                      origin_y + (system.galaxy_position.Y - min_y) * scale);
+        return ImVec2(origin_x + (system.galaxy_position.X - min_x) * scale_x,
+                      origin_y + (system.galaxy_position.Y - min_y) * scale_y);
     };
 
     // Sparse green chart grid, scaled to the visible quadrant only.
@@ -2284,8 +2285,7 @@ void build_sector_navmap(const galaxy::Galaxy& galaxy,
     }
     dl->AddRect(map_p0, map_p1, green, 0.0f, 0, 2.5f);
 
-    // A quadrant chart shows routes usable inside that quadrant. Cross-sector
-    // links are intentionally omitted rather than drawing meaningless cables.
+    // Local routes retain both endpoints on this chart.
     for (const auto& jump : galaxy.jumps) {
         if (!(jump.from < jump.to)) continue;
         const galaxy::SystemEntry* a = galaxy.find(jump.from);
@@ -2293,6 +2293,47 @@ void build_sector_navmap(const galaxy::Galaxy& galaxy,
         if (!a || !b || quadrant_for(*a) != selected_quadrant ||
             quadrant_for(*b) != selected_quadrant) continue;
         dl->AddLine(to_screen(*a), to_screen(*b), yellow, 1.2f);
+    }
+
+    // Interquadrant routes leave through the relevant chart edge. The remote
+    // system is not fabricated inside this local coordinate space; its known
+    // destination quadrant is shown at the exit arrow instead.
+    int interquadrant_exits = 0;
+    for (const auto& jump : galaxy.jumps) {
+        if (!(jump.from < jump.to)) continue;
+        const galaxy::SystemEntry* a = galaxy.find(jump.from);
+        const galaxy::SystemEntry* b = galaxy.find(jump.to);
+        if (!a || !b) continue;
+        const int qa = quadrant_for(*a);
+        const int qb = quadrant_for(*b);
+        if (qa == qb || (qa != selected_quadrant && qb != selected_quadrant)) continue;
+
+        const galaxy::SystemEntry* local = qa == selected_quadrant ? a : b;
+        const int remote_quadrant = qa == selected_quadrant ? qb : qa;
+        const ImVec2 local_pos = to_screen(*local);
+        const float dir_x = float((remote_quadrant % 2) - (selected_quadrant % 2));
+        const float dir_y = float((remote_quadrant / 2) - (selected_quadrant / 2));
+        const float tx = dir_x > 0.0f ? (map_p1.x - 16.0f - local_pos.x) / dir_x
+                       : dir_x < 0.0f ? (map_p0.x + 16.0f - local_pos.x) / dir_x : 1e9f;
+        const float ty = dir_y > 0.0f ? (map_p1.y - 16.0f - local_pos.y) / dir_y
+                       : dir_y < 0.0f ? (map_p0.y + 16.0f - local_pos.y) / dir_y : 1e9f;
+        const float t = fminf(tx > 0.0f ? tx : 1e9f, ty > 0.0f ? ty : 1e9f);
+        const ImVec2 exit(local_pos.x + dir_x * t, local_pos.y + dir_y * t);
+        dl->AddLine(local_pos, exit, red, 1.4f);
+        const ImVec2 tip_a(exit.x - dir_x * 10.0f + dir_y * 5.0f,
+                           exit.y - dir_y * 10.0f - dir_x * 5.0f);
+        const ImVec2 tip_b(exit.x - dir_x * 10.0f - dir_y * 5.0f,
+                           exit.y - dir_y * 10.0f + dir_x * 5.0f);
+        dl->AddTriangleFilled(exit, tip_a, tip_b, red);
+        char exit_label[48];
+        std::snprintf(exit_label, sizeof(exit_label), "TO %s", kQuadrantNames[remote_quadrant]);
+        const ImVec2 label_size = ImGui::CalcTextSize(exit_label);
+        const float label_x = fminf(map_p1.x - label_size.x - 4.0f,
+                                    fmaxf(map_p0.x + 4.0f, exit.x - label_size.x * 0.5f));
+        const float label_y = exit.y < map_p0.y + map_h * 0.5f ? exit.y + 6.0f
+                                                                 : exit.y - label_size.y - 6.0f;
+        dl->AddText(nullptr, 11.0f, ImVec2(label_x, label_y), red, exit_label);
+        ++interquadrant_exits;
     }
 
     for (const auto* system : systems) {
@@ -2352,9 +2393,13 @@ void build_sector_navmap(const galaxy::Galaxy& galaxy,
                 ImVec2(content_p0.x + 36.0f, footer_y + 6.0f), yellow, 1.5f);
     dl->AddText(nullptr, 12.0f, ImVec2(content_p0.x + 42.0f, footer_y), text,
                 "LOCAL JUMP ROUTE");
-    char summary[96];
-    std::snprintf(summary, sizeof(summary), "%zu SYSTEMS  |  ZOOM: CANONICAL BOUNDS",
-                  systems.size());
+    dl->AddLine(ImVec2(content_p0.x + 190.0f, footer_y + 6.0f),
+                ImVec2(content_p0.x + 214.0f, footer_y + 6.0f), red, 1.5f);
+    dl->AddText(nullptr, 12.0f, ImVec2(content_p0.x + 220.0f, footer_y), text,
+                "INTERQUADRANT EXIT");
+    char summary[112];
+    std::snprintf(summary, sizeof(summary), "%zu SYSTEMS  |  %d EXITS  |  ZOOM: FIT TO BOUNDS",
+                  systems.size(), interquadrant_exits);
     const ImVec2 summary_sz = ImGui::CalcTextSize(summary);
     dl->AddText(nullptr, 12.0f,
                 ImVec2(content_p0.x + content_sz.x - summary_sz.x - 10.0f, footer_y),

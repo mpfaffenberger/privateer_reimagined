@@ -51,7 +51,7 @@ def main() -> int:
 
     catalog = []     # galaxy "systems" entries
     jumps = []       # galaxy "jumps" entries
-    chart_positions = sector_map.load_positions(sector_map.DEFAULT_SOURCE)
+    chart_records = sector_map.load_records(sector_map.DEFAULT_SOURCE)
 
     built   = {}   # sid -> engine dict (kept so we can synthesize navs)
     display_of = {}
@@ -64,12 +64,14 @@ def main() -> int:
         built[sid] = conv.build(s, sid, skybox=sid, scale=SCALE)
 
         chart_key = sector_map.normalize_name(display)
-        if chart_key not in chart_positions:
+        record = chart_records.get(chart_key)
+        if record is None:
             raise ValueError(f"no canonical chart position for {display}")
+        chart_x, chart_y, chart_quadrant = record
         catalog.append({
             "id": sid, "display_name": display,
-            "sector": quad or sector,
-            "galaxy_position": list(chart_positions[chart_key]),
+            "sector": f"{chart_quadrant} Quadrant",
+            "galaxy_position": [chart_x, chart_y],
             "json_path": f"assets/systems/{sid}.json",
         })
 

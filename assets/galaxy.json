@@ -113,7 +113,7 @@
     {
       "id": "gamma",
       "display_name": "Gamma",
-      "sector": "Potter Quadrant",
+      "sector": "Fariss Quadrant",
       "galaxy_position": [
         -65,
         -127
@@ -223,7 +223,7 @@
     {
       "id": "valhalla",
       "display_name": "Valhalla",
-      "sector": "Humboldt Quadrant",
+      "sector": "Fariss Quadrant",
       "galaxy_position": [
         -85,
         -31
