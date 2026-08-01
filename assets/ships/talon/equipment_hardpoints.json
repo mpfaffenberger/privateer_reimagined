@@ -1,0 +1,11 @@
+{
+  "ship": "talon",
+  "sprite": "assets/ships/talon/sprites_3d/talon_az000_el+090_3d.png",
+  "zones": [
+    { "id": "gun_0", "label": "Gun 1", "kind": "gun", "slot": 0, "rect": [0.40980, 0.11443, 0.03500, 0.09932] },
+    { "id": "gun_1", "label": "Gun 2", "kind": "gun", "slot": 1, "rect": [0.56142, 0.09605, 0.03500, 0.09932] },
+    { "id": "gun_2", "label": "Gun 3", "kind": "gun", "slot": 2, "rect": [0.48028, 0.03632, 0.03500, 0.09932] },
+    { "id": "launcher_left", "label": "Left Launcher", "kind": "launcher", "slot": 0, "rect": [0.20126, 0.68971, 0.05649, 0.12450] },
+    { "id": "launcher_right", "label": "Right Launcher", "kind": "launcher", "slot": 1, "rect": [0.74072, 0.68052, 0.05649, 0.12450] }
+  ]
+}

@@ -1,0 +1,611 @@
+// ---------------------------------------------------------------------
+// capital_line_battle.json — 20v20 CAPITAL FLEET ENGAGEMENT
+//
+//   20× Paradigm (Confed capital)  — Z = -2000
+//   20× Kamekh   (Kilrathi capital) — Z = +2000
+//
+// Both lines start in "engage" state. 4000m gap — close enough for
+// immediate lock-on without bumper-car collisions.
+//
+// Ships per line: 20, spaced 500m apart (~10km total span).
+// Camera: 10km above center, looking straight down.
+//
+// Launch with:  ./build/new_privateer --system capital_line_battle --skip-title
+// ---------------------------------------------------------------------
+{
+  "name": "Capital Line Battle",
+  "description": "20 Paradigms vs 20 Kamekhs \u2014 two parallel battle lines, 4km apart.",
+  "skybox_seed": "sector_4774",
+  "star": {
+    "preset": "blue"
+  },
+  "asteroid_fields": [],
+  "placed_meshes": [],
+  "placed_sprites": [],
+  "placed_ship_sprites": [
+    {
+      "atlas": "ships/paradigm/atlas_manifest_3d",
+      "position": [
+        -4750.0,
+        0,
+        -2000
+      ],
+      "length_meters": 250,
+      "lights_enabled": true,
+      "faction": "confed",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/paradigm/atlas_manifest_3d",
+      "position": [
+        -4250.0,
+        0,
+        -2000
+      ],
+      "length_meters": 250,
+      "lights_enabled": true,
+      "faction": "confed",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/paradigm/atlas_manifest_3d",
+      "position": [
+        -3750.0,
+        0,
+        -2000
+      ],
+      "length_meters": 250,
+      "lights_enabled": true,
+      "faction": "confed",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/paradigm/atlas_manifest_3d",
+      "position": [
+        -3250.0,
+        0,
+        -2000
+      ],
+      "length_meters": 250,
+      "lights_enabled": true,
+      "faction": "confed",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/paradigm/atlas_manifest_3d",
+      "position": [
+        -2750.0,
+        0,
+        -2000
+      ],
+      "length_meters": 250,
+      "lights_enabled": true,
+      "faction": "confed",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/paradigm/atlas_manifest_3d",
+      "position": [
+        -2250.0,
+        0,
+        -2000
+      ],
+      "length_meters": 250,
+      "lights_enabled": true,
+      "faction": "confed",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/paradigm/atlas_manifest_3d",
+      "position": [
+        -1750.0,
+        0,
+        -2000
+      ],
+      "length_meters": 250,
+      "lights_enabled": true,
+      "faction": "confed",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/paradigm/atlas_manifest_3d",
+      "position": [
+        -1250.0,
+        0,
+        -2000
+      ],
+      "length_meters": 250,
+      "lights_enabled": true,
+      "faction": "confed",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/paradigm/atlas_manifest_3d",
+      "position": [
+        -750.0,
+        0,
+        -2000
+      ],
+      "length_meters": 250,
+      "lights_enabled": true,
+      "faction": "confed",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/paradigm/atlas_manifest_3d",
+      "position": [
+        -250.0,
+        0,
+        -2000
+      ],
+      "length_meters": 250,
+      "lights_enabled": true,
+      "faction": "confed",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/paradigm/atlas_manifest_3d",
+      "position": [
+        250.0,
+        0,
+        -2000
+      ],
+      "length_meters": 250,
+      "lights_enabled": true,
+      "faction": "confed",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/paradigm/atlas_manifest_3d",
+      "position": [
+        750.0,
+        0,
+        -2000
+      ],
+      "length_meters": 250,
+      "lights_enabled": true,
+      "faction": "confed",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/paradigm/atlas_manifest_3d",
+      "position": [
+        1250.0,
+        0,
+        -2000
+      ],
+      "length_meters": 250,
+      "lights_enabled": true,
+      "faction": "confed",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/paradigm/atlas_manifest_3d",
+      "position": [
+        1750.0,
+        0,
+        -2000
+      ],
+      "length_meters": 250,
+      "lights_enabled": true,
+      "faction": "confed",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/paradigm/atlas_manifest_3d",
+      "position": [
+        2250.0,
+        0,
+        -2000
+      ],
+      "length_meters": 250,
+      "lights_enabled": true,
+      "faction": "confed",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/paradigm/atlas_manifest_3d",
+      "position": [
+        2750.0,
+        0,
+        -2000
+      ],
+      "length_meters": 250,
+      "lights_enabled": true,
+      "faction": "confed",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/paradigm/atlas_manifest_3d",
+      "position": [
+        3250.0,
+        0,
+        -2000
+      ],
+      "length_meters": 250,
+      "lights_enabled": true,
+      "faction": "confed",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/paradigm/atlas_manifest_3d",
+      "position": [
+        3750.0,
+        0,
+        -2000
+      ],
+      "length_meters": 250,
+      "lights_enabled": true,
+      "faction": "confed",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/paradigm/atlas_manifest_3d",
+      "position": [
+        4250.0,
+        0,
+        -2000
+      ],
+      "length_meters": 250,
+      "lights_enabled": true,
+      "faction": "confed",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/paradigm/atlas_manifest_3d",
+      "position": [
+        4750.0,
+        0,
+        -2000
+      ],
+      "length_meters": 250,
+      "lights_enabled": true,
+      "faction": "confed",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/kamekh/atlas_manifest_3d",
+      "position": [
+        -4750.0,
+        0,
+        2000
+      ],
+      "length_meters": 180,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/kamekh/atlas_manifest_3d",
+      "position": [
+        -4250.0,
+        0,
+        2000
+      ],
+      "length_meters": 180,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/kamekh/atlas_manifest_3d",
+      "position": [
+        -3750.0,
+        0,
+        2000
+      ],
+      "length_meters": 180,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/kamekh/atlas_manifest_3d",
+      "position": [
+        -3250.0,
+        0,
+        2000
+      ],
+      "length_meters": 180,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/kamekh/atlas_manifest_3d",
+      "position": [
+        -2750.0,
+        0,
+        2000
+      ],
+      "length_meters": 180,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/kamekh/atlas_manifest_3d",
+      "position": [
+        -2250.0,
+        0,
+        2000
+      ],
+      "length_meters": 180,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/kamekh/atlas_manifest_3d",
+      "position": [
+        -1750.0,
+        0,
+        2000
+      ],
+      "length_meters": 180,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/kamekh/atlas_manifest_3d",
+      "position": [
+        -1250.0,
+        0,
+        2000
+      ],
+      "length_meters": 180,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/kamekh/atlas_manifest_3d",
+      "position": [
+        -750.0,
+        0,
+        2000
+      ],
+      "length_meters": 180,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/kamekh/atlas_manifest_3d",
+      "position": [
+        -250.0,
+        0,
+        2000
+      ],
+      "length_meters": 180,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/kamekh/atlas_manifest_3d",
+      "position": [
+        250.0,
+        0,
+        2000
+      ],
+      "length_meters": 180,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/kamekh/atlas_manifest_3d",
+      "position": [
+        750.0,
+        0,
+        2000
+      ],
+      "length_meters": 180,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/kamekh/atlas_manifest_3d",
+      "position": [
+        1250.0,
+        0,
+        2000
+      ],
+      "length_meters": 180,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/kamekh/atlas_manifest_3d",
+      "position": [
+        1750.0,
+        0,
+        2000
+      ],
+      "length_meters": 180,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/kamekh/atlas_manifest_3d",
+      "position": [
+        2250.0,
+        0,
+        2000
+      ],
+      "length_meters": 180,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/kamekh/atlas_manifest_3d",
+      "position": [
+        2750.0,
+        0,
+        2000
+      ],
+      "length_meters": 180,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/kamekh/atlas_manifest_3d",
+      "position": [
+        3250.0,
+        0,
+        2000
+      ],
+      "length_meters": 180,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/kamekh/atlas_manifest_3d",
+      "position": [
+        3750.0,
+        0,
+        2000
+      ],
+      "length_meters": 180,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/kamekh/atlas_manifest_3d",
+      "position": [
+        4250.0,
+        0,
+        2000
+      ],
+      "length_meters": 180,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/kamekh/atlas_manifest_3d",
+      "position": [
+        4750.0,
+        0,
+        2000
+      ],
+      "length_meters": 180,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    }
+  ],
+  "nav_points": [
+    {
+      "name": "Center",
+      "kind": "nav",
+      "position": [
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "encounters": [],
+  "player_start": {
+    "position": [
+      0,
+      10000,
+      0
+    ],
+    "look_at": [
+      0,
+      0,
+      0
+    ]
+  }
+}

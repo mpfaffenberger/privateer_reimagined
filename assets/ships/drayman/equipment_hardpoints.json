@@ -1,0 +1,13 @@
+{
+  "ship": "drayman",
+  "sprite": "assets/ships/drayman/sprites_3d/drayman_az000_el+090_3d.png",
+  "zones": [
+    { "id": "gun_0", "label": "Gun 1", "kind": "gun", "slot": 0, "rect": [0.44349, 0.08992, 0.05865, 0.12900] },
+    { "id": "gun_1", "label": "Gun 2", "kind": "gun", "slot": 1, "rect": [0.51548, 0.09299, 0.05865, 0.12900] },
+    { "id": "gun_2", "label": "Gun 3", "kind": "gun", "slot": 2, "rect": [0.44505, 0.52943, 0.05865, 0.12900] },
+    { "id": "gun_3", "label": "Gun 4", "kind": "gun", "slot": 3, "rect": [0.51398, 0.52943, 0.05865, 0.12900] },
+    { "id": "gun_4", "label": "Gun 5", "kind": "turret", "slot": 4, "rect": [0.47565, 0.75234, 0.05865, 0.12900] },
+    { "id": "launcher_left", "label": "Left Launcher", "kind": "launcher", "slot": 0, "rect": [0.34061, 0.34821, 0.04884, 0.17657] },
+    { "id": "launcher_right", "label": "Right Launcher", "kind": "launcher", "slot": 1, "rect": [0.60289, 0.35280, 0.04884, 0.17657] }
+  ]
+}

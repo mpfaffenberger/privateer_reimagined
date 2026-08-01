@@ -1,0 +1,2574 @@
+// ---------------------------------------------------------------------
+// dogfight.json — 100 DRALTHI vs 80 TALONS
+//
+// 180 fighters total, two overlapping volume clouds:
+//
+//   100× Dralthi (Kilrathi light fighter) — cloud centered at Z=-1500
+//    80× Talons  (Militia light fighter)  — cloud centered at Z=+1500
+//
+// Each cloud spans roughly 6km × 3km × 4km. Clouds overlap in the
+// center zone for immediate dogfighting chaos.
+//
+// Every ship in "engage" — instant mayhem.
+//
+// Camera: 15km above center, looking straight down at the carnage.
+//
+// Launch with:  ./build/new_privateer --system dogfight --skip-title
+// ---------------------------------------------------------------------
+{
+  "name": "180-Ship Dogfight",
+  "description": "100 Dralthi vs 80 Talons \u2014 massive fighter cloud battle.",
+  "skybox_seed": "sector_4774",
+  "star": {
+    "preset": "blue"
+  },
+  "asteroid_fields": [],
+  "placed_meshes": [],
+  "placed_sprites": [],
+  "placed_ship_sprites": [
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -288,
+        -138,
+        -1611
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        1404,
+        -102,
+        -2997
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        665,
+        -214,
+        -1717
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        232,
+        186,
+        -336
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        1313,
+        88,
+        -2238
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -2029,
+        197,
+        -189
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        83,
+        -85,
+        -968
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -2907,
+        -250,
+        -1010
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        1747,
+        -193,
+        -1123
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        496,
+        626,
+        -2613
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        1137,
+        -1212,
+        -4120
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -1214,
+        -733,
+        -624
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        1329,
+        -975,
+        -653
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -2004,
+        -69,
+        -1794
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        229,
+        655,
+        -862
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        700,
+        520,
+        -1022
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -1254,
+        -574,
+        -1970
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        999,
+        -200,
+        836
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -1639,
+        -879,
+        -732
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        2844,
+        405,
+        -664
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        2853,
+        -75,
+        -2923
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -1064,
+        762,
+        -2944
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        67,
+        203,
+        -1816
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        1447,
+        465,
+        821
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        1240,
+        -488,
+        -2062
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -1663,
+        762,
+        -2067
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -141,
+        599,
+        -2223
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -587,
+        -1473,
+        -2582
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -1135,
+        333,
+        -307
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -37,
+        209,
+        -1332
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        2169,
+        715,
+        -1226
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -2022,
+        723,
+        -1119
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        2454,
+        -24,
+        453
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -718,
+        1274,
+        -1385
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -1033,
+        -903,
+        -1651
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        2847,
+        653,
+        -811
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -4752,
+        569,
+        -944
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -1100,
+        -502,
+        -1502
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        3450,
+        -844,
+        -1928
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        2724,
+        -357,
+        -1864
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        196,
+        -993,
+        -1280
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -2419,
+        708,
+        -1497
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        4567,
+        225,
+        -134
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -2607,
+        -98,
+        -1177
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        3491,
+        -1345,
+        -509
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        1183,
+        1227,
+        -788
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        104,
+        -417,
+        -2748
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        391,
+        -153,
+        520
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -1222,
+        256,
+        -3069
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -791,
+        209,
+        -676
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        2896,
+        -35,
+        -2617
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        916,
+        414,
+        -1008
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -1401,
+        907,
+        -1412
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        1400,
+        1019,
+        -891
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        573,
+        1722,
+        -1256
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -592,
+        90,
+        -17
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        237,
+        416,
+        -304
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -1026,
+        -1381,
+        -1201
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        459,
+        -486,
+        -629
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        1215,
+        -796,
+        -982
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -392,
+        -1186,
+        -1047
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -90,
+        -596,
+        -977
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        976,
+        -462,
+        -1100
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        2030,
+        -570,
+        -1119
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        6,
+        1813,
+        -3362
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        1391,
+        -245,
+        -1600
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        3803,
+        -7,
+        741
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -884,
+        280,
+        -1991
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -1381,
+        50,
+        -1783
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        405,
+        -1684,
+        502
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -334,
+        1394,
+        -2507
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        585,
+        2532,
+        -2370
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -2991,
+        -437,
+        -1028
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        1387,
+        1032,
+        -1757
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -3205,
+        -348,
+        -260
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        931,
+        -1566,
+        -1535
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        2796,
+        1701,
+        -938
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        619,
+        -992,
+        -2343
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        94,
+        403,
+        -920
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -956,
+        -922,
+        -2278
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -2314,
+        515,
+        -3812
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -667,
+        360,
+        22
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        143,
+        801,
+        -1899
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -1489,
+        -540,
+        27
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        1988,
+        390,
+        1830
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -65,
+        496,
+        -1192
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -444,
+        1853,
+        7
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -2799,
+        -320,
+        -1072
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        1566,
+        -1079,
+        -3756
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -3813,
+        -57,
+        -1603
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        690,
+        -616,
+        -2724
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -4046,
+        263,
+        -1130
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        1986,
+        633,
+        -1691
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        2699,
+        -109,
+        -2161
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -1041,
+        -468,
+        -3666
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        313,
+        200,
+        -1862
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -1428,
+        297,
+        217
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        77,
+        -406,
+        -2091
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        -140,
+        -1012,
+        -1625
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/dralthi/atlas_manifest_3d",
+      "position": [
+        122,
+        1476,
+        -557
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        2068,
+        -570,
+        2170
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -2279,
+        250,
+        1919
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -1533,
+        1600,
+        2067
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -3805,
+        442,
+        1093
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        3,
+        373,
+        1891
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -4078,
+        -927,
+        2273
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        2602,
+        1523,
+        3303
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -4111,
+        616,
+        -416
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        3227,
+        203,
+        359
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        4020,
+        515,
+        -391
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        587,
+        -585,
+        1611
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -930,
+        1099,
+        77
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        635,
+        1451,
+        673
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        421,
+        162,
+        810
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        1296,
+        78,
+        556
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        3524,
+        633,
+        1333
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -1273,
+        -627,
+        2731
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -293,
+        368,
+        1316
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        1233,
+        -93,
+        2264
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -366,
+        664,
+        2172
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -233,
+        -688,
+        560
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -1481,
+        -788,
+        2366
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -93,
+        1256,
+        3779
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        48,
+        -1238,
+        1119
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -151,
+        -1191,
+        1250
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        574,
+        -368,
+        732
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -1518,
+        1429,
+        1340
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -1660,
+        -298,
+        2454
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -1369,
+        385,
+        2228
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        1498,
+        1120,
+        950
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        2265,
+        -634,
+        1103
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        2392,
+        658,
+        1502
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -2383,
+        449,
+        870
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -1848,
+        -519,
+        1746
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -4242,
+        289,
+        1674
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -1169,
+        830,
+        2111
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -1213,
+        -536,
+        2195
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -3032,
+        -266,
+        869
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        140,
+        169,
+        1537
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        2270,
+        182,
+        1185
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -2422,
+        577,
+        2028
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        2902,
+        -598,
+        1526
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -117,
+        -70,
+        1510
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -3429,
+        660,
+        2153
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        2261,
+        1800,
+        1181
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -72,
+        8,
+        3442
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -3462,
+        389,
+        29
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -5163,
+        -1617,
+        118
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        2138,
+        -695,
+        1273
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -2327,
+        489,
+        398
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        2635,
+        -794,
+        735
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        245,
+        20,
+        2925
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        241,
+        -966,
+        940
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -1146,
+        580,
+        1884
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -239,
+        696,
+        972
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -272,
+        145,
+        3028
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -197,
+        -281,
+        454
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        1372,
+        -470,
+        1844
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -3803,
+        835,
+        168
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -1555,
+        847,
+        166
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -159,
+        59,
+        501
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        2686,
+        1199,
+        -472
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -2898,
+        647,
+        197
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -777,
+        104,
+        2192
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -447,
+        76,
+        723
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        2585,
+        -396,
+        1840
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -1023,
+        85,
+        1332
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -325,
+        -811,
+        2296
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        2828,
+        195,
+        2232
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        1676,
+        742,
+        1803
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        425,
+        691,
+        1569
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -1948,
+        19,
+        -388
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -12,
+        331,
+        2736
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        303,
+        743,
+        1499
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -2047,
+        -1129,
+        530
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -2732,
+        507,
+        1292
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        1141,
+        59,
+        2544
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        2120,
+        -516,
+        1226
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        -1066,
+        -1297,
+        2175
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/talon/atlas_manifest_3d",
+      "position": [
+        2378,
+        -5,
+        1007
+      ],
+      "length_meters": 18,
+      "lights_enabled": true,
+      "faction": "militia",
+      "ai": {
+        "initial_state": "engage"
+      }
+    }
+  ],
+  "nav_points": [
+    {
+      "name": "Center",
+      "kind": "nav",
+      "position": [
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "encounters": [],
+  "player_start": {
+    "position": [
+      0,
+      15000,
+      0
+    ],
+    "look_at": [
+      0,
+      0,
+      0
+    ]
+  }
+}

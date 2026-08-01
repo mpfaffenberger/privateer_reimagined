@@ -1,0 +1,10 @@
+{
+  "ship": "stiletto",
+  "sprite": "assets/ships/stiletto/sprites_3d/stiletto_az000_el+090_3d.png",
+  "zones": [
+    { "id": "gun_0", "label": "Gun 1", "kind": "gun", "slot": 0, "rect": [0.61041, 0.38089, 0.04793, 0.09225] },
+    { "id": "gun_1", "label": "Gun 2", "kind": "gun", "slot": 1, "rect": [0.34703, 0.38548, 0.04793, 0.09225] },
+    { "id": "launcher_left", "label": "Left Launcher", "kind": "launcher", "slot": 0, "rect": [0.26711, 0.56720, 0.05491, 0.11072] },
+    { "id": "launcher_right", "label": "Right Launcher", "kind": "launcher", "slot": 1, "rect": [0.67640, 0.58251, 0.05491, 0.11072] }
+  ]
+}

@@ -1,0 +1,134 @@
+// ---------------------------------------------------------------------
+// drayman_vs_kamekh.json — 4 DRAYMEN vs 2 KAMEKHS
+//
+// 4 Confed Draymen (merchant ships, 2 meson blasters each, 35cm armor)
+// vs 2 Kilrathi Kamekhs (capital ships, 4 turreted lasers, 2 turreted
+// plasma cannons, DF/HS/IR missiles, 70cm armor).
+//
+// The merchants swarm in, the Kamekhs rain hell. Who wins?
+//
+// Camera: 6km above center, looking straight down.
+//
+// Launch with:  ./build/new_privateer --system drayman_vs_kamekh --skip-title
+// ---------------------------------------------------------------------
+{
+  "name": "4 Draymen vs 2 Kamekhs",
+  "description": "4 Confed Draymen vs 2 Kilrathi Kamekhs \u2014 merchant swarm vs capital ships.",
+  "skybox_seed": "sector_4774",
+  "star": {
+    "preset": "blue"
+  },
+  "asteroid_fields": [],
+  "placed_meshes": [],
+  "placed_sprites": [],
+  "placed_ship_sprites": [
+    {
+      "atlas": "ships/drayman/atlas_manifest_3d",
+      "position": [
+        -750.0,
+        0,
+        -2000
+      ],
+      "length_meters": 60,
+      "lights_enabled": true,
+      "faction": "confed",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/drayman/atlas_manifest_3d",
+      "position": [
+        -250.0,
+        0,
+        -2000
+      ],
+      "length_meters": 60,
+      "lights_enabled": true,
+      "faction": "confed",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/drayman/atlas_manifest_3d",
+      "position": [
+        250.0,
+        0,
+        -2000
+      ],
+      "length_meters": 60,
+      "lights_enabled": true,
+      "faction": "confed",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/drayman/atlas_manifest_3d",
+      "position": [
+        750.0,
+        0,
+        -2000
+      ],
+      "length_meters": 60,
+      "lights_enabled": true,
+      "faction": "confed",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/kamekh/atlas_manifest_3d",
+      "position": [
+        -400.0,
+        0,
+        2000
+      ],
+      "length_meters": 180,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    },
+    {
+      "atlas": "ships/kamekh/atlas_manifest_3d",
+      "position": [
+        400.0,
+        0,
+        2000
+      ],
+      "length_meters": 180,
+      "lights_enabled": true,
+      "faction": "kilrathi",
+      "ai": {
+        "initial_state": "engage"
+      }
+    }
+  ],
+  "nav_points": [
+    {
+      "name": "Center",
+      "kind": "nav",
+      "position": [
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "encounters": [],
+  "player_start": {
+    "position": [
+      0,
+      6000,
+      0
+    ],
+    "look_at": [
+      0,
+      0,
+      0
+    ]
+  }
+}

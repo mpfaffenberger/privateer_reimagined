@@ -1,0 +1,13 @@
+{
+  "ship": "broadsword",
+  "sprite": "assets/ships/broadsword/sprites_3d/broadsword_az000_el+090_3d.png",
+  "zones": [
+    { "id": "gun_0", "label": "Gun 1", "kind": "gun", "slot": 0, "rect": [0.46340, 0.18028, 0.04181, 0.09685] },
+    { "id": "gun_1", "label": "Gun 2", "kind": "gun", "slot": 1, "rect": [0.36694, 0.21243, 0.04181, 0.09685] },
+    { "id": "gun_2", "label": "Gun 3", "kind": "gun", "slot": 2, "rect": [0.55838, 0.20325, 0.04181, 0.09685] },
+    { "id": "launcher_left", "label": "Left Launcher", "kind": "launcher", "slot": 0, "rect": [0.14000, 0.46000, 0.13000, 0.10000] },
+    { "id": "launcher_right", "label": "Right Launcher", "kind": "launcher", "slot": 1, "rect": [0.73000, 0.46000, 0.13000, 0.10000] },
+    { "id": "zone_6", "label": "Turret 2", "kind": "turret", "slot": 0, "rect": [0.43838, 0.72015, 0.04181, 0.09685] },
+    { "id": "zone_7", "label": "Turret 1", "kind": "turret", "slot": 0, "rect": [0.49504, 0.71862, 0.04181, 0.09685] }
+  ]
+}

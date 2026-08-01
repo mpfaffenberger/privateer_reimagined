@@ -1,0 +1,12 @@
+{
+  "ship": "demon",
+  "sprite": "assets/ships/demon/sprites_3d/demon_az000_el+090_3d.png",
+  "zones": [
+    { "id": "gun_0", "label": "Gun 1", "kind": "gun", "slot": 0, "rect": [0.31792, 0.10371, 0.05406, 0.13207] },
+    { "id": "gun_1", "label": "Gun 2", "kind": "gun", "slot": 1, "rect": [0.62881, 0.10217, 0.05406, 0.13207] },
+    { "id": "gun_2", "label": "Gun 3", "kind": "gun", "slot": 2, "rect": [0.53234, 0.22162, 0.05406, 0.13207] },
+    { "id": "gun_3", "label": "Gun 4", "kind": "gun", "slot": 3, "rect": [0.41750, 0.21856, 0.05406, 0.13207] },
+    { "id": "launcher_left", "label": "Left Launcher", "kind": "launcher", "slot": 0, "rect": [0.30845, 0.35280, 0.05190, 0.13675] },
+    { "id": "launcher_right", "label": "Right Launcher", "kind": "launcher", "slot": 1, "rect": [0.64271, 0.36046, 0.05190, 0.13675] }
+  ]
+}
