@@ -225,7 +225,9 @@ void draw_zone_overlay(PlayerState& player, const ShipClass* schematic_ship,
 
 void draw_ship_schematic(PlayerState& player, const ShipClass* ship,
                          const ImVec2& panel_size) {
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.012f, 0.018f, 0.028f, 0.96f));
+    // Partially translucent so the equipment dealer scene behind the panel
+    // shows through; dark enough to keep the schematic legible.
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.012f, 0.018f, 0.028f, 0.80f));
     if (ImGui::BeginChild("##ship_schematic", panel_size, true,
                           ImGuiWindowFlags_NoScrollbar)) {
         ImGui::TextColored(kAccent, "%s LOADOUT",
@@ -421,7 +423,9 @@ void draw_equipment_screen(BaseContext& ctx) {
     ImGui::SetCursorScreenPos(ImVec2(left, top));
     draw_ship_schematic(player, ship, ImVec2(schematic_w, body_h));
     ImGui::SetCursorScreenPos(ImVec2(left + schematic_w + gap, top));
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.025f, 0.030f, 0.043f, 0.96f));
+    // Translucent panel bg (matches the schematic) so the dealer scene reads
+    // through the actions/purchase list while staying readable.
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.025f, 0.030f, 0.043f, 0.80f));
     if (ImGui::BeginChild("##equipment_actions",
                           ImVec2(total_w - schematic_w - gap, body_h), true)) {
         ImGui::TextColored(kAccent, "EQUIPMENT BAY");
