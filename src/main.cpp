@@ -3751,6 +3751,13 @@ void update_orbit_camera(float dt) {
         g.orbit_was_active = true;
         g.fly_by_wire = false;
         sapp_show_mouse(true);
+    } else if (!g.fly_by_wire) {
+        // Reconcile: keep the OS cursor visible throughout autopilot even if
+        // the engage edge above was skipped because orbit_was_active was left
+        // stale (e.g. death cinematic -> respawn straight into autopilot).
+        // fly_by_wire is the deliberate freelook exception: freelook hides
+        // the cursor so the mouse can pan the camera indefinitely (#159).
+        sapp_show_mouse(true);
     }
 
     // Freelook only while fly-by-wire is ON (SPACE toggles it, exactly as in
