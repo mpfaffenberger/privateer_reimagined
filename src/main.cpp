@@ -1120,7 +1120,7 @@ void build_system_scene(bool first_time) {
     docking::set_commit_handler([](PlayerState& player,
                                    const std::string& base_id) {
         const bool delivering_m01 = plot::has_flag(player, "m01_active");
-        missions::fail_cargo_on_dock(player, base_id);
+        missions::fail_incomplete_on_dock(player, base_id);
         campaign::on_dock(player, base_id);
         if (delivering_m01 && plot::has_flag(player, "m01_delivered")) {
             g.landing_notice_title = "DELIVERY COMPLETE";

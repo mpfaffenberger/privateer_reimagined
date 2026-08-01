@@ -967,30 +967,80 @@ bool abandon(PlayerState& p, const std::string& mission_id) {
     return false;
 }
 
-// Issue #24 fail-on-land (cargo): when the player docks anywhere, drop any
-// cargo consignment whose dest_base isn't this dock (cargo jettisoned, no
-// reward, no comm payout). Matches the rule that landing without delivering
-// fails the contract. Other (non-cargo) mission types aren't auto-failed
-// here — they persist until the player delivers or manually abandons, so
-// a defend/patrol can still span multiple visits.
-void fail_cargo_on_dock(PlayerState& p, const std::string& at_base) {
+// Is this mission's objective already satisfied — i.e. a dock should NOT
+// forfeit it? Mirrors complete_if_objectives_met()'s per-type rules so the
+// two paths can never disagree about "done". CargoDelivery is special-cased
+// by the caller (its objective IS docking, at dest_base specifically).
+static bool objectives_met_now(const ActiveMission& am) {
+    switch ((MissionType)am.type) {
+        case MissionType::Scout:
+        case MissionType::Patrol: {
+            if (am.nav_done.empty()) return false;
+            for (uint8_t d : am.nav_done) if (!d) return false;
+            return true;
+        }
+        case MissionType::Attack:
+        case MissionType::DefendBase:
+            return am.hostiles_required > 0 &&
+                   am.progress >= am.hostiles_required;
+        case MissionType::Bounty:
+            return am.count_required > 0 &&
+                   am.progress >= am.count_required;
+        case MissionType::CargoDelivery:
+            return false;   // caller keeps at-dest missions instead
+    }
+    return false;
+}
+
+// Issue #24 fail-on-land, extended to every mission type by #162: docking
+// forfeits ANY active contract whose objective isn't met yet. Cargo keeps
+// its at-destination exception (the player still clicks Deliver); missions
+// with met objectives are left for the tracker to settle; story (Fixer)
+// missions keep their campaign-owned lifecycle. Forfeit = mission dropped,
+// no reward, no rep change (matching the original game's hard-fail-on-dock).
+void fail_incomplete_on_dock(PlayerState& p, const std::string& at_base) {
     for (size_t i = 0; i < p.missions.size(); /* manual */) {
         ActiveMission& am = p.missions[i];
-        if (am.type != (int)MissionType::CargoDelivery) { ++i; continue; }
         // Story deliveries own their failure/completion rules in campaign.cpp.
         // Keep the giver check for saves made before MissionSource::Fixer.
         if (am.source == (int)MissionSource::Fixer || am.giver_faction == "Fixer") {
             ++i;
             continue;
         }
-        if (am.dest_base == at_base) { ++i; continue; }   // at target — keep
-        // Off-target dock: cargo goes (jettisoned), mission fails (no reward).
+        const MissionType t = (MissionType)am.type;
+        if (t == MissionType::CargoDelivery && am.dest_base == at_base) {
+            ++i; continue;                    // at target — Deliver still works
+        }
+        if (t != MissionType::CargoDelivery && objectives_met_now(am)) {
+            ++i; continue;                    // done — tracker settles payout
+        }
+        // Incomplete on dock: the contract is forfeited (no reward).
         const std::string title = am.title;
-        player::remove_cargo(p, am.commodity_id, am.units);
+        const char* line = nullptr;
+        switch (t) {
+            case MissionType::CargoDelivery:
+                player::remove_cargo(p, am.commodity_id, am.units);  // jettison
+                line = "Cargo contract failed: landed at the wrong base.";
+                break;
+            case MissionType::Patrol:
+                line = "Patrol contract failed: docked before the route was flown.";
+                break;
+            case MissionType::Scout:
+                line = "Scout contract failed: docked before the nav point was reached.";
+                break;
+            case MissionType::Attack:
+                line = "Strike contract failed: docked with hostiles still alive.";
+                break;
+            case MissionType::DefendBase:
+                line = "Defense contract failed: docked before the raid was repelled.";
+                break;
+            case MissionType::Bounty:
+                line = "Bounty forfeited: docked before the target was destroyed.";
+                break;
+        }
         std::printf("[missions] FAIL on dock at '%s': %s\n",
                     at_base.c_str(), title.c_str());
-        comm::push("Cargo contract failed: landed at the wrong base.",
-                   /*taunt=*/false);
+        if (line) comm::push(line, /*taunt=*/false);
         p.missions.erase(p.missions.begin() + (long)i);
     }
 }

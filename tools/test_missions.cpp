@@ -219,9 +219,52 @@ int main() {
         story.dest_base = "liverpool";
         player::add_cargo(pp, "iron", 40, 0, cap);
         pp.missions.push_back(story);
-        missions::fail_cargo_on_dock(pp, "achilles");
+        missions::fail_incomplete_on_dock(pp, "achilles");
         check(pp.missions.size() == 1 && player::cargo_units_used(pp) == 40,
               "FIXER CARGO: generic dock failure leaves campaign mission alone");
+    }
+
+    // #162 fail-on-dock, ALL types: docking forfeits any contract whose
+    // objective isn't met yet; met objectives survive for the tracker.
+    {
+        // Generic cargo at the WRONG base: jettisoned + dropped.
+        PlayerState pp = mkp();
+        const missions::Mission& m = sample[(int)missions::MissionType::CargoDelivery];
+        check(missions::accept(pp, m, cap), "DOCKFAIL: cargo accept");
+        missions::fail_incomplete_on_dock(pp, "some_other_base");
+        check(pp.missions.empty() && player::cargo_units_used(pp) == 0,
+              "DOCKFAIL: off-target cargo jettisoned + dropped");
+    }
+    {
+        // Incomplete patrol: forfeited on dock, comm line pushed.
+        PlayerState pp = mkp();
+        const missions::Mission& m = sample[(int)missions::MissionType::Patrol];
+        std::string fb = last_comm();
+        check(missions::accept(pp, m, cap), "DOCKFAIL: patrol accept");
+        missions::fail_incomplete_on_dock(pp, "achilles");
+        check(pp.missions.empty(), "DOCKFAIL: incomplete patrol forfeited");
+        check(last_comm() != fb, "DOCKFAIL: patrol failure comm pushed");
+    }
+    {
+        // Attack whose objective is ALREADY met: dock must NOT forfeit it —
+        // the tracker settles the payout on its own schedule.
+        PlayerState pp = mkp();
+        const missions::Mission& m = sample[(int)missions::MissionType::Attack];
+        check(missions::accept(pp, m, cap), "DOCKFAIL: attack accept");
+        ActiveMission& am = pp.missions.back();
+        if (am.hostiles_required <= 0) am.hostiles_required = 1;   // defensive
+        am.progress = am.hostiles_required;        // hostiles cleared pre-dock
+        missions::fail_incomplete_on_dock(pp, "achilles");
+        check(pp.missions.size() == 1,
+              "DOCKFAIL: met-objective attack survives dock");
+    }
+    {
+        // Incomplete bounty: forfeited on dock.
+        PlayerState pp = mkp();
+        const missions::Mission& m = sample[(int)missions::MissionType::Bounty];
+        check(missions::accept(pp, m, cap), "DOCKFAIL: bounty accept");
+        missions::fail_incomplete_on_dock(pp, "achilles");
+        check(pp.missions.empty(), "DOCKFAIL: incomplete bounty forfeited");
     }
 
     // Scout: complete when its single nav is marked reached.

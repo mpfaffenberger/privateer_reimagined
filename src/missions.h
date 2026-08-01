@@ -201,12 +201,17 @@ bool complete_delivery(PlayerState& p, const std::string& mission_id,
 // jettisons the hauled cargo. Returns false if the id isn't active.
 bool abandon(PlayerState& p, const std::string& mission_id);
 
-// Issue #24 "fail on land" hook. Call from the docking path when the player
-// commits to a Landed base: any cargo contract whose dest_base isn't this
-// dock is failed (cargo jettisoned, no reward). Missions at the target are
-// kept — the player can still click Deliver on them. Other mission types
-// aren't touched (they may span multiple visits).
-void fail_cargo_on_dock(PlayerState& p, const std::string& at_base);
+// Issue #24 "fail on land" hook, extended by #162 to EVERY mission type.
+// Call from the docking path when the player commits to a Landed base:
+//   * CargoDelivery — failed unless this dock IS dest_base (cargo
+//     jettisoned). At-target missions are kept so Deliver still works.
+//   * Patrol/Scout — failed unless every nav point was already reached.
+//   * Attack/DefendBase — failed unless the required hostiles are cleared.
+//   * Bounty — failed unless the required kills already landed.
+// Missions whose objectives ARE met are left alone (the tracker settles
+// their payout); story (Fixer) missions keep their campaign-owned
+// lifecycle. Failure = contract forfeited: no reward, no rep change.
+void fail_incomplete_on_dock(PlayerState& p, const std::string& at_base);
 
 // ---- in-flight progress + generic completion (the #13 tracker seam) --------
 //

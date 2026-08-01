@@ -92,7 +92,7 @@ void init();
 void set_cinematic_trigger(std::function<void(const std::string& id)> fn);
 
 // Dock settle hook: call once per NEW dock commit (main.cpp's
-// fail_cargo_on_dock site) with the raw nav base id ("liverpool_refinery").
+// fail_incomplete_on_dock site) with the raw nav base id ("liverpool_refinery").
 // Runs every active mission's delivery/failure checks.
 void on_dock(PlayerState& p, const std::string& base_id);
 
