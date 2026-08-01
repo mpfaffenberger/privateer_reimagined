@@ -74,6 +74,21 @@ void init() {
     simgui_desc_t d{};
     d.logger.func = nullptr;     // use sokol's default logger
     simgui_setup(&d);
+    // Use a proper screen UI font so glyphs stay crisp at any size. ImGui's
+    // bundled bitmap default (ProggyClean.ttf) rasterizes blurry/jagged once
+    // we bump font sizes for status bars / big titles (#169). The OFL Inter
+    // asset under assets/fonts/ (SIL OFL, see its LICENSE.txt) is added on
+    // top of the default so a stripped checkout that lacks it still starts
+    // with ImGui's built-in font. FontDefault swaps to Inter only on success.
+    ImGuiIO& io = ImGui::GetIO();
+    if (ImFont* f = io.Fonts->AddFontFromFileTTF("assets/fonts/Inter-Regular.ttf", 16.0f)) {
+        io.FontDefault = f;
+    } else {
+        std::fprintf(stderr,
+                     "[debug_panel] assets/fonts/Inter-Regular.ttf missing — "
+                     "falling back to ImGui default font\n");
+    }
+    io.Fonts->Build();
     std::printf("[debug_panel] Dear ImGui initialised (hidden; Ctrl+M to toggle)\n");
 }
 
