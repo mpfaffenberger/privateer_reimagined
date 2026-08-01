@@ -14,6 +14,7 @@
 #include "ship_class.h"
 
 #include <algorithm>
+#include <cstdio>
 #include <limits>
 
 namespace player {
@@ -217,7 +218,16 @@ bool carrying_contraband(const PlayerState& p) {
     // stowed in the secret compartment and invisible to scans (#116).
     for (const CargoEntry& e : p.cargo) {
         if (e.units <= 0 || e.hidden) continue;
-        if (commodity::is_contraband(e.commodity_id)) return true;
+        if (commodity::is_contraband(e.commodity_id)) {
+            // Diagnostic for #161: the militia "smuggler" scan is the only
+            // consumer, so this is bounded to once-per-scan — logging the
+            // exact offender makes a false-positive / innocent-cargo repro
+            // trivial to pin down (campaign m03/m04 Brilliance rides here
+            // in visible cargo while the mission is active).
+            std::printf("[contraband] detected id='%s' units=%d hidden=%d\n",
+                        e.commodity_id.c_str(), e.units, (int)e.hidden);
+            return true;
+        }
     }
     return false;
 }
