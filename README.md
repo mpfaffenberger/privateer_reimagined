@@ -8,6 +8,9 @@ combat, contracts, ship upgrades, exploration, and story-driven adventure.
 Explore all 69 systems, make your fortune, follow the complete campaign, and
 generally discover why space insurance premiums are obscene.
 
+![The New Detroit bar — someone here wants a word](docs/screenshots/new_detroit_bar.png)
+*The New Detroit bar. Ernesto Sandoval wants a word. It's probably fine.*
+
 This is an unofficial standalone implementation, with no game engine, ECS
 framework, or runtime dependency manager. Rendering, window/input, audio, and
 debug UI are built on small vendored libraries under `third_party/`.
@@ -89,20 +92,46 @@ stable player-facing CLI.
 
 ## Core controls
 
+### Flight & combat
+
 | Input | Action |
 |---|---|
-| Mouse | Fly-by-wire aiming |
+| Mouse | Fly-by-wire aiming (when engaged) |
+| `Space` | Toggle fly-by-wire ⇄ free cursor |
 | `+` / `-` | Increase/decrease throttle |
 | Hold `Tab` | Afterburner |
 | `,` / `.` | Roll left/right |
-| `N` | Open/cycle navigation targets |
-| `A` | Autopilot to selected nav point |
+| Hold left mouse or `Ctrl` | Fire guns |
+| `G` | Cycle gun arm-mode (unarmed → each gun type → all) |
+| `Enter` | Fire missile |
+| `M` | Cycle missile type (DF → HS → IR) |
+| `T` | Cycle targets (nearest → farthest, ≤15 km) |
+| `Z` | Tractor loose loot into the hold |
+| `I` | In-flight inventory |
+| `P` | Pause |
+
+### Navigation
+
+| Input | Action |
+|---|---|
+| `N` | Open nav map / cycle nav targets |
+| `A` | Autopilot to the selected nav point |
 | `D` | Dock at the selected base |
-| `T` | Cycle ship targets |
+| `J` | Jump through the selected jump gate |
+
+### Status MFD & comms
+
+| Input | Action |
+|---|---|
+| `C` | Comms screen (then `1`–`9` pick replies) |
+| `R` | Damage report screen |
+| `W` | Weapons loadout screen |
 | `Esc` | Back/close; double-tap in flight to quit |
 
 Additional context-sensitive bindings are shown by the in-game HUD. Debug and
-content-authoring panels intentionally have their own development bindings.
+content-authoring panels intentionally have their own development bindings —
+`Ctrl+M` toggles the ImGui debug panel, and `]` / `[` scale/reset sim time for
+watching AI brawls in fast-forward.
 
 ## Tests
 
