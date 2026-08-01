@@ -24,19 +24,12 @@ import json
 from pathlib import Path
 
 import build_system_from_wcpedia as conv
+import privateer_sector_map as sector_map
 
 REPO   = Path(__file__).resolve().parents[1]
 DATA   = REPO / "assets" / "data" / "gemini_systems.json"
 GALAXY = REPO / "assets" / "galaxy.json"
 SCALE  = 10.0 / 3.0
-
-# Coarse 2D galaxy-map layout: quadrant -> base cell, systems gridded within.
-QUAD_BASE = {
-    "Fariss Quadrant":   (-6,  6),   # NW
-    "Clarke Quadrant":   ( 6,  6),   # NE
-    "Humboldt Quadrant": (-6, -6),   # SW
-    "Potter Quadrant":   ( 6, -6),   # SE
-}
 
 
 # Non-system wcpedia pages that slipped into the scrape (sector overview /
@@ -58,7 +51,7 @@ def main() -> int:
 
     catalog = []     # galaxy "systems" entries
     jumps = []       # galaxy "jumps" entries
-    quad_counts: dict[str, int] = {}
+    chart_positions = sector_map.load_positions(sector_map.DEFAULT_SOURCE)
 
     built   = {}   # sid -> engine dict (kept so we can synthesize navs)
     display_of = {}
@@ -70,12 +63,13 @@ def main() -> int:
         display_of[sid] = display
         built[sid] = conv.build(s, sid, skybox=sid, scale=SCALE)
 
-        bx, by = QUAD_BASE.get(quad, (0, 0))
-        k = quad_counts.get(quad, 0); quad_counts[quad] = k + 1
+        chart_key = sector_map.normalize_name(display)
+        if chart_key not in chart_positions:
+            raise ValueError(f"no canonical chart position for {display}")
         catalog.append({
             "id": sid, "display_name": display,
             "sector": quad or sector,
-            "galaxy_position": [bx + (k % 5) - 2, by + (k // 5) - 2],
+            "galaxy_position": list(chart_positions[chart_key]),
             "json_path": f"assets/systems/{sid}.json",
         })
 
