@@ -46,10 +46,10 @@ const char* k_track_file[(int)music::Track::Count] = {
     "combat_08",    // StingJump        — jump executed (one-shot)
     "combat_09",    // StingLanding     — landing-zone approach (one-shot; deferred)
     "combat_10",    // StingDeath       — game over (one-shot)
-    "basetune_00",  // BaseAgricultural — agricultural base tune
-    "basetune_04",  // BaseMining       — mining base tune
-    "basetune_01",  // BaseNewDetroit   — New Detroit industrial/military hub
-    "oxford_theme", // BaseOxford       — Oxford-specific loop (looped, overrides bar pool)
+    "basetune_00",  // BaseAgricultural       — agricultural base tune
+    "basetune_04",  // BaseMining             — mining base tune
+    "basetune_01",  // BaseNewConstantinople  — New Constantinople
+    "oxford_theme", // BaseOxford             — Oxford-specific loop (looped, overrides bar pool)
     "bar_music_01", // BaseBar          — first track in the bar pool (14 total)
     "menu",         // Menu             — title/menu loop (assets/music/original/menu.wav, custom bed)
 };
@@ -316,11 +316,13 @@ music::Track base_track_for(const char* base_id) {
             // Oxford too -- Masterson's whole arc plays this track
             // whether the player is on the concourse or in the bar.
             //
-            // New Detroit is likewise per-base: the industrial/military
-            // hub gets its own BASETUNE sub-song (basetune_01) instead of
-            // sharing the mining bed its "military" archetype would pick.
-            if (folder == "new_detroit") {
-                g_cached_base_track = music::Track::BaseNewDetroit;
+            // New Constantinople is likewise per-base: it gets its own
+            // BASETUNE sub-song (basetune_01). Its custom "newcon" market
+            // archetype would otherwise fall through to the agricultural
+            // bed, which is clearly wrong for a capital-class hub. New
+            // Detroit keeps the generic military -> mining bed.
+            if (folder == "new_constantinople") {
+                g_cached_base_track = music::Track::BaseNewConstantinople;
             } else if (folder == "oxford") {
                 g_cached_base_track = music::Track::BaseOxford;
             } else if (const json::Value* m = root.find("market");
@@ -654,10 +656,10 @@ const char* to_name(Track t) {
         case Track::StingJump:        return "sting_jump";
         case Track::StingLanding:     return "sting_landing";
         case Track::StingDeath:       return "sting_death";
-        case Track::BaseAgricultural: return "base_agricultural";
-        case Track::BaseMining:       return "base_mining";
-        case Track::BaseNewDetroit:   return "base_new_detroit";
-        case Track::BaseOxford:       return "base_oxford";
+        case Track::BaseAgricultural:       return "base_agricultural";
+        case Track::BaseMining:             return "base_mining";
+        case Track::BaseNewConstantinople:  return "base_new_constantinople";
+        case Track::BaseOxford:             return "base_oxford";
         case Track::BaseBar:          return "base_bar";
         case Track::Menu:             return "menu";
         default:                      return "?";

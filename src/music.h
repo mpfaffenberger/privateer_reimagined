@@ -88,10 +88,10 @@ enum class Track {
     StingLanding,     // combat_09 — entering automatic landing zone (<700m)
     StingDeath,       // combat_10 — game over, your ship is cooked
     // ---- landed per-base tunes (BASETUNE.ADL sub-songs) ----
-    BaseAgricultural, // basetune_00 — agricultural base (Helen)
-    BaseMining,       // basetune_04 — mining base (Achilles, Hector)
-    BaseNewDetroit,   // basetune_01 — New Detroit (industrial/military hub)
-    BaseOxford,       // oxford_theme  — Oxford (academic hub); overrides the bar pool
+    BaseAgricultural,   // basetune_00 — agricultural base (Helen)
+    BaseMining,         // basetune_04 — mining base (Achilles, Hector)
+    BaseNewConstantinople, // basetune_01 — New Constantinople
+    BaseOxford,         // oxford_theme  — Oxford (academic hub); overrides the bar pool
     BaseBar,          // bar_music_01..14 — Freelancer bar pool (shuffled, non-looping)
     // ---- menu (BASETUNE.ADL sub-song 01) ----
     Menu,             // menu       — title/menu loop (custom bed, assets/music/original/menu.wav)
