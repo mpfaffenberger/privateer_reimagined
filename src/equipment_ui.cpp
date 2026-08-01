@@ -197,8 +197,6 @@ void draw_zone_overlay(PlayerState& player, const ShipClass* schematic_ship,
         float next_y = image_lo.y + 18.0f;
         const float label_x = on_right ? image_lo.x + image_size.x - 205.0f
                                        : image_lo.x + 12.0f;
-        const float elbow_x = on_right ? image_lo.x + image_size.x * 0.84f
-                                       : image_lo.x + image_size.x * 0.16f;
         for (Zone* zone : zones) {
             const ImVec2 lo = rect_min(*zone, image_lo, image_size);
             const ImVec2 hi = rect_max(*zone, image_lo, image_size);
@@ -207,9 +205,9 @@ void draw_zone_overlay(PlayerState& player, const ShipClass* schematic_ship,
             next_y = label_y + 42.0f;
             const ImU32 col = ImGui::ColorConvertFloat4ToU32(kind_color(zone->kind));
             const float line_end = on_right ? label_x - 7.0f : label_x + 193.0f;
-            dl->AddLine(anchor, ImVec2(elbow_x, label_y + 12.0f), col, 1.5f);
-            dl->AddLine(ImVec2(elbow_x, label_y + 12.0f),
-                        ImVec2(line_end, label_y + 12.0f), col, 1.5f);
+            // Single straight leader from the hardpoint marker to the label,
+            // rather than a two-segment elbow that reads as separate lines.
+            dl->AddLine(anchor, ImVec2(line_end, label_y + 12.0f), col, 1.5f);
             dl->AddCircleFilled(anchor, 3.5f, col);
             std::string state = zone_state(player, *zone, schematic_ship);
             for (char& c : state) {
