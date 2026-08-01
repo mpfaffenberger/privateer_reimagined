@@ -303,7 +303,7 @@ void shutdown() { if (g_worker.joinable()) g_worker.join(); }
 
 bool handle_event(const sapp_event* event) {
     if (event->type == SAPP_EVENTTYPE_KEY_DOWN && !event->key_repeat &&
-        event->key_code == SAPP_KEYCODE_F11) {
+        event->key_code == SAPP_KEYCODE_F1) {
         g_open = !g_open;
         return true;
     }
@@ -316,7 +316,7 @@ void build() {
 
     base_screens::CurrentRoomInfo info;
     ImGui::SetNextWindowSize(ImVec2(720, 620), ImGuiCond_FirstUseEver);
-    if (!ImGui::Begin("Base Art Studio (F11)", &g_open)) { ImGui::End(); return; }
+    if (!ImGui::Begin("Base Art Studio (F1)", &g_open)) { ImGui::End(); return; }
     if (!base_screens::current_room_info(info)) {
         ImGui::TextWrapped("Land at a base and open an art-backed room to use the studio.");
         ImGui::End();
