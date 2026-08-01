@@ -2153,8 +2153,8 @@ void build_sector_navmap(const galaxy::Galaxy& galaxy,
     if (galaxy.empty()) return;
 
     const auto sz = screen_size();
-    const float win_w = sz.w * 0.96f;
-    const float win_h = sz.h * 0.94f;
+    const float win_w = sz.w * 0.97f;
+    const float win_h = sz.h * 0.95f;
     ImGui::SetNextWindowPos(ImVec2((sz.w - win_w) * 0.5f,
                                    (sz.h - win_h) * 0.5f),
                             ImGuiCond_Always);
@@ -2172,7 +2172,7 @@ void build_sector_navmap(const galaxy::Galaxy& galaxy,
         return;
     }
 
-    // ---- map bbox over every system's galaxy_position (node coords) ----
+    // ---- map bbox over every system's galaxy_position ----
     float min_x = 1e9f, max_x = -1e9f, min_y = 1e9f, max_y = -1e9f;
     for (const auto& s : galaxy.systems) {
         min_x = fminf(min_x, s.galaxy_position.X);
@@ -2182,77 +2182,248 @@ void build_sector_navmap(const galaxy::Galaxy& galaxy,
     }
     const float cxm = 0.5f * (min_x + max_x);
     const float cym = 0.5f * (min_y + max_y);
-    // Square span (both axes share the padded max) centred on the bbox.
     float span = fmaxf(max_x - min_x, max_y - min_y);
     if (span < 1.0f) span = 1.0f;
-    span *= 1.18f;
+    span *= 1.20f;
 
-    // Square map area within the window content, centred.
+    // Square map area centred in window content.
     const ImVec2 area_p0 = ImGui::GetCursorScreenPos();
     const ImVec2 area_sz = ImGui::GetContentRegionAvail();
-    const float edge = fminf(area_sz.x, area_sz.y) - 8.0f;
+    const float edge = fminf(area_sz.x, area_sz.y) - 16.0f;
     const float sq_ox = (area_sz.x - edge) * 0.5f;
     const float sq_oy = (area_sz.y - edge) * 0.5f;
-    const ImVec2 sq_p0 { area_p0.x + sq_ox, area_p0.y + sq_oy };
-    const ImVec2 sq_sz { edge, edge };
-    const float scale = 0.92f * edge / span;
-    const ImVec2 ctr { sq_p0.x + sq_sz.x * 0.5f, sq_p0.y + sq_sz.y * 0.5f };
+    const ImVec2 sq_p0{ area_p0.x + sq_ox, area_p0.y + sq_oy };
+    const ImVec2 sq_sz{ edge, edge };
+    const float sq_end_x = sq_p0.x + sq_sz.x;
+    const float sq_end_y = sq_p0.y + sq_sz.y;
+    const float scale = 0.94f * edge / span;
+    const ImVec2 ctr{ sq_p0.x + sq_sz.x * 0.5f, sq_p0.y + sq_sz.y * 0.5f };
+
     auto to_screen = [&](float wx, float wy) {
-        // Minus on the vertical: screen-Y grows down, map-Y grows up.
         return ImVec2(ctr.x + (wx - cxm) * scale,
                       ctr.y - (wy - cym) * scale);
     };
 
     ImDrawList* dl = ImGui::GetWindowDrawList();
-    dl->AddRect(sq_p0, ImVec2(sq_p0.x + sq_sz.x, sq_p0.y + sq_sz.y),
-                IM_COL32(80, 100, 120, 200), 0.0f, 0, 1.0f);
 
-    // Tactical grid (8x8) centred on the map centre.
-    constexpr int kGridDivs = 8;
-    const ImU32 kGridLine = IM_COL32(60, 75, 90, 110);
-    const float cell = span / float(kGridDivs);
-    const float g_lo = -span * 0.5f, g_hi = span * 0.5f;
-    for (int i = 0; i <= kGridDivs; ++i) {
-        const float off = g_lo + i * cell;
-        dl->AddLine(to_screen(cxm + off, cym + g_lo),
-                    to_screen(cxm + off, cym + g_hi), kGridLine, 1.0f);
-        dl->AddLine(to_screen(cxm + g_lo, cym + off),
-                    to_screen(cxm + g_hi, cym + off), kGridLine, 1.0f);
+    // =========================================================
+    // BACKGROUND — deep space black
+    // =========================================================
+    dl->AddRectFilled(sq_p0, ImVec2(sq_end_x, sq_end_y),
+                      IM_COL32(5, 8, 14, 255));
+
+    // =========================================================
+    // SUBTLE STAR FIELD — small dim white dots for atmosphere
+    // =========================================================
+    struct StarSeed { int x, y, z; };
+    auto star_hash = [](StarSeed s) {
+        uint32_t h = (uint32_t)s.x * 73856093u + (uint32_t)s.y * 19349663u + (uint32_t)s.z * 83492791u;
+        h = (h ^ (h >> 13)) * 1274126177u;
+        return h;
+    };
+    for (int i = 0; i < 200; ++i) {
+        StarSeed seed{ i * 7 + 3, i * 13 + 17, 42 };
+        uint32_t h = star_hash(seed);
+        float rx = (float)(h & 0xFFFF) / 65535.0f;
+        h >>= 16;
+        float ry = (float)(h & 0xFFFF) / 65535.0f;
+        float brightness = 20.0f + (float)((h >> 8) & 0x1F) * 1.5f;
+        float alpha = fminf(brightness, 90.0f);
+        dl->AddCircleFilled(
+            ImVec2(sq_p0.x + rx * sq_sz.x, sq_p0.y + ry * sq_sz.y),
+            0.5f + ((float)((h >> 4) & 3) * 0.3f),
+            IM_COL32(180, 190, 210, (int)alpha));
     }
 
-    // Edges — jump links as lines. Jumps are authored as reciprocal
-    // directed pairs, so draw once per undirected pair via from<to.
-    const ImU32 kEdge = IM_COL32(150, 175, 200, 190);
-    for (const auto& j : galaxy.jumps) {
-        if (!(j.from < j.to)) continue;
-        const galaxy::SystemEntry* a = galaxy.find(j.from);
-        const galaxy::SystemEntry* b = galaxy.find(j.to);
-        if (!a || !b) continue;
-        dl->AddLine(to_screen(a->galaxy_position.X, a->galaxy_position.Y),
-                    to_screen(b->galaxy_position.X, b->galaxy_position.Y),
-                    kEdge, 1.2f);
+    // =========================================================
+    // GREEN GRID — 2x2 (quadrants) + subtle 4x4 sub-grid
+    // =========================================================
+    const ImU32 kGridBright = IM_COL32(30, 230, 70, 220);
+    const ImU32 kGridDim    = IM_COL32(15, 140, 40, 100);
+    const ImU32 kGridBorder = IM_COL32(30, 255, 70, 255);
+
+    // Outer border
+    dl->AddRect(sq_p0, ImVec2(sq_end_x, sq_end_y),
+                kGridBorder, 0.0f, 0, 2.5f);
+
+    // 2x2 bright grid lines (the quadrant dividers)
+    {
+        float mid_x = sq_p0.x + sq_sz.x * 0.5f;
+        float mid_y = sq_p0.y + sq_sz.y * 0.5f;
+        dl->AddLine(ImVec2(mid_x, sq_p0.y), ImVec2(mid_x, sq_end_y), kGridBright, 1.5f);
+        dl->AddLine(ImVec2(sq_p0.x, mid_y), ImVec2(sq_end_x, mid_y), kGridBright, 1.5f);
     }
 
-    // Nodes — one per system, current system highlighted + ringed.
+    // 4x4 dim sub-grid
+    {
+        for (int i = 1; i < 4; ++i) {
+            float t = i * 0.25f;
+            float x = sq_p0.x + sq_sz.x * t;
+            float y = sq_p0.y + sq_sz.y * t;
+            if (fabsf(t - 0.5f) < 0.01f) continue;
+            dl->AddLine(ImVec2(x, sq_p0.y), ImVec2(x, sq_end_y), kGridDim, 0.8f);
+            dl->AddLine(ImVec2(sq_p0.x, y), ImVec2(sq_end_x, y), kGridDim, 0.8f);
+        }
+    }
+
+    // =========================================================
+    // QUADRANT LABELS — bright green in corners
+    // =========================================================
+    std::vector<std::string> sectors[4];
+    for (const auto& s : galaxy.systems) {
+        bool right = s.galaxy_position.X >= cxm;
+        bool up    = s.galaxy_position.Y >= cym;
+        int q = (up ? 0 : 2) + (right ? 1 : 0);
+        if (!s.sector.empty()) sectors[q].push_back(s.sector);
+    }
+
+    auto dominant_sector = [](const std::vector<std::string>& list) -> std::string {
+        if (list.empty()) return "";
+        std::string best = list[0];
+        int best_count = 0;
+        for (const auto& a : list) {
+            int cnt = 0;
+            for (const auto& b : list) if (b == a) cnt++;
+            if (cnt > best_count) { best = a; best_count = cnt; }
+        }
+        return best;
+    };
+
+    std::string q_tl = dominant_sector(sectors[0]);
+    std::string q_tr = dominant_sector(sectors[1]);
+    std::string q_bl = dominant_sector(sectors[2]);
+    std::string q_br = dominant_sector(sectors[3]);
+
+    if (q_tl.empty()) q_tl = "Farris Quadrant";
+    if (q_tr.empty()) q_tr = "Clarke Quadrant";
+    if (q_bl.empty()) q_bl = "Humboldt Quadrant";
+    if (q_br.empty()) q_br = "Potter Quadrant";
+
+    const ImU32 kQuadLabel = IM_COL32(40, 255, 80, 210);
+    const float label_margin = 12.0f;
+
+    dl->AddText(ImVec2(sq_p0.x + label_margin, sq_p0.y + label_margin), kQuadLabel, q_tl.c_str());
+
+    {
+        ImVec2 text_sz = ImGui::CalcTextSize(q_tr.c_str());
+        dl->AddText(ImVec2(sq_end_x - label_margin - text_sz.x, sq_p0.y + label_margin), kQuadLabel, q_tr.c_str());
+    }
+    dl->AddText(ImVec2(sq_p0.x + label_margin, sq_end_y - label_margin - 14.0f), kQuadLabel, q_bl.c_str());
+
+    {
+        ImVec2 text_sz = ImGui::CalcTextSize(q_br.c_str());
+        dl->AddText(ImVec2(sq_end_x - label_margin - text_sz.x, sq_end_y - label_margin - 14.0f), kQuadLabel, q_br.c_str());
+    }
+
+    // =========================================================
+    // HEADER BANNER — sector name at top
+    // =========================================================
+    {
+        std::string sector_name = q_tl;
+        if (sector_name.size() > 10 &&
+            sector_name.compare(sector_name.size()-10, 10, " Quadrant") == 0) {
+            sector_name = sector_name.substr(0, sector_name.size()-10);
+        }
+
+        char header[200];
+        std::snprintf(header, sizeof(header),
+                      "%s SECTOR  |  ARCHIVE NO. 12, 1772.97011  |  BASED ON ORIGINAL CARTOGRAPHY BY LDI III MINING CORP.",
+                      sector_name.c_str());
+
+        ImVec2 header_sz = ImGui::CalcTextSize(header);
+        ImVec2 header_pos{ ctr.x - header_sz.x * 0.5f, sq_p0.y + 10.0f };
+        dl->AddText(header_pos, IM_COL32(220, 255, 180, 200), header);
+    }
+
+    // =========================================================
+    // JUMP LINKS — yellow for local, red for inter-quadrant
+    // =========================================================
+    const ImU32 kJumpYellow = IM_COL32(255, 230, 40, 200);
+    const ImU32 kJumpRed    = IM_COL32(230, 50, 30, 190);
+
+    {
+        float mid_x = sq_p0.x + sq_sz.x * 0.5f;
+        float mid_y = sq_p0.y + sq_sz.y * 0.5f;
+
+        for (const auto& j : galaxy.jumps) {
+            if (!(j.from < j.to)) continue;
+            const galaxy::SystemEntry* a = galaxy.find(j.from);
+            const galaxy::SystemEntry* b = galaxy.find(j.to);
+            if (!a || !b) continue;
+
+            ImVec2 pa = to_screen(a->galaxy_position.X, a->galaxy_position.Y);
+            ImVec2 pb = to_screen(b->galaxy_position.X, b->galaxy_position.Y);
+
+            bool crosses_v = ((pa.x < mid_x && pb.x > mid_x) || (pa.x > mid_x && pb.x < mid_x));
+            bool crosses_h = ((pa.y < mid_y && pb.y > mid_y) || (pa.y > mid_y && pb.y < mid_y));
+            bool is_long = crosses_v || crosses_h;
+
+            dl->AddLine(pa, pb, is_long ? kJumpRed : kJumpYellow, 1.0f);
+        }
+    }
+
+    // =========================================================
+    // NODES — bright star-like dots
+    // =========================================================
     for (const auto& s : galaxy.systems) {
         const ImVec2 sp = to_screen(s.galaxy_position.X, s.galaxy_position.Y);
         const bool cur = (s.id == current_system_id);
-        const ImU32 col = cur ? IM_COL32(110, 235, 255, 255)
-                              : IM_COL32(255, 195, 115, 255);
-        dl->AddCircleFilled(sp, cur ? 7.0f : 5.0f, col);
-        if (cur) dl->AddCircle(sp, 11.0f, IM_COL32(110, 235, 255, 220), 24, 1.5f);
-        dl->AddText(ImVec2(sp.x + 8.0f, sp.y - 16.0f),
-                    cur ? IM_COL32(190, 245, 255, 255) : IM_COL32(225, 230, 238, 200),
+
+        if (cur) {
+            dl->AddCircleFilled(sp, 6.0f, IM_COL32(200, 255, 255, 255));
+            dl->AddCircle(sp, 12.0f, IM_COL32(80, 240, 255, 230), 24, 2.0f);
+            dl->AddCircle(sp, 16.0f, IM_COL32(60, 200, 240, 80), 24, 1.0f);
+        } else {
+            dl->AddCircleFilled(sp, 3.0f, IM_COL32(240, 245, 255, 255));
+            dl->AddCircleFilled(sp, 5.0f, IM_COL32(200, 210, 230, 50));
+        }
+    }
+
+    // =========================================================
+    // SYSTEM LABELS — white text, offset to avoid overlap
+    // =========================================================
+    const ImU32 kLabelCur = IM_COL32(200, 255, 255, 255);
+    const ImU32 kLabelNormal = IM_COL32(230, 235, 240, 210);
+
+    for (const auto& s : galaxy.systems) {
+        const ImVec2 sp = to_screen(s.galaxy_position.X, s.galaxy_position.Y);
+        const bool cur = (s.id == current_system_id);
+
+        float off_x = 8.0f;
+        if (sp.x > sq_end_x - 120.0f) off_x = -120.0f;
+        if (sp.x < sq_p0.x + 100.0f) off_x = 8.0f;
+
+        ImVec2 label_pos{ sp.x + off_x, sp.y - 6.0f };
+        ImVec2 label_sz = ImGui::CalcTextSize(s.display_name.c_str());
+        if (label_pos.x < sq_p0.x + 2.0f) label_pos.x = sq_p0.x + 2.0f;
+        if (label_pos.x + label_sz.x > sq_end_x - 2.0f)
+            label_pos.x = sq_end_x - 2.0f - label_sz.x;
+
+        dl->AddText(label_pos, cur ? kLabelCur : kLabelNormal,
                     s.display_name.c_str());
     }
 
-    // Legend.
-    char legend[160];
-    std::snprintf(legend, sizeof legend,
-                  "systems: %zu\t jumplinks: %zu\t current system ringed",
-                  galaxy.systems.size(), galaxy.jumps.size());
-    const ImVec2 legend_p(sq_p0.x + 12.0f, sq_p0.y + sq_sz.y - 20.0f);
-    dl->AddText(legend_p, IM_COL32(180, 190, 200, 220), legend);
+    // =========================================================
+    // LEGEND — bottom of map
+    // =========================================================
+    {
+        float legend_y = sq_end_y + 8.0f;
+        const ImU32 kLegendText = IM_COL32(200, 210, 220, 220);
+        const float icon_size = 16.0f;
+        float cur_x = ctr.x - 200.0f;
+
+        dl->AddLine(ImVec2(cur_x, legend_y + 4.0f), ImVec2(cur_x + icon_size, legend_y + 4.0f), kJumpYellow, 1.5f);
+        dl->AddText(ImVec2(cur_x + icon_size + 4.0f, legend_y), kLegendText, "Local jump routes");
+
+        cur_x += 160.0f;
+        dl->AddLine(ImVec2(cur_x, legend_y + 4.0f), ImVec2(cur_x + icon_size, legend_y + 4.0f), kJumpRed, 1.5f);
+        dl->AddText(ImVec2(cur_x + icon_size + 4.0f, legend_y), kLegendText, "Inter-quadrant routes");
+
+        cur_x += 200.0f;
+        dl->AddCircleFilled(ImVec2(cur_x + 4.0f, legend_y + 4.0f), 3.0f, IM_COL32(200, 255, 255, 255));
+        dl->AddCircle(ImVec2(cur_x + 4.0f, legend_y + 4.0f), 7.0f, IM_COL32(80, 240, 255, 230), 12, 1.5f);
+        dl->AddText(ImVec2(cur_x + 14.0f, legend_y), kLegendText, "Current system");
+    }
 
     ImGui::End();
     if (!open || ImGui::IsKeyPressed(ImGuiKey_Escape)) {
