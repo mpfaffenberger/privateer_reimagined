@@ -1652,7 +1652,8 @@ void build_navmap(const Camera& cam, const StarSystem& system,
                   const PlayerState& player,
                   const std::string& current_system_id,
                   const galaxy::Galaxy& galaxy,
-                  bool& shown_in_out) {
+                  bool& shown_in_out,
+                  bool sector_pane_open) {
     if (!shown_in_out) return;
 
     const auto sz = screen_size();
@@ -1660,9 +1661,16 @@ void build_navmap(const Camera& cam, const StarSystem& system,
     // 94% tall, centred — fits both the map AND a right-side mission
     // panel without forcing the user to resize the window. Title says it
     // out loud so the panel isn't a surprise.
-    const float win_w = sz.w * 0.98f;
+    float win_w = sz.w * 0.98f;
     const float win_h = sz.h * 0.94f;
-    ImGui::SetNextWindowPos(ImVec2((sz.w - win_w) * 0.5f,
+    float win_x  = (sz.w - win_w) * 0.5f;
+    // When the sector map is open (M inside the navmap), tighten the
+    // navmap to the left so both maps are visible side-by-side.
+    if (sector_pane_open) {
+        win_w = sz.w * 0.55f;
+        win_x = sz.w * 0.01f;
+    }
+    ImGui::SetNextWindowPos(ImVec2(win_x,
                                    (sz.h - win_h) * 0.5f),
                             ImGuiCond_Always);
     ImGui::SetNextWindowSize(ImVec2(win_w, win_h), ImGuiCond_Always);
@@ -2148,15 +2156,23 @@ void build_navmap(const Camera& cam, const StarSystem& system,
 
 void build_sector_navmap(const galaxy::Galaxy& galaxy,
                          const std::string& current_system_id,
-                         bool& shown_in_out) {
+                         bool& shown_in_out,
+                         bool beside_navmap) {
     if (!shown_in_out || galaxy.empty()) return;
 
     const auto screen = screen_size();
-    const ImVec2 window_size(screen.w * 0.96f, screen.h * 0.94f);
-    ImGui::SetNextWindowPos(
-        ImVec2((screen.w - window_size.x) * 0.5f,
-               (screen.h - window_size.y) * 0.5f), ImGuiCond_Always);
-    ImGui::SetNextWindowSize(window_size, ImGuiCond_Always);
+    // Standalone: a big centred overlay. When opened from within the
+    // navmap (M while N is up), sit in the RIGHT pane so the local
+    // navmap (left) and sector map (right) are both visible "also".
+    float win_w = screen.w * 0.96f;
+    const float win_h = screen.h * 0.94f;
+    float win_x = (screen.w - win_w) * 0.5f;
+    if (beside_navmap) {
+        win_w = screen.w * 0.43f;
+        win_x = screen.w - win_w - screen.w * 0.01f;
+    }
+    ImGui::SetNextWindowPos(ImVec2(win_x, (screen.h - win_h) * 0.5f), ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(win_w, win_h), ImGuiCond_Always);
     ImGui::SetNextWindowBgAlpha(1.0f);
 
     push_hud_style();

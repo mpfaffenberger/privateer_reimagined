@@ -6497,12 +6497,16 @@ void frame_cb() {
         // player clicks a nav point — same effect as the N-cycle.
         cockpit_hud::build_navmap(g.camera, g.system, g.selected_nav,
                                    g.ships, g.player, g.player.current_system,
-                                   g.galaxy, g.show_navmap);
+                                   g.galaxy, g.show_navmap,
+                                   g.show_sector_map);
         // Sector navigation map (M to open/close): whole galaxy as a
-        // node+edge graph. Drawn on top of the regular HUD/naavmap.
+        // node+edge graph. When opened from within the navmap (M while N
+        // is up) it shares the screen as a right-side pane; standalone M
+        // still shows it full-screen.
         cockpit_hud::build_sector_navmap(g.galaxy,
                                          g.player.current_system,
-                                         g.show_sector_map);
+                                         g.show_sector_map,
+                                         g.show_navmap);
         // Reputation + comm-taunt feed (np-ma2.1), drawn over the HUD.
         // ---- HIDDEN TEMPORARILY (re-enable by uncommenting the line below) ----
         // comm::draw();

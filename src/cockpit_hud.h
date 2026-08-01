@@ -163,7 +163,8 @@ void build_navmap(const Camera& cam, const StarSystem& system,
                   const PlayerState& player,
                   const std::string& current_system_id,
                   const galaxy::Galaxy& galaxy,
-                  bool& shown_in_out);
+                  bool& shown_in_out,
+                  bool sector_pane_open = false);
 
 // Sector navmap: the whole galaxy as a graph — every known system as a
 // node at its galaxy_position, jump links as edges (drawn once per
@@ -171,6 +172,7 @@ void build_navmap(const Camera& cam, const StarSystem& system,
 // No interaction with local nav selection; purely a reference map.
 void build_sector_navmap(const galaxy::Galaxy& galaxy,
                          const std::string& current_system_id,
-                         bool& shown_in_out);
+                         bool& shown_in_out,
+                         bool beside_navmap = false);
 
 } // namespace cockpit_hud
