@@ -104,7 +104,7 @@ stable player-facing CLI.
 | Hold left mouse or `Ctrl` | Fire guns |
 | `G` | Cycle gun arm-mode (unarmed → each gun type → all) |
 | `Enter` | Fire missile |
-| `M` | Cycle missile type (DF → HS → IR) |
+| `F` | Cycle missile type (DF → HS → IR) |
 | `T` | Cycle targets (nearest → farthest, ≤15 km) |
 | `Z` | Tractor loose loot into the hold |
 | `I` | In-flight inventory |
@@ -114,7 +114,8 @@ stable player-facing CLI.
 
 | Input | Action |
 |---|---|
-| `N` | Open nav map / cycle nav targets |
+| `N` | Open local nav map / cycle nav targets |
+| `M` | Sector nav map (whole galaxy: systems + jump links) |
 | `A` | Autopilot to the selected nav point |
 | `D` | Dock at the selected base |
 | `J` | Jump through the selected jump gate |

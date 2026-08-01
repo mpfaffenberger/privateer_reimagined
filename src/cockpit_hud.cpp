@@ -2146,6 +2146,120 @@ void build_navmap(const Camera& cam, const StarSystem& system,
     }
 }
 
+void build_sector_navmap(const galaxy::Galaxy& galaxy,
+                         const std::string& current_system_id,
+                         bool& shown_in_out) {
+    if (!shown_in_out) return;
+    if (galaxy.empty()) return;
+
+    const auto sz = screen_size();
+    const float win_w = sz.w * 0.96f;
+    const float win_h = sz.h * 0.94f;
+    ImGui::SetNextWindowPos(ImVec2((sz.w - win_w) * 0.5f,
+                                   (sz.h - win_h) * 0.5f),
+                            ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(win_w, win_h), ImGuiCond_Always);
+    ImGui::SetNextWindowBgAlpha(1.0f);
+    push_hud_style();
+    ImGuiWindowFlags flags = ImGuiWindowFlags_NoCollapse
+                           | ImGuiWindowFlags_NoResize
+                           | ImGuiWindowFlags_NoSavedSettings;
+    bool open = true;
+    if (!ImGui::Begin("SECTOR NAVIGATION MAP  (M toggles, Esc closes)",
+                      &open, flags)) {
+        ImGui::End();
+        if (!open || ImGui::IsKeyPressed(ImGuiKey_Escape)) shown_in_out = false;
+        return;
+    }
+
+    // ---- map bbox over every system's galaxy_position (node coords) ----
+    float min_x = 1e9f, max_x = -1e9f, min_y = 1e9f, max_y = -1e9f;
+    for (const auto& s : galaxy.systems) {
+        min_x = fminf(min_x, s.galaxy_position.X);
+        max_x = fmaxf(max_x, s.galaxy_position.X);
+        min_y = fminf(min_y, s.galaxy_position.Y);
+        max_y = fmaxf(max_y, s.galaxy_position.Y);
+    }
+    const float cxm = 0.5f * (min_x + max_x);
+    const float cym = 0.5f * (min_y + max_y);
+    // Square span (both axes share the padded max) centred on the bbox.
+    float span = fmaxf(max_x - min_x, max_y - min_y);
+    if (span < 1.0f) span = 1.0f;
+    span *= 1.18f;
+
+    // Square map area within the window content, centred.
+    const ImVec2 area_p0 = ImGui::GetCursorScreenPos();
+    const ImVec2 area_sz = ImGui::GetContentRegionAvail();
+    const float edge = fminf(area_sz.x, area_sz.y) - 8.0f;
+    const float sq_ox = (area_sz.x - edge) * 0.5f;
+    const float sq_oy = (area_sz.y - edge) * 0.5f;
+    const ImVec2 sq_p0 { area_p0.x + sq_ox, area_p0.y + sq_oy };
+    const ImVec2 sq_sz { edge, edge };
+    const float scale = 0.92f * edge / span;
+    const ImVec2 ctr { sq_p0.x + sq_sz.x * 0.5f, sq_p0.y + sq_sz.y * 0.5f };
+    auto to_screen = [&](float wx, float wy) {
+        // Minus on the vertical: screen-Y grows down, map-Y grows up.
+        return ImVec2(ctr.x + (wx - cxm) * scale,
+                      ctr.y - (wy - cym) * scale);
+    };
+
+    ImDrawList* dl = ImGui::GetWindowDrawList();
+    dl->AddRect(sq_p0, ImVec2(sq_p0.x + sq_sz.x, sq_p0.y + sq_sz.y),
+                IM_COL32(80, 100, 120, 200), 0.0f, 0, 1.0f);
+
+    // Tactical grid (8x8) centred on the map centre.
+    constexpr int kGridDivs = 8;
+    const ImU32 kGridLine = IM_COL32(60, 75, 90, 110);
+    const float cell = span / float(kGridDivs);
+    const float g_lo = -span * 0.5f, g_hi = span * 0.5f;
+    for (int i = 0; i <= kGridDivs; ++i) {
+        const float off = g_lo + i * cell;
+        dl->AddLine(to_screen(cxm + off, cym + g_lo),
+                    to_screen(cxm + off, cym + g_hi), kGridLine, 1.0f);
+        dl->AddLine(to_screen(cxm + g_lo, cym + off),
+                    to_screen(cxm + g_hi, cym + off), kGridLine, 1.0f);
+    }
+
+    // Edges — jump links as lines. Jumps are authored as reciprocal
+    // directed pairs, so draw once per undirected pair via from<to.
+    const ImU32 kEdge = IM_COL32(150, 175, 200, 190);
+    for (const auto& j : galaxy.jumps) {
+        if (!(j.from < j.to)) continue;
+        const galaxy::SystemEntry* a = galaxy.find(j.from);
+        const galaxy::SystemEntry* b = galaxy.find(j.to);
+        if (!a || !b) continue;
+        dl->AddLine(to_screen(a->galaxy_position.X, a->galaxy_position.Y),
+                    to_screen(b->galaxy_position.X, b->galaxy_position.Y),
+                    kEdge, 1.2f);
+    }
+
+    // Nodes — one per system, current system highlighted + ringed.
+    for (const auto& s : galaxy.systems) {
+        const ImVec2 sp = to_screen(s.galaxy_position.X, s.galaxy_position.Y);
+        const bool cur = (s.id == current_system_id);
+        const ImU32 col = cur ? IM_COL32(110, 235, 255, 255)
+                              : IM_COL32(255, 195, 115, 255);
+        dl->AddCircleFilled(sp, cur ? 7.0f : 5.0f, col);
+        if (cur) dl->AddCircle(sp, 11.0f, IM_COL32(110, 235, 255, 220), 24, 1.5f);
+        dl->AddText(ImVec2(sp.x + 8.0f, sp.y - 16.0f),
+                    cur ? IM_COL32(190, 245, 255, 255) : IM_COL32(225, 230, 238, 200),
+                    s.display_name.c_str());
+    }
+
+    // Legend.
+    char legend[160];
+    std::snprintf(legend, sizeof legend,
+                  "systems: %zu\t jumplinks: %zu\t current system ringed",
+                  galaxy.systems.size(), galaxy.jumps.size());
+    const ImVec2 legend_p(sq_p0.x + 12.0f, sq_p0.y + sq_sz.y - 20.0f);
+    dl->AddText(legend_p, IM_COL32(180, 190, 200, 220), legend);
+
+    ImGui::End();
+    if (!open || ImGui::IsKeyPressed(ImGuiKey_Escape)) {
+        shown_in_out = false;
+    }
+}
+
 // -----------------------------------------------------------------------------
 // draw_sun_warning -- centre-screen banner for the sun proximity rules.
 // No-op when outside the 20k avoid bubble; yellow "WARNING" between 15-20k,

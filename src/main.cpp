@@ -527,6 +527,11 @@ struct AppState {
     // effect).
     bool show_navmap = false;
 
+    // Sector navigation map (M to open/close): the whole galaxy as a
+    // node+edge graph — every system at its galaxy_position, jump links
+    // as the edges. Distinct from show_navmap (the local in-system map).
+    bool show_sector_map = false;
+
     // Welcome / alpha-intro overlay. Starts true so a fresh launch opens
     // paused on the briefing; dismissed with SPACE/ENTER (handled at the
     // very top of event_cb so it doesn't collide with fly-by-wire /
@@ -6493,6 +6498,11 @@ void frame_cb() {
         cockpit_hud::build_navmap(g.camera, g.system, g.selected_nav,
                                    g.ships, g.player, g.player.current_system,
                                    g.galaxy, g.show_navmap);
+        // Sector navigation map (M to open/close): whole galaxy as a
+        // node+edge graph. Drawn on top of the regular HUD/naavmap.
+        cockpit_hud::build_sector_navmap(g.galaxy,
+                                         g.player.current_system,
+                                         g.show_sector_map);
         // Reputation + comm-taunt feed (np-ma2.1), drawn over the HUD.
         // ---- HIDDEN TEMPORARILY (re-enable by uncommenting the line below) ----
         // comm::draw();
@@ -7406,13 +7416,23 @@ void event_cb(const sapp_event* ev) {
         g_time_scale = 1.0f;
         std::printf("[time_scale] sim reset to 1x\n");
     }
-    if (ev->key_code == SAPP_KEYCODE_M && !ev->key_repeat) {
+    // F — cycle the selected missile type (DF -> HS -> IR -> DF).
+    // (Moved off M so M can open the sector navmap.) Pure UI state;
+    // resets the lock so switching to a lock type re-acquires.
+    if (ev->key_code == SAPP_KEYCODE_F && !ev->key_repeat) {
             g.selected_missile = (g.selected_missile + 1) % kMissileTypeCount;
             g.missile_lock = AppState::MissileLock{};   // fresh lock for the new type
             sfx::ui_click();
             std::printf("[missile] selected %s (x%d)\n",
                         missile::to_name((MissileType)g.selected_missile),
                         g.player.missiles[g.selected_missile]);
+        }
+        // M — toggle the sector navigation map (whole-galaxy node+edge
+        // graph). Independent of the local navmap (N).
+        if (ev->key_code == SAPP_KEYCODE_M && !ev->key_repeat) {
+            g.show_sector_map = !g.show_sector_map;
+            std::printf("[navmap] sector %s\n",
+                        g.show_sector_map ? "OPEN" : "CLOSED");
         }
         // F3 — toggle the ship-sprite frame HUD. Useful while flying around a
         // sprite ship: lets you see exactly which atlas cell the engine picks
