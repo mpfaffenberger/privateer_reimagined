@@ -334,7 +334,12 @@ void draw_exchange(BaseContext& ctx) {
     const float left = 24.0f, top = 56.0f, bottom = 76.0f;
 
     ImGui::SetCursorScreenPos(ImVec2(left, top));
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.012f, 0.018f, 0.028f, 0.97f));
+    // Semi-transparent scrim instead of a near-opaque slab: the base room art
+    // stays visible behind the exchange so the screen feels anchored in the
+    // scene. Inner panels add their own wash, so keep this one light — the
+    // composited alpha behind the tables lands around ~0.75. Tuned lighter
+    // so the room art clearly reads through the buy/sell menu.
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.012f, 0.018f, 0.028f, 0.55f));
     if (ImGui::BeginChild("##commodity_exchange",
                           ImVec2(sw - left - 24.0f, sh - top - bottom), true)) {
         ImGui::TextColored(kAmber, "%s COMMODITY EXCHANGE", ctx.display_name.c_str());
@@ -356,7 +361,7 @@ void draw_exchange(BaseContext& ctx) {
         const ImVec2 available = ImGui::GetContentRegionAvail();
         const float gap = 10.0f;
         const float market_width = available.x * 0.62f;
-        ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.018f, 0.023f, 0.034f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.018f, 0.023f, 0.034f, 0.30f));
         if (ImGui::BeginChild("##market_catalog", ImVec2(market_width, available.y), true)) {
             draw_filters();
             ImGui::Separator();
