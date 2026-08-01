@@ -10,7 +10,9 @@
 
 #ifdef _WIN32
 
-#define WIN32_LEAN_AND_MEAN
+// WIN32_LEAN_AND_MEAN is defined once, on the MSVC command line in
+// CMakeLists.txt (if(MSVC) block). Do not re-#define it here or MSVC
+// warns C4005 about the duplicate definition.
 #include <windows.h>
 
 namespace win32 {
