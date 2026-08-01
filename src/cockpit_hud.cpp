@@ -2246,8 +2246,20 @@ void build_sector_navmap(const galaxy::Galaxy& galaxy,
         if (system.sector.find("Humboldt") != std::string::npos) return 2;
         return 3; // Potter; all catalog entries use one of the four quadrants.
     };
+    // Temporary survey policy: these systems are not chart-visible before the
+    // Taryn Cross missions. Gamma/Delta/Delta Prime/Beta still define Fariss's
+    // stable fit bounds; Eden is omitted from both drawing and fit bounds.
+    auto is_hidden = [](const galaxy::SystemEntry& system) {
+        return system.id == "eden" || system.id == "gamma" ||
+               system.id == "delta" || system.id == "delta_prime" ||
+               system.id == "beta";
+    };
+    auto contributes_to_bounds = [](const galaxy::SystemEntry& system) {
+        return system.id != "eden";
+    };
     Bounds bounds[4];
     for (const auto& system : galaxy.systems) {
+        if (!contributes_to_bounds(system)) continue;
         Bounds& b = bounds[quadrant_for(system)];
         b.min_x = fminf(b.min_x, system.galaxy_position.X);
         b.max_x = fmaxf(b.max_x, system.galaxy_position.X);
@@ -2278,7 +2290,7 @@ void build_sector_navmap(const galaxy::Galaxy& galaxy,
         if (!(jump.from < jump.to)) continue;
         const galaxy::SystemEntry* a = galaxy.find(jump.from);
         const galaxy::SystemEntry* b = galaxy.find(jump.to);
-        if (!a || !b) continue;
+        if (!a || !b || is_hidden(*a) || is_hidden(*b)) continue;
         dl->AddLine(to_screen(*a), to_screen(*b),
                     a->sector == b->sector ? yellow : red, 1.1f);
     }
@@ -2303,6 +2315,7 @@ void build_sector_navmap(const galaxy::Galaxy& galaxy,
     // Nodes first, then labels. Labels try eight placements and choose the
     // candidate with the least overlap against labels already accepted.
     for (const auto& system : galaxy.systems) {
+        if (is_hidden(system)) continue;
         const ImVec2 p = to_screen(system);
         const bool current = system.id == current_system_id;
         dl->AddCircleFilled(p, current ? 5.0f : 2.5f,
@@ -2318,6 +2331,7 @@ void build_sector_navmap(const galaxy::Galaxy& galaxy,
     occupied.reserve(galaxy.systems.size());
     constexpr float kPad = 2.0f;
     for (const auto& system : galaxy.systems) {
+        if (is_hidden(system)) continue;
         const ImVec2 node = to_screen(system);
         const ImVec2 text_size = ImGui::CalcTextSize(system.display_name.c_str());
         const ImVec2 candidates[] = {
