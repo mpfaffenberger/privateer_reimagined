@@ -891,6 +891,13 @@ void ai_brain::run_combat(Ship& s, const ShipRegistry& all, float t_now) {
     // timeout prevents a faster pursuer from trapping it forever, and a
     // hull-critical flee can still preempt the run.
     if (s.ai.cur_maneuver == AIManeuver::BreakOff && s.ai.break_extend_dist > 0.0f) {
+        // A fleeing target (negative closing rate) doesn't deserve a 3-5 km
+        // head start — commit and turn back to re-engage instead of flying
+        // further from a runner who can outrun the chase anyway (#163).
+        const bool target_fleeing =
+            (c.dist > 1e-3f) &&
+            (HMM_DotV3(HMM_SubV3(s.world_velocity, c.target->world_velocity),
+                       HMM_DivV3F(c.to_target, c.dist)) < 0.0f);
         const float elapsed = (s.ai.maneuver_started_at >= 0.0f)
                             ? (t_now - s.ai.maneuver_started_at) : 999.0f;
         const bool reached = c.dist >= s.ai.break_extend_dist;
@@ -900,8 +907,9 @@ void ai_brain::run_combat(Ship& s, const ShipRegistry& all, float t_now) {
         const bool flee_now = preempt && preempt->maneuver == AIManeuver::FleeHome;
         // Out of stamina? Abandon the extension and fall through to a normal
         // (gated) reselection so the tired pilot turns back in and flies
-        // predictably instead of afterburning away.
-        if (!reached && !timeout && !flee_now && !suppress_evasion) {
+        // predictably instead of afterburning away. Same when the target is
+        // fleeing — cut the extension so we don't run away from a runner.
+        if (!reached && !timeout && !flee_now && !suppress_evasion && !target_fleeing) {
             run_maneuver(c, AIManeuver::BreakOff);
             const AIState mapped = ship_ai::from_name(
                 ai_maneuver::maneuver_state_label(AIManeuver::BreakOff));

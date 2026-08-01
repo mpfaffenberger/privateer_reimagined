@@ -19,7 +19,8 @@
         { "maneuver": "attack_run", "priority": 5, "duration": 2.5,
           "when": [ { "metric": "distance", "min": "f0_radii", "max": "pursue_switch" } ] },
         { "maneuver": "break_off", "priority": 6, "duration": 4.0,
-          "when": [ { "metric": "distance", "min": 0, "max": "f0_radii" } ] },
+          "when": [ { "metric": "distance", "min": 0, "max": "f0_radii" },
+                     { "metric": "closing_rate", "min": 0, "max": 1000000 } ] },
         { "maneuver": "flee_home", "priority": 8, "duration": 3.0,
           "when": [ { "metric": "hull", "min": 0, "max": "flee_threshold" } ] },
         { "maneuver": "lead_pursuit", "priority": 0, "duration": 2.0, "when": [] }
@@ -33,7 +34,8 @@
           "when": [ { "metric": "target_facing_me", "min": 0.5, "max": 1.01 },
                      { "metric": "distance", "min": 0, "max": "gun_range" } ] },
         { "maneuver": "break_off", "priority": 7, "duration": 4.0,
-          "when": [ { "metric": "distance", "min": 0, "max": "f0_radii" } ] }
+          "when": [ { "metric": "distance", "min": 0, "max": "f0_radii" },
+                     { "metric": "closing_rate", "min": 0, "max": 1000000 } ] }
       ]
     },
 
@@ -45,7 +47,8 @@
         { "maneuver": "attack_run", "priority": 5, "duration": 2.5,
           "when": [ { "metric": "distance", "min": "f0_radii", "max": "pursue_switch" } ] },
         { "maneuver": "break_off", "priority": 6, "duration": 2.5,
-          "when": [ { "metric": "distance", "min": 0, "max": "f0_radii" } ] },
+          "when": [ { "metric": "distance", "min": 0, "max": "f0_radii" },
+                     { "metric": "closing_rate", "min": 0, "max": 1000000 } ] },
         { "maneuver": "flee_home", "priority": 8, "duration": 2.0,
           "when": [ { "metric": "hull", "min": 0, "max": 0.05 } ] },
         { "maneuver": "lead_pursuit", "priority": 0, "duration": 2.0, "when": [] }
@@ -58,7 +61,8 @@
           "when": [ { "metric": "target_facing_me", "min": 0.7, "max": 1.01 },
                      { "metric": "distance", "min": 0, "max": "gun_range" } ] },
         { "maneuver": "break_off", "priority": 7, "duration": 2.5,
-          "when": [ { "metric": "distance", "min": 0, "max": "f0_radii" } ] }
+          "when": [ { "metric": "distance", "min": 0, "max": "f0_radii" },
+                     { "metric": "closing_rate", "min": 0, "max": 1000000 } ] }
       ]
     },
 
@@ -72,7 +76,8 @@
         { "maneuver": "attack_run", "priority": 5, "duration": 2.5,
           "when": [ { "metric": "distance", "min": "f0_radii", "max": "pursue_switch" } ] },
         { "maneuver": "break_off", "priority": 6, "duration": 5.0,
-          "when": [ { "metric": "distance", "min": 0, "max": "f0_radii" } ] },
+          "when": [ { "metric": "distance", "min": 0, "max": "f0_radii" },
+                     { "metric": "closing_rate", "min": 0, "max": 1000000 } ] },
         { "maneuver": "lead_pursuit", "priority": 0, "duration": 2.0, "when": [] }
       ],
       "interrupt": [
@@ -83,7 +88,8 @@
           "when": [ { "metric": "target_facing_me", "min": 0.3, "max": 1.01 },
                      { "metric": "distance", "min": 0, "max": "gun_range" } ] },
         { "maneuver": "break_off", "priority": 7, "duration": 5.0,
-          "when": [ { "metric": "distance", "min": 0, "max": "f0_radii" } ] }
+          "when": [ { "metric": "distance", "min": 0, "max": "f0_radii" },
+                     { "metric": "closing_rate", "min": 0, "max": 1000000 } ] }
       ]
     }
 
