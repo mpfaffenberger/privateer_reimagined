@@ -3113,7 +3113,6 @@ static void respawn_player(bool to_title = false) {
         game_state::request_mode(g.game, GameMode::Flight);
         g.show_title         = true;
         g.title_scene_inited = false;
-        std::printf("[respawn] player destroyed -> returning to TITLE screen\n");
         return;
     }
 
@@ -3123,12 +3122,9 @@ static void respawn_player(bool to_title = false) {
     if (!g.player.last_docked_base.empty()) {
         g.player.docked = true;
         game_state::request_mode(g.game, GameMode::Landed);
-        std::printf("[respawn] RESPAWNING AT %s — Landed\n",
-                    g.player.last_docked_base.c_str());
     } else {
         g.player.docked = false;
         game_state::request_mode(g.game, GameMode::Flight);
-        std::printf("[respawn] RESPAWNING in free flight (no base on record)\n");
     }
 }
 
