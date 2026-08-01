@@ -102,10 +102,13 @@ __pycache__/
 # In-game sprite atlas capture dirs (regeneratable via tools/tour_ship_sprite_atlas.sh)
 assets/ships/*/sprites_ingame/
 
-# Local generation workspace: API staging, decoded GOG data, temporary tools,
-# and references. Promote final assets into assets/ intentionally.
+# Regeneration trial dirs (local sprite/mesh experiment scratch).
 assets/ships/*/regen_trials/
-/generated/
+
+# NOTE: /generated/ is intentionally NOT ignored. The cross-machine generation
+# workspace (incl. generated/gog_extracted/ GOG-derived data) is deliberately
+# LFS-tracked via .gitattributes (generated/**) per #226 and lives only in this
+# private repo. Do not re-add /generated/ here.
 
 # In-game sprite-generation workbench requests/logs/status files
 assets/shipgen/
@@ -145,8 +148,11 @@ MT32_*.ROM
 CM32L_*.ROM
 
 # ────────────────────────────────────────────────────────────────────
-# Privateer GOG-derived data. Re-create with: tools/extract_privateer.sh
-# Derived facts (stats/labels/prices) live in docs/privateer_db/ and ARE tracked.
+# Root-level GOG extraction scratch (raw IFF/VOC/sprites for local tooling).
+# Re-create with: tools/extract_privateer.sh — never commit. The ANALYZED GOG
+# data that must persist cross-machine lives under generated/gog_extracted/ and
+# IS LFS-tracked per #226. Derived facts (stats/labels/prices) live in
+# docs/privateer_db/ and ARE tracked.
 # ────────────────────────────────────────────────────────────────────
 /gog_extracted/
 
