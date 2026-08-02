@@ -4295,6 +4295,15 @@ void frame_cb() {
 
     const bool dock_autopilot = docking::controls_locked(g.docking);
 
+    // The interactive armaments MFD needs hover for tooltips and drag sources,
+    // but a plain hover must not steal fly-by-wire steering. Preserve ImGui's
+    // normal capture for every other panel and for an active weapon drag.
+    const bool armaments_hover_passthrough =
+        cockpit_hud::status_screen() == cockpit_hud::StatusScreen::Weapons &&
+        cockpit_armaments::allows_flight_mouse_passthrough();
+    const bool ui_blocks_flight_mouse = ImGui::GetIO().WantCaptureMouse &&
+                                         !armaments_hover_passthrough;
+
     // Manual-override cancel (bead np-opa.3): once engaged, any deliberate
     // flight input hands the stick back — the afterburner key, or a hard
     // mouse-steer past the dead-zone (a resting cursor doesn't count, or
@@ -4302,7 +4311,7 @@ void frame_cb() {
     if (autopilot::engaged(g.autopilot)) {
         const bool key_input = g.keys_down[SAPP_KEYCODE_TAB];
         const bool mouse_steer =
-            g.fly_by_wire && !ImGui::GetIO().WantCaptureMouse &&
+            g.fly_by_wire && !ui_blocks_flight_mouse &&
             !autopilot::engaged(g.autopilot) &&   // during autopilot the mouse orbits the camera, never cancels
             (std::fabs(off_x) > 0.35f || std::fabs(off_y) > 0.35f);
         if (key_input || mouse_steer) {
@@ -4314,7 +4323,7 @@ void frame_cb() {
     const bool nav_autopilot = autopilot::controls_locked(g.autopilot);
     const bool autopilot_lock = dock_autopilot || nav_autopilot;
 
-    if (g.fly_by_wire && !ImGui::GetIO().WantCaptureMouse && !autopilot_lock
+    if (g.fly_by_wire && !ui_blocks_flight_mouse && !autopilot_lock
         && !dying && !cinematic::active()) {
         g.camera.apply_mouse_aim(off_x, off_y, dt);
     }

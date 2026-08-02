@@ -34,6 +34,8 @@ Layout g_layout;
 std::string g_loaded_ship;
 TextureSlot g_ship_texture;
 sg_sampler g_ship_sampler{};
+bool g_pointer_over = false;
+bool g_weapon_drag_active = false;
 
 void release_texture() {
     if (g_ship_texture.view.id) sg_destroy_view(g_ship_texture.view);
@@ -186,6 +188,19 @@ void draw(PlayerState& player, Ship& live_ship) {
 
     ImGui::SetCursorScreenPos(cursor);
     ImGui::Dummy(ImVec2(avail.x, side));
+
+    // ImGui claims the mouse for an interactive window even on plain hover.
+    // Cache enough detail for main's fly-by-wire path to distinguish a harmless
+    // MFD hover from an actual weapon drag that genuinely owns the pointer.
+    g_pointer_over = ImGui::IsWindowHovered(
+        ImGuiHoveredFlags_ChildWindows |
+        ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
+    const ImGuiPayload* payload = ImGui::GetDragDropPayload();
+    g_weapon_drag_active = payload && payload->IsDataType(kPayload);
+}
+
+bool allows_flight_mouse_passthrough() {
+    return g_pointer_over && !g_weapon_drag_active;
 }
 
 void shutdown() {
@@ -194,6 +209,8 @@ void shutdown() {
     g_ship_sampler = {};
     g_loaded_ship.clear();
     g_layout = {};
+    g_pointer_over = false;
+    g_weapon_drag_active = false;
 }
 
 } // namespace cockpit_armaments
