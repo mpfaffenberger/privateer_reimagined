@@ -44,6 +44,8 @@ class RiordianAmbushTests(unittest.TestCase):
         self.assertEqual("pentonville", when["system"])
         self.assertEqual({"nav": "119CE Jump", "radius_m": 20000}, when["near_nav"])
         self.assertEqual(["m05_active"], when["requires_flags"])
+        self.assertEqual([f"{CID}_seen"], when["forbids_flags"])
+        self.assertNotIn("killed:riordian", when["forbids_flags"])
         self.assertEqual([{"commodity": "brilliance", "min_units": 20}], when["cargo"])
 
     def test_outcome_places_riordian_and_three_talons_at_119ce(self) -> None:

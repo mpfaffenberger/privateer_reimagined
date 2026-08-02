@@ -142,8 +142,7 @@
           "m05_active"
         ],
         "forbids_flags": [
-          "studio_req_1785709304_seen",
-          "killed:riordian"
+          "studio_req_1785709304_seen"
         ]
       }
     }
