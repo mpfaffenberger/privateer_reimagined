@@ -323,14 +323,18 @@ target_compile_definitions(new_privateer PRIVATE ${SOKOL_BACKEND})
 if(MSVC)
     target_compile_definitions(new_privateer PRIVATE
         _USE_MATH_DEFINES NOMINMAX WIN32_LEAN_AND_MEAN _CRT_SECURE_NO_WARNINGS)
-    # sokol_app picks WinMain by default on Windows -> linker auto-selects
-    # SUBSYSTEM:WINDOWS -> no console -> all our printf / stderr output
-    # silently goes to nowhere, which makes debugging asset-load failures
-    # nearly impossible. Force the entry point back to plain `main()` and
-    # link as SUBSYSTEM:CONSOLE so launching the exe spawns a debug
-    # console the runtime can speak through. (Ship build can drop this
-    # later with a CMake option, but the cost during dev is zero.)
-    target_compile_definitions(new_privateer PRIVATE SOKOL_WIN32_FORCE_MAIN)
+    # Ship as a normal GUI application: the existing in-window loading screen
+    # should be the first thing players see, not a debug terminal firehose.
+    # Developers can opt back into main()+SUBSYSTEM:CONSOLE when diagnosing
+    # early startup failures with: -DNP_WINDOWS_CONSOLE=ON.
+    option(NP_WINDOWS_CONSOLE "Open a debug console with the Windows game" OFF)
+    if(NP_WINDOWS_CONSOLE)
+        target_compile_definitions(new_privateer PRIVATE SOKOL_WIN32_FORCE_MAIN)
+        set(NP_WINDOWS_SUBSYSTEM CONSOLE)
+    else()
+        set_target_properties(new_privateer PROPERTIES WIN32_EXECUTABLE TRUE)
+        set(NP_WINDOWS_SUBSYSTEM WINDOWS)
+    endif()
     # Statically link the MSVC C runtime (/MT) so the shipped exe has NO
     # dependency on the VC++ Redistributable (MSVCP140.dll / VCRUNTIME140*.dll).
     # Without this a portable build fails to launch on a clean Windows install
@@ -346,7 +350,7 @@ if(MSVC)
     # so we keep the symbol table without bloating the exe.
     target_compile_options(new_privateer PRIVATE /Zi)
     set_target_properties(new_privateer PROPERTIES
-        LINK_FLAGS "/SUBSYSTEM:CONSOLE /DEBUG /OPT:REF /OPT:ICF"
+        LINK_FLAGS "/SUBSYSTEM:${NP_WINDOWS_SUBSYSTEM} /DEBUG /OPT:REF /OPT:ICF"
     )
 endif()
 
