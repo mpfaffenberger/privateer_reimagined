@@ -474,6 +474,10 @@ struct AppState {
     // never tears down GPU/scene state mid-frame (same deferral discipline
     // as game-mode transitions + the debug spawn requests). Empty = none.
     std::string pending_goto;
+    // Non-empty only when a player-facing NEW/LOAD action queued the switch.
+    // The next frame paints this label before synchronous teardown begins and
+    // keeps updating the existing graphical progress bar through each phase.
+    std::string pending_goto_loading_label;
     // Pending jump (np-6al.3). Set when the player presses J at an eligible
     // gate; consumed during the Loading cinematic by execute_jump(), which
     // rebuilds the destination system and drops the player at arrival_nav
@@ -677,8 +681,9 @@ static float g_speed_input_ref = 0.0f;
 // Forward decls so init_cb + frame_cb can drive the runtime switch. Defined
 // just below init_cb.
 void unload_current_system();
-void build_system_scene(bool first_time);
-bool load_and_build_system(const std::string& id, bool first_time);
+void build_system_scene(bool first_time, bool show_progress = false);
+bool load_and_build_system(const std::string& id, bool first_time,
+                           bool show_progress = false);
 static uint32_t encounter_spawn(const encounters::SpawnRequest& req);   // defined below
 static void     encounter_despawn(uint32_t id);                         // defined below
 
@@ -1028,8 +1033,10 @@ static void apply_pending_player_health_snapshot(Ship& player) {
     std::printf("[save] applied loaded ship damage to hull\n");
 }
 
-void build_system_scene(bool first_time) {
-    if (first_time) present_startup_progress(0.42f, "Loading ship and faction data...");
+void build_system_scene(bool first_time, bool show_progress) {
+    const bool report_progress = first_time || show_progress;
+    if (report_progress)
+        present_startup_progress(0.42f, "Loading ship and faction data...");
     g.camera.position = g.system.player_start;
 
     // Optional spawn aim. The camera's default forward is -Z (identity
@@ -1371,7 +1378,8 @@ void build_system_scene(bool first_time) {
                     (int)g.system.nav_points.size());
     }
 
-    if (first_time) present_startup_progress(0.58f, "Building star system...");
+    if (report_progress)
+        present_startup_progress(0.58f, "Building star system...");
 
     // Spin up one AsteroidField per entry in the system JSON. Each uses its
     // own seed so placement/sizes are deterministic per-sector.
@@ -1410,8 +1418,9 @@ void build_system_scene(bool first_time) {
 
     // Dear ImGui debug overlay. Must come after sg_setup() so the sokol
     // backend has a valid device/context to build its pipeline against.
-    if (first_time) {
+    if (report_progress)
         present_startup_progress(0.65f, "Preparing interface...");
+    if (first_time) {
         sprite_light_editor::init();
         atlas_grid_viewer::init();
         sound_labeler::init();
@@ -2074,8 +2083,10 @@ void build_system_scene(bool first_time) {
     // Audio device + test samples. Failure is non-fatal by design —
     // audio::init logs and every later call no-ops, the game runs
     // silent (same resilience philosophy as dev_remote above).
+    if (report_progress)
+        present_startup_progress(0.72f,
+            first_time ? "Loading audio..." : "Preparing simulation...");
     if (first_time) {
-        present_startup_progress(0.72f, "Loading audio...");
         audio::init();
         g.sfx_blip  = audio::load("assets/sfx/blip.wav");
         g.sfx_burst = audio::load("assets/sfx/burst.wav");
@@ -2182,7 +2193,8 @@ void build_system_scene(bool first_time) {
         std::fprintf(stderr, "[main] sprite renderer init failed\n");
         std::exit(1);
     }
-    if (first_time) present_startup_progress(0.82f, "Loading ship artwork...");
+    if (report_progress)
+        present_startup_progress(0.82f, "Loading ship artwork...");
 
     // Load bolt sprite art (per-GunType animated frames from assets/bolts/).
     // Flattened into bolt_textures with per-type offsets for the renderer.
@@ -2653,7 +2665,9 @@ void unload_current_system() {
 // the old one (so a typo'd id leaves the current world intact), unload, then
 // build. The player's PlayerState is untouched the whole time — only
 // current_system is updated to the new world.
-bool load_and_build_system(const std::string& id, bool first_time) {
+bool load_and_build_system(const std::string& id, bool first_time,
+                           bool show_progress) {
+    const uint64_t load_started = stm_now();
     if (!first_time) {
         std::printf("[system] === switching '%s' -> '%s' ===\n",
                     g.player.current_system.c_str(), id.c_str());
@@ -2673,20 +2687,24 @@ bool load_and_build_system(const std::string& id, bool first_time) {
         return false;   // nothing torn down yet — current world still intact
     }
 
+    if (show_progress)
+        present_startup_progress(0.30f, "Releasing the previous system...");
     if (!first_time) unload_current_system();
     g.system = std::move(*loaded);
-    build_system_scene(first_time);
-    if (first_time) present_startup_progress(1.0f, "Entering Gemini Sector...");
+    build_system_scene(first_time, show_progress);
+    if (first_time || show_progress)
+        present_startup_progress(1.0f, "Entering Gemini Sector...");
 
     g.player.current_system = id;
     g.system_loaded = true;
     g.system_name   = id;
     dev_remote::publish_system_name(g.system.name.c_str());
     sapp_set_window_title(("new_privateer — " + g.system.name).c_str());
-    std::printf("[system] built %s: %zu asteroid fields, %zu sprites, "
+    const double total_load_ms = stm_ms(stm_since(load_started));
+    std::printf("[system] built %s in %.1f ms: %zu asteroid fields, %zu sprites, "
                 "%zu ship atlases, %zu nav points, registry=%zu ships "
                 "(player persists: %lld cr, ship '%s')\n",
-                g.system.name.c_str(), g.asteroid_fields.size(),
+                g.system.name.c_str(), total_load_ms, g.asteroid_fields.size(),
                 g.placed_sprites.size(), g.ship_sprite_atlases.size(),
                 g.system.nav_points.size(), g.ships.size(),
                 (long long)g.player.credits, g.player.ship_class_name.c_str());
@@ -4079,8 +4097,13 @@ void frame_cb() {
     }
     if (!g.pending_goto.empty()) {
         const std::string target = g.pending_goto;
+        const std::string loading_label = g.pending_goto_loading_label;
         g.pending_goto.clear();
+        g.pending_goto_loading_label.clear();
         g.switch_clock_s = 0.0f;
+        const bool show_progress = !loading_label.empty();
+        if (show_progress)
+            present_startup_progress(0.08f, loading_label.c_str());
         // The title scene holds SpriteArt/atlas pointers into the CURRENT
         // system's caches; switching underneath it leaves them dangling
         // (std::length_error reading freed GunMount/atlas memory — seen
@@ -4091,7 +4114,7 @@ void frame_cb() {
             title_scene::shutdown();
             g.title_scene_inited = false;
         }
-        load_and_build_system(target, /*first_time=*/false);
+        load_and_build_system(target, /*first_time=*/false, show_progress);
         // Arrive like a jump: at the first gate, drifting inward — NEVER
         // at player_start, which on base-dense systems (Perry) sits inside
         // an auto-land zone. The old behavior insta-landed the dev warp
@@ -6609,6 +6632,7 @@ void frame_cb() {
                     // last landed on. pending_goto re-runs the canonical
                     // build_system_scene at the next frame boundary.
                     g.pending_goto = g.system_name;
+                    g.pending_goto_loading_label = "Starting a new game...";
                     std::printf("[title] NEW clicked — fresh game, rebuilding %s, entering flight\n",
                                 g.system_name.c_str());
                 } else if (a == title_screen::Action::LoadGame) {
@@ -6675,6 +6699,8 @@ void frame_cb() {
                                     // differs.
                                     if (!g.player.current_system.empty()) {
                                         g.pending_goto = g.player.current_system;
+                                        g.pending_goto_loading_label =
+                                            "Loading saved game...";
                                     }
                                     // Resume WHERE you saved (np-3dp.21):
                                     // the autosave fires on dock, so a save
