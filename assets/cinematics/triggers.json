@@ -97,6 +97,30 @@
           "studio_req_1785449208_seen"
         ]
       }
+    },
+    {
+      "cinematic": "studio_req_1785636336",
+      "once": true,
+      "cooldown_s": 0,
+      "when": {
+        "system": "new_constantinople",
+        "cargo": [
+          {
+            "commodity": "brilliance",
+            "min_units": 25
+          }
+        ],
+        "near_nav": {
+          "nav": "44-P-1M Jump",
+          "radius_m": 20000
+        },
+        "requires_flags": [
+          "m04_active"
+        ],
+        "forbids_flags": [
+          "studio_req_1785636336_seen"
+        ]
+      }
     }
   ]
 }
