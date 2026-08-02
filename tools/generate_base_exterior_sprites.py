@@ -5,7 +5,6 @@ from __future__ import annotations
 import argparse
 import concurrent.futures
 import os
-import shutil
 import sys
 from pathlib import Path
 
@@ -14,6 +13,7 @@ sys.path.insert(0, str(REPO / "tools"))
 
 import batch_generate_ship_sprites as sprite_gen  # noqa: E402
 from extract_base_exterior_refs import BASE_APPEARANCES  # noqa: E402
+from upscale_base_exteriors import write_upscaled  # noqa: E402
 
 def load_api_key() -> None:
     if os.environ.get("OPENAI_API_KEY"):
@@ -129,9 +129,8 @@ def main() -> int:
                 sprite_gen.run_pixelart_tool(job, args.quality)
                 sprite_gen.clean_sprite(job, preview=False)
             target = REPO / "assets/sprites" / f"base_{job.ship}.png"
-            target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(job.clean_output, target)
-            return job.ship, "installed"
+            stats = write_upscaled(job.clean_output, target)
+            return job.ship, f"installed 2x ({stats.partial:,} soft-edge pixels)"
         except Exception as exc:  # batch reports every identity
             return job.ship, f"FAILED: {type(exc).__name__}: {exc}"
 
