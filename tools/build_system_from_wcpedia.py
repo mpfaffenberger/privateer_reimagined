@@ -21,6 +21,8 @@ from __future__ import annotations
 import argparse, json, re, sys
 from pathlib import Path
 
+from base_exterior_policy import display_length_meters
+
 REPO  = Path(__file__).resolve().parents[1]
 DATA  = REPO / "assets" / "data" / "gemini_systems.json"
 SYS   = REPO / "assets" / "systems"
@@ -130,8 +132,9 @@ def nav_from(desc: str, pos: list[int], idx: int, sysname: str):
         bid = snake(core.split(" Mining")[0].split(" Base")[0])
         nav = {"name": core, "kind": "station", "position": pos,
                "dockable": True, "base_id": bid}
-        spr = {"sprite": exterior_sprite_for(bid), "position": pos,
-               "length_meters": 3000}
+        sprite = exterior_sprite_for(bid)
+        spr = {"sprite": sprite, "position": pos,
+               "length_meters": display_length_meters(sprite)}
         return (nav, spr, ast)
     if "planet" in clow:
         base_name = re.sub(r"(?i)\s+(?:agricultural|pleasure|industrial)?\s*planet.*$",
@@ -139,8 +142,9 @@ def nav_from(desc: str, pos: list[int], idx: int, sysname: str):
         bid = snake(base_name)
         nav = {"name": core, "kind": "planet", "position": pos,
                "dockable": True, "base_id": bid}
-        spr = {"sprite": exterior_sprite_for(bid), "position": pos,
-               "length_meters": 2000}
+        sprite = exterior_sprite_for(bid)
+        spr = {"sprite": sprite, "position": pos,
+               "length_meters": display_length_meters(sprite)}
         return (nav, spr, ast)
     if has_ast:
         nav = {"name": core or f"Asteroid Field {idx}", "kind": "nav", "position": pos}

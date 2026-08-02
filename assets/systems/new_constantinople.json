@@ -14,7 +14,7 @@
         -33333,
         -166667
       ],
-      "length_meters": 3000
+      "length_meters": 1200
     },
     {
       "sprite": "sprites/base_agricultural",
@@ -23,7 +23,7 @@
         166667,
         -66667
       ],
-      "length_meters": 2000
+      "length_meters": 1600
     }
   ],
   "nav_points": [

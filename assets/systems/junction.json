@@ -14,7 +14,7 @@
         133333,
         -200000
       ],
-      "length_meters": 2000
+      "length_meters": 1600
     },
     {
       "sprite": "sprites/base_pleasure",
@@ -23,7 +23,7 @@
         200000,
         200000
       ],
-      "length_meters": 2000
+      "length_meters": 1600
     },
     {
       "sprite": "sprites/base_agricultural",
@@ -32,7 +32,7 @@
         50000,
         66667
       ],
-      "length_meters": 2000
+      "length_meters": 1600
     }
   ],
   "nav_points": [
