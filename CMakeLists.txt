@@ -407,6 +407,11 @@ add_executable(test_equipment_hardpoints EXCLUDE_FROM_ALL
 target_include_directories(test_equipment_hardpoints PRIVATE
     ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party)
 
+# Pure weapon-group indexing harness: catches unreachable ALL modes without
+# dragging the renderer, audio, or projectile simulation into a math test.
+add_executable(test_gun_modes EXCLUDE_FROM_ALL tools/test_gun_modes.cpp)
+target_include_directories(test_gun_modes PRIVATE ${CMAKE_SOURCE_DIR}/src)
+
 # Focused jump-eligibility regression harness. Jump deliberately does not link
 # threat.cpp: combat proximity belongs to autopilot, not gate eligibility.
 add_executable(test_jump EXCLUDE_FROM_ALL

@@ -2,6 +2,7 @@
 
 #include "aim.h"
 #include "gun.h"
+#include "gun_modes.h"
 #include "perception.h"
 #include "projectile.h"
 #include "sfx.h"
@@ -13,6 +14,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -271,84 +273,71 @@ namespace {
 // misses on first call and re-fills after are fine.
 struct UniqueCache {
     const std::vector<GunMount>* key = nullptr;
-    std::vector<int>             types;
+    std::vector<int> mount_types;
+    std::vector<int> unique_types;
 };
 UniqueCache& ucache() {
     static UniqueCache c;
     return c;
 }
 
+void refresh_unique_cache(const std::vector<GunMount>& mounts) {
+    UniqueCache& cache = ucache();
+    std::vector<int> current;
+    current.reserve(mounts.size());
+    for (const GunMount& mount : mounts) current.push_back((int)mount.type);
+    if (cache.key == &mounts && cache.mount_types == current) return;
+
+    cache.key = &mounts;
+    cache.mount_types = std::move(current);
+    cache.unique_types.clear();
+    for (int type : cache.mount_types) {
+        if (std::find(cache.unique_types.begin(), cache.unique_types.end(), type) ==
+            cache.unique_types.end()) {
+            cache.unique_types.push_back(type);
+        }
+    }
+}
+
 } // namespace
 
 int firing::gun_mode_count_for_mounts(const std::vector<GunMount>& mounts) {
-    UniqueCache& uc = ucache();
-    if (uc.key != &mounts || uc.types.empty()) {
-        uc.key = &mounts;
-        uc.types.clear();
-        for (const GunMount& m : mounts) {
-            const int t = (int)m.type;
-            if (std::find(uc.types.begin(), uc.types.end(), t) == uc.types.end()) {
-                uc.types.push_back(t);
-            }
-        }
-    }
-    return (int)uc.types.size() + 2;   // +2: mode 0 unarmed, last mode all
+    refresh_unique_cache(mounts);
+    return gun_modes::count((int)ucache().unique_types.size());
 }
 
 const std::vector<int>& firing::gun_unique_types_cache(
-    const std::vector<GunMount>&mounts) {
-    UniqueCache& uc = ucache();
-    if (uc.key != &mounts || uc.types.empty()) {
-        uc.key = &mounts;
-        uc.types.clear();
-        for (const GunMount& m : mounts) {
-            const int t = (int)m.type;
-            if (std::find(uc.types.begin(), uc.types.end(), t) == uc.types.end()) {
-                uc.types.push_back(t);
-            }
-        }
-    }
-    return uc.types;
+    const std::vector<GunMount>& mounts) {
+    refresh_unique_cache(mounts);
+    return ucache().unique_types;
 }
 
 void firing::apply_gun_mode(Ship& s, uint8_t mode_idx) {
-    const std::vector<int>& u = gun_unique_types_cache(s.mounts);
-    if (u.empty()) return;
-    // Mode 0 = unarmed, last = all, in-between = one type per mode.
-    const int N    = (int)u.size();
-    const int last = N + 1;
-    int m = (int)mode_idx;
-    if (N > 0) m = ((m % last) + last) % last;   // safe mod for any input
-    // Compute the "type filter" for this mode.
-    int target_type = -1;   // -1 = all, 0..N-1 = specific type, -2 = unarmed
-    if      (m == 0)   target_type = -2;
-    else if (m == last) target_type = -1;
-    else                target_type = u[m - 1];
+    const std::vector<int>& unique = gun_unique_types_cache(s.mounts);
+    const int unique_count = (int)unique.size();
+    const int mode = gun_modes::normalize((int)mode_idx, unique_count);
+    s.gun_armed.resize(s.mounts.size(), false);
+
+    const int selected_type_index = gun_modes::type_index(mode, unique_count);
     for (size_t i = 0; i < s.mounts.size(); ++i) {
-        if (i >= s.gun_armed.size()) break;
-        const int type = (int)s.mounts[i].type;
-        bool arm;
-        if      (target_type == -2) arm = false;        // unarmed
-        else if (target_type == -1) arm = true;         // all
-        else                          arm = (type == target_type);
-        s.gun_armed[i] = arm;
+        s.gun_armed[i] = gun_modes::is_all(mode, unique_count) ||
+            (selected_type_index >= 0 &&
+             (int)s.mounts[i].type == unique[(size_t)selected_type_index]);
     }
-    s.gun_mode_idx = (uint8_t)m;
+    s.gun_mode_idx = (uint8_t)mode;
 }
 
 const char* firing::gun_mode_label(const std::vector<int>& unique_types,
                                   uint8_t mode_idx) {
     static const char* k_unarmed = "UNARMED";
     static const char* k_all     = "ALL";
-    const int N    = (int)unique_types.size();
-    const int last = N + 1;
-    if (N == 0) return k_unarmed;
-    int m = (int)mode_idx;
-    m = ((m % last) + last) % last;
-    if (m == 0)   return k_unarmed;
-    if (m == last) return k_all;
+    const int unique_count = (int)unique_types.size();
+    if (unique_count == 0) return k_unarmed;
+    const int mode = gun_modes::normalize((int)mode_idx, unique_count);
+    if (gun_modes::is_unarmed(mode, unique_count)) return k_unarmed;
+    if (gun_modes::is_all(mode, unique_count)) return k_all;
     // Single-type mode: use the gun's canonical name uppercased.
-    const int t = unique_types[m - 1];
+    const int t = unique_types[(size_t)gun_modes::type_index(mode, unique_count)];
     const char* name = gun::to_name((GunType)t);
     static thread_local char buf[40];
     std::snprintf(buf, sizeof(buf), "%s", name);
