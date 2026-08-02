@@ -45,8 +45,11 @@ space station. Follow all four reference frames strictly. Preserve the reference
 surface colors, oceans, continents, clouds, night-side illumination, atmospheric
 rim, and recognizable planetary identity. Repaint the low-resolution source as a
 cinematic 1990s science-fiction planet. Show one complete spherical planet centered
-with generous transparent-background clearance. No station, spacecraft, mechanical
-hull, antenna, docking structure, city floating in space, starfield, nebula, text,
+with generous transparent-background clearance. Render smooth continuous gradients,
+fine native-resolution detail, and a naturally antialiased atmospheric limb. No
+pixel art, block pixels, dithering, palette quantization, station, spacecraft,
+mechanical hull, antenna, docking structure, city floating in space, starfield,
+nebula, text,
 logo, border, UI, moon, or additional object. Transparent background outside the
 atmospheric limb.
 """
@@ -60,8 +63,9 @@ sparse top antennas, red navigation lights, gray-blue plated hull, window bands,
 the canonical PERRY lettering curved across the upper sphere. Do not invent rings,
 sideways dumbbells, radial wheels, a second large sphere, lateral station arms, or
 additional modules. One complete station, centered, front-biased three-quarter view,
-transparent background. No planet, starfield, ships, people, UI, border, extra text,
-or watermark.
+transparent background. Render smooth continuous gradients and fine native-resolution
+mechanical detail. No pixel art, block pixels, dithering, palette quantization,
+planet, starfield, ships, people, UI, border, extra text, or watermark.
 """
     lettering = "Do not add text, labels, logos, insignia, numbers, or watermarks."
     return f"""Create a finished high-resolution space-view sprite of the canonical
@@ -72,7 +76,9 @@ Repaint the low-resolution source with detailed 1990s cinematic science-fiction
 hull plating, restrained weathering, windows, and practical navigation lights.
 Use a front-biased three-quarter presentation suitable for a camera-facing billboard.
 Show one complete station centered with generous transparent-background clearance.
-No planet, starfield, nebula, ships, people, border, UI, or cast-off debris.
+Render smooth continuous gradients and fine native-resolution mechanical detail. No
+pixel art, block pixels, dithering, palette quantization, planet, starfield, nebula,
+ships, people, border, UI, or cast-off debris.
 {lettering}
 """
 
@@ -81,10 +87,14 @@ def make_job(identity: str, refs_root: Path, stage: Path) -> sprite_gen.SpriteJo
     composite = refs_root / identity / "composite.png"
     if not composite.is_file():
         raise ValueError(f"{identity}: missing composed canonical reference {composite}")
-    refs = [composite]
+    clean_output = stage / "clean" / f"base_{identity}.png"
+    # Once an identity has a canonical high-detail repaint, use that as the
+    # single strict reference for future style-preserving iterations. Tiny DOS
+    # composites remain the bootstrap fallback, not a perpetual detail bottleneck.
+    refs = [clean_output] if clean_output.is_file() else [composite]
     perry_reference = REPO / "generated/base_imagery/perry_space_reference.png"
-    if identity == "perry" and perry_reference.is_file():
-        refs = [perry_reference, composite]
+    if not clean_output.is_file() and identity == "perry" and perry_reference.is_file():
+        refs = [perry_reference]
     prompt = prompt_for(identity)
     prompt_path = stage / "prompts" / f"{identity}.txt"
     prompt_path.parent.mkdir(parents=True, exist_ok=True)
@@ -96,7 +106,7 @@ def make_job(identity: str, refs_root: Path, stage: Path) -> sprite_gen.SpriteJo
         reference=refs[0],
         canonical_refs=tuple(refs[1:]),
         raw_output=stage / "raw" / f"base_{identity}.png",
-        clean_output=stage / "clean" / f"base_{identity}.png",
+        clean_output=clean_output,
         prompt_file=prompt_path,
         prompt=prompt,
     )
@@ -126,7 +136,7 @@ def main() -> int:
     def generate(job: sprite_gen.SpriteJob) -> tuple[str, str]:
         try:
             if args.force or not job.clean_output.is_file():
-                sprite_gen.run_pixelart_tool(job, args.quality)
+                sprite_gen.run_smooth_tool(job, args.quality)
                 sprite_gen.clean_sprite(job, preview=False)
             target = REPO / "assets/sprites" / f"base_{job.ship}.png"
             stats = write_upscaled(job.clean_output, target)

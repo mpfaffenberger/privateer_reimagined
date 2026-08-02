@@ -1,18 +1,17 @@
 TOOL_META = {
     "name": "generate_sprite",
     "namespace": "pixelart",
-    "description": "Generate a pixel art sprite using OpenAI's gpt-image-2 model, then crisp-pixelize it with PIL. Produces transparent PNG sprites suitable for games. Supports view angles (side, front, 3/4, top-down), palette quantization, custom pixel grid sizes, and optional reference image(s) for visual guidance via the /v1/images/edits endpoint.",
+    "description": "Generate a reference-guided game sprite using OpenAI's gpt-image-2 model. Pixel mode crisp-pixelizes with PIL; optional smooth mode preserves native painted detail. Supports transparent output, view angles, and reference images via the /v1/images/edits endpoint.",
     "enabled": True,
     "version": "1.1.1",
     "author": "user",
     "created_at": "2026-04-18T20:27:15.746389",
 }
 
-"""Pixel art sprite generator using OpenAI's image API + PIL post-processing.
+"""Game sprite generator using OpenAI's image API + PIL post-processing.
 
-Generates sprites with transparent backgrounds, then applies a crisp
-nearest-neighbor pixelization pass so output looks like authentic pixel art
-rather than "AI-painted pixel art".
+Pixel mode remains the default and applies crisp nearest-neighbor pixelization.
+Smooth mode preserves the model's native painted detail for larger billboards.
 """
 import base64
 import io
@@ -261,6 +260,7 @@ def generate_sprite(
     timeout: float = 180.0,
     reference_image: Optional[Union[str, List[str]]] = None,
     reference_strength: str = "strong",
+    render_style: str = "pixel",
 ) -> Dict[str, Any]:
     """Generate a pixel art sprite.
 
@@ -290,7 +290,10 @@ def generate_sprite(
         reference_strength: How strictly to follow the reference. One of
             "loose" (treat as inspiration only), "strong" (default — match
             silhouette, pose, and palette), or "strict" (preserve exact
-            composition; only re-render in pixel art style).
+            composition while changing rendering style).
+        render_style: "pixel" (default, backward compatible) applies prompt
+            enhancement, palette reduction, and nearest-neighbor pixelization.
+            "smooth" preserves native model detail without pixelization.
 
     Returns:
         Dict with output_path, raw_path, prompt, final_dimensions,
@@ -330,41 +333,59 @@ def generate_sprite(
         raise ValueError(
             f"reference_strength must be 'loose', 'strong', or 'strict', got {reference_strength!r}"
         )
+    if render_style not in {"pixel", "smooth"}:
+        raise ValueError("render_style must be 'pixel' or 'smooth'")
 
     reference_paths = _normalize_reference_paths(reference_image)
 
     extra_with_ref = extra_style
     if reference_paths:
-        ref_directives = {
-            "loose": (
-                "A reference image is provided for loose visual inspiration only — "
-                "borrow general vibe, palette hints, and subject feel, but feel free "
-                "to reinterpret pose, composition, and details freely."
-            ),
-            "strong": (
-                "A reference image is provided. MATCH its silhouette, pose, character "
-                "design, color palette, and key visual features closely, but re-render "
-                "the result fully in the requested chunky pixel art style."
-            ),
-            "strict": (
-                "A reference image is provided. PRESERVE its exact composition, pose, "
-                "proportions, and color choices as faithfully as possible. Only change "
-                "the rendering style: convert to crisp, hard-edged pixel art with the "
-                "requested grid resolution and limited palette."
-            ),
-        }[reference_strength]
+        if render_style == "smooth":
+            ref_directives = {
+                "loose": "Use the reference for general identity and palette inspiration.",
+                "strong": (
+                    "Match the reference silhouette, composition, palette, and key "
+                    "features closely while repainting it in smooth cinematic detail."
+                ),
+                "strict": (
+                    "Preserve the reference's exact composition, silhouette, proportions, "
+                    "and colors. Change only the rendering style to smooth cinematic art."
+                ),
+            }[reference_strength]
+        else:
+            ref_directives = {
+                "loose": (
+                    "Use the reference for loose visual inspiration; reinterpret details freely."
+                ),
+                "strong": (
+                    "Match the reference silhouette, pose, design, palette, and key features "
+                    "closely, but re-render fully in the requested chunky pixel-art style."
+                ),
+                "strict": (
+                    "Preserve the reference's exact composition, pose, proportions, and "
+                    "colors. Change only the style to crisp hard-edged pixel art."
+                ),
+            }[reference_strength]
         extra_with_ref = (
             f"{extra_style}. {ref_directives}" if extra_style else ref_directives
         )
 
-    prompt = _enhance_prompt(
-        subject=subject.strip(),
-        view=view,
-        palette_size=palette_size if palette_size > 0 else 16,
-        pixel_grid=pixel_grid,
-        transparent_bg=transparent_bg,
-        extra_style=extra_with_ref,
-    )
+    if render_style == "smooth":
+        bg = ("transparent background" if transparent_bg else "solid pure-white background")
+        prompt = (
+            f"{subject.strip()} {extra_with_ref or ''} One isolated subject, centered "
+            f"with generous margin, {bg}. Preserve smooth gradients and native fine detail; "
+            "no pixel art, palette quantization, dithering, block pixels, or outlines."
+        )
+    else:
+        prompt = _enhance_prompt(
+            subject=subject.strip(),
+            view=view,
+            palette_size=palette_size if palette_size > 0 else 16,
+            pixel_grid=pixel_grid,
+            transparent_bg=transparent_bg,
+            extra_style=extra_with_ref,
+        )
 
     if reference_paths:
         png_bytes = _call_openai_image_edit(
@@ -401,7 +422,8 @@ def generate_sprite(
         working = _key_out_white(working)
     working = _crop_to_content(working, pad=2)
 
-    final = _pixelize(working, pixel_grid, palette_size, render_size)
+    final = (working if render_style == "smooth" else
+             _pixelize(working, pixel_grid, palette_size, render_size))
     final.save(out_path, "PNG")
 
     return {
@@ -409,10 +431,14 @@ def generate_sprite(
         "raw_path": str(raw_path) if raw_path else None,
         "prompt": prompt,
         "final_dimensions": list(final.size),
-        "pixel_grid_dimensions": [
-            max(1, round(final.size[0] * pixel_grid / max(final.size))),
-            max(1, round(final.size[1] * pixel_grid / max(final.size))),
-        ],
+        "pixel_grid_dimensions": (
+            [
+                max(1, round(final.size[0] * pixel_grid / max(final.size))),
+                max(1, round(final.size[1] * pixel_grid / max(final.size))),
+            ]
+            if render_style == "pixel" else None
+        ),
+        "render_style": render_style,
         "reference_images": [str(p) for p in reference_paths] or None,
         "reference_strength": reference_strength if reference_paths else None,
         "used_endpoint": "edits" if reference_paths else "generations",

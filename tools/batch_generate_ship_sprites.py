@@ -689,6 +689,26 @@ def run_pixelart_tool(job: SpriteJob, quality: str) -> None:
     print(f"  ok: {result.get('elapsed_seconds', 0):.1f}s  {result.get('final_dimensions')}")
 
 
+def run_smooth_tool(job: SpriteJob, quality: str) -> None:
+    """Generate native-detail artwork without the pixel-art postprocessor."""
+    generate_sprite = _load_pixelart_generate_sprite()
+    job.raw_output.parent.mkdir(parents=True, exist_ok=True)
+    print(f"  smooth: {job.reference.name} -> {job.raw_output.name}")
+    result = generate_sprite(
+        subject=job.prompt,
+        output_path=str(job.raw_output),
+        transparent_bg=False,
+        size="auto",
+        quality=quality,
+        save_raw=True,
+        reference_image=[str(p) for p in job.all_references],
+        reference_strength="strict",
+        render_style="smooth",
+        timeout=240.0,
+    )
+    print(f"  ok: {result.get('elapsed_seconds', 0):.1f}s  {result.get('final_dimensions')}")
+
+
 def run_pixelart_parallel(
     jobs: list[SpriteJob],
     quality: str,
