@@ -1,0 +1,446 @@
+{
+  "id": "studio_req_1785636336",
+  "letterbox": true,
+  "skippable": true,
+  "location": {
+    "system": "new_constantinople",
+    "nav": "44-P-1M Jump"
+  },
+  "outcome": {
+    "player_at_nav": "44-P-1M Jump",
+    "spawns": [
+      {
+        "class": "broadsword",
+        "faction": "confed",
+        "count": 3,
+        "hostile": true
+      },
+      {
+        "class": "stiletto",
+        "faction": "confed",
+        "count": 5,
+        "hostile": true
+      },
+      {
+        "class": "paradigm",
+        "faction": "confed",
+        "count": 3,
+        "hostile": true
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "cmd": "spawn",
+      "actor": "grayson_ship",
+      "class": "$player",
+      "faction": "civilian",
+      "pos": [
+        -66667.0,
+        33333.0,
+        64667.0
+      ],
+      "t": 0.0
+    },
+    {
+      "cmd": "spawn",
+      "actor": "paradigm_lead",
+      "class": "paradigm",
+      "faction": "confed",
+      "pos": [
+        -66667.0,
+        33933.0,
+        71667.0
+      ],
+      "t": 0.0
+    },
+    {
+      "cmd": "spawn",
+      "actor": "paradigm_port",
+      "class": "paradigm",
+      "faction": "confed",
+      "pos": [
+        -70667.0,
+        34333.0,
+        72667.0
+      ],
+      "t": 0.0
+    },
+    {
+      "cmd": "spawn",
+      "actor": "paradigm_starboard",
+      "class": "paradigm",
+      "faction": "confed",
+      "pos": [
+        -62667.0,
+        34333.0,
+        72667.0
+      ],
+      "t": 0.0
+    },
+    {
+      "cmd": "spawn",
+      "actor": "broadsword_port",
+      "class": "broadsword",
+      "faction": "confed",
+      "pos": [
+        -70667.0,
+        32633.0,
+        70667.0
+      ],
+      "t": 0.0
+    },
+    {
+      "cmd": "spawn",
+      "actor": "broadsword_center",
+      "class": "broadsword",
+      "faction": "confed",
+      "pos": [
+        -66667.0,
+        32333.0,
+        70667.0
+      ],
+      "t": 0.0
+    },
+    {
+      "cmd": "spawn",
+      "actor": "broadsword_starboard",
+      "class": "broadsword",
+      "faction": "confed",
+      "pos": [
+        -62667.0,
+        32633.0,
+        70667.0
+      ],
+      "t": 0.0
+    },
+    {
+      "cmd": "spawn",
+      "actor": "stiletto_far_port",
+      "class": "stiletto",
+      "faction": "confed",
+      "pos": [
+        -71667.0,
+        33333.0,
+        69167.0
+      ],
+      "t": 0.0
+    },
+    {
+      "cmd": "spawn",
+      "actor": "stiletto_port",
+      "class": "stiletto",
+      "faction": "confed",
+      "pos": [
+        -69167.0,
+        33733.0,
+        69667.0
+      ],
+      "t": 0.0
+    },
+    {
+      "cmd": "spawn",
+      "actor": "stiletto_center",
+      "class": "stiletto",
+      "faction": "confed",
+      "pos": [
+        -66667.0,
+        32933.0,
+        69167.0
+      ],
+      "t": 0.0
+    },
+    {
+      "cmd": "spawn",
+      "actor": "stiletto_starboard",
+      "class": "stiletto",
+      "faction": "confed",
+      "pos": [
+        -64167.0,
+        33733.0,
+        69667.0
+      ],
+      "t": 0.0
+    },
+    {
+      "cmd": "spawn",
+      "actor": "stiletto_far_starboard",
+      "class": "stiletto",
+      "faction": "confed",
+      "pos": [
+        -61667.0,
+        33333.0,
+        69167.0
+      ],
+      "t": 0.0
+    },
+    {
+      "cmd": "fade_in",
+      "dur": 1.2,
+      "t": 0.0
+    },
+    {
+      "cmd": "music",
+      "file": "../music/original/combat_06.wav",
+      "t": 0.0
+    },
+    {
+      "cmd": "sfx",
+      "file": "../sfx/engine_hum.wav",
+      "t": 0.0
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 4.0,
+      "ease": "linear",
+      "keys": [
+        {
+          "pos": [
+            0.0,
+            5200.0,
+            -10000.0
+          ],
+          "look_at": "ship:paradigm_lead"
+        }
+      ],
+      "t": 0.0,
+      "follow": "paradigm_lead,paradigm_port,paradigm_starboard,broadsword_port,broadsword_center,broadsword_starboard,stiletto_far_port,stiletto_port,stiletto_center,stiletto_starboard,stiletto_far_starboard"
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 4.2,
+      "ease": "linear",
+      "keys": [
+        {
+          "pos": [
+            1250.0,
+            500.0,
+            -700.0
+          ],
+          "look_at": "ship:paradigm_lead"
+        }
+      ],
+      "t": 4.0,
+      "follow": "paradigm_lead"
+    },
+    {
+      "cmd": "line",
+      "speaker": "Commander Elian Rourke",
+      "text": "Unidentified privateer, cut thrust and prepare to be searched. This is a full-spectrum customs inspection.",
+      "side": "right",
+      "dur": 4.2,
+      "portrait": "portraits/rourke/studio_req_1785636336_01.png",
+      "voice_file": "audio/studio_req_1785636336_rourke_01.mp3",
+      "t": 4.0
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 4.0,
+      "ease": "linear",
+      "keys": [
+        {
+          "pos": [
+            255.0,
+            90.0,
+            -125.0
+          ],
+          "look_at": "ship:grayson_ship"
+        }
+      ],
+      "t": 8.3,
+      "follow": "grayson_ship"
+    },
+    {
+      "cmd": "line",
+      "speaker": "Grayson Burrows",
+      "text": "A full fleet for one cargo hold? I'm flattered. Tayla said the route was clear.",
+      "side": "left",
+      "dur": 4.0,
+      "portrait": "portraits/grayson/studio_req_1785636336_01.png",
+      "voice_file": "audio/studio_req_1785636336_grayson_01.mp3",
+      "t": 8.3
+    },
+    {
+      "cmd": "sfx",
+      "file": "../sfx/lock_seeking.wav",
+      "t": 12.15
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 4.3,
+      "ease": "linear",
+      "keys": [
+        {
+          "pos": [
+            -1250.0,
+            430.0,
+            -760.0
+          ],
+          "look_at": "ship:paradigm_lead"
+        }
+      ],
+      "t": 12.4,
+      "follow": "paradigm_lead"
+    },
+    {
+      "cmd": "line",
+      "speaker": "Commander Elian Rourke",
+      "text": "Your hold contains twenty-five units of Brilliance. Bribery has a shelf life, Mr. Burrows.",
+      "side": "right",
+      "dur": 4.3,
+      "portrait": "portraits/rourke/studio_req_1785636336_02.png",
+      "voice_file": "audio/studio_req_1785636336_rourke_02.mp3",
+      "t": 12.4
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 5.0,
+      "ease": "linear",
+      "keys": [
+        {
+          "pos": [
+            -250.0,
+            105.0,
+            -135.0
+          ],
+          "look_at": "ship:grayson_ship"
+        }
+      ],
+      "t": 16.8,
+      "follow": "grayson_ship"
+    },
+    {
+      "cmd": "line",
+      "speaker": "Grayson Burrows",
+      "text": "Don't you guys have Kilrathi to shoot at? No wonder we're losing the war...",
+      "side": "left",
+      "dur": 5.0,
+      "portrait": "portraits/grayson/studio_req_1785636336_02.png",
+      "voice_file": "audio/studio_req_1785636336_grayson_02.mp3",
+      "t": 16.8
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 4.1,
+      "ease": "linear",
+      "keys": [
+        {
+          "pos": [
+            1150.0,
+            520.0,
+            820.0
+          ],
+          "look_at": "ship:paradigm_lead"
+        }
+      ],
+      "t": 21.9,
+      "follow": "paradigm_lead"
+    },
+    {
+      "cmd": "line",
+      "speaker": "Commander Elian Rourke",
+      "text": "We do. They complain less. All units, mark the smuggler hostile and open fire.",
+      "side": "right",
+      "dur": 4.1,
+      "portrait": "portraits/rourke/studio_req_1785636336_03.png",
+      "voice_file": "audio/studio_req_1785636336_rourke_03.mp3",
+      "t": 21.9
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 3.5,
+      "ease": "linear",
+      "keys": [
+        {
+          "pos": [
+            245.0,
+            80.0,
+            145.0
+          ],
+          "look_at": "ship:grayson_ship"
+        }
+      ],
+      "t": 26.1,
+      "follow": "grayson_ship"
+    },
+    {
+      "cmd": "line",
+      "speaker": "Grayson Burrows",
+      "text": "There it is—the famous Confed sense of proportion.",
+      "side": "left",
+      "dur": 3.5,
+      "portrait": "portraits/grayson/studio_req_1785636336_03.png",
+      "voice_file": "audio/studio_req_1785636336_grayson_03.mp3",
+      "t": 26.1
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 4.3,
+      "ease": "linear",
+      "keys": [
+        {
+          "pos": [
+            0.0,
+            4200.0,
+            -8500.0
+          ],
+          "look_at": "ship:grayson_ship"
+        }
+      ],
+      "t": 29.7,
+      "follow": "paradigm_lead,paradigm_port,paradigm_starboard,broadsword_port,broadsword_center,broadsword_starboard,stiletto_far_port,stiletto_port,stiletto_center,stiletto_starboard,stiletto_far_starboard"
+    },
+    {
+      "cmd": "sfx",
+      "file": "../sfx/laser_fire.wav",
+      "pos": [
+        -71667.0,
+        33333.0,
+        69167.0
+      ],
+      "t": 29.9
+    },
+    {
+      "cmd": "sfx",
+      "file": "../sfx/laser_fire.wav",
+      "pos": [
+        -66667.0,
+        32333.0,
+        70667.0
+      ],
+      "t": 30.25
+    },
+    {
+      "cmd": "sfx",
+      "file": "../sfx/laser_fire.wav",
+      "pos": [
+        -61667.0,
+        33333.0,
+        69167.0
+      ],
+      "t": 30.6
+    },
+    {
+      "cmd": "sfx",
+      "file": "../sfx/impact_shield.wav",
+      "pos": [
+        -66667.0,
+        33333.0,
+        64667.0
+      ],
+      "t": 31.0
+    },
+    {
+      "cmd": "fade_out",
+      "dur": 1.2,
+      "t": 32.8
+    },
+    {
+      "cmd": "end",
+      "actions": [
+        "set_flag:studio_req_1785636336_seen"
+      ],
+      "t": 34.0
+    }
+  ]
+}
