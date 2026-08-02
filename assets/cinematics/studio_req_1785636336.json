@@ -10,19 +10,13 @@
     "player_at_nav": "44-P-1M Jump",
     "spawns": [
       {
-        "class": "broadsword",
-        "faction": "confed",
-        "count": 3,
-        "hostile": true
-      },
-      {
-        "class": "stiletto",
-        "faction": "confed",
-        "count": 5,
-        "hostile": true
-      },
-      {
         "class": "paradigm",
+        "faction": "confed",
+        "count": 1,
+        "hostile": true
+      },
+      {
+        "class": "broadsword",
         "faction": "confed",
         "count": 3,
         "hostile": true
@@ -49,32 +43,8 @@
       "faction": "confed",
       "pos": [
         -66667.0,
-        33933.0,
-        71667.0
-      ],
-      "t": 0.0
-    },
-    {
-      "cmd": "spawn",
-      "actor": "paradigm_port",
-      "class": "paradigm",
-      "faction": "confed",
-      "pos": [
-        -70667.0,
-        34333.0,
-        72667.0
-      ],
-      "t": 0.0
-    },
-    {
-      "cmd": "spawn",
-      "actor": "paradigm_starboard",
-      "class": "paradigm",
-      "faction": "confed",
-      "pos": [
-        -62667.0,
-        34333.0,
-        72667.0
+        37000.0,
+        77000.0
       ],
       "t": 0.0
     },
@@ -84,9 +54,9 @@
       "class": "broadsword",
       "faction": "confed",
       "pos": [
-        -70667.0,
-        32633.0,
-        70667.0
+        -80667.0,
+        31000.0,
+        72000.0
       ],
       "t": 0.0
     },
@@ -97,8 +67,8 @@
       "faction": "confed",
       "pos": [
         -66667.0,
-        32333.0,
-        70667.0
+        25000.0,
+        71500.0
       ],
       "t": 0.0
     },
@@ -108,69 +78,9 @@
       "class": "broadsword",
       "faction": "confed",
       "pos": [
-        -62667.0,
-        32633.0,
-        70667.0
-      ],
-      "t": 0.0
-    },
-    {
-      "cmd": "spawn",
-      "actor": "stiletto_far_port",
-      "class": "stiletto",
-      "faction": "confed",
-      "pos": [
-        -71667.0,
-        33333.0,
-        69167.0
-      ],
-      "t": 0.0
-    },
-    {
-      "cmd": "spawn",
-      "actor": "stiletto_port",
-      "class": "stiletto",
-      "faction": "confed",
-      "pos": [
-        -69167.0,
-        33733.0,
-        69667.0
-      ],
-      "t": 0.0
-    },
-    {
-      "cmd": "spawn",
-      "actor": "stiletto_center",
-      "class": "stiletto",
-      "faction": "confed",
-      "pos": [
-        -66667.0,
-        32933.0,
-        69167.0
-      ],
-      "t": 0.0
-    },
-    {
-      "cmd": "spawn",
-      "actor": "stiletto_starboard",
-      "class": "stiletto",
-      "faction": "confed",
-      "pos": [
-        -64167.0,
-        33733.0,
-        69667.0
-      ],
-      "t": 0.0
-    },
-    {
-      "cmd": "spawn",
-      "actor": "stiletto_far_starboard",
-      "class": "stiletto",
-      "faction": "confed",
-      "pos": [
-        -61667.0,
-        33333.0,
-        69167.0
+        -52667.0,
+        31000.0,
+        72000.0
       ],
       "t": 0.0
     },
@@ -197,14 +107,14 @@
         {
           "pos": [
             0.0,
-            5200.0,
-            -10000.0
+            13000.0,
+            -30000.0
           ],
           "look_at": "ship:paradigm_lead"
         }
       ],
       "t": 0.0,
-      "follow": "paradigm_lead,paradigm_port,paradigm_starboard,broadsword_port,broadsword_center,broadsword_starboard,stiletto_far_port,stiletto_port,stiletto_center,stiletto_starboard,stiletto_far_starboard"
+      "follow": "paradigm_lead,broadsword_port,broadsword_center,broadsword_starboard"
     },
     {
       "cmd": "camera_path",
@@ -388,15 +298,15 @@
         }
       ],
       "t": 44.32,
-      "follow": "paradigm_lead,paradigm_port,paradigm_starboard,broadsword_port,broadsword_center,broadsword_starboard,stiletto_far_port,stiletto_port,stiletto_center,stiletto_starboard,stiletto_far_starboard"
+      "follow": "paradigm_lead,broadsword_port,broadsword_center,broadsword_starboard"
     },
     {
       "cmd": "sfx",
       "file": "../sfx/laser_fire.wav",
       "pos": [
-        -71667.0,
-        33333.0,
-        69167.0
+        -80667.0,
+        31000.0,
+        72000.0
       ],
       "t": 44.52
     },
@@ -405,8 +315,8 @@
       "file": "../sfx/laser_fire.wav",
       "pos": [
         -66667.0,
-        32333.0,
-        70667.0
+        25000.0,
+        71500.0
       ],
       "t": 44.87
     },
@@ -414,9 +324,9 @@
       "cmd": "sfx",
       "file": "../sfx/laser_fire.wav",
       "pos": [
-        -61667.0,
-        33333.0,
-        69167.0
+        -52667.0,
+        31000.0,
+        72000.0
       ],
       "t": 45.22
     },

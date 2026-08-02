@@ -1,15 +1,15 @@
 {
   "id": "req_1785636336",
   "status": "done",
-  "message": "authored studio_req_1785636336: Tayla M04 New Constantinople customs interception with Commander Elian Rourke, 6 voiced dialogue lines, and an 11-ship hostile Confed outcome",
+  "message": "authored studio_req_1785636336: Tayla M04 New Constantinople customs interception with helmeted Commander Elian Rourke, 6 voiced dialogue lines, and a rebalanced 4-ship hostile Confed outcome",
   "cinematic_id": "studio_req_1785636336",
   "log": [
     "rerun completed after MINIMAX_API_KEY and OPENAI_API_KEY became available",
     "generated Rourke identity reference plus 3 Rourke and 3 Grayson expression portraits",
     "generated 6 MiniMax voice clips",
-    "portrait visual identity/expression QC: 8/8 PASS",
+    "helmeted Rourke visual identity/expression QC: 4/4 PASS",
     "validate: 0 errors, 0 warnings — PASS",
-    "contract: 3 broadswords + 5 stilettos + 3 paradigms, all hostile",
+    "rebalanced contract: 1 paradigm + 3 broadswords, all hostile and widely spaced",
     "triggers.json merged: new_constantinople + m04_active + 25 brilliance + 44-P-1M Jump"
   ]
 }
