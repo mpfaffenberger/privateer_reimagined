@@ -24,7 +24,6 @@ using equipment_hardpoints::Kind;
 using equipment_hardpoints::Layout;
 using equipment_hardpoints::Zone;
 
-constexpr ImU32 kGrid = IM_COL32(42, 68, 82, 80);
 constexpr ImU32 kArmed = IM_COL32(105, 240, 135, 245);
 constexpr ImU32 kOff = IM_COL32(180, 150, 60, 220);
 constexpr ImU32 kEmpty = IM_COL32(90, 100, 110, 180);
@@ -76,11 +75,6 @@ ImVec2 zone_center(const Zone& zone, ImVec2 image_lo, float side) {
 void draw_background(ImDrawList* dl, ImVec2 lo, float side) {
     const ImVec2 hi(lo.x + side, lo.y + side);
     dl->AddRectFilled(lo, hi, IM_COL32(2, 7, 12, 235), 3.0f);
-    for (int i = 1; i < 6; ++i) {
-        const float offset = side * (float)i / 6.0f;
-        dl->AddLine(ImVec2(lo.x + offset, lo.y), ImVec2(lo.x + offset, hi.y), kGrid);
-        dl->AddLine(ImVec2(lo.x, lo.y + offset), ImVec2(hi.x, lo.y + offset), kGrid);
-    }
     if (g_ship_texture.valid) {
         // Match the equipment bay's authored orientation: nose points upward.
         dl->AddImageQuad(simgui_imtextureid(g_ship_texture.view),
@@ -97,11 +91,16 @@ void draw_hardpoint(PlayerState& player, Ship& ship, const Zone& zone,
                         !player.gun_mounts[slot].gun_id.empty();
     const bool live = slot < ship.mounts.size();
     const bool armed = live && slot < ship.gun_armed.size() && ship.gun_armed[slot];
+    // Preserve the authored normalized rectangle exactly. Scaling the whole
+    // schematic scales every hardpoint uniformly; no per-axis clamping that
+    // fattens narrow gun slots into generic square buttons.
+    const ImVec2 lo(image_lo.x + zone.rect[0] * side,
+                    image_lo.y + zone.rect[1] * side);
+    const ImVec2 hi(image_lo.x + (zone.rect[0] + zone.rect[2]) * side,
+                    image_lo.y + (zone.rect[1] + zone.rect[3]) * side);
+    const float marker_w = hi.x - lo.x;
+    const float marker_h = hi.y - lo.y;
     const ImVec2 center = zone_center(zone, image_lo, side);
-    const float marker_w = std::clamp(zone.rect[2] * side, 18.0f, 28.0f);
-    const float marker_h = std::clamp(zone.rect[3] * side, 18.0f, 28.0f);
-    const ImVec2 lo(center.x - marker_w * 0.5f, center.y - marker_h * 0.5f);
-    const ImVec2 hi(center.x + marker_w * 0.5f, center.y + marker_h * 0.5f);
 
     ImGui::PushID(zone.id.c_str());
     ImGui::SetCursorScreenPos(lo);
