@@ -131,12 +131,13 @@ void draw_status_stub(const char* title, const char* body) {
     ImGui::PopStyleColor();
 }
 
-void draw_weapons_status(PlayerState* state, Ship& live_ship) {
+void draw_weapons_status(PlayerState* state, Ship& live_ship,
+                         int selected_ordnance) {
     if (!state) {
         draw_status_stub("ARMAMENTS", "persistent loadout unavailable");
         return;
     }
-    cockpit_armaments::draw(*state, live_ship);
+    cockpit_armaments::draw(*state, live_ship, selected_ordnance);
 }
 
 constexpr float kShipDiagramIconScale = 4.15f;
@@ -662,7 +663,7 @@ void draw_target_mfd(const Camera& cam, const ShipRegistry& ships,
 void draw_player_status(ShipRegistry& ships,
                         const ShipSpriteAtlas* player_preview_atlas,
                         const StarSystem& system, const Ship* target,
-                        PlayerState* player_state) {
+                        PlayerState* player_state, int selected_ordnance) {
     Ship* player_p = ships.player();
     if (!player_p) return;
     Ship& player = *player_p;
@@ -698,7 +699,7 @@ void draw_player_status(ShipRegistry& ships,
         draw_status_stub("DAMAGE CONTROL", "system damage not yet modeled");
         break;
       case StatusScreen::Weapons:
-        draw_weapons_status(player_state, player);
+        draw_weapons_status(player_state, player, selected_ordnance);
         break;
       case StatusScreen::Ship:
       default:
@@ -1342,7 +1343,7 @@ void build(const Camera& cam, const StarSystem& system, int selected_nav,
            ShipRegistry& ships, uint32_t target_ship_id,
            const ShipSpriteAtlas* player_preview_atlas,
            const char* dock_prompt, bool dock_ready, bool draw_world,
-           PlayerState* player_state) {
+           PlayerState* player_state, int selected_ordnance) {
     // Crosshair + aim cursor are HUD overlays that distract or fight input
     // when the navmap is up (it covers the screen centre) or autopilot owns
     // the ship (the camera is on rails, no manual aiming to assist).
@@ -1360,7 +1361,7 @@ void build(const Camera& cam, const StarSystem& system, int selected_nav,
     const Ship* status_target = target_ship_id
         ? ships.find_by_id(target_ship_id) : nullptr;
     draw_player_status(ships, player_preview_atlas, system, status_target,
-                       player_state);
+                       player_state, selected_ordnance);
     draw_nav_mfd   (cam, system, selected_nav, dock_prompt, dock_ready);
     draw_target_mfd(cam, ships, target_ship_id);
     draw_radar_mfd (cam, system, selected_nav, ships, target_ship_id);

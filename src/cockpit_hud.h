@@ -43,7 +43,8 @@ namespace cockpit_hud {
 // Privateer cockpit cycles a single MFD frame between sub-displays — here the
 // STATUS window flips between the hull diagram (Ship), Comms, live Weapons,
 // and the pending component-Damage panel. main.cpp's key handler drives the cycle
-// (C/R/W toggles); draw_player_status dispatches on the current value.
+// (C/R toggles; W selects launchers and opens Weapons); draw_player_status
+// dispatches on the current value.
 enum class StatusScreen { Ship, Comms, Damage, Weapons };
 
 // Set / query the active STATUS sub-screen. File-static inside cockpit_hud;
@@ -88,7 +89,8 @@ void build(const Camera& cam, const StarSystem& system, int selected_nav,
            const ShipSpriteAtlas* player_preview_atlas = nullptr,
            const char* dock_prompt = nullptr, bool dock_ready = false,
            bool draw_world = true,    // false hides nav-reticle + mission glyphs
-           PlayerState* player_state = nullptr);
+           PlayerState* player_state = nullptr,
+           int selected_ordnance = 0); // MissileType index for ARMAMENTS
 
 // Mission objective markers + per-type progress readout (#18). Read-only
 // over PlayerState::missions + the current system's nav set: floats a cyan

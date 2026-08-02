@@ -417,6 +417,11 @@ target_include_directories(test_equipment_hardpoints PRIVATE
 add_executable(test_gun_modes EXCLUDE_FROM_ALL tools/test_gun_modes.cpp)
 target_include_directories(test_gun_modes PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
+# Pure launcher hardware/ammo selection harness.
+add_executable(test_launcher_modes EXCLUDE_FROM_ALL tools/test_launcher_modes.cpp)
+target_include_directories(test_launcher_modes PRIVATE
+    ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party)
+
 add_executable(test_armament_loadout EXCLUDE_FROM_ALL
     tools/test_armament_loadout.cpp)
 target_include_directories(test_armament_loadout PRIVATE

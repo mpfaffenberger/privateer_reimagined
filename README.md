@@ -104,7 +104,7 @@ stable player-facing CLI.
 | Hold left mouse or `Ctrl` | Fire guns |
 | `G` | Cycle gun arm-mode (unarmed → each gun type → all) |
 | `Enter` | Fire missile |
-| `F` | Cycle missile type (DF → HS → IR) |
+| `F` | Compatibility alias: cycle loaded ordnance |
 | `T` | Cycle targets (nearest → farthest, ≤15 km) |
 | `Z` | Tractor loose loot into the hold |
 | `I` | In-flight inventory |
@@ -126,7 +126,7 @@ stable player-facing CLI.
 |---|---|
 | `C` | Comms screen (then `1`–`9` pick replies) |
 | `R` | Damage report screen |
-| `W` | Weapons loadout screen |
+| `W` | Cycle loaded launcher ordnance and open ARMAMENTS |
 | `Esc` | Back/close; double-tap in flight to quit |
 
 Additional context-sensitive bindings are shown by the in-game HUD. Debug and
