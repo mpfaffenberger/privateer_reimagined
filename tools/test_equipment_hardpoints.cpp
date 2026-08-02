@@ -49,9 +49,10 @@ int main() {
           centurion.zones[1].rect[3] == centurion.zones[0].rect[3],
           "layout normalization repairs inconsistent authored dimensions");
 
-    Layout fallback_layout;
-    check(!load("tarsus", 2, fallback_layout),
-          "missing authored Tarsus file reports fallback use");
+    Layout missing_layout;
+    check(!load("__missing_hull_fixture__", 2, missing_layout),
+          "missing authored file reports fallback use");
+    Layout fallback_layout = fallback("tarsus", 2);
     check(!fallback_layout.sprite.empty(), "fallback resolves a top-down sprite");
     check(fallback_layout.zones.size() == 4,
           "two-gun fallback contains guns plus left/right launchers");
