@@ -422,6 +422,10 @@ add_executable(test_launcher_modes EXCLUDE_FROM_ALL tools/test_launcher_modes.cp
 target_include_directories(test_launcher_modes PRIVATE
     ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party)
 
+# Pure Flight pause-overlay visibility harness.
+add_executable(test_pause_overlay EXCLUDE_FROM_ALL tools/test_pause_overlay.cpp)
+target_include_directories(test_pause_overlay PRIVATE ${CMAKE_SOURCE_DIR}/src)
+
 add_executable(test_armament_loadout EXCLUDE_FROM_ALL
     tools/test_armament_loadout.cpp)
 target_include_directories(test_armament_loadout PRIVATE

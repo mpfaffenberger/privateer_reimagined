@@ -1480,6 +1480,40 @@ void build_mission_objectives(const Camera& cam, const StarSystem& system,
     pop_hud_style();
 }
 
+void draw_pause_overlay() {
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImDrawList* fg = ImGui::GetForegroundDrawList();
+    const ImVec2 screen_lo = viewport->WorkPos;
+    const ImVec2 screen_hi(screen_lo.x + viewport->WorkSize.x,
+                           screen_lo.y + viewport->WorkSize.y);
+    fg->AddRectFilled(screen_lo, screen_hi, IM_COL32(0, 0, 0, 55));
+
+    const ImVec2 box_size(400.0f, 112.0f);
+    const ImVec2 box_lo(screen_lo.x + (viewport->WorkSize.x - box_size.x) * 0.5f,
+                        screen_lo.y + (viewport->WorkSize.y - box_size.y) * 0.38f);
+    const ImVec2 box_hi(box_lo.x + box_size.x, box_lo.y + box_size.y);
+    fg->AddRectFilled(box_lo, box_hi, IM_COL32(20, 16, 8, 235), 7.0f);
+    fg->AddRect(box_lo, box_hi, IM_COL32(255, 200, 60, 255),
+                7.0f, 0, 2.5f);
+
+    ImFont* font = ImGui::GetFont();
+    constexpr const char* kTitle = "GAME PAUSED";
+    constexpr const char* kInstruction = "Press P to unpause";
+    const float title_px = ImGui::GetFontSize() * 1.55f;
+    const float instruction_px = ImGui::GetFontSize() * 1.08f;
+    const ImVec2 title_size = font->CalcTextSizeA(title_px, 1000.0f, 0.0f, kTitle);
+    const ImVec2 instruction_size =
+        font->CalcTextSizeA(instruction_px, 1000.0f, 0.0f, kInstruction);
+    fg->AddText(font, title_px,
+                ImVec2(box_lo.x + (box_size.x - title_size.x) * 0.5f,
+                       box_lo.y + 24.0f),
+                IM_COL32(255, 220, 120, 255), kTitle);
+    fg->AddText(font, instruction_px,
+                ImVec2(box_lo.x + (box_size.x - instruction_size.x) * 0.5f,
+                       box_lo.y + 70.0f),
+                IM_COL32(230, 210, 155, 255), kInstruction);
+}
+
 void build_weapons_status(const WeaponsHudState& w) {
     // Suppress the whole panel when the player has zero ammo — both lines
     // become noise (DF always shows "DUMBFIRE", HS/IR always shows the
