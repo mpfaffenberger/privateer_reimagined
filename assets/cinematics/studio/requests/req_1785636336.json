@@ -1,0 +1,8 @@
+{
+  "id": "req_1785636336",
+  "kind": "author",
+  "brief": "The player is en route to New Constantinople with 25 units of brilliance in the hull. Hot. This is Tayla's 3rd mission. Upon jumping into New Constantinople, Grayson discovers an entire fleet of 3 broadswords, 5 stilettos, and 3 paradigms await him in a wide formation. \n\nThey do the usual prepare to be searched. They find contraband, they order all units to open fire. \n\nGrayson and the confed exchange sarcastic remakes \"Don't you guys have Kilrathi to shoot at? No wonder we're losing the war...\"\n\nand the more exchanges",
+  "triggers_text": "Upon entering New Constantinople system carrying 25 units of brilliance and on tayla's third mission.",
+  "outcome_text": "The fleet of confed are opening fire on grayson.",
+  "image": { "quality": "medium" }
+}
