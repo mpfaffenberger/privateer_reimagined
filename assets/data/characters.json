@@ -119,6 +119,16 @@
       "voice_id": "PrivMerchantFem01",
       "reference_image": "assets/cinematics/portraits/kort/_ref.png"
     },
+    "riordian": {
+      "id": "riordian",
+      "display_name": "William Riordian",
+      "role": "A former Tayla-route smuggler and confident pirate ace who ambushes Grayson during Tayla's final Brilliance run.",
+      "appearance": "Human man in his early 40s, lean and hawk-faced with pale olive skin, a long narrow jaw, and a nose that has been broken once and set slightly crooked. Swept-back black hair carries one sharp silver streak at the right temple. Amber-brown eyes, a precisely trimmed dark goatee, and a thin vertical scar beneath the left corner of his mouth. Handsome in a hard, predatory way, with the practiced composure of an ace who expects every room to notice him.",
+      "personality": "Swaggering, territorial, and dangerously self-assured. Riordian treats smuggling lanes like personal property and masks wounded jealousy with theatrical charm; when mocked, the polished confidence snaps into cold anger.",
+      "wardrobe": "Customized oxblood-red pirate flight jacket over a fitted charcoal pressure suit, black pilot harness with brass buckles, and a compact comm headset at his right ear. Expensive, meticulously maintained gear with every official insignia stripped away.",
+      "voice_id": "PrivFlightV1501",
+      "reference_image": "assets/cinematics/portraits/riordian/_ref.png"
+    },
     "pirate": {
       "id": "pirate",
       "display_name": "Pirate",
