@@ -6429,7 +6429,7 @@ void frame_cb() {
                                g.ships, g.player_target_id,
                                g.player_atlas,
                                dock_prompt, dock_ready,
-                               draw_world, &g.player.rep);
+                               draw_world, &g.player);
 
             // #112: in-flight inventory window (toggled by I). Reads + mutates
             // the unified hold through the SAME model path as the LANDED

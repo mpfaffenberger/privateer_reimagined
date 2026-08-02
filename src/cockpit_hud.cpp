@@ -16,6 +16,7 @@
 //           (no NDC Y-flip), so target projection skips the
 //           textbook (1 - ndc_y) inversion.
 #include "cockpit_hud.h"
+#include "cockpit_armaments.h"
 #include "comms_menu.h"
 #include "navmap_projection.h"
 
@@ -130,47 +131,12 @@ void draw_status_stub(const char* title, const char* body) {
     ImGui::PopStyleColor();
 }
 
-void draw_weapons_status(const Ship& player) {
-    ImGui::PushStyleColor(ImGuiCol_Text, kAmber);
-    ImGui::TextUnformatted("WEAPONS");
-    ImGui::PopStyleColor();
-    ImGui::Separator();
-
-    const auto& unique_types = firing::gun_unique_types_cache(player.mounts);
-    const char* mode = firing::gun_mode_label(unique_types, player.gun_mode_idx);
-    ImGui::PushStyleColor(ImGuiCol_Text, kHudWhite);
-    ImGui::Text("MODE %-14s %d/%zu ARMED", mode,
-                firing::gun_mode_armed_count(player), player.mounts.size());
-    const float energy_max = player.klass ? player.klass->energy_max : 0.0f;
-    ImGui::Text("ENERGY %5.0f / %5.0f GJ", player.energy_gj, energy_max);
-    ImGui::PopStyleColor();
-    ImGui::Separator();
-
-    if (player.mounts.empty()) {
-        ImGui::PushStyleColor(ImGuiCol_Text, kDimAmber);
-        ImGui::TextUnformatted("NO GUNS FITTED");
-        ImGui::PopStyleColor();
+void draw_weapons_status(PlayerState* state, Ship& live_ship) {
+    if (!state) {
+        draw_status_stub("ARMAMENTS", "persistent loadout unavailable");
         return;
     }
-
-    constexpr size_t k_max_visible_mounts = 6;
-    const size_t visible = std::min(player.mounts.size(), k_max_visible_mounts);
-    for (size_t i = 0; i < visible; ++i) {
-        const GunMount& mount = player.mounts[i];
-        const int type_index = (int)mount.type;
-        const char* name = (type_index >= 0 && type_index < kGunTypeCount)
-            ? g_gun_stats[type_index].name : "UNKNOWN";
-        const bool armed = i < player.gun_armed.size() && player.gun_armed[i];
-        ImGui::PushStyleColor(ImGuiCol_Text, armed ? kGreen : kDimAmber);
-        ImGui::Text("%d  %-18.18s %s%s", (int)i + 1, name,
-                    armed ? "ARM" : "OFF", mount.is_turret ? " T" : "");
-        ImGui::PopStyleColor();
-    }
-    if (player.mounts.size() > visible) {
-        ImGui::PushStyleColor(ImGuiCol_Text, kDimAmber);
-        ImGui::Text("+ %zu MORE MOUNTS", player.mounts.size() - visible);
-        ImGui::PopStyleColor();
-    }
+    cockpit_armaments::draw(*state, live_ship);
 }
 
 constexpr float kShipDiagramIconScale = 4.15f;
@@ -693,13 +659,13 @@ void draw_target_mfd(const Camera& cam, const ShipRegistry& ships,
 // thumbnail since the player has no sprite. Energy displayed as a
 // numeric current/max instead of a bar — energy ticks fast enough
 // during sustained fire that a bar would just look noisy.
-void draw_player_status(const ShipRegistry& ships,
+void draw_player_status(ShipRegistry& ships,
                         const ShipSpriteAtlas* player_preview_atlas,
                         const StarSystem& system, const Ship* target,
-                        const PlayerReputation* rep) {
-    const Ship* player_p = ships.player();
+                        PlayerState* player_state) {
+    Ship* player_p = ships.player();
     if (!player_p) return;
-    const Ship& player = *player_p;
+    Ship& player = *player_p;
 
     constexpr float w = 280.0f, h = 224.0f, margin = 16.0f;
     ImGui::SetNextWindowPos(ImVec2(margin, margin), ImGuiCond_Always);
@@ -707,7 +673,11 @@ void draw_player_status(const ShipRegistry& ships,
     ImGui::SetNextWindowBgAlpha(0.55f);
     push_hud_style();
 
-    if (ImGui::Begin("##player_status", nullptr, kHudWindowFlags)) {
+    // The armaments screen is the one interactive STATUS page: its hardpoints
+    // accept drag/drop. Every other page remains click-through flight HUD.
+    const ImGuiWindowFlags status_flags = g_status_screen == StatusScreen::Weapons
+        ? (kHudWindowFlags & ~ImGuiWindowFlags_NoInputs) : kHudWindowFlags;
+    if (ImGui::Begin("##player_status", nullptr, status_flags)) {
         ImGui::PushStyleColor(ImGuiCol_Text, kAmber);
         ImGui::TextUnformatted("STATUS");
         ImGui::PopStyleColor();
@@ -720,14 +690,15 @@ void draw_player_status(const ShipRegistry& ships,
       switch (g_status_screen) {
       case StatusScreen::Comms: {
         static const PlayerReputation kNoRep{};
-        comms_menu::draw(system, target, rep ? *rep : kNoRep);
+        comms_menu::draw(system, target,
+                         player_state ? player_state->rep : kNoRep);
         break;
       }
       case StatusScreen::Damage:
         draw_status_stub("DAMAGE CONTROL", "system damage not yet modeled");
         break;
       case StatusScreen::Weapons:
-        draw_weapons_status(player);
+        draw_weapons_status(player_state, player);
         break;
       case StatusScreen::Ship:
       default:
@@ -1368,10 +1339,10 @@ void draw_flight_status_mfd(const FlightStatusHudState& s) {
 
 void build(const Camera& cam, const StarSystem& system, int selected_nav,
            float mouse_x, float mouse_y, bool fly_by_wire,
-           const ShipRegistry& ships, uint32_t target_ship_id,
+           ShipRegistry& ships, uint32_t target_ship_id,
            const ShipSpriteAtlas* player_preview_atlas,
            const char* dock_prompt, bool dock_ready, bool draw_world,
-           const PlayerReputation* player_rep) {
+           PlayerState* player_state) {
     // Crosshair + aim cursor are HUD overlays that distract or fight input
     // when the navmap is up (it covers the screen centre) or autopilot owns
     // the ship (the camera is on rails, no manual aiming to assist).
@@ -1389,7 +1360,7 @@ void build(const Camera& cam, const StarSystem& system, int selected_nav,
     const Ship* status_target = target_ship_id
         ? ships.find_by_id(target_ship_id) : nullptr;
     draw_player_status(ships, player_preview_atlas, system, status_target,
-                       player_rep);
+                       player_state);
     draw_nav_mfd   (cam, system, selected_nav, dock_prompt, dock_ready);
     draw_target_mfd(cam, ships, target_ship_id);
     draw_radar_mfd (cam, system, selected_nav, ships, target_ship_id);

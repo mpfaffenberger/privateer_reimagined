@@ -79,16 +79,16 @@ bool project_world_point(const Camera& cam, HMM_Vec3 world,
 //                  nullptr/"" draws nothing; otherwise the string is
 //                  shown under the nav data. `dock_ready` tints it
 //                  green ("PRESS D TO DOCK") vs amber ("DOCK: TOO FAST").
-//   player_rep     player reputation, forwarded to the STATUS panel's Comms
-//                  sub-screen so it can resolve friendly-vs-hostile hail
-//                  lines. nullptr = no rep available (Comms shows friendly).
+//   player_state   persistent loadout used by the interactive armaments
+//                  screen and its drag/drop transactions. Reputation also
+//                  feeds Comms. nullptr keeps both screens read-only/fallback.
 void build(const Camera& cam, const StarSystem& system, int selected_nav,
            float mouse_x, float mouse_y, bool fly_by_wire,
-           const ShipRegistry& ships, uint32_t target_ship_id,
+           ShipRegistry& ships, uint32_t target_ship_id,
            const ShipSpriteAtlas* player_preview_atlas = nullptr,
            const char* dock_prompt = nullptr, bool dock_ready = false,
            bool draw_world = true,    // false hides nav-reticle + mission glyphs
-           const PlayerReputation* player_rep = nullptr);
+           PlayerState* player_state = nullptr);
 
 // Mission objective markers + per-type progress readout (#18). Read-only
 // over PlayerState::missions + the current system's nav set: floats a cyan

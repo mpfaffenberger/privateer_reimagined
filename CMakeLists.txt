@@ -259,6 +259,7 @@ src/bolt_art.cpp
     src/music_labeler.cpp
     src/speech_labeler.cpp
     src/cockpit_hud.cpp
+    src/cockpit_armaments.cpp
     src/comms_menu.cpp
     ${DEV_REMOTE_SRC}
     ${IMGUI_SRC}
@@ -411,6 +412,11 @@ target_include_directories(test_equipment_hardpoints PRIVATE
 # dragging the renderer, audio, or projectile simulation into a math test.
 add_executable(test_gun_modes EXCLUDE_FROM_ALL tools/test_gun_modes.cpp)
 target_include_directories(test_gun_modes PRIVATE ${CMAKE_SOURCE_DIR}/src)
+
+add_executable(test_armament_loadout EXCLUDE_FROM_ALL
+    tools/test_armament_loadout.cpp)
+target_include_directories(test_armament_loadout PRIVATE
+    ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party)
 
 # Focused jump-eligibility regression harness. Jump deliberately does not link
 # threat.cpp: combat proximity belongs to autopilot, not gate eligibility.
