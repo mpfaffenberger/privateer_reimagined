@@ -201,7 +201,10 @@ class _At:
              voice_file: Optional[str] = None,
              portrait: Optional[str] = None,
              speaker: Optional[str] = None,
-             generate: Optional[bool] = None) -> "_At":
+             generate: Optional[bool] = None,
+             voice_text: Optional[str] = None,
+             voice_emotion: str = "",
+             voice_speed: Optional[float] = None) -> "_At":
         """A composite spoken beat: portrait panel + subtitle + optional voice.
 
         ``character`` is the character-bible id (used for portrait generation
@@ -209,7 +212,10 @@ class _At:
         nameplate text. If portrait auto-generation is on (cinematic-level
         ``auto_portraits`` or per-line ``generate=True``) and no explicit
         ``portrait`` is given, this renders the art via ``portraits.gen_line``
-        and wires the resulting PNG path into the cue.
+        and wires the resulting PNG path into the cue. ``voice_text`` may carry
+        MiniMax pause/interjection tags while ``text`` stays clean for subtitles;
+        ``voice_emotion`` and ``voice_speed`` direct delivery without becoming
+        runtime fields.
         """
         if side not in ("left", "right"):
             raise ValueError(f"side must be 'left' or 'right', got {side!r}")
@@ -223,8 +229,11 @@ class _At:
         # Voice auto-gen (MiniMax TTS). Only when no explicit clip was given, so
         # an author can still hand-pick a specific file. Degrades to no voice
         # when MINIMAX_API_KEY is unset (line stays silent w/ subtitle+portrait).
-        if voice_file is None and self._p._auto_voices and text.strip():
-            voice_file = self._p._generate_voice(character, text)
+        spoken_text = voice_text if voice_text is not None else text
+        if voice_file is None and self._p._auto_voices and spoken_text.strip():
+            voice_file = self._p._generate_voice(
+                character, spoken_text, emotion=voice_emotion,
+                speed=voice_speed)
 
         cue = {"cmd": "line", "speaker": nameplate, "text": text,
                "side": side, "dur": float(dur)}
@@ -349,7 +358,9 @@ class Cinematic:
         )
         return _rel_to_cinematics(out)
 
-    def _generate_voice(self, character: str, text: str) -> Optional[str]:
+    def _generate_voice(self, character: str, text: str, *,
+                        emotion: str = "",
+                        speed: Optional[float] = None) -> Optional[str]:
         """Synthesize this line via MiniMax and return its cinematics-relative
         path ("audio/<id>_<char>_<NN>.mp3"), or None when unavailable."""
         n = self._vseq.get(character, 0) + 1
@@ -357,7 +368,8 @@ class Cinematic:
         out_rel = f"audio/{self.id}_{character}_{n:02d}.mp3"
         return voices_mod.gen_line_voice(
             character=character, text=text, out_rel=out_rel,
-            speed=self._voice_speed, bible=self._load_bible(),
+            speed=self._voice_speed if speed is None else speed,
+            emotion=emotion, bible=self._load_bible(),
         )
 
     # -- serialisation --------------------------------------------------------
