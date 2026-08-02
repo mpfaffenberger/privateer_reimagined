@@ -99,6 +99,7 @@ HMM_Mat4 model_matrix(HMM_Vec3 pos, HMM_Vec3 euler_deg, float s);
 #include "bolt_art.h"
 #include "projectile.h"
 #include "missile.h"
+#include "launcher_modes.h"
 #include "sfx.h"
 #include "music.h"
 #include "ship.h"
@@ -336,7 +337,7 @@ struct AppState {
     // projectile tracers. Empty until the player launches one.
     std::vector<Missile>                                 missiles;
     // Currently-selected missile type for the fire key (index into
-    // MissileType: 0=DF,1=HS,2=IR). Cycled with the missile-type key.
+    // MissileType: 0=DF,1=HS,2=IR,3=TORPEDO. Cycled with W (F alias).
     // Transient UI state — NOT persisted (ammo counts are, in PlayerState).
     int                                                  selected_missile = 0;
     // Edge-triggered fire request: the missile-fire key sets this in
@@ -1969,7 +1970,8 @@ void build_system_scene(bool first_time, bool show_progress) {
             });
 
         // POST /panel — flip the STATUS panel sub-screen (testing parity
-        // with the C/R/W flight keys, which the API can't press). Switching
+        // with the C/R flight keys and W's launcher-selection feedback,
+        // which the API can't press). Switching
         // to Comms also opens its menu (reset to destination-select).
         dev_remote::set_panel_hook(
             [](std::string screen) {
@@ -5134,9 +5136,15 @@ void frame_cb() {
         if (Ship* pl = g.ships.player(); pl && !dying) {
             const int           ti  = g.selected_missile;
             const MissileStats& sel = g_missile_stats[ti];
+            const bool has_hardware =
+                launcher_modes::has_compatible_hardware(g.player, ti);
             const bool has_ammo = player::missile_count(g.player, ti) > 0;
             const bool lock_ok  = !sel.needs_lock || g.missile_lock.locked;
-            if (!has_ammo) {
+            if (!has_hardware) {
+                sfx::out_of_ammo();
+                std::printf("[missile] FIRE refused: no compatible %s launcher\n",
+                            sel.short_name);
+            } else if (!has_ammo) {
                 sfx::out_of_ammo();
                 std::printf("[missile] FIRE refused: %s rack empty\n", sel.short_name);
             } else if (!lock_ok) {
@@ -6457,7 +6465,7 @@ void frame_cb() {
                                g.ships, g.player_target_id,
                                g.player_atlas,
                                dock_prompt, dock_ready,
-                               draw_world, &g.player);
+                               draw_world, &g.player, g.selected_missile);
 
             // #112: in-flight inventory window (toggled by I). Reads + mutates
             // the unified hold through the SAME model path as the LANDED
@@ -7086,6 +7094,22 @@ void cleanup_cb() {
     tracelog::shutdown();
 }
 
+void cycle_selected_launcher() {
+    const int previous = g.selected_missile;
+    g.selected_missile = launcher_modes::next_selection(g.player, previous);
+    g.missile_lock = AppState::MissileLock{};
+    cockpit_hud::set_status_screen(cockpit_hud::StatusScreen::Weapons);
+    sfx::ui_click();
+    const int count = player::missile_count(g.player, g.selected_missile);
+    if (g.selected_missile == previous &&
+        !launcher_modes::selectable(g.player, g.selected_missile)) {
+        std::printf("[launcher] no installed launcher has loaded ordnance\n");
+    } else {
+        std::printf("[launcher] selected %s (x%d)\n",
+                    missile::to_name((MissileType)g.selected_missile), count);
+    }
+}
+
 void event_cb(const sapp_event* ev) {
     // Track mouse-button state FIRST, before any ImGui / dev-editor handler
     // can early-return and swallow the event. Firing is a core flight input
@@ -7282,11 +7306,9 @@ void event_cb(const sapp_event* ev) {
                         p.gun_mode_idx, lbl, p.mounts.size());
             sfx::ui_click();
         }
-        // C / R / W — cycle the STATUS panel sub-screen (canonical Privateer
-        // MFD flip). Each is a TOGGLE: pressing the key for the screen you're
-        // already on flips back to the hull diagram (Ship); otherwise it
-        // switches to that screen. Opening Comms also resets its menu to the
-        // destination-select step. G and M are untouched.
+        // C / R toggle their STATUS sub-screens. W is reserved for launcher
+        // selection below and opens ARMAMENTS as immediate visual feedback.
+        // Opening Comms also resets its menu to the destination-select step.
         if (ev->key_code == SAPP_KEYCODE_C && !ev->key_repeat) {
             const bool on = cockpit_hud::status_screen()
                             == cockpit_hud::StatusScreen::Comms;
@@ -7304,14 +7326,8 @@ void event_cb(const sapp_event* ev) {
                    : cockpit_hud::StatusScreen::Damage);
             sfx::ui_click();
         }
-        if (ev->key_code == SAPP_KEYCODE_W && !ev->key_repeat) {
-            const bool on = cockpit_hud::status_screen()
-                            == cockpit_hud::StatusScreen::Weapons;
-            cockpit_hud::set_status_screen(
-                on ? cockpit_hud::StatusScreen::Ship
-                   : cockpit_hud::StatusScreen::Weapons);
-            sfx::ui_click();
-        }
+        if (ev->key_code == SAPP_KEYCODE_W && !ev->key_repeat)
+            cycle_selected_launcher();
         // 1-9 — drive the Comms menu (np-comms) when its screen is up. The
         // number routes to comms_menu::select (1-based); a no-op pick is
         // harmless. Only meaningful on the Comms screen so the keys stay
@@ -7440,29 +7456,20 @@ void event_cb(const sapp_event* ev) {
             loot::try_pull(g.camera.position, /*range=*/2500.0f,
                            g.player, capacity);
         }
-        // M — cycle the selected missile type (DF -> HS -> IR -> DF). Pure
-        // UI state; resets the lock so switching to a lock type re-acquires.
-        if (ev->key_code == SAPP_KEYCODE_RIGHT_BRACKET && !ev->key_repeat) {
         // ']' cycles the sim time scale: 1x -> 2x -> 4x -> 8x -> 1x.
-        g_time_scale = (g_time_scale >= 8.0f) ? 1.0f : g_time_scale * 2.0f;
-        std::printf("[time_scale] sim now %.0fx wall time\n", g_time_scale);
-    }
-    if (ev->key_code == SAPP_KEYCODE_LEFT_BRACKET && !ev->key_repeat) {
-        // '[' resets to 1x immediately.
-        g_time_scale = 1.0f;
-        std::printf("[time_scale] sim reset to 1x\n");
-    }
-    // F — cycle the selected missile type (DF -> HS -> IR -> DF).
-    // (Moved off M so M can open the sector navmap.) Pure UI state;
-    // resets the lock so switching to a lock type re-acquires.
-    if (ev->key_code == SAPP_KEYCODE_F && !ev->key_repeat) {
-            g.selected_missile = (g.selected_missile + 1) % kMissileTypeCount;
-            g.missile_lock = AppState::MissileLock{};   // fresh lock for the new type
-            sfx::ui_click();
-            std::printf("[missile] selected %s (x%d)\n",
-                        missile::to_name((MissileType)g.selected_missile),
-                        g.player.missiles[g.selected_missile]);
+        if (ev->key_code == SAPP_KEYCODE_RIGHT_BRACKET && !ev->key_repeat) {
+            g_time_scale = (g_time_scale >= 8.0f) ? 1.0f : g_time_scale * 2.0f;
+            std::printf("[time_scale] sim now %.0fx wall time\n", g_time_scale);
         }
+        if (ev->key_code == SAPP_KEYCODE_LEFT_BRACKET && !ev->key_repeat) {
+            // '[' resets to 1x immediately.
+            g_time_scale = 1.0f;
+            std::printf("[time_scale] sim reset to 1x\n");
+        }
+        // F remains a compatibility alias for existing muscle memory.
+        // W is the canonical launcher-cycle key and also opens ARMAMENTS.
+        if (ev->key_code == SAPP_KEYCODE_F && !ev->key_repeat)
+            cycle_selected_launcher();
         // M — toggle the sector navigation map (whole-galaxy node+edge
         // graph). Independent of the local navmap (N).
         if (ev->key_code == SAPP_KEYCODE_M && !ev->key_repeat) {

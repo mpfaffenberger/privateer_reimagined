@@ -4,6 +4,7 @@
 #include "armament_loadout.h"
 #include "equipment_hardpoints.h"
 #include "firing.h"
+#include "launcher_modes.h"
 #include "material.h"
 #include "player.h"
 #include "ship.h"
@@ -165,17 +166,79 @@ void draw_hardpoint(PlayerState& player, Ship& ship, const Zone& zone,
     ImGui::PopID();
 }
 
+void draw_launcher(const PlayerState& player, const Zone& zone,
+                   int selected_ordnance, ImVec2 image_lo, float side) {
+    if (zone.kind != Kind::Launcher || zone.slot < 0 || zone.slot > 1) return;
+    const launcher_modes::SideState state =
+        launcher_modes::side_state(player, zone.slot, selected_ordnance);
+    const bool missile_installed = state.missile_installed;
+    const bool torpedo_installed = state.torpedo_installed;
+    const bool active = state.active;
+    const bool fitted = missile_installed || torpedo_installed;
+
+    const ImVec2 lo(image_lo.x + zone.rect[0] * side,
+                    image_lo.y + zone.rect[1] * side);
+    const ImVec2 hi(image_lo.x + (zone.rect[0] + zone.rect[2]) * side,
+                    image_lo.y + (zone.rect[1] + zone.rect[3]) * side);
+    const ImVec2 center = zone_center(zone, image_lo, side);
+    const ImU32 color = !fitted ? kEmpty : active ? kArmed : kOff;
+    static constexpr const char* kNames[kMissileTypeCount] = {
+        "DF", "HS", "IR", "T"
+    };
+    const char* label = active ? kNames[selected_ordnance]
+                      : missile_installed && torpedo_installed ? "M/T"
+                      : missile_installed ? "M" : torpedo_installed ? "T" : "--";
+
+    ImGui::PushID(zone.id.c_str());
+    ImGui::SetCursorScreenPos(lo);
+    ImGui::InvisibleButton("##launcher", ImVec2(hi.x - lo.x, hi.y - lo.y));
+    const bool hovered = ImGui::IsItemHovered();
+    ImDrawList* dl = ImGui::GetWindowDrawList();
+    dl->AddRectFilled(lo, hi, IM_COL32(3, 13, 22, 180), 3.0f);
+    dl->AddRect(lo, hi, color, 3.0f, 0, hovered ? 2.5f : 1.5f);
+    const ImVec2 text_size = ImGui::CalcTextSize(label);
+    dl->AddText(ImVec2(center.x - text_size.x * 0.5f,
+                       center.y - text_size.y * 0.5f), color, label);
+    if (hovered) {
+        ImGui::BeginTooltip();
+        ImGui::Text("%s", zone.label.c_str());
+        ImGui::TextColored(missile_installed ? ImVec4(0.42f, 0.94f, 0.55f, 1.0f)
+                                             : ImVec4(0.50f, 0.50f, 0.50f, 1.0f),
+                           "MISSILE LAUNCHER  %s", missile_installed ? "INSTALLED" : "EMPTY");
+        ImGui::TextColored(torpedo_installed ? ImVec4(0.42f, 0.94f, 0.55f, 1.0f)
+                                             : ImVec4(0.50f, 0.50f, 0.50f, 1.0f),
+                           "TORPEDO LAUNCHER  %s", torpedo_installed ? "INSTALLED" : "EMPTY");
+        ImGui::Separator();
+        ImGui::Text("DF %d   HS %d   IR %d   TORP %d",
+                    player.missiles[0], player.missiles[1], player.missiles[2],
+                    player.torpedoes);
+        if (active) ImGui::TextColored(ImVec4(0.42f, 0.94f, 0.55f, 1.0f), "ACTIVE");
+        ImGui::EndTooltip();
+    }
+    ImGui::PopID();
+}
+
 } // namespace
 
-void draw(PlayerState& player, Ship& live_ship) {
+void draw(PlayerState& player, Ship& live_ship, int selected_ordnance) {
     ensure_sampler();
     ensure_layout(player, live_ship);
     const auto& unique = firing::gun_unique_types_cache(live_ship.mounts);
     ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.30f, 1.0f), "ARMAMENTS");
     ImGui::SameLine();
-    ImGui::TextDisabled("%s  %d/%zu",
+    ImGui::TextDisabled("GUN %s  %d/%zu",
         firing::gun_mode_label(unique, live_ship.gun_mode_idx),
         firing::gun_mode_armed_count(live_ship), live_ship.mounts.size());
+    static constexpr const char* kNames[kMissileTypeCount] = {
+        "DF", "HS", "IR", "TORP"
+    };
+    const int selected = std::clamp(selected_ordnance, 0, kMissileTypeCount - 1);
+    ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.30f, 1.0f), "LAUNCH");
+    ImGui::SameLine();
+    ImGui::TextDisabled("%s x%d  [MSL %d / TORP %d]",
+        kNames[selected], launcher_modes::ammo_count(player, selected),
+        launcher_modes::missile_launcher_count(player),
+        launcher_modes::torpedo_launcher_count(player));
 
     const ImVec2 cursor = ImGui::GetCursorScreenPos();
     const ImVec2 avail = ImGui::GetContentRegionAvail();
@@ -183,8 +246,12 @@ void draw(PlayerState& player, Ship& live_ship) {
     const ImVec2 image_lo(cursor.x + (avail.x - side) * 0.5f, cursor.y);
     ImDrawList* dl = ImGui::GetWindowDrawList();
     draw_background(dl, image_lo, side);
-    for (const Zone& zone : g_layout.zones)
-        draw_hardpoint(player, live_ship, zone, image_lo, side);
+    for (const Zone& zone : g_layout.zones) {
+        if (is_gun_zone(zone))
+            draw_hardpoint(player, live_ship, zone, image_lo, side);
+        else if (zone.kind == Kind::Launcher)
+            draw_launcher(player, zone, selected, image_lo, side);
+    }
 
     ImGui::SetCursorScreenPos(cursor);
     ImGui::Dummy(ImVec2(avail.x, side));

@@ -5,8 +5,9 @@ struct Ship;
 
 namespace cockpit_armaments {
 
-// Draw the interactive top-down gun schematic into the current ImGui window.
-void draw(PlayerState& player, Ship& live_ship);
+// Draw the interactive top-down gun + launcher schematic into the current
+// ImGui window. selected_ordnance is a MissileType index.
+void draw(PlayerState& player, Ship& live_ship, int selected_ordnance);
 
 // True when the pointer is merely hovering this MFD, not dragging a weapon.
 // Flight input may pass through in that state; an active drag still captures it.
