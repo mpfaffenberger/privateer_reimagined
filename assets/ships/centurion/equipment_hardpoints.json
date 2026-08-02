@@ -2,13 +2,13 @@
   "ship": "centurion",
   "sprite": "assets/ships/centurion/sprites_3d/centurion_az000_el+090_3d.png",
   "zones": [
-    { "id": "gun_0", "label": "Forward Gun 1", "kind": "gun", "slot": 0, "rect": [0.35873, 0.39221, 0.03629, 0.07677] },
+    { "id": "gun_0", "label": "Forward Gun 1", "kind": "gun", "slot": 0, "rect": [0.34966, 0.39480, 0.03629, 0.07677] },
     { "id": "gun_1", "label": "Forward Gun 2", "kind": "gun", "slot": 1, "rect": [0.60929, 0.39790, 0.03629, 0.07677] },
-    { "id": "gun_2", "label": "Forward Gun 3", "kind": "gun", "slot": 2, "rect": [0.39387, 0.32774, 0.03629, 0.07677] },
+    { "id": "gun_2", "label": "Forward Gun 3", "kind": "gun", "slot": 2, "rect": [0.38869, 0.34458, 0.03629, 0.07677] },
     { "id": "gun_3", "label": "Forward Gun 4", "kind": "gun", "slot": 3, "rect": [0.56565, 0.34323, 0.03629, 0.07677] },
     { "id": "turret_0", "label": "Turret Gun 1", "kind": "turret", "slot": 4, "rect": [0.46081, 0.80226, 0.03629, 0.07677] },
     { "id": "turret_1", "label": "Turret Gun 2", "kind": "turret", "slot": 5, "rect": [0.51032, 0.80355, 0.03629, 0.07677] },
-    { "id": "launcher_left", "label": "Left Launcher", "kind": "launcher", "slot": 0, "rect": [0.39688, 0.47535, 0.04355, 0.08613] },
-    { "id": "launcher_right", "label": "Right Launcher", "kind": "launcher", "slot": 1, "rect": [0.55938, 0.48368, 0.04355, 0.08613] }
+    { "id": "launcher_left", "label": "Left Launcher", "kind": "launcher", "slot": 0, "rect": [0.29714, 0.45851, 0.04355, 0.08613] },
+    { "id": "launcher_right", "label": "Right Launcher", "kind": "launcher", "slot": 1, "rect": [0.66430, 0.46943, 0.04355, 0.08613] }
   ]
 }
