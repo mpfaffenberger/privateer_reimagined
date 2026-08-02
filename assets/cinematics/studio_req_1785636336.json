@@ -208,7 +208,7 @@
     },
     {
       "cmd": "camera_path",
-      "dur": 4.2,
+      "dur": 8.306,
       "ease": "linear",
       "keys": [
         {
@@ -228,14 +228,14 @@
       "speaker": "Commander Elian Rourke",
       "text": "Unidentified privateer, cut thrust and prepare to be searched. This is a full-spectrum customs inspection.",
       "side": "right",
-      "dur": 4.2,
+      "dur": 8.306,
       "portrait": "portraits/rourke/studio_req_1785636336_01.png",
       "voice_file": "audio/studio_req_1785636336_rourke_01.mp3",
       "t": 4.0
     },
     {
       "cmd": "camera_path",
-      "dur": 4.0,
+      "dur": 6.614,
       "ease": "linear",
       "keys": [
         {
@@ -247,7 +247,7 @@
           "look_at": "ship:grayson_ship"
         }
       ],
-      "t": 8.3,
+      "t": 12.556,
       "follow": "grayson_ship"
     },
     {
@@ -255,19 +255,19 @@
       "speaker": "Grayson Burrows",
       "text": "A full fleet for one cargo hold? I'm flattered. Tayla said the route was clear.",
       "side": "left",
-      "dur": 4.0,
+      "dur": 6.614,
       "portrait": "portraits/grayson/studio_req_1785636336_01.png",
       "voice_file": "audio/studio_req_1785636336_grayson_01.mp3",
-      "t": 8.3
+      "t": 12.556
     },
     {
       "cmd": "sfx",
       "file": "../sfx/lock_seeking.wav",
-      "t": 12.15
+      "t": 19.17
     },
     {
       "cmd": "camera_path",
-      "dur": 4.3,
+      "dur": 7.262,
       "ease": "linear",
       "keys": [
         {
@@ -279,7 +279,7 @@
           "look_at": "ship:paradigm_lead"
         }
       ],
-      "t": 12.4,
+      "t": 19.42,
       "follow": "paradigm_lead"
     },
     {
@@ -287,14 +287,14 @@
       "speaker": "Commander Elian Rourke",
       "text": "Your hold contains twenty-five units of Brilliance. Bribery has a shelf life, Mr. Burrows.",
       "side": "right",
-      "dur": 4.3,
+      "dur": 7.262,
       "portrait": "portraits/rourke/studio_req_1785636336_02.png",
       "voice_file": "audio/studio_req_1785636336_rourke_02.mp3",
-      "t": 12.4
+      "t": 19.42
     },
     {
       "cmd": "camera_path",
-      "dur": 5.0,
+      "dur": 5.678,
       "ease": "linear",
       "keys": [
         {
@@ -306,7 +306,7 @@
           "look_at": "ship:grayson_ship"
         }
       ],
-      "t": 16.8,
+      "t": 26.932,
       "follow": "grayson_ship"
     },
     {
@@ -314,14 +314,14 @@
       "speaker": "Grayson Burrows",
       "text": "Don't you guys have Kilrathi to shoot at? No wonder we're losing the war...",
       "side": "left",
-      "dur": 5.0,
+      "dur": 5.678,
       "portrait": "portraits/grayson/studio_req_1785636336_02.png",
       "voice_file": "audio/studio_req_1785636336_grayson_02.mp3",
-      "t": 16.8
+      "t": 26.932
     },
     {
       "cmd": "camera_path",
-      "dur": 4.1,
+      "dur": 6.578,
       "ease": "linear",
       "keys": [
         {
@@ -333,7 +333,7 @@
           "look_at": "ship:paradigm_lead"
         }
       ],
-      "t": 21.9,
+      "t": 32.86,
       "follow": "paradigm_lead"
     },
     {
@@ -341,14 +341,14 @@
       "speaker": "Commander Elian Rourke",
       "text": "We do. They complain less. All units, mark the smuggler hostile and open fire.",
       "side": "right",
-      "dur": 4.1,
+      "dur": 6.578,
       "portrait": "portraits/rourke/studio_req_1785636336_03.png",
       "voice_file": "audio/studio_req_1785636336_rourke_03.mp3",
-      "t": 21.9
+      "t": 32.86
     },
     {
       "cmd": "camera_path",
-      "dur": 3.5,
+      "dur": 4.382,
       "ease": "linear",
       "keys": [
         {
@@ -360,7 +360,7 @@
           "look_at": "ship:grayson_ship"
         }
       ],
-      "t": 26.1,
+      "t": 39.688,
       "follow": "grayson_ship"
     },
     {
@@ -368,10 +368,10 @@
       "speaker": "Grayson Burrows",
       "text": "There it is—the famous Confed sense of proportion.",
       "side": "left",
-      "dur": 3.5,
+      "dur": 4.382,
       "portrait": "portraits/grayson/studio_req_1785636336_03.png",
       "voice_file": "audio/studio_req_1785636336_grayson_03.mp3",
-      "t": 26.1
+      "t": 39.688
     },
     {
       "cmd": "camera_path",
@@ -387,7 +387,7 @@
           "look_at": "ship:grayson_ship"
         }
       ],
-      "t": 29.7,
+      "t": 44.32,
       "follow": "paradigm_lead,paradigm_port,paradigm_starboard,broadsword_port,broadsword_center,broadsword_starboard,stiletto_far_port,stiletto_port,stiletto_center,stiletto_starboard,stiletto_far_starboard"
     },
     {
@@ -398,7 +398,7 @@
         33333.0,
         69167.0
       ],
-      "t": 29.9
+      "t": 44.52
     },
     {
       "cmd": "sfx",
@@ -408,7 +408,7 @@
         32333.0,
         70667.0
       ],
-      "t": 30.25
+      "t": 44.87
     },
     {
       "cmd": "sfx",
@@ -418,7 +418,7 @@
         33333.0,
         69167.0
       ],
-      "t": 30.6
+      "t": 45.22
     },
     {
       "cmd": "sfx",
@@ -428,19 +428,19 @@
         33333.0,
         64667.0
       ],
-      "t": 31.0
+      "t": 45.62
     },
     {
       "cmd": "fade_out",
       "dur": 1.2,
-      "t": 32.8
+      "t": 47.42
     },
     {
       "cmd": "end",
       "actions": [
         "set_flag:studio_req_1785636336_seen"
       ],
-      "t": 34.0
+      "t": 48.62
     }
   ]
 }
