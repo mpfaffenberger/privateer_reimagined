@@ -33,11 +33,23 @@ constexpr const char* kPayload = "COCKPIT_GUN_SLOT";
 Layout g_layout;
 std::string g_loaded_ship;
 TextureSlot g_ship_texture;
+sg_sampler g_ship_sampler{};
 
 void release_texture() {
     if (g_ship_texture.view.id) sg_destroy_view(g_ship_texture.view);
     if (g_ship_texture.image.id) sg_destroy_image(g_ship_texture.image);
     g_ship_texture = {};
+}
+
+void ensure_sampler() {
+    if (g_ship_sampler.id) return;
+    sg_sampler_desc desc{};
+    desc.min_filter = SG_FILTER_LINEAR;
+    desc.mag_filter = SG_FILTER_LINEAR;
+    desc.wrap_u = SG_WRAP_CLAMP_TO_EDGE;
+    desc.wrap_v = SG_WRAP_CLAMP_TO_EDGE;
+    desc.label = "cockpit-armaments-linear-sampler";
+    g_ship_sampler = sg_make_sampler(&desc);
 }
 
 void ensure_layout(const PlayerState& player, const Ship& ship) {
@@ -75,9 +87,12 @@ ImVec2 zone_center(const Zone& zone, ImVec2 image_lo, float side) {
 void draw_background(ImDrawList* dl, ImVec2 lo, float side) {
     const ImVec2 hi(lo.x + side, lo.y + side);
     dl->AddRectFilled(lo, hi, IM_COL32(2, 7, 12, 235), 3.0f);
-    if (g_ship_texture.valid) {
+    if (g_ship_texture.valid && g_ship_sampler.id) {
         // Match the equipment bay's authored orientation: nose points upward.
-        dl->AddImageQuad(simgui_imtextureid(g_ship_texture.view),
+        // The dedicated linear sampler preserves the PNG's anti-aliased alpha
+        // coverage while shrinking 512px art into this ~250px monitor.
+        dl->AddImageQuad(simgui_imtextureid_with_sampler(
+                g_ship_texture.view, g_ship_sampler),
             lo, ImVec2(hi.x, lo.y), hi, ImVec2(lo.x, hi.y),
             ImVec2(1, 1), ImVec2(0, 1), ImVec2(0, 0), ImVec2(1, 0));
     }
@@ -151,6 +166,7 @@ void draw_hardpoint(PlayerState& player, Ship& ship, const Zone& zone,
 } // namespace
 
 void draw(PlayerState& player, Ship& live_ship) {
+    ensure_sampler();
     ensure_layout(player, live_ship);
     const auto& unique = firing::gun_unique_types_cache(live_ship.mounts);
     ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.30f, 1.0f), "ARMAMENTS");
@@ -170,6 +186,14 @@ void draw(PlayerState& player, Ship& live_ship) {
 
     ImGui::SetCursorScreenPos(cursor);
     ImGui::Dummy(ImVec2(avail.x, side));
+}
+
+void shutdown() {
+    release_texture();
+    if (g_ship_sampler.id) sg_destroy_sampler(g_ship_sampler);
+    g_ship_sampler = {};
+    g_loaded_ship.clear();
+    g_layout = {};
 }
 
 } // namespace cockpit_armaments

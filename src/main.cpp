@@ -45,6 +45,7 @@
 #include "music_labeler.h"
 #include "speech_labeler.h"
 #include "camera.h"
+#include "cockpit_armaments.h"
 #include "cockpit_hud.h"
 #include "comms_menu.h"
 #include "comm.h"
@@ -7029,6 +7030,7 @@ void cleanup_cb() {
     sdtx_shutdown();
     g.post.destroy();
     g.rt.destroy();
+    cockpit_armaments::shutdown();
     debug_panel::shutdown();
     atlas_grid_viewer::shutdown();
     sprite_generation_tool::shutdown();
