@@ -64,32 +64,24 @@ def main() -> None:
     c.outcome(
         player_at_nav="44-P-1M Jump",
         spawns=[
+            {"class": "paradigm", "faction": "confed", "count": 1, "hostile": True},
             {"class": "broadsword", "faction": "confed", "count": 3, "hostile": True},
-            {"class": "stiletto", "faction": "confed", "count": 5, "hostile": True},
-            {"class": "paradigm", "faction": "confed", "count": 3, "hostile": True},
         ],
     )
 
     actors = [
         ("grayson_ship", "$player", [-66667, 33333, 64667]),
-        ("paradigm_lead", "paradigm", [-66667, 33933, 71667]),
-        ("paradigm_port", "paradigm", [-70667, 34333, 72667]),
-        ("paradigm_starboard", "paradigm", [-62667, 34333, 72667]),
-        ("broadsword_port", "broadsword", [-70667, 32633, 70667]),
-        ("broadsword_center", "broadsword", [-66667, 32333, 70667]),
-        ("broadsword_starboard", "broadsword", [-62667, 32633, 70667]),
-        ("stiletto_far_port", "stiletto", [-71667, 33333, 69167]),
-        ("stiletto_port", "stiletto", [-69167, 33733, 69667]),
-        ("stiletto_center", "stiletto", [-66667, 32933, 69167]),
-        ("stiletto_starboard", "stiletto", [-64167, 33733, 69667]),
-        ("stiletto_far_starboard", "stiletto", [-61667, 33333, 69167]),
+        ("paradigm_lead", "paradigm", [-66667, 37000, 77000]),
+        ("broadsword_port", "broadsword", [-80667, 31000, 72000]),
+        ("broadsword_center", "broadsword", [-66667, 25000, 71500]),
+        ("broadsword_starboard", "broadsword", [-52667, 31000, 72000]),
     ]
     for actor, cls, pos in actors:
         c.at(0.0).spawn(actor, cls=cls, faction="civilian" if cls == "$player" else "confed", pos=pos)
 
     c.at(0.0).fade_in(1.2).music("../music/original/combat_06.wav").sfx("../sfx/engine_hum.wav")
     fleet = ",".join(actor for actor, cls, _ in actors if cls != "$player")
-    c.at(0.0).camera_path([[0, 5200, -10000]], look_at="ship:paradigm_lead",
+    c.at(0.0).camera_path([[0, 13000, -30000]], look_at="ship:paradigm_lead",
                           ease="linear", dur=4.0)
     c._timeline[-1]["follow"] = fleet
 
@@ -147,9 +139,9 @@ def main() -> None:
     c.at(attack_t).camera_path([[0, 4200, -8500]], look_at="ship:grayson_ship",
                                ease="linear", dur=4.3)
     c._timeline[-1]["follow"] = fleet
-    c.at(attack_t + 0.2).sfx("../sfx/laser_fire.wav", pos=[-71667, 33333, 69167])
-    c.at(attack_t + 0.55).sfx("../sfx/laser_fire.wav", pos=[-66667, 32333, 70667])
-    c.at(attack_t + 0.9).sfx("../sfx/laser_fire.wav", pos=[-61667, 33333, 69167])
+    c.at(attack_t + 0.2).sfx("../sfx/laser_fire.wav", pos=[-80667, 31000, 72000])
+    c.at(attack_t + 0.55).sfx("../sfx/laser_fire.wav", pos=[-66667, 25000, 71500])
+    c.at(attack_t + 0.9).sfx("../sfx/laser_fire.wav", pos=[-52667, 31000, 72000])
     c.at(attack_t + 1.3).sfx("../sfx/impact_shield.wav", pos=[-66667, 33333, 64667])
     c.at(attack_t + 3.1).fade_out(1.2)
     c.at(attack_t + 4.3).end(actions=[f"set_flag:{CID}_seen"])
