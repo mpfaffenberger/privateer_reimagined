@@ -1,13 +1,20 @@
 # Agent Workflow
 
-## Issues and commits
+## Required issue and pull-request workflow
 
-- File a GitHub issue for every change before committing it.
-- Keep each issue scoped to one coherent change.
-- Commit the completed change with its issue number in the commit message.
-- Close the issue immediately after the commit is created.
-- Do not leave completed issues open for possible bugs or follow-up work.
-- File a new issue for every bug, regression, or follow-up discovered later.
+Every single repository change must follow this lifecycle, in order:
+
+1. File a scoped GitHub issue before modifying repository files.
+2. Implement and test the change on a dedicated branch.
+3. Commit the implementation with the issue number in the commit message.
+4. Open a pull request that links to the issue without closing it.
+5. Merge the pull request.
+6. Close the issue only after confirming that the pull request was merged.
+
+Keep each issue and pull request scoped to one coherent change. Do not commit
+directly to the default branch, close an issue before its pull request is merged,
+or leave a merged change's issue open. File a new issue for every bug,
+regression, or follow-up discovered later.
 
 ## Running the game
 
