@@ -108,7 +108,7 @@ stable player-facing CLI.
 | `T` | Cycle targets (nearest → farthest, ≤15 km) |
 | `Z` | Tractor loose loot into the hold |
 | `I` | In-flight inventory |
-| `P` | Pause |
+| `P` | Pause/unpause (shows centred instructions) |
 
 ### Navigation
 

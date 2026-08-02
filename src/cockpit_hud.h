@@ -130,6 +130,10 @@ struct WeaponsHudState {
 };
 void build_weapons_status(const WeaponsHudState& w);
 
+// Prominent centred Flight-pause overlay. The caller owns visibility state;
+// this function only draws the dimmer, frame, and instructions.
+void draw_pause_overlay();
+
 // Top-centre FLIGHT panel — speed / cruise mode / sun distance / position,
 // plus optional autopilot status lines. Same amber-border boxed styling as
 // the STATUS / TARGET panels in the screen corners. Replaces the old

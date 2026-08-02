@@ -100,6 +100,7 @@ HMM_Mat4 model_matrix(HMM_Vec3 pos, HMM_Vec3 euler_deg, float s);
 #include "projectile.h"
 #include "missile.h"
 #include "launcher_modes.h"
+#include "pause_overlay.h"
 #include "sfx.h"
 #include "music.h"
 #include "ship.h"
@@ -6567,6 +6568,14 @@ void frame_cb() {
             cinematic::draw_overlay(fb_w / cin_dpi, fb_h / cin_dpi);
         }
 
+        // Flight pause instructions belong to the Flight foreground layer,
+        // never the title-only branch. Keep the state rule pure/testable.
+        if (pause_overlay::visible(g.paused,
+                                   g.game.mode == GameMode::Flight,
+                                   g.show_title, cine_active)) {
+            cockpit_hud::draw_pause_overlay();
+        }
+
         // Alpha welcome/briefing overlay — drawn last so it sits on top of
         // the whole HUD. The sim is frozen (dt=0) while this is up.
         // Alpha welcome/briefing overlay — REMOVED in np-3dp. The title
@@ -6594,23 +6603,6 @@ void frame_cb() {
                                   ImVec2(vpf->WorkPos.x + vpf->WorkSize.x,
                                          vpf->WorkPos.y + vpf->WorkSize.y),
                                   wash);
-            }
-            // Flight pause banner (np-pau.28). Drawn on the foreground
-            // list so it sits on top of the HUD even mid-fight. Amber so
-            // it reads as a UI element, not an in-fiction warning.
-            if (g.paused) {
-                const ImGuiViewport* vpf = ImGui::GetMainViewport();
-                ImDrawList* fg = ImGui::GetForegroundDrawList();
-                const ImVec2 sz(280.0f, 44.0f);
-                const ImVec2 pos(vpf->WorkPos.x + (vpf->WorkSize.x - sz.x) * 0.5f,
-                                 vpf->WorkPos.y + 24.0f);
-                fg->AddRectFilled(pos, ImVec2(pos.x + sz.x, pos.y + sz.y),
-                                  IM_COL32(20, 16, 8, 220), 6.0f);
-                fg->AddRect(pos, ImVec2(pos.x + sz.x, pos.y + sz.y),
-                            IM_COL32(255, 200, 60, 255), 6.0f, 0, 2.0f);
-                fg->AddText(ImVec2(pos.x + 16.0f, pos.y + 12.0f),
-                            IM_COL32(255, 220, 120, 255),
-                            "PAUSED  -  press P to resume");
             }
             if (a != title_screen::Action::None) {
                 if (a == title_screen::Action::NewGame) {
