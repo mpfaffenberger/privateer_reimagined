@@ -195,7 +195,8 @@
           "m05_active"
         ],
         "forbids_flags": [
-          "killed:riordian"
+          "killed:riordian",
+          "studio_req_1785709304_seen"
         ],
         "cooldown_s": 300
       },

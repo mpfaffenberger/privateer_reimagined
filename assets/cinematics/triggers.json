@@ -121,6 +121,31 @@
           "studio_req_1785636336_seen"
         ]
       }
+    },
+    {
+      "cinematic": "studio_req_1785709304",
+      "once": true,
+      "cooldown_s": 0,
+      "when": {
+        "system": "pentonville",
+        "cargo": [
+          {
+            "commodity": "brilliance",
+            "min_units": 20
+          }
+        ],
+        "near_nav": {
+          "nav": "119CE Jump",
+          "radius_m": 20000
+        },
+        "requires_flags": [
+          "m05_active"
+        ],
+        "forbids_flags": [
+          "studio_req_1785709304_seen",
+          "killed:riordian"
+        ]
+      }
     }
   ]
 }

@@ -1,0 +1,276 @@
+{
+  "id": "studio_req_1785709304",
+  "letterbox": true,
+  "skippable": true,
+  "location": {
+    "system": "pentonville",
+    "nav": "119CE Jump"
+  },
+  "outcome": {
+    "player_at_nav": "119CE Jump",
+    "spawns": [
+      {
+        "class": "centurion",
+        "faction": "pirate",
+        "count": 1,
+        "hostile": true,
+        "cleared_flag": "killed:riordian"
+      },
+      {
+        "class": "talon",
+        "faction": "pirate",
+        "count": 3,
+        "hostile": true
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "cmd": "spawn",
+      "actor": "grayson_ship",
+      "class": "$player",
+      "faction": "civilian",
+      "pos": [
+        133333.0,
+        -61667.0,
+        81333.0
+      ],
+      "t": 0.0
+    },
+    {
+      "cmd": "spawn",
+      "actor": "riordian_ship",
+      "class": "centurion",
+      "faction": "pirate",
+      "pos": [
+        133333.0,
+        -61200.0,
+        84500.0
+      ],
+      "t": 0.0
+    },
+    {
+      "cmd": "spawn",
+      "actor": "talon_port",
+      "class": "talon",
+      "faction": "pirate",
+      "pos": [
+        131000.0,
+        -62500.0,
+        84000.0
+      ],
+      "t": 0.0
+    },
+    {
+      "cmd": "spawn",
+      "actor": "talon_high",
+      "class": "talon",
+      "faction": "pirate",
+      "pos": [
+        133333.0,
+        -59200.0,
+        84200.0
+      ],
+      "t": 0.0
+    },
+    {
+      "cmd": "spawn",
+      "actor": "talon_starboard",
+      "class": "talon",
+      "faction": "pirate",
+      "pos": [
+        135666.0,
+        -62500.0,
+        84000.0
+      ],
+      "t": 0.0
+    },
+    {
+      "cmd": "fade_in",
+      "dur": 1.2,
+      "t": 0.0
+    },
+    {
+      "cmd": "music",
+      "file": "../music/original/combat_05.wav",
+      "t": 0.0
+    },
+    {
+      "cmd": "sfx",
+      "file": "../sfx/engine_hum.wav",
+      "t": 0.0
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 3.8,
+      "ease": "linear",
+      "keys": [
+        {
+          "pos": [
+            0.0,
+            1100.0,
+            -3600.0
+          ],
+          "look_at": "ship:riordian_ship"
+        }
+      ],
+      "t": 0.0,
+      "follow": "riordian_ship,talon_port,talon_high,talon_starboard"
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 12.554,
+      "ease": "linear",
+      "keys": [
+        {
+          "pos": [
+            270.0,
+            105.0,
+            -115.0
+          ],
+          "look_at": "ship:riordian_ship"
+        }
+      ],
+      "t": 3.8,
+      "follow": "riordian_ship"
+    },
+    {
+      "cmd": "line",
+      "speaker": "William Riordian",
+      "text": "Burrows. I flew Tayla's routes for three years. Then you stole them out from under me. There ain't room for two of us in this town.",
+      "side": "right",
+      "dur": 12.554,
+      "portrait": "portraits/riordian/studio_req_1785709304_01.png",
+      "voice_file": "audio/studio_req_1785709304_riordian_01.mp3",
+      "t": 3.8
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 7.766,
+      "ease": "linear",
+      "keys": [
+        {
+          "pos": [
+            -260.0,
+            90.0,
+            -130.0
+          ],
+          "look_at": "ship:grayson_ship"
+        }
+      ],
+      "t": 16.604,
+      "follow": "grayson_ship"
+    },
+    {
+      "cmd": "line",
+      "speaker": "Grayson Burrows",
+      "text": "Tayla never said the routes came with a jilted ex. Should I return the cargo, or just your wounded pride?",
+      "side": "left",
+      "dur": 7.766,
+      "portrait": "portraits/grayson/studio_req_1785709304_01.png",
+      "voice_file": "audio/studio_req_1785709304_grayson_01.mp3",
+      "t": 16.604
+    },
+    {
+      "cmd": "sfx",
+      "file": "../sfx/lock_seeking.wav",
+      "t": 24.37
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 3.734,
+      "ease": "linear",
+      "keys": [
+        {
+          "pos": [
+            -275.0,
+            95.0,
+            120.0
+          ],
+          "look_at": "ship:riordian_ship"
+        }
+      ],
+      "t": 24.62,
+      "follow": "riordian_ship"
+    },
+    {
+      "cmd": "line",
+      "speaker": "William Riordian",
+      "text": "Keep laughing. Boys, clear the lane.",
+      "side": "right",
+      "dur": 3.734,
+      "portrait": "portraits/riordian/studio_req_1785709304_02.png",
+      "voice_file": "audio/studio_req_1785709304_riordian_02.mp3",
+      "t": 24.62
+    },
+    {
+      "cmd": "camera_path",
+      "dur": 4.0,
+      "ease": "linear",
+      "keys": [
+        {
+          "pos": [
+            0.0,
+            1200.0,
+            -3800.0
+          ],
+          "look_at": "ship:grayson_ship"
+        }
+      ],
+      "t": 28.604,
+      "follow": "riordian_ship,talon_port,talon_high,talon_starboard"
+    },
+    {
+      "cmd": "sfx",
+      "file": "../sfx/laser_fire.wav",
+      "pos": [
+        131000.0,
+        -62500.0,
+        84000.0
+      ],
+      "t": 28.804
+    },
+    {
+      "cmd": "sfx",
+      "file": "../sfx/laser_fire.wav",
+      "pos": [
+        133333.0,
+        -59200.0,
+        84200.0
+      ],
+      "t": 29.104
+    },
+    {
+      "cmd": "sfx",
+      "file": "../sfx/laser_fire.wav",
+      "pos": [
+        135666.0,
+        -62500.0,
+        84000.0
+      ],
+      "t": 29.404
+    },
+    {
+      "cmd": "sfx",
+      "file": "../sfx/impact_shield.wav",
+      "pos": [
+        133333.0,
+        -61667.0,
+        81333.0
+      ],
+      "t": 29.754
+    },
+    {
+      "cmd": "fade_out",
+      "dur": 1.2,
+      "t": 31.404
+    },
+    {
+      "cmd": "end",
+      "actions": [
+        "set_flag:studio_req_1785709304_seen"
+      ],
+      "t": 32.604
+    }
+  ]
+}
