@@ -191,3 +191,7 @@ tools/cinematics/.cache/
 # Voice-synthesis content-hash cache (regenerable; the SHIPPED clips live in
 # assets/cinematics/audio/ -- this is just the dedup blob store behind them)
 tools/cinematics/.cache_voice/
+
+# Cinematic Studio bridge liveness heartbeat. Rewritten every polling loop;
+# runtime state belongs in the worktree, not in version history.
+assets/cinematics/studio/bridge.alive
