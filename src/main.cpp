@@ -143,6 +143,7 @@ HMM_Mat4 model_matrix(HMM_Vec3 pos, HMM_Vec3 euler_deg, float s);
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -1125,16 +1126,10 @@ void build_system_scene(bool first_time) {
     // an undelivered campaign mission and resurrect it on load (#294).
     docking::set_commit_handler([](PlayerState& player,
                                    const std::string& base_id) {
-        const bool delivering_m01 = plot::has_flag(player, "m01_active");
         missions::fail_incomplete_on_dock(player, base_id);
-        campaign::on_dock(player, base_id);
-        if (delivering_m01 && plot::has_flag(player, "m01_delivered")) {
-            g.landing_notice_title = "DELIVERY COMPLETE";
-            g.landing_notice_body =
-                "Liverpool has received all 40 units of iron. Sandoval promised "
-                "payment back on New Detroit, so that is your next destination.\n\n"
-                "There is no need to rush the return flight: the Mission Computer "
-                "and local guilds may have additional work along the way.";
+        if (auto notice = campaign::on_dock(player, base_id)) {
+            g.landing_notice_title = std::move(notice->title);
+            g.landing_notice_body = std::move(notice->body);
             g.landing_notice_pending = true;
         }
     });

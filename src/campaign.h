@@ -69,6 +69,7 @@
 // -----------------------------------------------------------------------------
 
 #include <functional>
+#include <optional>
 #include <string>
 
 struct PlayerState;
@@ -91,10 +92,17 @@ void init();
 // Unwired (headless tools, tests) -> the token logs one line and no-ops.
 void set_cinematic_trigger(std::function<void(const std::string& id)> fn);
 
+struct DockNotice {
+    std::string title;
+    std::string body;
+};
+
 // Dock settle hook: call once per NEW dock commit (main.cpp's
 // fail_incomplete_on_dock site) with the raw nav base id ("liverpool_refinery").
-// Runs every active mission's delivery/failure checks.
-void on_dock(PlayerState& p, const std::string& base_id);
+// Runs every active mission's delivery/failure checks. Returns one guidance
+// notice when this landing completes an outbound objective with a return leg;
+// consuming it is UI policy owned by main.cpp.
+std::optional<DockNotice> on_dock(PlayerState& p, const std::string& base_id);
 
 // Palan blockade predicate (#126/#128): true while the campaign has
 // reached the Murphy arc (masterson_done) and the M16 waves haven't

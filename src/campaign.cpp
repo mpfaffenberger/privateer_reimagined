@@ -15,6 +15,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <functional>
+#include <utility>
 
 namespace campaign {
 namespace {
@@ -51,6 +52,8 @@ struct CargoMission {
     int64_t     payout;       // credits on delivery (0 = fixer settles later)
     const char* accept_line;  // comm feed on accept (cargo rows only)
     const char* deliver_line; // comm feed on delivery
+    const char* return_destination; // next base after outbound completion
+    const char* return_reason;      // why the player must make the return leg
     const char* extra_accept_flag;   // optional flag set on accept ("" = none)
     const char* extra_deliver_flag;  // optional flag set on delivery ("" = none)
     bool        stow_in_compartment; // M05: hide the goods from scans
@@ -61,12 +64,14 @@ constexpr CargoMission k_cargo_missions[] = {
     { "m01", "iron", 40, "", "liverpool", "newcastle", 0,
       "40 units of iron loaded. Destination: Liverpool, Newcastle system.",
       "Iron delivered. Sandoval promised payment back on New Detroit.",
+      "New Detroit", "Sandoval promised to settle the job there.",
       "", "", false },
     // M02 Tayla 1 (#114): plastics to Oakham, 10k on landing. Accept also
     // marks the player as Tayla's (tayla_employed -> pirate neutrality).
     { "m02", "plastics", 30, "", "oakham", "pentonville", 10000,
       "30 units of plastics loaded. Destination: Oakham, Pentonville system.",
       "Plastics delivered. 10,000 credits from Tayla's man on Oakham.",
+      "", "",
       // No return leg / no debrief for M02: the chain milestone lands
       // WITH the payout (issue #114: "tayla_1_done, Tayla relocates").
       "tayla_employed", "tayla_1_done", false },
@@ -75,32 +80,35 @@ constexpr CargoMission k_cargo_missions[] = {
     { "m03", "brilliance", 15, "", "hector", "troy", 15000,
       "15 units of Brilliance aboard. Destination: Hector, Troy system. Fly casual.",
       "Brilliance delivered at Hector. 15,000 credits. Now get back to Oakham.",
+      "Oakham, Pentonville system", "Return to Tayla for your debrief.",
       "", "", false },
     // M04 Tayla 3 (#116): Brilliance to New Constantinople. Confed pickets
     // are scripted scenarios gated on m04_active.
     { "m04", "brilliance", 25, "", "new_constantinople", "new_constantinople", 20000,
       "25 units of Brilliance aboard. Destination: New Constantinople. Tayla swears the patrols are bribed.",
       "Brilliance delivered. 20,000 credits. Tayla wants a word back at Oakham.",
+      "Oakham, Pentonville system", "Tayla is waiting to debrief you.",
       "", "", false },
     // M05 Tayla 4 (#117): final run, 20 units - exactly the secret
     // compartment's capacity. Riordian is scripted_encounters.json's job.
     { "m05", "brilliance", 20, "", "new_constantinople", "new_constantinople", 10000,
       "20 units of Brilliance stowed. Destination: New Constantinople. Watch your back.",
       "Final delivery made. 10,000 credits. Tayla is waiting at Oakham.",
+      "Oakham, Pentonville system", "Return to Tayla to close out the run.",
       "", "", true },
     // M07 Lynch 2 (#119): weapons to Siva (Rikel). Kroiz's ambush + the
     // conditional re-ambush near Siva live in scripted_encounters.json.
     { "m07", "weaponry", 20, "", "siva", "rikel", 15000,
       "20 units of weaponry loaded. Destination: Siva, Rikel system. Kroiz's gang objects.",
       "Weapons delivered at Siva. 15,000 credits. Lynch will hear of it.",
-      "", "lynch_2_done", false },
+      "", "", "", "lynch_2_done", false },
     // M08 Lynch 3 (#120): the cousin. Passenger plot item (no hold space,
     // can't be lost); Confed pursuit in Castor is scenario data. Completes
     // ON LANDING at Romulus.
     { "m08", "", 0, "lynch_cousin", "romulus", "castor", 30000,
       "",
       "Lynch's cousin slips away into Romulus. 30,000 credits, as promised.",
-      "", "lynch_3_done", false },
+      "", "", "", "lynch_3_done", false },
     // M09 Lynch 4 (#121): the Miggs betrayal. No payload, no payment —
     // the 'pickup at Liverpool' is a setup (Miggs waits in Newcastle,
     // scenario data). The mission RESOLVES by landing at Oxford; the
@@ -109,7 +117,7 @@ constexpr CargoMission k_cargo_missions[] = {
     { "m09", "", 0, "", "oxford", "oxford", 0,
       "",
       "No Smythe. No payment. But the Oxford library is real - and someone here knows about your artifact.",
-      "", "lynch_done", false },
+      "", "", "", "lynch_done", false },
     // M16 Murphy 3 (#128): break the blockade, land on Palan. The wingmen
     // and the four Demon waves are scenario data; the docking gate
     // (palan_blockaded) refuses the pad until the last wave dies and
@@ -117,7 +125,7 @@ constexpr CargoMission k_cargo_missions[] = {
     { "m16", "", 0, "", "palan", "palan", 15000,
       "",
       "Palan is free. Murphy's people transfer 15,000 credits - and a Dr. Monkhouse has been asking about you in the bar.",
-      "", "murphy_done", false },
+      "", "", "", "murphy_done", false },
     // M17 Monkhouse (#129): the doctor rides to Basra. The Kilrathi
     // ambush sits on the direct-route nav only (scenario data) - flying
     // wide dodges it, vanilla-accurate. Chain milestone (monkhouse_done +
@@ -125,7 +133,7 @@ constexpr CargoMission k_cargo_missions[] = {
     { "m17", "", 0, "dr_monkhouse", "basra", "palan", 5000,
       "",
       "Monkhouse bounds down the ramp, artifact piece clutched tight. 5,000 credits for the lift.",
-      "", "", false },
+      "", "", "", "", false },
 };
 
 std::string flag_active(const CargoMission& m)    { return std::string(m.token) + "_active"; }
@@ -191,9 +199,9 @@ bool cargo_accept(const CargoMission& m, PlayerState& p) {
 // for cargo rows, failure ANYWHERE the consignment turns up missing
 // (sold/jettisoned) - the active flag clears and the fixer re-offers
 // (vanilla retry policy). Passenger / no-payload rows can't fail this way.
-void cargo_on_dock(const CargoMission& m, PlayerState& p,
-                   const std::string& base_id) {
-    if (!plot::has_flag(p, flag_active(m))) return;
+std::optional<DockNotice> cargo_on_dock(const CargoMission& m, PlayerState& p,
+                                         const std::string& base_id) {
+    if (!plot::has_flag(p, flag_active(m))) return std::nullopt;
     const bool has_cargo = m.commodity[0] != '\0';
 
     if (base_is(base_id, m.dest_base)) {
@@ -217,10 +225,18 @@ void cargo_on_dock(const CargoMission& m, PlayerState& p,
                         m.token, base_id.c_str());
         }
         drop_active_mission(m, p);
-        return;
+        if (ok && m.return_destination[0]) {
+            DockNotice notice;
+            notice.title = "OBJECTIVE COMPLETE";
+            notice.body = "The outbound objective is complete. Your next objective "
+                          "is to return to " + std::string(m.return_destination) +
+                          ".\n\n" + m.return_reason;
+            return notice;
+        }
+        return std::nullopt;
     }
 
-    if (!has_cargo) return;   // passengers / bare objectives can't be lost
+    if (!has_cargo) return std::nullopt; // passengers / bare objectives can't be lost
 
     // Off-destination dock: count what's aboard (hidden stacks included -
     // remove_cargo doesn't care, we only need presence here). Short on
@@ -235,6 +251,7 @@ void cargo_on_dock(const CargoMission& m, PlayerState& p,
                     m.token, base_id.c_str());
         drop_active_mission(m, p);
     }
+    return std::nullopt;
 }
 
 // ---- escort missions (M10/M12/M13, #122/#124/#125 + infra #140) -------------
@@ -513,14 +530,18 @@ bool palan_blockaded(const PlayerState& p) {
            !plot::has_flag(p, "palan_blockade_lifted");
 }
 
-void on_dock(PlayerState& p, const std::string& base_id) {
-    for (const CargoMission& m : k_cargo_missions)
-        cargo_on_dock(m, p, base_id);
+std::optional<DockNotice> on_dock(PlayerState& p, const std::string& base_id) {
+    std::optional<DockNotice> notice;
+    for (const CargoMission& m : k_cargo_missions) {
+        if (auto completed = cargo_on_dock(m, p, base_id))
+            notice = std::move(completed);
+    }
     for (const EscortMission& m : k_escort_missions)
         escort_on_dock(m, p, base_id);
     m11_on_dock(p, base_id);
     m21_on_dock(p, base_id);
     m22_on_dock(p, base_id);
+    return notice;
 }
 
 void tick(const PlayerState& p, const std::string& system_id) {

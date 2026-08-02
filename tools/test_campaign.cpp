@@ -131,7 +131,11 @@ int main() {
           "docking elsewhere changes nothing");
 
     // ---- 4. delivery at Liverpool (suffixed nav id) ------------------------
-    campaign::on_dock(p, "liverpool_refinery");
+    const auto m01_notice = campaign::on_dock(p, "liverpool_refinery");
+    check(m01_notice && m01_notice->body.find("New Detroit") != std::string::npos,
+          "M01 delivery prompts return to New Detroit");
+    check(!campaign::on_dock(p, "liverpool_refinery"),
+          "M01 return guidance fires exactly once");
     check(!plot::has_flag(p, "m01_active"),   "delivery clears m01_active");
     check(plot::has_flag(p, "m01_delivered"), "delivery sets m01_delivered");
     check(cargo_units(p, "iron") == 0,        "delivery removes the iron");
@@ -201,7 +205,8 @@ int main() {
         p.rep.rep[(int)Faction::Pirate] = 0;
     }
 
-    campaign::on_dock(p, "oakham_pirate");
+    const auto m02_notice = campaign::on_dock(p, "oakham_pirate");
+    check(!m02_notice, "M02 has no return leg and shows no guidance modal");
     check(!plot::has_flag(p, "m02_active"),     "M02 delivery clears active");
     check(plot::has_flag(p, "m02_delivered"),   "M02 delivered flag");
     check(cargo_units(p, "plastics") == 0,      "M02 plastics removed");
@@ -215,7 +220,10 @@ int main() {
     fixers::accept(*fixers::find("tayla_m03_offer"), p);
     check(cargo_units(p, "brilliance") == 15,   "M03: 15 brilliance aboard");
     check(player::carrying_contraband(p),       "M03: open brilliance IS scannable");
-    campaign::on_dock(p, "hector");
+    const auto m03_notice = campaign::on_dock(p, "hector");
+    check(m03_notice && m03_notice->body.find("Oakham") != std::string::npos &&
+              m03_notice->body.find("Pentonville") != std::string::npos,
+          "M03 delivery prompts return to Oakham in Pentonville");
     check(plot::has_flag(p, "m03_delivered") &&
           p.credits == credits_before + 25000,  "M03 pays 15,000 at Hector");
     check(fixer_here("oakham_pirate", p, "tayla_m03_debrief"),
@@ -242,7 +250,9 @@ int main() {
           "M04 offered after tayla_2_done");
     fixers::accept(*fixers::find("tayla_m04_offer"), p);
     check(cargo_units(p, "brilliance") == 25,   "M04: 25 brilliance aboard");
-    campaign::on_dock(p, "new_constantinople");
+    const auto m04_notice = campaign::on_dock(p, "new_constantinople");
+    check(m04_notice && m04_notice->body.find("Oakham") != std::string::npos,
+          "M04 delivery prompts return to Oakham");
     check(plot::has_flag(p, "m04_delivered") &&
           p.credits == credits_before + 45000,  "M04 pays 20,000");
     fixers::dialogue_done(*fixers::find("tayla_m04_debrief"), p);
@@ -285,7 +295,9 @@ int main() {
           "M05 consignment auto-stowed: scan-clean");
     check(player::compartment_units_used(p) == 20,
           "M05 fills the compartment exactly");
-    campaign::on_dock(p, "new_constantinople");
+    const auto m05_notice = campaign::on_dock(p, "new_constantinople");
+    check(m05_notice && m05_notice->body.find("Oakham") != std::string::npos,
+          "M05 delivery prompts return to Oakham");
     check(plot::has_flag(p, "m05_delivered") &&
           p.credits == credits_before + 55000,  "M05 pays 10,000");
     check(player::compartment_units_used(p) == 0,
