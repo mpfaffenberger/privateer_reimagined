@@ -119,6 +119,16 @@
       "voice_id": "PrivMerchantFem01",
       "reference_image": "assets/cinematics/portraits/kort/_ref.png"
     },
+    "seelig": {
+      "id": "seelig",
+      "display_name": "Captain Seelig",
+      "role": "Captain of the Hooded Hawk, a veteran Talon pilot and former Roman Lynch operative who attacks Grayson after receiving Lynch's dismissal.",
+      "appearance": "Human man in his mid 40s, lean and compact with fair weathered skin, a narrow square face, a strong cleft chin, and a straight nose. Close-cut dark auburn hair recedes into a pronounced widow's peak, with neat short sideburns. Clean-shaven. Cold steel-blue eyes, a shallow notch through the outer right eyebrow, and fine tension lines around a mouth usually held in controlled professional calm.",
+      "personality": "Confident, disciplined, and unnervingly composed; a career operator who treats danger as routine. His polished restraint turns instantly into focused fury when Roman Lynch's betrayal is spoken aloud.",
+      "wardrobe": "Dark forest-green veteran pilot jacket over a fitted charcoal pressure suit, black five-point flight harness with brushed-steel buckles, and a slim gunmetal comm boom at the left cheek. The jacket is expensive but worn at the cuffs, with a small stylized silver hawk clasp at the collar and no readable text.",
+      "voice_id": "PrivFlightV1501",
+      "reference_image": "assets/cinematics/portraits/seelig/_ref.png"
+    },
     "riordian": {
       "id": "riordian",
       "display_name": "William Riordian",

@@ -145,6 +145,26 @@
           "studio_req_1785709304_seen"
         ]
       }
+    },
+    {
+      "cinematic": "studio_req_1785724793",
+      "once": true,
+      "cooldown_s": 0,
+      "when": {
+        "system": "pentonville",
+        "near_nav": {
+          "nav": "119CE Jump",
+          "radius_m": 20000
+        },
+        "requires_flags": [
+          "m06_active"
+        ],
+        "forbids_flags": [
+          "m06_message_delivered",
+          "killed:seelig",
+          "studio_req_1785724793_seen"
+        ]
+      }
     }
   ]
 }
