@@ -3992,6 +3992,7 @@
       "id": "terrell_debrief",
       "name": "Admiral Terrell",
       "base": "perry_naval",
+      "screen": "Office",
       "requires_flags": [
         "m23_active",
         "killed:steltek_drone"
@@ -4051,6 +4052,27 @@
         ""
       ],
       "portrait_pc": "portraits/grayson/_ref.png",
+      "prop": [
+        "props/drone_track_overlay.png",
+        "props/drone_track_overlay.png",
+        "props/drone_track_overlay.png",
+        "props/drone_track_overlay.png",
+        "props/drone_track_overlay.png",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
       "voice": [
         "audio/fixers/terrell_debrief_00.mp3",
         "audio/fixers/terrell_debrief_01.mp3",

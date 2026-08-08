@@ -30,6 +30,7 @@
 #include "plot.h"
 #include "ship_class.h"
 
+#include <algorithm>
 #include <cstdio>
 #include <string>
 #include <vector>
@@ -616,7 +617,22 @@ int main() {
     const int64_t pre_m23 = p.credits;
     check(fixer_here("perry_naval", p, "terrell_debrief"),
           "debrief gates open on the kill-memory flag");
-    fixers::dialogue_done(*fixers::find("terrell_debrief"), p);
+    const auto *terrell_debrief = fixers::find("terrell_debrief");
+    check(terrell_debrief->screen == "Office",
+          "Terrell's debrief remains in the established office");
+    check(terrell_debrief->cast.empty(),
+          "Terrell's debrief preserves the solo office staging");
+    check(terrell_debrief->prop.size() == terrell_debrief->dialogue.size() &&
+          std::all_of(terrell_debrief->prop.begin(),
+                      terrell_debrief->prop.begin() + 5,
+                      [](const std::string &prop) {
+                          return prop == "props/drone_track_overlay.png";
+                      }) &&
+          std::all_of(terrell_debrief->prop.begin() + 5,
+                      terrell_debrief->prop.end(),
+                      [](const std::string &prop) { return prop.empty(); }),
+          "analyst overlay stays on the opening report and off the farewell");
+    fixers::dialogue_done(*terrell_debrief, p);
     check(p.credits == pre_m23 + 30000, "M23 pays 30,000");
     check(plot::has_flag(p, "terrell_done") &&
           plot::has_flag(p, "campaign_complete"),
