@@ -90,6 +90,15 @@
       "wardrobe": "Brown leather jacket over a blue-grey ribbed turtleneck.",
       "reference_image": "_wcnews_refs/cross/Privateer_-_Screenshot_-_Mining_Base_-_Bar_-_Taryn_Cross_CU.png"
     },
+    "goodin": {
+      "id": "goodin",
+      "display_name": "Sandra Goodin",
+      "role": "Confederation Navy attaché to Admiral Terrell; intercepts the player and orders them to Perry after nine arrays track the Steltek drone.",
+      "appearance": "Human woman in her early 40s, fair-skinned with a broad composed face, strong jaw, straight nose, and a firm unsmiling mouth. Copper-red hair is swept tightly back from a high forehead into a neat regulation style. Clear green eyes beneath fine arched brows hold a precise, level, unimpressed gaze. No spectacles, jewellery, hat, or visible scars.",
+      "personality": "Precise, procedural, and coolly authoritative. Goodin wastes no words, treats resistance as an arithmetic error, and delivers dry threats with the weary restraint of an officer already anticipating the paperwork.",
+      "wardrobe": "Immaculate dark navy-blue Confederation officer's tunic with silver shoulder tabs and collar piping over a rust-orange ribbed high-neck undershirt. A small gold winged insignia and compact multicolour service-ribbon rack sit at the left breast. Crisp, understated, and regulation-neat.",
+      "reference_image": "_wcnews_refs/goodin/Goodin_-_Portrait.png"
+    },
     "terrell": {
       "id": "terrell",
       "display_name": "Admiral Terrell",

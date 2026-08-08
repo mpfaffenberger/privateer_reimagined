@@ -3631,7 +3631,23 @@
         "pc",
         ""
       ],
+      "portrait": "portraits/goodin/_ref.png",
       "portrait_pc": "portraits/grayson/_ref.png",
+      "prop": [
+        "",
+        "",
+        "",
+        "",
+        "props/drone_track_overlay.png",
+        "props/drone_track_overlay.png",
+        "props/drone_track_overlay.png",
+        "props/drone_track_overlay.png",
+        "props/drone_track_overlay.png",
+        "",
+        "",
+        "",
+        ""
+      ],
       "accept_dialogue": [
         "Sensible. I'll signal ahead.",
         "Do I get an escort?",
