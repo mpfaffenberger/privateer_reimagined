@@ -3565,6 +3565,21 @@
         ""
       ],
       "portrait_pc": "portraits/grayson/_ref.png",
+      "prop": [
+        "props/steltek_map.png",
+        "props/steltek_map.png",
+        "props/delta_prime_return.png",
+        "props/delta_prime_return.png",
+        "props/delta_prime_return.png",
+        "props/delta_prime_return.png",
+        "props/delta_prime_return.png",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
       "accept_dialogue": [
         "Last one. Then this sector's charted and we can all go home.",
         "You don't sound convinced.",
