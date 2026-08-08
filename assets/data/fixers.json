@@ -3434,6 +3434,19 @@
         ""
       ],
       "portrait_pc": "portraits/grayson/_ref.png",
+      "prop": [
+        "",
+        "props/steltek_map.png",
+        "props/steltek_map.png",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
       "accept_dialogue": [
         "Thank you. I'll flag the Kilrathi signatures to Fleet, for all the good it does.",
         "They won't act on it.",
