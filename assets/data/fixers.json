@@ -2345,6 +2345,27 @@
         ""
       ],
       "portrait_pc": "portraits/grayson/_ref.png",
+      "prop": [
+        "",
+        "",
+        "props/palan_blockade_readout.png",
+        "",
+        "props/palan_blockade_readout.png",
+        "props/palan_blockade_readout.png",
+        "props/palan_blockade_readout.png",
+        "props/palan_blockade_readout.png",
+        "props/palan_blockade_readout.png",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "props/palan_blockade_readout.png",
+        "props/palan_blockade_readout.png",
+        "props/palan_blockade_readout.png",
+        "",
+        ""
+      ],
       "accept_dialogue": [
         "Good. I'll log you with the wing.",
         "There's a wing?",
@@ -2361,6 +2382,15 @@
         "pc",
         "",
         "pc",
+        ""
+      ],
+      "accept_prop": [
+        "",
+        "",
+        "props/palan_casualty_roster.png",
+        "props/palan_casualty_roster.png",
+        "props/palan_casualty_roster.png",
+        "",
         ""
       ],
       "refuse_dialogue": [
