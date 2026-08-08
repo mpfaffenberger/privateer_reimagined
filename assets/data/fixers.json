@@ -2673,6 +2673,7 @@
         "...",
         "Say what you're thinking.",
         "I'm thinking they should stay home.",
+        "With respect, Captain, it's our home.",
         "It's their planet. Fifteen thousand waiting on Palan.",
         "And the bill afterward?",
         "You've killed a lot of bounty hunters. Militia and Confed listen to hunter gossip, and none of them will forget your transponder."
@@ -2696,11 +2697,36 @@
         "pc",
         "",
         "pc",
+        "militia",
         "",
         "pc",
         ""
       ],
+      "prop": [
+        "",
+        "props/palan_final_assault_readout.png",
+        "props/palan_final_assault_readout.png",
+        "",
+        "props/palan_final_assault_readout.png",
+        "",
+        "props/palan_final_assault_readout.png",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
       "portrait_pc": "portraits/grayson/_ref.png",
+      "cast": {
+        "militia": {
+          "name": "Militia Volunteer",
+          "portrait": "portraits/militia/_ref.png"
+        }
+      },
       "accept_dialogue": [
         "Then it's tonight. I'll tell the Talons.",
         "Tell them to stay behind me.",
@@ -2755,7 +2781,8 @@
         "audio/fixers/murphy_m16_offer_11.mp3",
         "audio/fixers/murphy_m16_offer_12.mp3",
         "audio/fixers/murphy_m16_offer_13.mp3",
-        "audio/fixers/murphy_m16_offer_14.mp3"
+        "audio/fixers/murphy_m16_offer_14.mp3",
+        "audio/fixers/murphy_m16_offer_15.mp3"
       ]
     },
     {
