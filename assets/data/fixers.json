@@ -3044,6 +3044,21 @@
         "pc",
         ""
       ],
+      "prop": [
+        "",
+        "",
+        "",
+        "",
+        "props/steltek_map.png",
+        "props/steltek_map.png",
+        "props/steltek_map.png",
+        "props/steltek_map.png",
+        "props/steltek_map.png",
+        "",
+        "",
+        "",
+        ""
+      ],
       "portrait_pc": "portraits/grayson/_ref.png",
       "accept_dialogue": [
         "Welcome to Exploratory Services. Try not to make me regret the paperwork.",
