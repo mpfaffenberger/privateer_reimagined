@@ -9,7 +9,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "assets"
-CID = "studio_req_1785709304"
+CID = "m05_riordian_grudge"
 
 
 class RiordianAmbushTests(unittest.TestCase):

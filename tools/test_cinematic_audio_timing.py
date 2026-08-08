@@ -34,7 +34,7 @@ class CinematicAudioTimingTests(unittest.TestCase):
         root = Path(__file__).resolve().parents[1]
         cinematic_dir = root / "assets" / "cinematics"
         data = json.loads(
-            (cinematic_dir / "studio_req_1785636336.json").read_text(encoding="utf-8")
+            (cinematic_dir / "m04_customs_intercept.json").read_text(encoding="utf-8")
         )
         timeline = data["timeline"]
         lines = [cue for cue in timeline if cue["cmd"] == "line"]

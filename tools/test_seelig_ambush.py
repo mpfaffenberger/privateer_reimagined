@@ -9,7 +9,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "assets"
-CID = "studio_req_1785724793"
+CID = "m06_seelig_message"
 
 
 class SeeligAmbushTests(unittest.TestCase):

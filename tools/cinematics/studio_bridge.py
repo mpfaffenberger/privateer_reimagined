@@ -416,7 +416,7 @@ def build_author_prompt(req: dict) -> str:
         "new 'penders_haulers' that contradicts an existing one). Before "
         "authoring, check `ls assets/cinematics/`; if <id>.json already "
         "exists with a DIFFERENT scene (different cast, different trigger, "
-        "different tone), use a NEW id (e.g. 'penders_crusader' vs "
+        "different tone), use a NEW id (e.g. 'm22_vera_crusader' vs "
         "'penders_haulers'). One id = one scene, full stop. The same rule "
         "applies to asset filenames: audio/<id>_<speaker>_<seq>.mp3 and "
         "portraits/<speaker>/<id>_<seq>.png are namespaced by cinematic id.")

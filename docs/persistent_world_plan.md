@@ -203,7 +203,7 @@ Leverage what we already built — this is the payoff of the cinematic system:
 - **Tier 2 — cinematics (expensive, ~8–10 scenes):**
   1. First meeting w/ Reesa+Vance convoy in Humboldt (intro their run)
   2. Vance convoy under pirate attack — Dekker ambush (join or watch)
-  3. Vera returns (penders_crusader follow-up, `penders_crusader_cleared` gate)
+  3. Vera returns (m22_vera_crusader follow-up, `m22_vera_crusader_cleared` gate)
   4. Brother Silas cold interrogation encounter
   5. Nak'hra first duel challenge (border jump)
   6. Nak'hra rematch (kill-count / day gated)
@@ -241,7 +241,7 @@ Leverage what we already built — this is the payoff of the cinematic system:
 
 **Phase 5 — Tier-2 cinematics (the fun part)**
 - [ ] 10 scenes above, authored/iterated via Studio pipeline
-- Agent: cinematic-director · Validate: in-game playback review (you), like we did for penders_crusader
+- Agent: cinematic-director · Validate: in-game playback review (you), like we did for m22_vera_crusader
 
 **Phase 6 — The Defector arc**
 - [ ] Ghraffid rotation schedule + discovery/trust cinematics + plot flags

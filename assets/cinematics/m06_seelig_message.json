@@ -1,5 +1,5 @@
 {
-  "id": "studio_req_1785724793",
+  "id": "m06_seelig_message",
   "letterbox": true,
   "skippable": true,
   "location": {
@@ -98,8 +98,8 @@
       "text": "Burrows. Roman said you'd be carrying a message. Let's hear it.",
       "side": "right",
       "dur": 5.389999999999991,
-      "portrait": "portraits/seelig/studio_req_1785724793_01.png",
-      "voice_file": "audio/studio_req_1785724793_seelig_01.mp3",
+      "portrait": "portraits/seelig/m06_seelig_message_01.png",
+      "voice_file": "audio/m06_seelig_message_seelig_01.mp3",
       "t": 3.5
     },
     {
@@ -125,8 +125,8 @@
       "text": "Roman Lynch says: ‘I am profoundly disappointed in you.’ That's the whole message. He really knows how to make a man feel valued.",
       "side": "left",
       "dur": 10.969999999999928,
-      "portrait": "portraits/grayson/studio_req_1785724793_01.png",
-      "voice_file": "audio/studio_req_1785724793_grayson_01.mp3",
+      "portrait": "portraits/grayson/m06_seelig_message_01.png",
+      "voice_file": "audio/m06_seelig_message_grayson_01.mp3",
       "t": 9.13999999999999
     },
     {
@@ -152,8 +152,8 @@
       "text": "Profoundly disappointed. After ten years. You can carry my reply.",
       "side": "right",
       "dur": 9.529999999999944,
-      "portrait": "portraits/seelig/studio_req_1785724793_02.png",
-      "voice_file": "audio/studio_req_1785724793_seelig_02.mp3",
+      "portrait": "portraits/seelig/m06_seelig_message_02.png",
+      "voice_file": "audio/m06_seelig_message_seelig_02.mp3",
       "t": 20.359999999999918
     },
     {
@@ -231,8 +231,8 @@
       "text": "Some people take performance reviews way too personally. Oh well... guess I'm gonna have to blast one more idiot...",
       "side": "left",
       "dur": 8.95399999999995,
-      "portrait": "portraits/grayson/studio_req_1785724793_02.png",
-      "voice_file": "audio/studio_req_1785724793_grayson_02.mp3",
+      "portrait": "portraits/grayson/m06_seelig_message_02.png",
+      "voice_file": "audio/m06_seelig_message_grayson_02.mp3",
       "t": 33.13999999999986
     },
     {
@@ -243,7 +243,7 @@
     {
       "cmd": "end",
       "actions": [
-        "set_flag:studio_req_1785724793_seen",
+        "set_flag:m06_seelig_message_seen",
         "set_flag:m06_message_delivered"
       ],
       "t": 43.54399999999981

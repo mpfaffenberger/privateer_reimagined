@@ -1,5 +1,5 @@
 {
-  "id": "studio_req_1785449208",
+  "id": "m03_troy_militia_bust",
   "letterbox": true,
   "skippable": true,
   "location": {
@@ -252,8 +252,8 @@
       "text": "Prepare to be searched. Maintain speed and course.",
       "side": "right",
       "dur": 3.6,
-      "portrait": "portraits/militia/studio_req_1785449208_01.png",
-      "voice_file": "audio/studio_req_1785449208_militia_01.mp3",
+      "portrait": "portraits/militia/m03_troy_militia_bust_01.png",
+      "voice_file": "audio/m03_troy_militia_bust_militia_01.mp3",
       "t": 3.0
     },
     {
@@ -284,8 +284,8 @@
       "text": "Contraband detected! All units, open fire on the perp!",
       "side": "right",
       "dur": 3.8,
-      "portrait": "portraits/militia/studio_req_1785449208_02.png",
-      "voice_file": "audio/studio_req_1785449208_militia_02.mp3",
+      "portrait": "portraits/militia/m03_troy_militia_bust_02.png",
+      "voice_file": "audio/m03_troy_militia_bust_militia_02.mp3",
       "t": 7.0
     },
     {
@@ -311,8 +311,8 @@
       "text": "I swear, officer, it's for medicinal reasons only!",
       "side": "left",
       "dur": 3.6,
-      "portrait": "portraits/grayson/studio_req_1785449208_01.png",
-      "voice_file": "audio/studio_req_1785449208_grayson_01.mp3",
+      "portrait": "portraits/grayson/m03_troy_militia_bust_01.png",
+      "voice_file": "audio/m03_troy_militia_bust_grayson_01.mp3",
       "t": 10.9
     },
     {
@@ -338,8 +338,8 @@
       "text": "Shut up, you damn smuggler!",
       "side": "right",
       "dur": 2.8,
-      "portrait": "portraits/militia/studio_req_1785449208_03.png",
-      "voice_file": "audio/studio_req_1785449208_militia_03.mp3",
+      "portrait": "portraits/militia/m03_troy_militia_bust_03.png",
+      "voice_file": "audio/m03_troy_militia_bust_militia_03.mp3",
       "t": 14.6
     },
     {
@@ -415,7 +415,7 @@
     {
       "cmd": "end",
       "actions": [
-        "set_flag:studio_req_1785449208_seen"
+        "set_flag:m03_troy_militia_bust_seen"
       ],
       "t": 22.0
     }

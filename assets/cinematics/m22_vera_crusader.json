@@ -1,5 +1,5 @@
 {
-  "id": "penders_crusader",
+  "id": "m22_vera_crusader",
   "letterbox": true,
   "skippable": true,
   "location": {
@@ -14,7 +14,7 @@
         "faction": "retro",
         "count": 10,
         "hostile": true,
-        "cleared_flag": "penders_crusader_cleared"
+        "cleared_flag": "m22_vera_crusader_cleared"
       }
     ]
   },
@@ -140,8 +140,8 @@
       "text": "EVIL HEATHEN! We know you possess high level alien technology! Machines of damnable intent!",
       "side": "right",
       "dur": 9.1,
-      "portrait": "portraits/vera/penders_crusader_01.png",
-      "voice_file": "audio/penders_crusader_vera_01.mp3",
+      "portrait": "portraits/vera/m22_vera_crusader_01.png",
+      "voice_file": "audio/m22_vera_crusader_vera_01.mp3",
       "t": 10.0
     },
     {
@@ -166,8 +166,8 @@
       "text": "Wow. You really love to hear yourself talk, don't you?",
       "side": "left",
       "dur": 4.2,
-      "portrait": "portraits/grayson/penders_crusader_01.png",
-      "voice_file": "audio/penders_crusader_grayson_01.mp3",
+      "portrait": "portraits/grayson/m22_vera_crusader_01.png",
+      "voice_file": "audio/m22_vera_crusader_grayson_01.mp3",
       "t": 20.1
     },
     {
@@ -192,8 +192,8 @@
       "text": "Do not mock the righteous! Your actions have added to the technological burden of mankind! Prepare yourself for retribution!",
       "side": "right",
       "dur": 11.4,
-      "portrait": "portraits/vera/penders_crusader_02.png",
-      "voice_file": "audio/penders_crusader_vera_02.mp3",
+      "portrait": "portraits/vera/m22_vera_crusader_02.png",
+      "voice_file": "audio/m22_vera_crusader_vera_02.mp3",
       "t": 25.1
     },
     {
@@ -218,8 +218,8 @@
       "text": "You know, for a religious fanatic, you're super cute... Instead of blasting me to oblivion, why don't we go out to dinner?",
       "side": "left",
       "dur": 7.8,
-      "portrait": "portraits/grayson/penders_crusader_02.png",
-      "voice_file": "audio/penders_crusader_grayson_02.mp3",
+      "portrait": "portraits/grayson/m22_vera_crusader_02.png",
+      "voice_file": "audio/m22_vera_crusader_grayson_02.mp3",
       "t": 37.3
     },
     {
@@ -244,8 +244,8 @@
       "text": "(gasps) You dare make this into a joke?",
       "side": "right",
       "dur": 5.0,
-      "portrait": "portraits/vera/penders_crusader_03.png",
-      "voice_file": "audio/penders_crusader_vera_03.mp3",
+      "portrait": "portraits/vera/m22_vera_crusader_03.png",
+      "voice_file": "audio/m22_vera_crusader_vera_03.mp3",
       "t": 46.0
     },
     {
@@ -270,8 +270,8 @@
       "text": "You are a heretic.<#0.3#>Now you die!",
       "side": "right",
       "dur": 4.2,
-      "portrait": "portraits/vera/penders_crusader_04.png",
-      "voice_file": "audio/penders_crusader_vera_04.mp3",
+      "portrait": "portraits/vera/m22_vera_crusader_04.png",
+      "voice_file": "audio/m22_vera_crusader_vera_04.mp3",
       "t": 51.9
     },
     {
@@ -370,8 +370,8 @@
       "text": "Oh well, it was worth a try.",
       "side": "left",
       "dur": 1.5,
-      "portrait": "portraits/grayson/penders_crusader_04.png",
-      "voice_file": "audio/penders_crusader_grayson_04.mp3",
+      "portrait": "portraits/grayson/m22_vera_crusader_04.png",
+      "voice_file": "audio/m22_vera_crusader_grayson_04.mp3",
       "t": 59.1
     },
     {
@@ -392,7 +392,7 @@
     {
       "cmd": "end",
       "actions": [
-        "set_flag:penders_crusader_seen"
+        "set_flag:m22_vera_crusader_seen"
       ],
       "t": 61.9
     }
