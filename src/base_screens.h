@@ -64,6 +64,7 @@ enum class BaseScreen {
     CargoHold,          // Phase 4f — sell loot/salvage from the unified hold
     Library,            // Oxford library reading room / Masterson
     ResearchComputer,   // vanilla-style tiny archive computer alcove
+    Office,             // scripted private meetings (for example Terrell)
     Launch,
     LandingPad,         // hangar room shown on dock; door leads to Concourse
     // --- action zones (not navigable screens) -------------------------------

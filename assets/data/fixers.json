@@ -3793,6 +3793,7 @@
       "id": "terrell_offer",
       "name": "Admiral Terrell",
       "base": "perry_naval",
+      "screen": "Office",
       "requires_flags": [
         "goodin_done"
       ],

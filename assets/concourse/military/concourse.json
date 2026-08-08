@@ -284,6 +284,14 @@
           ]
         }
       ]
+    },
+    "office": {
+      "background": "office_bg.png",
+      "bg_size": [
+        1672,
+        941
+      ],
+      "overlays": []
     }
   }
 }
