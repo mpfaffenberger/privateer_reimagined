@@ -2639,6 +2639,15 @@
         ""
       ],
       "portrait_pc": "portraits/grayson/_ref.png",
+      "prop": [
+        "props/palan_blockade_readout.png",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "props/palan_blockade_readout.png"
+      ],
       "voice": [
         "audio/fixers/murphy_m15_debrief_00.mp3",
         "audio/fixers/murphy_m15_debrief_01.mp3",

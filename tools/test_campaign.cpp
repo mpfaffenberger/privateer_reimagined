@@ -476,7 +476,20 @@ int main() {
     fixers::accept(*fixers::find("murphy_m15_offer"), p);
     plot::set_flag(p, "m15_cleared");
     plot::clear_flag(p, "m15_active");
-    fixers::dialogue_done(*fixers::find("murphy_m15_debrief"), p);
+    const auto* murphy_m15_debrief = fixers::find("murphy_m15_debrief");
+    check(murphy_m15_debrief->cast.empty(),
+          "M15 debrief preserves the solo Murphy staging");
+    check(murphy_m15_debrief->prop.size() ==
+              murphy_m15_debrief->dialogue.size() &&
+          murphy_m15_debrief->prop.front() ==
+              "props/palan_blockade_readout.png" &&
+          murphy_m15_debrief->prop.back() ==
+              "props/palan_blockade_readout.png" &&
+          std::all_of(murphy_m15_debrief->prop.begin() + 1,
+                      murphy_m15_debrief->prop.end() - 1,
+                      [](const auto& prop) { return prop.empty(); }),
+          "M15 debrief bookends face-to-face banter with blockade readouts");
+    fixers::dialogue_done(*murphy_m15_debrief, p);
     check(p.credits == murphy_base + 25000 &&
           plot::has_flag(p, "murphy_2_done"), "M15 debrief pays 10,000");
 
