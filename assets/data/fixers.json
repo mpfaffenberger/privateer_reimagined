@@ -3547,6 +3547,18 @@
         ""
       ],
       "portrait_pc": "portraits/grayson/_ref.png",
+      "prop": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "props/steltek_map.png",
+        "props/steltek_map.png",
+        "props/steltek_map.png",
+        ""
+      ],
       "voice": [
         "audio/fixers/cross_m20_debrief_00.mp3",
         "audio/fixers/cross_m20_debrief_01.mp3",
