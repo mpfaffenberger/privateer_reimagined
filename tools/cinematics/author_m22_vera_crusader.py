@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Author `penders_crusader` — the Vera "Crusader" Rostova Steltek ambush.
+"""Author `m22_vera_crusader` — the Vera "Crusader" Rostova Steltek ambush.
 
 A wave of ten retro talons led by the fanatical ace Vera "Crusader" Rostova
 swarms Grayson's Centurion at the Nitir jump of Blockade Point Tango. Vera
@@ -9,9 +9,9 @@ flirting with Vera, only making her more agitated: "VILE HERETIC!! PREPARE
 TO DIE".
 
 Trigger (assets/cinematics/triggers.json): in blockade_point_tango, near the
-Nitir Jump nav, requires steltek_gun_owned, has not seen penders_crusader_seen.
+Nitir Jump nav, requires steltek_gun_owned, has not seen m22_vera_crusader_seen.
 Outcome: 10 hostile retro talons near the player at the Nitir Jump nav;
-cleared_flag penders_crusader_cleared when the wing is dead.
+cleared_flag m22_vera_crusader_cleared when the wing is dead.
 """
 from __future__ import annotations
 
@@ -79,7 +79,7 @@ TALON_FORMATION = [
 
 def main() -> None:
     c = Cinematic(
-        "penders_crusader",
+        "m22_vera_crusader",
         letterbox=True,
         skippable=True,
         auto_portraits=True,
@@ -92,7 +92,7 @@ def main() -> None:
         player_at_nav="Nitir Jump",
         spawns=[
             {"class": "talon", "faction": "retro", "count": 10,
-             "hostile": True, "cleared_flag": "penders_crusader_cleared"},
+             "hostile": True, "cleared_flag": "m22_vera_crusader_cleared"},
         ],
     )
 
@@ -281,7 +281,7 @@ def main() -> None:
     # END
     # =====================================================================
     c.at(58.0).fade_out(1.0)
-    c.at(59.0).end(actions=["set_flag:penders_crusader_seen"])
+    c.at(59.0).end(actions=["set_flag:m22_vera_crusader_seen"])
 
     path = c.save()
     print(f"Saved: {path}")

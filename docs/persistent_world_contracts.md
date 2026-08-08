@@ -163,7 +163,7 @@ Existing fields (appearance/wardrobe/personality/voice_id) power portraits
 - Valid MiniMax emotions: `happy, sad, angry, fearful, disgusted,
   surprised, neutral`. ANYTHING ELSE fails silently at the API — voices.py
   validates and rejects loudly as of this epic.
-- TTS text discipline (learned on penders_crusader): no ALL-CAPS words,
+- TTS text discipline (learned on m22_vera_crusader): no ALL-CAPS words,
   use `<#0.3#>` pause markup, rephrase words the model mangles
   (e.g. "heretic"), normal sentence case.
 - Voice-first timing: generate audio, measure duration (afinfo), THEN set
@@ -179,7 +179,7 @@ Existing fields (appearance/wardrobe/personality/voice_id) power portraits
 nakhra_met, nakhra_duel_1, nakhra_duel_2, nakhra_named,
 ghraffid_met, ghraffid_spooked, ghraffid_trusted,
 ruth_doubt_1, ruth_doubt_2, ruth_doubt_3,
-penders_crusader_cleared (already live)
+m22_vera_crusader_cleared (already live)
 ```
 
 Set/cleared exclusively through `plot::run_action` grammar

@@ -1,5 +1,5 @@
 {
-  "id": "studio_req_1785709304",
+  "id": "m05_riordian_grudge",
   "letterbox": true,
   "skippable": true,
   "location": {
@@ -140,8 +140,8 @@
       "text": "Burrows. I flew Tayla's routes for three years. Then you stole them out from under me. There ain't room for two of us in this town.",
       "side": "right",
       "dur": 12.554,
-      "portrait": "portraits/riordian/studio_req_1785709304_01.png",
-      "voice_file": "audio/studio_req_1785709304_riordian_01.mp3",
+      "portrait": "portraits/riordian/m05_riordian_grudge_01.png",
+      "voice_file": "audio/m05_riordian_grudge_riordian_01.mp3",
       "t": 3.8
     },
     {
@@ -167,8 +167,8 @@
       "text": "Tayla never said the routes came with a jilted ex. Should I return the cargo, or just your wounded pride?",
       "side": "left",
       "dur": 7.766,
-      "portrait": "portraits/grayson/studio_req_1785709304_01.png",
-      "voice_file": "audio/studio_req_1785709304_grayson_01.mp3",
+      "portrait": "portraits/grayson/m05_riordian_grudge_01.png",
+      "voice_file": "audio/m05_riordian_grudge_grayson_01.mp3",
       "t": 16.604
     },
     {
@@ -199,8 +199,8 @@
       "text": "Keep laughing. Boys, clear the lane.",
       "side": "right",
       "dur": 3.734,
-      "portrait": "portraits/riordian/studio_req_1785709304_02.png",
-      "voice_file": "audio/studio_req_1785709304_riordian_02.mp3",
+      "portrait": "portraits/riordian/m05_riordian_grudge_02.png",
+      "voice_file": "audio/m05_riordian_grudge_riordian_02.mp3",
       "t": 24.62
     },
     {
@@ -268,7 +268,7 @@
     {
       "cmd": "end",
       "actions": [
-        "set_flag:studio_req_1785709304_seen"
+        "set_flag:m05_riordian_grudge_seen"
       ],
       "t": 32.604
     }

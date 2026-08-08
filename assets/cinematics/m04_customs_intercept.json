@@ -1,5 +1,5 @@
 {
-  "id": "studio_req_1785636336",
+  "id": "m04_customs_intercept",
   "letterbox": true,
   "skippable": true,
   "location": {
@@ -139,8 +139,8 @@
       "text": "Unidentified privateer, cut thrust and prepare to be searched. This is a full-spectrum customs inspection.",
       "side": "right",
       "dur": 8.306,
-      "portrait": "portraits/rourke/studio_req_1785636336_01.png",
-      "voice_file": "audio/studio_req_1785636336_rourke_01.mp3",
+      "portrait": "portraits/rourke/m04_customs_intercept_01.png",
+      "voice_file": "audio/m04_customs_intercept_rourke_01.mp3",
       "t": 4.0
     },
     {
@@ -166,8 +166,8 @@
       "text": "A full fleet for one cargo hold? I'm flattered. Tayla said the route was clear.",
       "side": "left",
       "dur": 6.614,
-      "portrait": "portraits/grayson/studio_req_1785636336_01.png",
-      "voice_file": "audio/studio_req_1785636336_grayson_01.mp3",
+      "portrait": "portraits/grayson/m04_customs_intercept_01.png",
+      "voice_file": "audio/m04_customs_intercept_grayson_01.mp3",
       "t": 12.556
     },
     {
@@ -198,8 +198,8 @@
       "text": "Your hold contains twenty-five units of Brilliance. Bribery has a shelf life, Mr. Burrows.",
       "side": "right",
       "dur": 7.262,
-      "portrait": "portraits/rourke/studio_req_1785636336_02.png",
-      "voice_file": "audio/studio_req_1785636336_rourke_02.mp3",
+      "portrait": "portraits/rourke/m04_customs_intercept_02.png",
+      "voice_file": "audio/m04_customs_intercept_rourke_02.mp3",
       "t": 19.42
     },
     {
@@ -225,8 +225,8 @@
       "text": "Don't you guys have Kilrathi to shoot at? No wonder we're losing the war...",
       "side": "left",
       "dur": 5.678,
-      "portrait": "portraits/grayson/studio_req_1785636336_02.png",
-      "voice_file": "audio/studio_req_1785636336_grayson_02.mp3",
+      "portrait": "portraits/grayson/m04_customs_intercept_02.png",
+      "voice_file": "audio/m04_customs_intercept_grayson_02.mp3",
       "t": 26.932
     },
     {
@@ -252,8 +252,8 @@
       "text": "We do. They complain less. All units, mark the smuggler hostile and open fire.",
       "side": "right",
       "dur": 6.578,
-      "portrait": "portraits/rourke/studio_req_1785636336_03.png",
-      "voice_file": "audio/studio_req_1785636336_rourke_03.mp3",
+      "portrait": "portraits/rourke/m04_customs_intercept_03.png",
+      "voice_file": "audio/m04_customs_intercept_rourke_03.mp3",
       "t": 32.86
     },
     {
@@ -279,8 +279,8 @@
       "text": "There it is—the famous Confed sense of proportion.",
       "side": "left",
       "dur": 4.382,
-      "portrait": "portraits/grayson/studio_req_1785636336_03.png",
-      "voice_file": "audio/studio_req_1785636336_grayson_03.mp3",
+      "portrait": "portraits/grayson/m04_customs_intercept_03.png",
+      "voice_file": "audio/m04_customs_intercept_grayson_03.mp3",
       "t": 39.688
     },
     {
@@ -348,7 +348,7 @@
     {
       "cmd": "end",
       "actions": [
-        "set_flag:studio_req_1785636336_seen"
+        "set_flag:m04_customs_intercept_seen"
       ],
       "t": 48.62
     }

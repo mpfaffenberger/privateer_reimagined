@@ -33,21 +33,21 @@
       }
     },
     {
-      "cinematic": "penders_haulers",
+      "cinematic": "m22_vera_crusader",
       "once": true,
       "cooldown_s": 0,
       "when": {
         "system": "blockade_point_tango",
-        "ship_class": "centurion",
         "near_nav": {
           "nav": "Nitir Jump",
           "radius_m": 25000
         },
         "requires_flags": [
+          "m22_active",
           "steltek_gun_owned"
         ],
         "forbids_flags": [
-          "penders_crusader_seen"
+          "m22_vera_crusader_seen"
         ]
       }
     },
@@ -83,7 +83,7 @@
       }
     },
     {
-      "cinematic": "studio_req_1785449208",
+      "cinematic": "m03_troy_militia_bust",
       "once": true,
       "cooldown_s": 0,
       "when": {
@@ -92,14 +92,16 @@
           "nav": "Pender's Star Jump",
           "radius_m": 20000
         },
-        "requires_flags": [],
+        "requires_flags": [
+          "m03_active"
+        ],
         "forbids_flags": [
-          "studio_req_1785449208_seen"
+          "m03_troy_militia_bust_seen"
         ]
       }
     },
     {
-      "cinematic": "studio_req_1785636336",
+      "cinematic": "m04_customs_intercept",
       "once": true,
       "cooldown_s": 0,
       "when": {
@@ -118,12 +120,12 @@
           "m04_active"
         ],
         "forbids_flags": [
-          "studio_req_1785636336_seen"
+          "m04_customs_intercept_seen"
         ]
       }
     },
     {
-      "cinematic": "studio_req_1785709304",
+      "cinematic": "m05_riordian_grudge",
       "once": true,
       "cooldown_s": 0,
       "when": {
@@ -142,12 +144,12 @@
           "m05_active"
         ],
         "forbids_flags": [
-          "studio_req_1785709304_seen"
+          "m05_riordian_grudge_seen"
         ]
       }
     },
     {
-      "cinematic": "studio_req_1785724793",
+      "cinematic": "m06_seelig_message",
       "once": true,
       "cooldown_s": 0,
       "when": {
@@ -162,7 +164,7 @@
         "forbids_flags": [
           "m06_message_delivered",
           "killed:seelig",
-          "studio_req_1785724793_seen"
+          "m06_seelig_message_seen"
         ]
       }
     }

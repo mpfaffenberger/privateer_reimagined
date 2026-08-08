@@ -12,7 +12,7 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 CIN_DIR = ROOT / "assets" / "cinematics"
-CID = "studio_req_1785636336"
+CID = "m04_customs_intercept"
 EXPECTED_FLEET = {
     "paradigm_lead": "paradigm",
     "broadsword_port": "broadsword",

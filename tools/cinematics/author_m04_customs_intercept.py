@@ -9,7 +9,7 @@ from PIL import Image
 from tools.cinematics.audio_timing import mp3_duration_seconds
 from tools.cinematics.builder import Cinematic, repo_root
 
-CID = "studio_req_1785636336"
+CID = "m04_customs_intercept"
 ROOT = repo_root()
 CIN_DIR = ROOT / "assets" / "cinematics"
 VOICE_TAIL_S = 0.35
