@@ -3303,6 +3303,21 @@
         ""
       ],
       "portrait_pc": "portraits/grayson/_ref.png",
+      "prop": [
+        "",
+        "",
+        "",
+        "props/garrovick_guncam.png",
+        "props/garrovick_guncam.png",
+        "props/garrovick_guncam.png",
+        "props/garrovick_guncam.png",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
       "voice": [
         "audio/fixers/cross_m19_debrief_00.mp3",
         "audio/fixers/cross_m19_debrief_01.mp3",
