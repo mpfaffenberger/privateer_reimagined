@@ -667,7 +667,9 @@ void register_bar_screen() {
         [](BaseContext& ctx) { draw_fixer_body(ctx, "Library"); });
     base_screens::register_screen(BaseScreen::ResearchComputer,
         [](BaseContext& ctx) { draw_fixer_body(ctx, "ResearchComputer"); });
-    std::printf("[fixers] Bar + Library + Research Computer bodies registered\n");
+    base_screens::register_screen(BaseScreen::Office,
+        [](BaseContext& ctx) { draw_fixer_body(ctx, "Office"); });
+    std::printf("[fixers] Bar + Library + Research Computer + Office bodies registered\n");
 }
 #else
 void talk_to(const FixerDef&) {}

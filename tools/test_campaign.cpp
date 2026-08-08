@@ -586,6 +586,8 @@ int main() {
     // M23: the boost + the drone kill + the office debrief.
     check(fixer_here("perry_naval", p, "terrell_offer"),
           "Terrell's office opens behind goodin_done");
+    check(fixers::find("terrell_offer")->screen == "Office",
+          "Terrell's briefing is staged in his office, not the bar");
     fixers::accept(*fixers::find("terrell_offer"), p);
     check(plot::has_flag(p, "m23_active"), "M23 accepted");
     check(!fixer_here("perry_naval", p, "terrell_debrief"),
