@@ -87,11 +87,12 @@ inline const CockpitArt* find_art(const char* ship_class) {
 }
 
 // ---- art -> screen fit ------------------------------------------------------
-// screen = origin + art_px * scale.
-struct Fit { float scale = 1.0f, ox = 0.0f, oy = 0.0f; };
+// Independent axes: retain the vertical glass/bezel fit while covering
+// the full viewport width. PNG and display quads share this transform.
+struct Fit { float scale_x = 1.0f, scale_y = 1.0f, ox = 0.0f, oy = 0.0f; };
 
 inline Vec2 to_screen(const Fit& f, Vec2 art) {
-    return { f.ox + art.x * f.scale, f.oy + art.y * f.scale };
+    return { f.ox + art.x * f.scale_x, f.oy + art.y * f.scale_y };
 }
 inline Quad to_screen(const Fit& f, const Quad& q) {
     Quad s;
@@ -99,7 +100,8 @@ inline Quad to_screen(const Fit& f, const Quad& q) {
     return s;
 }
 inline Rect to_screen(const Fit& f, const Rect& r) {
-    return { f.ox + r.x * f.scale, f.oy + r.y * f.scale, r.w * f.scale, r.h * f.scale };
+    return { f.ox + r.x * f.scale_x, f.oy + r.y * f.scale_y,
+             r.w * f.scale_x, r.h * f.scale_y };
 }
 
 // Lowest art row the fit must keep on screen: the lowest display glass plus
@@ -124,20 +126,22 @@ inline float display_bottom(const CockpitArt& a) {
 //
 // Very wide windows: covering the width would scale the art so far that the
 // boresight could no longer sit at centre with the lowest display still on
-// screen (the dash would ride up over the gunsight). The scale is capped
-// there instead (Hor+): extra width just shows more space at the sides.
+// screen (the dash would ride up over the gunsight). Cap only the vertical
+// scale, stretching horizontally to cover the width instead of exposing
+// the artwork's straight cut edges (#436).
 inline Fit fit_to_viewport(const CockpitArt& a, float vp_x, float vp_y,
                            float vp_w, float vp_h) {
     Fit f;
     const float cover = std::max(vp_w / a.art_w, vp_h / a.art_h);
     const float below = display_bottom(a) - a.boresight_y;
     const float cap   = below > 0.0f ? (vp_h * 0.5f) / below : cover;
-    f.scale = std::max(vp_h / a.art_h, std::min(cover, cap));
-    f.ox = vp_x + (vp_w - a.art_w * f.scale) * 0.5f;
+    f.scale_y = std::max(vp_h / a.art_h, std::min(cover, cap));
+    f.scale_x = std::max(f.scale_y, vp_w / a.art_w);
+    f.ox = vp_x + (vp_w - a.art_w * f.scale_x) * 0.5f;
     const float bottom = vp_y + vp_h;
-    f.oy = vp_y + vp_h * 0.5f - a.boresight_y * f.scale;
-    f.oy = std::min(f.oy, bottom - display_bottom(a) * f.scale);
-    f.oy = std::max(f.oy, bottom - a.art_h * f.scale);
+    f.oy = vp_y + vp_h * 0.5f - a.boresight_y * f.scale_y;
+    f.oy = std::min(f.oy, bottom - display_bottom(a) * f.scale_y);
+    f.oy = std::max(f.oy, bottom - a.art_h * f.scale_y);
     return f;
 }
 

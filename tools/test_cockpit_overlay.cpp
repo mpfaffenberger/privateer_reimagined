@@ -193,18 +193,15 @@ void check_fit(const CockpitArt& art) {
                            p.x <= s[0] + 0.01f && p.y <= s[1] + 0.01f;
             }
         }
-        bottom &= f.oy + art.art_h * f.scale >= s[1] - 0.01f;
-        // Full width up to 16:10-16:9 class windows; wider may pillarbox
-        // (Hor+) but must stay centred.
-        if (s[0] / s[1] <= 1.8f)
-            sides &= f.ox <= 0.01f && f.ox + art.art_w * f.scale >= s[0] - 0.01f;
-        sides &= near(f.ox * 2.0f + art.art_w * f.scale, s[0], 0.05f);
+        bottom &= f.oy + art.art_h * f.scale_y >= s[1] - 0.01f;
+        sides &= f.ox <= 0.01f && f.ox + art.art_w * f.scale_x >= s[0] - 0.01f;
+        sides &= near(f.ox * 2.0f + art.art_w * f.scale_x, s[0], 0.05f);
     }
     std::snprintf(label, sizeof(label), "%s: every display on screen, 4:3 to 21:9", art.ship_class);
     check(visible, label);
     std::snprintf(label, sizeof(label), "%s: dash always reaches the bottom edge", art.ship_class);
     check(bottom, label);
-    std::snprintf(label, sizeof(label), "%s: art centred; spans full width up to 16:9", art.ship_class);
+    std::snprintf(label, sizeof(label), "%s: art centred; covers both sides at every aspect", art.ship_class);
     check(sides, label);
 }
 
@@ -242,7 +239,7 @@ void check_art_alpha(const CockpitArt& art) {
     bool clear = true;
     for (const auto& s : kShapes) {
         const Fit f = fit_to_viewport(art, 0, 0, s[0], s[1]);
-        const float ax = (s[0] * 0.5f - f.ox) / f.scale, ay = (s[1] * 0.5f - f.oy) / f.scale;
+        const float ax = (s[0] * 0.5f - f.ox) / f.scale_x, ay = (s[1] * 0.5f - f.oy) / f.scale_y;
         clear &= quad_fraction(img, quad_from_rect(ax - 30, ay - 30, 60, 60), 0, 1, true) > 0.999f;
     }
     std::snprintf(label, sizeof(label), "%s: boresight looks through clear canopy", art.ship_class);
@@ -263,11 +260,33 @@ int main() {
     // Talon (cover-and-slide) exact fits.
     const CockpitArt& talon = *find_art("talon");
     const Fit t720 = fit_to_viewport(talon, 0, 0, 1280, 720);
-    check(near(t720.scale, 1.0f) && near(t720.ox, 0) && near(t720.oy, 100.0f),
+    check(near(t720.scale_y, 1.0f) && near(t720.ox, 0) && near(t720.oy, 100.0f),
           "talon 1280x720: 1:1, boresight slid onto screen centre");
     const Fit t1610 = fit_to_viewport(talon, 0, 0, 1440, 900);
-    check(near(t1610.scale, 1.25f) && near(t1610.ox, -80.0f) && near(t1610.oy, 125.0f),
+    check(near(t1610.scale_y, 1.25f) && near(t1610.ox, -80.0f) && near(t1610.oy, 125.0f),
           "talon 16:10 covers by height, crops sides evenly");
+
+    // Reproduce exposed side margins: vertical fit caps the uniform scale,
+    // but horizontal coverage must still reach both viewport edges (#436).
+    const CockpitArt& centurion = *find_art("centurion");
+    const Fit wide = fit_to_viewport(centurion, 75, 40, 3840, 1080);
+    const Rect bounds = to_screen(wide, Rect{0, 0, centurion.art_w, centurion.art_h});
+    check(wide.scale_x > wide.scale_y && near(bounds.x, 75, 0.01f) &&
+          near(bounds.x + bounds.w, 3915, 0.01f),
+          "32:9 offset viewport: stretch removes hard side edges");
+    bool aligned = true;
+    for (const Quad& art_quad : centurion.display) {
+        const Quad screen_quad = to_screen(wide, art_quad);
+        const Rect panel = panel_rect(screen_quad);
+        const Homography warp = rect_to_quad(panel, screen_quad);
+        const Homography back = inverse(warp);
+        const Vec2 flat{panel.x + panel.w * 0.3f, panel.y + panel.h * 0.6f};
+        const Vec2 restored = apply(back, apply(warp, flat));
+        aligned &= near(restored.x, flat.x, 0.01f) && near(restored.y, flat.y, 0.01f);
+        for (const Vec2& point : screen_quad.p)
+            aligned &= point.x >= 75 && point.x <= 3915 && point.y >= 40 && point.y <= 1120;
+    }
+    check(aligned, "stretched instruments stay visible and inverse mouse mapping round-trips");
 
     for (const CockpitArt& a : kCockpitArts) {
         check_fit(a);
