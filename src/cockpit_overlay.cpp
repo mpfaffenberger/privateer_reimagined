@@ -169,7 +169,10 @@ void draw(const std::string& ship_class) {
         d.to_screen = rect_to_quad(d.panel, d.quad);
         d.to_panel  = inverse(d.to_screen);
         // Glass: the flat panel grown by the bleed, warped onto the bezel.
-        const Rect g = inset(d.panel, -kGlassBleed * g_fit.scale);
+        const Rect g{ d.panel.x - kGlassBleed * g_fit.scale_x,
+                      d.panel.y - kGlassBleed * g_fit.scale_y,
+                      d.panel.w + 2.0f * kGlassBleed * g_fit.scale_x,
+                      d.panel.h + 2.0f * kGlassBleed * g_fit.scale_y };
         bg->AddQuadFilled(iv(apply(d.to_screen, { g.x,       g.y       })),
                           iv(apply(d.to_screen, { g.x + g.w, g.y       })),
                           iv(apply(d.to_screen, { g.x + g.w, g.y + g.h })),
