@@ -15,6 +15,7 @@
 
 #include "cockpit_overlay_layout.h"
 #include "pilot_head_motion.h"
+#include "cockpit_lights.h"
 
 #include <cmath>
 #include <cstdio>
@@ -258,6 +259,35 @@ int main() {
     check(find_art(nullptr) == nullptr,     "null class is safe");
 
     check_maths();
+    const LightState healthy{true, false, true, false};
+    const LightState alert{true, true, false, true};
+    check(lamp_on(Lamp::Power, healthy, 0.9) && lamp_on(Lamp::Auto, healthy, 0.9),
+          "power and AUTO-ready are steady live indicators");
+    check(!lamp_on(Lamp::Comms, healthy, 0) && !lamp_on(Lamp::Damage, healthy, 0) &&
+          !lamp_on(Lamp::Auto, alert, 0), "inactive comms, damage and blocked AUTO stay dark");
+    check(lamp_on(Lamp::Comms, alert, 0.1) && !lamp_on(Lamp::Comms, alert, 0.3),
+          "comms activity blinks at 2Hz only when active");
+    check(lamp_on(Lamp::Damage, alert, 0.1) && !lamp_on(Lamp::Damage, alert, 0.6),
+          "actual low armor warning blinks at 1Hz");
+    check(!lamp_on(Lamp::Power, {}, 0), "unpowered lamps stay dark");
+    const float capacity[4] = {10, 10, 10, 10}, safe[4] = {10, 10, 10, 10};
+    const float hurt[4] = {10, 2.5f, 10, 10}, missing[4] = {0, 0, 0, 0};
+    check(!low_armor(safe, capacity) && low_armor(hurt, capacity) && !low_armor(hurt, missing),
+          "armor warning checks any facing and ignores missing capacity");
+    AlphaImage lamp_art;
+    int channels = 0;
+    lamp_art.px = stbi_load(find_art("centurion")->path, &lamp_art.w, &lamp_art.h, &channels, 4);
+    bool on_metal = lamp_art.px != nullptr;
+    if (lamp_art.px) {
+        for (const LampPlacement& lamp : kCenturionLamps) {
+            const Rect r = inset(lamp.bounds, -4);
+            for (int y = (int)r.y; y <= (int)(r.y+r.h); ++y)
+                for (int x = (int)r.x; x <= (int)(r.x+r.w); ++x)
+                    on_metal &= lamp_art.at(x,y) == 255;
+        }
+        stbi_image_free(lamp_art.px);
+    }
+    check(on_metal, "Centurion lamp hardware and glow sit entirely on opaque metal");
 
     // Head lag responds to acceleration, not steady angular velocity.
     PilotHeadMotion head;

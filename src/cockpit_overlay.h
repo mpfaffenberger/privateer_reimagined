@@ -15,6 +15,7 @@
 #pragma once
 
 #include "cockpit_overlay_layout.h"
+#include "cockpit_lights.h"
 
 #include <string>
 
@@ -30,6 +31,9 @@ void draw(const std::string& ship_class, const Camera& camera);
 // Step 3. No-op unless draw() ran this frame. Call after ALL ImGui building,
 // immediately before the frame is rendered.
 void finalize();
+
+// Supply live light inputs after the flight-status gate is computed.
+void set_lights(const LightState& state);
 
 // True when cockpit art is active this ImGui frame. Keyed on ImGui's frame
 // counter so a skipped draw() (title, cinematic) can never leave the HUD

@@ -6508,6 +6508,8 @@ void frame_cb() {
         if (!g.show_title && !g.capture_clean && !cine_active) {
             const HMM_Vec3 pp = g.camera.position;
             cockpit_hud::FlightStatusHudState fs;
+            cockpit_overlay::LightState lamps;
+            lamps.comms_active = comm::speaker_id() != 0;
             fs.speed = HMM_LenV3(g.camera.velocity);
             fs.set_speed = g.camera.desired_forward_speed;
             fs.mode  = (g.camera.cruise_level > 0.5f)  ? "CRUISE"
@@ -6518,6 +6520,18 @@ void frame_cb() {
             if (const Ship* pl = g.ships.player()) {
                 fs.energy     = pl->energy_gj;
                 fs.energy_max = pl->klass ? pl->klass->energy_max : 0.0f;
+                lamps.powered = pl->alive;
+                if (pl->klass) {
+                    const auto* k = pl->klass;
+                    const auto* a = pl->fitted_armor;
+                    const float current[4] = {pl->armor_fore_cm, pl->armor_aft_cm,
+                        pl->armor_port_cm, pl->armor_starboard_cm};
+                    const float capacity[4] = {k->armor_fore_cm + (a ? a->front_cm : 0),
+                        k->armor_aft_cm + (a ? a->back_cm : 0),
+                        k->armor_port_cm + (a ? a->port_cm : 0),
+                        k->armor_starboard_cm + (a ? a->starboard_cm : 0)};
+                    lamps.damage_warning = cockpit_overlay::low_armor(current, capacity);
+                }
             }
             if (autopilot::engaged(g.autopilot))
                 fs.autopilot_nav = g.autopilot.nav_name.c_str();
@@ -6526,6 +6540,8 @@ void frame_cb() {
             fs.autopilot_ready = !autopilot::engaged(g.autopilot) &&
                 autopilot::engage_check(g.camera, g.system, g.selected_nav) ==
                     EngageResult::Engaged;
+            lamps.autopilot_ready = fs.autopilot_ready;
+            cockpit_overlay::set_lights(lamps);
             cockpit_hud::draw_flight_status_mfd(fs);
         }
         // Weapons + ordnance status (np-zte.2). Afterburner fuel bar
