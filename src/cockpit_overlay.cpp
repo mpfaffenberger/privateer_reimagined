@@ -208,11 +208,12 @@ static void draw_lights(ImDrawList* dl) {
         const ImU32 color = lamp.lamp == Lamp::Damage ? IM_COL32(255, 70, 35, 255)
             : lamp.lamp == Lamp::Comms ? IM_COL32(255, 180, 45, 255)
             : lamp.lamp == Lamp::Auto ? IM_COL32(100, 245, 125, 255)
-            : IM_COL32(140, 210, 185, 255);
-        if (on) rect(inset(r, -4), (color & 0x00ffffffu) | (35u << 24));
-        rect(inset(r, -2), IM_COL32(12, 14, 12, 255));
+            : IM_COL32(130, 240, 230, 255);
+        if (on) rect(inset(r, -6), (color & 0x00ffffffu) | (65u << 24));
+        rect(inset(r, -3), IM_COL32(85, 86, 72, 255));
+        rect(inset(r, -1), IM_COL32(12, 14, 12, 255));
         rect(r, on ? color : IM_COL32(43, 40, 30, 255));
-        if (on) rect({r.x+2, r.y+1, r.w-4, 1.5f}, IM_COL32(255, 245, 205, 190));
+        if (on) rect({r.x+2, r.y+1, r.w-4, 2.0f}, IM_COL32(255, 245, 205, 210));
     }
 }
 

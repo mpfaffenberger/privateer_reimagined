@@ -78,12 +78,23 @@ int main() {
     check(art_draw && bg->IdxBuffer[art_draw->IdxOffset] > i,
           "cockpit PNG is composited over world markers and MFDs");
     check(art_draw && last_draw && last_draw->IdxOffset > art_draw->IdxOffset &&
-          first_color(bg, IM_COL32(140, 210, 185, 255)) > i &&
+          first_color(bg, IM_COL32(130, 240, 230, 255)) > i &&
           first_color(bg, IM_COL32(100, 245, 125, 255)) > i,
           "live power and AUTO lamps are painted on top of cockpit metal");
     check(first_color(ImGui::GetForegroundDrawList(), ui) >= 0 && first_color(bg, ui) < 0,
           "menus and cursor foreground stay independent of cockpit mask");
     ImGui::Render();
+
+    io.DeltaTime = 0.9f;
+    ImGui::NewFrame();
+    draw("centurion", camera);
+    set_lights({true, false, true, false});
+    finalize();
+    check(first_color(ImGui::GetBackgroundDrawList(), IM_COL32(130, 240, 230, 255)) < 0 &&
+          first_color(ImGui::GetBackgroundDrawList(), IM_COL32(100, 245, 125, 255)) >= 0,
+          "later normal-flight frame visibly changes power lamp, not AUTO");
+    ImGui::Render();
+    io.DeltaTime = 1.0f / 60;
 
     ImGui::NewFrame(); // draw skipped: autopilot/external camera
     check(!active() && world_draw_list() == ImGui::GetForegroundDrawList(),

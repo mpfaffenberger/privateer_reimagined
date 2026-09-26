@@ -268,8 +268,11 @@ int main() {
     check_maths();
     const LightState healthy{true, false, true, false};
     const LightState alert{true, true, false, true};
-    check(lamp_on(Lamp::Power, healthy, 0.9) && lamp_on(Lamp::Auto, healthy, 0.9),
-          "power and AUTO-ready are steady live indicators");
+    check(lamp_on(Lamp::Power, healthy, 0.1) && !lamp_on(Lamp::Power, healthy, 0.9) &&
+          lamp_on(Lamp::Power, healthy, 1.7),
+          "healthy power indicator visibly cycles with no damage or comms");
+    check(lamp_on(Lamp::Auto, healthy, 0.1) && lamp_on(Lamp::Auto, healthy, 0.9),
+          "AUTO-ready stays steady and independent of power heartbeat");
     check(!lamp_on(Lamp::Comms, healthy, 0) && !lamp_on(Lamp::Damage, healthy, 0) &&
           !lamp_on(Lamp::Auto, alert, 0), "inactive comms, damage and blocked AUTO stay dark");
     check(lamp_on(Lamp::Comms, alert, 0.1) && !lamp_on(Lamp::Comms, alert, 0.3),
@@ -287,7 +290,7 @@ int main() {
     bool on_metal = lamp_art.px != nullptr;
     if (lamp_art.px) {
         for (const LampPlacement& lamp : kCenturionLamps) {
-            const Rect r = inset(lamp.bounds, -4);
+            const Rect r = inset(lamp.bounds, -6);
             for (int y = (int)r.y; y <= (int)(r.y+r.h); ++y)
                 for (int x = (int)r.x; x <= (int)(r.x+r.w); ++x)
                     on_metal &= lamp_art.at(x,y) == 255;
