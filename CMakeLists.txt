@@ -435,6 +435,12 @@ add_executable(test_pause_overlay EXCLUDE_FROM_ALL tools/test_pause_overlay.cpp)
 target_include_directories(test_pause_overlay PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
 # Pure cockpit-art fit + MFD-hole geometry harness (#426).
+# Real ImGui compositing with GPU texture allocation stubbed (#429).
+add_executable(test_cockpit_layers EXCLUDE_FROM_ALL
+    tools/test_cockpit_layers.cpp src/cockpit_overlay.cpp ${IMGUI_SRC})
+target_include_directories(test_cockpit_layers PRIVATE
+    ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party ${IMGUI_DIR})
+
 add_executable(test_cockpit_overlay EXCLUDE_FROM_ALL tools/test_cockpit_overlay.cpp)
 target_include_directories(test_cockpit_overlay PRIVATE
     ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party)
