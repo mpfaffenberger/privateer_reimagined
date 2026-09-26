@@ -55,11 +55,11 @@ Homography         g_head_transform;
 int                g_frame = -1;
 DisplayFrame       g_displays[kDisplayCount];
 
-// Display glass: near-opaque dark screen so instruments read against a
+// Display glass: opaque dark screen so world markers cannot bleed through a
 // bright sun or nebula. Bled under the bezel so no sliver of space shows —
 // but only 2 art px: the Centurion's centre MFD has a 3 px bottom bezel with
 // open space right below it.
-constexpr ImU32 kGlass      = IM_COL32(6, 10, 9, 236);
+constexpr ImU32 kGlass      = IM_COL32(6, 10, 9, 255);
 constexpr float kGlassBleed = 2.0f;    // art px
 constexpr unsigned kMaxBatch = 3u * 8192u;   // triangles-per-reserve cap
 
@@ -172,8 +172,6 @@ void draw(const std::string& ship_class, const Camera& camera) {
     g_fit   = fit_to_viewport(*art, vp->Pos.x, vp->Pos.y, vp->Size.x, vp->Size.y);
     g_frame = ImGui::GetFrameCount();
 
-    ImDrawList* bg = ImGui::GetBackgroundDrawList();
-
     for (int i = 0; i < kDisplayCount; ++i) {
         DisplayFrame& d = g_displays[i];
         d.present = present(art->display[i]);
@@ -184,6 +182,18 @@ void draw(const std::string& ship_class, const Camera& camera) {
         // The same affine head transform moves glass, content and PNG.
         d.to_screen = multiply(g_head_transform, rect_to_quad(d.panel, d.quad));
         d.to_panel  = inverse(d.to_screen);
+    }
+}
+
+void finalize() {
+    if (!active()) return;
+    ImDrawList* bg = ImGui::GetBackgroundDrawList();
+    // All world glyphs have now been emitted. Cover them with display glass,
+    // then instruments, then the PNG's opaque metal. Real canopy alpha stays
+    // open; masking works per pixel even for brackets spanning a strut.
+    for (int i = 0; i < kDisplayCount; ++i) {
+        const DisplayFrame& d = g_displays[i];
+        if (!d.present) continue;
         // Glass: the flat panel grown by the bleed, warped onto the bezel.
         const Rect g{ d.panel.x - kGlassBleed * g_fit.scale_x,
                       d.panel.y - kGlassBleed * g_fit.scale_y,
@@ -193,14 +203,6 @@ void draw(const std::string& ship_class, const Camera& camera) {
                           iv(apply(d.to_screen, { g.x + g.w, g.y       })),
                           iv(apply(d.to_screen, { g.x + g.w, g.y + g.h })),
                           iv(apply(d.to_screen, { g.x,       g.y + g.h })), kGlass);
-    }
-}
-
-void finalize() {
-    if (!active()) return;
-    ImDrawList* bg = ImGui::GetBackgroundDrawList();
-    for (int i = 0; i < kDisplayCount; ++i) {
-        if (!g_displays[i].present) continue;
         ImGuiWindow* w = ImGui::FindWindowByName(display_window_id((Display)i));
         if (w && w->LastFrameActive == ImGui::GetFrameCount())
             warp_draw_list(bg, w->DrawList, g_displays[i]);
@@ -215,6 +217,10 @@ void finalize() {
 
 bool active() {
     return g_art && g_frame == ImGui::GetFrameCount();
+}
+
+ImDrawList* world_draw_list() {
+    return active() ? ImGui::GetBackgroundDrawList() : ImGui::GetForegroundDrawList();
 }
 
 bool display_panel(Display d, Rect& out) {

@@ -6831,7 +6831,9 @@ void frame_cb() {
                 }
             }
 
-            ImDrawList* dl = ImGui::GetForegroundDrawList();
+            // Target brackets, labels, edge arrows and lead pips belong to
+            // the world behind cockpit metal, not the foreground UI (#429).
+            ImDrawList* dl = cockpit_overlay::world_draw_list();
             if (!offscreen) {
                 // NDC -> screen. Engine convention: NDC y maps DIRECTLY
                 // to screen y (no `(1 - ndc_y)` flip — see cockpit_hud's

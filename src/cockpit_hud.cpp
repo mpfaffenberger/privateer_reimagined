@@ -160,7 +160,7 @@ void draw_ship_diagram_centerpiece(ImDrawList* dl, const Ship& ship,
 void draw_crosshair(bool fly_by_wire) {
     const auto s = screen_size();
     const float cx = s.w * 0.5f, cy = s.h * 0.5f;
-    auto* dl = ImGui::GetForegroundDrawList();
+    auto* dl = cockpit_overlay::world_draw_list();
 
     constexpr float arm = 10.0f;     // half-length of each crosshair tick
     constexpr float gap = 4.0f;      // empty space at the centre
@@ -262,7 +262,7 @@ void draw_nav_reticle(const Camera& cam, const StarSystem& system, int selected_
         sy = cy + dy * t;
     }
 
-    auto* dl = ImGui::GetForegroundDrawList();
+    auto* dl = cockpit_overlay::world_draw_list();
     constexpr float r = 14.0f;
     dl->AddCircle(ImVec2(sx, sy), r, kAmber, 0, 2.0f);
     const float tick_in = r * 0.45f, tick_out = r * 0.85f;
@@ -984,7 +984,7 @@ void draw_nav_labels(const Camera& cam, const StarSystem& system) {
     const float    fb_w   = s.w, fb_h = s.h;
     const float    aspect = fb_w / fb_h;
     const HMM_Mat4 vp     = HMM_MulM4(cam.projection(aspect), cam.view());
-    auto*          dl     = ImGui::GetForegroundDrawList();
+    auto*          dl     = cockpit_overlay::world_draw_list();
 
     for (const auto& nav : system.nav_points) {
         const HMM_Vec3 d       = HMM_SubV3(nav.position, cam.position);
@@ -1038,7 +1038,7 @@ void draw_objective_marker(const Camera& cam, HMM_Vec3 world,
                            int label_stagger_idx = 0) {
     float sx, sy;
     if (!project_world_point(cam, world, sx, sy)) return;
-    auto* dl = ImGui::GetForegroundDrawList();
+    auto* dl = cockpit_overlay::world_draw_list();
     constexpr float r = 11.0f;
     dl->AddQuad(ImVec2(sx, sy - r), ImVec2(sx + r, sy),
                 ImVec2(sx, sy + r), ImVec2(sx - r, sy), col, 2.0f);
@@ -1093,6 +1093,7 @@ void draw_speaker_indicator(const Camera& cam, const ShipRegistry& ships) {
     if (!project_world_point(cam, s->position, sx, sy)) return;
     const auto ss = screen_size();
     if (sx < 0 || sx > ss.w || sy < 0 || sy > ss.h) return;  // off-screen: banner only
+    dl = cockpit_overlay::world_draw_list(); // world brackets, unlike the incoming UI banner
     // Four corner brackets framing a ~22 px box. Each is an "L" of two
     // short lines. arm = 5 px so the brackets read clearly even at the
     // default Retina scale.
