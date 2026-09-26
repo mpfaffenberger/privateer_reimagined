@@ -9,7 +9,8 @@
 // a skewed bezel — so tools/test_cockpit_overlay.cpp can check it without a
 // GPU.
 //
-// Display quads are authored in ART pixels, measured from the PNG's alpha:
+// Display quads are authored in ART pixels, measured from the PNG's alpha
+// (tools/cockpit_art.py analyze prints the rows):
 // straight edge lines least-squares fitted to the alpha=128 crossings (away
 // from the rounded corners), corners = line intersections. Screen positions
 // are ImGui LOGICAL pixels.
@@ -61,21 +62,21 @@ inline constexpr CockpitArt kCockpitArts[] = {
         { { { 560.1f, 396.1f }, { 719.8f, 396.1f }, { 721.2f, 503.7f }, { 558.9f, 503.7f } } },
         { { { 846.0f, 462.1f }, { 969.2f, 462.3f }, { 971.3f, 547.8f }, { 846.3f, 546.1f } } },
         {}, {}, {} } },
-    // Centurion: v10c classic Wing Commander silhouette (curved arch + triple
-    // MFD), clean: no baked gunsight/readouts, space visible all round.
-    // Pink-key-only alpha with soft edges; the dark dash metal stays solid.
-    // Skewed bezels: side MFDs shear outward 3.6-7.1 deg, the centre one is
-    // keystoned (287 px wide at the top, 304 at the bottom), and the small
-    // SET / KPS boxes lean too — hence quads + the perspective warp. The
-    // boresight is the canvas centre (clear canopy), so at 16:9 the art maps
-    // 1:1 with no slide.
-    { "centurion", "assets/cockpits/centurion.png", 1280.0f, 720.0f, 360.0f,
-      { { { { 210.4f, 515.3f }, { 384.5f, 515.3f }, { 373.7f, 662.7f }, { 192.2f, 662.7f } } },
-        { { { 511.4f, 475.3f }, { 797.6f, 475.3f }, { 806.4f, 712.7f }, { 502.3f, 712.7f } } },
-        { { { 915.8f, 514.3f }, { 1092.2f, 514.3f }, { 1109.5f, 662.7f }, { 925.2f, 662.7f } } },
-        { { { 539.8f, 150.3f }, { 761.4f, 148.7f }, { 759.8f, 178.8f }, { 541.9f, 178.7f } } },
-        { { { 318.4f, 453.3f }, { 423.7f, 453.3f }, { 423.7f, 472.7f }, { 316.7f, 472.7f } } },
-        { { { 871.1f, 452.3f }, { 981.3f, 452.3f }, { 982.4f, 472.4f }, { 871.4f, 473.6f } } } } },
+    // Centurion: v11 — classic Wing Commander silhouette (curved canopy arch,
+    // triple MFD, arch banner window, SET / KPS strips), generated with
+    // native transparency (no colour key, so no fringe) and finalized by
+    // tools/cockpit_art.py. Nothing baked in: every readout is live. The side
+    // MFDs are angled toward the pilot (edges ~5 deg, top/bottom 3.6-7.2 deg)
+    // and the strips tilt too — hence quads + the perspective warp. Canopy on
+    // the centre column spans y 95..493; the boresight sits in its upper
+    // middle.
+    { "centurion", "assets/cockpits/centurion.png", 1672.0f, 940.0f, 300.0f,
+      { { { { 306.3f, 608.0f }, { 525.3f, 593.7f }, { 542.0f, 770.7f }, { 324.0f, 798.4f } } },
+        { { { 695.5f, 534.3f }, { 975.4f, 534.3f }, { 975.7f, 760.9f }, { 695.3f, 760.9f } } },
+        { { { 1146.5f, 594.2f }, { 1365.1f, 608.0f }, { 1347.3f, 798.2f }, { 1130.0f, 770.6f } } },
+        { { { 720.4f, 19.9f }, { 950.9f, 19.9f }, { 950.9f, 74.5f }, { 720.3f, 74.7f } } },
+        { { { 351.7f, 525.2f }, { 493.3f, 521.9f }, { 493.4f, 555.3f }, { 351.5f, 561.0f } } },
+        { { { 1178.4f, 522.0f }, { 1319.8f, 525.1f }, { 1319.7f, 560.9f }, { 1177.9f, 555.4f } } } } },
 };
 
 inline const CockpitArt* find_art(const char* ship_class) {
@@ -101,13 +102,17 @@ inline Rect to_screen(const Fit& f, const Rect& r) {
     return { f.ox + r.x * f.scale, f.oy + r.y * f.scale, r.w * f.scale, r.h * f.scale };
 }
 
-// Lowest art row any present display reaches.
+// Lowest art row the fit must keep on screen: the lowest display glass plus
+// a strip of its bezel (3% of the art height), so the frame under the glass
+// is never cropped flush.
+constexpr float kBezelKeep = 0.03f;
+
 inline float display_bottom(const CockpitArt& a) {
     float bottom = 0.0f;
     for (const Quad& q : a.display)
         if (present(q))
             for (const Vec2& p : q.p) bottom = std::max(bottom, p.y);
-    return bottom;
+    return std::min(a.art_h, bottom + kBezelKeep * a.art_h);
 }
 
 // Cover-and-slide fit: the art spans the viewport (no letterbox), centred
