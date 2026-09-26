@@ -53,14 +53,14 @@ struct CockpitArt {
 // One row per hull with cockpit art. Hulls without a row keep the classic
 // free-floating HUD.
 inline constexpr CockpitArt kCockpitArts[] = {
-    // Tarsus (#452): classic asymmetric workstation silhouette. STATUS is
+    // Tarsus (#458): approved image-conditioned Pioneer-inspired art. STATUS is
     // a suspended upper-left CRT; radar and NAV are separate upright boxes
     // on the low console. Three real glass holes, no fighter-style strips.
     // Native-alpha art, with corners measured by cockpit_art.py analyze.
-    { "tarsus", "assets/cockpits/tarsus_freighter.png", 1672.0f, 940.0f, 400.0f,
-      { { { { 213.9f, 104.9f }, { 457.0f, 131.0f }, { 452.6f, 321.3f }, { 210.4f, 308.1f } } },
-        { { { 608.1f, 624.6f }, { 784.1f, 623.5f }, { 783.9f, 774.0f }, { 607.5f, 776.0f } } },
-        { { { 949.2f, 623.8f }, { 1126.5f, 624.1f }, { 1126.5f, 778.0f }, { 949.3f, 775.0f } } },
+    { "tarsus", "assets/cockpits/tarsus_freighter.png", 1672.0f, 940.0f, 345.5f,
+      { { { { 153.7f, 114.0f }, { 453.7f, 113.9f }, { 453.6f, 349.6f }, { 153.4f, 349.5f } } },
+        { { { 523.6f, 606.2f }, { 730.2f, 606.3f }, { 729.3f, 771.8f }, { 511.8f, 771.7f } } },
+        { { { 855.7f, 606.2f }, { 1089.3f, 606.4f }, { 1105.5f, 772.2f }, { 859.3f, 772.0f } } },
         {}, {}, {} }, true },
     // Talon: the amber industrial v7 cockpit (first built for the Centurion,
     // reassigned when the classic silhouette was approved). Near-frontal
