@@ -18,11 +18,13 @@
 
 #include <string>
 
+struct Camera;
+
 namespace cockpit_overlay {
 
 // Step 1. No-op for hulls without art. Call once per Flight frame inside the
 // ImGui frame, before the cockpit HUD panels ask for their displays.
-void draw(const std::string& ship_class);
+void draw(const std::string& ship_class, const Camera& camera);
 
 // Step 3. No-op unless draw() ran this frame. Call after ALL ImGui building,
 // immediately before the frame is rendered.

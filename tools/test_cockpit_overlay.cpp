@@ -14,6 +14,7 @@
 #include "stb_image.h"
 
 #include "cockpit_overlay_layout.h"
+#include "pilot_head_motion.h"
 
 #include <cmath>
 #include <cstdio>
@@ -256,6 +257,58 @@ int main() {
     check(find_art(nullptr) == nullptr,     "null class is safe");
 
     check_maths();
+
+    // Head lag responds to acceleration, not steady angular velocity.
+    PilotHeadMotion head;
+    const Rect view{75, 40, 1920, 1080};
+    const Vec2 sample{400, 200};
+    check(near(apply(head.transform(view), sample).x, sample.x), "head at rest is identity");
+    for (int i = 0; i < 60; ++i) head.update(3, -3, 1.0f / 60);
+    check(head.lateral.rate < -0.99f && head.vertical.rate > 0.99f,
+          "head leans against angular acceleration");
+    const Vec2 disabled = apply(head.transform(view, 0), sample);
+    check(near(disabled.x, sample.x) && near(disabled.y, sample.y), "zero strength disables head effect");
+    const float before = head.lateral.rate;
+    head.update(-3, 3, 1.0f / 60);
+    check(head.lateral.rate < 0 && std::abs(head.lateral.rate - before) < 0.1f,
+          "head reversal is damped, not an instantaneous flip");
+    bool covered = true, bounded = true, aligned_head = true;
+    for (float lateral : {-1.0f, 0.0f, 1.0f}) {
+        for (float vertical : {-1.0f, 0.0f, 1.0f}) {
+            head.lateral.rate = lateral;
+            head.vertical.rate = vertical;
+            const Homography h = head.transform(view);
+            for (float y : {view.y, view.y + view.h}) {
+                // Intersect the transformed sides at actual viewport rows,
+                // including vertical compression from pitch lean.
+                const float source_y = (y - h.m[5]) / h.m[4];
+                covered &= apply(h, {view.x, source_y}).x <= view.x + 0.01f;
+                covered &= apply(h, {view.x + view.w, source_y}).x >= view.x + view.w - 0.01f;
+            }
+            const Vec2 p = apply(h, sample);
+            bounded &= std::abs(p.x - sample.x) < 50 && std::abs(p.y - sample.y) < 25;
+            const auto* art = find_art("centurion");
+            const Fit fit = fit_to_viewport(*art, view.x, view.y, view.w, view.h);
+            for (const Quad& q : art->display) {
+                const Quad screen = to_screen(fit, q);
+                const Rect panel = panel_rect(screen);
+                const Homography combined = multiply(h, rect_to_quad(panel, screen));
+                const Vec2 actual = apply(combined, {panel.x, panel.y});
+                const Vec2 bezel = apply(h, screen.p[0]);
+                const Vec2 back = apply(inverse(combined), actual);
+                aligned_head &= near(actual.x, bezel.x, 0.01f) && near(actual.y, bezel.y, 0.01f)
+                    && near(back.x, panel.x, 0.01f) && near(back.y, panel.y, 0.01f);
+            }
+        }
+    }
+    check(covered, "maximum head shear cannot reopen cockpit side gaps");
+    check(bounded, "maximum head motion stays small and bounded");
+    check(aligned_head, "head warp keeps glass, instruments and mouse coordinates aligned");
+    for (int i = 0; i < 180; ++i) head.update(0, 0, 1.0f / 60);
+    check(std::abs(head.lateral.rate) < 0.00001f && std::abs(head.vertical.rate) < 0.00001f,
+          "head returns to neutral in a steady turn");
+    head.reset();
+    check(head.lateral.rate == 0 && head.vertical.drive == 0, "cockpit re-entry resets head lag");
 
     // Talon (cover-and-slide) exact fits.
     const CockpitArt& talon = *find_art("talon");

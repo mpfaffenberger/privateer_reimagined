@@ -6474,7 +6474,7 @@ void frame_cb() {
             // nonsense, and skipping it drops the HUD back to the classic
             // floating panels for those frames automatically.
             if (!g.orbit_active)
-                cockpit_overlay::draw(g.player.ship_class_name);
+                cockpit_overlay::draw(g.player.ship_class_name, g.camera);
             cockpit_hud::build(g.camera, g.system, g.selected_nav,
                                g.mouse_x, g.mouse_y, g.fly_by_wire,
                                g.ships, g.player_target_id,

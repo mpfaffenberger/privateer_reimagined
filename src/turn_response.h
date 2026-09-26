@@ -13,6 +13,10 @@ struct TurnResponse {
 
     void reset() { drive = rate = 0.0f; }
 
+    float acceleration(float response_seconds) const {
+        return response_seconds > 0.0f ? (drive - rate) / response_seconds : 0.0f;
+    }
+
     float step(float target, float dt, float response_seconds) {
         if (!(dt > 0.0f)) return 0.0f;
         if (!(response_seconds > 0.0f)) {
