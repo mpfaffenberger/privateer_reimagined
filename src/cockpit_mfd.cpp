@@ -98,16 +98,48 @@ void draw_autopilot(const FlightStatusHudState& s, const Rect& centre) {
     pop_hud_style();
 }
 
-// Commanded (+/-) speed in the art's SET strip, when it has one.
-void draw_set_speed(const FlightStatusHudState& s) {
-    PanelPlacement strip;
-    if (!display_placement(Display::Speed, strip)) return;
-    if (begin_panel(strip)) {
-        char buf[24];
-        std::snprintf(buf, sizeof(buf), "%.0f", s.set_speed);
-        strip_line(to_rect(strip), buf, kAmber);
+// Unlit indicator lamp (AUTO when autopilot can't engage).
+constexpr ImU32 kUnlit = IM_COL32(110, 84, 40, 150);
+
+// One-line strip: `left` flush left, `right` flush right, both shrunk
+// together if they'd collide.
+void strip_pair(const Rect& strip, const char* left, ImU32 left_col,
+                const char* right, ImU32 right_col) {
+    ImDrawList* dl   = ImGui::GetWindowDrawList();
+    ImFont*     font = ImGui::GetFont();
+    float px = ImGui::GetFontSize();
+    const float pad = 3.0f, gap = 6.0f;
+    const float need = font->CalcTextSizeA(px, FLT_MAX, 0.0f, left).x + gap +
+                       font->CalcTextSizeA(px, FLT_MAX, 0.0f, right).x;
+    if (need > strip.w - 2.0f * pad && need > 0.0f) px *= (strip.w - 2.0f * pad) / need;
+    const float rw = font->CalcTextSizeA(px, FLT_MAX, 0.0f, right).x;
+    const float y  = strip.y + (strip.h - px) * 0.5f;
+    dl->AddText(font, px, ImVec2(strip.x + pad, y), left_col, left);
+    dl->AddText(font, px, ImVec2(strip.x + strip.w - pad - rw, y), right_col, right);
+}
+
+// The art's small speed strips, when it has them — all live, never baked:
+// SET = commanded (+/-) speed; KPS = actual speed + the AUTO lamp, lit
+// when pressing A would engage the autopilot (nav selected, no hostiles).
+void draw_speed_strips(const FlightStatusHudState& s) {
+    char buf[32];
+    PanelPlacement set;
+    if (display_placement(Display::SetSpeed, set)) {
+        if (begin_panel(set)) {
+            std::snprintf(buf, sizeof(buf), "%.0f", s.set_speed);
+            strip_pair(to_rect(set), "SET", kDimAmber, buf, kAmber);
+        }
+        end_panel(set);
     }
-    end_panel(strip);
+    PanelPlacement kps;
+    if (display_placement(Display::Velocity, kps)) {
+        if (begin_panel(kps)) {
+            std::snprintf(buf, sizeof(buf), "KPS %.0f", s.speed);
+            strip_pair(to_rect(kps), buf, kAmber, "AUTO",
+                       s.autopilot_ready ? kGreen : kUnlit);
+        }
+        end_panel(kps);
+    }
 }
 
 } // namespace
@@ -207,12 +239,16 @@ bool draw_flight_flanks(const FlightStatusHudState& s) {
         const auto split = cockpit_overlay::split_radar(to_rect(p));
         const float pad = 3.0f;
 
-        // Left flank, top-down: speed + flight mode.
+        // Left flank, top-down: speed + flight mode. Art with its own KPS
+        // strip already shows speed there, so the flank keeps just the mode.
         float y = split.left.y + pad;
         char buf[32];
-        strip_text(dl, split.left, y, "SPD", kDimAmber);
-        std::snprintf(buf, sizeof(buf), "%.0f", s.speed);
-        strip_text(dl, split.left, y, buf, kHudWhite);
+        Rect kps_strip;
+        if (!cockpit_overlay::display_panel(Display::Velocity, kps_strip)) {
+            strip_text(dl, split.left, y, "SPD", kDimAmber);
+            std::snprintf(buf, sizeof(buf), "%.0f", s.speed);
+            strip_text(dl, split.left, y, buf, kHudWhite);
+        }
         strip_text(dl, split.left, y, s.mode, kAmber);
 
         // Right flank: energy bank as a vertical reservoir gauge — full
@@ -238,7 +274,7 @@ bool draw_flight_flanks(const FlightStatusHudState& s) {
     }
     end_panel(p);
 
-    draw_set_speed(s);
+    draw_speed_strips(s);
     draw_autopilot(s, to_rect(p));
     return true;
 }

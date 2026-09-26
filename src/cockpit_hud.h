@@ -148,6 +148,7 @@ struct FlightStatusHudState {
     float       energy_max = 0.0f;       // max bank (GJ); 0 hides the bar
     const char* autopilot_nav = nullptr; // null = none engaged
     const char* autopilot_msg = nullptr; // null = no transient banner
+    bool        autopilot_ready = false; // A would engage now (cockpit AUTO light)
 };
 void draw_flight_status_mfd(const FlightStatusHudState& s);
 

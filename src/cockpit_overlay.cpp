@@ -52,10 +52,11 @@ int                g_frame = -1;
 DisplayFrame       g_displays[kDisplayCount];
 
 // Display glass: near-opaque dark screen so instruments read against a
-// bright sun or nebula. Bled under the bezel so no sliver of space shows.
+// bright sun or nebula. Bled under the bezel so no sliver of space shows —
+// but only 2 art px: the Centurion's centre MFD has a 3 px bottom bezel with
+// open space right below it.
 constexpr ImU32 kGlass      = IM_COL32(6, 10, 9, 236);
-constexpr float kGlassBleed = 3.0f;    // art px
-constexpr ImU32 kSurround   = IM_COL32(0, 0, 0, 255);
+constexpr float kGlassBleed = 2.0f;    // art px
 constexpr unsigned kMaxBatch = 3u * 8192u;   // triangles-per-reserve cap
 
 const TextureSlot* texture_for(const CockpitArt& art) {
@@ -79,18 +80,6 @@ const TextureSlot* texture_for(const CockpitArt& art) {
 }
 
 ImVec2 iv(Vec2 p) { return { p.x, p.y }; }
-
-// Pad whatever part of the viewport the art doesn't cover.
-void fill_surround(ImDrawList* dl, const ImGuiViewport* vp, const Rect& art) {
-    const float vx0 = vp->Pos.x, vy0 = vp->Pos.y;
-    const float vx1 = vx0 + vp->Size.x, vy1 = vy0 + vp->Size.y;
-    const float ax0 = std::max(vx0, art.x), ay0 = std::max(vy0, art.y);
-    const float ax1 = std::min(vx1, art.x + art.w), ay1 = std::min(vy1, art.y + art.h);
-    if (ay0 > vy0) dl->AddRectFilled({ vx0, vy0 }, { vx1, ay0 }, kSurround);   // top
-    if (ay1 < vy1) dl->AddRectFilled({ vx0, ay1 }, { vx1, vy1 }, kSurround);   // bottom
-    if (ax0 > vx0) dl->AddRectFilled({ vx0, ay0 }, { ax0, ay1 }, kSurround);   // left
-    if (ax1 < vx1) dl->AddRectFilled({ ax1, ay0 }, { vx1, ay1 }, kSurround);   // right
-}
 
 struct Box { float x0, y0, x1, y1; };
 
@@ -151,8 +140,9 @@ const char* display_window_id(Display d) {
     case Display::Left:   return "##cockpit_display_left";
     case Display::Center: return "##cockpit_display_center";
     case Display::Right:  return "##cockpit_display_right";
-    case Display::Banner: return "##cockpit_display_banner";
-    case Display::Speed:  default: return "##cockpit_display_speed";
+    case Display::Banner:   return "##cockpit_display_banner";
+    case Display::SetSpeed: return "##cockpit_display_set_speed";
+    case Display::Velocity: default: return "##cockpit_display_velocity";
     }
 }
 
@@ -169,8 +159,6 @@ void draw(const std::string& ship_class) {
     g_frame = ImGui::GetFrameCount();
 
     ImDrawList* bg = ImGui::GetBackgroundDrawList();
-    if (art->black_surround)
-        fill_surround(bg, vp, to_screen(g_fit, Rect{ 0.0f, 0.0f, art->art_w, art->art_h }));
 
     for (int i = 0; i < kDisplayCount; ++i) {
         DisplayFrame& d = g_displays[i];

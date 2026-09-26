@@ -2,7 +2,7 @@
 //
 // Frame flow (all ImGui, logical pixels, composited after the 3D scene):
 //   1. draw()      — before the HUD. Publishes this frame's fit, and on the
-//                    BACKGROUND draw list paints the surround padding and a
+//                    BACKGROUND draw list paints a
 //                    dark glass fill under every display.
 //   2. HUD panels  — cockpit_hud lays each instrument out FLAT in its
 //                    display's panel window (display_panel / window id).

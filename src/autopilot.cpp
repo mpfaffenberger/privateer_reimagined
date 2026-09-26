@@ -49,22 +49,32 @@ namespace autopilot {
 bool controls_locked(const Autopilot& a) { return a.phase != AutopilotPhase::Idle; }
 bool engaged(const Autopilot& a)         { return a.phase != AutopilotPhase::Idle; }
 
+EngageResult engage_check(const Camera& cam, const StarSystem& system,
+                          int selected_nav) {
+    if (selected_nav < 0 || selected_nav >= (int)system.nav_points.size())
+        return EngageResult::NoNav;
+    // Hostile gate (threat.h): live spatial query over the ship registry.
+    if (threat::hostiles_near(cam.position, k_threat_radius_m))
+        return EngageResult::Hostiles;
+    return EngageResult::Engaged;
+}
+
 EngageResult try_engage(Autopilot& a, Camera& cam,
                         const StarSystem& system, int selected_nav) {
-    // No target → nothing to fly to. Flash and bail (the bead's
-    // "no-op gracefully" path).
-    if (selected_nav < 0 || selected_nav >= (int)system.nav_points.size()) {
+    // No target → nothing to fly to; hostiles near → no autopilot through
+    // a furball. Flash the refusal and bail (the "no-op gracefully" path).
+    switch (engage_check(cam, system, selected_nav)) {
+    case EngageResult::NoNav:
         set_msg(a, "NO NAV SELECTED");
         std::printf("[autopilot] engage refused — no nav selected\n");
         return EngageResult::NoNav;
-    }
-
-    // Hostile gate (threat.h). Stubbed false today; live with np-ma2.3.
-    if (threat::hostiles_near(cam.position, k_threat_radius_m)) {
+    case EngageResult::Hostiles:
         set_msg(a, "HOSTILES DETECTED - CANNOT ENGAGE");
         std::printf("[autopilot] engage refused — hostiles within %.0fu\n",
                     k_threat_radius_m);
         return EngageResult::Hostiles;
+    case EngageResult::Engaged:
+        break;
     }
 
     const NavPointDef& nav = system.nav_points[selected_nav];

@@ -21,10 +21,11 @@
 
 namespace cockpit_overlay {
 
-// Glass displays an overlay can carry: the three MFDs plus two optional
-// single-line readout strips (autopilot banner, SET speed).
-enum class Display { Left, Center, Right, Banner, Speed };
-constexpr int kDisplayCount = 5;
+// Glass displays an overlay can carry: the three MFDs plus optional
+// single-line strips (autopilot banner, commanded SET speed, KPS + AUTO).
+// Everything shown in them is LIVE — art must never bake readouts in.
+enum class Display { Left, Center, Right, Banner, SetSpeed, Velocity };
+constexpr int kDisplayCount = 6;
 
 struct Vec2 { float x = 0, y = 0; };
 struct Rect { float x = 0, y = 0, w = 0, h = 0; };
@@ -43,13 +44,7 @@ struct CockpitArt {
     const char* ship_class;      // ShipClass / PlayerState::ship_class_name
     const char* path;            // relative to the working dir (assets/...)
     float       art_w, art_h;    // authoring resolution of the quads below
-    Vec2        boresight;       // art point that should sit at screen centre
-    // Art paints its own gunsight at `boresight`: the fit then pins it EXACTLY
-    // to screen centre (where the guns converge) instead of sliding it.
-    bool        painted_gunsight;
-    // Art's surround outside the canopy is opaque black: viewport margins the
-    // art can't cover are padded black so no raw space bleeds round the frame.
-    bool        black_surround;
+    float       boresight_y;     // art row that should sit at screen centre
     Quad        display[kDisplayCount];   // indexed by Display
 };
 
@@ -57,28 +52,29 @@ struct CockpitArt {
 // free-floating HUD.
 inline constexpr CockpitArt kCockpitArts[] = {
     // Talon: the amber industrial v7 cockpit (first built for the Centurion,
-    // reassigned when the classic-silhouette v9 was approved). Near-frontal
+    // reassigned when the classic silhouette was approved). Near-frontal
     // MFDs — the side screens' outer top corners lean in ~1.5 deg (<= 2.8 px),
-    // which the warp now honours exactly. Canopy glass ends at y 335, so the
+    // which the warp honours exactly. Canopy glass ends at y 335, so the
     // boresight rides at 260, clear of the dash.
-    { "talon", "assets/cockpits/talon.png", 1280.0f, 720.0f, { 640.0f, 260.0f },
-      false, false,
+    { "talon", "assets/cockpits/talon.png", 1280.0f, 720.0f, 260.0f,
       { { { { 305.8f, 462.2f }, { 428.7f, 462.1f }, { 427.2f, 546.1f }, { 302.7f, 547.0f } } },
         { { { 560.1f, 396.1f }, { 719.8f, 396.1f }, { 721.2f, 503.7f }, { 558.9f, 503.7f } } },
         { { { 846.0f, 462.1f }, { 969.2f, 462.3f }, { 971.3f, 547.8f }, { 846.3f, 546.1f } } },
-        {}, {} } },
-    // Centurion: v9 classic Wing Commander silhouette (curved arch + triple
-    // MFD). Skewed bezels: the side MFDs shear outward ~4-6.6 deg, the centre
-    // one is keystoned (286 px wide at the top, 303 at the bottom), hence
-    // real quads + the perspective warp. Painted gunsight centred at
-    // (637, 243.5); black surround outside the arch.
-    { "centurion", "assets/cockpits/centurion.png", 1280.0f, 720.0f, { 637.0f, 243.5f },
-      true, true,
-      { { { { 206.9f, 427.0f }, { 380.3f, 427.0f }, { 369.4f, 576.0f }, { 189.6f, 576.0f } } },
-        { { { 505.7f, 385.2f }, { 791.4f, 385.2f }, { 799.7f, 627.7f }, { 497.0f, 628.1f } } },
-        { { { 906.5f, 426.2f }, { 1083.8f, 426.2f }, { 1101.0f, 575.8f }, { 917.0f, 576.3f } } },
-        { { { 534.5f,  57.0f }, { 754.7f,  57.0f }, { 752.7f,  87.0f }, { 536.7f,  87.7f } } },
-        { { { 315.4f, 365.2f }, { 420.5f, 365.2f }, { 418.6f, 383.0f }, { 313.4f, 383.0f } } } } },
+        {}, {}, {} } },
+    // Centurion: v10 classic Wing Commander silhouette (curved arch + triple
+    // MFD), clean: no baked gunsight/readouts, space visible all round.
+    // Skewed bezels: side MFDs shear outward 3.6-7.1 deg, the centre one is
+    // keystoned (287 px wide at the top, 304 at the bottom), and the small
+    // SET / KPS boxes lean too — hence quads + the perspective warp. The
+    // boresight is the canvas centre (clear canopy), so at 16:9 the art maps
+    // 1:1 with no slide.
+    { "centurion", "assets/cockpits/centurion.png", 1280.0f, 720.0f, 360.0f,
+      { { { { 210.3f, 515.0f }, { 384.8f, 515.0f }, { 373.9f, 663.0f }, { 191.9f, 663.0f } } },
+        { { { 511.1f, 475.0f }, { 797.9f, 475.0f }, { 806.5f, 713.0f }, { 502.1f, 713.0f } } },
+        { { { 915.6f, 514.0f }, { 1092.4f, 514.0f }, { 1109.7f, 662.5f }, { 925.1f, 663.3f } } },
+        { { { 539.6f, 150.0f }, { 761.6f, 149.6f }, { 759.9f, 179.0f }, { 541.7f, 179.0f } } },
+        { { { 318.3f, 453.0f }, { 424.0f, 453.0f }, { 424.0f, 472.6f }, { 316.5f, 472.0f } } },
+        { { { 871.0f, 451.4f }, { 982.0f, 453.1f }, { 982.0f, 472.8f }, { 871.0f, 473.5f } } } } },
 };
 
 inline const CockpitArt* find_art(const char* ship_class) {
@@ -104,65 +100,39 @@ inline Rect to_screen(const Fit& f, const Rect& r) {
     return { f.ox + r.x * f.scale, f.oy + r.y * f.scale, r.w * f.scale, r.h * f.scale };
 }
 
-// Art-space extents over every present display.
-struct Extent { float left = 1e9f, top = 1e9f, right = -1e9f, bottom = -1e9f; };
-inline Extent display_extent(const CockpitArt& a) {
-    Extent e;
-    for (const Quad& q : a.display) {
-        if (!present(q)) continue;
-        for (const Vec2& p : q.p) {
-            e.left = std::min(e.left, p.x);  e.right  = std::max(e.right,  p.x);
-            e.top  = std::min(e.top,  p.y);  e.bottom = std::max(e.bottom, p.y);
-        }
-    }
-    return e;
+// Lowest art row any present display reaches.
+inline float display_bottom(const CockpitArt& a) {
+    float bottom = 0.0f;
+    for (const Quad& q : a.display)
+        if (present(q))
+            for (const Vec2& p : q.p) bottom = std::max(bottom, p.y);
+    return bottom;
 }
 
-// Painted-gunsight fit: the gunsight is pinned to the viewport centre. Scale
-// is the smallest that covers the sides and bottom (the most art on screen),
-// capped so every display stays fully visible. When the cap wins (wide
-// windows) the uncovered margins are padded with the surround.
-inline Fit fit_gunsight(const CockpitArt& a, float vp_x, float vp_y,
-                        float vp_w, float vp_h) {
-    const float hw = vp_w * 0.5f, hh = vp_h * 0.5f;
-    const Vec2  b  = a.boresight;
-    const float cover = std::max(hw / std::min(b.x, a.art_w - b.x),
-                                 hh / (a.art_h - b.y));
-    const Extent e = display_extent(a);
-    float cap = 1e9f;
-    if (e.left < e.right) {
-        cap = std::min({ hw / (b.x - e.left), hw / (e.right - b.x),
-                         hh / (b.y - e.top),  hh / (e.bottom - b.y) });
-    }
-    Fit f;
-    f.scale = std::min(cover, cap);
-    f.ox = vp_x + hw - b.x * f.scale;
-    f.oy = vp_y + hh - b.y * f.scale;
-    return f;
-}
-
-// Cover-and-slide fit: the art always spans the viewport (no letterbox),
-// centred horizontally. Vertically it slides so the boresight lands on the
-// screen centre — everything outside the canopy frame is transparent space,
-// so the slide never opens a visible seam at the top. Two clamps, in
-// priority order: never lift the art's bottom edge off the viewport (dash
-// must reach the bottom), and keep every display on screen (ultrawide).
-inline Fit fit_cover_slide(const CockpitArt& a, float vp_x, float vp_y,
-                           float vp_w, float vp_h) {
-    Fit f;
-    f.scale = std::max(vp_w / a.art_w, vp_h / a.art_h);
-    f.ox = vp_x + (vp_w - a.art_w * f.scale) * 0.5f;
-    const float bottom = vp_y + vp_h;
-    f.oy = vp_y + vp_h * 0.5f - a.boresight.y * f.scale;
-    f.oy = std::min(f.oy, bottom - display_extent(a).bottom * f.scale);
-    f.oy = std::max(f.oy, bottom - a.art_h * f.scale);
-    return f;
-}
-
+// Cover-and-slide fit: the art spans the viewport (no letterbox), centred
+// horizontally. Vertically it slides so the boresight lands on the screen
+// centre — everything outside the frame is transparent space, so the slide
+// never opens a visible seam at the top. Two clamps, in priority order:
+// never lift the art's bottom edge off the viewport (dash must reach the
+// bottom), and keep every display on screen.
+//
+// Very wide windows: covering the width would scale the art so far that the
+// boresight could no longer sit at centre with the lowest display still on
+// screen (the dash would ride up over the gunsight). The scale is capped
+// there instead (Hor+): extra width just shows more space at the sides.
 inline Fit fit_to_viewport(const CockpitArt& a, float vp_x, float vp_y,
                            float vp_w, float vp_h) {
-    return a.painted_gunsight ? fit_gunsight(a, vp_x, vp_y, vp_w, vp_h)
-                              : fit_cover_slide(a, vp_x, vp_y, vp_w, vp_h);
+    Fit f;
+    const float cover = std::max(vp_w / a.art_w, vp_h / a.art_h);
+    const float below = display_bottom(a) - a.boresight_y;
+    const float cap   = below > 0.0f ? (vp_h * 0.5f) / below : cover;
+    f.scale = std::max(vp_h / a.art_h, std::min(cover, cap));
+    f.ox = vp_x + (vp_w - a.art_w * f.scale) * 0.5f;
+    const float bottom = vp_y + vp_h;
+    f.oy = vp_y + vp_h * 0.5f - a.boresight_y * f.scale;
+    f.oy = std::min(f.oy, bottom - display_bottom(a) * f.scale);
+    f.oy = std::max(f.oy, bottom - a.art_h * f.scale);
+    return f;
 }
 
 // ---- perspective warp ------------------------------------------------------

@@ -7,8 +7,8 @@
 //     re-export of the art can't silently leave instruments off the bezels;
 //   * the quad interior is transparent glass and a ring just outside it is
 //     opaque bezel (the art on top masks warped-panel overhang);
-//   * the screen centre (gun boresight) looks through canopy glass — and,
-//     for art that paints its own gunsight, lands exactly on it.
+//   * the screen centre (gun boresight) looks through clear canopy glass —
+//     which also catches a baked-in crosshair (the HUD draws the live one).
 // Plus the fit and homography maths.
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -29,7 +29,7 @@ void check(bool ok, const char* label) {
 }
 bool near(float a, float b, float eps = 0.01f) { return std::fabs(a - b) < eps; }
 
-const char* kNames[kDisplayCount] = { "left", "centre", "right", "banner", "speed" };
+const char* kNames[kDisplayCount] = { "left", "centre", "right", "banner", "set", "kps" };
 const float kShapes[][2] = { {1024, 768}, {1280, 720}, {1280, 813}, {1440, 900},
                              {1512, 982}, {1920, 1080}, {2560, 1080}, {800, 600} };
 
@@ -182,7 +182,7 @@ void check_maths() {
 
 void check_fit(const CockpitArt& art) {
     char label[128];
-    bool visible = true, bottom = true, sides = true, pinned = true;
+    bool visible = true, bottom = true, sides = true;
     for (const auto& s : kShapes) {
         const Fit f = fit_to_viewport(art, 0, 0, s[0], s[1]);
         for (const Quad& q : art.display) {
@@ -194,21 +194,18 @@ void check_fit(const CockpitArt& art) {
             }
         }
         bottom &= f.oy + art.art_h * f.scale >= s[1] - 0.01f;
-        sides  &= f.ox <= 0.01f && f.ox + art.art_w * f.scale >= s[0] - 0.01f;
-        const Vec2 b = to_screen(f, art.boresight);
-        pinned &= near(b.x, s[0] * 0.5f, 0.05f) && near(b.y, s[1] * 0.5f, 0.05f);
+        // Full width up to 16:10-16:9 class windows; wider may pillarbox
+        // (Hor+) but must stay centred.
+        if (s[0] / s[1] <= 1.8f)
+            sides &= f.ox <= 0.01f && f.ox + art.art_w * f.scale >= s[0] - 0.01f;
+        sides &= near(f.ox * 2.0f + art.art_w * f.scale, s[0], 0.05f);
     }
     std::snprintf(label, sizeof(label), "%s: every display on screen, 4:3 to 21:9", art.ship_class);
     check(visible, label);
     std::snprintf(label, sizeof(label), "%s: dash always reaches the bottom edge", art.ship_class);
     check(bottom, label);
-    if (art.painted_gunsight) {
-        std::snprintf(label, sizeof(label), "%s: painted gunsight pinned to screen centre", art.ship_class);
-        check(pinned, label);
-    } else {
-        std::snprintf(label, sizeof(label), "%s: art always spans the full width", art.ship_class);
-        check(sides, label);
-    }
+    std::snprintf(label, sizeof(label), "%s: art centred; spans full width up to 16:9", art.ship_class);
+    check(sides, label);
 }
 
 void check_art_alpha(const CockpitArt& art) {
@@ -233,33 +230,23 @@ void check_art_alpha(const CockpitArt& art) {
         std::snprintf(label, sizeof(label), "%s %s: interior is real alpha glass (%.3f)",
                       art.ship_class, kNames[i], glass);
         check(glass > 0.99f, label);
-        const float bezel = bezel_ring(img, q, 4.0f);
+        // 2 px out: the Centurion centre MFD's bottom bezel is only 3 px.
+        const float bezel = bezel_ring(img, q, 2.0f);
         std::snprintf(label, sizeof(label), "%s %s: ringed by opaque bezel (%.3f)",
                       art.ship_class, kNames[i], bezel);
         check(bezel > 0.95f, label);
     }
 
-    // Boresight: canopy glass around it, except where the art paints its own
-    // gunsight — then the gunsight's opaque strokes must straddle it.
+    // Boresight: a 60 art-px box of clear canopy around it at every aspect —
+    // no dash, no strut, no baked reticle.
     bool clear = true;
     for (const auto& s : kShapes) {
         const Fit f = fit_to_viewport(art, 0, 0, s[0], s[1]);
         const float ax = (s[0] * 0.5f - f.ox) / f.scale, ay = (s[1] * 0.5f - f.oy) / f.scale;
-        clear &= img.clear(ax, ay);
-        if (!art.painted_gunsight)
-            clear &= quad_fraction(img, quad_from_rect(ax - 30, ay - 30, 60, 60), 0, 1, true) > 0.999f;
+        clear &= quad_fraction(img, quad_from_rect(ax - 30, ay - 30, 60, 60), 0, 1, true) > 0.999f;
     }
-    std::snprintf(label, sizeof(label), "%s: boresight looks through canopy glass", art.ship_class);
+    std::snprintf(label, sizeof(label), "%s: boresight looks through clear canopy", art.ship_class);
     check(clear, label);
-    if (art.painted_gunsight) {
-        const float bx = art.boresight.x, by = art.boresight.y;
-        int x0 = 0, x1 = 0;   // nearest opaque strokes left/right of centre
-        for (int d = 1; d < 80 && !x0; ++d) if (!img.clear(bx - d, by)) x0 = d;
-        for (int d = 1; d < 80 && !x1; ++d) if (!img.clear(bx + d, by)) x1 = d;
-        std::snprintf(label, sizeof(label), "%s: boresight centred in the painted gunsight (%d/%d px)",
-                      art.ship_class, x0, x1);
-        check(x0 > 0 && x1 > 0 && std::abs(x0 - x1) <= 2, label);
-    }
     stbi_image_free(img.px);
 }
 

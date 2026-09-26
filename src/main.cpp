@@ -6519,6 +6519,9 @@ void frame_cb() {
                 fs.autopilot_nav = g.autopilot.nav_name.c_str();
             if (g.autopilot.msg_timer_s > 0.0f)
                 fs.autopilot_msg = g.autopilot.msg;
+            fs.autopilot_ready = !autopilot::engaged(g.autopilot) &&
+                autopilot::engage_check(g.camera, g.system, g.selected_nav) ==
+                    EngageResult::Engaged;
             cockpit_hud::draw_flight_status_mfd(fs);
         }
         // Weapons + ordnance status (np-zte.2). Afterburner fuel bar
