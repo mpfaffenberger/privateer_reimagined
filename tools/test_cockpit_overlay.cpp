@@ -253,7 +253,8 @@ void check_art_alpha(const CockpitArt& art) {
 int main() {
     check(find_art("centurion") != nullptr, "centurion has cockpit art");
     check(find_art("talon") != nullptr,     "talon has cockpit art");
-    check(find_art("tarsus") == nullptr,    "hull without art keeps classic HUD");
+    check(find_art("tarsus") != nullptr,    "Tarsus has its own live cockpit");
+    check(find_art("unmapped-hull") == nullptr, "hull without art keeps classic HUD");
     check(find_art(nullptr) == nullptr,     "null class is safe");
 
     check_maths();
