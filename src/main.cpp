@@ -2241,6 +2241,20 @@ void build_system_scene(bool first_time, bool show_progress) {
         g.placed_sprites.push_back(s);
     }
 
+    // Far-field galaxies / anomalies. Same SpriteArt cache as placed
+    // sprites, but they are NOT pushed into placed_sprites — the light
+    // editor, targeting, and collision never see them. Drawn later as a
+    // camera-locked sky dome (see frame_cb, immediately after the skybox).
+    for (const SkyPropDef& sp : g.system.sky_props) {
+        const std::string stem_full = "assets/" + sp.sprite;
+        auto [it, inserted] = g.sprite_art.try_emplace(sp.sprite, SpriteArt{});
+        if (inserted && !load_sprite_art(stem_full, it->second)) {
+            std::fprintf(stderr, "[sky] skipping far-field prop '%s'\n",
+                         sp.sprite.c_str());
+            g.sprite_art.erase(it);
+        }
+    }
+
     for (const auto& sd : g.system.placed_ship_sprites) {
         // np-wdk: route every system-JSON ship atlas stem through the central
         // resolver so it loads the sprites_3d/ variant. The cache key is the
@@ -6047,7 +6061,9 @@ void frame_cb() {
         const Camera& scene_cam = *scene_cam_ptr;
         // Draw order rationale:
         //   1. skybox   — no depth write, paints the background
-        //   2. dust     — additive particulate in "empty space"; drawn BEFORE
+        //   2. sky props — pixel galaxies/anomalies on a camera-locked dome.
+        //                 No depth write, so everything below paints over them.
+        //   3. dust     — additive particulate in "empty space"; drawn BEFORE
         //                 opaque geometry so rocks/sun paint over it cleanly.
         //                 (If drawn later, dust's depth test lets individual
         //                 near-camera specks sparkle on top of rock surfaces,
@@ -6057,6 +6073,26 @@ void frame_cb() {
         //   5. sun gas + corona — additive halos, depth test but no write.
         if (!g.capture_clean) {
             g.skybox.draw(scene_cam, aspect);
+            // Pixel galaxies / anomalies, glued to the camera so they read
+            // as sky rather than as objects you can fly into. No depth
+            // write: dust, rocks, ships, and the sun all paint over them.
+            if (!g.system.sky_props.empty()) {
+                std::vector<SpriteObject> sky_sprites;
+                sky_sprites.reserve(g.system.sky_props.size());
+                for (const SkyPropDef& p : g.system.sky_props) {
+                    auto art = g.sprite_art.find(p.sprite);
+                    if (art == g.sprite_art.end() || !art->second.hull.valid) continue;
+                    SpriteObject s{};
+                    s.art        = &art->second;
+                    s.position   = sky_prop_world_position(scene_cam.position, p.direction);
+                    s.world_size = sky_prop_world_size(p.angular_deg);
+                    s.roll_rad   = p.roll_rad;
+                    s.tint       = HMM_V4(1.0f, 1.0f, 1.0f, p.alpha);
+                    s.face_camera_position = true;
+                    sky_sprites.push_back(s);
+                }
+                g.sprite_render.draw_sky_dome(sky_sprites, scene_cam, aspect);
+            }
             // Camera velocity uses the same numeric convention exposed as kps.
             g.dust.draw(scene_cam, aspect, HMM_LenV3(g.camera.velocity));
             // Warp streaks layer over dust (additive). Self-gates on

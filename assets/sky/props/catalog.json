@@ -1,0 +1,10 @@
+[
+  { "sprite": "sky/props/pixel_galaxy_spiral_pink", "angular_deg": 14.0, "kind": "galaxy" },
+  { "sprite": "sky/props/pixel_galaxy_elliptical_amber", "angular_deg": 12.0, "kind": "galaxy" },
+  { "sprite": "sky/props/pixel_galaxy_edgeon_green", "angular_deg": 16.0, "kind": "galaxy" },
+  { "sprite": "sky/props/pixel_galaxy_irregular_candy", "angular_deg": 11.0, "kind": "galaxy" },
+  { "sprite": "sky/props/pixel_anomaly_wormhole_purple", "angular_deg": 8.0, "kind": "anomaly" },
+  { "sprite": "sky/props/pixel_anomaly_ice_nebula", "angular_deg": 13.0, "kind": "anomaly" },
+  { "sprite": "sky/props/pixel_anomaly_pulsar_red", "angular_deg": 9.0, "kind": "anomaly" },
+  { "sprite": "sky/props/pixel_anomaly_plasma_blob", "angular_deg": 10.0, "kind": "anomaly" }
+]

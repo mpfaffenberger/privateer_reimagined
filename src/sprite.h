@@ -107,7 +107,9 @@ struct SpriteRenderer {
     sg_shader   shader{};
     sg_pipeline pipeline_hull{};      // alpha-blend
     sg_pipeline pipeline_lights{};    // additive (static lights texture)
+    sg_pipeline pipeline_sky{};       // alpha-blend, no depth write (sky props)
     sg_sampler  sampler{};
+    sg_sampler  sampler_pixel{};      // nearest mag — chunky sky-prop pixels
 
     // Procedural glow spot (sprite_spot.glsl) — used for animated lights.
     // Same quad VBO as above; different shader with radial falloff + no
@@ -126,6 +128,14 @@ struct SpriteRenderer {
               const Camera& cam,
               float aspect,
               float time_sec) const;
+
+    // Far-field sky props. Alpha-blended like a hull, but depth is NOT
+    // written, and the sampler keeps pixel art crisp when magnified.
+    // Draw these immediately after the skybox and before dust / ships so
+    // every gameplay object paints over them.
+    void draw_sky_dome(const std::vector<SpriteObject>& sprites,
+                       const Camera& cam,
+                       float aspect) const;
 
     // Draws a list of free-standing additive glow points (no texture,
     // no light animation, no UV-into-billboard math). Used for projectile

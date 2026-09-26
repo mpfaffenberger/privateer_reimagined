@@ -195,10 +195,17 @@ bool SpriteRenderer::init() {
     sd.wrap_v = SG_WRAP_CLAMP_TO_EDGE;
     sampler = sg_make_sampler(&sd);
 
+    // Sky props are magnified pixel art. Nearest magnification keeps the
+    // chunks; linear minification keeps a tiny anomaly from shimmering.
+    sg_sampler_desc pixel_sd = sd;
+    pixel_sd.mag_filter = SG_FILTER_NEAREST;
+    pixel_sd.min_filter = SG_FILTER_LINEAR;
+    sampler_pixel = sg_make_sampler(&pixel_sd);
+
     // --- pipelines --------------------------------------------------------
     // Shared layout + shader; the two pipelines differ ONLY in blend state
     // and depth write, so we build a base and stamp out two variants.
-    auto make_pipeline = [&](bool additive) {
+    auto make_pipeline = [&](bool additive, bool depth_write) {
         sg_pipeline_desc pd{};
         pd.shader = shader;
         pd.layout.attrs[ATTR_sprite_a_corner].format = SG_VERTEXFORMAT_FLOAT2;
@@ -224,8 +231,10 @@ bool SpriteRenderer::init() {
         // Hull writes depth so lights layer depth-tests against it correctly,
         // AND so any opaque geometry drawn AFTER sprites is properly occluded
         // by near-camera sprites. Lights pass does NOT write depth — additive
-        // overlays shouldn't mask anything behind them.
-        pd.depth.write_enabled = !additive;
+        // overlays shouldn't mask anything behind them. Sky props also skip
+        // the write: they are drawn first and must never occlude the sun,
+        // a distant station, or anything else in the system.
+        pd.depth.write_enabled = depth_write;
 
         pd.colors[0].pixel_format = kSceneColorFormat;
         pd.depth.pixel_format     = kSceneDepthFormat;
@@ -234,8 +243,9 @@ bool SpriteRenderer::init() {
         return sg_make_pipeline(&pd);
     };
 
-    pipeline_hull   = make_pipeline(/*additive=*/false);
-    pipeline_lights = make_pipeline(/*additive=*/true);
+    pipeline_hull   = make_pipeline(/*additive=*/false, /*depth_write=*/true);
+    pipeline_lights = make_pipeline(/*additive=*/true,  /*depth_write=*/false);
+    pipeline_sky    = make_pipeline(/*additive=*/false, /*depth_write=*/false);
 
     // --- animated-spot pipeline ------------------------------------------
     // Separate shader (sprite_spot.glsl) with its own vertex layout: only
@@ -268,6 +278,7 @@ bool SpriteRenderer::init() {
 
     const bool ok = sg_query_pipeline_state(pipeline_hull)   == SG_RESOURCESTATE_VALID
                  && sg_query_pipeline_state(pipeline_lights) == SG_RESOURCESTATE_VALID
+                 && sg_query_pipeline_state(pipeline_sky)    == SG_RESOURCESTATE_VALID
                  && sg_query_pipeline_state(spot_pipeline)   == SG_RESOURCESTATE_VALID;
     if (!ok) {
         std::fprintf(stderr, "[sprite] pipeline creation failed\n");
@@ -280,6 +291,8 @@ void SpriteRenderer::destroy() {
     sg_destroy_shader(spot_shader);
     sg_destroy_pipeline(pipeline_hull);
     sg_destroy_pipeline(pipeline_lights);
+    sg_destroy_pipeline(pipeline_sky);
+    sg_destroy_sampler(sampler_pixel);
     sg_destroy_sampler(sampler);
     sg_destroy_shader(shader);
     sg_destroy_buffer(ibuf);
@@ -530,6 +543,74 @@ void SpriteRenderer::draw(const std::vector<SpriteObject>& sprites,
             sg_apply_uniforms(UB_fs_spot_params, SG_RANGE(fsp));
             sg_draw(0, 6, 1);
         }
+    }
+}
+
+void SpriteRenderer::draw_sky_dome(const std::vector<SpriteObject>& sprites,
+                                   const Camera& cam,
+                                   float aspect) const {
+    if (sprites.empty()) return;
+
+    const HMM_Mat4 view = cam.view();
+    const HMM_Mat4 vp   = HMM_MulM4(cam.projection(aspect), view);
+    HMM_Vec3 cam_right, cam_up;
+    camera_basis(view, cam_right, cam_up);
+
+    sg_apply_pipeline(pipeline_sky);
+    sg_bindings b{};
+    b.vertex_buffers[0] = vbuf;
+    b.index_buffer      = ibuf;
+    b.samplers[SMP_u_smp] = sampler_pixel;
+
+    for (const SpriteObject& s : sprites) {
+        if (!s.art || !s.art->hull.valid) continue;
+
+        const int tw = s.art->hull_w, th = s.art->hull_h;
+        const float longest = (float)std::max(tw, th);
+        const float sx = (float)tw / longest;
+        const float sy = (float)th / longest;
+
+        // Viewpoint-aligned basis so a prop at the edge of the screen
+        // still faces the camera instead of shearing like a screen card.
+        HMM_Vec3 use_right = cam_right, use_up = cam_up;
+        if (s.face_camera_position) {
+            HMM_Vec3 fwd = HMM_SubV3(cam.position, s.position);
+            const float fl = HMM_LenV3(fwd);
+            if (fl > 1e-3f) {
+                fwd = HMM_DivV3F(fwd, fl);
+                HMM_Vec3 r = HMM_Cross(HMM_V3(0.0f, 1.0f, 0.0f), fwd);
+                float rl = HMM_LenV3(r);
+                if (rl < 1e-3f) { r = cam_right; rl = HMM_LenV3(r); }
+                r = HMM_DivV3F(r, std::max(rl, 1e-6f));
+                use_right = r;
+                use_up    = HMM_Cross(fwd, r);
+            }
+        }
+
+        vs_params_t vsp{};
+        std::memcpy(vsp.view_proj, &vp, sizeof(float) * 16);
+        vsp.cam_right[0] = use_right.X; vsp.cam_right[1] = use_right.Y;
+        vsp.cam_right[2] = use_right.Z; vsp.cam_right[3] = 0.0f;
+        vsp.cam_up[0]    = use_up.X;    vsp.cam_up[1]    = use_up.Y;
+        vsp.cam_up[2]    = use_up.Z;    vsp.cam_up[3]    = 0.0f;
+        vsp.inst_pos[0]  = s.position.X;
+        vsp.inst_pos[1]  = s.position.Y;
+        vsp.inst_pos[2]  = s.position.Z;
+        vsp.inst_pos[3]  = s.world_size * 0.5f;
+        vsp.inst_scale[0] = sx;
+        vsp.inst_scale[1] = sy;
+        vsp.inst_scale[2] = std::cos(s.roll_rad);
+        vsp.inst_scale[3] = std::sin(s.roll_rad);
+
+        fs_params_t fsp{};
+        fsp.tint[0] = s.tint.X; fsp.tint[1] = s.tint.Y;
+        fsp.tint[2] = s.tint.Z; fsp.tint[3] = s.tint.W;
+
+        b.views[VIEW_u_tex] = s.art->hull.view;
+        sg_apply_bindings(&b);
+        sg_apply_uniforms(UB_vs_params, SG_RANGE(vsp));
+        sg_apply_uniforms(UB_fs_params, SG_RANGE(fsp));
+        sg_draw(0, 6, 1);
     }
 }
 

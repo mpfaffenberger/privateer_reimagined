@@ -614,6 +614,18 @@ target_include_directories(test_world_clock PRIVATE
     ${CMAKE_SOURCE_DIR}/src
 )
 
+# Far-field sky prop placement. Run from the repo root.
+#   cmake --build build --target test_sky_props && ./build/test_sky_props
+add_executable(test_sky_props EXCLUDE_FROM_ALL
+    tools/test_sky_props.cpp
+    src/system_def.cpp
+    src/json.cpp
+)
+target_include_directories(test_sky_props PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/third_party
+)
+
 # Docking lifecycle proof, including the once-per-landing day advance. Save
 # and audio boundaries are stubbed by the harness; no real user files touched.
 #   cmake --build build --target test_docking && ./build/test_docking

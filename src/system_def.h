@@ -19,6 +19,8 @@
 //     "name":         "Troy",
 //     "description":  "...",
 //     "skybox_seed":  "troy",
+//     "sky_props":    [ { "sprite": "sky/props/pixel_galaxy_spiral_pink",
+//                         "dir": [0.2, 0.8, -0.5], "angular_deg": 12 } ],
 //     "star":         { "preset": "yellow" },
 //     "asteroid_fields": [
 //        { "center": [x,y,z], "half_extent": [x,y,z],
@@ -62,6 +64,51 @@ struct PlacedSpriteDef {
     HMM_Vec3    position      = { 0, 0, 0 };
     float       length_meters = 1000.0f;
 };
+
+// A far-field sky prop (pixel galaxy / anomaly) painted on the celestial
+// sphere. `sprite` is a path stem relative to `assets/` (the PNG is
+// `<stem>.png`). `direction` is a world-space unit vector: the billboard
+// is parked at camera + direction * k_sky_prop_dome_radius every frame, so
+// it stays glued to the sky (no parallax, no collision, not targetable).
+// `angular_deg` is the apparent diameter. Optional system JSON:
+//
+//   "sky_props": [
+//     { "sprite": "sky/props/pixel_galaxy_spiral_pink",
+//       "dir": [0.2, 0.8, -0.5], "angular_deg": 12,
+//       "roll_deg": 20, "alpha": 0.95 }
+//   ]
+//
+// Omit the key and the loader fills 1–3 props from a hash of skybox_seed.
+// An empty array is an explicit opt-out.
+struct SkyPropDef {
+    std::string sprite;
+    HMM_Vec3    direction   = { 0.0f, 1.0f, 0.0f };
+    float       angular_deg = 10.0f;
+    float       roll_rad    = 0.0f;
+    float       alpha       = 1.0f;
+};
+
+// Dome radius for sky props. Inside the camera far plane (500 km) with
+// margin for the billboard's rim, and beyond any nav / station in the
+// Gemini catalog so gameplay geometry draws in front.
+constexpr float k_sky_prop_dome_radius = 420000.0f;
+
+struct SkyPropCatalogEntry {
+    const char* sprite;        // assets-relative stem
+    float       angular_deg;   // typical apparent diameter
+};
+
+// Built-in pack. Order is part of the seed hash (index 0..3 are galaxies).
+const SkyPropCatalogEntry* sky_prop_catalog(int* count);
+
+// Deterministic 1–3 props for `skybox_seed`. Same seed → same sky.
+std::vector<SkyPropDef> autogen_sky_props(const std::string& skybox_seed);
+
+// World-space center of a sky prop for the camera currently rendering.
+HMM_Vec3 sky_prop_world_position(HMM_Vec3 camera_pos, HMM_Vec3 direction);
+
+// Billboard length (longest side, meters) for an apparent diameter.
+float sky_prop_world_size(float angular_deg);
 
 // A multi-view ship sprite atlas instance. `atlas` is a JSON manifest stem
 // relative to assets/, e.g. "ships/tarsus/atlas_manifest". Unlike generic
@@ -329,6 +376,12 @@ struct StarSystem {
     std::vector<PlacedMeshDef>       placed_meshes;
     std::vector<PlacedSpriteDef>     placed_sprites;
     std::vector<PlacedShipSpriteDef> placed_ship_sprites;
+
+    // Far-field galaxies / anomalies. `sky_props_authored` is true when the
+    // JSON contained a `sky_props` key (including an empty array, which
+    // means "none"). Otherwise `sky_props` is autogen_sky_props(skybox_seed).
+    bool                    sky_props_authored = false;
+    std::vector<SkyPropDef> sky_props;
     std::vector<NavPointDef>         nav_points;
     std::vector<EncounterRuleDef>    encounters;
 

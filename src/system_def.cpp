@@ -5,8 +5,11 @@
 #include "system_def.h"
 #include "json.h"
 
+#include <cmath>
+#include <cstdint>
 #include <cstdio>
 #include <filesystem>
+#include <utility>
 
 namespace {
 
@@ -111,6 +114,36 @@ PlacedShipSpriteDef parse_ship_sprite(const json::Value& v) {
     return s;
 }
 
+// Far-field sky prop. Directions are normalised; angular size is clamped
+// so a typo can't push the billboard through the camera far plane.
+SkyPropDef parse_sky_prop(const json::Value& v) {
+    SkyPropDef p;
+    if (auto* s = v.find("sprite")) p.sprite = s->as_string();
+    if (const json::Value* d = v.find("dir"))
+        p.direction = vec3_or(d, p.direction);
+    else if (const json::Value* d = v.find("direction"))
+        p.direction = vec3_or(d, p.direction);
+    const float len = std::sqrt(p.direction.X * p.direction.X +
+                                p.direction.Y * p.direction.Y +
+                                p.direction.Z * p.direction.Z);
+    if (len > 1e-4f) {
+        p.direction.X /= len;
+        p.direction.Y /= len;
+        p.direction.Z /= len;
+    } else {
+        p.direction = { 0.0f, 1.0f, 0.0f };
+    }
+    if (auto* a = v.find("angular_deg")) p.angular_deg = a->as_float();
+    if (auto* r = v.find("roll_rad"))    p.roll_rad    = r->as_float();
+    if (auto* r = v.find("roll_deg"))    p.roll_rad    = r->as_float() * 0.01745329251f;
+    if (auto* a = v.find("alpha"))       p.alpha       = a->as_float();
+    if (p.alpha < 0.0f) p.alpha = 0.0f;
+    if (p.alpha > 1.0f) p.alpha = 1.0f;
+    if (p.angular_deg < 2.0f)  p.angular_deg = 2.0f;
+    if (p.angular_deg > 28.0f) p.angular_deg = 28.0f;
+    return p;
+}
+
 // A nav waypoint — name, kind tag, position. Kind defaults to "nav" so a
 // minimal entry { "name": "X", "position": [...] } parses cleanly.
 NavPointDef parse_nav(const json::Value& v) {
@@ -212,6 +245,153 @@ std::string resolve_path(const std::string& s) {
 
 } // namespace
 
+namespace {
+
+// FNV-1a 64-bit. Same offset and prime as sky_family_hash(), so a
+// skybox_seed hashes identically here and in the sky-family picker.
+uint64_t sky_prop_hash(const std::string& s) {
+    uint64_t h = 14695981039346656037ull;
+    for (unsigned char c : s) {
+        h ^= (uint64_t)c;
+        h *= 1099511628211ull;
+    }
+    return h ? h : 0x9E3779B97F4A7C15ull;
+}
+
+struct SkyRng {
+    uint64_t s;
+    explicit SkyRng(uint64_t seed) : s(seed ? seed : 0x9E3779B97F4A7C15ull) {}
+    uint32_t u32() {
+        s ^= s >> 12;
+        s ^= s << 25;
+        s ^= s >> 27;
+        return (uint32_t)((s * 0x2545F4914F6CDD1Dull) >> 32);
+    }
+    float unit() { return (float)(u32() >> 8) * (1.0f / 16777216.0f); }
+};
+
+HMM_Vec3 sky_rand_dir(SkyRng& r) {
+    for (;;) {
+        const float x = r.unit() * 2.0f - 1.0f;
+        const float y = r.unit() * 2.0f - 1.0f;
+        const float q = x * x + y * y;
+        if (q >= 1.0f || q == 0.0f) continue;
+        const float k = 2.0f * std::sqrt(1.0f - q);
+        return HMM_V3(x * k, y * k, 1.0f - 2.0f * q);
+    }
+}
+
+bool sky_separated(HMM_Vec3 dir, const std::vector<SkyPropDef>& prev) {
+    for (const SkyPropDef& p : prev) {
+        if (HMM_DotV3(dir, p.direction) > 0.35f) return false;
+    }
+    return true;
+}
+
+// Rotate `v` by `radians` toward a direction perpendicular to `axis_hint`.
+HMM_Vec3 sky_rotate(HMM_Vec3 v, HMM_Vec3 axis_hint, float radians) {
+    HMM_Vec3 axis = HMM_Cross(v, axis_hint);
+    float al = HMM_LenV3(axis);
+    if (al < 1e-4f) {
+        axis = HMM_Cross(v, HMM_V3(1.0f, 0.0f, 0.0f));
+        al = HMM_LenV3(axis);
+    }
+    axis = HMM_DivV3F(axis, al > 1e-6f ? al : 1.0f);
+    const float c = std::cos(radians);
+    const float s = std::sin(radians);
+    const HMM_Vec3 term1 = HMM_MulV3F(v, c);
+    const HMM_Vec3 term2 = HMM_MulV3F(HMM_Cross(axis, v), s);
+    const HMM_Vec3 term3 = HMM_MulV3F(axis, HMM_DotV3(axis, v) * (1.0f - c));
+    return HMM_NormV3(HMM_AddV3(term1, HMM_AddV3(term2, term3)));
+}
+
+const SkyPropCatalogEntry k_sky_prop_catalog[] = {
+    { "sky/props/pixel_galaxy_spiral_pink",      14.0f },
+    { "sky/props/pixel_galaxy_elliptical_amber", 12.0f },
+    { "sky/props/pixel_galaxy_edgeon_green",     16.0f },
+    { "sky/props/pixel_galaxy_irregular_candy",  11.0f },
+    { "sky/props/pixel_anomaly_wormhole_purple",  8.0f },
+    { "sky/props/pixel_anomaly_ice_nebula",      13.0f },
+    { "sky/props/pixel_anomaly_pulsar_red",       9.0f },
+    { "sky/props/pixel_anomaly_plasma_blob",     10.0f },
+};
+constexpr int k_sky_prop_catalog_count = 8;
+constexpr int k_sky_prop_galaxy_count  = 4;   // first entries are galaxies
+
+} // namespace
+
+const SkyPropCatalogEntry* sky_prop_catalog(int* count) {
+    if (count) *count = k_sky_prop_catalog_count;
+    return k_sky_prop_catalog;
+}
+
+std::vector<SkyPropDef> autogen_sky_props(const std::string& skybox_seed) {
+    SkyRng rng(sky_prop_hash(skybox_seed));
+    const int count = 1 + (int)(rng.u32() % 3u);
+
+    // Every system gets at least one galaxy. The rest are a shuffle of
+    // whatever is left in the pack, so two systems rarely share a trio.
+    const int galaxy = (int)(rng.u32() % (uint32_t)k_sky_prop_galaxy_count);
+    int pool[k_sky_prop_catalog_count];
+    int n_pool = 0;
+    for (int i = 0; i < k_sky_prop_catalog_count; ++i) {
+        if (i == galaxy) continue;
+        pool[n_pool++] = i;
+    }
+    for (int i = n_pool - 1; i > 0; --i) {
+        const int j = (int)(rng.u32() % (uint32_t)(i + 1));
+        std::swap(pool[i], pool[j]);
+    }
+
+    int chosen[3] = { galaxy, 0, 0 };
+    for (int i = 1; i < count; ++i) chosen[i] = pool[i - 1];
+
+    std::vector<SkyPropDef> out;
+    out.reserve((size_t)count);
+    for (int n = 0; n < count; ++n) {
+        const SkyPropCatalogEntry& cat = k_sky_prop_catalog[chosen[n]];
+        SkyPropDef p;
+        p.sprite = cat.sprite;
+
+        HMM_Vec3 dir = sky_rand_dir(rng);
+        bool ok = sky_separated(dir, out);
+        for (int attempt = 0; attempt < 24 && !ok; ++attempt) {
+            dir = sky_rand_dir(rng);
+            ok = sky_separated(dir, out);
+        }
+        if (!ok && !out.empty()) {
+            dir = sky_rotate(out.back().direction, HMM_V3(0.0f, 1.0f, 0.0f), 1.9f);
+            if (!sky_separated(dir, out))
+                dir = sky_rotate(dir, HMM_V3(1.0f, 0.0f, 0.0f), 1.4f);
+        }
+        const float len = HMM_LenV3(dir);
+        p.direction = HMM_DivV3F(dir, len > 1e-6f ? len : 1.0f);
+
+        const float jitter = 0.85f + 0.30f * rng.unit();
+        p.angular_deg = cat.angular_deg * jitter;
+        p.roll_rad    = rng.unit() * 6.28318530718f;
+        p.alpha       = 0.92f + 0.08f * rng.unit();
+        out.push_back(p);
+    }
+    return out;
+}
+
+HMM_Vec3 sky_prop_world_position(HMM_Vec3 camera_pos, HMM_Vec3 direction) {
+    const float len = HMM_LenV3(direction);
+    const HMM_Vec3 dir = (len > 1e-4f)
+        ? HMM_DivV3F(direction, len)
+        : HMM_V3(0.0f, 1.0f, 0.0f);
+    return HMM_AddV3(camera_pos, HMM_MulV3F(dir, k_sky_prop_dome_radius));
+}
+
+float sky_prop_world_size(float angular_deg) {
+    float deg = angular_deg;
+    if (deg < 2.0f)  deg = 2.0f;
+    if (deg > 28.0f) deg = 28.0f;
+    const float half = deg * 0.5f * 0.01745329251f;
+    return 2.0f * k_sky_prop_dome_radius * std::tan(half);
+}
+
 std::optional<StarSystem> load_system(const std::string& name_or_path) {
     const std::string path = resolve_path(name_or_path);
     if (!std::filesystem::exists(path)) {
@@ -266,6 +446,18 @@ std::optional<StarSystem> load_system(const std::string& name_or_path) {
         }
     }
 
+    if (auto* props = root.find("sky_props"); props && props->is_array()) {
+        s.sky_props_authored = true;
+        for (const auto& sp : props->as_array()) {
+            if (!sp.is_object()) continue;
+            SkyPropDef p = parse_sky_prop(sp);
+            if (p.sprite.empty()) continue;
+            s.sky_props.push_back(std::move(p));
+        }
+    } else {
+        s.sky_props = autogen_sky_props(s.skybox_seed);
+    }
+
     if (auto* ships = root.find("placed_ship_sprites"); ships && ships->is_array()) {
         for (const auto& sp : ships->as_array()) {
             s.placed_ship_sprites.push_back(parse_ship_sprite(sp));
@@ -292,11 +484,18 @@ std::optional<StarSystem> load_system(const std::string& name_or_path) {
         }
     }
 
-    std::printf("[system] loaded '%s' — %s (skybox=%s, star=%s, fields=%zu, meshes=%zu, sprites=%zu, ship_sprites=%zu, navs=%zu)\n",
+    std::printf("[system] loaded '%s' — %s (skybox=%s, star=%s, fields=%zu, meshes=%zu, sprites=%zu, ship_sprites=%zu, navs=%zu, sky_props=%zu%s)\n",
                 path.c_str(), s.name.c_str(), s.skybox_seed.c_str(),
                 s.star_preset.c_str(), s.asteroid_fields.size(),
                 s.placed_meshes.size(), s.placed_sprites.size(),
-                s.placed_ship_sprites.size(), s.nav_points.size());
+                s.placed_ship_sprites.size(), s.nav_points.size(),
+                s.sky_props.size(),
+                s.sky_props_authored ? " authored" : " seeded");
+    for (const SkyPropDef& p : s.sky_props) {
+        std::printf("[sky]   %s  ang=%.1f°  dir=(%.2f, %.2f, %.2f)\n",
+                    p.sprite.c_str(), p.angular_deg,
+                    p.direction.X, p.direction.Y, p.direction.Z);
+    }
     if (!s.encounters.empty()) {
         std::printf("[system] '%s' has %zu encounter rule(s)\n",
                     s.name.c_str(), s.encounters.size());
