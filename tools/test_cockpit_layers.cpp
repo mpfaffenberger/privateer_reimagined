@@ -93,6 +93,9 @@ int main() {
     check(first_color(ImGui::GetBackgroundDrawList(), IM_COL32(130, 240, 230, 255)) < 0 &&
           first_color(ImGui::GetBackgroundDrawList(), IM_COL32(100, 245, 125, 255)) >= 0,
           "later normal-flight frame visibly changes power lamp, not AUTO");
+    const int activity = first_color(ImGui::GetBackgroundDrawList(), IM_COL32(255, 180, 45, 255));
+    check(activity >= 0 && ImGui::GetBackgroundDrawList()->VtxBuffer[activity].pos.y < io.DisplaySize.y * 0.5f,
+          "normal-flight amber blink is actually emitted on upper cockpit rim");
     ImGui::Render();
     io.DeltaTime = 1.0f / 60;
 
