@@ -3,7 +3,7 @@
 #include "cockpit_overlay_layout.h"
 #include "turn_response.h"
 
-// Cosmetic cockpit-only head lag (#439). The world camera, firing rays and
+// Cosmetic rigid cockpit slide (#444), replacing the rejected shear (#441). The world camera, firing rays and
 // crosshair remain unchanged: this suggests the pilot moving in the seat,
 // rather than moving the aim point. Zero strength disables it completely.
 namespace cockpit_overlay {
@@ -20,21 +20,19 @@ struct PilotHeadMotion {
 
     Homography transform(const Rect& viewport, float strength = 1.0f) const {
         strength = std::clamp(strength, 0.0f, 1.0f);
-        const float shear = lateral.rate * 0.035f * strength;
-        const float pitch_scale = 1.0f + vertical.rate * 0.018f * strength;
+        const float unit = std::min(viewport.w, viewport.h);
+        const float dx = std::clamp(lateral.rate, -1.0f, 1.0f) * unit * 0.006f * strength;
+        const float dy = std::clamp(vertical.rate, -1.0f, 1.0f) * unit * 0.004f * strength;
         const float cx = viewport.x + viewport.w * 0.5f;
         const float cy = viewport.y + viewport.h * 0.5f;
-        const float bottom = viewport.y + viewport.h;
-        // Extra horizontal coverage exactly compensates shear at viewport
-        // top/bottom. Head lean must never reintroduce the side gaps (#436).
-        const float pitch_guard = std::max(1.0f, 2.0f / pitch_scale - 1.0f);
-        const float widen = 1.0f + std::abs(shear) * viewport.h / viewport.w * pitch_guard;
+        // Fixed uniform overscan reserves 0.8% at every edge, more than the
+        // maximum slide. It never changes with acceleration: no breathing,
+        // shear, rotation or changing proportions. Only dx/dy move over time.
+        const float zoom = 1.0f + 0.016f * strength;
         Homography h;
-        h.m[0] = widen;
-        h.m[1] = shear;
-        h.m[2] = cx * (1.0f - widen) - shear * cy;
-        h.m[4] = pitch_scale;
-        h.m[5] = bottom * (1.0f - pitch_scale);
+        h.m[0] = h.m[4] = zoom;
+        h.m[2] = cx * (1.0f - zoom) + dx;
+        h.m[5] = cy * (1.0f - zoom) + dy;
         return h;
     }
 };

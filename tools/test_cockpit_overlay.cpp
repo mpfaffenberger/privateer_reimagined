@@ -262,31 +262,37 @@ int main() {
     PilotHeadMotion head;
     const Rect view{75, 40, 1920, 1080};
     const Vec2 sample{400, 200};
-    check(near(apply(head.transform(view), sample).x, sample.x), "head at rest is identity");
+    const Homography resting = head.transform(view);
+    const Vec2 center{view.x + view.w * 0.5f, view.y + view.h * 0.5f};
+    check(near(apply(resting, center).x, center.x) && near(apply(resting, center).y, center.y),
+          "resting slide centers fixed overscan without shifting cockpit");
     for (int i = 0; i < 60; ++i) head.update(3, -3, 1.0f / 60);
     check(head.lateral.rate < -0.99f && head.vertical.rate > 0.99f,
-          "head leans against angular acceleration");
+          "cockpit slides against angular acceleration");
     const Vec2 disabled = apply(head.transform(view, 0), sample);
     check(near(disabled.x, sample.x) && near(disabled.y, sample.y), "zero strength disables head effect");
     const float before = head.lateral.rate;
     head.update(-3, 3, 1.0f / 60);
     check(head.lateral.rate < 0 && std::abs(head.lateral.rate - before) < 0.1f,
           "head reversal is damped, not an instantaneous flip");
-    bool covered = true, bounded = true, aligned_head = true;
+    bool covered = true, bounded = true, aligned_head = true, rigid = true;
     for (float lateral : {-1.0f, 0.0f, 1.0f}) {
         for (float vertical : {-1.0f, 0.0f, 1.0f}) {
             head.lateral.rate = lateral;
             head.vertical.rate = vertical;
             const Homography h = head.transform(view);
+            rigid &= near(h.m[0], resting.m[0]) && near(h.m[4], resting.m[4]) &&
+                     h.m[1] == 0 && h.m[3] == 0 && h.m[6] == 0 && h.m[7] == 0;
             for (float y : {view.y, view.y + view.h}) {
-                // Intersect the transformed sides at actual viewport rows,
-                // including vertical compression from pitch lean.
+                // Intersect translated sides at actual viewport rows.
                 const float source_y = (y - h.m[5]) / h.m[4];
                 covered &= apply(h, {view.x, source_y}).x <= view.x + 0.01f;
                 covered &= apply(h, {view.x + view.w, source_y}).x >= view.x + view.w - 0.01f;
             }
-            const Vec2 p = apply(h, sample);
-            bounded &= std::abs(p.x - sample.x) < 50 && std::abs(p.y - sample.y) < 25;
+            const Vec2 p = apply(h, sample), neutral = apply(resting, sample);
+            bounded &= std::abs(p.x - neutral.x) <= 6.49f && std::abs(p.y - neutral.y) <= 4.33f;
+            covered &= apply(h, {view.x, view.y}).y <= view.y + 0.01f &&
+                       apply(h, {view.x, view.y + view.h}).y >= view.y + view.h - 0.01f;
             const auto* art = find_art("centurion");
             const Fit fit = fit_to_viewport(*art, view.x, view.y, view.w, view.h);
             for (const Quad& q : art->display) {
@@ -301,9 +307,33 @@ int main() {
             }
         }
     }
-    check(covered, "maximum head shear cannot reopen cockpit side gaps");
+    check(rigid, "motion changes translation only: no shear, rotation or dynamic zoom");
+    check(covered, "maximum rigid slide cannot reopen side or bottom gaps");
     check(bounded, "maximum head motion stays small and bounded");
-    check(aligned_head, "head warp keeps glass, instruments and mouse coordinates aligned");
+    check(aligned_head, "rigid slide keeps glass, instruments and mouse coordinates aligned");
+    bool slide_fit = true;
+    for (float width : {1024.0f, 1280.0f, 1920.0f, 2560.0f}) {
+        const Rect viewport{20, 30, width, 720};
+        for (const CockpitArt& art : kCockpitArts) {
+            const Fit f = fit_to_viewport(art, viewport.x, viewport.y, width, 720);
+            for (float sign : {-1.0f, 1.0f}) {
+                head.lateral.rate = head.vertical.rate = sign;
+                const Homography transform = head.transform(viewport);
+                const Rect art_rect = to_screen(f, Rect{0, 0, art.art_w, art.art_h});
+                const Vec2 lo = apply(transform, {art_rect.x, art_rect.y});
+                const Vec2 hi = apply(transform, {art_rect.x + art_rect.w, art_rect.y + art_rect.h});
+                slide_fit &= lo.x <= 20.01f && hi.x >= 20 + width - 0.01f && hi.y >= 749.99f;
+                for (const Quad& glass : art.display) {
+                    if (!present(glass)) continue;
+                    for (const Vec2& corner : to_screen(f, glass).p) {
+                        const Vec2 p = apply(transform, corner);
+                        slide_fit &= p.x >= 20 && p.x <= 20 + width && p.y >= 30 && p.y <= 750;
+                    }
+                }
+            }
+        }
+    }
+    check(slide_fit, "all hulls keep glass visible and frame covering edges during slide, 4:3 to 32:9");
     for (int i = 0; i < 180; ++i) head.update(0, 0, 1.0f / 60);
     check(std::abs(head.lateral.rate) < 0.00001f && std::abs(head.vertical.rate) < 0.00001f,
           "head returns to neutral in a steady turn");
