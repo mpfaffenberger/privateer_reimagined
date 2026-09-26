@@ -58,9 +58,9 @@ struct Camera {
 // Fly-by-wire turn rates (rad/s at full ±1 offset). Tuned for a
 // Freelancer-snappy feel: ~80°/s peak yaw, ~70°/s peak pitch.
 // Pitch slightly slower than yaw to discourage barrel-rolly chaos.
-// ~90% of a commanded turn rate after 0.23s; no overshoot. Kept separate
+// ~90% of a commanded turn rate after 0.62s; no overshoot. Kept separate
 // from hull-specific maximum rates so tuning preserves ship capabilities.
-float turn_response_seconds = 0.06f;
+float turn_response_seconds = 0.16f;
 TurnResponse yaw_response{}, pitch_response{};
 void reset_turn_response() { yaw_response.reset(); pitch_response.reset(); }
 
