@@ -53,8 +53,8 @@ int main() {
     check(axis.rate == 0 && axis.drive == 0, "handoff reset clears inertia");
     check(near(axis.step(1.4f, 0.1f, 0), 0.14f), "zero response time supports instant legacy tuning");
 
-    check(Camera{}.cockpit_head_motion_strength == 0.0f,
-          "cockpit remains rigid by default while turn inertia stays enabled");
+    check(Camera{}.cockpit_head_motion_strength == 1.0f,
+          "small rigid slide is enabled independently of turn inertia");
     Camera heavy;
     for (int i = 0; i < 9; ++i) heavy.apply_mouse_aim(1, 0, 1.0f / 60);
     const float fraction = -heavy.yaw_response.rate / heavy.max_yaw_rate;
