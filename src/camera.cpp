@@ -65,8 +65,10 @@ void Camera::apply_mouse_aim(float off_x, float off_y, float dt) {
     // Sign convention matches apply_mouse_delta. Pitch flip mirrors the
     // engine's world-up = +screen_y rendering convention (see camera.h
     // header note + the same flip in cockpit_hud nav reticle).
-    const float yaw_rad   = -dz(off_x) * max_yaw_rate   * dt;
-    const float pitch_rad = +dz(off_y) * max_pitch_rate * dt;
+    const float yaw_rad = yaw_response.step(
+        -dz(off_x) * max_yaw_rate, dt, turn_response_seconds);
+    const float pitch_rad = pitch_response.step(
+        dz(off_y) * max_pitch_rate, dt, turn_response_seconds);
     compose_local(*this, yaw_rad, pitch_rad);
     // No pitch clamp — quaternion + local-frame composition is happy at
     // any angle, no pole degeneracy. This is the whole reason we moved
