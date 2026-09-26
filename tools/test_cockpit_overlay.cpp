@@ -255,6 +255,13 @@ int main() {
     check(find_art("centurion") != nullptr, "centurion has cockpit art");
     check(find_art("talon") != nullptr,     "talon has cockpit art");
     check(find_art("tarsus") != nullptr,    "Tarsus has its own live cockpit");
+    const CockpitArt& tarsus = *find_art("tarsus");
+    check(tarsus.display[0].p[2].y < tarsus.display[1].p[0].y &&
+          tarsus.display[0].p[2].x < tarsus.display[1].p[0].x &&
+          tarsus.display[1].p[2].x < tarsus.display[2].p[0].x,
+          "Tarsus silhouette: hanging upper-left CRT plus two separate lower monitors");
+    check(!present(tarsus.display[3]) && !present(tarsus.display[4]) && !present(tarsus.display[5]),
+          "Tarsus has three CRTs, not the fighter six-hole dashboard");
     check(find_art("unmapped-hull") == nullptr, "hull without art keeps classic HUD");
     check(find_art(nullptr) == nullptr,     "null class is safe");
 

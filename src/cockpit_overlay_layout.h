@@ -47,21 +47,21 @@ struct CockpitArt {
     float       art_w, art_h;    // authoring resolution of the quads below
     float       boresight_y;     // art row that should sit at screen centre
     Quad        display[kDisplayCount];   // indexed by Display
+    bool        preserve_full_width = false; // asymmetric hanging CRTs must not be side-cropped
 };
 
 // One row per hull with cockpit art. Hulls without a row keep the classic
 // free-floating HUD.
 inline constexpr CockpitArt kCockpitArts[] = {
-    // Tarsus: boxy working-freighter frame with six live glass holes.
-    // Native-alpha source and deterministic finalized art; legacy Tarsus
-    // assets are retained untouched. Quads measured by cockpit_art.py.
-    { "tarsus", "assets/cockpits/tarsus_freighter.png", 1672.0f, 940.0f, 280.0f,
-      { { { { 320.0f, 606.5f }, { 552.3f, 595.4f }, { 562.5f, 765.3f }, { 332.0f, 786.7f } } },
-        { { { 687.4f, 542.0f }, { 983.9f, 542.1f }, { 982.5f, 762.4f }, { 688.7f, 762.3f } } },
-        { { { 1119.1f, 595.6f }, { 1351.5f, 606.5f }, { 1339.6f, 786.8f }, { 1108.9f, 765.0f } } },
-        { { { 709.8f, 23.0f }, { 961.8f, 22.9f }, { 961.9f, 70.4f }, { 709.8f, 70.6f } } },
-        { { { 378.8f, 510.8f }, { 524.0f, 506.2f }, { 524.0f, 540.6f }, { 379.0f, 545.2f } } },
-        { { { 1147.7f, 506.1f }, { 1292.8f, 511.0f }, { 1292.5f, 545.1f }, { 1148.1f, 540.7f } } } } },
+    // Tarsus (#452): classic asymmetric workstation silhouette. STATUS is
+    // a suspended upper-left CRT; radar and NAV are separate upright boxes
+    // on the low console. Three real glass holes, no fighter-style strips.
+    // Native-alpha art, with corners measured by cockpit_art.py analyze.
+    { "tarsus", "assets/cockpits/tarsus_freighter.png", 1672.0f, 940.0f, 400.0f,
+      { { { { 213.9f, 104.9f }, { 457.0f, 131.0f }, { 452.6f, 321.3f }, { 210.4f, 308.1f } } },
+        { { { 608.1f, 624.6f }, { 784.1f, 623.5f }, { 783.9f, 774.0f }, { 607.5f, 776.0f } } },
+        { { { 949.2f, 623.8f }, { 1126.5f, 624.1f }, { 1126.5f, 778.0f }, { 949.3f, 775.0f } } },
+        {}, {}, {} }, true },
     // Talon: the amber industrial v7 cockpit (first built for the Centurion,
     // reassigned when the classic silhouette was approved). Near-frontal
     // MFDs — the side screens' outer top corners lean in ~1.5 deg (<= 2.8 px),
@@ -146,7 +146,8 @@ inline Fit fit_to_viewport(const CockpitArt& a, float vp_x, float vp_y,
     const float below = display_bottom(a) - a.boresight_y;
     const float cap   = below > 0.0f ? (vp_h * 0.5f) / below : cover;
     f.scale_y = std::max(vp_h / a.art_h, std::min(cover, cap));
-    f.scale_x = std::max(f.scale_y, vp_w / a.art_w);
+    f.scale_x = a.preserve_full_width ? vp_w / a.art_w
+                                     : std::max(f.scale_y, vp_w / a.art_w);
     f.ox = vp_x + (vp_w - a.art_w * f.scale_x) * 0.5f;
     const float bottom = vp_y + vp_h;
     f.oy = vp_y + vp_h * 0.5f - a.boresight_y * f.scale_y;
