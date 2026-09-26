@@ -4353,6 +4353,10 @@ void frame_cb() {
     if (g.fly_by_wire && !ui_blocks_flight_mouse && !autopilot_lock
         && !dying && !cinematic::active()) {
         g.camera.apply_mouse_aim(off_x, off_y, dt);
+    } else {
+        // UI, autopilot and cinematics own the camera now. Never replay a
+        // stale manual turn when the pilot gets control back (#433).
+        g.camera.reset_turn_response();
     }
 
     // Drain any queued dev_remote commands into game state BEFORE
@@ -6470,7 +6474,7 @@ void frame_cb() {
             // nonsense, and skipping it drops the HUD back to the classic
             // floating panels for those frames automatically.
             if (!g.orbit_active)
-                cockpit_overlay::draw(g.player.ship_class_name);
+                cockpit_overlay::draw(g.player.ship_class_name, g.camera);
             cockpit_hud::build(g.camera, g.system, g.selected_nav,
                                g.mouse_x, g.mouse_y, g.fly_by_wire,
                                g.ships, g.player_target_id,

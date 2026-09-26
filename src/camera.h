@@ -24,6 +24,7 @@
 // -----------------------------------------------------------------------------
 
 #include "HandmadeMath.h"
+#include "turn_response.h"
 
 struct Camera {
     // ---- Orientation ---------------------------------------------------
@@ -57,6 +58,14 @@ struct Camera {
 // Fly-by-wire turn rates (rad/s at full ±1 offset). Tuned for a
 // Freelancer-snappy feel: ~80°/s peak yaw, ~70°/s peak pitch.
 // Pitch slightly slower than yaw to discourage barrel-rolly chaos.
+// ~90% of a commanded turn rate after 0.62s; no overshoot. Kept separate
+// from hull-specific maximum rates so tuning preserves ship capabilities.
+float turn_response_seconds = 0.16f;
+// Cosmetic head lean: 0 disables; 1 gives a small acceleration-driven sway.
+float cockpit_head_motion_strength = 1.0f;
+TurnResponse yaw_response{}, pitch_response{};
+void reset_turn_response() { yaw_response.reset(); pitch_response.reset(); }
+
 float max_yaw_rate    = 1.4f;
 float max_pitch_rate  = 1.2f;
 // Roll is keyboard-driven (Q/E in main), not mouse-driven, so it
@@ -119,7 +128,8 @@ float mouse_dead_zone = 0.05f;
 // Fly-by-wire aim. (off_x, off_y) is the mouse position normalised to
 // [-1, 1] from screen centre — 0 = neutral, ±1 = screen edge. Applies
 // a soft dead-zone around centre, then linearly maps the remainder
-// to angular velocity, then steps the camera by dt. Replaces FPS-
+// to a target angular velocity; damped acceleration then steps the camera.
+// Replaces FPS-
 // style relative-mouse look for ship piloting (Freelancer feel:
 // where the cursor sits, the nose chases).
 void apply_mouse_aim(float off_x, float off_y, float dt);

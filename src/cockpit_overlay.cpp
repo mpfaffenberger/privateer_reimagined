@@ -10,6 +10,8 @@
 // draw list is then emptied — ImGui skips a draw list with no commands
 // (AddDrawListToDrawDataEx), and it is reset on the next NewFrame anyway.
 #include "cockpit_overlay.h"
+#include "camera.h"
+#include "pilot_head_motion.h"
 
 #include "material.h"      // TextureSlot + load_texture_png (shared PNG loader)
 
@@ -48,6 +50,8 @@ struct DisplayFrame {
 const CockpitArt*  g_art = nullptr;
 const TextureSlot* g_tex = nullptr;
 Fit                g_fit;
+PilotHeadMotion    g_head;
+Homography         g_head_transform;
 int                g_frame = -1;
 DisplayFrame       g_displays[kDisplayCount];
 
@@ -146,13 +150,23 @@ const char* display_window_id(Display d) {
     }
 }
 
-void draw(const std::string& ship_class) {
+void draw(const std::string& ship_class, const Camera& camera) {
     const CockpitArt* art = find_art(ship_class.c_str());
     if (!art) return;
     const TextureSlot* tex = texture_for(*art);
     if (!tex) return;   // no art -> classic HUD; never park panels in thin air
 
     const ImGuiViewport* vp = ImGui::GetMainViewport();
+    // Skipped frames mean an external/cinematic camera or a different hull:
+    // discard old head lag instead of replaying it on cockpit re-entry.
+    if (g_frame != ImGui::GetFrameCount() - 1 || g_art != art)
+        g_head.reset();
+    const float tau = camera.turn_response_seconds;
+    g_head.update(camera.yaw_response.acceleration(tau) / std::max(camera.max_yaw_rate, 0.01f),
+                  camera.pitch_response.acceleration(tau) / std::max(camera.max_pitch_rate, 0.01f),
+                  ImGui::GetIO().DeltaTime);
+    g_head_transform = g_head.transform(
+        {vp->Pos.x, vp->Pos.y, vp->Size.x, vp->Size.y}, camera.cockpit_head_motion_strength);
     g_art   = art;
     g_tex   = tex;
     g_fit   = fit_to_viewport(*art, vp->Pos.x, vp->Pos.y, vp->Size.x, vp->Size.y);
@@ -166,7 +180,9 @@ void draw(const std::string& ship_class) {
         if (!d.present) continue;
         d.quad      = to_screen(g_fit, art->display[i]);
         d.panel     = panel_rect(d.quad);
-        d.to_screen = rect_to_quad(d.panel, d.quad);
+        // Keep the flat layout stable (no font reflow as the head moves).
+        // The same affine head transform moves glass, content and PNG.
+        d.to_screen = multiply(g_head_transform, rect_to_quad(d.panel, d.quad));
         d.to_panel  = inverse(d.to_screen);
         // Glass: the flat panel grown by the bleed, warped onto the bezel.
         const Rect g{ d.panel.x - kGlassBleed * g_fit.scale_x,
@@ -190,8 +206,11 @@ void finalize() {
             warp_draw_list(bg, w->DrawList, g_displays[i]);
     }
     const Rect full = to_screen(g_fit, Rect{ 0.0f, 0.0f, g_art->art_w, g_art->art_h });
-    bg->AddImage(simgui_imtextureid_with_sampler(g_tex->view, g_sampler),
-                 { full.x, full.y }, { full.x + full.w, full.y + full.h });
+    bg->AddImageQuad(simgui_imtextureid_with_sampler(g_tex->view, g_sampler),
+        iv(apply(g_head_transform, {full.x, full.y})),
+        iv(apply(g_head_transform, {full.x + full.w, full.y})),
+        iv(apply(g_head_transform, {full.x + full.w, full.y + full.h})),
+        iv(apply(g_head_transform, {full.x, full.y + full.h})));
 }
 
 bool active() {
