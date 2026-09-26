@@ -6464,8 +6464,13 @@ void frame_cb() {
                 !autopilot::engaged(g.autopilot) && !g.show_navmap;
             // Per-hull cockpit art (#426) goes down first, on ImGui's
             // background list, so the HUD panels below can park inside
-            // its MFD holes. No-op for hulls without art.
-            cockpit_overlay::draw(g.player.ship_class_name);
+            // its MFD holes. No-op for hulls without art. Skipped while
+            // the render camera is OUTSIDE the hull (autopilot chase cam,
+            // death cinematic): a cockpit frame over a 3rd-person view is
+            // nonsense, and skipping it drops the HUD back to the classic
+            // floating panels for those frames automatically.
+            if (!g.orbit_active)
+                cockpit_overlay::draw(g.player.ship_class_name);
             cockpit_hud::build(g.camera, g.system, g.selected_nav,
                                g.mouse_x, g.mouse_y, g.fly_by_wire,
                                g.ships, g.player_target_id,
