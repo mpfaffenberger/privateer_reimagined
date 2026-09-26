@@ -53,6 +53,14 @@ struct CockpitArt {
 // One row per hull with cockpit art. Hulls without a row keep the classic
 // free-floating HUD.
 inline constexpr CockpitArt kCockpitArts[] = {
+    // Galaxy (#462): original Privateer image-conditioned angular merchant
+    // cockpit. Three measured glass holes; full-canvas fit closes the ceiling
+    // and leaves clear canopy around the actual viewport centre.
+    { "galaxy", "assets/cockpits/galaxy.png", 1672.0f, 940.0f, 264.3f,
+      { { { { 81.9f, 567.8f }, { 291.2f, 567.9f }, { 282.6f, 698.9f }, { 69.7f, 698.9f } } },
+        { { { 382.9f, 523.8f }, { 760.0f, 523.9f }, { 757.5f, 749.5f }, { 369.7f, 749.4f } } },
+        { { { 916.5f, 523.8f }, { 1290.0f, 523.9f }, { 1302.3f, 749.4f }, { 919.0f, 749.5f } } },
+        {}, {}, {} }, true },
     // Tarsus (#458): approved image-conditioned Pioneer-inspired art. STATUS is
     // a suspended upper-left CRT; radar and NAV are separate upright boxes
     // on the low console. Three real glass holes, no fighter-style strips.

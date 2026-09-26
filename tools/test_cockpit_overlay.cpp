@@ -254,6 +254,7 @@ void check_art_alpha(const CockpitArt& art) {
 int main() {
     check(find_art("centurion") != nullptr, "centurion has cockpit art");
     check(find_art("talon") != nullptr,     "talon has cockpit art");
+    check(find_art("galaxy") != nullptr,    "Galaxy has its own reference-based cockpit");
     check(find_art("tarsus") != nullptr,    "Tarsus has its own live cockpit");
     const CockpitArt& tarsus = *find_art("tarsus");
     check(tarsus.display[0].p[2].y < tarsus.display[1].p[0].y &&
