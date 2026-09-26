@@ -206,7 +206,7 @@ static void draw_lights(ImDrawList* dl) {
         const Rect r = lamp.bounds;
         const bool on = lamp_on(lamp.lamp, g_lights, ImGui::GetTime());
         const ImU32 color = lamp.lamp == Lamp::Damage ? IM_COL32(255, 70, 35, 255)
-            : lamp.lamp == Lamp::Comms ? IM_COL32(255, 180, 45, 255)
+            : (lamp.lamp == Lamp::Comms || lamp.lamp == Lamp::Activity) ? IM_COL32(255, 180, 45, 255)
             : lamp.lamp == Lamp::Auto ? IM_COL32(100, 245, 125, 255)
             : IM_COL32(130, 240, 230, 255);
         if (on) rect(inset(r, -6), (color & 0x00ffffffu) | (65u << 24));

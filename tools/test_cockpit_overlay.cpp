@@ -279,7 +279,10 @@ int main() {
           "comms activity blinks at 2Hz only when active");
     check(lamp_on(Lamp::Damage, alert, 0.1) && !lamp_on(Lamp::Damage, alert, 0.6),
           "actual low armor warning blinks at 1Hz");
-    check(!lamp_on(Lamp::Power, {}, 0), "unpowered lamps stay dark");
+    check(!lamp_on(Lamp::Power, {}, 0) && !lamp_on(Lamp::Activity, {}, 0.9),
+          "unpowered lamps stay dark");
+    check(!lamp_on(Lamp::Activity, healthy, 0.1) && lamp_on(Lamp::Activity, healthy, 0.9),
+          "upper-rim amber activity alternates with cyan heartbeat in normal flight");
     const float capacity[4] = {10, 10, 10, 10}, safe[4] = {10, 10, 10, 10};
     const float hurt[4] = {10, 2.5f, 10, 10}, missing[4] = {0, 0, 0, 0};
     check(!low_armor(safe, capacity) && low_armor(hurt, capacity) && !low_armor(hurt, missing),
@@ -298,6 +301,28 @@ int main() {
         stbi_image_free(lamp_art.px);
     }
     check(on_metal, "Centurion lamp hardware and glow sit entirely on opaque metal");
+    bool rim_visible = true;
+    int rim_count = 0;
+    const CockpitArt& lamp_cockpit = *find_art("centurion");
+    for (const LampPlacement& lamp : kCenturionLamps) {
+        if (lamp.bounds.y >= 100) continue;
+        ++rim_count;
+        for (const auto& size : kShapes) {
+            const Fit fit = fit_to_viewport(lamp_cockpit, 0, 0, size[0], size[1]);
+            for (float side : {-1.0f, 1.0f}) {
+                PilotHeadMotion motion;
+                motion.lateral.rate = motion.vertical.rate = side;
+                const auto transform = motion.transform({0, 0, size[0], size[1]});
+                const Rect r = inset(lamp.bounds, -6);
+                for (const Vec2& corner : to_screen(fit, quad_from_rect(r.x, r.y, r.w, r.h)).p) {
+                    const Vec2 p = apply(transform, corner);
+                    rim_visible &= p.x >= 0 && p.x <= size[0] && p.y >= 0 && p.y < size[1] * 0.5f;
+                }
+            }
+        }
+    }
+    check(rim_count == 2 && rim_visible,
+          "two top-rim lamps remain in upper view throughout slide and supported aspects");
 
     // Head lag responds to acceleration, not steady angular velocity.
     PilotHeadMotion head;
