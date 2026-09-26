@@ -21,14 +21,16 @@ struct PilotHeadMotion {
     Homography transform(const Rect& viewport, float strength = 1.0f) const {
         strength = std::clamp(strength, 0.0f, 1.0f);
         const float unit = std::min(viewport.w, viewport.h);
-        const float dx = std::clamp(lateral.rate, -1.0f, 1.0f) * unit * 0.006f * strength;
+        constexpr float lateral_pixels = 20.0f; // logical px in either direction (#446)
+        const float dx = std::clamp(lateral.rate, -1.0f, 1.0f) * lateral_pixels * strength;
         const float dy = std::clamp(vertical.rate, -1.0f, 1.0f) * unit * 0.004f * strength;
         const float cx = viewport.x + viewport.w * 0.5f;
         const float cy = viewport.y + viewport.h * 0.5f;
-        // Fixed uniform overscan reserves 0.8% at every edge, more than the
-        // maximum slide. It never changes with acceleration: no breathing,
-        // shear, rotation or changing proportions. Only dx/dy move over time.
-        const float zoom = 1.0f + 0.016f * strength;
+        // Fixed uniform overscan covers full lateral travel plus a pixel
+        // of filtering margin. It only depends on viewport size/strength,
+        // never acceleration: no breathing, shear or dynamic zoom.
+        const float overscan = std::max(0.016f, 2.0f * (lateral_pixels + 1.0f) / viewport.w);
+        const float zoom = 1.0f + overscan * strength;
         Homography h;
         h.m[0] = h.m[4] = zoom;
         h.m[2] = cx * (1.0f - zoom) + dx;
