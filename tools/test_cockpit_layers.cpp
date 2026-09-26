@@ -99,6 +99,23 @@ int main() {
     ImGui::Render();
     io.DeltaTime = 1.0f / 60;
 
+    ImGui::NewFrame();
+    draw("tarsus", camera);
+    set_lights({true, false, true, false});
+    finalize();
+    check(first_color(ImGui::GetBackgroundDrawList(), IM_COL32(100, 245, 125, 255)) >= 0 &&
+          first_color(ImGui::GetBackgroundDrawList(), IM_COL32(130, 240, 230, 255)) >= 0,
+          "Tarsus auxiliary AUTO and activity lamps render in healthy flight");
+    ImGui::Render();
+    ImGui::NewFrame();
+    draw("tarsus", camera);
+    set_lights({true, false, false, false});
+    finalize();
+    check(first_color(ImGui::GetBackgroundDrawList(), IM_COL32(100, 245, 125, 255)) < 0 &&
+          first_color(ImGui::GetBackgroundDrawList(), IM_COL32(255, 70, 35, 255)) < 0,
+          "Tarsus blocked AUTO and healthy damage lamps stay dark");
+    ImGui::Render();
+
     ImGui::NewFrame(); // draw skipped: autopilot/external camera
     check(!active() && world_draw_list() == ImGui::GetForegroundDrawList(),
           "skipped cockpit frame restores classic marker layer");

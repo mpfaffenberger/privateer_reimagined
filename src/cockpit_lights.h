@@ -10,7 +10,7 @@ struct LightState {
     bool damage_warning = false;
 };
 enum class Lamp { Power, Comms, Auto, Damage, Activity };
-struct LampPlacement { Lamp lamp; Rect bounds; };
+struct LampPlacement { Lamp lamp; Rect bounds; double phase_seconds = 0; };
 // Centurion art pixels: console bank plus two upper-rim heartbeat lamps.
 // Renderer applies the identical fit + rigid slide as the cockpit PNG.
 inline constexpr LampPlacement kCenturionLamps[] = {
@@ -21,6 +21,32 @@ inline constexpr LampPlacement kCenturionLamps[] = {
     // Flank the arch banner on solid rim metal, clear of the glass (#456).
     {Lamp::Power,    {642, 40, 32, 12}},
     {Lamp::Activity, {998, 40, 32, 12}},
+};
+
+// Tarsus auxiliary panel beside the hanging STATUS CRT (#460).
+// Mask the old painted bar first, then illuminate its existing slots.
+inline constexpr Rect kTarsusActivityBackplate{583, 66, 105, 19};
+inline constexpr LampPlacement kTarsusLamps[] = {
+    {Lamp::Power, {585, 69, 5, 13}, 0.00},
+    {Lamp::Activity, {593, 69, 5, 13}, 0.12},
+    {Lamp::Power, {601, 69, 5, 13}, 0.24},
+    {Lamp::Activity, {609, 69, 5, 13}, 0.36},
+    {Lamp::Power, {617, 69, 5, 13}, 0.48},
+    {Lamp::Activity, {625, 69, 5, 13}, 0.60},
+    {Lamp::Power, {633, 69, 5, 13}, 0.72},
+    {Lamp::Activity, {641, 69, 5, 13}, 0.84},
+    {Lamp::Power, {649, 69, 5, 13}, 0.96},
+    {Lamp::Activity, {657, 69, 5, 13}, 1.08},
+    {Lamp::Power, {665, 69, 5, 13}, 1.20},
+    {Lamp::Activity, {673, 69, 5, 13}, 1.32},
+    {Lamp::Power, {681, 69, 5, 13}, 1.44},
+    // Cover both baked red lamp pairs; retain the AUTO lettering between.
+    {Lamp::Auto, {584, 107, 18, 16}},
+    {Lamp::Auto, {670, 107, 17, 16}},
+    {Lamp::Power, {605, 227, 20, 6}},
+    {Lamp::Activity, {605, 240, 20, 7}},
+    {Lamp::Comms, {605, 254, 20, 7}},
+    {Lamp::Damage, {605, 273, 20, 6}},
 };
 
 inline bool lamp_on(Lamp lamp, const LightState& state, double seconds) {

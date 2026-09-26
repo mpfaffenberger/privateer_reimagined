@@ -324,6 +324,38 @@ int main() {
     check(rim_count == 2 && rim_visible,
           "two top-rim lamps remain in upper view throughout slide and supported aspects");
 
+    AlphaImage auxiliary_art;
+    auxiliary_art.px = stbi_load(find_art("tarsus")->path, &auxiliary_art.w, &auxiliary_art.h, &channels, 4);
+    bool auxiliary_opaque = auxiliary_art.px != nullptr;
+    if (auxiliary_art.px) {
+        for (const LampPlacement& lamp : kTarsusLamps) {
+            const Rect r = inset(lamp.bounds, -1);
+            for (int y = (int)r.y; y <= (int)(r.y+r.h); ++y)
+                for (int x = (int)r.x; x <= (int)(r.x+r.w); ++x)
+                    auxiliary_opaque &= auxiliary_art.at(x,y) == 255;
+        }
+        const Rect r = kTarsusActivityBackplate;
+        for (int y = (int)r.y; y <= (int)(r.y+r.h); ++y)
+            for (int x = (int)r.x; x <= (int)(r.x+r.w); ++x)
+                auxiliary_opaque &= auxiliary_art.at(x,y) == 255;
+        stbi_image_free(auxiliary_art.px);
+    }
+    check(auxiliary_opaque, "Tarsus auxiliary lamps replace opaque panel graphics, not window glass");
+    bool ceiling_covered = true;
+    for (const auto& size : kShapes) {
+        const Fit f = fit_to_viewport(tarsus, 25, 35, size[0], size[1]);
+        ceiling_covered &= near(f.oy, 35) && near(f.oy + tarsus.art_h*f.scale_y, 35+size[1]);
+        for (float sign : {-1.0f, 1.0f}) {
+            PilotHeadMotion motion;
+            motion.lateral.rate = motion.vertical.rate = sign;
+            const auto h = motion.transform({25,35,size[0],size[1]});
+            const Vec2 top = apply(h, to_screen(f, Vec2{0,0}));
+            const Vec2 bottom = apply(h, to_screen(f, Vec2{tarsus.art_w,tarsus.art_h}));
+            ceiling_covered &= top.y <= 35 && bottom.y >= 35+size[1];
+        }
+    }
+    check(ceiling_covered, "Tarsus ceiling and floor cover viewport edges even during full slide");
+
     // Head lag responds to acceleration, not steady angular velocity.
     PilotHeadMotion head;
     const Rect view{75, 40, 1920, 1080};
