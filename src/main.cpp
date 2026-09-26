@@ -6068,9 +6068,9 @@ void frame_cb() {
         //                 (If drawn later, dust's depth test lets individual
         //                 near-camera specks sparkle on top of rock surfaces,
         //                 which reads as "holes" to the eye.)
-        //   3. asteroids — opaque, writes depth; covers dust where rocks are.
-        //   4. sun sphere— opaque, writes depth.
-        //   5. sun gas + corona — additive halos, depth test but no write.
+        //   4. asteroids — opaque, writes depth; covers dust where rocks are.
+        //   5. sun sphere— opaque, writes depth.
+        //   6. sun gas + corona — additive halos, depth test but no write.
         if (!g.capture_clean) {
             g.skybox.draw(scene_cam, aspect);
             // Pixel galaxies / anomalies, glued to the camera so they read
