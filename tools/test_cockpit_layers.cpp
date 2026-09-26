@@ -62,17 +62,25 @@ int main() {
                                              {panel.x+30, panel.y+30}, instrument);
     ImGui::End();
     ImGui::GetForegroundDrawList()->AddRectFilled({5, 5}, {20, 20}, ui);
+    set_lights({true, false, true, false});
     finalize();
     const int m = first_color(bg, marker);
     const int g = first_color(bg, IM_COL32(6, 10, 9, 255));
     const int i = first_color(bg, instrument);
     check(m == 0 && g > m, "opaque MFD glass covers world markers");
     check(i > g, "live instrument content stays above glass");
+    const ImDrawCmd* art_draw = nullptr;
     const ImDrawCmd* last_draw = nullptr;
-    for (const ImDrawCmd& cmd : bg->CmdBuffer)
-        if (cmd.ElemCount) last_draw = &cmd; // PopTexture leaves an empty command
-    check(bg->VtxBuffer.Size >= i + 4 && last_draw && last_draw->GetTexID() == 42,
-          "cockpit PNG is composited last over world markers and MFDs");
+    for (const ImDrawCmd& cmd : bg->CmdBuffer) {
+        if (cmd.ElemCount) last_draw = &cmd;
+        if (cmd.ElemCount && cmd.GetTexID() == 42) art_draw = &cmd;
+    }
+    check(art_draw && bg->IdxBuffer[art_draw->IdxOffset] > i,
+          "cockpit PNG is composited over world markers and MFDs");
+    check(art_draw && last_draw && last_draw->IdxOffset > art_draw->IdxOffset &&
+          first_color(bg, IM_COL32(140, 210, 185, 255)) > i &&
+          first_color(bg, IM_COL32(100, 245, 125, 255)) > i,
+          "live power and AUTO lamps are painted on top of cockpit metal");
     check(first_color(ImGui::GetForegroundDrawList(), ui) >= 0 && first_color(bg, ui) < 0,
           "menus and cursor foreground stay independent of cockpit mask");
     ImGui::Render();

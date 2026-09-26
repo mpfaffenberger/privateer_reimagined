@@ -54,6 +54,7 @@ PilotHeadMotion    g_head;
 Homography         g_head_transform;
 int                g_frame = -1;
 DisplayFrame       g_displays[kDisplayCount];
+LightState         g_lights;
 
 // Display glass: opaque dark screen so world markers cannot bleed through a
 // bright sun or nebula. Bled under the bezel so no sliver of space shows —
@@ -151,6 +152,7 @@ const char* display_window_id(Display d) {
 }
 
 void draw(const std::string& ship_class, const Camera& camera) {
+    g_lights = {};
     const CockpitArt* art = find_art(ship_class.c_str());
     if (!art) return;
     const TextureSlot* tex = texture_for(*art);
@@ -185,6 +187,35 @@ void draw(const std::string& ship_class, const Camera& camera) {
     }
 }
 
+void set_lights(const LightState& state) {
+    if (active()) g_lights = state;
+}
+
+// Hardware lamps are painted after the PNG, on the same background list.
+// Every corner follows its art-space placement through fit and pilot slide.
+static void draw_lights(ImDrawList* dl) {
+    if (std::strcmp(g_art->ship_class, "centurion") != 0) return;
+    const auto rect = [dl](Rect r, ImU32 color) {
+        const Quad q = to_screen(g_fit, quad_from_rect(r.x, r.y, r.w, r.h));
+        dl->AddQuadFilled(iv(apply(g_head_transform, q.p[0])),
+                          iv(apply(g_head_transform, q.p[1])),
+                          iv(apply(g_head_transform, q.p[2])),
+                          iv(apply(g_head_transform, q.p[3])), color);
+    };
+    for (const LampPlacement& lamp : kCenturionLamps) {
+        const Rect r = lamp.bounds;
+        const bool on = lamp_on(lamp.lamp, g_lights, ImGui::GetTime());
+        const ImU32 color = lamp.lamp == Lamp::Damage ? IM_COL32(255, 70, 35, 255)
+            : lamp.lamp == Lamp::Comms ? IM_COL32(255, 180, 45, 255)
+            : lamp.lamp == Lamp::Auto ? IM_COL32(100, 245, 125, 255)
+            : IM_COL32(140, 210, 185, 255);
+        if (on) rect(inset(r, -4), (color & 0x00ffffffu) | (35u << 24));
+        rect(inset(r, -2), IM_COL32(12, 14, 12, 255));
+        rect(r, on ? color : IM_COL32(43, 40, 30, 255));
+        if (on) rect({r.x+2, r.y+1, r.w-4, 1.5f}, IM_COL32(255, 245, 205, 190));
+    }
+}
+
 void finalize() {
     if (!active()) return;
     ImDrawList* bg = ImGui::GetBackgroundDrawList();
@@ -213,6 +244,7 @@ void finalize() {
         iv(apply(g_head_transform, {full.x + full.w, full.y})),
         iv(apply(g_head_transform, {full.x + full.w, full.y + full.h})),
         iv(apply(g_head_transform, {full.x, full.y + full.h})));
+    draw_lights(bg);
 }
 
 bool active() {
