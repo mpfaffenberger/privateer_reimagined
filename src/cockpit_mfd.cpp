@@ -10,6 +10,14 @@
 // ImGui 1.92's dynamic fonts let us rasterise text at the glass-sized pixel
 // height instead of blurry-scaling it.
 //
+// Flat windows (rather than perspective-warped planes) are correct because
+// the art's MFD glass is frontal: measured corners sit <= 2.8 art px off an
+// axis-aligned rect, inside the content padding. The harness enforces that
+// per art row. If future art has genuinely angled MFDs, the least-invasive
+// upgrade is a CPU homography over the slot window's ImDrawList vertices
+// after End() (rect -> measured quad, clip rect = quad bbox), with the
+// inverse mapping applied to the mouse for the interactive STATUS page.
+//
 // The one ImGui wrinkle: the centre MFD carries RADAR plus the FLIGHT and
 // ordnance readouts that used to be separate floating panels. ImGui happily
 // re-opens a window by name within a frame and appends to it, so those

@@ -6,6 +6,13 @@
 // transparent glass ringed by opaque bezel (so a re-export of the art can't
 // silently leave the instruments floating over the dashboard) and that the
 // screen centre (gun boresight) always looks through canopy glass.
+//
+// It also guards the flat-window design: cockpit_mfd pins axis-aligned
+// ImGui windows to the holes, which is only right while the glass is a
+// frontal rectangle. Every art row's holes are measured (edge lines fitted
+// to the alpha, corners intersected) and must sit within
+// kFlatTolerancePx of their table rect. Genuinely skewed/perspective MFDs
+// would fail here, and then need a perspective quad path, not a nudge.
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
@@ -52,6 +59,85 @@ float ring_opaque(const unsigned char* px, int w, int h, const Rect& r, int by) 
     for (int x = x0; x <= x1; ++x) { sample(x, y0); sample(x, y1); }
     for (int y = y0 + 1; y < y1; ++y) { sample(x0, y); sample(x1, y); }
     return total ? (float)hit / (float)total : 0.0f;
+}
+
+// ---- hole flatness (perspective guard) -------------------------------------
+// Max art px a measured hole corner may sit off its table rect and still be
+// served by a flat window: the MFD content padding (5 logical px) plus the
+// glass's rounded corners absorb this much lean without visible overlap.
+constexpr float kFlatTolerancePx = 4.0f;
+
+struct AlphaImage {
+    const unsigned char* px; int w, h;
+    int at(int x, int y) const { return px[(y * w + x) * 4 + 3]; }
+};
+
+// Sub-pixel coordinate (pixel-centre convention) along the walk axis where
+// alpha crosses 128, walking from (x,y) in steps of (dx,dy). NAN if none.
+float edge_crossing(const AlphaImage& a, int x, int y, int dx, int dy, int limit) {
+    int prev = a.at(x, y);
+    for (int i = 1; i <= limit; ++i) {
+        const int nx = x + dx * i, ny = y + dy * i;
+        if (nx < 0 || ny < 0 || nx >= a.w || ny >= a.h) break;
+        const int cur = a.at(nx, ny);
+        if ((prev >= 128) != (cur >= 128)) {
+            const float t = (128.0f - prev) / (float)(cur - prev);
+            const int   from = dx ? nx - dx : ny - dy;   // walk-axis index of prev
+            return (float)from + 0.5f + t * (float)(dx ? dx : dy);
+        }
+        prev = cur;
+    }
+    return NAN;
+}
+
+// Least-squares u = k*v + c.
+struct Line { float k = 0, c = 0; };
+Line fit_line(const float* v, const float* u, int n) {
+    double mv = 0, mu = 0;
+    for (int i = 0; i < n; ++i) { mv += v[i]; mu += u[i]; }
+    mv /= n; mu /= n;
+    double sxy = 0, sxx = 0;
+    for (int i = 0; i < n; ++i) { sxy += (v[i] - mv) * (u[i] - mu); sxx += (v[i] - mv) * (v[i] - mv); }
+    const double k = sxx > 0 ? sxy / sxx : 0.0;
+    return { (float)k, (float)(mu - k * mv) };
+}
+
+// Largest corner offset between the hole's measured quad and `r`. Edges are
+// sampled 10 px in from the rounded corners; side edges are x = k*y + c,
+// top/bottom are y = k*x + c; corners are their intersections.
+float max_corner_offset(const AlphaImage& a, const Rect& r) {
+    const int x0 = (int)r.x, y0 = (int)r.y, x1 = (int)(r.x + r.w) - 1, y1 = (int)(r.y + r.h) - 1;
+    const int cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, reach = (int)std::max(r.w, r.h);
+    float v[512], le[512], ri[512], to[512], bo[512];
+    int nr = 0, nc = 0;
+    for (int y = y0 + 10; y <= y1 - 10 && nr < 512; ++y, ++nr) {
+        v[nr]  = (float)y + 0.5f;
+        le[nr] = edge_crossing(a, cx, y, -1, 0, reach);
+        ri[nr] = edge_crossing(a, cx, y, +1, 0, reach);
+        if (std::isnan(le[nr]) || std::isnan(ri[nr])) return INFINITY;
+    }
+    const Line L = fit_line(v, le, nr), R = fit_line(v, ri, nr);
+    for (int x = x0 + 10; x <= x1 - 10 && nc < 512; ++x, ++nc) {
+        v[nc]  = (float)x + 0.5f;
+        to[nc] = edge_crossing(a, x, cy, 0, -1, reach);
+        bo[nc] = edge_crossing(a, x, cy, 0, +1, reach);
+        if (std::isnan(to[nc]) || std::isnan(bo[nc])) return INFINITY;
+    }
+    const Line T = fit_line(v, to, nc), B = fit_line(v, bo, nc);
+    auto corner = [](Line side, Line cap, float& x, float& y) {
+        y = (cap.k * side.c + cap.c) / (1.0f - cap.k * side.k);
+        x = side.k * y + side.c;
+    };
+    const float rx[4] = { r.x, r.x + r.w, r.x + r.w, r.x };
+    const float ry[4] = { r.y, r.y,       r.y + r.h, r.y + r.h };
+    const Line  sides[4] = { L, R, R, L }, caps[4] = { T, T, B, B };
+    float worst = 0.0f;
+    for (int i = 0; i < 4; ++i) {
+        float x, y;
+        corner(sides[i], caps[i], x, y);
+        worst = std::max(worst, std::hypot(x - rx[i], y - ry[i]));
+    }
+    return worst;
 }
 
 } // namespace
@@ -132,6 +218,27 @@ int main() {
         }
         check(boresight_clear, "boresight looks through canopy glass at every aspect");
         stbi_image_free(px);
+    }
+
+    // Perspective guard, for EVERY art row (not just the Centurion).
+    for (const CockpitArt& a : kCockpitArts) {
+        int iw = 0, ih = 0, ic = 0;
+        unsigned char* ipx = stbi_load(a.path, &iw, &ih, &ic, 4);
+        char label[112];
+        if (!ipx) {
+            std::snprintf(label, sizeof(label), "%s art loads for flatness check", a.ship_class);
+            check(false, label);
+            continue;
+        }
+        const AlphaImage img{ ipx, iw, ih };
+        const char* names[] = { "left", "centre", "right" };
+        for (int i = 0; i < kMfdCount; ++i) {
+            const float off = max_corner_offset(img, a.mfd[i]);
+            std::snprintf(label, sizeof(label), "%s %s MFD is a frontal rect (worst corner %.2f px)",
+                          a.ship_class, names[i], off);
+            check(off <= kFlatTolerancePx, label);
+        }
+        stbi_image_free(ipx);
     }
 
     std::printf("\n%s\n", g_failures ? "FAIL" : "ALL PASS");

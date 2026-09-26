@@ -33,6 +33,11 @@ struct CockpitArt {
 // free-floating HUD. Centurion MFD rects measured from centurion.png alpha:
 // left 303..428 x 462..546, centre 559..720 x 396..503, right 846..971 x
 // 462..547 (inclusive), each ~97.6% of its bbox (softly rounded corners).
+// All three are FRONTAL rectangles: edge lines fitted to the alpha put every
+// corner within 2.8 art px of these rects (worst: the side MFDs' outer top
+// corners lean in ~1.5 deg), so flat axis-aligned windows match the glass.
+// tools/test_cockpit_overlay enforces that (<= 4 px) for every row — art
+// with truly skewed/perspective MFDs must fail there and get a quad path.
 // Boresight: the centre-column canopy glass spans y 110..335 and the dash
 // starts at 336, so a plain centred fit (screen centre = y 360) would park
 // the gun crosshair ON the dashboard. y 260 keeps the crosshair + nav
