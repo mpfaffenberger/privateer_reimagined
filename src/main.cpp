@@ -47,6 +47,7 @@
 #include "camera.h"
 #include "cockpit_armaments.h"
 #include "cockpit_hud.h"
+#include "cockpit_overlay.h"
 #include "comms_menu.h"
 #include "comm.h"
 #include "voice.h"
@@ -6461,6 +6462,10 @@ void frame_cb() {
             // the navmap panel renders the same info textually.
             const bool draw_world =
                 !autopilot::engaged(g.autopilot) && !g.show_navmap;
+            // Per-hull cockpit art (#426) goes down first, on ImGui's
+            // background list, so the HUD panels below can park inside
+            // its MFD holes. No-op for hulls without art.
+            cockpit_overlay::draw(g.player.ship_class_name);
             cockpit_hud::build(g.camera, g.system, g.selected_nav,
                                g.mouse_x, g.mouse_y, g.fly_by_wire,
                                g.ships, g.player_target_id,

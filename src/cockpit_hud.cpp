@@ -16,7 +16,9 @@
 //           (no NDC Y-flip), so target projection skips the
 //           textbook (1 - ndc_y) inversion.
 #include "cockpit_hud.h"
+#include "cockpit_hud_internal.h"
 #include "cockpit_armaments.h"
+#include "cockpit_overlay.h"
 #include "comms_menu.h"
 #include "navmap_projection.h"
 
@@ -65,25 +67,8 @@ ScreenSize screen_size() {
              dpi };
 }
 
-// Palette — a small, deliberate set of HUD colours so every panel sings
-// the same tune. Amber matches our nav-target reticle; cyan/green/blue
-// are radar dot colours per nav kind.
-static const ImU32 kAmber     = IM_COL32(255, 217,  77, 240);
-static const ImU32 kDimAmber  = IM_COL32(180, 150,  60, 200);
-static const ImU32 kCyan      = IM_COL32(120, 220, 255, 240);
-static const ImU32 kGreen     = IM_COL32(120, 240, 140, 240);
-static const ImU32 kBlueP     = IM_COL32( 90, 160, 255, 240);
-// navmap-only colours. Distinguish jump holes (bright blue circles) from
-// empty nav points (green circles) and from dockable bases (squares use
-// the kind colour from color_for_kind). Matches the classic Privateer
-// tactical map: square = base, blue = jump hole, green = nav point.
-static const ImU32 kJumpBlue  = IM_COL32( 80, 150, 255, 240);
-static const ImU32 kNavGreen  = IM_COL32(120, 240, 140, 240);
-// Grid + axis labels on the navmap. Faint enough that nav points still
-// pop, dark enough that the grid is legible against the panel background.
-static const ImU32 kGridLine  = IM_COL32( 80, 130, 180,  55);
-static const ImU32 kHudWhite  = IM_COL32(220, 230, 235, 220);
-static const ImU32 kPanelBg   = IM_COL32( 10,  14,  20, 220);
+// Palette, kHudWindowFlags and push/pop_hud_style live in
+// cockpit_hud_internal.h (shared with cockpit_mfd.cpp).
 
 // Map a nav kind to its radar/MFD dot colour. String compare is fine —
 // nav_points is small and this loop is dwarfed by ImGui call overhead.
@@ -92,27 +77,6 @@ ImU32 color_for_kind(const std::string& kind) {
     if (kind == "station") return kGreen;
     if (kind == "planet")  return kBlueP;
     return kHudWhite;
-}
-
-// Common flag set for HUD windows: locked-in-place, no chrome, no input.
-constexpr ImGuiWindowFlags kHudWindowFlags =
-    ImGuiWindowFlags_NoTitleBar         | ImGuiWindowFlags_NoResize        |
-    ImGuiWindowFlags_NoMove             | ImGuiWindowFlags_NoScrollbar     |
-    ImGuiWindowFlags_NoCollapse         | ImGuiWindowFlags_NoSavedSettings |
-    ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav           |
-    ImGuiWindowFlags_NoInputs;
-
-// Push the standard HUD window styling (dark-bg + amber border). Pair
-// with pop_hud_style() — uses 2 colours + 2 vars.
-void push_hud_style() {
-    ImGui::PushStyleColor(ImGuiCol_WindowBg, kPanelBg);
-    ImGui::PushStyleColor(ImGuiCol_Border,   kAmber);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding,    ImVec2(8.0f, 6.0f));
-}
-void pop_hud_style() {
-    ImGui::PopStyleVar(2);
-    ImGui::PopStyleColor(2);
 }
 
 // Which sub-screen the STATUS panel is showing. Defaults to the hull
@@ -349,13 +313,10 @@ void draw_nav_mfd(const Camera& cam, const StarSystem& system, int selected_nav,
     const float w = 240.0f, margin = 16.0f;
     const float h = has_prompt ? 116.0f : 96.0f;
 
-    ImGui::SetNextWindowPos(ImVec2(s.w - w - margin, s.h - h - margin),
-                            ImGuiCond_Always);
-    ImGui::SetNextWindowSize(ImVec2(w, h), ImGuiCond_Always);
-    ImGui::SetNextWindowBgAlpha(0.55f);
-    push_hud_style();
-
-    if (ImGui::Begin("##nav_mfd", nullptr, kHudWindowFlags)) {
+    const PanelPlacement panel = place_panel(
+        cockpit_overlay::Mfd::Right, "##nav_mfd",
+        ImVec2(s.w - w - margin, s.h - h - margin), ImVec2(w, h));
+    if (begin_panel(panel)) {
         ImGui::PushStyleColor(ImGuiCol_Text, kAmber);
         ImGui::TextUnformatted("NAV");
         ImGui::PopStyleColor();
@@ -398,8 +359,7 @@ void draw_nav_mfd(const Camera& cam, const StarSystem& system, int selected_nav,
             }
         }
     }
-    ImGui::End();
-    pop_hud_style();
+    end_panel(panel);
 }
 
 // ---- radar MFD (bottom-left) ---------------------------------------------
@@ -426,12 +386,11 @@ void draw_target_mfd(const Camera& cam, const ShipRegistry& ships,
 
     const auto sz = screen_size();
     constexpr float w = 280.0f, h = 248.0f, margin = 16.0f;
-    ImGui::SetNextWindowPos(ImVec2(sz.w - w - margin, margin), ImGuiCond_Always);
-    ImGui::SetNextWindowSize(ImVec2(w, h), ImGuiCond_Always);
-    ImGui::SetNextWindowBgAlpha(0.55f);
-    push_hud_style();
+    const PanelPlacement panel = place_panel(
+        cockpit_overlay::Mfd::Right, "##target_mfd",
+        ImVec2(sz.w - w - margin, margin), ImVec2(w, h));
 
-    if (ImGui::Begin("##target_mfd", nullptr, kHudWindowFlags)) {
+    if (begin_panel(panel)) {
         ImGui::PushStyleColor(ImGuiCol_Text, kAmber);
         ImGui::TextUnformatted("TARGET");
         ImGui::PopStyleColor();
@@ -446,7 +405,11 @@ void draw_target_mfd(const Camera& cam, const ShipRegistry& ships,
             // Left column: sprite thumbnail (if available). Use the
             // camera-relative cell selector so the thumbnail matches
             // what the player sees out the window.
-            constexpr float thumb_w = 80.0f, thumb_h = 80.0f;
+            // In an MFD the portrait shrinks to the 3-line identity block
+            // beside it so the shield/armor diagram keeps room below.
+            const float thumb_w = panel.in_mfd
+                ? ImGui::GetTextLineHeightWithSpacing() * 3.0f : 80.0f;
+            const float thumb_h = thumb_w;
             if (target->sprite && target->sprite->atlas) {
                 const ShipSpriteFrame* f = choose_ship_sprite_frame(
                     *target->sprite->atlas, *target->sprite, cam);
@@ -575,8 +538,9 @@ void draw_target_mfd(const Camera& cam, const ShipRegistry& ships,
             // No facing labels to reserve room for, so the base height is the
             // bare bar/frame extent and the drawing fills the space below the
             // portrait/identity block.
+            // Floor 0.4 (not 1.0) so the diagram still fits a cockpit MFD.
             const float s = std::clamp(std::min(avail_w / 150.0f,
-                                                avail_h / 82.0f), 1.0f, 3.0f);
+                                                avail_h / 82.0f), 0.4f, 3.0f);
 
             const float k_circle_r         = 11.0f * s;
             const float k_bar_thick        = 6.0f  * s;
@@ -650,8 +614,7 @@ void draw_target_mfd(const Camera& cam, const ShipRegistry& ships,
                                            k_ship_col, k_ship_outline);
         }
     }
-    ImGui::End();
-    pop_hud_style();
+    end_panel(panel);
 }
 
 // Top-left STATUS panel — player ship's hull integrity at a glance.
@@ -669,16 +632,15 @@ void draw_player_status(ShipRegistry& ships,
     Ship& player = *player_p;
 
     constexpr float w = 280.0f, h = 224.0f, margin = 16.0f;
-    ImGui::SetNextWindowPos(ImVec2(margin, margin), ImGuiCond_Always);
-    ImGui::SetNextWindowSize(ImVec2(w, h), ImGuiCond_Always);
-    ImGui::SetNextWindowBgAlpha(0.55f);
-    push_hud_style();
+    const PanelPlacement panel = place_panel(
+        cockpit_overlay::Mfd::Left, "##player_status",
+        ImVec2(margin, margin), ImVec2(w, h));
 
     // The armaments screen is the one interactive STATUS page: its hardpoints
     // accept drag/drop. Every other page remains click-through flight HUD.
     const ImGuiWindowFlags status_flags = g_status_screen == StatusScreen::Weapons
         ? (kHudWindowFlags & ~ImGuiWindowFlags_NoInputs) : kHudWindowFlags;
-    if (ImGui::Begin("##player_status", nullptr, status_flags)) {
+    if (begin_panel(panel, status_flags)) {
         ImGui::PushStyleColor(ImGuiCol_Text, kAmber);
         ImGui::TextUnformatted("STATUS");
         ImGui::PopStyleColor();
@@ -777,8 +739,9 @@ void draw_player_status(ShipRegistry& ships,
             // Base height is the bare bar/frame extent now that the F/A/P/St
             // facing labels are gone — no label margin to reserve, so the
             // drawing grows to nearly fill the panel.
+            // Floor 0.4 (not 1.0) so the diagram still fits a cockpit MFD.
             const float s = std::clamp(std::min(avail_w / 150.0f,
-                                                avail_h / 98.0f), 1.0f, 3.0f);
+                                                avail_h / 98.0f), 0.4f, 3.0f);
 
             const float k_circle_r         = 13.0f * s;  // ship icon radius
             const float k_bar_thick        = 7.0f  * s;  // each bar thickness
@@ -868,8 +831,7 @@ void draw_player_status(ShipRegistry& ships,
         break;
       }   // end switch(g_status_screen)
     }
-    ImGui::End();
-    pop_hud_style();
+    end_panel(panel);
 
 }
 
@@ -878,21 +840,21 @@ void draw_radar_mfd(const Camera& cam, const StarSystem& system, int selected_na
     const auto s = screen_size();
     constexpr float w = 168.0f, h = 168.0f, margin = 16.0f;
 
-    ImGui::SetNextWindowPos(ImVec2(margin, s.h - h - margin), ImGuiCond_Always);
-    ImGui::SetNextWindowSize(ImVec2(w, h), ImGuiCond_Always);
-    ImGui::SetNextWindowBgAlpha(0.55f);
+    // In the cockpit the disc takes the square middle of the centre MFD;
+    // the flanks either side carry the FLIGHT/ordnance readouts.
+    const PanelPlacement panel = place_panel(
+        cockpit_overlay::Mfd::Center, "##radar_mfd",
+        ImVec2(margin, s.h - h - margin), ImVec2(w, h));
+    const cockpit_overlay::Rect disc = panel.in_mfd
+        ? cockpit_overlay::split_radar(to_rect(panel)).disc
+        : to_rect(panel);
 
-    ImGui::PushStyleColor(ImGuiCol_WindowBg, kPanelBg);
-    ImGui::PushStyleColor(ImGuiCol_Border,   kAmber);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding,    ImVec2(0.0f, 0.0f));
-
-    if (ImGui::Begin("##radar_mfd", nullptr, kHudWindowFlags)) {
-        ImVec2      p0 = ImGui::GetWindowPos();
+    if (begin_panel(panel, kHudWindowFlags, ImVec2(0.0f, 0.0f))) {
+        const ImVec2 p0 = panel.pos;
         ImDrawList* dl = ImGui::GetWindowDrawList();
 
-        const ImVec2 ctr  = ImVec2(p0.x + w * 0.5f, p0.y + h * 0.5f);
-        const float  rad  = std::min(w, h) * 0.5f - 6.0f;
+        const ImVec2 ctr  = ImVec2(disc.x + disc.w * 0.5f, disc.y + disc.h * 0.5f);
+        const float  rad  = std::min(disc.w, disc.h) * 0.5f - (panel.in_mfd ? 3.0f : 6.0f);
         // 35 km radar radius (np-rad.1) — expanded from the legacy 15 km so
         // a single screen frame can show more of the local traffic around
         // the player. Anything past 35k clamps to the rim, so nav points
@@ -995,12 +957,11 @@ void draw_radar_mfd(const Camera& cam, const StarSystem& system, int selected_na
         dl->AddTriangleFilled(p_tip, p_bl, p_br, kHudWhite);
 
         // Faint label so first-time players know what they're looking at.
-        dl->AddText(ImVec2(p0.x + 6.0f, p0.y + 4.0f), kDimAmber, "RADAR");
+        // The cockpit's flank gauges own that corner; the bezel says RADAR.
+        if (!panel.in_mfd)
+            dl->AddText(ImVec2(p0.x + 6.0f, p0.y + 4.0f), kDimAmber, "RADAR");
     }
-    ImGui::End();
-
-    ImGui::PopStyleVar(2);
-    ImGui::PopStyleColor(2);
+    end_panel(panel);
 }
 
 // ---- nav-point name labels ----------------------------------------------
@@ -1287,6 +1248,8 @@ bool project_world_point(const Camera& cam, HMM_Vec3 world,
 // (not in the anon namespace) so main.cpp can drive it with the live
 // camera + autopilot snapshot every flight frame.
 void draw_flight_status_mfd(const FlightStatusHudState& s) {
+    // Cockpit art up: speed/mode/energy flank the radar instead.
+    if (draw_flight_flanks(s)) return;
     const auto sz = screen_size();
     constexpr float w = 280.0f, margin = 16.0f;
     // Height grows for the energy gauge + any autopilot rows so the box
@@ -1362,8 +1325,17 @@ void build(const Camera& cam, const StarSystem& system, int selected_nav,
         ? ships.find_by_id(target_ship_id) : nullptr;
     draw_player_status(ships, player_preview_atlas, system, status_target,
                        player_state, selected_ordnance);
-    draw_nav_mfd   (cam, system, selected_nav, dock_prompt, dock_ready);
-    draw_target_mfd(cam, ships, target_ship_id);
+    if (!cockpit_overlay::active()) {
+        draw_nav_mfd   (cam, system, selected_nav, dock_prompt, dock_ready);
+        draw_target_mfd(cam, ships, target_ship_id);
+    } else if (status_target && status_target->alive && !dock_ready) {
+        // Cockpit art has ONE right-hand MFD, shared Privateer-VDU style:
+        // a live ship lock shows TARGET, otherwise NAV. Cleared-to-dock/jump
+        // always wins so the D/J prompt can never hide behind a lock.
+        draw_target_mfd(cam, ships, target_ship_id);
+    } else {
+        draw_nav_mfd(cam, system, selected_nav, dock_prompt, dock_ready);
+    }
     draw_radar_mfd (cam, system, selected_nav, ships, target_ship_id);
     // "Who's speaking" speaker marker. Always on when set — it's the
     // HUD's only way to anchor a comm-bark ship visually, so even when
@@ -1458,10 +1430,12 @@ void build_mission_objectives(const Camera& cam, const StarSystem& system,
     constexpr float w = 280.0f, margin = 16.0f;
     const float row_h = ImGui::GetTextLineHeightWithSpacing();
     const float h = 26.0f + row_h * (float)rows.size() + 6.0f;
-    // STATUS panel is 224 tall at (16,16); sit just below it.
+    // STATUS panel is 224 tall at (16,16); sit just below it — unless the
+    // cockpit art has moved STATUS into the left MFD, freeing the corner.
     constexpr float kStatusPanelH = 224.0f;
-    ImGui::SetNextWindowPos(ImVec2(margin, margin + kStatusPanelH + 8.0f),
-                            ImGuiCond_Always);
+    const float y = cockpit_overlay::active()
+        ? margin : margin + kStatusPanelH + 8.0f;
+    ImGui::SetNextWindowPos(ImVec2(margin, y), ImGuiCond_Always);
     ImGui::SetNextWindowSize(ImVec2(w, h), ImGuiCond_Always);
     ImGui::SetNextWindowBgAlpha(0.55f);
     push_hud_style();
@@ -1519,6 +1493,8 @@ void build_weapons_status(const WeaponsHudState& w) {
     // become noise (DF always shows "DUMBFIRE", HS/IR always shows the
     // lock-state legend which is meaningless without missiles to fire).
     if (w.missile_count <= 0) return;
+    // Cockpit art up: ordnance lives in the centre MFD's left flank.
+    if (draw_weapons_flank(w)) return;
 
     const ScreenSize ss = screen_size();
     ImDrawList* dl = ImGui::GetForegroundDrawList();
@@ -1537,23 +1513,16 @@ void build_weapons_status(const WeaponsHudState& w) {
     dl->AddText(ImVec2(x, y), ammo_col, line);
     y += 18.0f;
 
-    // ---- lock state -----------------------------------------------------
-    // DF (no lock) just shows "DUMBFIRE"; HS/IR show seeking/locked with
-    // an IR build-up bar so the ~1.5s acquire is visible, not mysterious.
-    if (!w.needs_lock) {
-        dl->AddText(ImVec2(x, y), kDimAmber, w.no_lock_label);
-    } else if (w.lock_state == 2) {
-        dl->AddText(ImVec2(x, y), kGreen, "LOCKED");
-    } else if (w.lock_state == 1) {
-        dl->AddText(ImVec2(x, y), kCyan, "LOCK\xE2\x80\xA6");   // "LOCK…"
+    // ---- lock state (wording shared with the MFD flank) -----------------
+    const LockReadout lock = lock_readout(w);
+    dl->AddText(ImVec2(x, y), lock.col, lock.text);
+    if (lock.show_progress) {
         // Build-up bar to the right of the label.
         const float bx = x + 64.0f, bw = 80.0f, bh = 8.0f;
         dl->AddRect(ImVec2(bx, y + 2.0f), ImVec2(bx + bw, y + 2.0f + bh), kDimAmber);
         const float f = std::clamp(w.lock_progress, 0.0f, 1.0f);
         dl->AddRectFilled(ImVec2(bx + 1, y + 3.0f),
                           ImVec2(bx + 1 + (bw - 2) * f, y + 1.0f + bh), kCyan);
-    } else {
-        dl->AddText(ImVec2(x, y), kDimAmber, "NO TARGET");
     }
     y += 22.0f;
 
