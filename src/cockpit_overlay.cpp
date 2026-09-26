@@ -194,7 +194,10 @@ void set_lights(const LightState& state) {
 // Hardware lamps are painted after the PNG, on the same background list.
 // Every corner follows its art-space placement through fit and pilot slide.
 static void draw_lights(ImDrawList* dl) {
-    if (std::strcmp(g_art->ship_class, "centurion") != 0) return;
+    const bool embedded = std::strcmp(g_art->ship_class, "tarsus") == 0;
+    if (!embedded && std::strcmp(g_art->ship_class, "centurion") != 0) return;
+    const LampPlacement* lamps = embedded ? kTarsusLamps : kCenturionLamps;
+    const size_t count = embedded ? std::size(kTarsusLamps) : std::size(kCenturionLamps);
     const auto rect = [dl](Rect r, ImU32 color) {
         const Quad q = to_screen(g_fit, quad_from_rect(r.x, r.y, r.w, r.h));
         dl->AddQuadFilled(iv(apply(g_head_transform, q.p[0])),
@@ -202,15 +205,19 @@ static void draw_lights(ImDrawList* dl) {
                           iv(apply(g_head_transform, q.p[2])),
                           iv(apply(g_head_transform, q.p[3])), color);
     };
-    for (const LampPlacement& lamp : kCenturionLamps) {
+    if (embedded) rect(kTarsusActivityBackplate, IM_COL32(9, 12, 13, 255));
+    for (size_t i = 0; i < count; ++i) {
+        const LampPlacement& lamp = lamps[i];
         const Rect r = lamp.bounds;
-        const bool on = lamp_on(lamp.lamp, g_lights, ImGui::GetTime());
+        const bool on = lamp_on(lamp.lamp, g_lights, ImGui::GetTime() + lamp.phase_seconds);
         const ImU32 color = lamp.lamp == Lamp::Damage ? IM_COL32(255, 70, 35, 255)
             : (lamp.lamp == Lamp::Comms || lamp.lamp == Lamp::Activity) ? IM_COL32(255, 180, 45, 255)
             : lamp.lamp == Lamp::Auto ? IM_COL32(100, 245, 125, 255)
             : IM_COL32(130, 240, 230, 255);
-        if (on) rect(inset(r, -6), (color & 0x00ffffffu) | (65u << 24));
-        rect(inset(r, -3), IM_COL32(85, 86, 72, 255));
+        if (!embedded) {
+            if (on) rect(inset(r, -6), (color & 0x00ffffffu) | (65u << 24));
+            rect(inset(r, -3), IM_COL32(85, 86, 72, 255));
+        }
         rect(inset(r, -1), IM_COL32(12, 14, 12, 255));
         rect(r, on ? color : IM_COL32(43, 40, 30, 255));
         if (on) rect({r.x+2, r.y+1, r.w-4, 2.0f}, IM_COL32(255, 245, 205, 210));

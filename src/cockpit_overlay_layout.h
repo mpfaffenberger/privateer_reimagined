@@ -47,7 +47,7 @@ struct CockpitArt {
     float       art_w, art_h;    // authoring resolution of the quads below
     float       boresight_y;     // art row that should sit at screen centre
     Quad        display[kDisplayCount];   // indexed by Display
-    bool        preserve_full_width = false; // asymmetric hanging CRTs must not be side-cropped
+    bool        fit_entire_canvas = false; // workstation ceiling and all CRTs stay in the viewport
 };
 
 // One row per hull with cockpit art. Hulls without a row keep the classic
@@ -142,12 +142,21 @@ inline float display_bottom(const CockpitArt& a) {
 inline Fit fit_to_viewport(const CockpitArt& a, float vp_x, float vp_y,
                            float vp_w, float vp_h) {
     Fit f;
+    if (a.fit_entire_canvas) {
+        // Tarsus has a physical ceiling: boresight-sliding the entire image
+        // exposes a straight band of space above it (#460). Fit the whole
+        // authored canvas; its central canopy remains clear at the gunsight.
+        f.scale_x = vp_w / a.art_w;
+        f.scale_y = vp_h / a.art_h;
+        f.ox = vp_x;
+        f.oy = vp_y;
+        return f;
+    }
     const float cover = std::max(vp_w / a.art_w, vp_h / a.art_h);
     const float below = display_bottom(a) - a.boresight_y;
     const float cap   = below > 0.0f ? (vp_h * 0.5f) / below : cover;
     f.scale_y = std::max(vp_h / a.art_h, std::min(cover, cap));
-    f.scale_x = a.preserve_full_width ? vp_w / a.art_w
-                                     : std::max(f.scale_y, vp_w / a.art_w);
+    f.scale_x = std::max(f.scale_y, vp_w / a.art_w);
     f.ox = vp_x + (vp_w - a.art_w * f.scale_x) * 0.5f;
     const float bottom = vp_y + vp_h;
     f.oy = vp_y + vp_h * 0.5f - a.boresight_y * f.scale_y;
