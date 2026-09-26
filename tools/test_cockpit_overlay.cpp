@@ -290,7 +290,8 @@ int main() {
                 covered &= apply(h, {view.x + view.w, source_y}).x >= view.x + view.w - 0.01f;
             }
             const Vec2 p = apply(h, sample), neutral = apply(resting, sample);
-            bounded &= std::abs(p.x - neutral.x) <= 6.49f && std::abs(p.y - neutral.y) <= 4.33f;
+            bounded &= near(p.x - neutral.x, lateral * 20.0f, 0.01f) &&
+                       std::abs(p.y - neutral.y) <= 4.33f;
             covered &= apply(h, {view.x, view.y}).y <= view.y + 0.01f &&
                        apply(h, {view.x, view.y + view.h}).y >= view.y + view.h - 0.01f;
             const auto* art = find_art("centurion");
@@ -309,7 +310,7 @@ int main() {
     }
     check(rigid, "motion changes translation only: no shear, rotation or dynamic zoom");
     check(covered, "maximum rigid slide cannot reopen side or bottom gaps");
-    check(bounded, "maximum head motion stays small and bounded");
+    check(bounded, "maximum slide is exactly 20px left/right with subtle vertical travel");
     check(aligned_head, "rigid slide keeps glass, instruments and mouse coordinates aligned");
     bool slide_fit = true;
     for (float width : {1024.0f, 1280.0f, 1920.0f, 2560.0f}) {
