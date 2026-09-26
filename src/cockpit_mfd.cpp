@@ -1,28 +1,17 @@
-// cockpit_mfd.cpp — HUD panel placement + compact MFD readouts (#426).
+// cockpit_mfd.cpp — HUD panel placement + compact cockpit readouts (#426).
 //
-// Why ImGui windows (and not a separate render path) for the MFDs:
-// cockpit_hud's panels are already ImGui windows with live data, and the
-// STATUS armaments page takes drag/drop input. Re-drawing them through
-// another path would fork every panel. Instead each panel keeps its body and
-// only its *window* moves: pinned to the MFD glass rect with ImGuiCond_Always,
-// chrome stripped (no bg/border/title — the painted bezel is the frame), and
-// ImGui's per-window clip rect == the glass, so nothing spills onto the dash.
-// ImGui 1.92's dynamic fonts let us rasterise text at the glass-sized pixel
-// height instead of blurry-scaling it.
+// Each HUD panel keeps its ImGui body; only its *window* moves. With cockpit
+// art up, a panel draws into its display's shared window, laid out flat over
+// the display's panel rect (ImGuiCond_Always), chrome stripped (the painted
+// bezel is the frame), font rasterised at a glass-sized height (ImGui 1.92
+// dynamic fonts: crisp, not scaled). cockpit_overlay::finalize() then warps
+// the finished window geometry onto the skewed bezel quad and draws the art
+// over it — see cockpit_overlay.cpp for why that beats a parallel renderer.
 //
-// Flat windows (rather than perspective-warped planes) are correct because
-// the art's MFD glass is frontal: measured corners sit <= 2.8 art px off an
-// axis-aligned rect, inside the content padding. The harness enforces that
-// per art row. If future art has genuinely angled MFDs, the least-invasive
-// upgrade is a CPU homography over the slot window's ImDrawList vertices
-// after End() (rect -> measured quad, clip rect = quad bbox), with the
-// inverse mapping applied to the mouse for the interactive STATUS page.
-//
-// The one ImGui wrinkle: the centre MFD carries RADAR plus the FLIGHT and
-// ordnance readouts that used to be separate floating panels. ImGui happily
-// re-opens a window by name within a frame and appends to it, so those
-// readouts Begin() the same "##mfd_center" window and draw into the flank
-// strips beside the radar disc (cockpit_overlay::split_radar).
+// The centre display carries RADAR plus the FLIGHT and ordnance readouts
+// that used to be separate floating panels: ImGui re-opens a window by name
+// within a frame and appends, so those readouts Begin() the same window and
+// draw into the flank strips beside the disc (cockpit_overlay::split_radar).
 #include "cockpit_hud_internal.h"
 #include "cockpit_overlay.h"
 
@@ -34,49 +23,58 @@ namespace cockpit_hud {
 
 namespace {
 
-using cockpit_overlay::Mfd;
+using cockpit_overlay::Display;
 using cockpit_overlay::Rect;
 
-// One shared window per MFD slot, so later panels can append (see header).
-const char* slot_window_id(Mfd slot) {
-    switch (slot) {
-    case Mfd::Left:   return "##mfd_left";
-    case Mfd::Center: return "##mfd_center";
-    case Mfd::Right:  default: return "##mfd_right";
-    }
+// Font pixel height for a display `glass_h` logical px tall. Full MFDs get
+// ~8.5 text rows (the densest page, NAV, is title + 4 rows + dock prompt);
+// single-line strips (< 60 px) fill ~60% of their height. Clamped so huge
+// windows don't get billboard text and tiny ones stay legible.
+float display_font_px(float glass_h) {
+    const float px = glass_h < 60.0f ? glass_h * 0.6f : glass_h / 8.5f;
+    return std::clamp(px, 8.0f, 16.0f);
 }
 
-// Font pixel height for an MFD of `glass_h` logical px. ~8.5 text rows per
-// glass keeps the densest page (NAV: title + 4 rows + dock prompt) inside
-// the smaller side MFDs; clamped so huge windows don't get billboard text
-// and tiny ones stay legible.
-float mfd_font_px(float glass_h) {
-    return std::clamp(glass_h / 8.5f, 8.0f, 16.0f);
-}
-
-// Centred text on one line of a flank strip, shrunk to fit its width.
+// Centred text on one line of a strip, shrunk to fit its width.
 // Advances `y` by the line height actually used.
-void flank_text(ImDrawList* dl, const Rect& flank, float& y,
+void strip_text(ImDrawList* dl, const Rect& strip, float& y,
                 const char* text, ImU32 col) {
     ImFont* font = ImGui::GetFont();
     float   px   = ImGui::GetFontSize();
     ImVec2  ts   = font->CalcTextSizeA(px, FLT_MAX, 0.0f, text);
-    const float room = flank.w - 2.0f;
+    const float room = strip.w - 2.0f;
     if (ts.x > room && ts.x > 0.0f) {
         px *= room / ts.x;
         ts  = font->CalcTextSizeA(px, FLT_MAX, 0.0f, text);
     }
-    dl->AddText(font, px, ImVec2(flank.x + (flank.w - ts.x) * 0.5f, y), col, text);
+    dl->AddText(font, px, ImVec2(strip.x + (strip.w - ts.x) * 0.5f, y), col, text);
     y += ts.y + 1.0f;
+}
+
+// One line, vertically centred in the whole strip.
+void strip_line(const Rect& strip, const char* text, ImU32 col) {
+    float y = strip.y + (strip.h - ImGui::GetFontSize()) * 0.5f;
+    strip_text(ImGui::GetWindowDrawList(), strip, y, text, col);
 }
 
 float line_px() { return ImGui::GetFontSize() + 1.0f; }
 
-// Autopilot lines are transient/situational, not an instrument, so in the
-// cockpit they pop up as a small banner sitting on the dash right above the
-// centre MFD rather than taking a whole screen.
-void draw_autopilot_banner(const FlightStatusHudState& s, const Rect& centre) {
+// Autopilot state. Art with a banner strip shows it there (message wins over
+// the standing "AUTOPILOT - nav" line — the strip has one row); otherwise a
+// small boxed banner sits on the dash right above the centre MFD.
+void draw_autopilot(const FlightStatusHudState& s, const Rect& centre) {
     if (!s.autopilot_nav && !s.autopilot_msg) return;
+    PanelPlacement strip;
+    if (display_placement(Display::Banner, strip)) {
+        if (begin_panel(strip)) {
+            char line[96];
+            if (s.autopilot_msg) std::snprintf(line, sizeof(line), "%s", s.autopilot_msg);
+            else                 std::snprintf(line, sizeof(line), "AUTOPILOT - %s", s.autopilot_nav);
+            strip_line(to_rect(strip), line, s.autopilot_msg ? kAmber : kGreen);
+        }
+        end_panel(strip);
+        return;
+    }
     const int   rows = (s.autopilot_nav ? 1 : 0) + (s.autopilot_msg ? 1 : 0);
     const float w = std::max(centre.w * 1.6f, 220.0f);
     const float h = ImGui::GetTextLineHeightWithSpacing() * rows + 12.0f;
@@ -100,6 +98,18 @@ void draw_autopilot_banner(const FlightStatusHudState& s, const Rect& centre) {
     pop_hud_style();
 }
 
+// Commanded (+/-) speed in the art's SET strip, when it has one.
+void draw_set_speed(const FlightStatusHudState& s) {
+    PanelPlacement strip;
+    if (!display_placement(Display::Speed, strip)) return;
+    if (begin_panel(strip)) {
+        char buf[24];
+        std::snprintf(buf, sizeof(buf), "%.0f", s.set_speed);
+        strip_line(to_rect(strip), buf, kAmber);
+    }
+    end_panel(strip);
+}
+
 } // namespace
 
 void push_hud_style(ImVec2 padding) {
@@ -113,48 +123,65 @@ void pop_hud_style() {
     ImGui::PopStyleColor(2);
 }
 
-bool mfd_placement(Mfd slot, PanelPlacement& out) {
-    Rect glass;
-    if (!cockpit_overlay::mfd_rect(slot, glass)) return false;
-    out.window_id = slot_window_id(slot);
-    out.pos       = ImVec2(glass.x, glass.y);
-    out.size      = ImVec2(glass.w, glass.h);
-    out.in_mfd    = true;
+bool display_placement(Display d, PanelPlacement& out) {
+    Rect panel;
+    if (!cockpit_overlay::display_panel(d, panel)) return false;
+    out.window_id  = cockpit_overlay::display_window_id(d);
+    out.pos        = ImVec2(panel.x, panel.y);
+    out.size       = ImVec2(panel.w, panel.h);
+    out.in_display = true;
+    out.display    = d;
     return true;
 }
 
-PanelPlacement place_panel(Mfd slot, const char* classic_id,
+PanelPlacement place_panel(Display d, const char* classic_id,
                            ImVec2 classic_pos, ImVec2 classic_size) {
     PanelPlacement p;
-    if (mfd_placement(slot, p)) return p;
+    if (display_placement(d, p)) return p;
     p.window_id = classic_id;
     p.pos       = classic_pos;
     p.size      = classic_size;
     return p;
 }
 
-bool begin_panel(const PanelPlacement& p, ImGuiWindowFlags flags,
-                 ImVec2 classic_padding) {
+bool begin_panel(PanelPlacement& p, ImGuiWindowFlags flags, ImVec2 classic_padding) {
     ImGui::SetNextWindowPos(p.pos, ImGuiCond_Always);
     ImGui::SetNextWindowSize(p.size, ImGuiCond_Always);
-    if (p.in_mfd) {
-        // Glass fill is painted under the bezel by cockpit_overlay; the
-        // window itself is chrome-free so the art frames the content.
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5.0f, 3.0f));
-        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing,   ImVec2(4.0f, 1.0f));
-        ImGui::PushFont(nullptr, mfd_font_px(p.size.y));
-        flags |= ImGuiWindowFlags_NoBackground;
-    } else {
+    if (!p.in_display) {
         ImGui::SetNextWindowBgAlpha(0.55f);
         push_hud_style(classic_padding);
+        return ImGui::Begin(p.window_id, nullptr, flags);
     }
-    return ImGui::Begin(p.window_id, nullptr, flags);
+    // Glass is painted under the bezel by cockpit_overlay; the window itself
+    // is chrome-free so the art frames the content.
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5.0f, 3.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing,   ImVec2(4.0f, 1.0f));
+    ImGui::PushFont(nullptr, display_font_px(p.size.y));
+    const bool open = ImGui::Begin(p.window_id, nullptr,
+                                   flags | ImGuiWindowFlags_NoBackground);
+    // The window is drawn flat but SHOWN warped: interactive panels must
+    // hit-test in flat space, so hand them the inverse-warped mouse.
+    ImGuiIO& io = ImGui::GetIO();
+    cockpit_overlay::Vec2 flat;
+    p.mouse_remapped = !(flags & ImGuiWindowFlags_NoInputs) &&
+                       ImGui::IsMousePosValid(&io.MousePos) &&
+                       cockpit_overlay::screen_to_panel(
+                           p.display, { io.MousePos.x, io.MousePos.y }, flat);
+    if (p.mouse_remapped) {
+        p.saved_mouse = io.MousePos;
+        io.MousePos   = ImVec2(flat.x, flat.y);
+    }
+    return open;
 }
 
-void end_panel(const PanelPlacement& p) {
+void end_panel(PanelPlacement& p) {
+    if (p.mouse_remapped) {
+        ImGui::GetIO().MousePos = p.saved_mouse;
+        p.mouse_remapped = false;
+    }
     ImGui::End();
-    if (p.in_mfd) {
+    if (p.in_display) {
         ImGui::PopFont();
         ImGui::PopStyleVar(3);
     } else {
@@ -173,9 +200,9 @@ LockReadout lock_readout(const WeaponsHudState& w) {
 
 bool draw_flight_flanks(const FlightStatusHudState& s) {
     PanelPlacement p;
-    if (!mfd_placement(Mfd::Center, p)) return false;
+    if (!display_placement(Display::Center, p)) return false;
 
-    if (begin_panel(p)) {   // appends to the RADAR's centre-MFD window
+    if (begin_panel(p)) {   // appends to the RADAR's centre-display window
         ImDrawList* dl = ImGui::GetWindowDrawList();
         const auto split = cockpit_overlay::split_radar(to_rect(p));
         const float pad = 3.0f;
@@ -183,17 +210,17 @@ bool draw_flight_flanks(const FlightStatusHudState& s) {
         // Left flank, top-down: speed + flight mode.
         float y = split.left.y + pad;
         char buf[32];
-        flank_text(dl, split.left, y, "SPD", kDimAmber);
+        strip_text(dl, split.left, y, "SPD", kDimAmber);
         std::snprintf(buf, sizeof(buf), "%.0f", s.speed);
-        flank_text(dl, split.left, y, buf, kHudWhite);
-        flank_text(dl, split.left, y, s.mode, kAmber);
+        strip_text(dl, split.left, y, buf, kHudWhite);
+        strip_text(dl, split.left, y, s.mode, kAmber);
 
         // Right flank: energy bank as a vertical reservoir gauge — full
         // grows upward, burn/fire drains it (same pool feeds both).
         if (s.energy_max > 0.0f) {
             const Rect& r = split.right;
             float ly = r.y + pad;
-            flank_text(dl, r, ly, "NRG", kDimAmber);
+            strip_text(dl, r, ly, "NRG", kDimAmber);
             const float frac = std::clamp(s.energy / s.energy_max, 0.0f, 1.0f);
             const float bw   = std::min(r.w * 0.45f, 14.0f);
             const ImVec2 lo(r.x + (r.w - bw) * 0.5f, ly + 2.0f);
@@ -206,20 +233,21 @@ bool draw_flight_flanks(const FlightStatusHudState& s) {
             }
             float py = r.y + r.h - pad - line_px();
             std::snprintf(buf, sizeof(buf), "%.0f%%", frac * 100.0f);
-            flank_text(dl, r, py, buf, kHudWhite);
+            strip_text(dl, r, py, buf, kHudWhite);
         }
     }
     end_panel(p);
 
-    draw_autopilot_banner(s, to_rect(p));
+    draw_set_speed(s);
+    draw_autopilot(s, to_rect(p));
     return true;
 }
 
 bool draw_weapons_flank(const WeaponsHudState& w) {
     PanelPlacement p;
-    if (!mfd_placement(Mfd::Center, p)) return false;
+    if (!display_placement(Display::Center, p)) return false;
 
-    if (begin_panel(p)) {   // appends to the centre-MFD window
+    if (begin_panel(p)) {   // appends to the centre-display window
         ImDrawList* dl = ImGui::GetWindowDrawList();
         const Rect left = cockpit_overlay::split_radar(to_rect(p)).left;
         const LockReadout lock = lock_readout(w);
@@ -229,10 +257,10 @@ bool draw_weapons_flank(const WeaponsHudState& w) {
         const float bar_h = lock.show_progress ? 5.0f : 0.0f;
         float y = left.y + left.h - 3.0f - line_px() * 3.0f - bar_h;
         char buf[32];
-        flank_text(dl, left, y, "MSL", kDimAmber);
+        strip_text(dl, left, y, "MSL", kDimAmber);
         std::snprintf(buf, sizeof(buf), "%s x%d", w.missile_name, w.missile_count);
-        flank_text(dl, left, y, buf, kAmber);
-        flank_text(dl, left, y, lock.text, lock.col);
+        strip_text(dl, left, y, buf, kAmber);
+        strip_text(dl, left, y, lock.text, lock.col);
         if (lock.show_progress) {
             const float f = std::clamp(w.lock_progress, 0.0f, 1.0f);
             const ImVec2 lo(left.x + 4.0f, y + 1.0f);

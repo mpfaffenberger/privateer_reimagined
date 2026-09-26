@@ -1,13 +1,25 @@
-// cockpit_overlay.cpp — see header for the layering story.
+// cockpit_overlay.cpp — see header for the frame flow.
+//
+// Why warp ImGui's output instead of rendering instruments some other way:
+// every panel keeps its existing ImGui body (and the STATUS armaments page
+// keeps its drag/drop), and ImGui windows are strictly axis-aligned. So the
+// panels are laid out flat, and finalize() re-projects their finished vertex
+// data. Triangles are copied un-indexed with each vertex pushed through the
+// display's homography; per-triangle affine UV interpolation is exact for the
+// solid fills and indistinguishable for glyph-sized quads. The source window
+// draw list is then emptied — ImGui skips a draw list with no commands
+// (AddDrawListToDrawDataEx), and it is reset on the next NewFrame anyway.
 #include "cockpit_overlay.h"
 
 #include "material.h"      // TextureSlot + load_texture_png (shared PNG loader)
 
 #include "imgui.h"
+#include "imgui_internal.h"   // FindWindowByName, ImGuiWindow::DrawList
 #include "sokol_gfx.h"
-#include "sokol_app.h"     // must precede sokol_imgui.h
+#include "sokol_app.h"        // must precede sokol_imgui.h
 #include "sokol_imgui.h"
 
+#include <algorithm>
 #include <cstdio>
 #include <iterator>
 
@@ -23,16 +35,28 @@ struct LoadedArt { TextureSlot tex; bool tried = false; };
 LoadedArt  g_loaded[kArtCount];
 sg_sampler g_sampler{};
 
-// Frame state published by draw() for the HUD panels to query.
-const CockpitArt* g_art = nullptr;
-Fit               g_fit;
-int               g_frame = -1;
+// Per-display frame state published by draw().
+struct DisplayFrame {
+    bool       present = false;
+    Rect       panel;         // flat layout rect (logical px)
+    Quad       quad;          // skewed on-screen glass
+    Homography to_screen;     // panel -> quad
+    Homography to_panel;      // quad -> panel (mouse)
+};
 
-// MFD glass: near-opaque dark screen so instruments read against a bright
-// sun or nebula behind the dash. Bled 2 art px under the bezel so no sliver
-// of space shows between glass and frame.
+// Frame state published by draw() for the HUD panels and finalize().
+const CockpitArt*  g_art = nullptr;
+const TextureSlot* g_tex = nullptr;
+Fit                g_fit;
+int                g_frame = -1;
+DisplayFrame       g_displays[kDisplayCount];
+
+// Display glass: near-opaque dark screen so instruments read against a
+// bright sun or nebula. Bled under the bezel so no sliver of space shows.
 constexpr ImU32 kGlass      = IM_COL32(6, 10, 9, 236);
-constexpr float kGlassBleed = 2.0f;
+constexpr float kGlassBleed = 3.0f;    // art px
+constexpr ImU32 kSurround   = IM_COL32(0, 0, 0, 255);
+constexpr unsigned kMaxBatch = 3u * 8192u;   // triangles-per-reserve cap
 
 const TextureSlot* texture_for(const CockpitArt& art) {
     LoadedArt& slot = g_loaded[&art - kCockpitArts];
@@ -54,10 +78,83 @@ const TextureSlot* texture_for(const CockpitArt& art) {
     return &slot.tex;
 }
 
-ImVec2 tl(const Rect& r) { return { r.x, r.y }; }
-ImVec2 br(const Rect& r) { return { r.x + r.w, r.y + r.h }; }
+ImVec2 iv(Vec2 p) { return { p.x, p.y }; }
+
+// Pad whatever part of the viewport the art doesn't cover.
+void fill_surround(ImDrawList* dl, const ImGuiViewport* vp, const Rect& art) {
+    const float vx0 = vp->Pos.x, vy0 = vp->Pos.y;
+    const float vx1 = vx0 + vp->Size.x, vy1 = vy0 + vp->Size.y;
+    const float ax0 = std::max(vx0, art.x), ay0 = std::max(vy0, art.y);
+    const float ax1 = std::min(vx1, art.x + art.w), ay1 = std::min(vy1, art.y + art.h);
+    if (ay0 > vy0) dl->AddRectFilled({ vx0, vy0 }, { vx1, ay0 }, kSurround);   // top
+    if (ay1 < vy1) dl->AddRectFilled({ vx0, ay1 }, { vx1, vy1 }, kSurround);   // bottom
+    if (ax0 > vx0) dl->AddRectFilled({ vx0, ay0 }, { ax0, ay1 }, kSurround);   // left
+    if (ax1 < vx1) dl->AddRectFilled({ ax1, ay0 }, { vx1, ay1 }, kSurround);   // right
+}
+
+struct Box { float x0, y0, x1, y1; };
+
+Box warped_bounds(const Homography& h, const ImVec4& r) {
+    const Vec2 c[4] = { apply(h, { r.x, r.y }), apply(h, { r.z, r.y }),
+                        apply(h, { r.z, r.w }), apply(h, { r.x, r.w }) };
+    Box b{ c[0].x, c[0].y, c[0].x, c[0].y };
+    for (const Vec2& p : c) {
+        b.x0 = std::min(b.x0, p.x); b.y0 = std::min(b.y0, p.y);
+        b.x1 = std::max(b.x1, p.x); b.y1 = std::max(b.y1, p.y);
+    }
+    return b;
+}
+
+// Re-emit `src`'s triangles into `dst`, every vertex warped panel -> quad.
+void warp_draw_list(ImDrawList* dst, ImDrawList* src, const DisplayFrame& d) {
+    const ImGuiViewport* vp = ImGui::GetMainViewport();
+    const ImVec2 vp_min = vp->Pos, vp_max(vp->Pos.x + vp->Size.x, vp->Pos.y + vp->Size.y);
+    const Box quad_box = warped_bounds(d.to_screen,
+        { d.panel.x, d.panel.y, d.panel.x + d.panel.w, d.panel.y + d.panel.h });
+    for (const ImDrawCmd& cmd : src->CmdBuffer) {
+        if (cmd.UserCallback || cmd.ElemCount == 0) continue;
+        // The command's (flat) scissor, re-projected; the art on top masks
+        // the sliver between this bbox and the true quad edge.
+        // Clamped to the viewport; sokol_imgui hands the scissor to the GPU
+        // unchecked, so an empty/inverted one is skipped outright.
+        const Box c = warped_bounds(d.to_screen, cmd.ClipRect);
+        const ImVec2 lo(std::max({ c.x0, quad_box.x0, vp_min.x }),
+                        std::max({ c.y0, quad_box.y0, vp_min.y }));
+        const ImVec2 hi(std::min({ c.x1, quad_box.x1, vp_max.x }),
+                        std::min({ c.y1, quad_box.y1, vp_max.y }));
+        if (hi.x <= lo.x || hi.y <= lo.y) continue;
+        dst->PushClipRect(lo, hi);
+        dst->PushTexture(cmd.TexRef);
+        const ImDrawIdx*  idx = src->IdxBuffer.Data + cmd.IdxOffset;
+        const ImDrawVert* vtx = src->VtxBuffer.Data + cmd.VtxOffset;
+        for (unsigned done = 0; done < cmd.ElemCount;) {
+            const unsigned n = std::min(cmd.ElemCount - done, kMaxBatch);
+            dst->PrimReserve((int)n, (int)n);
+            for (unsigned i = 0; i < n; ++i) {
+                const ImDrawVert& v = vtx[idx[done + i]];
+                dst->PrimVtx(iv(apply(d.to_screen, { v.pos.x, v.pos.y })), v.uv, v.col);
+            }
+            done += n;
+        }
+        dst->PopTexture();
+        dst->PopClipRect();
+    }
+    src->CmdBuffer.resize(0);
+    src->IdxBuffer.resize(0);
+    src->VtxBuffer.resize(0);
+}
 
 } // namespace
+
+const char* display_window_id(Display d) {
+    switch (d) {
+    case Display::Left:   return "##cockpit_display_left";
+    case Display::Center: return "##cockpit_display_center";
+    case Display::Right:  return "##cockpit_display_right";
+    case Display::Banner: return "##cockpit_display_banner";
+    case Display::Speed:  default: return "##cockpit_display_speed";
+    }
+}
 
 void draw(const std::string& ship_class) {
     const CockpitArt* art = find_art(ship_class.c_str());
@@ -67,26 +164,58 @@ void draw(const std::string& ship_class) {
 
     const ImGuiViewport* vp = ImGui::GetMainViewport();
     g_art   = art;
+    g_tex   = tex;
     g_fit   = fit_to_viewport(*art, vp->Pos.x, vp->Pos.y, vp->Size.x, vp->Size.y);
     g_frame = ImGui::GetFrameCount();
 
     ImDrawList* bg = ImGui::GetBackgroundDrawList();
-    for (const Rect& hole : art->mfd) {
-        const Rect glass = to_screen(g_fit, inset(hole, -kGlassBleed));
-        bg->AddRectFilled(tl(glass), br(glass), kGlass);
+    if (art->black_surround)
+        fill_surround(bg, vp, to_screen(g_fit, Rect{ 0.0f, 0.0f, art->art_w, art->art_h }));
+
+    for (int i = 0; i < kDisplayCount; ++i) {
+        DisplayFrame& d = g_displays[i];
+        d.present = present(art->display[i]);
+        if (!d.present) continue;
+        d.quad      = to_screen(g_fit, art->display[i]);
+        d.panel     = panel_rect(d.quad);
+        d.to_screen = rect_to_quad(d.panel, d.quad);
+        d.to_panel  = inverse(d.to_screen);
+        // Glass: the flat panel grown by the bleed, warped onto the bezel.
+        const Rect g = inset(d.panel, -kGlassBleed * g_fit.scale);
+        bg->AddQuadFilled(iv(apply(d.to_screen, { g.x,       g.y       })),
+                          iv(apply(d.to_screen, { g.x + g.w, g.y       })),
+                          iv(apply(d.to_screen, { g.x + g.w, g.y + g.h })),
+                          iv(apply(d.to_screen, { g.x,       g.y + g.h })), kGlass);
     }
-    const Rect full = to_screen(g_fit, { 0.0f, 0.0f, art->art_w, art->art_h });
-    bg->AddImage(simgui_imtextureid_with_sampler(tex->view, g_sampler),
-                 tl(full), br(full));
+}
+
+void finalize() {
+    if (!active()) return;
+    ImDrawList* bg = ImGui::GetBackgroundDrawList();
+    for (int i = 0; i < kDisplayCount; ++i) {
+        if (!g_displays[i].present) continue;
+        ImGuiWindow* w = ImGui::FindWindowByName(display_window_id((Display)i));
+        if (w && w->LastFrameActive == ImGui::GetFrameCount())
+            warp_draw_list(bg, w->DrawList, g_displays[i]);
+    }
+    const Rect full = to_screen(g_fit, Rect{ 0.0f, 0.0f, g_art->art_w, g_art->art_h });
+    bg->AddImage(simgui_imtextureid_with_sampler(g_tex->view, g_sampler),
+                 { full.x, full.y }, { full.x + full.w, full.y + full.h });
 }
 
 bool active() {
     return g_art && g_frame == ImGui::GetFrameCount();
 }
 
-bool mfd_rect(Mfd which, Rect& out) {
-    if (!active()) return false;
-    out = to_screen(g_fit, g_art->mfd[(int)which]);
+bool display_panel(Display d, Rect& out) {
+    if (!active() || !g_displays[(int)d].present) return false;
+    out = g_displays[(int)d].panel;
+    return true;
+}
+
+bool screen_to_panel(Display d, Vec2 screen, Vec2& out) {
+    if (!active() || !g_displays[(int)d].present) return false;
+    out = apply(g_displays[(int)d].to_panel, screen);
     return true;
 }
 

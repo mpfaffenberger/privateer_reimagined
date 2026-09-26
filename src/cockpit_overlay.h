@@ -1,15 +1,17 @@
 // cockpit_overlay.h — per-hull cockpit art framing the flight view (#426).
 //
-// Layering (all ImGui, bottom to top):
-//   1. ImGui BACKGROUND draw list: dark MFD "glass" fills, then the cockpit
-//      PNG. The PNG's real alpha lets space through the canopy; the glass
-//      fills sit under the MFD holes so the bezel art overlaps their edges.
-//   2. Regular ImGui windows: cockpit_hud's STATUS / RADAR / NAV (TARGET)
-//      panels, parked exactly inside the three MFD holes (see mfd_rect).
-//   3. ImGui FOREGROUND draw list: crosshair, reticles, warnings.
-//
-// Everything is in ImGui logical pixels, so it composites after the 3D
-// scene without touching the render passes.
+// Frame flow (all ImGui, logical pixels, composited after the 3D scene):
+//   1. draw()      — before the HUD. Publishes this frame's fit, and on the
+//                    BACKGROUND draw list paints the surround padding and a
+//                    dark glass fill under every display.
+//   2. HUD panels  — cockpit_hud lays each instrument out FLAT in its
+//                    display's panel window (display_panel / window id).
+//   3. finalize()  — right before ImGui renders. Moves each display window's
+//                    geometry onto the background list, warped through a
+//                    homography onto the skewed bezel quad, then draws the
+//                    cockpit PNG ON TOP: its real alpha masks rounded glass
+//                    corners and any overhang, exactly like a physical frame.
+//   Everything else (crosshair, reticles, tooltips, navmap) stays above.
 #pragma once
 
 #include "cockpit_overlay_layout.h"
@@ -18,18 +20,29 @@
 
 namespace cockpit_overlay {
 
-// Draw the art for `ship_class` this frame (no-op for hulls without art).
-// Call once per Flight frame, inside the ImGui frame, BEFORE the cockpit HUD
-// panels so they can ask for their MFD rects.
+// Step 1. No-op for hulls without art. Call once per Flight frame inside the
+// ImGui frame, before the cockpit HUD panels ask for their displays.
 void draw(const std::string& ship_class);
 
-// True when cockpit art was drawn during the current ImGui frame. Keyed on
-// ImGui's frame counter so a skipped draw() (title, cinematic) can never
-// leave the HUD parked in holes that are not on screen.
+// Step 3. No-op unless draw() ran this frame. Call after ALL ImGui building,
+// immediately before the frame is rendered.
+void finalize();
+
+// True when cockpit art is active this ImGui frame. Keyed on ImGui's frame
+// counter so a skipped draw() (title, cinematic) can never leave the HUD
+// parked in displays that are not on screen.
 bool active();
 
-// Screen rect (ImGui logical px) of an MFD's glass this frame. False when no
-// cockpit art is active — callers fall back to their classic placement.
-bool mfd_rect(Mfd which, Rect& out);
+// ImGui window every panel targeting `d` must draw into (shared per display,
+// so later panels append; finalize() warps it).
+const char* display_window_id(Display d);
+
+// Flat panel rect (logical px) for display `d` this frame. False when no
+// art is active or this art lacks that display.
+bool display_panel(Display d, Rect& out);
+
+// Inverse warp: screen point -> flat panel point, for hit-testing the
+// interactive STATUS page. False when the display isn't active.
+bool screen_to_panel(Display d, Vec2 screen, Vec2& out);
 
 } // namespace cockpit_overlay

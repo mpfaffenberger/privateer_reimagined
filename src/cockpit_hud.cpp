@@ -313,8 +313,8 @@ void draw_nav_mfd(const Camera& cam, const StarSystem& system, int selected_nav,
     const float w = 240.0f, margin = 16.0f;
     const float h = has_prompt ? 116.0f : 96.0f;
 
-    const PanelPlacement panel = place_panel(
-        cockpit_overlay::Mfd::Right, "##nav_mfd",
+    PanelPlacement panel = place_panel(
+        cockpit_overlay::Display::Right, "##nav_mfd",
         ImVec2(s.w - w - margin, s.h - h - margin), ImVec2(w, h));
     if (begin_panel(panel)) {
         ImGui::PushStyleColor(ImGuiCol_Text, kAmber);
@@ -386,8 +386,8 @@ void draw_target_mfd(const Camera& cam, const ShipRegistry& ships,
 
     const auto sz = screen_size();
     constexpr float w = 280.0f, h = 248.0f, margin = 16.0f;
-    const PanelPlacement panel = place_panel(
-        cockpit_overlay::Mfd::Right, "##target_mfd",
+    PanelPlacement panel = place_panel(
+        cockpit_overlay::Display::Right, "##target_mfd",
         ImVec2(sz.w - w - margin, margin), ImVec2(w, h));
 
     if (begin_panel(panel)) {
@@ -407,7 +407,7 @@ void draw_target_mfd(const Camera& cam, const ShipRegistry& ships,
             // what the player sees out the window.
             // In an MFD the portrait shrinks to the 3-line identity block
             // beside it so the shield/armor diagram keeps room below.
-            const float thumb_w = panel.in_mfd
+            const float thumb_w = panel.in_display
                 ? ImGui::GetTextLineHeightWithSpacing() * 3.0f : 80.0f;
             const float thumb_h = thumb_w;
             if (target->sprite && target->sprite->atlas) {
@@ -632,8 +632,8 @@ void draw_player_status(ShipRegistry& ships,
     Ship& player = *player_p;
 
     constexpr float w = 280.0f, h = 224.0f, margin = 16.0f;
-    const PanelPlacement panel = place_panel(
-        cockpit_overlay::Mfd::Left, "##player_status",
+    PanelPlacement panel = place_panel(
+        cockpit_overlay::Display::Left, "##player_status",
         ImVec2(margin, margin), ImVec2(w, h));
 
     // The armaments screen is the one interactive STATUS page: its hardpoints
@@ -842,10 +842,10 @@ void draw_radar_mfd(const Camera& cam, const StarSystem& system, int selected_na
 
     // In the cockpit the disc takes the square middle of the centre MFD;
     // the flanks either side carry the FLIGHT/ordnance readouts.
-    const PanelPlacement panel = place_panel(
-        cockpit_overlay::Mfd::Center, "##radar_mfd",
+    PanelPlacement panel = place_panel(
+        cockpit_overlay::Display::Center, "##radar_mfd",
         ImVec2(margin, s.h - h - margin), ImVec2(w, h));
-    const cockpit_overlay::Rect disc = panel.in_mfd
+    const cockpit_overlay::Rect disc = panel.in_display
         ? cockpit_overlay::split_radar(to_rect(panel)).disc
         : to_rect(panel);
 
@@ -854,7 +854,7 @@ void draw_radar_mfd(const Camera& cam, const StarSystem& system, int selected_na
         ImDrawList* dl = ImGui::GetWindowDrawList();
 
         const ImVec2 ctr  = ImVec2(disc.x + disc.w * 0.5f, disc.y + disc.h * 0.5f);
-        const float  rad  = std::min(disc.w, disc.h) * 0.5f - (panel.in_mfd ? 3.0f : 6.0f);
+        const float  rad  = std::min(disc.w, disc.h) * 0.5f - (panel.in_display ? 3.0f : 6.0f);
         // 35 km radar radius (np-rad.1) — expanded from the legacy 15 km so
         // a single screen frame can show more of the local traffic around
         // the player. Anything past 35k clamps to the rim, so nav points
@@ -958,7 +958,7 @@ void draw_radar_mfd(const Camera& cam, const StarSystem& system, int selected_na
 
         // Faint label so first-time players know what they're looking at.
         // The cockpit's flank gauges own that corner; the bezel says RADAR.
-        if (!panel.in_mfd)
+        if (!panel.in_display)
             dl->AddText(ImVec2(p0.x + 6.0f, p0.y + 4.0f), kDimAmber, "RADAR");
     }
     end_panel(panel);

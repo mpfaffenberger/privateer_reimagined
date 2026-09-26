@@ -49,28 +49,34 @@ void pop_hud_style();
 
 // ---- panel placement ---------------------------------------------------------
 // Where a HUD panel draws this frame. Classic: its own screen-corner window
-// in the amber HUD box. In an MFD: the shared window of that MFD slot, sized
-// to the glass, chrome-free (the painted bezel IS the frame) and with a font
-// sized to the glass so the same content fits a much smaller screen.
+// in the amber HUD box. In a cockpit display: the shared window of that
+// display, laid out FLAT over the display's panel rect, chrome-free (the
+// painted bezel IS the frame) and with a font sized to the glass.
+// cockpit_overlay::finalize() later warps that window onto the skewed bezel.
 struct PanelPlacement {
-    const char* window_id = "";
-    ImVec2      pos, size;
-    bool        in_mfd = false;
+    const char*              window_id = "";
+    ImVec2                   pos, size;
+    bool                     in_display = false;
+    cockpit_overlay::Display display = cockpit_overlay::Display::Left;
+    ImVec2                   saved_mouse;   // restored by end_panel (remap)
+    bool                     mouse_remapped = false;
 };
 
-// MFD placement for `slot`; false when no cockpit art is on screen.
-bool mfd_placement(cockpit_overlay::Mfd slot, PanelPlacement& out);
+// Display placement for `d`; false when no cockpit art (or no such display).
+bool display_placement(cockpit_overlay::Display d, PanelPlacement& out);
 
-// MFD placement when cockpit art is up, else the classic rect.
-PanelPlacement place_panel(cockpit_overlay::Mfd slot, const char* classic_id,
+// Display placement when cockpit art is up, else the classic rect.
+PanelPlacement place_panel(cockpit_overlay::Display d, const char* classic_id,
                            ImVec2 classic_pos, ImVec2 classic_size);
 
 // Begin/End the panel's window with the matching styling. ALWAYS pair with
 // end_panel(), whatever begin_panel() returned (ImGui Begin/End contract).
-// Calling begin_panel twice for the same MFD slot appends to its window.
-bool begin_panel(const PanelPlacement& p, ImGuiWindowFlags flags = kHudWindowFlags,
+// Calling begin_panel twice for the same display appends to its window.
+// Interactive panels (flags without NoInputs) in a warped display see the
+// mouse through the inverse warp between begin_panel and end_panel.
+bool begin_panel(PanelPlacement& p, ImGuiWindowFlags flags = kHudWindowFlags,
                  ImVec2 classic_padding = ImVec2(8.0f, 6.0f));
-void end_panel(const PanelPlacement& p);
+void end_panel(PanelPlacement& p);
 
 inline cockpit_overlay::Rect to_rect(const PanelPlacement& p) {
     return { p.pos.x, p.pos.y, p.size.x, p.size.y };
@@ -81,7 +87,8 @@ inline cockpit_overlay::Rect to_rect(const PanelPlacement& p) {
 struct LockReadout { const char* text; ImU32 col; bool show_progress; };
 LockReadout lock_readout(const WeaponsHudState& w);
 
-// Compact centre-MFD flank readouts (speed/mode + energy; ordnance). Each
+// Compact cockpit readouts: centre-MFD flanks (speed/mode + energy;
+// ordnance) plus the optional SET-speed and autopilot-banner strips. Each
 // returns false — drawing nothing — when cockpit art is not active, so the
 // caller falls through to its classic free-floating panel.
 bool draw_flight_flanks(const FlightStatusHudState& s);

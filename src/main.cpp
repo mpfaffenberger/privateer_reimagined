@@ -6500,6 +6500,7 @@ void frame_cb() {
             const HMM_Vec3 pp = g.camera.position;
             cockpit_hud::FlightStatusHudState fs;
             fs.speed = HMM_LenV3(g.camera.velocity);
+            fs.set_speed = g.camera.desired_forward_speed;
             fs.mode  = (g.camera.cruise_level > 0.5f)  ? "CRUISE"
                      : (g.camera.cruise_level > 0.05f) ? "SPOOL "
                      :                                   "NORMAL";
@@ -7019,6 +7020,9 @@ void frame_cb() {
     // drawable acquisition per frame; a second pass was flickering).
     const HMM_Mat4 vp = HMM_MulM4(g.camera.projection(aspect), g.camera.view());
     const HMM_Vec3 flare_tint = g.sun.glow_color;
+    // Cockpit art (#426): warp the display panels onto their bezels and lay
+    // the PNG over them. Must follow ALL ImGui building for this frame.
+    cockpit_overlay::finalize();
     g.post.composite_to_swapchain(g.rt, g.sun.position, vp, flare_tint,
                                   sapp_width(), sapp_height(),
                                   [] { debug_panel::render(); });

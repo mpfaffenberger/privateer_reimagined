@@ -1,18 +1,15 @@
 // Pure cockpit-art geometry harness (#426). Run from the repo root:
 //   cmake --build build --target test_cockpit_overlay && ./build/test_cockpit_overlay
 //
-// Checks the viewport fit, that every MFD hole stays on screen at common
-// aspects, and — against the real PNG — that each table rect really is
-// transparent glass ringed by opaque bezel (so a re-export of the art can't
-// silently leave the instruments floating over the dashboard) and that the
-// screen centre (gun boresight) always looks through canopy glass.
-//
-// It also guards the flat-window design: cockpit_mfd pins axis-aligned
-// ImGui windows to the holes, which is only right while the glass is a
-// frontal rectangle. Every art row's holes are measured (edge lines fitted
-// to the alpha, corners intersected) and must sit within
-// kFlatTolerancePx of their table rect. Genuinely skewed/perspective MFDs
-// would fail here, and then need a perspective quad path, not a nudge.
+// Checks, for EVERY art row, against its real PNG alpha:
+//   * each display quad matches the glass edges re-measured from the alpha
+//     (lines fitted to the alpha=128 crossings, corners intersected) — so a
+//     re-export of the art can't silently leave instruments off the bezels;
+//   * the quad interior is transparent glass and a ring just outside it is
+//     opaque bezel (the art on top masks warped-panel overhang);
+//   * the screen centre (gun boresight) looks through canopy glass — and,
+//     for art that paints its own gunsight, lands exactly on it.
+// Plus the fit and homography maths.
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
@@ -27,49 +24,22 @@ namespace {
 
 int g_failures = 0;
 void check(bool ok, const char* label) {
-    std::printf("%-62s %s\n", label, ok ? "PASS" : "FAIL");
+    std::printf("%-66s %s\n", label, ok ? "PASS" : "FAIL");
     if (!ok) ++g_failures;
 }
-bool near(float a, float b) { return std::fabs(a - b) < 0.01f; }
+bool near(float a, float b, float eps = 0.01f) { return std::fabs(a - b) < eps; }
 
-// Fraction of pixels in `r` (art px) whose alpha satisfies want_clear.
-float alpha_fraction(const unsigned char* px, int w, int h, const Rect& r,
-                     bool want_clear) {
-    int hit = 0, total = 0;
-    for (int y = (int)r.y; y < (int)(r.y + r.h); ++y)
-        for (int x = (int)r.x; x < (int)(r.x + r.w); ++x) {
-            if (x < 0 || y < 0 || x >= w || y >= h) continue;
-            const bool clear = px[(y * w + x) * 4 + 3] < 128;
-            hit += (clear == want_clear);
-            ++total;
-        }
-    return total ? (float)hit / (float)total : 0.0f;
-}
-
-// Fraction of opaque pixels on the 1px ring `by` px outside `r`.
-float ring_opaque(const unsigned char* px, int w, int h, const Rect& r, int by) {
-    int hit = 0, total = 0;
-    const int x0 = (int)r.x - by, x1 = (int)(r.x + r.w) - 1 + by;
-    const int y0 = (int)r.y - by, y1 = (int)(r.y + r.h) - 1 + by;
-    auto sample = [&](int x, int y) {
-        if (x < 0 || y < 0 || x >= w || y >= h) return;
-        hit += px[(y * w + x) * 4 + 3] >= 128;
-        ++total;
-    };
-    for (int x = x0; x <= x1; ++x) { sample(x, y0); sample(x, y1); }
-    for (int y = y0 + 1; y < y1; ++y) { sample(x0, y); sample(x1, y); }
-    return total ? (float)hit / (float)total : 0.0f;
-}
-
-// ---- hole flatness (perspective guard) -------------------------------------
-// Max art px a measured hole corner may sit off its table rect and still be
-// served by a flat window: the MFD content padding (5 logical px) plus the
-// glass's rounded corners absorb this much lean without visible overlap.
-constexpr float kFlatTolerancePx = 4.0f;
+const char* kNames[kDisplayCount] = { "left", "centre", "right", "banner", "speed" };
+const float kShapes[][2] = { {1024, 768}, {1280, 720}, {1280, 813}, {1440, 900},
+                             {1512, 982}, {1920, 1080}, {2560, 1080}, {800, 600} };
 
 struct AlphaImage {
-    const unsigned char* px; int w, h;
-    int at(int x, int y) const { return px[(y * w + x) * 4 + 3]; }
+    unsigned char* px = nullptr; int w = 0, h = 0;
+    int  at(int x, int y) const { return px[(y * w + x) * 4 + 3]; }
+    bool clear(float x, float y) const {
+        const int ix = (int)std::floor(x), iy = (int)std::floor(y);
+        return ix >= 0 && iy >= 0 && ix < w && iy < h && at(ix, iy) < 128;
+    }
 };
 
 // Sub-pixel coordinate (pixel-centre convention) along the walk axis where
@@ -82,7 +52,7 @@ float edge_crossing(const AlphaImage& a, int x, int y, int dx, int dy, int limit
         const int cur = a.at(nx, ny);
         if ((prev >= 128) != (cur >= 128)) {
             const float t = (128.0f - prev) / (float)(cur - prev);
-            const int   from = dx ? nx - dx : ny - dy;   // walk-axis index of prev
+            const int from = dx ? nx - dx : ny - dy;
             return (float)from + 0.5f + t * (float)(dx ? dx : dy);
         }
         prev = cur;
@@ -102,143 +72,219 @@ Line fit_line(const float* v, const float* u, int n) {
     return { (float)k, (float)(mu - k * mv) };
 }
 
-// Largest corner offset between the hole's measured quad and `r`. Edges are
-// sampled 10 px in from the rounded corners; side edges are x = k*y + c,
-// top/bottom are y = k*x + c; corners are their intersections.
-float max_corner_offset(const AlphaImage& a, const Rect& r) {
-    const int x0 = (int)r.x, y0 = (int)r.y, x1 = (int)(r.x + r.w) - 1, y1 = (int)(r.y + r.h) - 1;
-    const int cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, reach = (int)std::max(r.w, r.h);
-    float v[512], le[512], ri[512], to[512], bo[512];
-    int nr = 0, nc = 0;
-    for (int y = y0 + 10; y <= y1 - 10 && nr < 512; ++y, ++nr) {
-        v[nr]  = (float)y + 0.5f;
-        le[nr] = edge_crossing(a, cx, y, -1, 0, reach);
-        ri[nr] = edge_crossing(a, cx, y, +1, 0, reach);
-        if (std::isnan(le[nr]) || std::isnan(ri[nr])) return INFINITY;
+// Re-measure a display's glass from the alpha, seeded by the table quad's
+// bbox; edges sampled over their middle 60% (clear of the rounded corners).
+// Returns the worst corner distance to the table quad (INFINITY if lost).
+float worst_corner_offset(const AlphaImage& a, const Quad& q) {
+    float x0 = q.p[0].x, x1 = x0, y0 = q.p[0].y, y1 = y0;
+    for (const Vec2& p : q.p) {
+        x0 = std::min(x0, p.x); x1 = std::max(x1, p.x);
+        y0 = std::min(y0, p.y); y1 = std::max(y1, p.y);
     }
-    const Line L = fit_line(v, le, nr), R = fit_line(v, ri, nr);
-    for (int x = x0 + 10; x <= x1 - 10 && nc < 512; ++x, ++nc) {
-        v[nc]  = (float)x + 0.5f;
-        to[nc] = edge_crossing(a, x, cy, 0, -1, reach);
-        bo[nc] = edge_crossing(a, x, cy, 0, +1, reach);
-        if (std::isnan(to[nc]) || std::isnan(bo[nc])) return INFINITY;
+    const int cx = (int)((x0 + x1) * 0.5f), cy = (int)((y0 + y1) * 0.5f);
+    const int reach = (int)std::max(x1 - x0, y1 - y0);
+    const int my = std::max(2, (int)((y1 - y0) * 0.2f)), mx = std::max(2, (int)((x1 - x0) * 0.2f));
+    float v[1024], lo[1024], hi[1024];
+    int n = 0;
+    for (int y = (int)y0 + my; y <= (int)y1 - my && n < 1024; ++y, ++n) {
+        v[n]  = (float)y + 0.5f;
+        lo[n] = edge_crossing(a, cx, y, -1, 0, reach);
+        hi[n] = edge_crossing(a, cx, y, +1, 0, reach);
+        if (std::isnan(lo[n]) || std::isnan(hi[n])) return INFINITY;
     }
-    const Line T = fit_line(v, to, nc), B = fit_line(v, bo, nc);
-    auto corner = [](Line side, Line cap, float& x, float& y) {
-        y = (cap.k * side.c + cap.c) / (1.0f - cap.k * side.k);
-        x = side.k * y + side.c;
-    };
-    const float rx[4] = { r.x, r.x + r.w, r.x + r.w, r.x };
-    const float ry[4] = { r.y, r.y,       r.y + r.h, r.y + r.h };
-    const Line  sides[4] = { L, R, R, L }, caps[4] = { T, T, B, B };
+    const Line L = fit_line(v, lo, n), R = fit_line(v, hi, n);
+    n = 0;
+    for (int x = (int)x0 + mx; x <= (int)x1 - mx && n < 1024; ++x, ++n) {
+        v[n]  = (float)x + 0.5f;
+        lo[n] = edge_crossing(a, x, cy, 0, -1, reach);
+        hi[n] = edge_crossing(a, x, cy, 0, +1, reach);
+        if (std::isnan(lo[n]) || std::isnan(hi[n])) return INFINITY;
+    }
+    const Line T = fit_line(v, lo, n), B = fit_line(v, hi, n);
+    const Line sides[4] = { L, R, R, L }, caps[4] = { T, T, B, B };
     float worst = 0.0f;
     for (int i = 0; i < 4; ++i) {
-        float x, y;
-        corner(sides[i], caps[i], x, y);
-        worst = std::max(worst, std::hypot(x - rx[i], y - ry[i]));
+        const float y = (caps[i].k * sides[i].c + caps[i].c) / (1.0f - caps[i].k * sides[i].k);
+        const float x = sides[i].k * y + sides[i].c;
+        worst = std::max(worst, std::hypot(x - q.p[i].x, y - q.p[i].y));
     }
     return worst;
+}
+
+// Fraction of samples on the unit-square grid [lo,hi]^2, mapped through the
+// quad's projective map, that are transparent (want_clear) / opaque.
+float quad_fraction(const AlphaImage& a, const Quad& q, float lo, float hi, bool want_clear) {
+    const Homography m = unit_square_to_quad(q);
+    int hit = 0, total = 0;
+    for (int j = 0; j <= 40; ++j)
+        for (int i = 0; i <= 40; ++i) {
+            const Vec2 p = apply(m, { lo + (hi - lo) * i / 40.0f, lo + (hi - lo) * j / 40.0f });
+            hit += a.clear(p.x, p.y) == want_clear;
+            ++total;
+        }
+    return (float)hit / (float)total;
+}
+
+// Fraction of opaque samples on the quad's edges pushed `by` art px outward.
+float bezel_ring(const AlphaImage& a, const Quad& q, float by) {
+    int hit = 0, total = 0;
+    Vec2 c{ 0, 0 };
+    for (const Vec2& p : q.p) { c.x += p.x * 0.25f; c.y += p.y * 0.25f; }
+    for (int e = 0; e < 4; ++e) {
+        const Vec2 p0 = q.p[e], p1 = q.p[(e + 1) % 4];
+        for (int i = 1; i < 40; ++i) {
+            const float t = i / 40.0f;
+            Vec2 p{ p0.x + (p1.x - p0.x) * t, p0.y + (p1.y - p0.y) * t };
+            const float dx = p.x - c.x, dy = p.y - c.y, len = std::hypot(dx, dy);
+            // Push outward along the edge normal (sign chosen away from centre).
+            float nx = -(p1.y - p0.y), ny = p1.x - p0.x;
+            const float nl = std::hypot(nx, ny);
+            nx /= nl; ny /= nl;
+            if (nx * dx + ny * dy < 0) { nx = -nx; ny = -ny; }
+            (void)len;
+            p.x += nx * by; p.y += ny * by;
+            hit += !a.clear(p.x, p.y);
+            ++total;
+        }
+    }
+    return (float)hit / (float)total;
+}
+
+void check_maths() {
+    // Homography: corners exact, inverse round-trips, rect->itself = identity.
+    const Quad q{ { { 206.9f, 427.0f }, { 380.3f, 427.0f }, { 369.4f, 576.0f }, { 189.6f, 576.0f } } };
+    const Rect r = panel_rect(q);
+    const Homography h = rect_to_quad(r, q), hi = inverse(h);
+    const Vec2 rc[4] = { { r.x, r.y }, { r.x + r.w, r.y }, { r.x + r.w, r.y + r.h }, { r.x, r.y + r.h } };
+    bool corners = true, round_trip = true;
+    for (int i = 0; i < 4; ++i) {
+        const Vec2 s = apply(h, rc[i]);
+        corners &= near(s.x, q.p[i].x, 0.01f) && near(s.y, q.p[i].y, 0.01f);
+        const Vec2 back = apply(hi, s);
+        round_trip &= near(back.x, rc[i].x, 0.01f) && near(back.y, rc[i].y, 0.01f);
+    }
+    check(corners,    "homography maps panel corners onto the skewed quad");
+    check(round_trip, "inverse homography round-trips (mouse remap)");
+    const Vec2 mid = apply(h, { r.x + r.w * 0.5f, r.y + r.h * 0.5f });
+    check(mid.x > r.x && mid.x < r.x + r.w && mid.y > r.y && mid.y < r.y + r.h,
+          "warp keeps the panel centre inside its glass");
+    const Rect flat{ 10, 20, 30, 40 };
+    const Homography id = rect_to_quad(flat, quad_from_rect(10, 20, 30, 40));
+    const Vec2 p = apply(id, { 17, 33 });
+    check(near(p.x, 17) && near(p.y, 33), "rect onto itself is the identity");
+
+    // Radar split: square disc, equal flanks, no gaps, flanks >= 19% each.
+    const RadarSplit sp = split_radar({ 0, 0, 300, 243 });
+    check(near(sp.disc.w, 186.0f) && near(sp.left.w, sp.right.w) &&
+          near(sp.left.w + sp.disc.w + sp.right.w, 300.0f),
+          "radar split = capped square disc + equal flanks");
+}
+
+void check_fit(const CockpitArt& art) {
+    char label[128];
+    bool visible = true, bottom = true, sides = true, pinned = true;
+    for (const auto& s : kShapes) {
+        const Fit f = fit_to_viewport(art, 0, 0, s[0], s[1]);
+        for (const Quad& q : art.display) {
+            if (!present(q)) continue;
+            for (const Vec2& c : q.p) {
+                const Vec2 p = to_screen(f, c);
+                visible &= p.x >= -0.01f && p.y >= -0.01f &&
+                           p.x <= s[0] + 0.01f && p.y <= s[1] + 0.01f;
+            }
+        }
+        bottom &= f.oy + art.art_h * f.scale >= s[1] - 0.01f;
+        sides  &= f.ox <= 0.01f && f.ox + art.art_w * f.scale >= s[0] - 0.01f;
+        const Vec2 b = to_screen(f, art.boresight);
+        pinned &= near(b.x, s[0] * 0.5f, 0.05f) && near(b.y, s[1] * 0.5f, 0.05f);
+    }
+    std::snprintf(label, sizeof(label), "%s: every display on screen, 4:3 to 21:9", art.ship_class);
+    check(visible, label);
+    std::snprintf(label, sizeof(label), "%s: dash always reaches the bottom edge", art.ship_class);
+    check(bottom, label);
+    if (art.painted_gunsight) {
+        std::snprintf(label, sizeof(label), "%s: painted gunsight pinned to screen centre", art.ship_class);
+        check(pinned, label);
+    } else {
+        std::snprintf(label, sizeof(label), "%s: art always spans the full width", art.ship_class);
+        check(sides, label);
+    }
+}
+
+void check_art_alpha(const CockpitArt& art) {
+    char label[128];
+    AlphaImage img;
+    int n = 0;
+    img.px = stbi_load(art.path, &img.w, &img.h, &n, 4);
+    std::snprintf(label, sizeof(label), "%s: %s loads (run from repo root)", art.ship_class, art.path);
+    check(img.px != nullptr, label);
+    if (!img.px) return;
+    std::snprintf(label, sizeof(label), "%s: PNG size matches authoring resolution", art.ship_class);
+    check(img.w == (int)art.art_w && img.h == (int)art.art_h, label);
+
+    for (int i = 0; i < kDisplayCount; ++i) {
+        const Quad& q = art.display[i];
+        if (!present(q)) continue;
+        const float off = worst_corner_offset(img, q);
+        std::snprintf(label, sizeof(label), "%s %s: quad matches measured glass (%.2f px)",
+                      art.ship_class, kNames[i], off);
+        check(off <= 1.5f, label);
+        const float glass = quad_fraction(img, q, 0.06f, 0.94f, true);
+        std::snprintf(label, sizeof(label), "%s %s: interior is real alpha glass (%.3f)",
+                      art.ship_class, kNames[i], glass);
+        check(glass > 0.99f, label);
+        const float bezel = bezel_ring(img, q, 4.0f);
+        std::snprintf(label, sizeof(label), "%s %s: ringed by opaque bezel (%.3f)",
+                      art.ship_class, kNames[i], bezel);
+        check(bezel > 0.95f, label);
+    }
+
+    // Boresight: canopy glass around it, except where the art paints its own
+    // gunsight — then the gunsight's opaque strokes must straddle it.
+    bool clear = true;
+    for (const auto& s : kShapes) {
+        const Fit f = fit_to_viewport(art, 0, 0, s[0], s[1]);
+        const float ax = (s[0] * 0.5f - f.ox) / f.scale, ay = (s[1] * 0.5f - f.oy) / f.scale;
+        clear &= img.clear(ax, ay);
+        if (!art.painted_gunsight)
+            clear &= quad_fraction(img, quad_from_rect(ax - 30, ay - 30, 60, 60), 0, 1, true) > 0.999f;
+    }
+    std::snprintf(label, sizeof(label), "%s: boresight looks through canopy glass", art.ship_class);
+    check(clear, label);
+    if (art.painted_gunsight) {
+        const float bx = art.boresight.x, by = art.boresight.y;
+        int x0 = 0, x1 = 0;   // nearest opaque strokes left/right of centre
+        for (int d = 1; d < 80 && !x0; ++d) if (!img.clear(bx - d, by)) x0 = d;
+        for (int d = 1; d < 80 && !x1; ++d) if (!img.clear(bx + d, by)) x1 = d;
+        std::snprintf(label, sizeof(label), "%s: boresight centred in the painted gunsight (%d/%d px)",
+                      art.ship_class, x0, x1);
+        check(x0 > 0 && x1 > 0 && std::abs(x0 - x1) <= 2, label);
+    }
+    stbi_image_free(img.px);
 }
 
 } // namespace
 
 int main() {
-    const CockpitArt* art = find_art("centurion");
-    check(art != nullptr, "centurion has cockpit art");
-    check(find_art("tarsus") == nullptr, "hull without art keeps classic HUD");
-    check(find_art(nullptr) == nullptr, "null class is safe");
-    if (!art) return 1;
+    check(find_art("centurion") != nullptr, "centurion has cockpit art");
+    check(find_art("talon") != nullptr,     "talon has cockpit art");
+    check(find_art("tarsus") == nullptr,    "hull without art keeps classic HUD");
+    check(find_art(nullptr) == nullptr,     "null class is safe");
 
-    // Native size: 1:1, slid down so boresight row 260 sits on centre 360.
-    const Fit native = fit_to_viewport(*art, 0, 0, 1280, 720);
-    check(near(native.scale, 1.0f) && near(native.ox, 0) && near(native.oy, 100.0f),
-          "1280x720: 1:1, boresight slid onto screen centre");
+    check_maths();
 
-    // 16:10 is height-bound: scale 1.25, 80px cropped off each side.
-    const Fit f1610 = fit_to_viewport(*art, 0, 0, 1440, 900);
-    check(near(f1610.scale, 1.25f) && near(f1610.ox, -80.0f) && near(f1610.oy, 125.0f),
-          "16:10 covers by height, crops sides evenly");
-    const Rect left = to_screen(f1610, art->mfd[(int)Mfd::Left]);
-    check(near(left.x, 298.75f) && near(left.w, 157.5f),
-          "MFD rect follows the art transform");
+    // Talon (cover-and-slide) exact fits.
+    const CockpitArt& talon = *find_art("talon");
+    const Fit t720 = fit_to_viewport(talon, 0, 0, 1280, 720);
+    check(near(t720.scale, 1.0f) && near(t720.ox, 0) && near(t720.oy, 100.0f),
+          "talon 1280x720: 1:1, boresight slid onto screen centre");
+    const Fit t1610 = fit_to_viewport(talon, 0, 0, 1440, 900);
+    check(near(t1610.scale, 1.25f) && near(t1610.ox, -80.0f) && near(t1610.oy, 125.0f),
+          "talon 16:10 covers by height, crops sides evenly");
 
-    // Every hole stays fully on screen for common window shapes.
-    const float shapes[][2] = { {1024, 768}, {1440, 900}, {1512, 982},
-                                {1920, 1080}, {2560, 1080}, {800, 600} };
-    bool all_visible = true, bottom_covered = true, sides_covered = true;
-    for (const auto& s : shapes) {
-        const Fit f = fit_to_viewport(*art, 0, 0, s[0], s[1]);
-        for (const Rect& hole : art->mfd) {
-            const Rect r = to_screen(f, hole);
-            all_visible &= r.x >= 0 && r.y >= 0 &&
-                           r.x + r.w <= s[0] && r.y + r.h <= s[1];
-        }
-        bottom_covered &= f.oy + art->art_h * f.scale >= s[1] - 0.01f;
-        sides_covered  &= f.ox <= 0.01f && f.ox + art->art_w * f.scale >= s[0] - 0.01f;
-    }
-    check(all_visible,    "all MFD holes on screen from 4:3 to 21:9");
-    check(bottom_covered, "dash always reaches the bottom edge");
-    check(sides_covered,  "art always spans the full width");
-
-    // Radar split: square disc in the middle, equal flanks, no gaps.
-    const Rect centre = to_screen(native, art->mfd[(int)Mfd::Center]);
-    const RadarSplit sp = split_radar(centre);
-    check(near(sp.disc.w, centre.h) && near(sp.left.w, sp.right.w) &&
-          near(sp.left.w + sp.disc.w + sp.right.w, centre.w),
-          "radar split = square disc + equal flanks");
-
-    // The table must match the real alpha channel.
-    int w = 0, h = 0, n = 0;
-    unsigned char* px = stbi_load(art->path, &w, &h, &n, 4);
-    check(px != nullptr, "centurion.png loads (run from repo root)");
-    if (px) {
-        check(w == (int)art->art_w && h == (int)art->art_h,
-              "PNG size matches authoring resolution");
-        const char* names[] = { "left", "centre", "right" };
-        for (int i = 0; i < kMfdCount; ++i) {
-            char label[96];
-            const float glass = alpha_fraction(px, w, h, inset(art->mfd[i], 3.0f), true);
-            std::snprintf(label, sizeof(label), "%s MFD interior is real alpha glass (%.3f)",
-                          names[i], glass);
-            check(glass > 0.99f, label);
-            const float bezel = ring_opaque(px, w, h, art->mfd[i], 3);
-            std::snprintf(label, sizeof(label), "%s MFD ringed by opaque bezel (%.3f)",
-                          names[i], bezel);
-            check(bezel > 0.95f, label);
-        }
-        // Screen centre -> art space must be canopy glass for every shape,
-        // with a margin box so the crosshair/reticle isn't clipped either.
-        bool boresight_clear = true;
-        for (const auto& s : shapes) {
-            const Fit f = fit_to_viewport(*art, 0, 0, s[0], s[1]);
-            const float ax = (s[0] * 0.5f - f.ox) / f.scale;
-            const float ay = (s[1] * 0.5f - f.oy) / f.scale;
-            boresight_clear &=
-                alpha_fraction(px, w, h, { ax - 30, ay - 30, 60, 60 }, true) > 0.999f;
-        }
-        check(boresight_clear, "boresight looks through canopy glass at every aspect");
-        stbi_image_free(px);
-    }
-
-    // Perspective guard, for EVERY art row (not just the Centurion).
     for (const CockpitArt& a : kCockpitArts) {
-        int iw = 0, ih = 0, ic = 0;
-        unsigned char* ipx = stbi_load(a.path, &iw, &ih, &ic, 4);
-        char label[112];
-        if (!ipx) {
-            std::snprintf(label, sizeof(label), "%s art loads for flatness check", a.ship_class);
-            check(false, label);
-            continue;
-        }
-        const AlphaImage img{ ipx, iw, ih };
-        const char* names[] = { "left", "centre", "right" };
-        for (int i = 0; i < kMfdCount; ++i) {
-            const float off = max_corner_offset(img, a.mfd[i]);
-            std::snprintf(label, sizeof(label), "%s %s MFD is a frontal rect (worst corner %.2f px)",
-                          a.ship_class, names[i], off);
-            check(off <= kFlatTolerancePx, label);
-        }
-        stbi_image_free(ipx);
+        check_fit(a);
+        check_art_alpha(a);
     }
 
     std::printf("\n%s\n", g_failures ? "FAIL" : "ALL PASS");

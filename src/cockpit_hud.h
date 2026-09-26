@@ -140,6 +140,7 @@ void draw_pause_overlay();
 // sdtx text block that used to sit free-floating at the top.
 struct FlightStatusHudState {
     float       speed = 0.0f;            // m/s (length of camera velocity)
+    float       set_speed = 0.0f;        // commanded (+/-) speed; cockpit SET readout
     const char* mode  = "NORMAL";        // NORMAL / SPOOL / CRUISE
     float       d_sun = 0.0f;            // world units to the system sun
     float       pos_x = 0.0f, pos_y = 0.0f, pos_z = 0.0f;
