@@ -61,20 +61,21 @@ inline constexpr CockpitArt kCockpitArts[] = {
         { { { 560.1f, 396.1f }, { 719.8f, 396.1f }, { 721.2f, 503.7f }, { 558.9f, 503.7f } } },
         { { { 846.0f, 462.1f }, { 969.2f, 462.3f }, { 971.3f, 547.8f }, { 846.3f, 546.1f } } },
         {}, {}, {} } },
-    // Centurion: v10 classic Wing Commander silhouette (curved arch + triple
+    // Centurion: v10c classic Wing Commander silhouette (curved arch + triple
     // MFD), clean: no baked gunsight/readouts, space visible all round.
+    // Pink-key-only alpha with soft edges; the dark dash metal stays solid.
     // Skewed bezels: side MFDs shear outward 3.6-7.1 deg, the centre one is
     // keystoned (287 px wide at the top, 304 at the bottom), and the small
     // SET / KPS boxes lean too — hence quads + the perspective warp. The
     // boresight is the canvas centre (clear canopy), so at 16:9 the art maps
     // 1:1 with no slide.
     { "centurion", "assets/cockpits/centurion.png", 1280.0f, 720.0f, 360.0f,
-      { { { { 210.3f, 515.0f }, { 384.8f, 515.0f }, { 373.9f, 663.0f }, { 191.9f, 663.0f } } },
-        { { { 511.1f, 475.0f }, { 797.9f, 475.0f }, { 806.5f, 713.0f }, { 502.1f, 713.0f } } },
-        { { { 915.6f, 514.0f }, { 1092.4f, 514.0f }, { 1109.7f, 662.5f }, { 925.1f, 663.3f } } },
-        { { { 539.6f, 150.0f }, { 761.6f, 149.6f }, { 759.9f, 179.0f }, { 541.7f, 179.0f } } },
-        { { { 318.3f, 453.0f }, { 424.0f, 453.0f }, { 424.0f, 472.6f }, { 316.5f, 472.0f } } },
-        { { { 871.0f, 451.4f }, { 982.0f, 453.1f }, { 982.0f, 472.8f }, { 871.0f, 473.5f } } } } },
+      { { { { 210.4f, 515.3f }, { 384.5f, 515.3f }, { 373.7f, 662.7f }, { 192.2f, 662.7f } } },
+        { { { 511.4f, 475.3f }, { 797.6f, 475.3f }, { 806.4f, 712.7f }, { 502.3f, 712.7f } } },
+        { { { 915.8f, 514.3f }, { 1092.2f, 514.3f }, { 1109.5f, 662.7f }, { 925.2f, 662.7f } } },
+        { { { 539.8f, 150.3f }, { 761.4f, 148.7f }, { 759.8f, 178.8f }, { 541.9f, 178.7f } } },
+        { { { 318.4f, 453.3f }, { 423.7f, 453.3f }, { 423.7f, 472.7f }, { 316.7f, 472.7f } } },
+        { { { 871.1f, 452.3f }, { 981.3f, 452.3f }, { 982.4f, 472.4f }, { 871.4f, 473.6f } } } } },
 };
 
 inline const CockpitArt* find_art(const char* ship_class) {
