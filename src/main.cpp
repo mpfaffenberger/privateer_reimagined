@@ -4352,6 +4352,10 @@ void frame_cb() {
     if (g.fly_by_wire && !ui_blocks_flight_mouse && !autopilot_lock
         && !dying && !cinematic::active()) {
         g.camera.apply_mouse_aim(off_x, off_y, dt);
+    } else {
+        // UI, autopilot and cinematics own the camera now. Never replay a
+        // stale manual turn when the pilot gets control back (#433).
+        g.camera.reset_turn_response();
     }
 
     // Drain any queued dev_remote commands into game state BEFORE
