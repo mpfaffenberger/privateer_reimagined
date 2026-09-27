@@ -91,7 +91,7 @@ bool parse_corner(const char* tok, int v_count, int t_count, int n_count,
 }
 
 void compute_flat_normals(std::vector<MeshVertex>& verts,
-                          const std::vector<uint16_t>& indices) {
+                          const std::vector<MeshIndex>& indices) {
     // Zero-init then accumulate area-weighted face normals.
     for (auto& v : verts) {
         v.normal[0] = 0.0f; v.normal[1] = 0.0f; v.normal[2] = 0.0f;
@@ -130,7 +130,7 @@ bool load_obj_text(const std::string& text, Mesh& out) {
     std::vector<Vec3> normals;
     std::vector<Vec2> uvs;
 
-    std::unordered_map<Triple, uint16_t, TripleHash> dedup;
+    std::unordered_map<Triple, MeshIndex, TripleHash> dedup;
     out.vertices.clear();
     out.indices.clear();
     out.materials.clear();
@@ -212,7 +212,7 @@ bool load_obj_text(const std::string& text, Mesh& out) {
             if (!face_ok || corners.size() < 3) continue;
             // Fan-triangulate (OK for convex polygons, which OBJ faces always
             // are when exported from real modellers).
-            auto emit_corner = [&](const Triple& tr) -> uint16_t {
+            auto emit_corner = [&](const Triple& tr) -> MeshIndex {
                 auto it = dedup.find(tr);
                 if (it != dedup.end()) return it->second;
                 MeshVertex mv{};
@@ -230,11 +230,7 @@ bool load_obj_text(const std::string& text, Mesh& out) {
                     mv.uv[0] = uvs[tr.t].u;
                     mv.uv[1] = uvs[tr.t].v;
                 }
-                if (out.vertices.size() >= 65535) {
-                    std::fprintf(stderr, "[obj] mesh exceeds uint16 index limit (65535 verts)\n");
-                    return (uint16_t)0;
-                }
-                uint16_t idx = (uint16_t)out.vertices.size();
+                const MeshIndex idx = (MeshIndex)out.vertices.size();
                 out.vertices.push_back(mv);
                 dedup.emplace(tr, idx);
                 return idx;
@@ -248,11 +244,11 @@ bool load_obj_text(const std::string& text, Mesh& out) {
                 return t.v >= 0 && t.v < (int)positions.size();
             };
             if (!valid(corners[0])) continue;
-            uint16_t i0 = emit_corner(corners[0]);
+            const MeshIndex i0 = emit_corner(corners[0]);
             for (size_t k = 1; k + 1 < corners.size(); ++k) {
                 if (!valid(corners[k]) || !valid(corners[k + 1])) continue;
-                uint16_t i1 = emit_corner(corners[k]);
-                uint16_t i2 = emit_corner(corners[k + 1]);
+                const MeshIndex i1 = emit_corner(corners[k]);
+                const MeshIndex i2 = emit_corner(corners[k + 1]);
                 out.indices.push_back(i0);
                 out.indices.push_back(i1);
                 out.indices.push_back(i2);

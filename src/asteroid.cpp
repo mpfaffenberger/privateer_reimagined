@@ -196,7 +196,7 @@ Mesh generate_variant(uint32_t variant_seed) {
         m.vertices[i].normal[1] = normals[i].Y;
         m.vertices[i].normal[2] = normals[i].Z;
     }
-    m.indices = std::move(indices);
+    m.indices.assign(indices.begin(), indices.end());   // u16 generator -> MeshIndex
     return m;
 }
 
@@ -291,7 +291,7 @@ bool AsteroidField::init() {
     pd.layout.attrs[ATTR_asteroid_i_speed_tint].buffer_index = 1;
     pd.layout.attrs[ATTR_asteroid_i_speed_tint].offset  = 32;
 
-    pd.index_type    = SG_INDEXTYPE_UINT16;
+    pd.index_type    = kMeshIndexType;   // draws Mesh::ibuf
     // No back-face culling. Belt-and-suspenders with the displacement
     // clamp above: any residual inverted triangles still draw, so the
     // rock reads as solid from every angle. The overdraw cost is trivial

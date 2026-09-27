@@ -666,6 +666,11 @@ target_link_options(test_campaign PRIVATE -Wl,-dead_strip)
 # through a fake play hook. Links only the engine-free TUs (+ plot.cpp for
 # the flag gates) — no imgui / sokol / GL / audio.
 #   cmake --build build --target test_cinematic && ./build/test_cinematic
+add_executable(test_mesh_indices EXCLUDE_FROM_ALL tools/test_mesh_indices.cpp
+    src/obj_loader.cpp src/mesh_cache.cpp src/json.cpp)
+target_include_directories(test_mesh_indices PRIVATE
+    ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party)
+
 add_executable(test_cinematic_dialogue EXCLUDE_FROM_ALL tools/test_cinematic_dialogue.cpp)
 target_include_directories(test_cinematic_dialogue PRIVATE
     ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party)

@@ -2,9 +2,8 @@
 // -----------------------------------------------------------------------------
 // mesh.h — minimal CPU-side mesh with GPU buffer upload helpers.
 //
-// Interleaved (pos, normal) vertex layout, uint16 indices. That's enough
-// for anything procedurally generated up to ~65k vertices per mesh, which
-// is orders of magnitude more than an asteroid needs.
+// Interleaved (pos, normal, uv) vertex layout, 32-bit indices. Reskinned
+// ships with one atlas material exceed 65,535 unique OBJ corners (#484).
 //
 // Deliberately no UVs, no tangents, no skinning. YAGNI — we'll add fields
 // when a shader actually wants them. Adding now would bloat every vertex
@@ -26,6 +25,11 @@ struct Submesh {
     uint32_t material_idx = 0;   // index into Mesh::materials
 };
 
+// Index type for every Mesh buffer. Pipelines drawing Mesh::ibuf must use
+// kMeshIndexType; independent small buffers (sprites, sun, skybox) keep u16.
+using MeshIndex = uint32_t;
+inline constexpr sg_index_type kMeshIndexType = SG_INDEXTYPE_UINT32;
+
 struct MeshVertex {
     float pos[3];
     float normal[3];
@@ -35,7 +39,7 @@ static_assert(sizeof(MeshVertex) == 32, "MeshVertex layout assumption broken");
 
 struct Mesh {
     std::vector<MeshVertex> vertices;
-    std::vector<uint16_t>   indices;
+    std::vector<MeshIndex>  indices;
 
     // Per-mesh material table + submesh list. Populated by the OBJ loader
     // via the `.materials.json` sidecar; for meshes without one, a single
