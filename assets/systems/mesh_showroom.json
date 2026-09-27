@@ -55,7 +55,7 @@
       "double_sided": true
     },
     {
-      "obj": "meshes/ships_wcnews/demon.obj",
+      "obj": "meshes/ships_reskinned/demon.obj",
       "position": [
         -200.0,
         0,
@@ -253,7 +253,7 @@
       "double_sided": true
     },
     {
-      "obj": "meshes/ships_wcnews/dd_tug.obj",
+      "obj": "meshes/ships_reskinned/dd_tug.obj",
       "position": [
         1000.0,
         0,
