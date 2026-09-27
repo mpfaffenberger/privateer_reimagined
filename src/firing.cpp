@@ -156,10 +156,11 @@ void firing::tick(ShipRegistry& ships,
             const float fire_rate_mult = (wm.fire_rate_mult > 0.0f) ? wm.fire_rate_mult : 1.0f;
             const float shot_energy_cost = gs.energy_cost_gj * wm.energy_mult;
 
-            // gun_armed (np-3dp): G-key cycle gates which mounts fire.
-            // NPCs leave gun_armed empty (treated as armed). Cooldown
-            // applies to every mount, fixed and turret alike.
-            if (i < s.gun_armed.size() && !s.gun_armed[i]) continue;
+            // G-key modes gate only the manually fired forward battery.
+            // Autonomous turrets remain live in every mode—including
+            // UNARMED—so defensive mounts actually behave automatically.
+            // NPCs leave gun_armed empty (treated as armed).
+            if (!m.is_turret && i < s.gun_armed.size() && !s.gun_armed[i]) continue;
             if (s.gun_cooldowns[i] > 0.0f)                 continue;
 
             // Muzzle position: ship pos + rotated mount offset. (Mutable so
@@ -178,8 +179,8 @@ void firing::tick(ShipRegistry& ships,
                 // hulls (centurion, paradigm, orion, ...) get their rear
                 // turrets back. The old `if (s.is_player) continue;` guard
                 // was an unfinished-Phase-0 stub, not a design decision.
-                // (gun_armed[] still gates which mounts fire, so the player
-                // keeps agency via the G-key arm modes.)
+                // Turrets intentionally ignore G-key forward-gun modes; their
+                // agency is positional (arc/range/hostility), not manual fire.
 
                 // Cone geometry for this mount, world frame.
                 // The player flies in the CAMERA basis (-z forward), which is
@@ -273,7 +274,7 @@ namespace {
 // misses on first call and re-fills after are fine.
 struct UniqueCache {
     const std::vector<GunMount>* key = nullptr;
-    std::vector<int> mount_types;
+    std::vector<int> mount_signatures;
     std::vector<int> unique_types;
 };
 UniqueCache& ucache() {
@@ -285,13 +286,17 @@ void refresh_unique_cache(const std::vector<GunMount>& mounts) {
     UniqueCache& cache = ucache();
     std::vector<int> current;
     current.reserve(mounts.size());
-    for (const GunMount& mount : mounts) current.push_back((int)mount.type);
-    if (cache.key == &mounts && cache.mount_types == current) return;
+    for (const GunMount& mount : mounts) {
+        current.push_back((int)mount.type | (mount.is_turret ? 0x100 : 0));
+    }
+    if (cache.key == &mounts && cache.mount_signatures == current) return;
 
     cache.key = &mounts;
-    cache.mount_types = std::move(current);
+    cache.mount_signatures = std::move(current);
     cache.unique_types.clear();
-    for (int type : cache.mount_types) {
+    for (const GunMount& mount : mounts) {
+        if (!gun_modes::participates_in_forward_cycle(mount.is_turret)) continue;
+        const int type = (int)mount.type;
         if (std::find(cache.unique_types.begin(), cache.unique_types.end(), type) ==
             cache.unique_types.end()) {
             cache.unique_types.push_back(type);
@@ -319,10 +324,12 @@ void firing::apply_gun_mode(Ship& s, uint8_t mode_idx) {
     s.gun_armed.resize(s.mounts.size(), false);
 
     const int selected_type_index = gun_modes::type_index(mode, unique_count);
+    const int selected_type = selected_type_index >= 0
+        ? unique[(size_t)selected_type_index] : -1;
     for (size_t i = 0; i < s.mounts.size(); ++i) {
-        s.gun_armed[i] = gun_modes::is_all(mode, unique_count) ||
-            (selected_type_index >= 0 &&
-             (int)s.mounts[i].type == unique[(size_t)selected_type_index]);
+        s.gun_armed[i] = gun_modes::mount_is_armed(
+            s.mounts[i].is_turret, (int)s.mounts[i].type,
+            gun_modes::is_all(mode, unique_count), selected_type);
     }
     s.gun_mode_idx = (uint8_t)mode;
 }

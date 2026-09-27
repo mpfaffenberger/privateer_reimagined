@@ -29,4 +29,17 @@ constexpr int type_index(int mode, int unique_type_count) {
         ? normalized - 1 : -1;
 }
 
+// Turrets are autonomous defensive mounts, not forward-gun groups. They stay
+// active in every G-key mode and their turret-only weapon types do not add a
+// pointless selectable mode to the forward battery cycle.
+constexpr bool participates_in_forward_cycle(bool is_turret) {
+    return !is_turret;
+}
+
+constexpr bool mount_is_armed(bool is_turret, int mount_type,
+                              bool all_forward, int selected_type) {
+    return is_turret || all_forward ||
+           (selected_type >= 0 && mount_type == selected_type);
+}
+
 } // namespace gun_modes

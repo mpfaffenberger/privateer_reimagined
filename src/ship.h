@@ -260,11 +260,9 @@ struct Ship {
     // wholly unaffected. Only apply_player_loadout (main.cpp) fills it.
     std::vector<inventory::WeaponMods> mount_mods;
 
-    // Per-mount "armed" gate (np-3dp). Parallel to mounts/gun_cooldowns.
-    // Default-on so the existing fire_guns flow keeps working; the G
-    // key cycles through {unarmed, mesons, ionics, all} and flips
-    // these bits per the mode. firing::tick consults gun_armed[i] and
-    // skips mounts the player has disarmed.
+    // Per-mount "armed" state (np-3dp). Parallel to mounts/gun_cooldowns.
+    // G-key modes flip fixed-gun bits only; autonomous turret bits stay true
+    // and firing::tick defensively ignores the mask for turret mounts.
     std::vector<bool>    gun_armed;
     // Current arm-mode index 0..3: 0=unarmed, 1=mesons, 2=ionics, 3=all.
     // Stored on the ship so a non-player ship can also be inspected

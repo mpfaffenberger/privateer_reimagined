@@ -30,15 +30,16 @@
 //      (cone_half_angle_deg) AND the target is within range_m. No energy
 //      cost, no energy gate — only cooldown + arc + range gate it.
 //      Works for BOTH player and NPC ships (issue #109 removed the old
-//      NPC-only guard); gun_armed[] still gates which mounts fire so the
-//      player keeps control via the G-key arm modes.
+//      NPC-only guard). Turrets remain auto-armed in every G-key mode;
+//      forward-gun selection never disables defensive turret fire.
 //
 // Inheritance velocity: projectile starts with the SHIP's forward
 // velocity added to the gun's muzzle speed. Realistic-feel — a fast
 // ship's bullets fly faster, a fleeing ship's bullets fall short.
 //
 // Gun arm-mode (np-3dp): the G key cycles the player through a list of
-// modes built dynamically from the ship's CURRENT mount list.
+// modes built dynamically from the ship's CURRENT FIXED-GUN mount list.
+// Autonomous turret-only weapon types are excluded and turrets stay active.
 //   * 1 unique gun type  -> cycle {UNARMED, ALL}              (2 modes)
 //   * N unique types     -> cycle {UNARMED, T1, T2, ..., TN, ALL}
 //                            (N+2 modes, one slot per type)
@@ -65,8 +66,8 @@ void tick(ShipRegistry& ships,
           std::vector<Projectile>& projectiles,
           float dt);
 
-// Number of gun arm-modes for a ship's current mount list (np-3dp).
-// Modes = unique GunTypes + 2 (unarmed slot + all slot). Each press of
+// Number of gun arm-modes for a ship's current fixed-gun mounts (np-3dp).
+// Modes = unique fixed GunTypes + 2 (unarmed slot + all slot). Each press of
 // G cycles one step through this list. For a Tarsus with mass drivers
 // only the result is 3: {UNARMED, MASS_DRIVER, ALL}.
 int  gun_mode_count_for_mounts(const std::vector<GunMount>& mounts);
@@ -77,7 +78,8 @@ int  gun_mode_count_for_mounts(const std::vector<GunMount>& mounts);
 const std::vector<int>& gun_unique_types_cache(
     const std::vector<GunMount>& mounts);
 
-// Write per-mount gun_armed[] flags for the given mode index. mode_idx
+// Write per-mount gun_armed[] flags for the given mode index. Turret bits are
+// always true; mode selection applies only to fixed guns. mode_idx
 // is taken mod the current mode count, so callers can pass the raw
 // ++gun_mode_idx result without % cleanup. Also stores the normalised
 // index back on the ship so the HUD/console can refer to it.
