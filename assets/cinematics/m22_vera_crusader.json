@@ -139,14 +139,14 @@
       "speaker": "Vera \"Crusader\" Rostova",
       "text": "EVIL HEATHEN! We know you possess high level alien technology! Machines of damnable intent!",
       "side": "right",
-      "dur": 9.1,
+      "dur": 9.7,
       "portrait": "portraits/vera/m22_vera_crusader_01.png",
       "voice_file": "audio/m22_vera_crusader_vera_01.mp3",
       "t": 10.0
     },
     {
       "cmd": "camera_path",
-      "dur": 9.6,
+      "dur": 10.2,
       "follow": "vera",
       "keys": [
         {
@@ -165,14 +165,14 @@
       "speaker": "Grayson Burrows",
       "text": "Wow. You really love to hear yourself talk, don't you?",
       "side": "left",
-      "dur": 4.2,
+      "dur": 4.8,
       "portrait": "portraits/grayson/m22_vera_crusader_01.png",
       "voice_file": "audio/m22_vera_crusader_grayson_01.mp3",
-      "t": 20.1
+      "t": 20.7
     },
     {
       "cmd": "camera_path",
-      "dur": 4.7,
+      "dur": 5.3,
       "follow": "grayson_ship",
       "keys": [
         {
@@ -184,7 +184,7 @@
           "look_at": "ship:grayson_ship"
         }
       ],
-      "t": 20.1
+      "t": 20.7
     },
     {
       "cmd": "line",
@@ -194,7 +194,7 @@
       "dur": 11.4,
       "portrait": "portraits/vera/m22_vera_crusader_02.png",
       "voice_file": "audio/m22_vera_crusader_vera_02.mp3",
-      "t": 25.1
+      "t": 26.3
     },
     {
       "cmd": "camera_path",
@@ -210,7 +210,7 @@
           "look_at": "ship:vera"
         }
       ],
-      "t": 25.1
+      "t": 26.3
     },
     {
       "cmd": "line",
@@ -220,7 +220,7 @@
       "dur": 7.8,
       "portrait": "portraits/grayson/m22_vera_crusader_02.png",
       "voice_file": "audio/m22_vera_crusader_grayson_02.mp3",
-      "t": 37.3
+      "t": 38.5
     },
     {
       "cmd": "camera_path",
@@ -236,7 +236,7 @@
           "look_at": "ship:grayson_ship"
         }
       ],
-      "t": 37.3
+      "t": 38.5
     },
     {
       "cmd": "line",
@@ -246,7 +246,7 @@
       "dur": 5.0,
       "portrait": "portraits/vera/m22_vera_crusader_03.png",
       "voice_file": "audio/m22_vera_crusader_vera_03.mp3",
-      "t": 46.0
+      "t": 47.2
     },
     {
       "cmd": "camera_path",
@@ -262,21 +262,21 @@
           "look_at": "ship:vera"
         }
       ],
-      "t": 46.0
+      "t": 47.2
     },
     {
       "cmd": "line",
       "speaker": "Vera \"Crusader\" Rostova",
       "text": "You are a heretic.<#0.3#>Now you die!",
       "side": "right",
-      "dur": 4.2,
+      "dur": 5.5,
       "portrait": "portraits/vera/m22_vera_crusader_04.png",
       "voice_file": "audio/m22_vera_crusader_vera_04.mp3",
-      "t": 51.9
+      "t": 53.1
     },
     {
       "cmd": "camera_path",
-      "dur": 4.8,
+      "dur": 6.1,
       "follow": "vera",
       "keys": [
         {
@@ -288,7 +288,7 @@
           "look_at": "ship:vera"
         }
       ],
-      "t": 51.9
+      "t": 53.1
     },
     {
       "cmd": "sfx",
@@ -298,7 +298,7 @@
         66900.0,
         -131100.0
       ],
-      "t": 56.9
+      "t": 59.4
     },
     {
       "cmd": "actor_path",
@@ -320,7 +320,7 @@
           ]
         }
       ],
-      "t": 56.9
+      "t": 59.4
     },
     {
       "cmd": "camera_path",
@@ -336,7 +336,7 @@
           "look_at": "ship:vera"
         }
       ],
-      "t": 56.9
+      "t": 59.4
     },
     {
       "cmd": "sfx",
@@ -346,11 +346,11 @@
         66500.0,
         -131800.0
       ],
-      "t": 57.2
+      "t": 59.7
     },
     {
       "cmd": "camera_path",
-      "dur": 2.0,
+      "dur": 3.3,
       "follow": "grayson_ship",
       "keys": [
         {
@@ -362,17 +362,17 @@
           "look_at": "ship:grayson_ship"
         }
       ],
-      "t": 59.1
+      "t": 61.6
     },
     {
       "cmd": "line",
       "speaker": "Grayson Burrows",
       "text": "Oh well, it was worth a try.",
       "side": "left",
-      "dur": 1.5,
+      "dur": 2.8,
       "portrait": "portraits/grayson/m22_vera_crusader_04.png",
       "voice_file": "audio/m22_vera_crusader_grayson_04.mp3",
-      "t": 59.1
+      "t": 61.6
     },
     {
       "cmd": "sfx",
@@ -382,19 +382,19 @@
         66500.0,
         -131000.0
       ],
-      "t": 60.1
+      "t": 64.7
     },
     {
       "cmd": "fade_out",
       "dur": 1.0,
-      "t": 60.9
+      "t": 64.7
     },
     {
       "cmd": "end",
       "actions": [
         "set_flag:m22_vera_crusader_seen"
       ],
-      "t": 61.9
+      "t": 65.7
     }
   ]
 }
