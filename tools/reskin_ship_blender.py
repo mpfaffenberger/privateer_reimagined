@@ -19,6 +19,9 @@ gives them a proper skin:
      the OBJ comes back in the exact source frame and every orientation
      override / lights3d file keyed to the ship stays valid.
 
+Per-ship decals (nose art) live in `reskin_decals.py`; generic node
+builders in `reskin_nodes.py`.
+
 Output lives in its own directory so re-running `import_3ds_meshes.py`
 never clobbers it; `regenerate_mesh_showroom.mesh_obj_asset()` prefers it
 when present.
@@ -40,6 +43,11 @@ from pathlib import Path
 
 import bpy
 import numpy as np
+
+# Blender's --python doesn't put the script dir on sys.path.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from reskin_decals import build_decal_group  # noqa: E402
+from reskin_nodes import add_node, math_op, node_tree_of, smoothstep  # noqa: E402
 
 REPO    = Path(__file__).resolve().parents[1]
 SRC_DIR = REPO / "assets" / "meshes" / "ships_wcnews"
@@ -78,47 +86,8 @@ class Look:
                                       # (the artist's hand-painted detail wins)
 
 
-# ─── Small node helpers (keeps the graph code readable) ──────────────────────
-
-def _node_tree(mat):
-    """Materials always have node trees from Blender 5.0; `use_nodes` is
-    deprecated there but still required on 4.x."""
-    if bpy.app.version < (5, 0, 0):
-        mat.use_nodes = True
-    return mat.node_tree
-
-
-def _node(tree, kind, location=(0, 0), **props):
-    n = tree.nodes.new(kind)
-    n.location = location
-    for key, value in props.items():
-        setattr(n, key, value)
-    return n
-
-
-def _math(tree, op, a=None, b=None, c=None, location=(0, 0)):
-    """Math node; each operand is either a socket (linked) or a float."""
-    n = _node(tree, "ShaderNodeMath", location, operation=op)
-    for idx, operand in enumerate((a, b, c)):
-        if operand is None:
-            continue
-        if isinstance(operand, (int, float)):
-            n.inputs[idx].default_value = float(operand)
-        else:
-            tree.links.new(operand, n.inputs[idx])
-    return n.outputs[0]
-
-
-def _smoothstep(tree, value, lo, hi, location=(0, 0)):
-    n = _node(tree, "ShaderNodeMapRange", location, interpolation_type="SMOOTHSTEP")
-    tree.links.new(value, n.inputs["Value"])
-    n.inputs["From Min"].default_value = lo
-    n.inputs["From Max"].default_value = hi
-    return n.outputs["Result"]
-
-
 def _voronoi(tree, coords, scale, feature, randomness, location=(0, 0)):
-    n = _node(tree, "ShaderNodeTexVoronoi", location, voronoi_dimensions="3D",
+    n = add_node(tree, "ShaderNodeTexVoronoi", location, voronoi_dimensions="3D",
               feature=feature, distance="CHEBYCHEV")
     n.inputs["Scale"].default_value = scale
     n.inputs["Randomness"].default_value = randomness
@@ -133,9 +102,9 @@ def _seams(tree, coords, scale, look: Look, location=(0, 0)):
     x, y = location
     f1 = _voronoi(tree, coords, scale, "F1", look.panel_randomness, (x, y))
     f2 = _voronoi(tree, coords, scale, "F2", look.panel_randomness, (x, y - 250))
-    edge = _math(tree, "SUBTRACT", f2.outputs["Distance"], f1.outputs["Distance"], location=(x + 200, y))
-    flat = _smoothstep(tree, edge, 0.0, look.groove_width, (x + 380, y))
-    return _math(tree, "SUBTRACT", 1.0, flat, location=(x + 560, y)), f1
+    edge = math_op(tree, "SUBTRACT", f2.outputs["Distance"], f1.outputs["Distance"], location=(x + 200, y))
+    flat = smoothstep(tree, edge, 0.0, look.groove_width, (x + 380, y))
+    return math_op(tree, "SUBTRACT", 1.0, flat, location=(x + 560, y)), f1
 
 
 # ─── Shared detail node group ────────────────────────────────────────────────
@@ -151,68 +120,68 @@ def build_detail_group(look: Look, ship_length: float):
                          ("Spec", "NodeSocketFloat")):
         ng.interface.new_socket(name, in_out="OUTPUT", socket_type=socket)
     t = ng
-    gin  = _node(t, "NodeGroupInput",  (-1600, 0))
-    gout = _node(t, "NodeGroupOutput", (1400, 0))
+    gin  = add_node(t, "NodeGroupInput",  (-1600, 0))
+    gout = add_node(t, "NodeGroupOutput", (1400, 0))
 
     # Object-space coords normalised by ship length → look is size-independent.
-    texco = _node(t, "ShaderNodeTexCoord", (-1600, 400))
-    norm = _node(t, "ShaderNodeVectorMath", (-1400, 400), operation="SCALE")
+    texco = add_node(t, "ShaderNodeTexCoord", (-1600, 400))
+    norm = add_node(t, "ShaderNodeVectorMath", (-1400, 400), operation="SCALE")
     t.links.new(texco.outputs["Object"], norm.inputs[0])
     norm.inputs["Scale"].default_value = 1.0 / ship_length
     coords = norm.outputs[0]
 
     coarse, coarse_f1 = _seams(t, coords, look.panels_per_length, look, (-1200, 800))
     fine, _ = _seams(t, coords, look.panels_per_length * look.fine_panel_ratio, look, (-1200, 250))
-    groove = _math(t, "MAXIMUM", coarse, _math(t, "MULTIPLY", fine, look.fine_weight,
+    groove = math_op(t, "MAXIMUM", coarse, math_op(t, "MULTIPLY", fine, look.fine_weight,
                                                 location=(-500, 250)), location=(-300, 600))
 
     # Per-panel jitter in [-j, +j] from the coarse cell's random colour.
-    cell_rand = _node(t, "ShaderNodeSeparateColor", (-500, 900))
+    cell_rand = add_node(t, "ShaderNodeSeparateColor", (-500, 900))
     t.links.new(coarse_f1.outputs["Color"], cell_rand.inputs[0])
-    jitter = _math(t, "MULTIPLY", _math(t, "SUBTRACT", cell_rand.outputs[0], 0.5, location=(-300, 900)),
+    jitter = math_op(t, "MULTIPLY", math_op(t, "SUBTRACT", cell_rand.outputs[0], 0.5, location=(-300, 900)),
                    2.0 * look.panel_jitter, location=(-100, 900))
 
-    noise = _node(t, "ShaderNodeTexNoise", (-1200, -300))
+    noise = add_node(t, "ShaderNodeTexNoise", (-1200, -300))
     noise.inputs["Scale"].default_value = look.grime_scale
     noise.inputs["Detail"].default_value = 8.0
     t.links.new(coords, noise.inputs["Vector"])
-    grime = _smoothstep(t, noise.outputs["Fac"], 0.48, 0.72, (-900, -300))
+    grime = smoothstep(t, noise.outputs["Fac"], 0.48, 0.72, (-900, -300))
 
-    ao = _node(t, "ShaderNodeAmbientOcclusion", (-1200, -650), samples=16, only_local=True)
+    ao = add_node(t, "ShaderNodeAmbientOcclusion", (-1200, -650), samples=16, only_local=True)
     ao.inputs["Distance"].default_value = look.ao_distance * ship_length
-    ao_mul = _math(t, "MULTIPLY_ADD", ao.outputs["AO"], 1.0 - look.ao_floor, look.ao_floor,
+    ao_mul = math_op(t, "MULTIPLY_ADD", ao.outputs["AO"], 1.0 - look.ao_floor, look.ao_floor,
                    location=(-900, -650))
 
     # Colour factor = seams × jitter × grime × AO, faded toward 1 by (1 - Detail).
-    f = _math(t, "MULTIPLY_ADD", groove, -look.groove_darken, 1.0, location=(100, 500))
-    f = _math(t, "MULTIPLY", f, _math(t, "ADD", jitter, 1.0, location=(100, 900)), location=(300, 500))
-    f = _math(t, "MULTIPLY", f, _math(t, "MULTIPLY_ADD", grime, -look.grime_darken, 1.0,
+    f = math_op(t, "MULTIPLY_ADD", groove, -look.groove_darken, 1.0, location=(100, 500))
+    f = math_op(t, "MULTIPLY", f, math_op(t, "ADD", jitter, 1.0, location=(100, 900)), location=(300, 500))
+    f = math_op(t, "MULTIPLY", f, math_op(t, "MULTIPLY_ADD", grime, -look.grime_darken, 1.0,
                                       location=(100, -300)), location=(500, 500))
-    f = _math(t, "MULTIPLY", f, ao_mul, location=(700, 500))
-    f = _math(t, "MULTIPLY_ADD", _math(t, "SUBTRACT", f, 1.0, location=(850, 500)),
+    f = math_op(t, "MULTIPLY", f, ao_mul, location=(700, 500))
+    f = math_op(t, "MULTIPLY_ADD", math_op(t, "SUBTRACT", f, 1.0, location=(850, 500)),
               gin.outputs["Detail"], 1.0, location=(1000, 500))
-    color = _node(t, "ShaderNodeVectorMath", (1200, 400), operation="SCALE")
+    color = add_node(t, "ShaderNodeVectorMath", (1200, 400), operation="SCALE")
     t.links.new(gin.outputs["Base Color"], color.inputs[0])
     t.links.new(f, color.inputs["Scale"])
     t.links.new(color.outputs[0], gout.inputs["Color"])
 
     # Height: surviving source bump minus seams (fine grain from the grime noise).
-    detail_h = _math(t, "MULTIPLY_ADD", noise.outputs["Fac"], 0.15, _math(t, "MULTIPLY", groove, -1.0,
+    detail_h = math_op(t, "MULTIPLY_ADD", noise.outputs["Fac"], 0.15, math_op(t, "MULTIPLY", groove, -1.0,
                      location=(300, 100)), location=(500, 100))
-    height = _math(t, "MULTIPLY_ADD", detail_h, gin.outputs["Detail"],
-                   _math(t, "MULTIPLY", gin.outputs["Base Height"], look.orig_bump_weight,
+    height = math_op(t, "MULTIPLY_ADD", detail_h, gin.outputs["Detail"],
+                   math_op(t, "MULTIPLY", gin.outputs["Base Height"], look.orig_bump_weight,
                          location=(500, -50)), location=(800, 100))
     t.links.new(height, gout.inputs["Height"])
 
     # Spec: grime and seams are matte; panels vary a little.
-    s = _math(t, "MULTIPLY_ADD", grime, -0.7, 1.0, location=(300, -100))
-    s = _math(t, "MULTIPLY", s, _math(t, "MULTIPLY_ADD", groove, -0.6, 1.0, location=(300, -250)),
+    s = math_op(t, "MULTIPLY_ADD", grime, -0.7, 1.0, location=(300, -100))
+    s = math_op(t, "MULTIPLY", s, math_op(t, "MULTIPLY_ADD", groove, -0.6, 1.0, location=(300, -250)),
               location=(500, -150))
-    s = _math(t, "MULTIPLY", s, _math(t, "MULTIPLY_ADD", jitter, 2.0, 1.0, location=(500, -300)),
+    s = math_op(t, "MULTIPLY", s, math_op(t, "MULTIPLY_ADD", jitter, 2.0, 1.0, location=(500, -300)),
               location=(700, -150))
-    s = _math(t, "MULTIPLY_ADD", _math(t, "SUBTRACT", s, 1.0, location=(850, -150)),
+    s = math_op(t, "MULTIPLY_ADD", math_op(t, "SUBTRACT", s, 1.0, location=(850, -150)),
               gin.outputs["Detail"], 1.0, location=(1000, -150))
-    spec = _math(t, "MULTIPLY", s, gin.outputs["Shine"], location=(1200, -150))
+    spec = math_op(t, "MULTIPLY", s, gin.outputs["Shine"], location=(1200, -150))
     t.links.new(spec, gout.inputs["Spec"])
     return ng
 
@@ -279,8 +248,8 @@ def _image_node(tree, filename: str, non_color: bool, location):
     img = bpy.data.images.load(str(SRC_DIR / filename), check_existing=True)
     if non_color:
         img.colorspace_settings.name = "Non-Color"
-    tex = _node(tree, "ShaderNodeTexImage", location, image=img)
-    uv = _node(tree, "ShaderNodeUVMap", (location[0] - 200, location[1]), uv_map=ORIG_UV)
+    tex = add_node(tree, "ShaderNodeTexImage", location, image=img)
+    uv = add_node(tree, "ShaderNodeUVMap", (location[0] - 200, location[1]), uv_map=ORIG_UV)
     tree.links.new(uv.outputs["UV"], tex.inputs["Vector"])
     return tex
 
@@ -294,35 +263,40 @@ def _detail_strength(name: str, spec: dict, look: Look) -> float:
     return 1.0 if is_flat_tint else look.authored_detail
 
 
-def wire_material(mat, spec: dict, group, look: Look, length: float) -> None:
+def wire_material(mat, spec: dict, group, look: Look, length: float, decals=None) -> None:
     """Rebuild one source material as: source maps → detail group → bake
     nodes. The `bake_target` image node is left selected+active; bake()
     points it at each pass's output image."""
     name = spec["name"].upper()
-    t = _node_tree(mat)
+    t = node_tree_of(mat)
     t.nodes.clear()
-    detail = _node(t, "ShaderNodeGroup", (0, 0), node_tree=group)
+    detail = add_node(t, "ShaderNodeGroup", (0, 0), node_tree=group)
     detail.inputs["Detail"].default_value = _detail_strength(name, spec, look)
     detail.inputs["Shine"].default_value = (look.shiny_spec if any(k in name for k in SHINY_KEYWORDS)
                                             else look.base_spec)
+    base_color = detail.inputs["Base Color"]
+    if decals is not None:
+        painter = add_node(t, "ShaderNodeGroup", (-200, 300), node_tree=decals)
+        t.links.new(painter.outputs["Color"], base_color)
+        base_color = painter.inputs["Color"]
     if spec.get("diffuse"):
         diffuse = _image_node(t, spec["diffuse"], False, (-400, 200))
-        t.links.new(diffuse.outputs["Color"], detail.inputs["Base Color"])
+        t.links.new(diffuse.outputs["Color"], base_color)
     # NB: the wcnews "normal" key actually holds a grayscale 3DS bump map (#473).
     if spec.get("normal"):
         bump_src = _image_node(t, spec["normal"], True, (-400, -150))
         t.links.new(bump_src.outputs["Color"], detail.inputs["Base Height"])
 
-    bump = _node(t, "ShaderNodeBump", (250, -200))
+    bump = add_node(t, "ShaderNodeBump", (250, -200))
     bump.inputs["Distance"].default_value = look.bump_distance * length
     t.links.new(detail.outputs["Height"], bump.inputs["Height"])
-    bsdf = _node(t, "ShaderNodeBsdfPrincipled", (450, -100), name="bake_bsdf")
+    bsdf = add_node(t, "ShaderNodeBsdfPrincipled", (450, -100), name="bake_bsdf")
     t.links.new(bump.outputs["Normal"], bsdf.inputs["Normal"])
-    _node(t, "ShaderNodeEmission", (450, 150), name="bake_emit")
-    _node(t, "ShaderNodeOutputMaterial", (700, 0), name="bake_out")
+    add_node(t, "ShaderNodeEmission", (450, 150), name="bake_emit")
+    add_node(t, "ShaderNodeOutputMaterial", (700, 0), name="bake_out")
 
-    tex = _node(t, "ShaderNodeTexImage", (450, 400), name="bake_target")
-    atlas_uv = _node(t, "ShaderNodeUVMap", (250, 400), uv_map=ATLAS_UV)
+    tex = add_node(t, "ShaderNodeTexImage", (450, 400), name="bake_target")
+    atlas_uv = add_node(t, "ShaderNodeUVMap", (250, 400), uv_map=ATLAS_UV)
     t.links.new(atlas_uv.outputs["UV"], tex.inputs["Vector"])
     for n in t.nodes:
         n.select = False
@@ -397,12 +371,12 @@ def export(obj, ship: str, images: dict) -> Path:
     # One material, one UV set: exactly what the engine will read. The
     # node graph only feeds the companion .mtl (handy for DCC previews).
     final = bpy.data.materials.new(FINAL_MAT)
-    t = _node_tree(final)
+    t = node_tree_of(final)
     t.nodes.clear()
-    bsdf = _node(t, "ShaderNodeBsdfPrincipled", (0, 0))
-    base = _node(t, "ShaderNodeTexImage", (-300, 0), image=images["diffuse"])
+    bsdf = add_node(t, "ShaderNodeBsdfPrincipled", (0, 0))
+    base = add_node(t, "ShaderNodeTexImage", (-300, 0), image=images["diffuse"])
     t.links.new(base.outputs["Color"], bsdf.inputs["Base Color"])
-    t.links.new(bsdf.outputs["BSDF"], _node(t, "ShaderNodeOutputMaterial", (300, 0)).inputs["Surface"])
+    t.links.new(bsdf.outputs["BSDF"], add_node(t, "ShaderNodeOutputMaterial", (300, 0)).inputs["Surface"])
     obj.data.materials.clear()
     obj.data.materials.append(final)
     obj.data.uv_layers.remove(obj.data.uv_layers[ORIG_UV])
@@ -469,6 +443,7 @@ def main() -> None:
     specs = {s["name"]: s for s in json.loads(
         (SRC_DIR / f"{args.ship}.materials.json").read_text())["materials"]}
     group = build_detail_group(look, length)
+    decals = build_decal_group(args.ship)
     images = {
         "diffuse": new_image(f"{args.ship}_diffuse", args.size, False, (0.5, 0.5, 0.5, 1)),
         "normal":  new_image(f"{args.ship}_normal",  args.size, True,  (0.5, 0.5, 1.0, 1)),
@@ -476,7 +451,7 @@ def main() -> None:
     }
     materials = [m for m in obj.data.materials if m]
     for mat in materials:
-        wire_material(mat, specs.get(mat.name, {"name": mat.name}), group, look, length)
+        wire_material(mat, specs.get(mat.name, {"name": mat.name}), group, look, length, decals)
 
     margin_px = max(4, args.size // 256)
     bake(materials, images["diffuse"], "EMIT", "Color", margin_px)
