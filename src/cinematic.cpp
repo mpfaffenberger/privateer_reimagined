@@ -5,6 +5,7 @@
 // -----------------------------------------------------------------------------
 
 #include "cinematic.h"
+#include "cinematic_dialogue.h"
 #include "cinematic_parse.h"  // Cue / Cinematic data model + non-throwing parser
 
 #include "audio.h"          // audio::play_file / play_file_world
@@ -63,6 +64,7 @@ int       g_prev_cam_cue = -1; // last frame's g_cam_cue (detect hard cuts)
 HMM_Vec3  g_cam_vel{};       // world-space velocity of g_cam (drives warp streaks)
 
 VoiceId   g_music_voice = 0;
+DialogueTrack g_dialogue;
 
 std::string g_last_error;    // "" once a load succeeds; set on any failure
 std::function<void(const std::string&)> g_event_tap;   // Phase-2 beat sink
@@ -207,6 +209,7 @@ void despawn_actors() {
 // despawns the actors it spawned (so repeated plays don't pile up ships).
 void end_cinematic(const char* reason) {
     if (!g_active) return;
+    g_dialogue.stop();
     if (g_music_voice) { audio::stop(g_music_voice); g_music_voice = 0; }
     despawn_actors();
     char buf[96];
@@ -289,6 +292,7 @@ bool play_file(const std::string& path) {
     g_prev_cam_cue = -1;
     g_cam_vel = HMM_V3(0, 0, 0);
     g_actors.clear();
+    g_dialogue.stop();
     g_music_voice = 0;
 
     recompute_end();
@@ -420,6 +424,7 @@ bool seek(float t, ShipRegistry& ships, PlayerState& player,
     // Rewind latches + music, then silently fast-forward to `target`.
     g_cam_cue = -1;
     g_ending  = false;
+    g_dialogue.stop();
     if (g_music_voice) { audio::stop(g_music_voice); g_music_voice = 0; }
     for (Cue& c : g_cin.cues) c.fired = false;
 
@@ -476,6 +481,7 @@ bool reload(const std::string& id, ShipRegistry& ships, PlayerState& player,
     const bool  was_active = g_active;
     const float saved_t    = g_time;
 
+    g_dialogue.stop(); // including failed live reloads: no orphaned speech
     load(k_asset_root + target_id + ".json");   // re-parse from disk
     if (!g_cin.valid) { err = g_last_error; return false; }
     recompute_end();
@@ -555,8 +561,7 @@ void tick(float dt, ShipRegistry& ships, PlayerState& player,
                 break;
             }
             case Cmd::Line:
-                if (!c.voice_file.empty())
-                    audio::play_file(k_asset_root + c.voice_file, 1.0f);
+                g_dialogue.play(c.voice_file.empty() ? std::string{} : k_asset_root + c.voice_file);
                 std::snprintf(ebuf, sizeof(ebuf),
                     "line speaker=%s portrait=%s side=%s t=%.2f",
                     c.speaker.c_str(), c.portrait.c_str(),

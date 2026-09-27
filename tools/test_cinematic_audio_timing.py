@@ -30,6 +30,28 @@ class CinematicAudioTimingTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "no MPEG"):
                 mp3_duration_seconds(path)
 
+    def test_vera_crusader_dialogue_and_actions_leave_audio_room(self) -> None:
+        cinematic_dir = Path(__file__).resolve().parents[1] / "assets" / "cinematics"
+        data = json.loads((cinematic_dir / "m22_vera_crusader.json").read_text())
+        cues = data["timeline"]
+        lines = [cue for cue in cues if cue["cmd"] == "line"]
+        self.assertEqual(7, len(lines))
+        for index, line in enumerate(lines):
+            with self.subTest(voice=line["voice_file"]):
+                audio = mp3_duration_seconds(cinematic_dir / line["voice_file"])
+                self.assertGreaterEqual(line["dur"], audio + 0.449)
+                shots = [cue for cue in cues if cue["cmd"] == "camera_path"
+                         and cue["t"] == line["t"]]
+                self.assertEqual(1, len(shots))
+                self.assertGreaterEqual(shots[0]["dur"], line["dur"])
+                if index + 1 < len(lines):
+                    self.assertGreaterEqual(lines[index+1]["t"] - (line["t"] + line["dur"]), 0.499)
+                for cue in cues:
+                    if cue["cmd"] in ("sfx", "fade_out", "end") and cue["t"] >= line["t"]:
+                        self.assertGreaterEqual(cue["t"], line["t"] + audio + 0.449)
+        self.assertEqual(sorted(cue["t"] for cue in cues), [cue["t"] for cue in cues])
+        self.assertIn("set_flag:m22_vera_crusader_seen", cues[-1]["actions"])
+
     def test_m04_lines_and_cameras_cover_generated_voices(self) -> None:
         root = Path(__file__).resolve().parents[1]
         cinematic_dir = root / "assets" / "cinematics"
