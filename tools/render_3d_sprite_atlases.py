@@ -87,7 +87,7 @@ def _mirror_source_az(az: float) -> float | None:
 # picked up here on the next render run. No drift, one canonical list.
 sys.path.insert(0, str(Path(__file__).parent))
 from regenerate_mesh_showroom import (        # noqa: E402  (path hack)
-    KEEP_AND_RENAME, PER_SHIP_OVERRIDES,
+    KEEP_AND_RENAME, PER_SHIP_OVERRIDES, mesh_obj_asset,
 )
 
 # Defaults applied when a ship has no PER_SHIP_OVERRIDES entry. MUST
@@ -240,7 +240,7 @@ def _write_capture_scene(ship: dict) -> Path:
         "placed_sprites":      [],
         "placed_ship_sprites": [],
         "placed_meshes": [{
-            "obj":           f"meshes/ships_wcnews/{ship['codename']}.obj",
+            "obj":           mesh_obj_asset(ship["codename"]),
             "position":      [0, 0, 0],
             "euler_deg":     ship["euler_deg"],
             "length_meters": CAPTURE_LENGTH_M,
