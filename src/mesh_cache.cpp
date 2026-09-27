@@ -2,7 +2,8 @@
 // mesh_cache.cpp — binary read/write for the .npmesh format.
 //
 // File layout (little-endian, packed):
-//   char[8]  magic = "NPMESH01"      (bump version to invalidate existing caches)
+//   char[8]  magic = "NPMESH02"      (bump version to invalidate existing caches;
+//                                    02 = u32 indices, #484)
 //   u32      vertex_count
 //   u32      index_count
 //   u32      submesh_count
@@ -10,7 +11,7 @@
 //   f32[3]   aabb_min
 //   f32[3]   aabb_max
 //   MeshVertex[vertex_count]         (32 bytes each — pos, normal, uv)
-//   u16       [index_count]
+//   u32       [index_count]
 //   Submesh   [submesh_count]        (12 bytes — start, count, material_idx)
 //   foreach material:
 //     u16    name_length
@@ -32,7 +33,7 @@
 
 namespace {
 
-constexpr char kMagic[8] = { 'N','P','M','E','S','H','0','1' };
+constexpr char kMagic[8] = { 'N','P','M','E','S','H','0','2' };
 
 std::string cache_path_for(const std::string& obj_path) {
     namespace fs = std::filesystem;
@@ -104,7 +105,7 @@ bool try_load_mesh_cache(const std::string& obj_path, Mesh& out) {
     if (!read_blob(f, out.vertices.data(), vc * sizeof(MeshVertex))) return false;
 
     out.indices.assign(ic, 0);
-    if (!read_blob(f, out.indices.data(), ic * sizeof(uint16_t))) return false;
+    if (!read_blob(f, out.indices.data(), ic * sizeof(MeshIndex))) return false;
 
     out.submeshes.assign(smc, {});
     if (!read_blob(f, out.submeshes.data(), smc * sizeof(Submesh))) return false;
@@ -148,7 +149,7 @@ bool write_mesh_cache(const std::string& obj_path, const Mesh& mesh) {
     if (!write_blob(f, mesh.aabb_max,  sizeof(mesh.aabb_max))) return false;
 
     if (vc  && !write_blob(f, mesh.vertices.data(),  vc  * sizeof(MeshVertex))) return false;
-    if (ic  && !write_blob(f, mesh.indices.data(),   ic  * sizeof(uint16_t)))   return false;
+    if (ic  && !write_blob(f, mesh.indices.data(),   ic  * sizeof(MeshIndex)))  return false;
     if (smc && !write_blob(f, mesh.submeshes.data(), smc * sizeof(Submesh)))    return false;
 
     for (const auto& m : mesh.materials) {

@@ -34,7 +34,7 @@ bool init_mesh_atmosphere_pipeline(MeshRenderer& m) {
     ap.layout.attrs[ATTR_atmosphere_a_uv].format     = SG_VERTEXFORMAT_FLOAT2;
     ap.layout.attrs[ATTR_atmosphere_a_uv].offset     = 24;
 
-    ap.index_type = SG_INDEXTYPE_UINT16;
+    ap.index_type = kMeshIndexType;
 
     // Cull BACK faces → render the *front* of the shell. Because the
     // shell is scaled up relative to the planet, its front faces sit

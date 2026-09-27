@@ -93,7 +93,7 @@ bool MeshRenderer::init() {
     pd.layout.attrs[ATTR_mesh_a_uv].format      = SG_VERTEXFORMAT_FLOAT2;
     pd.layout.attrs[ATTR_mesh_a_uv].offset      = 24;
 
-    pd.index_type = SG_INDEXTYPE_UINT16;
+    pd.index_type = kMeshIndexType;
     pd.depth.compare       = SG_COMPAREFUNC_LESS_EQUAL;
     pd.depth.write_enabled = true;
     pd.colors[0].pixel_format = kSceneColorFormat;

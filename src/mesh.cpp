@@ -40,7 +40,7 @@ bool Mesh::upload() {
     sg_buffer_desc ibd{};
     ibd.usage.index_buffer = true;
     ibd.data.ptr  = indices.data();
-    ibd.data.size = indices.size() * sizeof(uint16_t);
+    ibd.data.size = indices.size() * sizeof(MeshIndex);
     ibuf = sg_make_buffer(&ibd);
 
     index_count = (int)indices.size();
