@@ -62,6 +62,14 @@ FINAL_MAT = "RESKIN"  # single material the exported OBJ references
 NO_DETAIL_KEYWORDS = ("GLASS", "LIGHT")
 SHINY_KEYWORDS     = ("GLASS", "SHINY")
 
+# Stray source parts deleted before baking, by EXACT OBJ group name (the
+# Kamekh has both Pod01 and Pod012 — prefix matching would be a bug).
+DROP_PARTS: dict[str, frozenset[str]] = {
+    # PodNN2 are stray duplicates of the hull-mounted PodNN, slid 260-364u
+    # forward and left floating in space. The mounted Pod01..Pod06 stay.
+    "kamekh": frozenset({"Pod012", "Pod022", "Pod032", "Pod042", "Pod052", "Pod062"}),
+}
+
 
 @dataclass(frozen=True)
 class Look:
@@ -211,9 +219,24 @@ def enable_gpu(scene) -> str:
     return "CPU"
 
 
+def _base_name(name: str) -> str:
+    """'Pod012.001' → 'Pod012' (Blender de-dup suffix), else unchanged."""
+    stem, _, suffix = name.rpartition(".")
+    return stem if stem and suffix.isdigit() else name
+
+
 def import_joined(ship: str):
-    """Import the OBJ and join every part into one object named after the ship."""
-    bpy.ops.wm.obj_import(filepath=str(SRC_DIR / f"{ship}.obj"))
+    """Import the OBJ (one object per group), delete DROP_PARTS, and join
+    the rest into one object named after the ship."""
+    bpy.ops.wm.obj_import(filepath=str(SRC_DIR / f"{ship}.obj"), use_split_groups=True)
+    drop = DROP_PARTS.get(ship, frozenset())
+    doomed = [o for o in bpy.context.scene.objects if _base_name(o.name) in drop]
+    missing = drop - {_base_name(o.name) for o in doomed}
+    if missing:
+        raise SystemExit(f"[reskin] DROP_PARTS for '{ship}' names parts not in the OBJ: "
+                         f"{sorted(missing)} — stale list?")
+    for o in doomed:
+        bpy.data.objects.remove(o, do_unlink=True)
     parts = [o for o in bpy.context.scene.objects if o.type == "MESH"]
     for o in parts:
         o.select_set(True)
@@ -392,20 +415,26 @@ def export(obj, ship: str, images: dict) -> Path:
     return out
 
 
-def _vertex_bbox(obj_path: Path) -> tuple[list[float], list[float]]:
+def _vertex_bbox(obj_path: Path, skip_groups=frozenset()) -> tuple[list[float], list[float]]:
+    """AABB of `v` lines, ignoring vertices listed under a skipped `g`
+    group (the wcnews converter writes each group's vertices after it)."""
     lo, hi = [math.inf] * 3, [-math.inf] * 3
+    skipping = False
     with obj_path.open() as f:
         for line in f:
-            if line.startswith("v "):
+            if line.startswith("g "):
+                skipping = line[2:].strip() in skip_groups
+            elif line.startswith("v ") and not skipping:
                 for i, v in enumerate(map(float, line.split()[1:4])):
                     lo[i], hi[i] = min(lo[i], v), max(hi[i], v)
     return lo, hi
 
 
-def assert_same_frame(src: Path, dst: Path) -> None:
+def assert_same_frame(src: Path, dst: Path, dropped=frozenset()) -> None:
     """The engine's per-ship euler overrides and lights3d files assume the
-    wcnews frame. Fail loudly if the round trip moved/rotated/scaled it."""
-    (slo, shi), (dlo, dhi) = _vertex_bbox(src), _vertex_bbox(dst)
+    wcnews frame. Fail loudly if the round trip moved/rotated/scaled it.
+    Dropped parts are excluded from the expected AABB (they may sit at its edge)."""
+    (slo, shi), (dlo, dhi) = _vertex_bbox(src, dropped), _vertex_bbox(dst)
     tol = 1e-3 * max(b - a for a, b in zip(slo, shi))
     drift = max(abs(a - b) for a, b in zip(slo + shi, dlo + dhi))
     if drift > tol:
@@ -459,7 +488,7 @@ def main() -> None:
     bake(materials, images["normal"], "NORMAL", None, margin_px)
 
     out = export(obj, args.ship, images)
-    assert_same_frame(SRC_DIR / f"{args.ship}.obj", out)
+    assert_same_frame(SRC_DIR / f"{args.ship}.obj", out, DROP_PARTS.get(args.ship, frozenset()))
     print(f"[reskin] {args.ship}: {len(materials)} source materials, {args.size}px atlas, "
           f"device={device}, length={length:.1f} -> {out}")
 
