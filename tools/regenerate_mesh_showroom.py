@@ -46,10 +46,6 @@ REPO    = Path(__file__).resolve().parents[1]
 SRC_DIR = REPO / "assets" / "meshes" / "ships_wcnews"
 OUT_PATH = REPO / "assets" / "systems" / "mesh_showroom.json"
 ASSET_PREFIX = "meshes/ships_wcnews/"   # what goes in the JSON, relative to assets/
-# Hand-reskinned hulls (tools/reskin_ship_blender.py) live beside, not on top
-# of, the converter output so re-running import_3ds_meshes.py can't clobber
-# them. Same stem, same model frame — overrides below apply unchanged.
-RESKIN_PREFIX = "meshes/ships_reskinned/"
 
 # Per-codename overrides for meshes whose native frame / colour balance
 # doesn't match the global default. Each value is a dict of any subset
@@ -253,15 +249,10 @@ def mesh_obj_asset(stem: str) -> str:
     render_3d_sprite_atlases.py so showroom and sprite captures can never
     disagree about which mesh a ship uses.
 
-    Precedence: explicit PER_SHIP_OVERRIDES `obj` > reskin on disk > wcnews.
+    Precedence: explicit PER_SHIP_OVERRIDES `obj` > wcnews. (Reskins from
+    tools/reskin_ship_blender.py replace the wcnews files in place.)
     """
-    override = PER_SHIP_OVERRIDES.get(stem, {}).get("obj")
-    if override:
-        return override
-    reskin = f"{RESKIN_PREFIX}{stem}.obj"
-    if (REPO / "assets" / reskin).exists():
-        return reskin
-    return f"{ASSET_PREFIX}{stem}.obj"
+    return PER_SHIP_OVERRIDES.get(stem, {}).get("obj", f"{ASSET_PREFIX}{stem}.obj")
 
 
 def build_mesh_entry(stem: str, x: float, z: float,

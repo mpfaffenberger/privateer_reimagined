@@ -14,17 +14,19 @@ gives them a proper skin:
      space, so faces that never had UVs get detail too.
   4. Bake three atlas maps with Cycles: diffuse (AO baked in), tangent-
      space normal, and spec.
-  5. Export `assets/meshes/ships_reskinned/<ship>.obj` + `materials.json`
-     + PNGs. Import and export share Blender's default axis settings, so
-     the OBJ comes back in the exact source frame and every orientation
-     override / lights3d file keyed to the ship stays valid.
+  5. Overwrite `ships_wcnews/<ship>.obj` + `materials.json` IN PLACE with
+     the baked atlas PNGs, then prune textures only the old sidecar used
+     and the stale `.npmesh` cache. Import and export share Blender's
+     default axis settings, so the OBJ comes back in the exact source
+     frame and every orientation override / lights3d file stays valid.
 
 Per-ship decals (nose art) live in `reskin_decals.py`; generic node
 builders in `reskin_nodes.py`.
 
-Output lives in its own directory so re-running `import_3ds_meshes.py`
-never clobbers it; `regenerate_mesh_showroom.mesh_obj_asset()` prefers it
-when present.
+Git history is the backup of the flat originals. The tool refuses to run
+on an already-reskinned ship; to re-bake, regenerate the flat source with
+`tools/import_3ds_meshes.py --only <ship>` first (which, by the same
+token, overwrites a reskin — git diff shows it).
 
 Usage (Blender 4.2+ / 5.x). `--python-exit-code 1` matters: without it
 Blender exits 0 even when the script aborts.
@@ -50,8 +52,9 @@ from reskin_decals import build_decal_group  # noqa: E402
 from reskin_nodes import add_node, math_op, node_tree_of, smoothstep  # noqa: E402
 
 REPO    = Path(__file__).resolve().parents[1]
-SRC_DIR = REPO / "assets" / "meshes" / "ships_wcnews"
-DST_DIR = REPO / "assets" / "meshes" / "ships_reskinned"
+# Reskins REPLACE their source in place (git history keeps the flat originals).
+MESH_DIR = REPO / "assets" / "meshes" / "ships_wcnews"
+SIDECAR_SLOTS = ("diffuse", "normal", "spec", "glow")   # texture keys in materials.json
 
 ORIG_UV   = "orig"    # source UVs (bitmaps only) — bake input
 ATLAS_UV  = "atlas"   # fresh unwrap — bake output + exported UVs
@@ -228,7 +231,7 @@ def _base_name(name: str) -> str:
 def import_joined(ship: str):
     """Import the OBJ (one object per group), delete DROP_PARTS, and join
     the rest into one object named after the ship."""
-    bpy.ops.wm.obj_import(filepath=str(SRC_DIR / f"{ship}.obj"), use_split_groups=True)
+    bpy.ops.wm.obj_import(filepath=str(MESH_DIR / f"{ship}.obj"), use_split_groups=True)
     drop = DROP_PARTS.get(ship, frozenset())
     doomed = [o for o in bpy.context.scene.objects if _base_name(o.name) in drop]
     missing = drop - {_base_name(o.name) for o in doomed}
@@ -268,7 +271,7 @@ def ship_length(obj) -> float:
 
 def _image_node(tree, filename: str, non_color: bool, location):
     """Image texture sampled through the ORIGINAL UVs."""
-    img = bpy.data.images.load(str(SRC_DIR / filename), check_existing=True)
+    img = bpy.data.images.load(str(MESH_DIR / filename), check_existing=True)
     if non_color:
         img.colorspace_settings.name = "Non-Color"
     tex = add_node(tree, "ShaderNodeTexImage", location, image=img)
@@ -381,12 +384,11 @@ def new_image(name: str, size: int, non_color: bool, fill):
 
 # ─── Export ──────────────────────────────────────────────────────────────────
 
-def export(obj, ship: str, images: dict) -> Path:
-    DST_DIR.mkdir(parents=True, exist_ok=True)
+def export(obj, ship: str, images: dict) -> tuple[Path, dict]:
     files = {}
     for slot, img in images.items():
         fname = f"{ship}_{slot}.png"
-        img.filepath_raw = str(DST_DIR / fname)
+        img.filepath_raw = str(MESH_DIR / fname)
         img.file_format = "PNG"
         img.save()
         files[slot] = fname
@@ -406,13 +408,38 @@ def export(obj, ship: str, images: dict) -> Path:
 
     bpy.ops.object.select_all(action="DESELECT")
     obj.select_set(True)
-    out = DST_DIR / f"{ship}.obj"
+    out = MESH_DIR / f"{ship}.obj"
     bpy.ops.wm.obj_export(filepath=str(out), export_selected_objects=True, export_uv=True,
                           export_normals=True, export_materials=True,
                           export_triangulated_mesh=True, path_mode="STRIP")
     sidecar = {"materials": [{"name": FINAL_MAT, **files}]}
-    (DST_DIR / f"{ship}.materials.json").write_text(json.dumps(sidecar, indent=2) + "\n")
-    return out
+    (MESH_DIR / f"{ship}.materials.json").write_text(json.dumps(sidecar, indent=2) + "\n")
+    return out, files
+
+
+def load_source_specs(ship: str) -> dict:
+    """Source materials by name. Refuses an already-reskinned ship: baking
+    our own output again would silently re-weather and re-blur it."""
+    specs = json.loads((MESH_DIR / f"{ship}.materials.json").read_text())["materials"]
+    if [s["name"] for s in specs] == [FINAL_MAT]:
+        raise SystemExit(f"[reskin] '{ship}' is already reskinned. Regenerate the flat source "
+                         f"first: tools/import_3ds_meshes.py --only {ship}")
+    return {s["name"]: s for s in specs}
+
+
+def prune_superseded(ship: str, old_specs: dict, new_files: dict) -> list[str]:
+    """Delete textures only the previous sidecar used, plus the stale binary
+    mesh cache (a checkout can leave it newer than the new OBJ, and the
+    engine would then load the OLD mesh from it). Returns removed names."""
+    old = {s[k] for s in old_specs.values() for k in SIDECAR_SLOTS if s.get(k)}
+    doomed = sorted(old - set(new_files.values())) + [f"{ship}.npmesh"]
+    removed = []
+    for name in doomed:
+        path = MESH_DIR / name
+        if path.exists():
+            path.unlink()
+            removed.append(name)
+    return removed
 
 
 def _vertex_bbox(obj_path: Path, skip_groups=frozenset()) -> tuple[list[float], list[float]]:
@@ -430,11 +457,12 @@ def _vertex_bbox(obj_path: Path, skip_groups=frozenset()) -> tuple[list[float], 
     return lo, hi
 
 
-def assert_same_frame(src: Path, dst: Path, dropped=frozenset()) -> None:
+def assert_same_frame(expected: tuple[list[float], list[float]], dst: Path) -> None:
     """The engine's per-ship euler overrides and lights3d files assume the
     wcnews frame. Fail loudly if the round trip moved/rotated/scaled it.
-    Dropped parts are excluded from the expected AABB (they may sit at its edge)."""
-    (slo, shi), (dlo, dhi) = _vertex_bbox(src, dropped), _vertex_bbox(dst)
+    `expected` is snapshotted BEFORE the in-place export overwrites the
+    source — comparing the new file to itself would always pass."""
+    (slo, shi), (dlo, dhi) = expected, _vertex_bbox(dst)
     tol = 1e-3 * max(b - a for a, b in zip(slo, shi))
     drift = max(abs(a - b) for a, b in zip(slo + shi, dlo + dhi))
     if drift > tol:
@@ -465,12 +493,12 @@ def main() -> None:
     device = enable_gpu(scene)
     scene.cycles.samples = args.samples
 
+    specs = load_source_specs(args.ship)   # guard first: no work on a reskinned ship
+    expected_bbox = _vertex_bbox(MESH_DIR / f"{args.ship}.obj", DROP_PARTS.get(args.ship, frozenset()))
     obj = import_joined(args.ship)
     length = ship_length(obj)
     unwrap_atlas(obj, args.margin)
 
-    specs = {s["name"]: s for s in json.loads(
-        (SRC_DIR / f"{args.ship}.materials.json").read_text())["materials"]}
     group = build_detail_group(look, length)
     decals = build_decal_group(args.ship)
     images = {
@@ -487,10 +515,11 @@ def main() -> None:
     bake(materials, images["spec"], "EMIT", "Spec", margin_px)
     bake(materials, images["normal"], "NORMAL", None, margin_px)
 
-    out = export(obj, args.ship, images)
-    assert_same_frame(SRC_DIR / f"{args.ship}.obj", out, DROP_PARTS.get(args.ship, frozenset()))
+    out, files = export(obj, args.ship, images)
+    assert_same_frame(expected_bbox, out)
+    removed = prune_superseded(args.ship, specs, files)
     print(f"[reskin] {args.ship}: {len(materials)} source materials, {args.size}px atlas, "
-          f"device={device}, length={length:.1f} -> {out}")
+          f"device={device}, length={length:.1f} -> {out}; pruned {len(removed)} superseded files")
 
 
 if __name__ == "__main__":
