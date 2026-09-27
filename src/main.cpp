@@ -47,6 +47,7 @@
 #include "camera.h"
 #include "cockpit_armaments.h"
 #include "cockpit_hud.h"
+#include "cockpit_overlay.h"
 #include "comms_menu.h"
 #include "comm.h"
 #include "voice.h"
@@ -6465,6 +6466,15 @@ void frame_cb() {
             // the navmap panel renders the same info textually.
             const bool draw_world =
                 !autopilot::engaged(g.autopilot) && !g.show_navmap;
+            // Per-hull cockpit art (#426) goes down first, on ImGui's
+            // background list, so the HUD panels below can park inside
+            // its MFD holes. No-op for hulls without art. Skipped while
+            // the render camera is OUTSIDE the hull (autopilot chase cam,
+            // death cinematic): a cockpit frame over a 3rd-person view is
+            // nonsense, and skipping it drops the HUD back to the classic
+            // floating panels for those frames automatically.
+            if (!g.orbit_active)
+                cockpit_overlay::draw(g.player.ship_class_name, g.camera);
             cockpit_hud::build(g.camera, g.system, g.selected_nav,
                                g.mouse_x, g.mouse_y, g.fly_by_wire,
                                g.ships, g.player_target_id,
@@ -6498,7 +6508,10 @@ void frame_cb() {
         if (!g.show_title && !g.capture_clean && !cine_active) {
             const HMM_Vec3 pp = g.camera.position;
             cockpit_hud::FlightStatusHudState fs;
+            cockpit_overlay::LightState lamps;
+            lamps.comms_active = comm::speaker_id() != 0;
             fs.speed = HMM_LenV3(g.camera.velocity);
+            fs.set_speed = g.camera.desired_forward_speed;
             fs.mode  = (g.camera.cruise_level > 0.5f)  ? "CRUISE"
                      : (g.camera.cruise_level > 0.05f) ? "SPOOL "
                      :                                   "NORMAL";
@@ -6507,11 +6520,28 @@ void frame_cb() {
             if (const Ship* pl = g.ships.player()) {
                 fs.energy     = pl->energy_gj;
                 fs.energy_max = pl->klass ? pl->klass->energy_max : 0.0f;
+                lamps.powered = pl->alive;
+                if (pl->klass) {
+                    const auto* k = pl->klass;
+                    const auto* a = pl->fitted_armor;
+                    const float current[4] = {pl->armor_fore_cm, pl->armor_aft_cm,
+                        pl->armor_port_cm, pl->armor_starboard_cm};
+                    const float capacity[4] = {k->armor_fore_cm + (a ? a->front_cm : 0),
+                        k->armor_aft_cm + (a ? a->back_cm : 0),
+                        k->armor_port_cm + (a ? a->port_cm : 0),
+                        k->armor_starboard_cm + (a ? a->starboard_cm : 0)};
+                    lamps.damage_warning = cockpit_overlay::low_armor(current, capacity);
+                }
             }
             if (autopilot::engaged(g.autopilot))
                 fs.autopilot_nav = g.autopilot.nav_name.c_str();
             if (g.autopilot.msg_timer_s > 0.0f)
                 fs.autopilot_msg = g.autopilot.msg;
+            fs.autopilot_ready = !autopilot::engaged(g.autopilot) &&
+                autopilot::engage_check(g.camera, g.system, g.selected_nav) ==
+                    EngageResult::Engaged;
+            lamps.autopilot_ready = fs.autopilot_ready;
+            cockpit_overlay::set_lights(lamps);
             cockpit_hud::draw_flight_status_mfd(fs);
         }
         // Weapons + ordnance status (np-zte.2). Afterburner fuel bar
@@ -6817,7 +6847,9 @@ void frame_cb() {
                 }
             }
 
-            ImDrawList* dl = ImGui::GetForegroundDrawList();
+            // Target brackets, labels, edge arrows and lead pips belong to
+            // the world behind cockpit metal, not the foreground UI (#429).
+            ImDrawList* dl = cockpit_overlay::world_draw_list();
             if (!offscreen) {
                 // NDC -> screen. Engine convention: NDC y maps DIRECTLY
                 // to screen y (no `(1 - ndc_y)` flip — see cockpit_hud's
@@ -7018,6 +7050,9 @@ void frame_cb() {
     // drawable acquisition per frame; a second pass was flickering).
     const HMM_Mat4 vp = HMM_MulM4(g.camera.projection(aspect), g.camera.view());
     const HMM_Vec3 flare_tint = g.sun.glow_color;
+    // Cockpit art (#426): warp the display panels onto their bezels and lay
+    // the PNG over them. Must follow ALL ImGui building for this frame.
+    cockpit_overlay::finalize();
     g.post.composite_to_swapchain(g.rt, g.sun.position, vp, flare_tint,
                                   sapp_width(), sapp_height(),
                                   [] { debug_panel::render(); });

@@ -61,6 +61,9 @@ struct Camera {
 // ~90% of a commanded turn rate after 0.62s; no overshoot. Kept separate
 // from hull-specific maximum rates so tuning preserves ship capabilities.
 float turn_response_seconds = 0.16f;
+// Small rigid cockpit slide during turn acceleration (#444). No shear.
+// Set to zero to disable; ship turn inertia remains independent.
+float cockpit_head_motion_strength = 1.0f;
 TurnResponse yaw_response{}, pitch_response{};
 void reset_turn_response() { yaw_response.reset(); pitch_response.reset(); }
 

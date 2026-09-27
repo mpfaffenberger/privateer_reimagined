@@ -110,6 +110,12 @@ bool controls_locked(const Autopilot& a);
 // today, named for the HUD's intent.)
 bool engaged(const Autopilot& a);
 
+// The engage gate on its own, side-effect free: NoNav / Hostiles, or
+// Engaged meaning "try_engage would succeed right now". The cockpit AUTO
+// light polls this every frame so it can never disagree with the A key.
+EngageResult engage_check(const Camera& cam, const StarSystem& system,
+                          int selected_nav);
+
 // Attempt to engage toward `selected_nav` (index into
 // system.nav_points; -1 = none). Vets nav-selected + the hostile gate,
 // stashes the right HUD banner for every outcome, and returns the
