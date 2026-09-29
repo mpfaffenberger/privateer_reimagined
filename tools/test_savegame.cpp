@@ -27,6 +27,7 @@
 #include "shield.h"
 #include "ship_class.h"
 #include "test_sandbox.h"
+#include "test_stderr_capture.h"
 
 #include <cstdio>
 #include <cstdlib>
@@ -628,6 +629,25 @@ int main() {
         if (!ok) ++g_fail;
         std::printf("  [%s] v11 component junk clamps; missing keys stay pristine\n",
                     ok ? "OK  " : "FAIL");
+    }
+
+    // 3k. (#239) an uncreatable saves dir returns "" and its log names the
+    //     FULL path. fs::path::c_str() is wchar_t* on Windows, so passing it
+    //     to "%s" logged just the drive letter.
+    {
+        const std::filesystem::path blocker = sandbox / "blocker";
+        { std::ofstream f(blocker); }   // a FILE where a directory must go
+        const std::string want = (blocker / "new_privateer" / "saves").string();
+        test_sandbox::set_data_dir(blocker);
+        std::string dir = "<not called>";
+        const std::string log = test_stderr::capture(
+            sandbox / "stderr.txt", [&] { dir = savegame::saves_dir(); });
+        test_sandbox::set_data_dir(sandbox);
+        const bool ok = dir.empty() && log.find(want) != std::string::npos;
+        if (!ok) ++g_fail;
+        std::printf("  [%s] uncreatable saves dir -> \"\" + log names full path\n",
+                    ok ? "OK  " : "FAIL");
+        if (!ok) std::printf("         want '%s' in log: %s", want.c_str(), log.c_str());
     }
 
     // 3h. (#138) plot:: mutator invariants: idempotent set/give, clear/

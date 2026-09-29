@@ -204,15 +204,18 @@ std::string saves_dir() {
         std::fprintf(stderr, "[save] no user data dir (HOME/APPDATA unset) — cannot locate saves dir\n");
         return {};
     }
-    fs::path dir = fs::path(base) / "saves";
+    const fs::path dir = fs::path(base) / "saves";
+    // Log via string(), never path::c_str(): that's wchar_t* on Windows and
+    // "%s" would print only the drive letter (#239).
+    const std::string dir_str = dir.string();
     std::error_code ec;
     fs::create_directories(dir, ec);   // no-op if it already exists
     if (ec) {
         std::fprintf(stderr, "[save] could not create '%s': %s\n",
-                     dir.c_str(), ec.message().c_str());
+                     dir_str.c_str(), ec.message().c_str());
         return {};
     }
-    return dir.string();
+    return dir_str;
 }
 
 std::string slot_path(int slot) {
