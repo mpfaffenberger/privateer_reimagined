@@ -1014,6 +1014,13 @@ static void apply_player_loadout(Ship& pl, const PlayerState& p, bool heal = tru
     pl.engine_recharge_mult   = 1.0f;
     pl.engine_recharge_add_gj = outfitting::engine_recharge_bonus_for(p.engine_level);
     pl.shield_recharge_drain_gj = outfitting::shield_recharge_drain_for(p.shield_level);
+    // Which components exist to be shot out (#141): only hardware the player
+    // actually owns. Guns/engines/radar/tractor are always fitted.
+    ship_systems::set_installed(pl.systems, ShipSystem::Launchers,
+                                launcher_modes::has_missile_hardware(p) ||
+                                launcher_modes::has_torpedo_hardware(p));
+    ship_systems::set_installed(pl.systems, ShipSystem::ShieldGen, p.shield_level > 0);
+    ship_systems::set_installed(pl.systems, ShipSystem::JumpDrive, p.has_jump_drive);
     // heal=true on a fresh hull (boot / NEW / respawn / ship-swap); false on
     // a normal land->launch so battle damage you didn't pay to repair
     // persists across the base visit.
@@ -1070,7 +1077,23 @@ static void apply_pending_player_health_snapshot(Ship& player) {
     player.shield_port_cm     = g.player.hp_shield_port;
     player.shield_starboard_cm = g.player.hp_shield_starboard;
     player.energy_gj          = g.player.hp_energy;
+    ship_systems::restore(player.systems, g.player.hp_systems);
     std::printf("[save] applied loaded ship damage to hull\n");
+}
+
+// Jump verdict for the player against the nearest in-range gate (#380): ONE
+// place folds the owned drive and its component damage (#141) into
+// jump::evaluate, so the HUD prompt, the J key and the dev hooks can never
+// disagree.
+static jump::Eligibility player_jump_eligibility() {
+    jump::Drive drive = jump::Drive::None;
+    if (g.player.has_jump_drive) {
+        const Ship* pl = g.ships.player();
+        drive = (pl && !ship_systems::operational(pl->systems, ShipSystem::JumpDrive))
+              ? jump::Drive::Destroyed : jump::Drive::Online;
+    }
+    return jump::evaluate(g.camera, g.system, g.galaxy, g.player.current_system,
+                          drive);
 }
 
 void build_system_scene(bool first_time, bool show_progress) {
@@ -1732,9 +1755,7 @@ void build_system_scene(bool first_time, bool show_progress) {
                 g.camera.position = HMM_AddV3(n.position,
                                               HMM_V3(0.0f, 0.0f, 1200.0f));
                 g.camera.velocity = HMM_V3(0.0f, 0.0f, 0.0f);
-                const jump::Eligibility e = jump::evaluate(
-                    g.camera, g.system, g.galaxy, g.player.current_system,
-                    g.player.has_jump_drive);
+                const jump::Eligibility e = player_jump_eligibility();
                 if (e.status == jump::Status::Ready) {
                     std::printf("[dev_remote] /jump %s -> %s engaging\n",
                                 g.player.current_system.c_str(), e.dest_id.c_str());
@@ -3047,8 +3068,7 @@ void update_dev_jump_soak(float dt) {
         into = (len > 1e-3f) ? HMM_DivV3F(into, len) : HMM_V3(0.0f, 0.0f, -1.0f);
         g.camera.position = HMM_AddV3(n.position, HMM_MulV3F(into, 1000.0f));
         g.camera.velocity = HMM_V3(0.0f, 0.0f, 0.0f);
-        e = jump::evaluate(g.camera, g.system, g.galaxy, g.player.current_system,
-                           g.player.has_jump_drive);
+        e = player_jump_eligibility();
         if (e.status == jump::Status::Ready) { idx = e.nav_index; break; }
         std::printf("[dev] --dev-jump-soak: gate '%s' not ready (%s); trying next\n",
                     n.name.c_str(), jump::status_str(e.status));
@@ -4825,7 +4845,12 @@ void frame_cb() {
             g.player.hp_shield_port    = player->shield_port_cm;
             g.player.hp_shield_starboard = player->shield_starboard_cm;
             g.player.hp_energy         = player->energy_gj;
+            g.player.hp_systems        = player->systems.integrity;
         }
+        // Engine damage (#141) derates the camera-flown player's top speed
+        // and turn rates; NPCs get the same curve in their flight controller.
+        g.camera.speed_derate = ship_systems::speed_mult(player->systems);
+        g.camera.turn_derate  = ship_systems::turn_mult(player->systems);
     }
     for (Ship& s : g.ships) {
         if (!s.is_player) ship::sync_from_sprite(s);
@@ -5190,6 +5215,9 @@ void frame_cb() {
                 sfx::out_of_ammo();
                 std::printf("[missile] FIRE refused: no compatible %s launcher\n",
                             sel.short_name);
+            } else if (!ship_systems::operational(pl->systems, ShipSystem::Launchers)) {
+                sfx::out_of_ammo();
+                std::printf("[missile] FIRE refused: launchers destroyed\n");
             } else if (!has_ammo) {
                 sfx::out_of_ammo();
                 std::printf("[missile] FIRE refused: %s rack empty\n", sel.short_name);
@@ -6479,9 +6507,7 @@ void frame_cb() {
         // Non-dockable navs (far-off gates included) leave the line blank.
         const char* dock_prompt = nullptr;
         bool        dock_ready  = false;
-        const jump::Eligibility jump_e = jump::evaluate(
-            g.camera, g.system, g.galaxy, g.player.current_system,
-            g.player.has_jump_drive);
+        const jump::Eligibility jump_e = player_jump_eligibility();
         if (jump_e.status != jump::Status::NotJumpNav) {
             dock_prompt = jump::prompt(jump_e, &dock_ready);
         } else if (g.selected_nav >= 0 &&
@@ -7429,9 +7455,7 @@ void event_cb(const sapp_event* ev) {
         // via the jump prompt). Re-checks eligibility here so a stale prompt
         // frame can't smuggle through an out-of-range or newly locked jump.
         if (ev->key_code == SAPP_KEYCODE_J && g.autopilot.phase == AutopilotPhase::Idle) {
-            const jump::Eligibility e = jump::evaluate(
-                g.camera, g.system, g.galaxy, g.player.current_system,
-                g.player.has_jump_drive);
+            const jump::Eligibility e = player_jump_eligibility();
             if (e.status == jump::Status::Ready) {
                 const char* src_nav = g.system.nav_points[e.nav_index].name.c_str();
                 std::printf("[jump] %s -> %s via %s (%.0fu out) — engaging\n",
@@ -7515,12 +7539,18 @@ void event_cb(const sapp_event* ev) {
         // path the trading screen uses (no per-frame heap math).
         if (ev->key_code == SAPP_KEYCODE_Z && !ev->key_repeat &&
             g.game.mode == GameMode::Flight) {
-            const ShipClass* klass = ship_class::find(g.player.ship_class_name);
-            const int capacity = player::cargo_capacity(g.player, klass);
-            // The camera sits at the player ship, so camera.position IS
-            // the player's world position for proximity checks.
-            loot::try_pull(g.camera.position, /*range=*/2500.0f,
-                           g.player, capacity);
+            const Ship* pl = g.ships.player();
+            if (pl && !ship_systems::operational(pl->systems, ShipSystem::Tractor)) {
+                // Shot-out tractor emitter (#141): repair it at a base.
+                std::printf("[tractor] refused: tractor destroyed\n");
+            } else {
+                const ShipClass* klass = ship_class::find(g.player.ship_class_name);
+                const int capacity = player::cargo_capacity(g.player, klass);
+                // The camera sits at the player ship, so camera.position IS
+                // the player's world position for proximity checks.
+                loot::try_pull(g.camera.position, /*range=*/2500.0f,
+                               g.player, capacity);
+            }
         }
         // ']' cycles the sim time scale: 1x -> 2x -> 4x -> 8x -> 1x.
         if (ev->key_code == SAPP_KEYCODE_RIGHT_BRACKET && !ev->key_repeat) {

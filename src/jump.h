@@ -20,6 +20,7 @@
 //      — the NEAREST such gate is the candidate; the nav-computer selection
 //      is irrelevant. Flying up to a gate is enough, like the original.
 //   2. the player has a Jump Drive fitted            (else: "JUMP: NO DRIVE")
+//      and it isn't shot out (#141)             (else: "JUMP: DRIVE DAMAGED")
 //   3. it resolves to a real galaxy edge             (else: "JUMP: NO ROUTE")
 //   4. the campaign has opened that route            (else: "JUMP: UNSURVEYED")
 //
@@ -61,6 +62,15 @@ enum class Status : uint8_t {
     Locked,       // link exists but the campaign hasn't opened it (#130)
                   // — "JUMP: UNSURVEYED"
     NoDrive,      // player has no Jump Drive fitted — "JUMP: NO DRIVE"
+    DriveDamaged, // drive fitted but shot out (#141) — "JUMP: DRIVE DAMAGED"
+};
+
+// State of the player's jump drive. One enum rather than two bools so the
+// nonsense "not fitted but destroyed" combination can't be expressed.
+enum class Drive : uint8_t {
+    None,        // not fitted
+    Destroyed,   // fitted, 0% integrity (component damage, #141)
+    Online,      // fitted and working (partial damage still jumps)
 };
 
 struct Eligibility {
@@ -84,11 +94,12 @@ void set_route_gate(
 // k_trigger_range_m of the camera (ties keep the lower nav index). Pure:
 // reads the camera pose, gate positions, and the galaxy topology — mutates
 // nothing. No gate in range -> NotJumpNav with nav_index == -1.
-// Pass `has_jump_drive` so the verdict can include NoDrive.
+// Pass the player's `drive` state so the verdict can include NoDrive /
+// DriveDamaged.
 Eligibility evaluate(const Camera& cam, const StarSystem& system,
                      const galaxy::Galaxy& galaxy,
                      const std::string& current_system_id,
-                     bool has_jump_drive);
+                     Drive drive);
 
 // HUD prompt for an eligibility, or nullptr when nothing should be drawn
 // (NotJumpNav — no gate nearby, so no refusal line either). Sets *ready =

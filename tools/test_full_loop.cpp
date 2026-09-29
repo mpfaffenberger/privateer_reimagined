@@ -671,7 +671,7 @@ int main() {
             cam.position = troy.nav_points[gate].position;   // sitting on the gate
 
             const jump::Eligibility clear = jump::evaluate(cam, troy, gal, "troy",
-                                                           /*has_jump_drive=*/true);
+                                                           jump::Drive::Online);
             bool ready = false; (void)jump::prompt(clear, &ready);
             check(clear.status == jump::Status::Ready && ready &&
                   clear.nav_index == gate,
@@ -684,7 +684,7 @@ int main() {
                 spawn_npc(w, *talon, Faction::Pirate,
                           HMM_AddV3(cam.position, HMM_V3(2000, 0, 0)));
                 const jump::Eligibility under_fire = jump::evaluate(
-                    cam, troy, gal, "troy", /*has_jump_drive=*/true);
+                    cam, troy, gal, "troy", jump::Drive::Online);
                 check(under_fire.status == jump::Status::Ready,
                       "jump remains READY with a hostile nearby");
 

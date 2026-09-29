@@ -35,9 +35,11 @@
 
 #include "faction.h"
 #include "gun.h"
+#include "hit_facing.h"
 #include "inventory.h"
 #include "perception.h"
 #include "ship_ai.h"
+#include "ship_systems.h"
 
 #include <HandmadeMath.h>
 #include <cstdint>
@@ -47,10 +49,6 @@ struct ArmorType;
 struct ScannerType;
 struct ShipClass;
 struct ShipSpriteObject;
-
-// Hit facing classification — top-level so collision code (projectile.cpp)
-// and ship code (ship.cpp) can share without nested-namespace gymnastics.
-enum class HitFacing : uint8_t { Fore, Aft, Port, Starboard };
 
 // What the controller is aiming for THIS tick. Behaviors write here;
 // the flight controller reads here.
@@ -244,6 +242,13 @@ struct Ship {
     // firing.cpp — the additive fields above take over). 1.0 is a no-op.
     float engine_recharge_mult = 1.0f;
 
+    // Per-component damage (#141). Armor-penetrating hits chip one system
+    // each (ship::take_damage); effects are read where each system acts
+    // (firing, flight controller, perception, shield regen, jump, tractor).
+    // heal_to_full restores integrity but keeps the installed mask, which
+    // the player's loadout owns (apply_player_loadout); NPCs fit everything.
+    ShipSystems systems;
+
     // ---- weapons ------------------------------------------------------
     // Per-instance copy of the fitted gun mounts. Initialised from
     // klass->default_guns at spawn for NPCs; the player ship is also
@@ -319,7 +324,8 @@ void sync_from_sprite(Ship& s);
 
 // Refill a ship to full from its class: armor + shield (incl. fitted
 // armor/shield tiers) to max, energy to max, all shield-regen pauses
-// cleared, alive=true. Null-class-safe (leaves the player's
+// cleared, every component back to full integrity (#141; the installed
+// mask is untouched), alive=true. Null-class-safe (leaves the player's
 // zero-by-default health untouched). The single source of truth for
 // "health from class" — both the initial player spawn (main.cpp) and
 // respawn (np-ma2.2) call it so the two paths can't drift. Does NOT

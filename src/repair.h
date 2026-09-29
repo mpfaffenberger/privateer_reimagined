@@ -16,12 +16,17 @@
 //   * hull — credits per cm of armor missing across all facings, so a
 //            lightly-scratched hull is cheap and a near-wreck is dear.
 //   * ammo — flat per-missile restock price, per type, up to a cap.
+//   * components (#141) — per-system replacement price x integrity
+//            missing, repaired one system at a time.
 // All constants live in repair.cpp and are the feature's only tuning knobs.
 //
 // Headless-safe: links against ship.cpp + player.cpp with no UI/audio, so
 // the offline harness can prove the credit math + heal without a window.
 // -----------------------------------------------------------------------------
 
+#include "ship_systems.h"
+
+#include <array>
 #include <cstdint>
 
 struct Ship;
@@ -38,10 +43,16 @@ struct Quote {
                                 // don't have to be churned; can be deleted
                                 // alongside any lingering refuel buttons)
     int64_t missile_cost = 0;   // restock to the standard loadout
+    // Per-component repair (#141), indexed by ShipSystem: the component's
+    // replacement price times the integrity missing. 0 for pristine or
+    // uninstalled components. systems_cost sums them.
+    std::array<int64_t, kShipSystemCount> system_cost{};
+    int64_t systems_cost = 0;
     int64_t total        = 0;
     bool    hull_damaged = false;
     bool    fuel_low     = false;  // legacy field, always false
     bool    missiles_low = false;
+    bool    systems_damaged = false;
 };
 
 // Price the work. `ship` may be null (no player ship yet) — hull_cost is
@@ -50,8 +61,13 @@ Quote quote(const Ship* ship, const PlayerState& p);
 
 // Repair the hull armor to full (via ship::heal_to_full) for hull_cost.
 // Returns false (no mutation) if the ship is null, undamaged, or the player
-// can't afford it. Logs the before/after for the validation trail.
+// can't afford it. Logs the before/after for the validation trail. Does NOT
+// fix components -- those are priced and repaired one at a time below.
 bool repair_hull(Ship& ship, PlayerState& p);
+
+// Repair one component to full integrity for quote.system_cost[sys] (#141).
+// False (no mutation) if it isn't damaged or the player can't afford it.
+bool repair_system(Ship& ship, PlayerState& p, ShipSystem sys);
 
 // Restock missiles to the standard loadout for missile_cost. False if
 // already stocked or unaffordable.

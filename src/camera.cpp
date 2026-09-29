@@ -66,9 +66,9 @@ void Camera::apply_mouse_aim(float off_x, float off_y, float dt) {
     // engine's world-up = +screen_y rendering convention (see camera.h
     // header note + the same flip in cockpit_hud nav reticle).
     const float yaw_rad = yaw_response.step(
-        -dz(off_x) * max_yaw_rate, dt, turn_response_seconds);
+        -dz(off_x) * max_yaw_rate * turn_derate, dt, turn_response_seconds);
     const float pitch_rad = pitch_response.step(
-        dz(off_y) * max_pitch_rate, dt, turn_response_seconds);
+        dz(off_y) * max_pitch_rate * turn_derate, dt, turn_response_seconds);
     compose_local(*this, yaw_rad, pitch_rad);
     // No pitch clamp — quaternion + local-frame composition is happy at
     // any angle, no pole degeneracy. This is the whole reason we moved
@@ -79,7 +79,7 @@ void Camera::apply_roll(float rate_sign, float dt) {
     // Local-frame compose around camera +Z. Same gimbal-lock-immune
     // pattern as compose_local() above — kept inline because roll has
     // no pitch coupling and a per-axis helper would be one-call DRY.
-    const float roll_rad = -rate_sign * max_roll_rate * dt;  // sign: E rolls right
+    const float roll_rad = -rate_sign * max_roll_rate * turn_derate * dt;  // sign: E rolls right
     const HMM_Quat dq_roll = HMM_QFromAxisAngle_RH(HMM_V3(0.0f, 0.0f, 1.0f), roll_rad);
     orientation = HMM_NormQ(HMM_MulQ(orientation, dq_roll));
 }
@@ -123,8 +123,8 @@ void Camera::integrate(float dt) {
         if (ram_tumble_t_remaining < 0.0f) ram_tumble_t_remaining = 0.0f;
     }
 
-    const float max_speed = max_speed_cruise0
-        + (max_speed_cruise1 - max_speed_cruise0) * cruise_level;
+    const float max_speed = (max_speed_cruise0
+        + (max_speed_cruise1 - max_speed_cruise0) * cruise_level) * speed_derate;
     const float t_mult = 1.0f + (cruise_thrust_mult - 1.0f) * cruise_level;
 
     // Decompose velocity into camera-forward (Z) and strafe (X/Y) parts.

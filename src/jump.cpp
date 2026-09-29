@@ -57,7 +57,7 @@ void set_route_gate(
 Eligibility evaluate(const Camera& cam, const StarSystem& system,
                      const galaxy::Galaxy& galaxy,
                      const std::string& current_system_id,
-                     bool has_jump_drive) {
+                     Drive drive) {
     Eligibility e;
 
     // 1. A jump gate must be physically nearby (#380) — whatever is
@@ -73,8 +73,14 @@ Eligibility evaluate(const Camera& cam, const StarSystem& system,
     // 2. (np-3dp.27): the player needs a fitted Jump Drive to USE the gate.
     // The prompt string still says "PRESS J"; we refuse with a dedicated
     // NoDrive status so the UI can render a distinct amber "JUMP: NO DRIVE".
-    if (!has_jump_drive) {
+    if (drive == Drive::None) {
         e.status = Status::NoDrive;
+        return e;
+    }
+    // (#141) A shot-out drive is still fitted -- say so, so the pilot knows
+    // the fix is the repair desk, not the equipment dealer.
+    if (drive == Drive::Destroyed) {
+        e.status = Status::DriveDamaged;
         return e;
     }
 
@@ -120,6 +126,7 @@ const char* prompt(const Eligibility& e, bool* ready) {
         case Status::NoRoute:  return "JUMP: NO ROUTE";
         case Status::Locked:   return "JUMP: UNSURVEYED";
         case Status::NoDrive:  return "JUMP: NO DRIVE";
+        case Status::DriveDamaged: return "JUMP: DRIVE DAMAGED";
         case Status::NotJumpNav:
         default:               return nullptr;   // not a gate — no prompt
     }
@@ -132,6 +139,7 @@ const char* status_str(Status s) {
         case Status::NoRoute:    return "no route";
         case Status::Locked:     return "locked (unsurveyed)";
         case Status::NoDrive:    return "no drive";
+        case Status::DriveDamaged: return "drive damaged";
         default:                 return "?";
     }
 }

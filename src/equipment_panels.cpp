@@ -386,6 +386,26 @@ void draw_service(const PanelContext& ctx) {
             repair::repair_hull(*ctx.live_ship, p)) sfx::ui_click();
         ImGui::EndDisabled();
     }
+    // Per-component repairs (#141): one button per damaged system, priced
+    // by how much of it is missing.
+    if (ctx.live_ship && !quote.systems_damaged) {
+        ImGui::TextColored(kGood, "ALL SYSTEMS NOMINAL");
+    } else if (ctx.live_ship) {
+        for (int i = 0; i < kShipSystemCount; ++i) {
+            if (quote.system_cost[i] <= 0) continue;
+            const ShipSystem sys = ship_systems::at(i);
+            const float left = ship_systems::integrity(ctx.live_ship->systems, sys);
+            char label[96];
+            std::snprintf(label, sizeof label, "REPAIR %-10s %s   %lld CR##sys%d",
+                          ship_systems::label(sys),
+                          left > 0.0f ? "DAMAGED  " : "DESTROYED",
+                          (long long)quote.system_cost[i], i);
+            ImGui::BeginDisabled(!player::can_afford(p, quote.system_cost[i]));
+            if (ImGui::Button(label, ImVec2(-1.0f, 28.0f)) &&
+                repair::repair_system(*ctx.live_ship, p, sys)) sfx::ui_click();
+            ImGui::EndDisabled();
+        }
+    }
     ImGui::Spacing();
     ImGui::Text("MISSILE RACK    %d / %d",
                 repair::missiles_total(p), repair::missile_rack_capacity(p));
