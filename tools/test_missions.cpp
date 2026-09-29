@@ -32,6 +32,7 @@
 #include "galaxy.h"
 #include "player.h"
 #include "savegame.h"
+#include "test_sandbox.h"
 #include "ship_class.h"
 
 #include <algorithm>
@@ -100,6 +101,7 @@ static std::string last_comm() {
 
 
 int main() {
+    test_sandbox::isolate_saves("missions");   // slot-7 round trip (#383)
     faction::init();
     comm::load("assets/data/comm_lines.json");
     commodity::load("assets/data/privateer_db/cargo.toml");

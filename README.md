@@ -217,9 +217,10 @@ cmake --build build --target help | grep test_
 For current pass/fail status and known-broken harnesses, see the test
 scoreboard in [`docs/GAP_ANALYSIS.md`](docs/GAP_ANALYSIS.md#p0--build-and-test-health).
 
-> **Warning ([#383]):** `test_savegame`, `test_missions`, and
-> `test_full_loop` currently write into your **real** save directory (slots
-> 7/9 plus an autosave). Back up your saves before running them.
+Harnesses never touch your real saves. Any harness that can reach
+`savegame` must call `test_sandbox::isolate_saves("<name>")` (in
+`tools/test_sandbox.h`) first thing in `main()`. It points `NP_DATA_DIR` at
+a per-harness temp directory and aborts if that doesn't take effect.
 
 ## Architecture
 
@@ -296,5 +297,3 @@ renderer has enough to answer for already.
 MIT. See [`LICENSE`](LICENSE).
 
 [issues]: https://github.com/mpfaffenberger/privateer_reimagined/issues
-
-[#383]: https://github.com/mpfaffenberger/privateer_reimagined/issues/383

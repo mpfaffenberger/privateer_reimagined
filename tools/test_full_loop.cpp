@@ -55,6 +55,7 @@
 #include "player.h"
 #include "repair.h"
 #include "savegame.h"
+#include "test_sandbox.h"
 #include "ship.h"
 #include "ai_brain.h"
 #include "ship_class.h"
@@ -215,6 +216,7 @@ int reap_dead_npcs(ShipRegistry& ships, SpritePool& pool) {
 } // namespace
 
 int main() {
+    test_sandbox::isolate_saves("full_loop");  // dock autosaves + slot 9 (#383)
     std::printf("################################################################\n");
     std::printf("# np-zte.3 — FULL SANDBOX LOOP integration harness\n");
     std::printf("# fly -> fight -> dock -> trade -> outfit -> mission -> jump ->\n");
