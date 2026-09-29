@@ -19,6 +19,7 @@
 // -----------------------------------------------------------------------------
 
 #include "sokol_gfx.h"
+#include <cstdint>
 #include <string>
 
 struct TextureSlot {
@@ -42,3 +43,7 @@ struct Material {
 // `slot` untouched if the file is missing or can't be decoded. Callers
 // are expected to try multiple candidate paths (fallback chain).
 bool load_texture_png(const std::string& path, TextureSlot& slot);
+
+// Upload tightly packed RGBA8 pixels (w*h*4 bytes) into `slot`. The caller
+// keeps ownership of `rgba`; it may be freed as soon as this returns.
+bool make_texture_rgba8(const uint8_t* rgba, int w, int h, TextureSlot& slot);
