@@ -21,8 +21,8 @@ campaign all ship and are covered by headless tests.
 
 The remaining gaps are:
 
-1. **Build and test health.** Three harnesses write into the player's real save directory ([#383]). The
-   broad integration harness is red ([#314]). There is no CI.
+1. **Build and test health.** The broad integration harness is red
+   ([#314]), six harnesses aren't wired ([#493]), and there is no CI.
 2. **Combat-system fidelity.** Per-system component damage, Friend-or-Foe
    missiles, scanner tiers, and buying turrets for hulls that lack them.
 3. **Presentation polish.** HDR/bloom, normal maps, an Orion cockpit, and
@@ -98,7 +98,6 @@ _New tier since the 2026-07-19 audit._
 
 | Gap | Impact | Issue |
 |---|---|---|
-| **Tests write into the player's real saves.** `test_savegame`, `test_missions` (slot 7) and `test_full_loop` (slot 9 + a timestamped autosave). Because `--continue` loads the newest save, a test run can hijack the player's next resume. | Data hazard | [#383] |
 | `test_full_loop` fails 17 checks (start state, director spawns, dock autosave slot 0, cargo run, respawn) because of stale assumptions after the autosave/economy changes | Main integration net is off | [#314] |
 | 6 `tools/test_*.cpp` harnesses aren't wired into CMake (`autopilot`, `inventory112`, `light_rec`, `missile`, `reputation`, `salvage`) | Coverage that looks real but isn't | [#493] |
 | **No CI.** The Windows Actions workflow was removed on 2026-07-11 after repeated failures. Windows previews are hand-published; Windows-specific bugs are open ([#291], [#239]). | Regressions show up late | — (needs an issue if CI is wanted) |
@@ -106,9 +105,15 @@ _New tier since the 2026-07-19 audit._
 **Test scoreboard (2026-09-28, macOS Release):** 23/24 pass on a fresh
 clone. `test_full_loop` fails.
 
-**Fixed since the audit:** fresh clones build the game and every harness
-without recovered data ([#427]). Still open nearby: the post-build assets
-link assumes the build dir is `<repo>/build` ([#497]).
+**Fixed since the audit:**
+- Fresh clones build the game and every harness without recovered data
+  ([#427]).
+- The post-build assets link follows the real build dir, so any `-B` works
+  ([#497]).
+- Save-touching harnesses (`test_savegame`, `test_missions`,
+  `test_full_loop`) run in per-harness temp dirs via `tools/test_sandbox.h`,
+  which aborts if isolation fails ([#383]). `test_docking` stubs `savegame`
+  and never wrote real saves.
 
 ### P1 — Combat-system gaps
 
@@ -233,24 +238,21 @@ human judgment call.
 
 ## 4. Suggested attack order
 
-1. **Isolate test saves ([#383])** and fix the build-dir assumption
-   ([#497]). Both are small, and they protect players' save files and
-   contributors' build setups.
-2. **Get `test_full_loop` green ([#314])**, wire the orphaned harnesses
+1. **Get `test_full_loop` green ([#314])**, wire the orphaned harnesses
    ([#493]), and decide whether to bring CI back (at least a macOS or Linux
    headless-test job).
-3. **Component damage + Damage Control MFD ([#141]).** It's the biggest
+2. **Component damage + Damage Control MFD ([#141]).** It's the biggest
    remaining gameplay-fidelity gap, and the repair economy hooks are ready.
-4. **Unify radar range ([#492]) → scanner tiers ([#143]) → FF missiles
+3. **Unify radar range ([#492]) → scanner tiers ([#143]) → FF missiles
    ([#144])**, then purchasable turrets ([#145]/#379). All small and
    data-driven.
-5. **Presentation:** HDR/bloom ([#488]/#489), normal maps ([#473]), Orion
+4. **Presentation:** HDR/bloom ([#488]/#489), normal maps ([#473]), Orion
    cockpit + MFD clipping ([#168]/#430).
-6. **Gemini Lives phases 3–4** (schedules, director, barks: [#172]–[#174]),
+5. **Gemini Lives phases 3–4** (schedules, director, barks: [#172]–[#174]),
    then the cast and cinematics.
-7. **Keep splitting `main.cpp` ([#151])**, starting with the input handler,
+6. **Keep splitting `main.cpp` ([#151])**, starting with the input handler,
    since [#491] already touches it.
-8. Righteous Fire, someday ([#148]).
+7. Righteous Fire, someday ([#148]).
 
 [#65]: https://github.com/mpfaffenberger/privateer_reimagined/issues/65
 [#68]: https://github.com/mpfaffenberger/privateer_reimagined/issues/68
