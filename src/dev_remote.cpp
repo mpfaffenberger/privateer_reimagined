@@ -13,6 +13,7 @@
 #include "comm.h"
 #include "faction.h"
 #include "voice.h"
+#include "world_clock.h"
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -71,7 +72,8 @@ struct Command {
                       InventoryInstall, InventoryEquip, SetPanel, CommsSelect,
                       Rumor, Plot, BaseScreenNav, Goto, Dock, Fixer,
                       Autopilot, Jump, Damage, BarMusic, DjPanel,
-                      CinematicPlay, CinematicStop, CinematicReload, CinematicSeek };
+                      CinematicPlay, CinematicStop, CinematicReload, CinematicSeek,
+                      AdvanceDay };
     Kind kind;
 
     // SetCamera — any optional field is encoded with `has_*`.
@@ -95,7 +97,7 @@ struct Command {
     // (faction reuses the field above).
     std::string     str_arg;          // commodity id (CargoGive) / class (Spawn)
     std::string     faction_name;     // raw faction string (Spawn)
-    int             int_arg = 0;      // units (CargoGive)
+    int             int_arg = 0;      // units (CargoGive), days (AdvanceDay)
     float           dist    = 0.0f;   // spawn distance (Spawn)
     uint32_t        kill_id = 0;      // target ship id (Kill/Damage; 0 = nearest)
     float           damage_cm = 0.0f; // hit size (Damage; gun name in str_arg)
@@ -122,6 +124,7 @@ std::deque<Command> g_queue;
 // Published state for /state responses. Plain atomics for the cheap
 // scalars; a short mutex for the string.
 std::atomic<int>    g_last_fps{0};
+std::atomic<int>    g_day{0};
 std::mutex          g_system_mu;
 std::string         g_system_name;
 
@@ -228,6 +231,7 @@ std::function<void(int, int)>                               g_inventory_equip_ho
 std::function<void(std::string)>                            g_panel_hook;
 std::function<void(int)>                                    g_comms_select_hook;
 std::function<void(std::string, std::string)>               g_plot_hook;
+std::function<void(int)>                                     g_advance_day_hook;
 std::function<void(std::string)>                            g_base_screen_hook;
 std::function<void(std::string)>                            g_goto_hook;
 std::function<void(std::string)>                            g_dock_hook;
@@ -351,16 +355,20 @@ std::string json_state() {
         std::lock_guard lk(g_system_mu);
         sys = g_system_name;
     }
+    const int day = g_day.load();
     char buf[512];
     std::snprintf(buf, sizeof(buf),
         "{\"pos\":[%.2f,%.2f,%.2f],"
         "\"euler\":[%.2f,%.2f,%.2f],"
         "\"fps\":%d,"
-        "\"system\":\"%s\"}",
+        "\"system\":\"%s\","
+        "\"day\":%d,"
+        "\"stardate\":\"%s\"}",
         pos.X, pos.Y, pos.Z,
         euler.X, euler.Y, euler.Z,
         g_last_fps.load(),
-        sys.c_str());
+        sys.c_str(),
+        day, world_clock::stardate_string(day).c_str());
     return buf;
 }
 
@@ -620,6 +628,27 @@ void handle_player(int fd) {
 // POST /plot — mutate campaign plot state (#138). Body { action, id }.
 // Action verb is validated HERE so a typo 400s before anything queues;
 // the real plot::* mutation runs on the main thread via the plot hook.
+// POST /advance_day — {"days":N}, default 1. Validated here; the host's
+// hook bumps PlayerState::day on the main thread (#171).
+void handle_advance_day(int fd, const std::string& body) {
+    float days = 1.0f;
+    extract_float(body, "days", &days);
+    if (days < 1.0f || days > 3650.0f || days != (float)(int)days) {
+        send_json(fd, "{\"ok\":false,\"error\":\"days must be an integer in 1..3650\"}");
+        return;
+    }
+    Command c;
+    c.kind    = Command::Kind::AdvanceDay;
+    c.int_arg = (int)days;
+    {
+        std::lock_guard lk(g_queue_mu);
+        g_queue.push_back(c);
+    }
+    char buf[64];
+    std::snprintf(buf, sizeof(buf), "{\"ok\":true,\"days\":%d}", c.int_arg);
+    send_json(fd, buf);
+}
+
 void handle_plot(int fd, const std::string& body) {
     std::string action, id;
     if (!extract_string(body, "action", &action)) {
@@ -1540,6 +1569,7 @@ void handle_connection(int fd) {
     else if (method == "POST" && path == "/inventory/equip") handle_inventory_equip(fd, body);
     else if (method == "GET"  && path == "/player")     handle_player(fd);
     else if (method == "POST" && path == "/plot")       handle_plot(fd, body);
+    else if (method == "POST" && path == "/advance_day") handle_advance_day(fd, body);
     else if (method == "GET"  && path == "/base")       handle_base(fd);
     else if (method == "POST" && path == "/base/screen") handle_base_screen(fd, body);
     else if (method == "POST" && path == "/goto")       handle_goto(fd, body);
@@ -1625,6 +1655,10 @@ void stop() {
 
 void publish_fps(int fps) {
     g_last_fps.store(fps);
+}
+
+void publish_day(int day) {
+    g_day.store(day);
 }
 
 void drain_commands(Camera& cam) {
@@ -1821,6 +1855,15 @@ void drain_commands(Camera& cam) {
             {
                 std::lock_guard lk(g_hooks_mu);
                 hook = g_comms_select_hook;
+            }
+            if (hook) hook(c.int_arg);
+            break;
+        }
+        case Command::Kind::AdvanceDay: {
+            std::function<void(int)> hook;
+            {
+                std::lock_guard lk(g_hooks_mu);
+                hook = g_advance_day_hook;
             }
             if (hook) hook(c.int_arg);
             break;
@@ -2148,6 +2191,11 @@ void set_comms_select_hook(std::function<void(int)> hook) {
 void set_plot_hook(std::function<void(std::string, std::string)> hook) {
     std::lock_guard lk(g_hooks_mu);
     g_plot_hook = std::move(hook);
+}
+
+void set_advance_day_hook(std::function<void(int)> hook) {
+    std::lock_guard lk(g_hooks_mu);
+    g_advance_day_hook = std::move(hook);
 }
 
 void set_goto_hook(std::function<void(std::string)> hook) {

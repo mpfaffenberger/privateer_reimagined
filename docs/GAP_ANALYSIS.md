@@ -60,7 +60,7 @@ Rough completion: **sandbox ~92%, story ~100% (base game), combat systems
 | Cockpits: painted overlays with live MFD instruments and lamps for **Tarsus, Galaxy, Centurion** (+ Talon for dev); world markers occluded by cockpit structure | Done **(corrected; the old doc said "deliberately not used")** | `cockpit_overlay*.{h,cpp}`, `assets/cockpits/`, `test_cockpit_overlay`, `test_cockpit_layers` |
 | Weapons/ARMAMENTS MFD: live arm mode, mounts, energy, turret markers, interactive schematic | Done | `cockpit_mfd.cpp`, `cockpit_armaments.*`, `test_armament_loadout` |
 | Saves: format **v8**, accumulating timestamped autosaves, `--continue` resumes newest, load-menu metadata, progress UI during rebuilds | Done **(corrected; was v6)** | `savegame.h` `k_format_version = 8` |
-| Calendar: stardate `2669.135`, +1 day per landing, persisted, shown on base screens | Done in gameplay (dev hooks pending, [#171]) | `world_clock.*`, `docking.cpp`, `test_world_clock` |
+| Calendar: stardate `2669.135`, +1 day per landing, persisted, shown on base screens | Done, including dev_remote `/state` day/stardate and `POST /advance_day` ([#171]) | `world_clock.*`, `docking.cpp`, `test_world_clock` |
 | Audio: SFX, dynamic music, per-scene bar music + DJ tool, extracted original speech, voice bank, per-line voice direction | Done | `audio/music/sfx/voice/*`, `music_dj.*` |
 | Hazards, asteroids, loot/tractor, explosions, warp streaks, title scene, death | Done | respective modules |
 | Dev infra: headless test seams, loopback `dev_remote` HTTP API (macOS), debug panel, cinematic studio, labelers, sprite/mesh/light editors, ~150 tools | Done | `dev_remote.*`, `tools/` |
@@ -129,6 +129,10 @@ on a fresh clone. `test_full_loop` fails.
   hull, starter-loadout change), not game bugs. `autopilot` and `reputation`
   gained real assertions. `test_light_rec` was a CLI probe, not a test, and
   is now `tools/light_rec_probe.cpp`.
+- Quick fixes (2026-09-29): stale stub comments ([#149]); cinematic and
+  trigger writes are atomic via `tools/cinematics/publish.py` ([#368]);
+  mesh showroom regenerated with Stiletto ([#474]); dev_remote exposes the
+  day ([#171]); [#323] closed as a duplicate of [#322].
 
 ### P1 — Combat-system gaps
 
@@ -159,10 +163,9 @@ on a fresh clone. `test_full_loop` fails.
   settled: commit to per-hull cockpits.
 - **Rendering:** HDR scene with highlight roll-off and dithering ([#488],
   branch in progress), a bloom kernel that's 4× taller than wide ([#489]), 3DS
-  bump maps fed in as tangent-space normals ([#473]), mesh showroom drift
-  ([#474]), and the pixel sky-props PR ([#468]/[#425]). Atlas regeneration for the
+  bump maps fed in as tangent-space normals ([#473]), and the pixel sky-props PR ([#468]/[#425]). Atlas regeneration for the
   reskinned hulls is done ([#482]).
-- **Art passes:** equipment dealer rooms ([#322]/[#323]), vanilla upgrade-screen
+- **Art passes:** equipment dealer room ([#322]), vanilla upgrade-screen
   art ([#230]), refinery landing composites ([#293]), AI art for base
   backgrounds/animated concourses ([#165]), character art for fixers, comms
   pilots, and Grayson ([#166]), and skybox depth ([#167]).
@@ -182,7 +185,7 @@ on a fresh clone. `test_full_loop` fails.
 
 | Phase | Status | Evidence / issue |
 |---|---|---|
-| 1. Calendar + save v8 + dock hook + stardate UI | **Mostly done.** Gameplay side shipped; the dev_remote `/state` day field and `/advance_day` test hook are missing | `world_clock.*`, [#171] |
+| 1. Calendar + save v8 + dock hook + stardate UI | **Done**, including the dev_remote `/state` day field and `/advance_day` test hook | `world_clock.*`, [#171] |
 | 2. Character bible expansion | Partial: 24 characters in `characters.json`; new cast pending | [#175]–[#180] |
 | 3. NPC schedules + `npc_director` + schedule lint | Not started (no `npc_schedules.json`, no director module) | [#172], [#173] |
 | 4. Trigger extensions (`npc_present`, day gates) + Tier-1 barks | Not started | [#174] |
@@ -219,10 +222,8 @@ RF gap **(corrected)**. Fine to defer.
   led by `cockpit_hud.cpp` (2,482), `dev_remote.cpp` (2,216),
   `base_screens.cpp` (1,451), `missions.cpp` (1,304), and
   `scripted_encounters.cpp` (1,165).
-- **Comment debt is low but not zero:** 8 TODO/FIXME/HACK markers across
-  `src/`. Stale-comment liars remain ([#149]): `game_state.h` still calls
-  live screens "today a stub screen", `autopilot.cpp` describes the hostile
-  gate as a stub.
+- **Comment debt is low:** 8 TODO/FIXME/HACK markers across `src/`, and the
+  known stale "stub" comments are fixed ([#149]).
 - **Repo hygiene: done** ([#150] closed). The tracked root is clean. Local
   build products and logs stay untracked.
 - **Doc drift:** this audit replaced a gap doc that had drifted for about 60
@@ -234,11 +235,11 @@ RF gap **(corrected)**. Fine to defer.
 
 Closed after checking the code: [#142] (Weapons MFD), [#150] (repo cleanup),
 [#153] (cockpit decision: commit), [#482] (reskin atlases regenerated). Left
-open because they're only partly done: [#171] (dev hooks missing), [#65]–[#68]
+open because they're only partly done: [#171] (dev hooks missing; since fixed), [#65]–[#68]
 (one distress scenario exists, not the 10–15 variants or the inspection
 scene), and [#166] (fixer portraits exist; generic pilots and Grayson don't).
-Art-quality tickets [#293], [#322], and [#323] have related commits but need a
-human judgment call.
+Art-quality tickets [#293] and [#322] have related commits but need a human
+judgment call ([#323] was a duplicate of [#322]).
 
 ---
 
@@ -298,6 +299,7 @@ human judgment call.
 [#322]: https://github.com/mpfaffenberger/privateer_reimagined/issues/322
 [#323]: https://github.com/mpfaffenberger/privateer_reimagined/issues/323
 [#339]: https://github.com/mpfaffenberger/privateer_reimagined/issues/339
+[#368]: https://github.com/mpfaffenberger/privateer_reimagined/issues/368
 [#379]: https://github.com/mpfaffenberger/privateer_reimagined/issues/379
 [#380]: https://github.com/mpfaffenberger/privateer_reimagined/issues/380
 [#383]: https://github.com/mpfaffenberger/privateer_reimagined/issues/383

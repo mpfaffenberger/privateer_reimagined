@@ -139,6 +139,7 @@ HMM_Mat4 model_matrix(HMM_Vec3 pos, HMM_Vec3 euler_deg, float s);
 #include "imgui.h"   // ImGui::GetIO() for WantCaptureMouse handoff
 
 #include <algorithm>   // std::clamp, std::min, std::max, std::sort
+#include <limits>
 #include <array>
 #include <chrono>       // std::chrono::steady_clock
 #include <cmath>       // std::sin/cos/sqrt; needs _USE_MATH_DEFINES for M_PI on MSVC
@@ -1610,6 +1611,11 @@ void build_system_scene(bool first_time, bool show_progress) {
             // "run" executes ANY grammar token (campaign tokens included)
             // — the judge's generic lever until #154's click endpoints.
             else if (action == "run")         plot::run_action(g.player, id);
+        });
+        dev_remote::set_advance_day_hook([](int days) {
+            // Same overflow guard as the dock tick in docking.cpp.
+            const int room = std::numeric_limits<int>::max() - g.player.day;
+            g.player.day += std::min(days, room);
         });
         // POST /base/screen — navigate the Landed base UI (Bar, boards...).
         dev_remote::set_base_screen_hook([](std::string name) {
@@ -3510,6 +3516,7 @@ static void update_mission_forces() {
 // assert against credits/rep/missions while flying, docked, dying, or
 // loading. Flat POD mirrors only; dev_remote never sees PlayerState.
 void publish_dev_remote_snapshots() {
+    dev_remote::publish_day(g.player.day);
     dev_remote::PlayerInfo pi;
     pi.credits        = g.player.credits;
     pi.ship_class     = g.player.ship_class_name;
