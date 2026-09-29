@@ -651,6 +651,24 @@ int main() {
         if (!ok) std::printf("         want '%s' in log: %s", want.c_str(), log.c_str());
     }
 
+    // 3l. (#538) a half-written per-side launcher pair loads with the missing
+    //     side off, instead of dereferencing null (_left only) or discarding
+    //     the present side for the legacy default (_right only).
+    {
+        const std::string path = savegame::slot_path(kOldNoMissSlot);
+        { std::ofstream f(path, std::ios::trunc);
+          f << "{ \"version\": " << savegame::k_format_version << ",\n"
+               "  \"player\": { \"credits\": \"1\", \"current_system\": \"troy\",\n"
+               "    \"missile_launcher_left\": true, \"torpedo_launcher_right\": true } }"; }
+        PlayerState p;
+        const bool r = savegame::load(p, kOldNoMissSlot);
+        const bool ok = r && p.missile_launcher_left && !p.missile_launcher_right &&
+                        !p.torpedo_launcher_left && p.torpedo_launcher_right;
+        if (!ok) ++g_fail;
+        std::printf("  [%s] half launcher pairs load; missing side reads off\n",
+                    ok ? "OK  " : "FAIL");
+    }
+
     // 3h. (#138) plot:: mutator invariants: idempotent set/give, clear/
     //     remove report presence truthfully, empty ids refused.
     {

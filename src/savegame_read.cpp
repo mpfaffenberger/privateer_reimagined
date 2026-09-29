@@ -253,6 +253,20 @@ void read_missions(const json::Value& pl, int ver, int slot, PlayerState& out) {
     }
 }
 
+// One per-side launcher pair. Either key present means the per-side format,
+// and a missing side reads off: a half-written pair must neither dereference
+// null nor be discarded for the legacy default (#538). Returns false when
+// neither key exists (a pre-per-side save; the caller migrates its count).
+bool read_launcher_pair(const json::Value& pl, const char* left_key,
+                        const char* right_key, bool& left, bool& right) {
+    const json::Value* l = pl.find(left_key);
+    const json::Value* r = pl.find(right_key);
+    if (!l && !r) return false;
+    left  = l && l->bool_or(false);
+    right = r && r->bool_or(false);
+    return true;
+}
+
 // ordnance + launchers (np-zte.2, v3).
 void read_ordnance(const json::Value& pl, PlayerState& out) {
     // Missiles default to 0 (an old save genuinely had none). The legacy
@@ -295,19 +309,8 @@ void read_ordnance(const json::Value& pl, PlayerState& out) {
         out.torpedo_launcher_left  = n_owned >= 1;
         out.torpedo_launcher_right = n_owned >= 2;
     };
-    bool got_ml = false, got_tl = false;
-    // FIXME(#538): a present _left with an absent _right dereferences null.
-    if (const json::Value* ml = pl.find("missile_launcher_left"); ml) {
-        out.missile_launcher_left  = ml->bool_or(false);
-        out.missile_launcher_right = pl.find("missile_launcher_right")->bool_or(false);
-        got_ml = true;
-    }
-    if (const json::Value* tl = pl.find("torpedo_launcher_left"); tl) {
-        out.torpedo_launcher_left  = tl->bool_or(false);
-        out.torpedo_launcher_right = pl.find("torpedo_launcher_right")->bool_or(false);
-        got_tl = true;
-    }
-    if (!got_ml) {
+    if (!read_launcher_pair(pl, "missile_launcher_left", "missile_launcher_right",
+                            out.missile_launcher_left, out.missile_launcher_right)) {
         if (const json::Value* ml = pl.find("missile_launchers_owned"); ml) {
             fill_missile(std::clamp((int)ml->number_or(1),
                                     0, repair::k_max_missile_launchers));
@@ -315,7 +318,8 @@ void read_ordnance(const json::Value& pl, PlayerState& out) {
             fill_missile(1);   // Tarsus default: just the LEFT
         }
     }
-    if (!got_tl) {
+    if (!read_launcher_pair(pl, "torpedo_launcher_left", "torpedo_launcher_right",
+                            out.torpedo_launcher_left, out.torpedo_launcher_right)) {
         if (const json::Value* tl = pl.find("torpedo_tubes_owned"); tl) {
             fill_torpedo(std::clamp((int)tl->number_or(0),
                                     0, repair::k_max_torpedo_launchers));
