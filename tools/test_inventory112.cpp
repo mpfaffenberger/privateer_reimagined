@@ -1,8 +1,6 @@
 // Offline check for #112 model layer: sell_cargo_unit decrements + credits +
 // erases at zero; item add/sell still works. Build:
-//   clang++ -std=c++20 -DINVENTORY_HEADLESS -Isrc -Ithird_party \
-//     tools/test_inventory112.cpp src/inventory.cpp src/player.cpp src/json.cpp \
-//     -o /tmp/test_inv112
+//   cmake --build build --target test_inventory112 && ./build/test_inventory112
 #include "inventory.h"
 #include "player.h"
 #include <cstdio>

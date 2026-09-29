@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Visual check for sprite_light_rec (#111): runs the C++ matcher (/tmp/tlr)
+"""Visual check for sprite_light_rec (#111): runs the C++ matcher (/tmp/tlr, built from tools/light_rec_probe.cpp)
 for a seed light and burns the result onto a copy of the sprite so we can
 eyeball that recommendations land on the CENTRE of matching features.
 

@@ -22,7 +22,7 @@ campaign all ship and are covered by headless tests.
 The remaining gaps are:
 
 1. **Build and test health.** The broad integration harness is red
-   ([#314]), six harnesses aren't wired ([#493]), and there is no CI.
+   ([#314]) and there is no CI.
 2. **Combat-system fidelity.** Per-system component damage, Friend-or-Foe
    missiles, scanner tiers, and buying turrets for hulls that lack them.
 3. **Presentation polish.** HDR/bloom, normal maps, an Orion cockpit, and
@@ -99,11 +99,10 @@ _New tier since the 2026-07-19 audit._
 | Gap | Impact | Issue |
 |---|---|---|
 | `test_full_loop` fails 17 checks (start state, director spawns, dock autosave slot 0, cargo run, respawn) because of stale assumptions after the autosave/economy changes | Main integration net is off | [#314] |
-| 6 `tools/test_*.cpp` harnesses aren't wired into CMake (`autopilot`, `inventory112`, `light_rec`, `missile`, `reputation`, `salvage`) | Coverage that looks real but isn't | [#493] |
 | **No CI.** The Windows Actions workflow was removed on 2026-07-11 after repeated failures. Windows previews are hand-published; Windows-specific bugs are open ([#291], [#239]). | Regressions show up late | — (needs an issue if CI is wanted) |
 
-**Test scoreboard (2026-09-28, macOS Release):** 23/24 pass on a fresh
-clone. `test_full_loop` fails.
+**Test scoreboard (2026-09-28, macOS Release):** 28/29 wired harnesses pass
+on a fresh clone. `test_full_loop` fails.
 
 **Fixed since the audit:**
 - Fresh clones build the game and every harness without recovered data
@@ -118,6 +117,12 @@ clone. `test_full_loop` fails.
   unreachable F8/F9 demo-cinematic handlers were removed (use
   `POST /cinematic/play`), and one `player_trigger_held()` replaced a stale
   `X`/`Tab` trigger check in the gun-mode cycle.
+- Five orphaned harnesses are wired into CMake and green ([#493]):
+  `test_autopilot`, `test_inventory112`, `test_missile`, `test_reputation`,
+  `test_salvage`. Their failures were test rot (API drift, NPC-vs-player
+  hull, starter-loadout change), not game bugs. `autopilot` and `reputation`
+  gained real assertions. `test_light_rec` was a CLI probe, not a test, and
+  is now `tools/light_rec_probe.cpp`.
 
 ### P1 — Combat-system gaps
 
@@ -237,9 +242,8 @@ human judgment call.
 
 ## 4. Suggested attack order
 
-1. **Get `test_full_loop` green ([#314])**, wire the orphaned harnesses
-   ([#493]), and decide whether to bring CI back (at least a macOS or Linux
-   headless-test job).
+1. **Get `test_full_loop` green ([#314])** and decide whether to bring CI
+   back (at least a macOS or Linux headless-test job).
 2. **Component damage + Damage Control MFD ([#141]).** It's the biggest
    remaining gameplay-fidelity gap, and the repair economy hooks are ready.
 3. **Unify radar range ([#492]) → scanner tiers ([#143]) → FF missiles
