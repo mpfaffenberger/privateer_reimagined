@@ -78,6 +78,7 @@ struct SfxTable {
     SampleId missile_fire      = 0;
     SampleId lock_seeking      = 0;
     SampleId lock_acquired     = 0;
+    SampleId missile_warning   = 0;   // inbound-missile alarm (#523, procedural)
     SampleId jump_sting        = 0;   // sfx_41 — plays first on jump
     SampleId jump_sting2       = 0;   // sfx_42 — follows ~3.3s later
     // Per-GunType firing samples, indexed by (int)GunType. Player guns use
@@ -207,6 +208,18 @@ constexpr float k_npc_impact_max_m    = 20000.0f;
 constexpr float k_explosion_ref_m     = 400.0f;
 constexpr float k_explosion_max_m     = 20000.0f;
 
+// Stepped NPC distance zone (above) for a world point. Returns the gain, or
+// a negative value past the quiet zone (caller drops the sound). Shared by
+// NPC gunfire and NPC missile launches (#523) so the two can't drift.
+float npc_zone_gain(HMM_Vec3 world_pos) {
+    const float dist = HMM_LenV3(
+        HMM_SubV3(world_pos, audio::listener_position()));
+    if (dist < k_gun_zone_full_m)  return k_gun_zone_gain_full;
+    if (dist < k_gun_zone_med_m)   return k_gun_zone_gain_med;
+    if (dist < k_gun_zone_quiet_m) return k_gun_zone_gain_quiet;
+    return -1.0f;
+}
+
 } // namespace
 
 namespace sfx {
@@ -226,6 +239,7 @@ void load_all() {
     g_sfx.missile_fire      = load_pref("missile_fire");
     g_sfx.lock_seeking      = load_pref("lock_seeking");
     g_sfx.lock_acquired     = load_pref("lock_acquired");
+    g_sfx.missile_warning   = load_pref("missile_warning");
     g_sfx.jump_sting        = load_pref("jump");    // sfx_41
     g_sfx.jump_sting2       = load_pref("jump2");   // sfx_42
 
@@ -240,7 +254,7 @@ void load_all() {
     std::printf("[sfx]   component_damage<-sfx_38 (player internal system hit)\n");
     std::printf("[sfx]   missile_fire<-sfx_18 afterburner<-sfx_22(HELD LOOP) jump<-sfx_41(+sfx_42)\n");
     std::printf("[sfx]   ui_click<-sfx_34 lock_acquired<-sfx_31\n");
-    std::printf("[sfx]   engine_hum<-procedural(de-buzzed idle loop) lock_seeking<-procedural (no canon original)\n");
+    std::printf("[sfx]   engine_hum<-procedural(de-buzzed idle loop) lock_seeking<-procedural (no canon original) missile_warning<-procedural\n");
 
     // Per-gun firing sounds: LOUD(player) + QUIET(NPC) twin per GunType.
     // Each variant prefers its own local-only original
@@ -304,13 +318,8 @@ void gun_fired(GunType type, HMM_Vec3 world_pos, bool is_player) {
         // Stepped distance zone -> 2D play with computed gain. We lose 3D
         // pan vs play_world, but the user-authored curve is exact (see the
         // constants above) and pan was a minor effect at combat distances.
-        const float dist = HMM_LenV3(
-            HMM_SubV3(world_pos, audio::listener_position()));
-        float zone_gain;
-        if      (dist < k_gun_zone_full_m)  zone_gain = k_gun_zone_gain_full;
-        else if (dist < k_gun_zone_med_m)   zone_gain = k_gun_zone_gain_med;
-        else if (dist < k_gun_zone_quiet_m) zone_gain = k_gun_zone_gain_quiet;
-        else                                return;   // past 15 km -- silent
+        const float zone_gain = npc_zone_gain(world_pos);
+        if (zone_gain < 0.0f) return;   // past 15 km -- silent
         v = audio::play(s, zone_gain);
     }
     // Throttled visibility: one log line per second summarizing the
@@ -498,6 +507,22 @@ void missile_fired() {
     if (s == 0) return;
     audio::play(s, 0.7f);
     std::printf("[sfx] missile fired\n");
+}
+
+void npc_missile_fired(HMM_Vec3 world_pos) {
+    // Same launch sample as the player's rack, gain-stepped by distance like
+    // NPC gunfire (a launch is rare, so no coalescer needed).
+    const SampleId s = g_sfx.missile_fire != 0 ? g_sfx.missile_fire : g_sfx.cruise_windup;
+    if (s == 0) return;
+    const float gain = npc_zone_gain(world_pos);
+    if (gain < 0.0f) return;   // out of earshot
+    audio::play(s, 0.7f * gain);
+    std::printf("[sfx] npc missile fired (gain %.2f)\n", 0.7f * gain);
+}
+
+void missile_warning() {
+    if (g_sfx.missile_warning == 0) return;
+    audio::play(g_sfx.missile_warning, 0.6f);
 }
 
 void out_of_ammo() {

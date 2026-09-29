@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <cfloat>
+#include <cmath>
 #include <cstdio>
 
 namespace cockpit_hud {
@@ -307,6 +308,31 @@ bool draw_weapons_flank(const WeaponsHudState& w) {
     }
     end_panel(p);
     return true;
+}
+
+void draw_missile_warning(int inbound) {
+    if (inbound <= 0) return;
+    // Hard ~3 Hz blink (not a soft pulse) so it reads as an ALARM even in
+    // peripheral vision. The backing plate stays lit so the slot never
+    // vanishes mid-blink and the eye can find it again.
+    const bool lit = std::fmod(ImGui::GetTime(), 0.3) < 0.18;
+    char text[24];
+    if (inbound == 1) std::snprintf(text, sizeof(text), "MISSILE");
+    else              std::snprintf(text, sizeof(text), "MISSILE x%d", inbound);
+
+    const ImVec2 disp = ImGui::GetIO().DisplaySize;
+    ImDrawList* dl = ImGui::GetForegroundDrawList();
+    ImFont*     font = ImGui::GetFont();
+    constexpr float kPx = 24.0f;
+    const ImVec2 ts = font->CalcTextSizeA(kPx, FLT_MAX, 0.0f, text);
+    // Just under the gun crosshair: where the eye already is in a fight.
+    const ImVec2 at(disp.x * 0.5f - ts.x * 0.5f, disp.y * 0.5f + 56.0f);
+    const ImVec2 pad(10.0f, 4.0f);
+    const ImVec2 lo(at.x - pad.x, at.y - pad.y);
+    const ImVec2 hi(at.x + ts.x + pad.x, at.y + ts.y + pad.y);
+    dl->AddRectFilled(lo, hi, IM_COL32(70, 0, 0, 170), 3.0f);
+    dl->AddRect(lo, hi, IM_COL32(255, 50, 40, lit ? 255 : 110), 3.0f, 0, 2.0f);
+    if (lit) dl->AddText(font, kPx, at, IM_COL32(255, 70, 55, 255), text);
 }
 
 } // namespace cockpit_hud
