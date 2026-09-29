@@ -20,23 +20,26 @@ The engine draws stars (and far-off ship traffic) behind the masked plate, and
 maps mouth-anchored sprite layers onto [cx, cy, r].
 
 Usage (from the repo root):
-    uv run tools/newcon_concourse/bake_hangar.py [--debug build/newcon_concourse/mouths.png]
-    uv run tools/newcon_concourse/bake_hangar.py --stars-only     # just the star tiles
+    uv run tools/room_anim/newcon/bake_hangar.py [--debug build/room_anim/newcon/mouths.png]
+    uv run tools/room_anim/newcon/bake_hangar.py --stars-only     # just the star tiles
 """
 import argparse
 import json
 import math
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 
-from bake_sky import RNG_SEED, PaintedStars, sky_fill, solidify, star_removed, star_tile
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from base import paths  # noqa: E402
+from sky import RNG_SEED, PaintedStars, sky_fill, solidify, star_removed, star_tile  # noqa: E402
 
-REPO = Path(__file__).resolve().parents[2]
-COMPOSITES = REPO / "assets/concourse/newcon/landing_ships"
-OUT = REPO / "assets/concourse/newcon/anim/hangar"
+NEWCON = paths("newcon")
+COMPOSITES = NEWCON.room / "landing_ships"
+OUT = NEWCON.anim / "hangar"
 
 SPACE_DARKNESS = 30      # star-removed luminance at or below this is open space
 SEED_REGION = (0.2, 0.05, 0.8, 0.6)   # where to look for the mouth (fractions of W/H)

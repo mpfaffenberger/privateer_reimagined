@@ -1,7 +1,7 @@
 """Render ship traffic for the New Con hangar (#553). Runs inside Blender:
 
     blender --background --factory-startup \\
-        --python tools/newcon_concourse/render_hangar.py -- --layer all
+        --python tools/room_anim/newcon/render_hangar.py -- --layer all
     ... -- --layer ship_depart --frames 1:48 --samples 8     # quick look
 
 The hangar is 18 differently framed composites, so nothing is camera-matched
@@ -17,7 +17,7 @@ so the tunnel rim and the parked ship occlude it. Inside the tunnel it is
 drawn OVER the plate; those paths stay in the band above the parked hulls
 (bake_traffic.py checks this).
 
-Writes build/newcon_concourse/hangar/<layer>/:
+Writes build/room_anim/newcon/hangar/<layer>/:
     NNNN.png   straight-alpha RGBA ship, rendered inside a border around it
     pass.json  {"frames", "fps", "anchor", "over": [frame numbers in the tunnel]}
 """
@@ -31,15 +31,16 @@ import bpy
 from mathutils import Matrix, Vector
 
 HERE = Path(__file__).resolve().parent
-if str(HERE) not in sys.path:
-    sys.path.insert(0, str(HERE))
+for path in (HERE, HERE.parent):              # this base's modules, then shared ones
+    if str(path) not in sys.path:
+        sys.path.insert(0, str(path))
 
-import render_layers  # noqa: E402  (set_border)
+import render  # noqa: E402  (set_border)
 import scene as hall  # noqa: E402  (reset, setup_render, canvas size)
 import ships  # noqa: E402
+from base import paths  # noqa: E402
 
-REPO = HERE.parents[1]
-BUILD = REPO / "build/newcon_concourse/hangar"
+BUILD = paths("newcon").build / "hangar"
 
 FOCAL_PX = 1024.0
 ANCHOR = (768.0, 360.0, 200.0)          # canonical mouth on the canvas, px
@@ -237,7 +238,7 @@ def render(layer, frame_range=None, samples=32):
         sc.frame_set(f)
         if root.matrix_world.translation.y < MOUTH_DEPTH:
             over.append(f)
-        if not render_layers.set_border(sc, [root], margin=0.25, footprint=False):
+        if not render.set_border(sc, [root], margin=0.25, footprint=False):
             continue                              # off-screen: a blank timeline slot
         sc.render.filepath = str(out / f"{f:04d}.png")
         bpy.ops.render.render(write_still=True)

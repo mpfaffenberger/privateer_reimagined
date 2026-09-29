@@ -18,8 +18,8 @@ landing_ships/NAME.png, with {plate} -> NAME (#553).
 Nothing here reads Blender output, so it checks what ships.
 
 Usage (from the repo root):
-    uv run tools/newcon_concourse/composite_preview.py --seconds 12 \
-        --out build/newcon_concourse/preview.mp4
+    uv run tools/room_anim/composite_preview.py --base newcon --seconds 12 \
+        --out build/room_anim/newcon/preview.mp4
     ... --out preview.gif --scale 0.5 --fps 12     # GIF for the PR
     ... --at 3.5 --out still.png                   # one frame
     ... --only anim/walker_toward.json             # isolate one layer
@@ -32,8 +32,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-REPO = Path(__file__).resolve().parents[2]
-ROOM_DIR = REPO / "assets/concourse/newcon"
+from base import paths
 
 
 def rgba(path):
@@ -59,16 +58,16 @@ def sample_repeat(tile, qx, qy):
 
 
 class Sky:
-    def __init__(self, cfg, size, centre):
-        self.fill = np.asarray(Image.open(ROOM_DIR / cfg["fill"]).convert("RGB")
+    def __init__(self, room_dir, cfg, size, centre):
+        self.fill = np.asarray(Image.open(room_dir / cfg["fill"]).convert("RGB")
                                .resize(size, Image.BILINEAR), dtype=np.float32) / 255.0
-        self.mask = np.asarray(Image.open(ROOM_DIR / cfg["mask"]).convert("L"),
+        self.mask = np.asarray(Image.open(room_dir / cfg["mask"]).convert("L"),
                                dtype=np.float32) / 255.0
         # Only sky pixels can show stars; the plate hides the rest.
         self.ys, self.xs = np.nonzero(self.mask > 0)
         self.px, self.py = self.xs + 0.5, self.ys + 0.5          # pixel centres
         self.centre = centre
-        self.stars = [(np.asarray(Image.open(ROOM_DIR / s["tile"]).convert("RGBA"),
+        self.stars = [(np.asarray(Image.open(room_dir / s["tile"]).convert("RGBA"),
                                   dtype=np.float32) / 255.0,
                        s["velocity"], float(s.get("spin", 0.0)))
                       for s in cfg.get("stars", [])]
@@ -90,8 +89,8 @@ class Sky:
 
 
 class Layer:
-    def __init__(self, manifest, anchor=None):
-        path = ROOM_DIR / manifest
+    def __init__(self, room_dir, manifest, anchor=None):
+        path = room_dir / manifest
         self.meta = json.loads(path.read_text())
         self.atlas = Image.open(path.parent / self.meta["atlas"]).convert("RGBA")
         self.by_slot = {f["slot"]: f for f in self.meta["frames"]}
@@ -127,6 +126,7 @@ class Layer:
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("--base", default="newcon", help="assets/concourse/<base>")
     ap.add_argument("--room", default="concourse")
     ap.add_argument("--plate", help="per-plate composite (e.g. tarsus) for --room landing")
     ap.add_argument("--only", action="append", help="draw only these layer manifests")
@@ -141,20 +141,22 @@ def main():
     ap.add_argument("--at", type=float, help="write a single still at this time")
     args = ap.parse_args()
 
-    room = json.loads((ROOM_DIR / "concourse.json").read_text())["rooms"][args.room]
+    room_dir = paths(args.base).room
+    room = json.loads((room_dir / "concourse.json").read_text())["rooms"][args.room]
     anchor = None
     if args.plate:
         room = json.loads(json.dumps(room["composite"]).replace("{plate}", args.plate))
         room["background"] = f"landing_ships/{args.plate}.png"
         if "anchors" in room:
-            anchor = json.loads((ROOM_DIR / room["anchors"]).read_text()).get(args.plate)
-    plate = rgba(ROOM_DIR / room["background"])
+            anchor = json.loads((room_dir / room["anchors"]).read_text()).get(args.plate)
+    plate = rgba(room_dir / room["background"])
     size = (plate.shape[1], plate.shape[0])
     centre = anchor[:2] if anchor else (size[0] / 2, size[1] / 2)
-    sky = Sky(room["sky"], size, centre) if "sky" in room and not args.no_sky else None
+    sky = (Sky(room_dir, room["sky"], size, centre)
+           if "sky" in room and not args.no_sky else None)
     if sky is not None:
         plate[..., 3] = 1.0 - sky.mask
-    layers = [Layer(m, anchor) for m in (args.only or room.get("layers", []))]
+    layers = [Layer(room_dir, m, anchor) for m in (args.only or room.get("layers", []))]
 
     def frame(t):
         canvas = sky.draw(t) if sky else np.zeros_like(plate[..., :3])

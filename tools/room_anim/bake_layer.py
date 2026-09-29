@@ -17,7 +17,7 @@ floor need no special blend modes:
                      light, so the proxy deck's albedo need not match paint)
     (in linear light, with the render's exposure undone: light adds linearly,
     and passes are rendered dark so nothing clips; only where A was rendered:
-    render_layers.py borders each frame to the actor and its floor footprint)
+    render.py borders each frame to the actor and its floor footprint)
     then, in display sRGB (how the engine blends), per channel d = T-P:
     a = d/(1-P) if d>0,  -d/P if d<0;   c = P + d/a
 
@@ -25,26 +25,21 @@ Each frame is trimmed to its non-zero alpha and shelf-packed into one atlas.
 Big frames (near the camera, motion-blurred, soft anyway) are stored at half
 resolution; the manifest's src/dst rects let the engine scale them back up.
 
-Loop timing (period / phase) comes from tools/newcon_concourse/layers.json.
+Loop timing (period / phase) comes from tools/room_anim/<base>/layers.json.
 
-Usage (from the repo root):
-    uv run tools/newcon_concourse/bake_layer.py --all
-    uv run tools/newcon_concourse/bake_layer.py car_receding
-    uv run tools/newcon_concourse/bake_layer.py car_receding --period 30   # try a timing
+Usage (from the repo root; --base defaults to newcon):
+    uv run tools/room_anim/bake_layer.py --base newcon --all
+    uv run tools/room_anim/bake_layer.py car_receding
+    uv run tools/room_anim/bake_layer.py car_receding --period 30   # try a timing
 """
 import argparse
 import json
 import math
-from pathlib import Path
 
 import numpy as np
 from PIL import Image
 
-REPO = Path(__file__).resolve().parents[2]
-PLATE = REPO / "assets/concourse/newcon/concourse_bg.png"
-BUILD = REPO / "build/newcon_concourse"
-OUT = REPO / "assets/concourse/newcon/anim"
-TIMING = Path(__file__).resolve().parent / "layers.json"
+from base import paths
 
 NOISE = 5.0 / 255.0     # visible plate change below this is noise or invisible light
 SOURCE_LSB = 3.0 / 255.0  # A-B below this in the 8-bit render is quantisation, not light
@@ -149,8 +144,12 @@ def shelf_pack(sizes, width):
 
 
 def main():
-    timing = {k: v for k, v in json.loads(TIMING.read_text()).items() if not k.startswith("_")}
-    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    pre = argparse.ArgumentParser(add_help=False)
+    pre.add_argument("--base", default="newcon", help="assets/concourse/<base>")
+    where = paths(pre.parse_known_args()[0].base)
+    timing = {k: v for k, v in json.loads(where.timing.read_text()).items()
+              if not k.startswith("_")}
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0], parents=[pre])
     ap.add_argument("layer", nargs="?", choices=sorted(timing))
     ap.add_argument("--all", action="store_true", help="bake every layer in layers.json")
     ap.add_argument("--period", type=float,
@@ -161,18 +160,18 @@ def main():
         ap.error("give exactly one of LAYER or --all")
     for layer in (sorted(timing) if args.all else [args.layer]):
         cfg = timing[layer]
-        bake(layer,
+        bake(where, layer,
              cfg["period"] if args.period is None else args.period,
              cfg["offset"] if args.offset is None else args.offset)
 
 
-def bake(layer, period, offset):
-    src = BUILD / layer
-    info = json.loads((src / "pass.json").read_text())   # written by render_layers
+def bake(where, layer, period, offset):
+    src = where.build / layer
+    info = json.loads((src / "pass.json").read_text())   # written by render.render_passes
     if "exposure_ev" not in info:
         raise SystemExit(f"{layer}: pass.json predates exposure_ev; re-render the layer")
     fps, gain = float(info["fps"]), 2.0 ** -float(info["exposure_ev"])
-    plate = load_rgba(PLATE)[..., :3]
+    plate = load_rgba(where.plate)[..., :3]
     empty = load_rgba(src / "empty.png")[..., :3]
     sprites, slots = [], []
     for beauty_path in sorted((src / "beauty").glob("*.png")):
@@ -183,7 +182,7 @@ def bake(layer, period, offset):
     if not sprites:
         raise SystemExit(f"{layer}: every frame is empty")
     period_frames = max(int(info["frames"]), int(math.ceil(period * fps)))
-    write_sheet(OUT, layer, sprites, slots, (plate.shape[1], plate.shape[0]), fps,
+    write_sheet(where.anim, layer, sprites, slots, (plate.shape[1], plate.shape[0]), fps,
                 period_frames, int(round(offset * fps)))
 
 

@@ -13,7 +13,7 @@
 // star tiles are drawn underneath it, so the stars drift behind the arches.
 // Velocities are plate pixels per second.
 //
-// Layers: sprite sheets baked by tools/newcon_concourse/bake_layer.py. Every
+// Layers: sprite sheets baked by tools/room_anim/bake_layer.py. Every
 // frame has an atlas `src` rect and a plate-pixel `dst` rect (src may be
 // smaller: big frames are stored at half resolution). The timeline has
 // `period_frames` slots at `fps`; slots without a frame draw nothing (the gap
