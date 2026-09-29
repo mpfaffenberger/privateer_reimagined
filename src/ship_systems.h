@@ -57,6 +57,11 @@ struct ShipSystems {
 };
 static_assert(kShipSystemCount == 7, "update the ShipSystems initialisers");
 
+// What a penetrating hit did to the system it landed on (#519). Ordered by
+// severity so std::max folds several hits in one frame into the worst one;
+// ship::take_damage latches it for main.cpp's component-damage audio cue.
+enum class SystemHit : uint8_t { None = 0, Damaged, Destroyed };
+
 namespace ship_systems {
 
 // ---- tuning knobs ------------------------------------------------------------
@@ -187,6 +192,13 @@ inline ShipSystem apply_hit(ShipSystems& ss, HitFacing f,
     // Snap float dust to a clean zero so "destroyed" is exact.
     if (v < 1e-4f) v = 0.0f;
     return s;
+}
+
+// Classify one system's integrity change. No loss (e.g. a hit on an already
+// destroyed system) is None; crossing to exactly 0 is Destroyed.
+inline SystemHit classify_hit(float before, float after) {
+    if (after >= before) return SystemHit::None;
+    return after <= 0.0f ? SystemHit::Destroyed : SystemHit::Damaged;
 }
 
 // ---- gameplay effects --------------------------------------------------------

@@ -461,17 +461,23 @@ void ship::take_damage(Ship& s, float damage_cm, HitFacing facing,
         } else {
             // It got through the armor and we're still flying: something
             // behind that plating just took the hit (#141).
+            const SystemIntegrity before = s.systems.integrity;
             const ShipSystem hit = ship_systems::apply_hit(
                 s.systems, facing, damage_cm, component_roll());
-            if (hit != ShipSystem::Count && s.is_player) {
+            if (hit != ShipSystem::Count) {
                 const float left = ship_systems::integrity(s.systems, hit);
-                if (left > 0.0f)
-                    std::printf("[damage] %s hit: %s at %.0f%%\n",
-                                facing_name(facing), ship_systems::label(hit),
-                                left * 100.0f);
-                else
-                    std::printf("[damage] %s hit: %s DESTROYED\n",
-                                facing_name(facing), ship_systems::label(hit));
+                // Latch for the component-damage audio cue (#519).
+                s.pending_system_hit = std::max(s.pending_system_hit,
+                    ship_systems::classify_hit(before[(int)hit], left));
+                if (s.is_player) {
+                    if (left > 0.0f)
+                        std::printf("[damage] %s hit: %s at %.0f%%\n",
+                                    facing_name(facing), ship_systems::label(hit),
+                                    left * 100.0f);
+                    else
+                        std::printf("[damage] %s hit: %s DESTROYED\n",
+                                    facing_name(facing), ship_systems::label(hit));
+                }
             }
         }
     }

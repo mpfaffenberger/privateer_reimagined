@@ -123,6 +123,15 @@ void test_pure_model() {
     restore(loaded, junk);
     check(loaded.integrity[0] == 1.0f && loaded.integrity[1] == 0.0f &&
           loaded.integrity[2] == 0.5f, "restore clamps snapshot into [0, 1]");
+
+    // #519 hit classification (drives the component-damage audio cue).
+    check(classify_hit(1.0f, 0.6f) == SystemHit::Damaged,   "integrity loss -> Damaged");
+    check(classify_hit(0.3f, 0.0f) == SystemHit::Destroyed, "loss to 0 -> Destroyed");
+    check(classify_hit(0.0f, 0.0f) == SystemHit::None,      "hit on a dead system -> None");
+    check(classify_hit(0.5f, 1.0f) == SystemHit::None,      "repair is not a hit");
+    check(std::max(SystemHit::Damaged, SystemHit::Destroyed) == SystemHit::Destroyed &&
+          std::max(SystemHit::None, SystemHit::Damaged) == SystemHit::Damaged,
+          "severity order folds to the worst hit");
 }
 
 // A tiny hull: 50 cm armor + 10 cm shields per facing, 10 km radar.
@@ -160,6 +169,19 @@ void test_damage_pipeline(const TestHull& hull) {
     check(hurt == 1, "penetrating hit damages exactly one component");
     check(near(total_missing(s.systems), 5.0f * ship_systems::k_integrity_loss_per_cm),
           "integrity lost == penetrating cm * k_integrity_loss_per_cm");
+
+    // #519: the take_damage latch main.cpp consumes for the audio cue.
+    Ship cue = hull.spawn();
+    ship::take_damage(cue, 8.0f, HitFacing::Fore);    // shield soak
+    check(cue.pending_system_hit == SystemHit::None, "soaked hit latches no system hit");
+    ship::take_damage(cue, 5.0f, HitFacing::Fore);    // 3 cm through
+    check(cue.pending_system_hit == SystemHit::Damaged, "penetrating hit latches Damaged");
+    ship::take_damage(cue, 40.0f, HitFacing::Fore);   // wrecks a system, hull survives
+    check(cue.alive && cue.pending_system_hit == SystemHit::Destroyed,
+          "system-killing hit latches Destroyed");
+    ship::take_damage(cue, 1.0f, HitFacing::Fore);
+    check(cue.pending_system_hit == SystemHit::Destroyed,
+          "latch keeps the worst hit until consumed");
 
     ship_systems::set_installed(s.systems, ShipSystem::JumpDrive, false);
     ship::heal_to_full(s);

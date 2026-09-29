@@ -71,6 +71,7 @@ struct SfxTable {
     SampleId impact_armor_npc  = 0;   // armor hit,  NPC victim     (sfx_24)
     SampleId explosion_small   = 0;
     SampleId explosion_big     = 0;
+    SampleId component_damage  = 0;   // player system hit            (sfx_38)
     SampleId engine_hum        = 0;
     SampleId cruise_windup     = 0;
     SampleId ui_click          = 0;
@@ -147,6 +148,13 @@ uint64_t g_last_impact_ticks         = 0;
 uint64_t g_last_suppress_log_ticks   = 0;
 int      g_suppressed_since_last_log = 0;
 
+// ---- component-damage cue throttle (#519) -------------------------------------
+// Sustained fire through bare armor chips a system with EVERY bolt; one
+// "something just broke" cue per half second carries all the information.
+// No suppression log: ship::take_damage already logs every component hit.
+uint64_t g_last_component_cue_ticks = 0;
+constexpr double k_component_cue_spacing_s = 0.5;
+
 // ---- NPC gunfire coalescing (np-3va) -------------------------------------------
 // The impact gate above already collapses thunk-spam; NPC gunfire had NO
 // gate, so a 17-ship furball fired one play_world() per shot per mount
@@ -211,6 +219,7 @@ void load_all() {
     g_sfx.impact_armor_npc  = load_pref("impact_armor_npc");
     g_sfx.explosion_small   = load_pref("explosion_small");
     g_sfx.explosion_big     = load_pref("explosion_big");
+    g_sfx.component_damage  = load_pref("component_damage");
     g_sfx.engine_hum        = load_pref("engine_hum");
     g_sfx.cruise_windup     = load_pref("cruise_windup");
     g_sfx.ui_click          = load_pref("ui_click");
@@ -228,6 +237,7 @@ void load_all() {
     std::printf("[sfx]   impact_armor  player<-sfx_23 npc<-sfx_24\n");
     std::printf("[sfx]   impact_shield player<-sfx_25 npc<-sfx_26\n");
     std::printf("[sfx]   explosion_big<-sfx_27 explosion_small<-sfx_28\n");
+    std::printf("[sfx]   component_damage<-sfx_38 (player internal system hit)\n");
     std::printf("[sfx]   missile_fire<-sfx_18 afterburner<-sfx_22(HELD LOOP) jump<-sfx_41(+sfx_42)\n");
     std::printf("[sfx]   ui_click<-sfx_34 lock_acquired<-sfx_31\n");
     std::printf("[sfx]   engine_hum<-procedural(de-buzzed idle loop) lock_seeking<-procedural (no canon original)\n");
@@ -364,6 +374,20 @@ void ship_exploded(HMM_Vec3 world_pos, bool big) {
     std::printf("[sfx] explosion (%s) voice %u gain L/R %.2f/%.2f pos %.0f,%.0f,%.0f\n",
                 big ? "big" : "small", v, gl, gr,
                 world_pos.X, world_pos.Y, world_pos.Z);
+}
+
+void component_damaged(bool destroyed) {
+    if (g_sfx.component_damage == 0) return;
+    const uint64_t now = stm_now();
+    if (!destroyed && g_last_component_cue_ticks != 0 &&
+        stm_sec(stm_diff(now, g_last_component_cue_ticks)) < k_component_cue_spacing_s)
+        return;
+    g_last_component_cue_ticks = now;
+    // Sits above player gunfire (0.35) like a missile launch; a destroyed
+    // system is the loudest thing short of an explosion.
+    audio::play(g_sfx.component_damage, destroyed ? 0.95f : 0.65f);
+    std::printf("[sfx] component damage cue (%s)\n",
+                destroyed ? "system DESTROYED" : "system damaged");
 }
 
 void update_engine_hum(float speed_frac, float cruise_level,

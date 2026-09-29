@@ -96,7 +96,7 @@ constexpr UseRow k_current_use[] = {
     { 27, "explosion_big event" },
     { 30, "explosion_small event" },
     { 34, "ui_click event" },
-    { 38, "tachyon_cannon gun" },
+    { 38, "component_damage event (#519)" },
     { 40, "missile_fire event" },
     { 41, "cruise_windup event (+ jump sting)" },
 };

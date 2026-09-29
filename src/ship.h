@@ -248,6 +248,10 @@ struct Ship {
     // heal_to_full restores integrity but keeps the installed mask, which
     // the player's loadout owns (apply_player_loadout); NPCs fit everything.
     ShipSystems systems;
+    // Worst component hit since the last consume (#519). take_damage latches
+    // it for every ship; main.cpp std::exchange()s the PLAYER's once per
+    // frame into sfx::component_damaged (ship.cpp stays sfx-free/headless).
+    SystemHit pending_system_hit = SystemHit::None;
 
     // ---- weapons ------------------------------------------------------
     // Per-instance copy of the fitted gun mounts. Initialised from
