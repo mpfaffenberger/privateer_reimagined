@@ -30,6 +30,7 @@
 //       src/game_state.cpp src/player.cpp src/faction.cpp src/comm.cpp \
 //       src/commodity.cpp src/economy.cpp src/outfitting.cpp src/missions.cpp \
 //       src/galaxy.cpp src/system_def.cpp src/json.cpp src/savegame.cpp \
+//       src/savegame_read.cpp src/savegame_write.cpp \
 //       src/docking.cpp src/autopilot.cpp src/threat.cpp src/jump.cpp \
 //       src/encounters.cpp src/repair.cpp src/missile.cpp src/ship.cpp \
 //       src/ship_class.cpp src/ship_registry.cpp src/ship_ai.cpp \
