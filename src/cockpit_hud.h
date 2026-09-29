@@ -36,8 +36,16 @@ struct ShipSpriteAtlas;
 class ShipRegistry;
 
 namespace galaxy { struct Galaxy; }
+enum class Stance : uint8_t;   // faction.h
 
 namespace cockpit_hud {
+
+// Colour for a perceived contact as the player's scanner reveals it (#143):
+// a colour-IFF scanner paints by stance (red hostile / yellow neutral /
+// green allied); a monochrome one paints every contact one radar tint.
+// ImU32 (IM_COL32) packing, so this header stays ImGui-free. The ONE
+// palette for the radar, navmap, target panel and in-world brackets.
+uint32_t contact_color(Stance stance, bool color_iff, uint8_t alpha = 255);
 
 // Which screen the top-left STATUS panel is currently showing. The canonical
 // Privateer cockpit cycles a single MFD frame between sub-displays — here the

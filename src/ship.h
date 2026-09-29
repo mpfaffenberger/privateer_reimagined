@@ -44,6 +44,7 @@
 #include <vector>
 
 struct ArmorType;
+struct ScannerType;
 struct ShipClass;
 struct ShipSpriteObject;
 
@@ -220,6 +221,12 @@ struct Ship {
     // (Plasteel/Tungsten/Isometal) and it lands here; NPCs always stay null.
     // Per-instance so it never mutates the shared ShipClass.
     const ArmorType* fitted_armor = nullptr;
+
+    // Per-instance fitted scanner (#143, scanner.h). Only the player fits
+    // one (apply_player_loadout, from PlayerState::scanner_id); null means
+    // the hull's class radar_range and no colour IFF / lock / ITTS, which
+    // is how every NPC flies.
+    const ScannerType* fitted_scanner = nullptr;
 
     // Engine recharge — additive ABSOLUTE GJ/s from the engine upgrade
     // ladder (np-3dp.27 / gamefaq 4.6.2). Refreshed on the player in

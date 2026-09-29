@@ -145,10 +145,14 @@ NPC-buffed repair hull, one fixed mission-board seed) now match the game.
 2. **Friend-or-Foe missiles** ([#144]). `MissileType` is still DF/HS/IR/
    Torpedo. The source data already lists FF on several loadouts
    (`privateer_ship_data.json`), so they're referenced but can't be fired.
-3. **Scanner/radar tiers** ([#143]). There are no scanner products. The
-   foundation is ready: every ship, player included, now reads one per-hull
-   `ShipClass::radar_range` through `perception::radar_range_m()` ([#492]),
-   so a tier only has to change that value.
+3. **Scanner/radar tiers** ([#143]) **(done)**. All nine gamefaq scanners
+   (Iris, Hunter AW, and B&S) are in the `scanners` list in
+   `equipment_prices.json` and sold on the Equipment SYSTEMS page. The fitted
+   scanner sets the player's `perception::radar_range_m()` ([#492]), while NPCs
+   keep their hull's default range. Stance colours need a colour-IFF scanner,
+   guided missiles need Target Lock or they fire unguided, and the ITTS pip and
+   aim gimbal need ITTS. Still missing: the per-scanner chance to identify a
+   target ([#516]).
 4. **Turrets.** Firing is done, and guns can be bought into *existing*
    turret hardpoints **(corrected)**. Still missing: adding turrets to hulls
    that don't have them ([#145]), and keeping turrets auto-armed across gun
@@ -317,3 +321,4 @@ judgment call ([#323] was a duplicate of [#322]).
 [#492]: https://github.com/mpfaffenberger/privateer_reimagined/issues/492
 [#493]: https://github.com/mpfaffenberger/privateer_reimagined/issues/493
 [#497]: https://github.com/mpfaffenberger/privateer_reimagined/issues/497
+[#516]: https://github.com/mpfaffenberger/privateer_reimagined/issues/516

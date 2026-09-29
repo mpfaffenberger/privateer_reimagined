@@ -198,6 +198,7 @@ add_executable(new_privateer
     src/economy.cpp
     src/commodity_ui.cpp
     src/outfitting.cpp
+    src/scanner.cpp
     src/dealer_ui.cpp
     src/equipment_hardpoints.cpp
     src/equipment_panels.cpp
@@ -419,6 +420,18 @@ add_executable(test_outfitting EXCLUDE_FROM_ALL
 target_include_directories(test_outfitting PRIVATE
     ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party)
 target_compile_definitions(test_outfitting PRIVATE OUTFITTING_HEADLESS)
+
+# Scanner catalog + fit/sell transactions (#143).
+#   cmake --build build --target test_scanner && ./build/test_scanner
+add_executable(test_scanner EXCLUDE_FROM_ALL
+    tools/test_scanner.cpp src/scanner.cpp
+    src/outfitting.cpp src/ship_class.cpp src/gun.cpp src/shield.cpp
+    src/armor.cpp src/player.cpp src/mobility.cpp src/faction.cpp src/json.cpp
+    src/commodity.cpp
+)
+target_include_directories(test_scanner PRIVATE
+    ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party)
+target_compile_definitions(test_scanner PRIVATE OUTFITTING_HEADLESS)
 
 add_executable(test_equipment_hardpoints EXCLUDE_FROM_ALL
     tools/test_equipment_hardpoints.cpp src/equipment_hardpoints.cpp src/json.cpp)
