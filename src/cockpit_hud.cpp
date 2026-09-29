@@ -432,7 +432,10 @@ void draw_target_mfd(const Camera& cam, const ShipRegistry& ships,
             // classic box, so long names shrink and faction/stance wraps.
             ImGui::BeginGroup();
 
-            const char* class_name = !target->display_name.empty()
+            // #516: no class or faction until the scanner identifies it.
+            const bool known = target->identified_by_player;
+            const char* class_name = !known ? "UNKNOWN"
+                : !target->display_name.empty()
                 ? target->display_name.c_str()
                 : (target->klass ? target->klass->display_name.c_str()
                                  : (target->is_player ? "PLAYER" : "?"));
@@ -442,8 +445,8 @@ void draw_target_mfd(const Camera& cam, const ShipRegistry& ships,
             // get the stance the AI uses (so target-panel colors match
             // the on-screen indicator + radar). Distance from the
             // contact entry too — already filtered by radar range.
-            const char*  fac_name = target->klass
-                ? faction::to_name(target->faction) : "?";
+            const char*  fac_name = !known ? "---"
+                : target->klass ? faction::to_name(target->faction) : "?";
             float        dist_m   = 0.0f;
             Stance       stance   = Stance::Neutral;
             bool         iff      = false;   // #143: stance needs colour IFF

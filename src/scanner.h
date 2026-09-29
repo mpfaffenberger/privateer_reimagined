@@ -17,6 +17,10 @@
 //     the ITTS lead pip (and the matching aim gimbal) only with ITTS.
 //   * missile lock — guided missiles only lock with a Target Lock scanner;
 //     without one they launch unguided ("won't guide", gamefaq Q&A).
+//   * identification (#516) — the targeted contact reads UNKNOWN until the
+//     scanner wins a once-per-second identify_pct_per_s roll on it
+//     (IdentifyTimer / tick_identify below; the flag lives on the contact,
+//     Ship::identified_by_player).
 //
 // The owned scanner is PlayerState::scanner_id (by id, like armor_name);
 // the live Ship caches the resolved ScannerType* as fitted_scanner at the
@@ -41,6 +45,7 @@ struct ScannerType {
     bool        color_iff   = false; // stance-coloured contacts vs monochrome
     bool        target_lock = false; // guided missiles can acquire a lock
     bool        itts        = false; // lead-prediction reticle + aim gimbal
+    float       identify_pct_per_s = 0.0f; // % chance per second to ID the target
 };
 
 namespace scanner {
@@ -62,6 +67,33 @@ inline float range_m(const ScannerType* s, float hull_default_m) {
 inline bool color_iff(const ScannerType* s)   { return s && s->color_iff; }
 inline bool target_lock(const ScannerType* s) { return s && s->target_lock; }
 inline bool itts(const ScannerType* s)        { return s && s->itts; }
+
+// ---- identification (#516) ---------------------------------------------------
+// Per-target identify clock: time the CURRENT target has been held since
+// its last roll, carried across frames. Retargeting restarts it.
+struct IdentifyTimer {
+    uint32_t target_id = 0;     // contact the carry belongs to (0 = none)
+    float    carry_s   = 0.0f;  // time since the last roll on target_id
+};
+
+// Advance `t` by dt_s on `target_id`; returns how many 1 s identify rolls
+// fell due. A new target_id (or 0 = nothing targeted) restarts the clock.
+int identify_rolls_due(IdentifyTimer& t, uint32_t target_id, float dt_s);
+
+// One roll with u01 in [0,1). No scanner or a 0% scanner never succeeds.
+inline bool identify_roll(const ScannerType* s, float u01) {
+    return s && u01 * 100.0f < s->identify_pct_per_s;
+}
+
+// Tick + roll: true when this call identified `target_id`. `roll01` is any
+// callable returning a uniform float in [0,1) (injected so tests are exact).
+template <class Roll01>
+bool tick_identify(IdentifyTimer& t, uint32_t target_id, const ScannerType* s,
+                   float dt_s, Roll01&& roll01) {
+    for (int n = identify_rolls_due(t, target_id, dt_s); n > 0; --n)
+        if (identify_roll(s, roll01())) return true;
+    return false;
+}
 
 // ---- transactions (mutate ONLY through player:: credit helpers) --------------
 // Fit scanner `id`, trading the currently fitted one back at full price, so

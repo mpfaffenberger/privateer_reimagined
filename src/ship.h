@@ -112,6 +112,12 @@ struct Ship {
     // for procedural traffic, whose UI label falls back to the hull class.
     std::string       display_name;
 
+    // Player-scanner identification (#516, scanner.h). Until the player's
+    // fitted scanner wins an identify roll on this contact, the target panel
+    // and bracket label read UNKNOWN (no class/faction). Sticky until
+    // death/despawn. Transient — not serialized.
+    bool              identified_by_player = false;
+
     // Player grievance (np): repeated player hits on an otherwise non-hostile
     // ship provoke it. Once player_hit_count reaches k_provoke_hits the ship
     // bears a grudge (provoked_by_player) and perception::classify_pair treats

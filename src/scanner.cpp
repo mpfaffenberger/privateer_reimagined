@@ -35,6 +35,8 @@ int load(const std::string& equip_prices_path) {
         s.color_iff   = e.contains("color_iff")   && e["color_iff"].bool_or(false);
         s.target_lock = e.contains("target_lock") && e["target_lock"].bool_or(false);
         s.itts        = e.contains("itts")        && e["itts"].bool_or(false);
+        s.identify_pct_per_s = e.contains("identify_pct_per_s")
+            ? (float)e["identify_pct_per_s"].number_or(0) : 0.0f;
         if (s.id.empty() || find(s.id)) {
             std::fprintf(stderr, "[scanner] skipping blank/duplicate id '%s'\n", s.id.c_str());
             continue;
@@ -51,6 +53,15 @@ const ScannerType* find(const std::string& id) {
     if (id.empty()) return nullptr;
     for (const ScannerType& s : g_catalog) if (s.id == id) return &s;
     return nullptr;
+}
+
+int identify_rolls_due(IdentifyTimer& t, uint32_t target_id, float dt_s) {
+    if (target_id != t.target_id) t = IdentifyTimer{target_id, 0.0f};
+    if (target_id == 0 || dt_s <= 0.0f) return 0;
+    t.carry_s += dt_s;
+    const int due = (int)t.carry_s;   // whole seconds held
+    t.carry_s -= (float)due;
+    return due;
 }
 
 bool buy(PlayerState& p, const std::string& id) {
