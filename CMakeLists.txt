@@ -270,6 +270,7 @@ src/bolt_art.cpp
     src/cockpit_mfd.cpp
     src/cockpit_overlay.cpp
     src/cockpit_armaments.cpp
+    src/hud_text_fit.cpp
     src/comms_menu.cpp
     ${DEV_REMOTE_SRC}
     ${IMGUI_SRC}
@@ -449,6 +450,14 @@ target_include_directories(test_pause_overlay PRIVATE ${CMAKE_SOURCE_DIR}/src)
 add_executable(test_cockpit_layers EXCLUDE_FROM_ALL
     tools/test_cockpit_layers.cpp src/cockpit_overlay.cpp ${IMGUI_SRC})
 target_include_directories(test_cockpit_layers PRIVATE
+    ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party ${IMGUI_DIR})
+
+# Dense HUD lines fit every hull's MFD glass, real ImGui + game font (#430).
+# Run from the repo root.
+add_executable(test_hud_text_fit EXCLUDE_FROM_ALL
+    tools/test_hud_text_fit.cpp src/hud_text_fit.cpp src/cockpit_mfd.cpp
+    src/cockpit_overlay.cpp ${IMGUI_SRC})
+target_include_directories(test_hud_text_fit PRIVATE
     ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party ${IMGUI_DIR})
 
 add_executable(test_cockpit_overlay EXCLUDE_FROM_ALL tools/test_cockpit_overlay.cpp)

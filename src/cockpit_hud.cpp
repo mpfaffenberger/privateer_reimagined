@@ -20,6 +20,7 @@
 #include "cockpit_armaments.h"
 #include "cockpit_overlay.h"
 #include "comms_menu.h"
+#include "hud_text_fit.h"
 #include "navmap_projection.h"
 
 #include "armor.h"
@@ -424,16 +425,16 @@ void draw_target_mfd(const Camera& cam, const ShipRegistry& ships,
             }
             ImGui::SameLine();
 
-            // Right column: identity + range + stance + HP bars.
+            // Right column: identity + range + stance + HP bars. Lines fit
+            // the column's width (#430): an MFD is far narrower than the
+            // classic box, so long names shrink and faction/stance wraps.
             ImGui::BeginGroup();
 
             const char* class_name = !target->display_name.empty()
                 ? target->display_name.c_str()
                 : (target->klass ? target->klass->display_name.c_str()
                                  : (target->is_player ? "PLAYER" : "?"));
-            ImGui::PushStyleColor(ImGuiCol_Text, kHudWhite);
-            ImGui::Text("%s", class_name);
-            ImGui::PopStyleColor();
+            hud_text_fit::text(class_name, kHudWhite);
 
             // Faction + stance — find the player's perception entry to
             // get the stance the AI uses (so target-panel colors match
@@ -461,14 +462,12 @@ void draw_target_mfd(const Camera& cam, const ShipRegistry& ships,
               : (stance == Stance::Allied)  ? "ALLIED"
               :                                "NEUTRAL";
 
-            ImGui::PushStyleColor(ImGuiCol_Text, stance_col);
-            ImGui::Text("%s  %s", fac_name, stance_str);
-            ImGui::PopStyleColor();
+            hud_text_fit::pair_or_wrap(fac_name, stance_str, stance_col);
 
-            ImGui::PushStyleColor(ImGuiCol_Text, kHudWhite);
-            if (dist_m < 10000.0f) ImGui::Text("DIST  %6.0f m",  dist_m);
-            else                   ImGui::Text("DIST  %5.1f km", dist_m * 0.001f);
-            ImGui::PopStyleColor();
+            char dist[32];
+            if (dist_m < 10000.0f) std::snprintf(dist, sizeof(dist), "DIST  %6.0f m",  dist_m);
+            else                   std::snprintf(dist, sizeof(dist), "DIST  %5.1f km", dist_m * 0.001f);
+            hud_text_fit::text(dist, kHudWhite);
 
             ImGui::EndGroup();
 
