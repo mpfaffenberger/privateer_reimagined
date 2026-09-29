@@ -1,8 +1,6 @@
 // Offline check for issue #87: scrap_metal & friends load as commodities and
 // price/sell through the existing exchange. Build:
-//   clang++ -std=c++20 -DECONOMY_HEADLESS -Isrc -Ithird_party \
-//     tools/test_salvage.cpp src/economy.cpp src/commodity.cpp \
-//     src/player.cpp src/json.cpp -o /tmp/test_salvage
+//   cmake --build build --target test_salvage && ./build/test_salvage
 #include "economy.h"
 #include "commodity.h"
 #include <cstdio>

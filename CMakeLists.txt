@@ -697,6 +697,35 @@ target_include_directories(test_cinematic PRIVATE
 )
 
 # ---------------------------------------------------------------------------
+# Harnesses revived from tools/ (#493): each exits non-zero on failure.
+add_executable(test_autopilot EXCLUDE_FROM_ALL
+    tools/test_autopilot.cpp src/autopilot.cpp src/camera.cpp src/threat.cpp
+    src/hazards.cpp src/faction.cpp)
+add_executable(test_inventory112 EXCLUDE_FROM_ALL
+    tools/test_inventory112.cpp src/inventory.cpp src/player.cpp src/json.cpp
+    src/commodity.cpp)
+target_compile_definitions(test_inventory112 PRIVATE INVENTORY_HEADLESS)
+add_executable(test_missile EXCLUDE_FROM_ALL
+    tools/test_missile.cpp src/missile.cpp src/ship.cpp src/player.cpp
+    src/repair.cpp src/ship_class.cpp src/gun.cpp src/shield.cpp src/armor.cpp
+    src/mobility.cpp src/faction.cpp src/ship_ai.cpp src/perception.cpp
+    src/json.cpp src/commodity.cpp src/ai_brain.cpp src/hazards.cpp
+    src/ship_registry.cpp src/comm.cpp)
+target_compile_definitions(test_missile PRIVATE COMM_HEADLESS)
+add_executable(test_reputation EXCLUDE_FROM_ALL
+    tools/test_reputation.cpp src/comm.cpp src/faction.cpp src/player.cpp
+    src/json.cpp src/commodity.cpp)
+target_compile_definitions(test_reputation PRIVATE COMM_HEADLESS)
+add_executable(test_salvage EXCLUDE_FROM_ALL
+    tools/test_salvage.cpp src/economy.cpp src/commodity.cpp src/player.cpp
+    src/json.cpp)
+target_compile_definitions(test_salvage PRIVATE ECONOMY_HEADLESS)
+foreach(harness test_autopilot test_inventory112 test_missile test_reputation test_salvage)
+    target_include_directories(${harness} PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party)
+endforeach()
+
+# ---------------------------------------------------------------------------
 # `dist` — portable, relocatable game folder (build/dist/).
 #
 # Copies the executable + a pruned real-file assets/ copy (drops sprite-gen

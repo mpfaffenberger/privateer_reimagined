@@ -13,12 +13,8 @@
 //   4. Repair: damage a ship, quote + pay to restore hull to full; assert the
 //      credits left and the armor came back; assert refusal when broke.
 //
-// Build (mirrors tools/test_savegame.cpp):
-//   clang++ -std=c++20 -Isrc -Ithird_party \
-//       tools/test_missile.cpp src/missile.cpp src/ship.cpp src/player.cpp \
-//       src/repair.cpp src/ship_class.cpp src/gun.cpp src/shield.cpp \
-//       src/armor.cpp src/mobility.cpp src/faction.cpp src/ship_ai.cpp \
-//       src/perception.cpp src/json.cpp -o /tmp/test_missile
+// Build + run:
+//   cmake --build build --target test_missile && ./build/test_missile
 // (the harness chdir's to the repo root so the data tables load by relpath.)
 // -----------------------------------------------------------------------------
 
@@ -172,17 +168,25 @@ int main() {
     // -------------------------------------------------------------------
     std::printf("\n--- 3. finite ammo ---\n");
     {
+        // Exercise whichever rack the starter loadout fills (heat-seekers
+        // today) instead of hard-coding one, so a loadout rebalance can't
+        // silently turn this case into a false failure again (#493).
         PlayerState p = player::new_game("troy");
-        const int df0 = player::missile_count(p, 0);
-        std::printf("  new-game DF rack = %d\n", df0);
-        CHECK("new game starts with DF ammo", df0 > 0);
+        int rack = -1;
+        for (int i = 0; i < 3 && rack < 0; ++i)
+            if (player::k_new_game_missiles[i] > 0) rack = i;
+        CHECK("starter loadout includes missiles", rack >= 0);
+        if (rack < 0) rack = 0;
+        const int start = player::missile_count(p, rack);
+        std::printf("  new-game rack %d = %d\n", rack, start);
+        CHECK("new game starts with ammo in that rack", start > 0);
 
         int fired = 0;
-        while (player::consume_missile(p, 0)) ++fired;
-        std::printf("  fired %d DF until empty; rack now %d\n",
-                    fired, player::missile_count(p, 0));
-        CHECK("consumed exactly the starting count", fired == df0);
-        CHECK("empty rack refuses further fire", !player::consume_missile(p, 0));
+        while (player::consume_missile(p, rack)) ++fired;
+        std::printf("  fired %d until empty; rack now %d\n",
+                    fired, player::missile_count(p, rack));
+        CHECK("consumed exactly the starting count", fired == start);
+        CHECK("empty rack refuses further fire", !player::consume_missile(p, rack));
     }
 
     // -------------------------------------------------------------------
@@ -192,7 +196,12 @@ int main() {
     {
         PlayerState p = player::new_game("troy");
         p.credits = 100000;                  // plenty
-        Ship s = ship::spawn(*k);
+        // Player hull, built the way main.cpp builds it. ship::spawn() is the
+        // NPC path and applies the enemy armor buff, which heal_to_full
+        // (player rules) correctly does not restore (#493).
+        Ship s = ship::spawn_player();
+        s.klass = k;
+        ship::heal_to_full(s);
         s.id = 3003;
         const float full = total_armor(s);
         // Bash the hull: zero the fore armor.

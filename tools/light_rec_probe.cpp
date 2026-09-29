@@ -1,6 +1,7 @@
-// Throwaway harness for sprite_light_rec — validates the region matcher
-// offline (no GPU/window). Build:
-//   g++ -std=c++17 -I src -I third_party tools/test_light_rec.cpp -o /tmp/tlr
+// Offline CLI probe for sprite_light_rec: runs the region matcher on one
+// pixel of a hull PNG (no GPU/window). Backend for tools/annotate_light_rec.py.
+// Not a test harness: it needs arguments and asserts nothing (#493). Build:
+//   g++ -std=c++17 -I src -I third_party tools/light_rec_probe.cpp -o /tmp/tlr
 // Run: /tmp/tlr <hull.png> <u> <v> [color_tol] [patch_px]
 // stb_image.h has no include guard; let sprite_light_rec.cpp's single
 // include pull it in, with the implementation macro set here.
