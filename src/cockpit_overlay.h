@@ -24,8 +24,15 @@ struct ImDrawList;
 
 namespace cockpit_overlay {
 
-// Step 1. No-op for hulls without art. Call once per Flight frame inside the
-// ImGui frame, before the cockpit HUD panels ask for their displays.
+// Pilot's cockpit-art toggle (#554, V in flight). Session-only, defaults ON.
+// While off, draw() is a no-op, so the HUD falls back to the classic
+// full-screen floating panels, exactly as for a hull without art.
+void set_enabled(bool on);
+bool enabled();
+
+// Step 1. No-op for hulls without art or while disabled. Call once per
+// Flight frame inside the ImGui frame, before the cockpit HUD panels ask for
+// their displays.
 void draw(const std::string& ship_class, const Camera& camera);
 
 // Step 3. No-op unless draw() ran this frame. Call after ALL ImGui building,

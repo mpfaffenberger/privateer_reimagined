@@ -1,12 +1,14 @@
 // Headless test of the real overlay compositing code. Only GPU texture
 // allocation is stubbed; ImGui draw lists, glass and MFD warping are real.
 #include "camera.h"
+#include "cockpit_hud_internal.h"
 #include "cockpit_overlay.h"
 #include "material.h"
 #include "imgui.h"
 #include "sokol_app.h"
 #include "sokol_imgui.h"
 #include <cstdio>
+#include <cstring>
 
 bool load_texture_png(const std::string& path, TextureSlot& slot) {
     if (path.find("talon") != std::string::npos) return false;
@@ -114,6 +116,39 @@ int main() {
     check(first_color(ImGui::GetBackgroundDrawList(), IM_COL32(100, 245, 125, 255)) < 0 &&
           first_color(ImGui::GetBackgroundDrawList(), IM_COL32(255, 70, 35, 255)) < 0,
           "Tarsus blocked AUTO and healthy damage lamps stay dark");
+    ImGui::Render();
+
+    // Pilot toggle (#554): OFF is the classic full-screen HUD even on a hull
+    // WITH art, through the same draw()/place_panel() calls main.cpp makes.
+    using cockpit_hud::PanelPlacement;
+    using cockpit_hud::place_panel;
+    check(enabled(), "cockpit art defaults on");
+    set_enabled(false);
+    ImGui::NewFrame();
+    draw("centurion", camera);
+    set_lights({true, false, true, false});
+    const PanelPlacement off = place_panel(Display::Left, "##classic_status",
+                                           {16, 16}, {300, 224});
+    bool any_display = false;
+    for (int d = 0; d < kDisplayCount; ++d)
+        any_display |= display_panel((Display)d, panel);
+    finalize();
+    check(!active() && !any_display && world_draw_list() == ImGui::GetForegroundDrawList(),
+          "cockpit OFF: no MFD displays, world markers stay foreground");
+    check(!off.in_display && std::strcmp(off.window_id, "##classic_status") == 0 &&
+          off.pos.x == 16 && off.pos.y == 16 && off.size.x == 300 && off.size.y == 224,
+          "cockpit OFF: HUD panels use the classic floating layout");
+    check(ImGui::GetBackgroundDrawList()->VtxBuffer.empty(),
+          "cockpit OFF: no art, glass or lamps are composited");
+    ImGui::Render();
+    set_enabled(true);
+    ImGui::NewFrame();
+    draw("centurion", camera);
+    const PanelPlacement on = place_panel(Display::Left, "##classic_status",
+                                          {16, 16}, {300, 224});
+    check(active() && on.in_display &&
+          std::strcmp(on.window_id, display_window_id(Display::Left)) == 0,
+          "cockpit back ON: HUD returns to the cockpit displays");
     ImGui::Render();
 
     ImGui::NewFrame(); // draw skipped: autopilot/external camera
