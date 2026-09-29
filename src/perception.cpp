@@ -1,5 +1,6 @@
 #include "perception.h"
 
+#include "scanner.h"
 #include "ship.h"
 #include "ship_registry.h"
 #include "ship_class.h"
@@ -114,5 +115,6 @@ void perception::tick(ShipRegistry& ships, const PlayerReputation& player_rep) {
 }
 
 float perception::radar_range_m(const Ship& s) {
-    return s.klass ? s.klass->radar_range : k_default_radar_range_m;
+    const float hull = s.klass ? s.klass->radar_range : k_default_radar_range_m;
+    return scanner::range_m(s.fitted_scanner, hull);
 }

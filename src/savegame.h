@@ -72,7 +72,9 @@ namespace savegame {
 // loading (and playing) exactly as before.
 // v8 (Gemini Lives #171) added the persistent `day` counter. Older saves
 // default to day zero (stardate 2669.135).
-constexpr int k_format_version = 8;
+// v9 (#143) added the fitted `scanner_id`. Older saves load with
+// player::k_starting_scanner (a v8 pilot never had one to sell).
+constexpr int k_format_version = 9;
 
 // Slot 0 is the autosave; manual saves start at 1.
 constexpr int k_autosave_slot = 0;

@@ -267,6 +267,8 @@ static std::string serialize_player(const PlayerState& p) {
         w.key("engine_level");    w.value_int(p.engine_level);
         w.key("armor_name");      w.value_string(p.armor_name);
         w.key("cargo_expansion"); w.value_bool(p.cargo_expansion);
+        // fitted scanner (#143, v9). "" = none fitted (sold).
+        w.key("scanner_id");      w.value_string(p.scanner_id);
         w.key("has_jump_drive");   w.value_bool(p.has_jump_drive);
         w.key("ecm_level");        w.value_int(p.ecm_level);
         w.key("has_repair_droid"); w.value_bool(p.has_repair_droid);
@@ -594,6 +596,10 @@ bool load(PlayerState& p, const std::string& path) {
         out.engine_level    = pl.contains("engine_level")    ? (int)pl["engine_level"].number_or(0)  : 0;
         out.armor_name      = pl.contains("armor_name")      ? pl["armor_name"].string_or("")       : "";
         out.cargo_expansion = pl.contains("cargo_expansion") ? pl["cargo_expansion"].bool_or(false)  : false;
+        // scanner (#143, v9). A pre-v9 save never had one to lose, so it gets
+        // the new-game scanner; a present "" means the pilot sold it.
+        out.scanner_id      = pl.contains("scanner_id")      ? pl["scanner_id"].string_or("")
+                                                             : player::k_starting_scanner;
         out.has_jump_drive   = pl.contains("has_jump_drive")   ? pl["has_jump_drive"].bool_or(false)   : false;
         out.ecm_level        = pl.contains("ecm_level")        ? (int)pl["ecm_level"].number_or(0)    : 0;
         out.has_repair_droid = pl.contains("has_repair_droid") ? pl["has_repair_droid"].bool_or(false) : false;

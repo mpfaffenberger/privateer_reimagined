@@ -33,6 +33,7 @@
 #include "missions.h"
 #include "perception.h"
 #include "player.h"
+#include "scanner.h"
 #include "sfx.h"
 #include "shield.h"
 #include "ship.h"
@@ -444,7 +445,9 @@ void draw_target_mfd(const Camera& cam, const ShipRegistry& ships,
                 ? faction::to_name(target->faction) : "?";
             float        dist_m   = 0.0f;
             Stance       stance   = Stance::Neutral;
+            bool         iff      = false;   // #143: stance needs colour IFF
             if (const Ship* player = ships.player(); player) {
+                iff = scanner::color_iff(player->fitted_scanner);
                 for (const PerceivedContact& c : player->perception.visible) {
                     if (c.ship_id == target_ship_id) {
                         dist_m = c.distance_m;
@@ -453,12 +456,10 @@ void draw_target_mfd(const Camera& cam, const ShipRegistry& ships,
                     }
                 }
             }
-            const ImU32 stance_col =
-                (stance == Stance::Hostile) ? IM_COL32(255,  90,  90, 255)
-              : (stance == Stance::Allied)  ? IM_COL32( 90, 255, 110, 255)
-              :                                IM_COL32(255, 220,  60, 255);
+            const ImU32 stance_col = contact_color(stance, iff);
             const char* stance_str =
-                (stance == Stance::Hostile) ? "HOSTILE"
+                !iff                        ? "NO IFF"
+              : (stance == Stance::Hostile) ? "HOSTILE"
               : (stance == Stance::Allied)  ? "ALLIED"
               :                                "NEUTRAL";
 
@@ -914,12 +915,14 @@ void draw_radar_mfd(const Camera& cam, const StarSystem& system, int selected_na
         // Plot ship contacts from the player's perception. Same
         // camera-relative projection as the nav loop above; stance
         // colors mirror the on-screen target indicator (red=hostile,
-        // green=allied, yellow=neutral) so the radar reads at a glance.
+        // green=allied, yellow=neutral) so the radar reads at a glance —
+        // on a colour-IFF scanner; monochrome ones show one tint (#143).
         // Ships cluster toward the center (the engagement bubble); nav
         // points sit at or near the rim because they're system-scale
         // (planets, jump points 100+ km away).
         if (const Ship* player_p = ships.player(); player_p) {
             const Ship& player = *player_p;
+            const bool iff = scanner::color_iff(player.fitted_scanner);
             for (const PerceivedContact& c : player.perception.visible) {
                 // Reconstruct world position from cached unit + distance.
                 const HMM_Vec3 contact_pos =
@@ -938,10 +941,7 @@ void draw_radar_mfd(const Camera& cam, const StarSystem& system, int selected_na
                 const ImVec2 dot { ctr.x + dx_norm * r_norm * rad,
                                    ctr.y + dy_norm * r_norm * rad };
 
-                const ImU32 col =
-                    (c.stance == Stance::Hostile) ? IM_COL32(255,  90,  90, 255)
-                  : (c.stance == Stance::Allied)  ? IM_COL32( 90, 255, 110, 255)
-                  :                                 IM_COL32(255, 220,  60, 255);
+                const ImU32 col = contact_color(c.stance, iff);
                 const bool   sel = (c.ship_id == target_ship_id);
                 const float  dot_r = sel ? 4.0f : 2.5f;
                 dl->AddCircleFilled(dot, dot_r, col);
@@ -1212,6 +1212,16 @@ std::string base_label(const StarSystem& sys, const std::string& base_id) {
 }
 
 } // anonymous namespace
+
+uint32_t contact_color(Stance stance, bool color_iff, uint8_t alpha) {
+    if (!color_iff) return IM_COL32(190, 205, 215, alpha);   // monochrome radar tint
+    switch (stance) {
+        case Stance::Hostile: return IM_COL32(255,  90,  90, alpha);
+        case Stance::Allied:  return IM_COL32( 90, 255, 110, alpha);
+        case Stance::Neutral: break;
+    }
+    return IM_COL32(255, 220, 60, alpha);
+}
 
 // STATUS sub-screen accessors. File-static g_status_screen lives in the
 // anonymous namespace above; these are the public seam main.cpp + the
@@ -1771,15 +1781,13 @@ void build_navmap(const Camera& cam, const StarSystem& system,
         // densely packed ship dots.
         if (const Ship* player_p = ships.player(); player_p) {
             const Ship& player = *player_p;
+            const bool iff = scanner::color_iff(player.fitted_scanner);
             for (const PerceivedContact& c : player.perception.visible) {
                 const HMM_Vec3 p = HMM_AddV3(
                     player.position, HMM_MulV3F(c.to_unit, c.distance_m));
                 const HMM_Vec2 mp = world_map_pos(p);
                 const ImVec2 sp = to_screen(mp.X, mp.Y);
-                const ImU32 col =
-                    (c.stance == Stance::Hostile) ? IM_COL32(255,  90,  90, 230)
-                  : (c.stance == Stance::Allied)  ? IM_COL32( 90, 255, 110, 230)
-                  :                                  IM_COL32(255, 220,  60, 230);
+                const ImU32 col = contact_color(c.stance, iff, 230);
                 dl->AddCircleFilled(sp, 3.0f, col, 8);
             }
         }
