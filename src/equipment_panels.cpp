@@ -346,8 +346,8 @@ void draw_systems(const PanelContext& ctx) {
         {"ecm_l1", "ECM Level 1", "Basic missile lock disruption"},
         {"ecm_l2", "ECM Level 2", "Improved disruption; requires L1"},
         {"ecm_l3", "ECM Level 3", "Advanced disruption; requires L2"},
-        {"repair_droid", "Repair Droid", "Repairs hull damage in flight"},
-        {"adv_repair_droid", "Advanced Repair Droid", "Faster repair; requires standard droid"},
+        {"repair_droid", "Repair Droid", "Fixes damaged non-weapon systems in flight"},
+        {"adv_repair_droid", "Advanced Repair Droid", "Repairs 2x faster; requires standard droid"},
     }};
     for (const Item& item : items) {
         ImGui::PushID(item.id);

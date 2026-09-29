@@ -5335,6 +5335,14 @@ void frame_cb() {
     // through the identical death-detection below.
     missile::collide_and_damage(g.missiles, g.ships, dt);
     for (Ship& s : g.ships) ship::regen_shields(s, dt);
+    // Repair droid (#517): the player's droid patches damaged, non-weapon
+    // components while flying. Runs after this frame's hits so a part shot
+    // to 0% this frame counts as destroyed (base-only) straight away.
+    if (Ship* pl = g.ships.player(); pl && pl->alive) {
+        ship_systems::droid_tick(pl->systems,
+            ship_systems::droid_rate(g.player.has_repair_droid, g.player.adv_repair_droid),
+            dt);
+    }
 
     // Death detection. For NPCs we trigger on ANY occupied dead ship
     // (not just the alive:true->false edge), because some damage sources
