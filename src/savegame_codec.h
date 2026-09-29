@@ -28,10 +28,11 @@ inline constexpr const char* k_missile_save_keys[k_missile_rack_types] = {
 // The complete save document for `p`: version + timestamp + label + player.
 std::string encode(const PlayerState& p);
 
-// Decode a parsed save document into `out`. Returns false (logged, tagged with
-// `slot`) on a missing/unsupported version or a missing player object. May
-// throw on a malformed-but-parseable document; load() owns the catch.
-bool decode(const json::Value& root, int slot, PlayerState& out);
+// Decode a parsed save document into `out`. Returns false (logged, naming the
+// file at `path`) on a missing/unsupported version or a missing player
+// object. May throw on a malformed-but-parseable document; load() owns the
+// catch.
+bool decode(const json::Value& root, const std::string& path, PlayerState& out);
 
 // Load-menu metadata from a parsed save document; leaves `path` empty and
 // sets `exists` iff the version is valid. May throw; peek_path() catches.

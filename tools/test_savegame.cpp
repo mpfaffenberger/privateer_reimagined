@@ -669,6 +669,26 @@ int main() {
                     ok ? "OK  " : "FAIL");
     }
 
+    // 3m. (#539) load diagnostics name the save FILE; they used to say
+    //     "slot -1" for every load. One fixture per layer: load() itself
+    //     (corrupt), the decode envelope (newer version), a field reader
+    //     (out-of-range mission type).
+    {
+        bool ok = true;
+        for (int slot : {kCorruptSlot, kVersionSlot, kOldBadTypeSlot}) {
+            PlayerState p;
+            const std::string log = test_stderr::capture(
+                sandbox / "stderr.txt", [&] { savegame::load(p, slot); });
+            const bool named =
+                log.find("'" + savegame::slot_path(slot) + "'") != std::string::npos &&
+                log.find("slot -1") == std::string::npos;
+            if (!named) { ok = false; std::printf("         slot %d log: %s", slot, log.c_str()); }
+        }
+        if (!ok) ++g_fail;
+        std::printf("  [%s] load diagnostics name the save file, not slot -1\n",
+                    ok ? "OK  " : "FAIL");
+    }
+
     // 3h. (#138) plot:: mutator invariants: idempotent set/give, clear/
     //     remove report presence truthfully, empty ids refused.
     {

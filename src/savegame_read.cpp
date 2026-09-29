@@ -198,7 +198,8 @@ void read_hold(const json::Value& pl, PlayerState& out) {
 // correspond to any legal mission — drop them and log one line so a
 // hand-edited or pre-#6 save can't silently invent a bogus mission. Also
 // drop any `type` outside [0,5].
-void read_missions(const json::Value& pl, int ver, int slot, PlayerState& out) {
+void read_missions(const json::Value& pl, int ver, const std::string& path,
+                   PlayerState& out) {
     const json::Value* ms = pl.find("missions");
     if (!ms || !ms->is_array()) return;
     for (const json::Value& e : ms->as_array()) {
@@ -217,8 +218,8 @@ void read_missions(const json::Value& pl, int ver, int slot, PlayerState& out) {
         }
         if (am.type < 0 || am.type > 5) {
             std::fprintf(stderr,
-                "[save] slot %d: dropping mission '%s' with out-of-range type %d\n",
-                slot, am.id.c_str(), am.type);
+                "[save] '%s': dropping mission '%s' with out-of-range type %d\n",
+                path.c_str(), am.id.c_str(), am.type);
             continue;
         }
         am.source        = e.contains("source")        ? (int)e["source"].number_or(0)    : 0;
@@ -408,22 +409,22 @@ void read_location(const json::Value& pl, PlayerState& out) {
 
 } // namespace
 
-bool decode(const json::Value& root, int slot, PlayerState& out) {
+bool decode(const json::Value& root, const std::string& path, PlayerState& out) {
     const json::Value* vver = root.find("version");
     const int ver = (vver && vver->is_number()) ? vver->as_int() : 0;
     if (ver <= 0) {
-        std::fprintf(stderr, "[save] slot %d: missing/invalid version\n", slot);
+        std::fprintf(stderr, "[save] '%s': missing/invalid version\n", path.c_str());
         return false;
     }
     if (ver > k_format_version) {
-        std::fprintf(stderr, "[save] slot %d: format v%d newer than supported v%d — refusing\n",
-                     slot, ver, k_format_version);
+        std::fprintf(stderr, "[save] '%s': format v%d newer than supported v%d — refusing\n",
+                     path.c_str(), ver, k_format_version);
         return false;
     }
 
     const json::Value* pv = root.find("player");
     if (!pv || !pv->is_object()) {
-        std::fprintf(stderr, "[save] slot %d: no player object\n", slot);
+        std::fprintf(stderr, "[save] '%s': no player object\n", path.c_str());
         return false;
     }
     const json::Value& pl = *pv;
@@ -433,7 +434,7 @@ bool decode(const json::Value& root, int slot, PlayerState& out) {
     read_guilds(pl, out);
     read_plot(pl, out);
     read_hold(pl, out);
-    read_missions(pl, ver, slot, out);
+    read_missions(pl, ver, path, out);
     read_ordnance(pl, out);
     read_career(pl, out);
     read_ship_health(pl, out);

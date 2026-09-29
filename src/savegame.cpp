@@ -180,7 +180,6 @@ bool load(PlayerState& p, int slot) {
 
 bool load(PlayerState& p, const std::string& path) {
     if (path.empty()) return false;
-    const int slot = -1;   // path-based load; the slot # is only for logs
 
     // Missing file is the common, non-error case (no save yet) — quiet-ish.
     if (!fs::exists(fs::path(path))) {
@@ -192,8 +191,7 @@ bool load(PlayerState& p, const std::string& path) {
     // syntax error, so a truncated/corrupt file lands here as !is_object().
     const json::Value root = json::parse_file(path);
     if (!root.is_object()) {
-        std::fprintf(stderr, "[save] slot %d: corrupt or unparseable (%s)\n",
-                     slot, path.c_str());
+        std::fprintf(stderr, "[save] '%s': corrupt or unparseable\n", path.c_str());
         return false;
     }
 
@@ -203,10 +201,11 @@ bool load(PlayerState& p, const std::string& path) {
     // never leaves the live PlayerState half-overwritten.
     try {
         PlayerState out;
-        if (!codec::decode(root, slot, out)) return false;
+        if (!codec::decode(root, path, out)) return false;
         p = std::move(out);
     } catch (const std::exception& ex) {
-        std::fprintf(stderr, "[save] slot %d: deserialize error — %s\n", slot, ex.what());
+        std::fprintf(stderr, "[save] '%s': deserialize error — %s\n",
+                     path.c_str(), ex.what());
         return false;
     }
 
