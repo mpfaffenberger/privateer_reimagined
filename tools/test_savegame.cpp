@@ -20,9 +20,12 @@
 // -----------------------------------------------------------------------------
 
 #include "faction.h"
+#include "gun.h"
 #include "player.h"
 #include "plot.h"
 #include "savegame.h"
+#include "shield.h"
+#include "ship_class.h"
 #include "test_sandbox.h"
 
 #include <cstdio>
@@ -77,6 +80,7 @@ PlayerState make_mutated() {
     p.engine_level    = 2;
     p.cargo_expansion = true;
     p.scanner_id      = "hunter_aw_6i";           // #143: not the new-game default
+    p.turrets         = { "rear" };               // #145 (v10) turret hardware
     // #16: guild memberships should survive the round-trip.
     p.merc_guild_member     = true;
     p.merchant_guild_member = true;
@@ -289,6 +293,7 @@ int main() {
     CHECK_EQ("engine_level",    dst.engine_level,    src.engine_level);
     CHECK_EQ("cargo_expansion", dst.cargo_expansion, src.cargo_expansion);
     CHECK_EQ("scanner_id",      dst.scanner_id,      src.scanner_id);
+    CHECK_EQ("turrets",         dst.turrets,         src.turrets);
     CHECK_EQ("merc_guild_member",     dst.merc_guild_member,     src.merc_guild_member);
     CHECK_EQ("merchant_guild_member", dst.merchant_guild_member, src.merchant_guild_member);
 
@@ -554,6 +559,34 @@ int main() {
         if (!ok) ++g_fail;
         std::printf("  [%s] v8 save -> starting scanner; sold scanner stays sold\n",
                     ok ? "OK  " : "FAIL");
+    }
+
+    // 3i. (#145) a pre-v10 save has no turrets key: turret slots whose
+    //     mounts already carry a gun are grandfathered as owned; a hull
+    //     with empty turret mounts gets none. Needs the ship catalog.
+    {
+        faction::init();
+        gun::load_table("assets/data/privateer_ship_data.json");
+        shield::load_table("assets/data/privateer_ship_data.json");
+        ship_class::load_all("assets/ships");
+        auto load_v9 = [](const char* mounts) {
+            const std::string path = savegame::slot_path(kOldNoMissSlot);
+            { std::ofstream f(path, std::ios::trunc);
+              f << "{ \"version\": 9, \"label\": \"v9-pre-turrets\",\n"
+                   "  \"player\": { \"ship_class_name\": \"centurion\","
+                   " \"gun_mounts\": " << mounts << " } }"; }
+            PlayerState p;
+            const bool r = savegame::load(p, kOldNoMissSlot);
+            return r ? p.turrets : std::vector<std::string>{"<load failed>"};
+        };
+        const bool armed = load_v9("[\"laser\",\"laser\",\"\",\"\",\"\",\"ionic_pulse_cannon\"]")
+                           == std::vector<std::string>{"rear"};
+        const bool bare  = load_v9("[\"laser\",\"laser\",\"\",\"\",\"\",\"\"]").empty();
+        if (!armed || !bare) ++g_fail;
+        std::printf("  [%s] v9 Centurion with a turret gun keeps its rear turret\n",
+                    armed ? "OK  " : "FAIL");
+        std::printf("  [%s] v9 Centurion with empty turret mounts owns no turret\n",
+                    bare ? "OK  " : "FAIL");
     }
 
     // 3h. (#138) plot:: mutator invariants: idempotent set/give, clear/

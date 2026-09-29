@@ -89,6 +89,12 @@
     { "id": "bs_omni",            "name": "B&S Omni",           "price": 100000, "range_m": 30000, "color_iff": true,  "target_lock": true,  "itts": true  }
   ],
 
+  // Turret hardware (#145): price per turret POSITION a hull supports
+  // (ship.json turret_slot: Centurion/Orion rear, Galaxy top/bottom/rear).
+  // Buys the empty turret; each gun fitted into it is bought separately at
+  // the "guns" price above. Hand-authored (the gamefaq lists no price).
+  "turret_price": 10000,
+
   // Discrete buy-once-per-ship upgrades (np-3dp.27). Each is a bool flag on
   // PlayerState + Ship (own / don't own). None of the game's hulls ship
   // with any of these — a fresh Tarsus from the dealer has NONE, so it

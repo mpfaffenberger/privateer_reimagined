@@ -154,10 +154,11 @@ NPC-buffed repair hull, one fixed mission-board seed) now match the game.
    guided missiles need Target Lock or they fire unguided, and the ITTS pip and
    aim gimbal need ITTS. Still missing: the per-scanner chance to identify a
    target ([#516]).
-4. **Turrets.** Firing is done, and guns can be bought into *existing*
-   turret hardpoints **(corrected)**. Still missing: adding turrets to hulls
-   that don't have them ([#145]), and keeping turrets auto-armed across gun
-   groups ([#379]). A manual turret view is probably a deliberate non-goal
+4. **Turrets** **(done)**. Firing is done. Turret hardware is bought per hull
+   position (`turret_slot` in ship.json: Centurion/Orion rear, Galaxy
+   top/bottom/rear) before a gun can be fitted into it ([#145]), and player
+   turrets stay auto-armed across gun groups ([#379]). A manual turret view
+   is probably a deliberate non-goal
    (auto-fire plays better).
 
 ### P2 — Presentation and art

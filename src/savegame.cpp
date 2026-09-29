@@ -26,6 +26,7 @@
 #include "json.h"
 #include "player.h"
 #include "repair.h"
+#include "ship_class.h"
 #include "world_clock.h"
 
 #include <algorithm>
@@ -181,6 +182,20 @@ std::string user_data_dir() {
 #endif
 }
 
+// Pre-v10 saves predate turret hardware (#145): back then every hull came
+// with its turret mounts, so treat a turret slot as owned iff one of its
+// mounts already carries a gun. Nothing the player paid for goes inert.
+void grandfather_turrets(PlayerState& p) {
+    const ShipClass* klass = ship_class::find(p.ship_class_name);
+    if (!klass) return;
+    for (const TurretSlot& t : klass->turret_slots) {
+        const bool armed = std::any_of(t.mounts.begin(), t.mounts.end(), [&](int m) {
+            return m < (int)p.gun_mounts.size() && !p.gun_mounts[(size_t)m].gun_id.empty();
+        });
+        if (armed) p.turrets.push_back(t.id);
+    }
+}
+
 } // namespace
 
 std::string saves_dir() {
@@ -275,6 +290,10 @@ static std::string serialize_player(const PlayerState& p) {
         w.key("cargo_expansion"); w.value_bool(p.cargo_expansion);
         // fitted scanner (#143, v9). "" = none fitted (sold).
         w.key("scanner_id");      w.value_string(p.scanner_id);
+        // turret hardware (#145, v10): owned TurretSlot ids.
+        w.key("turrets"); w.member_array_begin();
+          for (const std::string& t : p.turrets) w.value_string(t);
+        w.end_array();
         w.key("has_jump_drive");   w.value_bool(p.has_jump_drive);
         w.key("ecm_level");        w.value_int(p.ecm_level);
         w.key("has_repair_droid"); w.value_bool(p.has_repair_droid);
@@ -607,6 +626,14 @@ bool load(PlayerState& p, const std::string& path) {
         // the new-game scanner; a present "" means the pilot sold it.
         out.scanner_id      = pl.contains("scanner_id")      ? pl["scanner_id"].string_or("")
                                                              : player::k_starting_scanner;
+        // turret hardware (#145, v10). Pre-v10 saves have no key: grandfather
+        // every turret slot that already carries a fitted gun.
+        if (const json::Value* tv = pl.find("turrets"); tv && tv->is_array()) {
+            for (const json::Value& t : tv->as_array())
+                if (t.is_string()) out.turrets.push_back(t.as_string());
+        } else {
+            grandfather_turrets(out);
+        }
         out.has_jump_drive   = pl.contains("has_jump_drive")   ? pl["has_jump_drive"].bool_or(false)   : false;
         out.ecm_level        = pl.contains("ecm_level")        ? (int)pl["ecm_level"].number_or(0)    : 0;
         out.has_repair_droid = pl.contains("has_repair_droid") ? pl["has_repair_droid"].bool_or(false) : false;

@@ -13,6 +13,7 @@
 #include "sfx.h"
 #include "imgui.h"
 
+#include <algorithm>
 #include <array>
 #include <cstdio>
 #include <string>
@@ -38,17 +39,52 @@ void status(bool installed, const char* installed_text = "INSTALLED") {
                        "%s", installed ? installed_text : "EMPTY");
 }
 
+// Turret HARDWARE block for a turret mount (#145). Returns true when the
+// turret is installed, i.e. its mounts can take a gun.
+bool draw_turret_hardware(const PanelContext& ctx, const TurretSlot& turret) {
+    PlayerState& p = ctx.player;
+    const bool owned = player::has_turret(p, turret.id);
+    ImGui::TextUnformatted(turret.label.c_str());
+    status(owned);
+    const int64_t price = turret_price();
+    if (!owned) {
+        ImGui::TextColored(kDim, "Install the turret to fit guns into its %zu mount%s.",
+                           turret.mounts.size(), turret.mounts.size() == 1 ? "" : "s");
+        char buy[64]; std::snprintf(buy, sizeof buy, "INSTALL TURRET  %lld CR", (long long)price);
+        ImGui::BeginDisabled(price <= 0 || !player::can_afford(p, price));
+        if (ImGui::Button(buy, ImVec2(-1.0f, 36.0f)) &&
+            buy_turret(p, turret.id, ctx.ship_class)) sfx::ui_click();
+        ImGui::EndDisabled();
+        return false;
+    }
+    const bool armed = std::any_of(turret.mounts.begin(), turret.mounts.end(), [&](int m) {
+        return m < (int)p.gun_mounts.size() && !p.gun_mounts[(size_t)m].gun_id.empty();
+    });
+    char sell[64]; std::snprintf(sell, sizeof sell, "REMOVE TURRET  +%lld CR", (long long)price);
+    ImGui::BeginDisabled(armed);
+    if (ImGui::Button(sell, ImVec2(-1.0f, 32.0f)) &&
+        sell_turret(p, turret.id, ctx.ship_class)) sfx::ui_click();
+    ImGui::EndDisabled();
+    if (armed) ImGui::TextColored(kDim, "Sell the turret's guns before removing it.");
+    ImGui::Separator();
+    return true;
+}
+
 void draw_guns(const PanelContext& ctx) {
     PlayerState& player = ctx.player;
     const int slot = ctx.zone.slot;
     const bool valid = slot >= 0 && slot < (int)player.gun_mounts.size();
-    heading(ctx.zone.kind == equipment_hardpoints::Kind::Turret
-                ? "TURRET HARDPOINT" : "FORWARD GUN HARDPOINT",
+    // Turret-ness is a property of the HULL's mount (ship.json), not of the
+    // schematic zone -- fallback layouts label every mount a forward gun.
+    const TurretSlot* turret =
+        ctx.ship_class ? ctx.ship_class->turret_slot_for_mount(slot) : nullptr;
+    heading(turret ? "TURRET HARDPOINT" : "FORWARD GUN HARDPOINT",
             ctx.zone.label.c_str());
     if (!valid) {
         ImGui::TextColored(kBad, "Mount %d does not exist on this hull.", slot + 1);
         return;
     }
+    if (turret && !draw_turret_hardware(ctx, *turret)) return;
 
     const std::string& fitted = player.gun_mounts[(size_t)slot].gun_id;
     ImGui::Text("MOUNT %d", slot + 1);

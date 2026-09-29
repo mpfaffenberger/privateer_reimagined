@@ -486,7 +486,7 @@ target_include_directories(test_cockpit_overlay PRIVATE
     ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party)
 
 add_executable(test_armament_loadout EXCLUDE_FROM_ALL
-    tools/test_armament_loadout.cpp)
+    tools/test_armament_loadout.cpp src/player.cpp src/commodity.cpp src/json.cpp)
 target_include_directories(test_armament_loadout PRIVATE
     ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party)
 
@@ -628,6 +628,7 @@ add_executable(test_savegame EXCLUDE_FROM_ALL
     tools/test_savegame.cpp
     src/savegame.cpp src/world_clock.cpp src/player.cpp src/plot.cpp src/json.cpp src/faction.cpp
     src/commodity.cpp
+    src/ship_class.cpp src/gun.cpp src/shield.cpp src/mobility.cpp   # pre-v9 turret grandfathering
 )
 target_include_directories(test_savegame PRIVATE
     ${CMAKE_SOURCE_DIR}/src
@@ -733,7 +734,8 @@ add_executable(test_autopilot EXCLUDE_FROM_ALL
     src/hazards.cpp src/faction.cpp)
 add_executable(test_inventory112 EXCLUDE_FROM_ALL
     tools/test_inventory112.cpp src/inventory.cpp src/player.cpp src/json.cpp
-    src/commodity.cpp)
+    src/commodity.cpp src/ship_class.cpp src/gun.cpp src/shield.cpp src/mobility.cpp
+    src/faction.cpp)
 target_compile_definitions(test_inventory112 PRIVATE INVENTORY_HEADLESS)
 add_executable(test_missile EXCLUDE_FROM_ALL
     tools/test_missile.cpp src/missile.cpp src/ship.cpp src/player.cpp

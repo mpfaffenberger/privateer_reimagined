@@ -31,14 +31,16 @@
   // Mount offsets are in WORLD units (firing.cpp body_to_world applies no
   // scale) and ships render ~140u, so guns sit on the wings: mass drivers
   // out near the wingtips, tachyon/particle inboard, turrets at the tail.
+  // turret_slot groups turret mounts into one purchasable position (#145):
+  // the player buys the "rear" turret hardware, then a gun per mount.
   "default_guns": [
     { "offset_body": [-27.2, 4.8, 24.0], "type": "mass_driver" },
     { "offset_body": [ 27.2, 4.8, 24.0], "type": "mass_driver" },
     { "offset_body": [ -8.8, 4.8, 27.2], "type": "tachyon_cannon" },
     { "offset_body": [  8.8, 4.8, 27.2], "type": "particle_cannon" },
 
-    { "offset_body": [-5.6, 0.0, -24.0], "forward_body": [0, 0, -1], "cone_half_angle_deg": 120, "type": "ionic_pulse_cannon", "turret": true },
-    { "offset_body": [ 5.6, 0.0, -24.0], "forward_body": [0, 0, -1], "cone_half_angle_deg": 120, "type": "ionic_pulse_cannon", "turret": true }
+    { "offset_body": [-5.6, 0.0, -24.0], "forward_body": [0, 0, -1], "cone_half_angle_deg": 120, "type": "ionic_pulse_cannon", "turret": true, "turret_slot": "rear" },
+    { "offset_body": [ 5.6, 0.0, -24.0], "forward_body": [0, 0, -1], "cone_half_angle_deg": 120, "type": "ionic_pulse_cannon", "turret": true, "turret_slot": "rear" }
   ],
 
   "energy_max":      250,

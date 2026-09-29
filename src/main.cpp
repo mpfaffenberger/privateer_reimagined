@@ -958,7 +958,10 @@ static bool player_scanner_can_lock() {
 // the single source of truth for muzzle geometry. p.gun_mounts only decides
 // how many hardpoints are FILLED and with what gun, in list order: a brand-
 // new Tarsus fills slots 0 and 1 with its two lasers. Tune muzzle placement in the JSON, never here. Shared by the boot
-// spawn AND the title NEW handler. Unknown / empty gun names fall back to a Laser.
+// spawn AND the title NEW handler. Unknown gun names fall back to a Laser; an
+// EMPTY slot (sold gun, or a turret whose hardware isn't owned, #145/#510)
+// stays in pl.mounts as an inert GunType::Count mount so mount indices keep
+// lining up with p.gun_mounts (armament MFD, swap helper, mount_mods).
 static void apply_player_loadout(Ship& pl, const PlayerState& p, bool heal = true) {
     if (const ShipClass* k = ship_class::find(p.ship_class_name)) pl.klass = k;
     // Per-hull turn rate for the PLAYER. Unlike NPCs (which scale max_ypr by
@@ -1027,9 +1030,14 @@ static void apply_player_loadout(Ship& pl, const PlayerState& p, bool heal = tru
                        : std::min(p.gun_mounts.size(), slots);
     for (size_t i = 0; i < n; ++i) {
         GunMount m = k->default_guns[i];   // position + default type from ship.json
-        if (i < p.gun_mounts.size() && !p.gun_mounts[i].gun_id.empty()) {
-            const GunType t = gun::from_name(p.gun_mounts[i].gun_id);
-            m.type = (t == GunType::Count) ? GunType::Laser : t;   // player gun overrides type only
+        if (!p.gun_mounts.empty()) {
+            const std::string& gun_id = p.gun_mounts[i].gun_id;
+            if (gun_id.empty() || !player::mount_fittable(p, k, (int)i)) {
+                m.type = GunType::Count;                              // inert: nothing fitted
+            } else {
+                const GunType t = gun::from_name(gun_id);
+                m.type = (t == GunType::Count) ? GunType::Laser : t;  // player gun overrides type only
+            }
         }
         // Keep the authored cone: only turrets read it, and clamping it
         // (the old 1-degree override) left player turrets unable to fire (#379).
@@ -1257,9 +1265,7 @@ void build_system_scene(bool first_time, bool show_progress) {
     if (!g_player_ship_override.empty()) {
         if (const ShipClass* k = ship_class::find(g_player_ship_override)) {
             g.player.ship_class_name = g_player_ship_override;
-            g.player.gun_mounts.clear();
-            for (const GunMount& m : k->default_guns)
-                g.player.gun_mounts.push_back(MountSlot{gun::to_name(m.type)});
+            outfitting::fit_stock_guns(g.player, k, /*with_turrets=*/true);
             std::printf("[player] --ship override: flying '%s' with %zu stock guns\n",
                         g_player_ship_override.c_str(), g.player.gun_mounts.size());
         } else {
@@ -1986,19 +1992,15 @@ void build_system_scene(bool first_time, bool show_progress) {
         // POST /inventory/equip — fit the Weapon-kind item at item_index
         // into a gun mount, routing through the SAME inventory::equip_weapon
         // the Cargo Hold screen uses. A negative mount_index means "first
-        // empty mount (else 0)" — resolved here so the screen + dev path
+        // open mount (player::first_open_mount, else 0)" — resolved here so the screen + dev path
         // share one fitting policy. Takes effect on the next launch when
         // apply_player_loadout re-reads gun_mounts onto the live ship.
         dev_remote::set_inventory_equip_hook(
             [](int item_index, int mount_index) {
                 if (mount_index < 0) {
-                    mount_index = 0;
-                    for (int mi = 0; mi < (int)g.player.gun_mounts.size(); ++mi) {
-                        if (g.player.gun_mounts[(size_t)mi].gun_id.empty()) {
-                            mount_index = mi;
-                            break;
-                        }
-                    }
+                    const int open = player::first_open_mount(
+                        g.player, ship_class::find(g.player.ship_class_name));
+                    mount_index = open >= 0 ? open : 0;
                 }
                 const bool ok = inventory::equip_weapon(g.player, item_index, mount_index);
                 std::printf("[dev_remote] inventory/equip: item=%d mount=%d ok=%s\n",

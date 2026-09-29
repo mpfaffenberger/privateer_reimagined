@@ -175,6 +175,11 @@ struct PlayerState {
     // fitted (hull-default range, monochrome, no lock, no ITTS). New games
     // start with k_starting_scanner. Survives hull swaps (#143).
     std::string              scanner_id;
+    // Turret HARDWARE owned on this hull (#145, save v10): TurretSlot ids
+    // ("rear", "top", ...) from the ShipClass. A turret mount in gun_mounts
+    // only takes (and fires) a gun once its slot is listed here. New games
+    // and fresh hulls start empty; buy_hull clears it with the old hull.
+    std::vector<std::string> turrets;
 
     // Discrete buy-once-per-ship flags (np-3dp.27). New games have ALL
     // false, so the starter Tarsus can't jump, has no tractor, etc. until
@@ -408,6 +413,22 @@ int compartment_units_used(const PlayerState& p);
 // existing hidden stack of the same commodity. Takes NO hold capacity.
 bool add_compartment_cargo(PlayerState& p, const std::string& commodity_id,
                            int units);
+
+// ---- gun mounts + turret hardware (#145) ------------------------------------
+// True if the player owns turret hardware for `slot_id` on the current hull.
+bool has_turret(const PlayerState& p, const std::string& slot_id);
+
+// True if a gun may live in gun_mounts[mount]: the hull has that mount and,
+// for a turret mount, the player owns its turret hardware. A null klass
+// (catalog not loaded) accepts any mount >= 0 -- nothing to check against.
+// The single rule every fitting path (dealer, hold, campaign, dev) and the
+// launch-time loadout share.
+bool mount_fittable(const PlayerState& p, const ShipClass* klass, int mount);
+
+// First fittable mount with no gun in it, or -1 when every usable mount is
+// full. Replaces the old "first empty slot" scans, which would happily drop
+// a gun into a turret the player never bought.
+int first_open_mount(const PlayerState& p, const ShipClass* klass);
 
 // ---- ordnance (np-zte.2) ----------------------------------------------------
 // type_index is a MissileType (0=DF,1=HS,2=IR,3=FF,4=TORPEDO); out-of-range

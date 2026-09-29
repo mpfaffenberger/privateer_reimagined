@@ -145,7 +145,9 @@ bool install_upgrade(PlayerState& p, int index);
 // empty MountSlot{} if short), overwrite it with a MountSlot carrying the
 // item's id + rarity (so its WeaponMods follow the gun onto the hull),
 // then erase the consumed item. Returns false (no mutation) on an
-// out-of-range item_index, a negative mount_index, or a non-Weapon item.
+// out-of-range item_index, a non-Weapon item, or a mount that isn't
+// player::mount_fittable on the current hull (negative, past the hull's
+// mounts, or a turret whose hardware isn't installed -- #145).
 // apply_player_loadout (main.cpp) re-applies gun_mounts to the live Ship
 // each launch, so the fitted weapon takes effect on the next spawn.
 bool equip_weapon(PlayerState& p, int item_index, int mount_index);

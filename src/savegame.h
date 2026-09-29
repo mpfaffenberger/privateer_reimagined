@@ -74,7 +74,10 @@ namespace savegame {
 // default to day zero (stardate 2669.135).
 // v9 (#143) added the fitted `scanner_id`. Older saves load with
 // player::k_starting_scanner (a v8 pilot never had one to sell).
-constexpr int k_format_version = 9;
+// v10 (#145) added `turrets`, the owned turret-hardware slot ids. A pre-v10
+// save is grandfathered: every turret slot with a gun already fitted in one
+// of its mounts counts as owned, so an old Centurion keeps its rear turret.
+constexpr int k_format_version = 10;
 
 // Slot 0 is the autosave; manual saves start at 1.
 constexpr int k_autosave_slot = 0;

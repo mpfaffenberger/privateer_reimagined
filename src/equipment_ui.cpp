@@ -95,6 +95,10 @@ std::string zone_state(const PlayerState& player, const Zone& zone,
             if (zone.slot >= 0 && zone.slot < (int)player.gun_mounts.size() &&
                 !player.gun_mounts[(size_t)zone.slot].gun_id.empty())
                 return player.gun_mounts[(size_t)zone.slot].gun_id;
+            if (const TurretSlot* t = schematic_ship
+                    ? schematic_ship->turret_slot_for_mount(zone.slot) : nullptr;
+                t && !player::has_turret(player, t->id))
+                return "NO TURRET";   // #145: turret hardware not bought
             return "EMPTY";
         case Kind::Launcher: {
             if (g_editing) return "LAUNCHER HARDPOINT";
