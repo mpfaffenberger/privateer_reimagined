@@ -37,6 +37,9 @@
     { "offset_body": [ 3.5, 0.0, 3.0], "type": "mass_driver" }
   ],
 
+  // Stock missile rack (#524), from privateer_ship_data.json "Weapons".
+  "default_missiles": { "FF": 6, "HS": 3 },
+
   "energy_max":      240,
   "energy_recharge": 32,
 

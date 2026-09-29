@@ -10,13 +10,14 @@
 #include "faction.h"
 #include "perception.h"
 #include "ship.h"
+#include "ship_class.h"
 #include "ship_registry.h"
 #include "ship_sprite.h"
 #include "world_scale.h"
 
 #include <algorithm>
 #include <cmath>
-#include <cstring>
+#include <iterator>
 
 // ---- per-type stats ---------------------------------------------------------
 // Tuned for "combat feel", not realism. Damage well above gun-per-shot
@@ -34,29 +35,17 @@ const MissileStats g_missile_stats[kMissileTypeCount] = {
     // IR 17cm @850kps. Our muzzle speeds run hotter than canon's kps for
     // demo-scale readability, but the armour-penetration (damage) + lock
     // technique match the source exactly.
-    /* DF */ { "DF", "Dumbfire",       13.0f, 1400.0f, 0.0f, 6.0f, 8000.0f, 60.0f, false, false },
-    /* HS */ { "HS", "Heat-Seeker",    16.0f, 1200.0f, 1.2f, 8.0f, 9000.0f, 90.0f, true,  false },
-    /* IR */ { "IR", "Image-Rec",      17.5f, 1100.0f, 2.4f, 9.0f,10000.0f,100.0f, true,  true  },
+    /* DF */ { k_missile_codes[0], "Dumbfire",       13.0f, 1400.0f, 0.0f, 6.0f, 8000.0f, 60.0f, false, false },
+    /* HS */ { k_missile_codes[1], "Heat-Seeker",    16.0f, 1200.0f, 1.2f, 8.0f, 9000.0f, 90.0f, true,  false },
+    /* IR */ { k_missile_codes[2], "Image-Rec",      17.5f, 1100.0f, 2.4f, 9.0f,10000.0f,100.0f, true,  true  },
     // FF (#144): canon 17cm @900kps, 7200m. Speed/range scaled like HS
     // (same demo-scale bump); steering deliberately IS the HS seeker — FF
     // is "HS that picks its own target", not a better tracker.
-    /* FF */ { "FF", "Friend-or-Foe",  17.0f, 1150.0f, 1.2f, 8.0f, 9000.0f, 90.0f, false, false, true },
-    /* TORP*/ { "TORP","Torpedo",       60.0f,  600.0f, 0.0f,12.0f,14000.0f,100.0f, false, false },
+    /* FF */ { k_missile_codes[3], "Friend-or-Foe",  17.0f, 1150.0f, 1.2f, 8.0f, 9000.0f, 90.0f, false, false, true },
+    /* TORP*/ { k_missile_codes[4],"Torpedo",       60.0f,  600.0f, 0.0f,12.0f,14000.0f,100.0f, false, false },
 };
 
 namespace missile {
-
-MissileType from_name(const char* s) {
-    if (!s) return MissileType::Count;
-    for (int i = 0; i < kMissileTypeCount; ++i)
-        if (std::strcmp(s, g_missile_stats[i].short_name) == 0) return (MissileType)i;
-    return MissileType::Count;
-}
-
-const char* to_name(MissileType t) {
-    const int i = (int)t;
-    return (i >= 0 && i < kMissileTypeCount) ? g_missile_stats[i].short_name : "?";
-}
 
 Missile spawn(MissileType type, const HMM_Vec3& muzzle_pos,
               const HMM_Vec3& forward, const HMM_Vec3& shooter_vel,
@@ -97,12 +86,18 @@ HMM_Vec3 ship_world_pos(const Ship& s) {
     return s.sprite ? s.sprite->position : s.position;
 }
 
-// NPC FF rack tuning (#144). Two rounds keeps a pirate wing dangerous
-// without turning every Talon into a missile boat; the first-launch delay
-// means the opening gun pass comes before the first missile.
-constexpr int   k_pirate_ff_rack       = 2;
-constexpr float k_npc_ff_first_launch_s = 4.0f;
-constexpr float k_npc_ff_refire_s       = 10.0f;
+// NPC rack pacing (#144). The first-launch delay means the opening gun
+// pass comes before the first missile; the refire keeps a deep rack (a
+// Kamekh's ten DFs) a steady threat rather than a single salvo.
+constexpr float k_npc_first_launch_s = 4.0f;
+constexpr float k_npc_refire_s       = 10.0f;
+
+// npc_pick_round's preference: strongest seeker first.
+constexpr MissileType k_npc_fire_order[] = {
+    MissileType::IR, MissileType::HS, MissileType::FF, MissileType::DF,
+};
+static_assert(std::size(k_npc_fire_order) == kMissileRackTypeCount,
+              "every rack type needs a place in the NPC fire order");
 
 HMM_Vec3 ship_forward(const Ship& s) {
     const HMM_Mat4 r = HMM_QToM4(s.orientation);
@@ -131,14 +126,29 @@ uint32_t acquire_iff_target(const ShipRegistry& ships, uint32_t owner_id,
 }
 
 void arm_npc_rack(Ship& s) {
-    s.ff_missiles        = (s.faction == Faction::Pirate) ? k_pirate_ff_rack : 0;
-    s.missile_cooldown_s = k_npc_ff_first_launch_s;
+    s.npc_missiles       = s.klass ? s.klass->default_missiles : MissileRack{};
+    s.missile_cooldown_s = k_npc_first_launch_s;
+    // Pirates' vanilla FF preference (#144) as a refit of the hull's load.
+    if (s.faction == Faction::Pirate) {
+        const int total = rack_total(s.npc_missiles);
+        s.npc_missiles  = MissileRack{};
+        s.npc_missiles[(int)MissileType::FF] = total;
+    }
+}
+
+MissileType npc_pick_round(const MissileRack& rack, bool has_lock) {
+    for (MissileType t : k_npc_fire_order) {
+        if (rack[(int)t] <= 0) continue;
+        if (g_missile_stats[(int)t].needs_lock && !has_lock) continue;
+        return t;
+    }
+    return MissileType::Count;
 }
 
 int npc_launch(std::vector<Missile>& missiles, ShipRegistry& ships, float dt) {
     int launched = 0;
     for (Ship& s : ships) {
-        if (s.is_player || !s.alive || s.ff_missiles <= 0) continue;
+        if (s.is_player || !s.alive || rack_total(s.npc_missiles) <= 0) continue;
         // Shot-out launchers (#141) ground the rack, same as the player's.
         if (!ship_systems::operational(s.systems, ShipSystem::Launchers)) continue;
         // Only mid gun-run (target in arc + range): the refire clock
@@ -148,13 +158,22 @@ int npc_launch(std::vector<Missile>& missiles, ShipRegistry& ships, float dt) {
         s.missile_cooldown_s -= dt;
         if (s.missile_cooldown_s > 0.0f) continue;
 
+        // Lock types lock the AI's own target — the ship it's gun-running
+        // — not an IFF pick. No live target = only FF/DF are eligible.
+        const Ship* tgt = s.ai.target_id ? ships.find_by_id(s.ai.target_id) : nullptr;
+        const bool has_lock = tgt && tgt->alive && tgt->id != s.id;
+        const MissileType type = npc_pick_round(s.npc_missiles, has_lock);
+        if (type == MissileType::Count) continue;   // only lock rounds, no lock
+
         const HMM_Vec3 fwd    = ship_forward(s);
         const HMM_Vec3 muzzle = HMM_AddV3(ship_world_pos(s),
                                           HMM_MulV3F(fwd, ship::hit_radius_m(s)));
-        missiles.push_back(spawn(MissileType::FF, muzzle, fwd, s.world_velocity,
-                                 s.id, /*target: FF self-acquires*/ 0));
-        --s.ff_missiles;
-        s.missile_cooldown_s = k_npc_ff_refire_s;
+        // spawn() keeps the target only for lock types: FF self-acquires
+        // on its first tick, DF flies straight along the nose.
+        missiles.push_back(spawn(type, muzzle, fwd, s.world_velocity,
+                                 s.id, has_lock ? tgt->id : 0));
+        --s.npc_missiles[(int)type];
+        s.missile_cooldown_s = k_npc_refire_s;
         ++launched;
     }
     return launched;

@@ -28,6 +28,10 @@
     { "offset_body": [ 0.0, 0.0, 3.5], "type": "particle_cannon" }
   ],
 
+  // Stock missile rack (#524), from privateer_ship_data.json "Weapons".
+  // Torpedoes omitted: own tube, not an NPC rack.
+  "default_missiles": { "HS": 2 },
+
   "energy_max":      180,
   "energy_recharge": 30,
 

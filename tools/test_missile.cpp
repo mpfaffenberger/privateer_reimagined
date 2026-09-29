@@ -379,28 +379,34 @@ int main() {
     }
 
     // -------------------------------------------------------------------
-    // 9. NPC FF racks (#144): pirates carry them, launch only mid gun-run.
+    // 9. NPC racks (#144, #524): pirates refit FF, launch only mid gun-run.
     // -------------------------------------------------------------------
-    std::printf("\n--- 9. NPC FF racks ---\n");
+    std::printf("\n--- 9. NPC racks: pirate FF + gun-run gate ---\n");
     {
+        const ShipClass* drayman = ship_class::find("drayman");
+        if (!drayman) { std::printf("FATAL: no drayman class\n"); return 1; }
         ShipRegistry ships;
         ShipSpriteObject spr_p, spr_m;
         Ship pir = make_target(*k, spr_p, HMM_V3(0, 0, 0), 9001);
         pir.faction = Faction::Pirate;
         missile::arm_npc_rack(pir);
-        Ship mer = make_target(*k, spr_m, HMM_V3(0, 0, 5000), 9002);
+        Ship mer = make_target(*drayman, spr_m, HMM_V3(0, 0, 5000), 9002);
         mer.faction = Faction::Merchant;
         missile::arm_npc_rack(mer);
-        const int rack = pir.ff_missiles;
-        CHECK("pirates spawn with an FF rack", rack > 0);
-        CHECK("merchants spawn without one", mer.ff_missiles == 0);
+        const int rack = pir.npc_missiles[(int)MissileType::FF];
+        CHECK("pirate Talon refits its hull load as FF",
+              rack == missile::rack_total(k->default_missiles) && rack > 0 &&
+              missile::rack_total(pir.npc_missiles) == rack);
+        CHECK("a hull with no missiles in the data spawns without one",
+              missile::rack_total(mer.npc_missiles) == 0);
         ships.spawn(std::move(pir));
         ships.spawn(std::move(mer));
 
         std::vector<Missile> ms;
         Ship& p = *ships.find_by_id(9001);
         for (int i = 0; i < 30; ++i) missile::npc_launch(ms, ships, 1.0f);
-        CHECK("idle pirate never launches", ms.empty() && p.ff_missiles == rack);
+        CHECK("idle pirate never launches",
+              ms.empty() && p.npc_missiles[(int)MissileType::FF] == rack);
 
         p.ai.state = AIState::Engage;
         p.controller.fire_guns = true;
@@ -408,9 +414,132 @@ int main() {
         for (int i = 0; i < 120; ++i) launched += missile::npc_launch(ms, ships, 1.0f);
         std::printf("  engaged pirate launched %d of %d\n", launched, rack);
         CHECK("engaged pirate empties its rack, one round at a time",
-              launched == rack && p.ff_missiles == 0 && (int)ms.size() == rack);
+              launched == rack && missile::rack_total(p.npc_missiles) == 0 &&
+              (int)ms.size() == rack);
         CHECK("NPC rounds are FF owned by the pirate",
               !ms.empty() && ms[0].type == MissileType::FF && ms[0].owner_id == 9001);
+    }
+
+    // -------------------------------------------------------------------
+    // 10. Hull missile loadouts (#524): typed racks from ship data, lock
+    //     types lock the AI's target, DF flies the nose, cooldowns hold.
+    // -------------------------------------------------------------------
+    std::printf("\n--- 10. hull missile loadouts ---\n");
+    {
+        const auto rack_of = [](const char* hull) {
+            const ShipClass* c = ship_class::find(hull);
+            return c ? c->default_missiles : MissileRack{};
+        };
+        const auto rack_is = [](const MissileRack& r, int df, int hs, int ir, int ff) {
+            return r[(int)MissileType::DF] == df && r[(int)MissileType::HS] == hs &&
+                   r[(int)MissileType::IR] == ir && r[(int)MissileType::FF] == ff;
+        };
+        CHECK("Talon hull: HS x2",            rack_is(rack_of("talon"),      0, 2, 0, 0));
+        CHECK("Centurion hull: FF x2, IR x2", rack_is(rack_of("centurion"),  0, 0, 2, 2));
+        CHECK("Broadsword hull: FF x6, HS x3",rack_is(rack_of("broadsword"), 0, 3, 0, 6));
+        CHECK("Gothri hull: FF1 DF1 IR3",     rack_is(rack_of("gothri"),     1, 0, 3, 1));
+        CHECK("Kamekh hull: DF10 IR2 HS1",    rack_is(rack_of("kamekh"),    10, 1, 2, 0));
+        CHECK("Paradigm hull: DF10 IR2 HS1",  rack_is(rack_of("paradigm"),  10, 1, 2, 0));
+        CHECK("Demon rack is HS x2 (torpedoes stay off it)",
+              rack_is(rack_of("demon"), 0, 2, 0, 0));
+
+        // Non-pirates keep the hull load as authored.
+        if (const ShipClass* bs = ship_class::find("broadsword")) {
+            Ship s = ship::spawn(*bs);
+            s.faction = Faction::Confed;
+            missile::arm_npc_rack(s);
+            CHECK("Confed Broadsword flies its hull rack",
+                  rack_is(s.npc_missiles, 0, 3, 0, 6));
+        } else {
+            CHECK("broadsword class loaded", false);
+        }
+
+        // Fire order: strongest seeker first; lock types need a lock.
+        MissileRack all{};
+        all.fill(1);
+        MissileRack lock_only{};
+        lock_only[(int)MissileType::HS] = 2;
+        CHECK("IR goes first with a lock",
+              missile::npc_pick_round(all, true) == MissileType::IR);
+        CHECK("no lock skips IR/HS for FF",
+              missile::npc_pick_round(all, false) == MissileType::FF);
+        all[(int)MissileType::FF] = 0;
+        CHECK("no lock, no FF: DF along the nose",
+              missile::npc_pick_round(all, false) == MissileType::DF);
+        CHECK("lock-only rack holds fire without a lock",
+              missile::npc_pick_round(lock_only, false) == MissileType::Count);
+        CHECK("empty rack picks nothing",
+              missile::npc_pick_round(MissileRack{}, true) == MissileType::Count);
+
+        // Engaged NPC helper: armed from `hull`, mid gun-run on `target`.
+        const auto engaged = [&](const char* hull, ShipSpriteObject& spr,
+                                 uint32_t id, uint32_t target) {
+            Ship s = make_target(*ship_class::find(hull), spr, HMM_V3(0, 0, 0), id);
+            s.faction = Faction::Militia;
+            missile::arm_npc_rack(s);
+            s.ai.state             = AIState::Engage;
+            s.ai.target_id         = target;
+            s.controller.fire_guns = true;
+            return s;
+        };
+
+        // IR locks the AI's target -- a merchant nobody's IFF reads hostile
+        // (no perception tick), so an IFF pick would have found nothing.
+        {
+            ShipRegistry ships;
+            ShipSpriteObject spr_c, spr_t;
+            ships.spawn(engaged("centurion", spr_c, 10001, 10002));
+            Ship tgt = make_target(*k, spr_t, HMM_V3(0, 0, 3000), 10002);
+            tgt.faction = Faction::Merchant;
+            ships.spawn(std::move(tgt));
+
+            std::vector<Missile> ms;
+            for (int i = 0; i < 4 && ms.empty(); ++i) missile::npc_launch(ms, ships, 1.0f);
+            const Ship& c = *ships.find_by_id(10001);
+            CHECK("Centurion's first round is IR",
+                  ms.size() == 1 && ms[0].type == MissileType::IR);
+            CHECK("IR is locked on the AI's target, not an IFF pick",
+                  !ms.empty() && ms[0].target_id == 10002 && ms[0].owner_id == 10001);
+            CHECK("the launched round left the rack",
+                  c.npc_missiles[(int)MissileType::IR] == 1 &&
+                  c.npc_missiles[(int)MissileType::FF] == 2);
+        }
+
+        // No AI target: a lock-only rack (Stiletto HS x2) holds fire.
+        {
+            ShipRegistry ships;
+            ShipSpriteObject spr;
+            ships.spawn(engaged("stiletto", spr, 10101, /*target*/ 0));
+            std::vector<Missile> ms;
+            for (int i = 0; i < 30; ++i) missile::npc_launch(ms, ships, 1.0f);
+            CHECK("HS-only NPC without a target never launches",
+                  ms.empty() && ships.find_by_id(10101)->npc_missiles[(int)MissileType::HS] == 2);
+        }
+
+        // DF flies the nose, untargeted; first launch + refire cooldowns hold.
+        {
+            ShipRegistry ships;
+            ShipSpriteObject spr_d, spr_t;
+            ships.spawn(engaged("dralthi", spr_d, 10201, 10202));
+            ships.spawn(make_target(*k, spr_t, HMM_V3(0, 0, 3000), 10202));
+
+            std::vector<Missile> ms;
+            int first_at = -1, second_at = -1;
+            for (int step = 1; step <= 20; ++step) {
+                const size_t before = ms.size();
+                missile::npc_launch(ms, ships, 1.0f);
+                if (ms.size() == before) continue;
+                if (first_at < 0) { first_at = step; continue; }
+                second_at = step;
+                break;
+            }
+            std::printf("  Dralthi DF launches at t=%ds and t=%ds\n", first_at, second_at);
+            CHECK("first launch waits out the opening gun pass (4 s)", first_at == 4);
+            CHECK("refire cooldown holds (10 s)", second_at == first_at + 10);
+            CHECK("Dralthi fires DF, untargeted, straight along its nose",
+                  !ms.empty() && ms[0].type == MissileType::DF && ms[0].target_id == 0 &&
+                  std::fabs(ms[0].heading.Z - 1.0f) < 1e-4f);
+        }
     }
 
     std::printf("\n=== %s ===\n", g_fail == 0 ? "ALL CHECKS PASSED" : "FAILURES DETECTED");

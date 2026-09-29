@@ -29,6 +29,10 @@
     { "offset_body": [ 1.5, 0.0, 3.5], "type": "meson_blaster" }
   ],
 
+  // Stock missile rack (#524), from privateer_ship_data.json "Weapons".
+  // Torpedoes omitted: own tube, not an NPC rack.
+  "default_missiles": { "HS": 2 },
+
   "energy_max":      200,
   "energy_recharge": 32,
 
