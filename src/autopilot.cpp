@@ -120,10 +120,9 @@ void tick(Autopilot& a, Camera& cam, const StarSystem& system,
     }
     if (a.phase == AutopilotPhase::Idle) return;
 
-    // Hostile gate, re-checked every engaged frame. Stub returns false
-    // today (np-ma2.3 seam) so this never trips yet — but it's wired:
-    // the moment the director spawns hostiles in range we drop out and
-    // hand control back, exactly like the OG.
+    // Hostile gate, re-checked every engaged frame: if a live hostile is
+    // inside k_threat_radius_m we drop out and hand control back, exactly
+    // like the original (threat::hostiles_near, backed by the ship registry).
     if (threat::hostiles_near(cam.position, k_threat_radius_m)) {
         std::printf("[autopilot] HOSTILES detected — dropping autopilot\n");
         disengage(a, cam, "AUTOPILOT DISENGAGED - HOSTILES");

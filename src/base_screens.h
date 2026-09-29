@@ -2,17 +2,16 @@
 // -----------------------------------------------------------------------------
 // base_screens.h — Privateer-style 2D base screens (concourse + sub-screens).
 //
-// What replaces the np-eag.2 "LANDED @ x — base screens TBD" stub. While
-// the game is in GameMode::Landed (game_state.h) we render a full-screen
+// While the game is in GameMode::Landed (game_state.h) we render a full-screen
 // concourse image for the docked base, draw clickable hotspot regions over
 // it, and let the player walk a tiny screen stack:
 //
 //   Concourse (the hub)
 //     ├─ Bar               — fixers (fixers.cpp registers the body, #137)
-//     ├─ Commodity Exchange— buy/sell goods            (np-9cu.2 fills in)
-//     ├─ Ship Dealer       — hulls                     (np-9cu.3 fills in)
-//     ├─ Equipment         — guns/shields/engines      (np-9cu.3 fills in)
-//     ├─ Mission Computer  — generated missions        (np-zte.1 fills in)
+//     ├─ Commodity Exchange— buy/sell goods            (economy.cpp)
+//     ├─ Ship Dealer       — hulls                     (outfitting.cpp)
+//     ├─ Equipment         — guns/shields/engines      (outfitting.cpp)
+//     ├─ Mission Computer  — generated missions        (missions.cpp)
 //     └─ Launch            — back to Flight (docking::launch)
 //
 // Data-driven, no hardcoded layouts: every base is described by

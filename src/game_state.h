@@ -6,12 +6,12 @@
 //
 //   Flight  — the normal sim: camera physics, AI, projectiles, rendering.
 //             Everything the game has done since Stage 1 lives here.
-//   Landed  — docked at a base/planet. Eventually the concourse / bar /
-//             commodity exchange screens; today a stub screen.
-//   Dying   — the player ship was destroyed. Eventually an eject/death
-//             cinematic + "load save?" prompt; today a stub screen.
-//   Loading — a save is being deserialized / a system is being swapped
-//             in. Eventually a progress screen; today a stub screen.
+//   Landed  — docked at a base/planet: the concourse and its sub-screens
+//             (base_screens.h).
+//   Dying   — the player ship was destroyed: a timed death cinematic over
+//             the still-running sim, then back to the title screen.
+//   Loading — a system is being swapped in (the jump flash). There is no
+//             progress screen; non-jump loads show a one-line label.
 //
 // Why a deferred-transition API instead of just assigning `mode`?
 // A mode flip mid-frame is a footgun: half the frame's systems would run

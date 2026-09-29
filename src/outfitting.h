@@ -27,9 +27,8 @@
 // engine_level is folded into the player's effective top speed by scaling the
 // camera's speed caps off the hull's cruise/afterburner numbers. See
 // effective_speed_caps + the note in outfitting.cpp; main.cpp applies it on
-// launch and at startup. (This is the engine-multiplier wiring the np-9cu.3
-// brief asked for; the ship.cpp:305 TODO it referenced is actually about the
-// SHIELD effect_pct, a separate concern left in place — see that comment.)
+// launch and at startup. (The SHIELD effect_pct TODO in ship.cpp is a
+// separate concern; see that comment.)
 //
 // The pricing + transaction MODEL is pure data (no ImGui) so the offline
 // harness (tools/test_outfitting.cpp) links it under OUTFITTING_HEADLESS,

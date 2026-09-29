@@ -3594,11 +3594,11 @@ void publish_dev_remote_snapshots() {
     }
 }
 
-// ---- non-Flight stub screens ------------------------------------------------
+// ---- non-Flight screens (Landed / Loading) ----------------------------------
 //
-// Landed / Dying / Loading don't have real screens yet (np-eag.2 only adds
-// the state machine). Each renders a dark clear + a one-line debugtext
-// label so it's unmistakable which mode you're in, plus the debug panel
+// Landed draws the base screens. Loading draws the jump flash, or a
+// one-line debugtext label for a non-jump load. (Dying never gets here: its
+// death cinematic runs in the normal flight frame.) Both keep the debug panel
 // (so the Game Mode combo can drive you back out) and the dev_remote
 // hooks (so /screenshot keeps working for validation). Escape returns to
 // Flight — wired in event_cb. ASCII-only labels because the sokol
@@ -4299,7 +4299,7 @@ void frame_cb() {
         respawn_player(/*to_title=*/true);
     }
 
-    // Landed / Loading render a stub screen and skip the entire sim +
+    // Landed (base screens) and Loading (jump flash) skip the entire sim +
     // render path below. Flight (and the Dying cinematic) fall through.
     if (g.game.mode != GameMode::Flight && g.game.mode != GameMode::Dying) {
         frame_stub();

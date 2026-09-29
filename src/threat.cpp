@@ -25,8 +25,8 @@ namespace threat {
 
 namespace {
 // Non-owning view of the world, set by main.cpp at system load. Null
-// until then (and again after teardown) — the query degrades to the
-// original always-false stub, so the startup window stays crash-free.
+// until then (and again after teardown), when every query answers "no
+// threat", so the startup window stays crash-free.
 const ShipRegistry*     g_ships = nullptr;
 const PlayerReputation* g_rep   = nullptr;
 
