@@ -10,8 +10,8 @@ Why generate instead of hand-edit:
     one source of truth, idempotent re-run. DRY.
 
 Layout:
-    Alpha-sorted ships → row-major grid (cols × rows). Default 12 × 9 =
-    108 slots — fits today's set with zero waste. If the set grows past
+    Alpha-sorted ships → row-major grid (cols × rows). Default 6 columns,
+    matching the in-game showroom layout (#474). If the set grows past
     that the grid auto-expands (rows increase, cols held constant) so
     the showroom stays rectangular.
 
@@ -339,7 +339,7 @@ def build_showroom(stems: list[str], cols: int, spacing: float,
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--cols",    type=int,   default=12,
+    p.add_argument("--cols",    type=int,   default=6,
                    help="ships per row in the grid (default: 12)")
     p.add_argument("--spacing", type=float, default=400.0,
                    help="distance between adjacent ships in metres (default: 400)")
