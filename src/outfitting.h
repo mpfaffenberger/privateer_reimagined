@@ -150,7 +150,7 @@ bool sell_cargo_expansion(PlayerState& p);
 // jump eligibility, ECM breaks missile locks, etc.). Known items:
 //   * jump_drive      — allows taking a jump gate (the J prompt)
 //   * ecm_lN (N=1..3) — passive missile-lock break chance per second
-//   * repair_droid    — hull repair while flying
+//   * repair_droid    — in-flight component repair (ship_systems::droid_tick)
 //   * adv_repair_droid (Righteous Fire) — repair_droid twice as fast
 //   * tractor_beam    — pull loot cargo
 int64_t discrete_price(const std::string& item);

@@ -209,4 +209,63 @@ inline float shield_regen_mult(const ShipSystems& ss) {
     return integrity(ss, ShipSystem::ShieldGen);
 }
 
+// ---- repair droid (#517) -----------------------------------------------------
+// Canon (gamefaq 4.6.7): "Repairs your damage except to armor and weapons.
+// Cannot repair destroyed items." So the droid only ever touches installed,
+// damaged-but-alive, non-weapon systems; guns/launchers, 0% wrecks and hull
+// armor stay a repair-desk job. The Righteous Fire advanced droid runs 2x.
+//
+// Integrity restored per second of flight. A 1.8 cm laser bolt's worth of
+// damage (~14%) takes the standard droid ~30 s to patch.
+inline constexpr float k_droid_repair_per_s = 0.005f;
+inline constexpr float k_adv_droid_mult     = 2.0f;
+
+// Repair rate for the fitted droid (0 = no droid).
+inline constexpr float droid_rate(bool has_droid, bool advanced) {
+    return !has_droid ? 0.0f
+         : k_droid_repair_per_s * (advanced ? k_adv_droid_mult : 1.0f);
+}
+
+// The droid's work queue, survival first: get moving, get shields back, see,
+// then the get-home/loot gear. Weapons are deliberately absent (canon).
+// A FIXED order (rather than most-damaged-first) keeps droid_tick stateless
+// AND frame-rate independent: greedy-most-damaged alternates between tied
+// parts at 60 Hz but not in one big tick.
+inline constexpr ShipSystem k_droid_priority[] = {
+    ShipSystem::Engines, ShipSystem::ShieldGen, ShipSystem::Radar,
+    ShipSystem::JumpDrive, ShipSystem::Tractor,
+};
+
+// Damaged but not destroyed: the only state the droid can do anything about.
+inline bool droid_fixable(const ShipSystems& ss, ShipSystem s) {
+    return damaged(ss, s) && operational(ss, s);
+}
+
+// First fixable system in priority order; Count when the droid is idle.
+inline ShipSystem droid_target(const ShipSystems& ss) {
+    for (ShipSystem s : k_droid_priority)
+        if (droid_fixable(ss, s)) return s;
+    return ShipSystem::Count;
+}
+
+// Spend rate_per_s * dt of integrity on droid_target(), carrying any
+// leftover into the next target so one 30 s tick == 1800 ticks of 1/60 s.
+// Returns the last system worked on, or Count if the droid had nothing to do.
+inline ShipSystem droid_tick(ShipSystems& ss, float rate_per_s, float dt) {
+    float budget = rate_per_s * dt;
+    ShipSystem last = ShipSystem::Count;
+    while (budget > 0.0f) {
+        const ShipSystem s = droid_target(ss);
+        if (s == ShipSystem::Count) break;
+        float& v = ss.integrity[(int)s];
+        const float step = std::min(budget, 1.0f - v);
+        v += step;
+        budget -= step;
+        // Snap float dust to a clean 1 so "repaired" is exact.
+        if (v > 1.0f - 1e-4f) v = 1.0f;
+        last = s;
+    }
+    return last;
+}
+
 } // namespace ship_systems

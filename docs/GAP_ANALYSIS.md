@@ -141,8 +141,9 @@ NPC-buffed repair hull, one fixed mission-board seed) now match the game.
    Armor-penetrating hits damage guns, launchers, engines, shield gen,
    radar, jump drive or tractor (`ship_systems.h`, player and NPCs alike);
    the `R` page shows live integrity (`cockpit_damage.cpp`); the repair
-   desk prices each component; save v11 persists it. The Repair Droid is
-   still sold but does nothing in flight ([#517]).
+   desk prices each component; save v11 persists it. The Repair Droid now
+   patches damaged non-weapon components in flight (advanced = 2x); weapons,
+   destroyed parts and armor stay base-only, per canon ([#517]) **(done)**.
 2. **Friend-or-Foe missiles** ([#144]) **(done)**. `MissileType::FF`
    needs no lock and seeks the nearest ship the shooter's IFF reads as
    hostile, re-acquiring when its mark dies. Sold at the dealer, saved
@@ -253,8 +254,8 @@ judgment call ([#323] was a duplicate of [#322]).
 
 ## 4. Suggested attack order
 
-1. **Component damage + Damage Control MFD ([#141]) (done).** Next up
-   there: make the Repair Droid fix components in flight ([#517]).
+1. **Component damage + Damage Control MFD ([#141]) (done)**, plus the
+   in-flight Repair Droid ([#517]) **(done)**.
 2. **Scanner tiers ([#143]) → FF missiles ([#144])**, then purchasable turrets ([#145]/[#379]). All small and
    data-driven.
 3. **Presentation:** HDR/bloom ([#488]/[#489]), normal maps ([#473]), Orion

@@ -9,6 +9,8 @@
 //      regen, a dead radar shrinks perception::radar_range_m.
 //   3. Repair desk (repair.cpp): per-component quote, paid repair_system,
 //      refusal when broke, and repair_hull leaving components alone.
+//   4. Repair droid (#517): canon limits (no weapons, no wrecks, no armor),
+//      fixed priority queue, 2x advanced rate, frame-rate independence.
 //
 // Hand-built ShipClass/ShieldType, so no asset tables are loaded.
 //   cmake --build build --target test_ship_systems && ./build/test_ship_systems
@@ -224,14 +226,84 @@ void test_repair(const TestHull& hull) {
           "hull repair leaves components broken (sold separately)");
 }
 
+void test_repair_droid(const TestHull& hull) {
+    std::printf("\n--- 4. repair droid ---\n");
+    using namespace ship_systems;
+
+    const float base = droid_rate(true, false);
+    check(droid_rate(false, false) == 0.0f && droid_rate(false, true) == 0.0f,
+          "no droid -> rate 0 (adv flag alone does nothing)");
+    check(base > 0.0f && near(droid_rate(true, true), base * k_adv_droid_mult) &&
+          near(k_adv_droid_mult, 2.0f), "advanced droid runs 2x");
+
+    ShipSystems ss;
+    ss.integrity[(int)ShipSystem::Guns]      = 0.3f;  // weapon: desk only
+    ss.integrity[(int)ShipSystem::Launchers] = 0.3f;  // weapon: desk only
+    ss.integrity[(int)ShipSystem::JumpDrive] = 0.0f;  // wreck: desk only
+    ss.integrity[(int)ShipSystem::Radar]     = 0.2f;
+    ss.integrity[(int)ShipSystem::Engines]   = 0.4f;
+    check(droid_target(ss) == ShipSystem::Engines,
+          "engines first by priority, even when radar is worse");
+
+    check(droid_tick(ss, base, 10.0f) == ShipSystem::Engines &&
+          near(integrity(ss, ShipSystem::Engines), 0.4f + base * 10.0f) &&
+          near(integrity(ss, ShipSystem::Radar), 0.2f),
+          "one tick spends rate * dt on the target only");
+
+    // Long enough to fix everything it's allowed to, several times over.
+    droid_tick(ss, base, 10000.0f);
+    check(integrity(ss, ShipSystem::Engines) == 1.0f &&
+          integrity(ss, ShipSystem::Radar) == 1.0f,
+          "leftover budget carries over: engines then radar fully restored");
+    check(near(integrity(ss, ShipSystem::Guns), 0.3f) &&
+          near(integrity(ss, ShipSystem::Launchers), 0.3f),
+          "weapons are never touched");
+    check(integrity(ss, ShipSystem::JumpDrive) == 0.0f,
+          "destroyed components stay destroyed");
+    check(droid_target(ss) == ShipSystem::Count &&
+          droid_tick(ss, base, 1.0f) == ShipSystem::Count,
+          "nothing repairable -> idle");
+
+    ShipSystems uninstalled;
+    uninstalled.integrity[(int)ShipSystem::Tractor] = 0.5f;
+    uninstalled.installed[(int)ShipSystem::Tractor] = false;
+    check(droid_tick(uninstalled, base, 1000.0f) == ShipSystem::Count,
+          "uninstalled hardware is ignored");
+
+    // Frame-rate independence across a target switch; the 0.1 budget runs
+    // out partway through the second part, so any order drift would show.
+    ShipSystems drip, lump;
+    for (ShipSystems* t : { &drip, &lump }) {
+        t->integrity[(int)ShipSystem::Radar]   = 0.95f;
+        t->integrity[(int)ShipSystem::Tractor] = 0.90f;
+    }
+    for (int i = 0; i < 1200; ++i) droid_tick(drip, base, 1.0f / 60.0f);
+    droid_tick(lump, base, 20.0f);
+    check(integrity(lump, ShipSystem::Radar) == 1.0f &&
+          near(integrity(lump, ShipSystem::Tractor), 0.95f),
+          "20 s: radar finished, then tractor 0.90 -> 0.95");
+    check(std::fabs(integrity(drip, ShipSystem::Radar) - integrity(lump, ShipSystem::Radar)) < 1e-3f &&
+          std::fabs(integrity(drip, ShipSystem::Tractor) - integrity(lump, ShipSystem::Tractor)) < 1e-3f,
+          "1200 x 1/60 s == 1 x 20 s");
+
+    // Armor is not the droid's job.
+    Ship s = hull.spawn();
+    s.armor_fore_cm = 1.0f;
+    s.systems.integrity[(int)ShipSystem::ShieldGen] = 0.5f;
+    droid_tick(s.systems, droid_rate(true, true), 1000.0f);
+    check(s.armor_fore_cm == 1.0f && integrity(s.systems, ShipSystem::ShieldGen) == 1.0f,
+          "droid fixes the shield gen but leaves armor alone");
+}
+
 } // namespace
 
 int main() {
-    std::printf("=== #141 per-component damage harness ===\n");
+    std::printf("=== #141/#517 per-component damage + repair droid harness ===\n");
     const TestHull hull;
     test_pure_model();
     test_damage_pipeline(hull);
     test_repair(hull);
+    test_repair_droid(hull);
     std::printf("\n=== %s ===\n", g_fail == 0 ? "ALL CHECKS PASSED" : "FAILURES DETECTED");
     return g_fail == 0 ? 0 : 1;
 }
