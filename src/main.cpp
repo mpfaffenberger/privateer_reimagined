@@ -1096,6 +1096,17 @@ static jump::Eligibility player_jump_eligibility() {
                           drive);
 }
 
+// Engage a Ready jump (#512): queue the destination + arrival gate and flip
+// to the Loading hyperspace cinematic; execute_jump() does the warp. ONE
+// place shared by the J key and the dev drivers (/jump hook, jump soak) so
+// the dev paths keep proving the real J path. Caller has checked Ready.
+static void engage_jump(const jump::Eligibility& e) {
+    g.pending_jump_system = e.dest_id;
+    g.pending_jump_nav    = e.arrival_nav;
+    sfx::jump();
+    game_state::request_mode(g.game, GameMode::Loading);
+}
+
 void build_system_scene(bool first_time, bool show_progress) {
     const bool report_progress = first_time || show_progress;
     if (report_progress)
@@ -1759,10 +1770,7 @@ void build_system_scene(bool first_time, bool show_progress) {
                 if (e.status == jump::Status::Ready) {
                     std::printf("[dev_remote] /jump %s -> %s engaging\n",
                                 g.player.current_system.c_str(), e.dest_id.c_str());
-                    g.pending_jump_system = e.dest_id;
-                    g.pending_jump_nav    = e.arrival_nav;
-                    sfx::jump();
-                    game_state::request_mode(g.game, GameMode::Loading);
+                    engage_jump(e);
                 } else {
                     std::printf("[dev_remote] /jump refused at %s: %s\n",
                                 nav.c_str(), jump::status_str(e.status));
@@ -3083,10 +3091,7 @@ void update_dev_jump_soak(float dt) {
     std::printf("[dev] --dev-jump-soak: auto-J %s -> %s via %s (%d remaining)\n",
                 g.player.current_system.c_str(), e.dest_id.c_str(),
                 gate.name.c_str(), g.dev_jump_remaining - 1);
-    g.pending_jump_system = e.dest_id;
-    g.pending_jump_nav    = e.arrival_nav;
-    sfx::jump();
-    game_state::request_mode(g.game, GameMode::Loading);
+    engage_jump(e);
 
     --g.dev_jump_remaining;
     if (g.dev_jump_remaining <= 0) g.dev_jump_quit = true;
@@ -7461,10 +7466,7 @@ void event_cb(const sapp_event* ev) {
                 std::printf("[jump] %s -> %s via %s (%.0fu out) — engaging\n",
                             g.player.current_system.c_str(), e.dest_id.c_str(),
                             src_nav, e.distance_m);
-                g.pending_jump_system = e.dest_id;
-                g.pending_jump_nav    = e.arrival_nav;
-                sfx::jump();
-                game_state::request_mode(g.game, GameMode::Loading);
+                engage_jump(e);
             } else if (e.status != jump::Status::NotJumpNav) {
                 if (e.status == jump::Status::NoRoute) {
                     const std::string& nm = g.system.nav_points[e.nav_index].name;
