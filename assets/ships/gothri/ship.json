@@ -16,7 +16,6 @@
 
   "personality":       "standard",
 
-  "radar_range":   25000,
   "weapons_range": 5000,
 
   "max_engine_level": 2,

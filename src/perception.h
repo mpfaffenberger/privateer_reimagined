@@ -87,4 +87,10 @@ namespace perception {
 // vector walk.
 void tick(ShipRegistry& ships, const PlayerReputation& player_rep);
 
+// The ONE radar/sensor radius for any ship, player included: its hull's
+// ShipClass::radar_range, or k_default_radar_range_m when class-less.
+// Perception, target locking, the T-cycle, and the radar MFD all read this,
+// so what you can see, lock, and draw can never disagree (#492).
+float radar_range_m(const Ship& s);
+
 } // namespace perception
