@@ -83,8 +83,8 @@ constexpr double k_sell_refund_pct = 0.75;
 constexpr int64_t k_missile_launcher_sell_price = 7500;   // 75% of 10 000
 constexpr int64_t k_torpedo_launcher_sell_price = 1875;  // 75% of 2 500
 
-// Per-missile dealer price by MissileType index (0=DF, 1=HS, 2=IR).
-// Canonical gamefaq prices: 20 / 35 / 75. Out-of-range -> 0.
+// Per-missile dealer price by MissileType index (0=DF, 1=HS, 2=IR, 3=FF).
+// Canonical gamefaq prices: 20 / 35 / 75; FF 100 is tuned. Out-of-range -> 0.
 int64_t missile_price(int type);
 
 // Compute total rack size for missiles, given the launchers the player owns.
@@ -108,7 +108,7 @@ bool right_hardpoint_free(const PlayerState& p);
 // Total missiles currently loaded across all types.
 int missiles_total(const PlayerState& p);
 
-// Buy `count` missiles of `type` (0=DF/1=HS/2=IR) at missile_price each,
+// Buy `count` missiles of `type` (0=DF/1=HS/2=IR/3=FF) at missile_price each,
 // capped so the rack never exceeds the player's capacity. Returns false
 // (no spend) when the type/count is invalid, the rack is full, or the
 // player can't afford the FULL count.
@@ -148,20 +148,7 @@ bool sell_torpedo_launcher_right(PlayerState& p);
 
 // Sell-back for a single round of missile / torpedo ammo at full price.
 // Refuses if the rack has zero of that type (nothing to sell).
-bool sell_missile(PlayerState& p, int type);   // type is 0=DF,1=HS,2=IR
+bool sell_missile(PlayerState& p, int type);   // type is 0=DF,1=HS,2=IR,3=FF
 bool sell_torpedo(PlayerState& p);   // single round at a time
-
-// Per-missile dealer price by MissileType index (0=DF, 1=HS, 2=IR).
-// Canonical gamefaq prices: 20 / 35 / 75. Out-of-range -> 0.
-int64_t missile_price(int type);
-
-// Total missiles currently loaded across all types.
-int missiles_total(const PlayerState& p);
-
-// Buy `count` missiles of `type` (0=DF/1=HS/2=IR) at missile_price each,
-// capped so the rack never exceeds k_missile_capacity total. Returns false
-// (no spend) when the type/count is invalid, the rack is full, or the
-// player can't afford the FULL count.
-bool buy_missiles(PlayerState& p, int type, int count);
 
 } // namespace repair

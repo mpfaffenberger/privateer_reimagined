@@ -26,9 +26,25 @@ namespace {
 constexpr double k_credits_per_armor_cm = 20.0;   // hull repair
 // k_credits_per_fuel removed: afterburner now shares the ship's energy bank
 // (recharges for free, no top-off service to sell).
-// Per-missile price, indexed by MissileType (DF/HS/IR). Canonical Privateer
-// (gamefaq): Dumb-Fire 20, Heat-Seeker 35, Image-Rec 75.
-constexpr int64_t k_missile_price[3] = { 20, 35, 75 };
+// Per-missile price, indexed by MissileType (DF/HS/IR/FF). Canonical Privateer
+// (gamefaq): Dumb-Fire 20, Heat-Seeker 35, Image-Rec 75. FF (#144) is tuned,
+// not sourced: priced above IR because it needs no lock at all.
+constexpr int64_t k_missile_price[k_missile_rack_types] = { 20, 35, 75, 100 };
+
+// "DF/HS/IR/FF = a/b/c/d" for the dealer logs, so every log line agrees on
+// the rack layout instead of hand-listing indices.
+static_assert(k_missile_rack_types == 4, "rack_summary lists every rack type");
+struct RackSummary { char text[64]; };
+RackSummary rack_summary(const PlayerState& p) {
+    RackSummary r;
+    std::snprintf(r.text, sizeof r.text, "DF/HS/IR/FF = %d/%d/%d/%d",
+                  p.missiles[0], p.missiles[1], p.missiles[2], p.missiles[3]);
+    return r;
+}
+
+bool valid_rack_type(int type) {
+    return type >= 0 && type < k_missile_rack_types;
+}
 
 // Per-torpedo price (single rate). Torpedoes don't split into DF/HS/IR
 // variants in Privateer canon -- there's just one Proton Torpedo.
@@ -87,7 +103,7 @@ Quote quote(const Ship* ship, const PlayerState& p) {
         q.fuel_cost = 0;
     }
 
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < k_missile_rack_types; ++i) {
         const int need = player::k_new_game_missiles[i] - p.missiles[i];
         if (need > 0) {
             q.missiles_low = true;
@@ -138,7 +154,7 @@ bool repair_hull(Ship& ship, PlayerState& p) {
 }
 
 int64_t missile_price(int type) {
-    return (type >= 0 && type < 3) ? k_missile_price[type] : 0;
+    return valid_rack_type(type) ? k_missile_price[type] : 0;
 }
 
 int missile_rack_capacity(const PlayerState& p) {
@@ -168,7 +184,9 @@ bool right_hardpoint_free(const PlayerState& p) {
 }
 
 int missiles_total(const PlayerState& p) {
-    return p.missiles[0] + p.missiles[1] + p.missiles[2];
+    int total = 0;
+    for (int m : p.missiles) total += m;
+    return total;
 }
 
 int64_t torpedo_price() {
@@ -180,7 +198,7 @@ int torpedoes_total(const PlayerState& p) {
 }
 
 bool buy_missiles(PlayerState& p, int type, int count) {
-    if (type < 0 || type >= 3 || count <= 0) {
+    if (!valid_rack_type(type) || count <= 0) {
         std::printf("[repair] buy missiles refused: bad type/count %d x%d\n", type, count);
         return false;
     }
@@ -199,10 +217,8 @@ bool buy_missiles(PlayerState& p, int type, int count) {
         return false;
     }
     player::add_missiles(p, type, n);
-    std::printf("[repair] bought %d type%d missile(s) | DF/HS/IR = %d/%d/%d | "
-                "paid %lld | credits %lld\n",
-                n, type, p.missiles[0], p.missiles[1], p.missiles[2],
-                (long long)cost, (long long)p.credits);
+    std::printf("[repair] bought %d type%d missile(s) | %s | paid %lld | credits %lld\n",
+                n, type, rack_summary(p).text, (long long)cost, (long long)p.credits);
     return true;
 }
 
@@ -344,7 +360,7 @@ bool sell_torpedo_launcher_right(PlayerState& p) {
 }
 
 bool sell_missile(PlayerState& p, int type) {
-    if (type < 0 || type >= 3) {
+    if (!valid_rack_type(type)) {
         std::printf("[repair] sell missile refused: bad type %d\n", type);
         return false;
     }
@@ -355,8 +371,8 @@ bool sell_missile(PlayerState& p, int type) {
     }
     --p.missiles[type];
     player::add_credits(p, k_missile_price[type]);
-    std::printf("[repair] sold 1 type%d missile | now %d/%d/%d | +%lld | credits %lld\n",
-                type, p.missiles[0], p.missiles[1], p.missiles[2],
+    std::printf("[repair] sold 1 type%d missile | %s | +%lld | credits %lld\n",
+                type, rack_summary(p).text,
                 (long long)k_missile_price[type], (long long)p.credits);
     return true;
 }
@@ -385,13 +401,12 @@ bool rearm(PlayerState& p) {
                     (long long)q.missile_cost, (long long)p.credits);
         return false;
     }
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < k_missile_rack_types; ++i) {
         const int need = player::k_new_game_missiles[i] - p.missiles[i];
         if (need > 0) player::add_missiles(p, i, need);
     }
-    std::printf("[repair] missiles restocked DF/HS/IR = %d/%d/%d | paid %lld | credits %lld\n",
-                p.missiles[0], p.missiles[1], p.missiles[2],
-                (long long)q.missile_cost, (long long)p.credits);
+    std::printf("[repair] missiles restocked %s | paid %lld | credits %lld\n",
+                rack_summary(p).text, (long long)q.missile_cost, (long long)p.credits);
     return true;
 }
 

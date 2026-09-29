@@ -3,6 +3,7 @@
 
 #include "armor.h"
 #include "gun.h"
+#include "missile.h"
 #include "outfitting.h"
 #include "player.h"
 #include "repair.h"
@@ -142,10 +143,10 @@ void draw_launcher(const PanelContext& ctx) {
     ImGui::Spacing();
     ImGui::Separator();
     ImGui::TextColored(kDim, "ORDNANCE INVENTORY");
-    const char* labels[] = {"DF", "HS", "IR"};
-    for (int type = 0; type < 3; ++type) {
+    for (int type = 0; type < kMissileRackTypeCount; ++type) {
         ImGui::PushID(type);
-        ImGui::Text("%s MISSILES    %d", labels[type], p.missiles[type]);
+        ImGui::Text("%s MISSILES    %d", missile::to_name((MissileType)type),
+                    p.missiles[type]);
         ImGui::SameLine(180.0f);
         const bool room = repair::missiles_total(p) < repair::missile_rack_capacity(p);
         ImGui::BeginDisabled(!room || !player::can_afford(p, repair::missile_price(type)));

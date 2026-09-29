@@ -40,6 +40,11 @@
 
 struct ShipClass;
 
+// Missile types that share the missile launcher's rack (DF/HS/IR/FF) —
+// mirrors missile.h's kMissileRackTypeCount without the include (see the
+// PlayerState::missiles note); player.cpp static_asserts they agree.
+constexpr int k_missile_rack_types = 4;
+
 // One fitted gun mount slot (Phase 4d Wave 1, #88). Promoted from a bare
 // std::string gun name so a mounted weapon can carry its rarity + per-shot
 // WeaponMods through the loadout — exactly like an InventoryItem does in
@@ -226,11 +231,12 @@ struct PlayerState {
 
     // ---- ordnance: finite missile ammo (np-zte.2) -------------------------
     // Unlike guns (energy-limited but never "out"), missiles are consumable.
-    // Indexed by MissileType (DF/HS/IR — missile.h); one fired = one gone,
+    // Indexed by MissileType (DF/HS/IR/FF — missile.h); one fired = one gone,
     // restocked at a base. Kept as a flat array (not a missile.h include) to
     // preserve player.h's "strings + ints, no upstream deps" discipline —
-    // the index meaning is the stable contract, mirrored by MissileType.
-    int missiles[3]  = { 0, 0, 0 };
+    // the index meaning is the stable contract, mirrored by MissileType
+    // (player.cpp static_asserts k_missile_rack_types against it).
+    int missiles[k_missile_rack_types] = {};
 
     // Torpedo rack (separate physical launcher on the hull). Just one
     // canonical ammo type -- Proton Torpedo. Indexing by DF/HS/IR is gone;
@@ -341,10 +347,10 @@ constexpr int64_t k_merchant_guild_fee = 1000;
 constexpr float k_afterburner_drain_per_s = 50.0f;  // GJ/s drained from energy_gj
 
 // New-game / new-hull starting missile loadout, indexed by MissileType
-// (DF/HS/IR). The canonical Tarsus start (np-3dp.25) carries a single
+// (DF/HS/IR/FF). The canonical Tarsus start (np-3dp.25) carries a single
 // launcher of 4 heat-seekers and nothing else; the equipment dealer and
 // base rearm restock / diversify it.
-constexpr int k_new_game_missiles[3] = { 0, 4, 0 };
+constexpr int k_new_game_missiles[k_missile_rack_types] = { 0, 4, 0, 0 };
 
 // ---- credits ------------------------------------------------------------
 // spend() refuses (returns false, no mutation) when funds are short.
@@ -404,7 +410,8 @@ bool add_compartment_cargo(PlayerState& p, const std::string& commodity_id,
                            int units);
 
 // ---- ordnance (np-zte.2) ----------------------------------------------------
-// type_index is a MissileType (0=DF,1=HS,2=IR); out-of-range is a no-op.
+// type_index is a MissileType (0=DF,1=HS,2=IR,3=FF,4=TORPEDO); out-of-range
+// is a no-op. add_missiles covers the shared missile rack only (not TORPEDO).
 // missile_count reads the stock; consume_missile decrements one and returns
 // true, or false (no mutation) when the rack is empty — the caller turns
 // that into the out-of-ammo click. add_missiles tops up (clamped ≥ 0).

@@ -17,6 +17,9 @@
 #include <cstdio>
 #include <limits>
 
+static_assert(k_missile_rack_types == kMissileRackTypeCount,
+              "PlayerState::missiles must cover every rack MissileType");
+
 namespace player {
 
 PlayerState new_game(const std::string& start_system) {
@@ -42,7 +45,7 @@ PlayerState new_game(const std::string& start_system) {
     p.scanner_id = k_starting_scanner;
     // Starter missile loadout (np-zte.2): 4 heat-seekers, nothing else.
     // Afterburner shares the ship's energy bank (no separate fuel tank).
-    for (int i = 0; i < 3; ++i) p.missiles[i] = k_new_game_missiles[i];
+    for (int i = 0; i < k_missile_rack_types; ++i) p.missiles[i] = k_new_game_missiles[i];
     // No starter torpedoes -- the dealer is the only place to load them,
     // so a new pilot starts empty on the torpedo rack.
     p.torpedoes = 0;
@@ -148,7 +151,7 @@ bool consume_missile(PlayerState& p, int type_index) {
 }
 
 void add_missiles(PlayerState& p, int type_index, int count) {
-    if (type_index < 0 || type_index >= 3 || count <= 0) return;
+    if (type_index < 0 || type_index >= k_missile_rack_types || count <= 0) return;
     p.missiles[type_index] += count;
 }
 
