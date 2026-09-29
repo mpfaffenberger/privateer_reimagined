@@ -4,6 +4,7 @@
 #include "armament_loadout.h"
 #include "equipment_hardpoints.h"
 #include "firing.h"
+#include "hud_text_fit.h"
 #include "launcher_modes.h"
 #include "material.h"
 #include "player.h"
@@ -29,6 +30,7 @@ constexpr ImU32 kArmed = IM_COL32(105, 240, 135, 245);
 constexpr ImU32 kOff = IM_COL32(180, 150, 60, 220);
 constexpr ImU32 kEmpty = IM_COL32(90, 100, 110, 180);
 constexpr ImU32 kDrop = IM_COL32(120, 220, 255, 255);
+constexpr ImU32 kTitle = IM_COL32(255, 217, 77, 255);
 constexpr const char* kPayload = "COCKPIT_GUN_SLOT";
 
 Layout g_layout;
@@ -224,21 +226,30 @@ void draw(PlayerState& player, Ship& live_ship, int selected_ordnance) {
     ensure_sampler();
     ensure_layout(player, live_ship);
     const auto& unique = firing::gun_unique_types_cache(live_ship.mounts);
-    ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.30f, 1.0f), "ARMAMENTS");
-    ImGui::SameLine();
-    ImGui::TextDisabled("GUN %s  %d/%zu",
-        firing::gun_mode_label(unique, live_ship.gun_mode_idx),
-        firing::gun_mode_armed_count(live_ship), live_ship.mounts.size());
     static constexpr const char* kNames[kMissileTypeCount] = {
         "DF", "HS", "IR", "TORP"
     };
     const int selected = std::clamp(selected_ordnance, 0, kMissileTypeCount - 1);
-    ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.30f, 1.0f), "LAUNCH");
-    ImGui::SameLine();
-    ImGui::TextDisabled("%s x%d  [MSL %d / TORP %d]",
-        kNames[selected], launcher_modes::ammo_count(player, selected),
+
+    // Header readouts, full wording in the classic box. A cockpit MFD is
+    // ~half as wide (#430), so compact phrasings drop only what the
+    // schematic below already shows: the page title and launcher counts.
+    char gun[64], gun_short[64], launch[64], launch_short[32];
+    const char* mode = firing::gun_mode_label(unique, live_ship.gun_mode_idx);
+    const int armed = firing::gun_mode_armed_count(live_ship);
+    std::snprintf(gun, sizeof gun, "GUN %s  %d/%zu", mode, armed, live_ship.mounts.size());
+    std::snprintf(gun_short, sizeof gun_short, "%s  %d/%zu", mode, armed, live_ship.mounts.size());
+    const int ammo = launcher_modes::ammo_count(player, selected);
+    std::snprintf(launch, sizeof launch, "%s x%d  [MSL %d / TORP %d]",
+        kNames[selected], ammo,
         launcher_modes::missile_launcher_count(player),
         launcher_modes::torpedo_launcher_count(player));
+    std::snprintf(launch_short, sizeof launch_short, "%s x%d", kNames[selected], ammo);
+    const hud_text_fit::Phrasing gun_line[] = { { "ARMAMENTS", gun }, { "GUN", gun_short } };
+    const hud_text_fit::Phrasing launch_line[] = { { "LAUNCH", launch }, { "LAUNCH", launch_short } };
+    const ImU32 detail = ImGui::GetColorU32(ImGuiCol_TextDisabled);
+    hud_text_fit::line(gun_line, IM_ARRAYSIZE(gun_line), kTitle, detail);
+    hud_text_fit::line(launch_line, IM_ARRAYSIZE(launch_line), kTitle, detail);
 
     const ImVec2 cursor = ImGui::GetCursorScreenPos();
     const ImVec2 avail = ImGui::GetContentRegionAvail();
