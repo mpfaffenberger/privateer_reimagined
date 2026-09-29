@@ -631,9 +631,18 @@ struct AppState {
 struct _PreG { _PreG()  { std::fprintf(stderr, "[trace] pre-g\n");  std::fflush(stderr); } };
 static _PreG g_trace_pre_g;
 AppState g;
-// Dev gun-mount tuner overlay — hidden by default, F4 toggles it. Kept in
-// the build for future per-ship muzzle tuning; off so it doesn't clutter.
+// Dev gun-mount tuner overlay — hidden by default, Shift+F4 toggles it. Kept
+// in the build for future per-ship muzzle tuning; off so it doesn't clutter.
 static bool g_show_mount_tuner = false;
+
+// The one definition of "the player is holding the gun trigger" (Ctrl or
+// left mouse). Shared by the per-frame fire input and the gun-mode cycle so
+// the two can't drift apart again (#491).
+static bool player_trigger_held(const AppState& app) {
+    return app.keys_down[SAPP_KEYCODE_LEFT_CONTROL] ||
+           app.keys_down[SAPP_KEYCODE_RIGHT_CONTROL] ||
+           app.mouse_left_held;
+}
 struct _PostG { _PostG() { std::fprintf(stderr, "[trace] post-g\n"); std::fflush(stderr); } };
 static _PostG g_trace_post_g;
 
@@ -4998,10 +5007,7 @@ void frame_cb() {
             }
         }
 
-        player.controller.fire_guns =
-            g.keys_down[SAPP_KEYCODE_LEFT_CONTROL] ||
-            g.keys_down[SAPP_KEYCODE_RIGHT_CONTROL] ||
-            g.mouse_left_held;
+        player.controller.fire_guns = player_trigger_held(g);
         if (g.show_title)    player.controller.fire_guns = false;   // frozen on briefing
         // Navmap overlay owns the click — left-mouse would otherwise fire guns
         // every time the player aimed for a navmap button or scrolled the map.
@@ -7220,7 +7226,7 @@ void event_cb(const sapp_event* ev) {
     // Ctrl+K — Cinematic Studio. Ahead of debug_panel so the toggle beats
     // ImGui widget focus, same trick as the F-key tools above.
     if (cinematic::studio::handle_event(ev))     return;
-    // F11 Base Art Studio; available only when its landed-room seam resolves.
+    // F1 Base Art Studio; available only when its landed-room seam resolves.
     if (base_art_studio::handle_event(ev))        return;
     if (debug_panel::handle_event(ev)) return;
 
@@ -7254,24 +7260,12 @@ void event_cb(const sapp_event* ev) {
 
     switch (ev->type) {
     case SAPP_EVENTTYPE_KEY_DOWN:
-        // Cinematic controls (np-cinematic Phase 1). While a cutscene
-        // plays, Esc SKIPS it (if skippable) instead of arming quit. F8
-        // is the dev trigger — plays the demo cinematic from Flight (the
-        // dev_remote /cinematic/play endpoint lands in Phase 2).
-        if (cinematic::active()) {
-            if (ev->key_code == SAPP_KEYCODE_ESCAPE) { cinematic::skip(g.player); return; }
-        } else if (ev->key_code == SAPP_KEYCODE_F8 && !ev->key_repeat &&
-                   g.game.mode == GameMode::Flight) {
-            std::string err;
-            if (!cinematic_play_located("demo_flyby", err))
-                std::printf("[cinematic] F8 demo refused: %s\n", err.c_str());
-            return;
-        }
-        if (ev->key_code == SAPP_KEYCODE_F9 && !ev->key_repeat &&
-            g.game.mode == GameMode::Flight && !cinematic::active()) {
-            std::string err;
-            if (!cinematic_play_located("demo_exchange", err))
-                std::printf("[cinematic] F9 demo refused: %s\n", err.c_str());
+        // While a cutscene plays, Esc SKIPS it (if skippable) instead of
+        // arming quit. Dev playback goes through dev_remote
+        // POST /cinematic/play (the old F8/F9 demo keys were shadowed by the
+        // music/speech labelers and never fired, #491).
+        if (cinematic::active() && ev->key_code == SAPP_KEYCODE_ESCAPE) {
+            cinematic::skip(g.player);
             return;
         }
         // N — cycle target through nav_points. KEY_DOWN (not keys_down
@@ -7328,7 +7322,7 @@ void event_cb(const sapp_event* ev) {
             }
             // Match on-fire HUD: if the player isn't holding the trigger,
             // force fire_guns off so the cycle is unambiguous.
-            if (!g.keys_down[SAPP_KEYCODE_X] && !g.keys_down[SAPP_KEYCODE_TAB]) {
+            if (!player_trigger_held(g)) {
                 p.controller.fire_guns = false;
             }
             const auto& u  = firing::gun_unique_types_cache(p.mounts);
@@ -7517,8 +7511,10 @@ void event_cb(const sapp_event* ev) {
             std::printf("[hud] ship-frame HUD %s\n",
                         g.show_ship_frame_hud ? "on" : "off");
         }
-        // F4 — toggle the dev Gun Mount Tuner overlay (off by default).
-        if (ev->key_code == SAPP_KEYCODE_F4 && !ev->key_repeat) {
+        // Shift+F4 — toggle the dev Gun Mount Tuner overlay (off by default).
+        // Plain F4 is the atlas grid viewer, which consumes it first (#491).
+        if (ev->key_code == SAPP_KEYCODE_F4 && !ev->key_repeat &&
+            (ev->modifiers & SAPP_MODIFIER_SHIFT)) {
             g_show_mount_tuner = !g_show_mount_tuner;
             std::printf("[mount-tuner] %s\n", g_show_mount_tuner ? "on" : "off");
         }

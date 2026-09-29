@@ -114,6 +114,10 @@ clone. `test_full_loop` fails.
   `test_full_loop`) run in per-harness temp dirs via `tools/test_sandbox.h`,
   which aborts if isolation fails ([#383]). `test_docking` stubs `savegame`
   and never wrote real saves.
+- Shadowed dev keys ([#491]): the gun mount tuner moved to `Shift+F4`, the
+  unreachable F8/F9 demo-cinematic handlers were removed (use
+  `POST /cinematic/play`), and one `player_trigger_held()` replaced a stale
+  `X`/`Tab` trigger check in the gun-mode cycle.
 
 ### P1 — Combat-system gaps
 
@@ -205,18 +209,13 @@ RF gap **(corrected)**. Fine to defer.
   led by `cockpit_hud.cpp` (2,482), `dev_remote.cpp` (2,216),
   `base_screens.cpp` (1,451), `missions.cpp` (1,304), and
   `scripted_encounters.cpp` (1,165).
-- **Dead or shadowed input handlers** ([#491]): `F4`/`F8`/`F9` in `main.cpp`
-  (mount tuner, demo cinematics) can never fire because the atlas viewer
-  and music/speech labelers consume those keys first. There's also a stale
-  "F11 Base Art Studio" comment (it's `F1` now) and a gun-mode handler that
-  still checks `X`/`Tab` as the trigger.
 - **Magic numbers:** the 15 km radar literal appears in 3 places ([#492]).
   `dev_remote::start()` defaults to port 8765, but the only caller passes
   47001.
 - **Comment debt is low but not zero:** 8 TODO/FIXME/HACK markers across
   `src/`. Stale-comment liars remain ([#149]): `game_state.h` still calls
   live screens "today a stub screen", `autopilot.cpp` describes the hostile
-  gate as a stub. The input comments are listed above.
+  gate as a stub.
 - **Repo hygiene: done** ([#150] closed). The tracked root is clean. Local
   build products and logs stay untracked.
 - **Doc drift:** this audit replaced a gap doc that had drifted for about 60
@@ -251,7 +250,7 @@ human judgment call.
 5. **Gemini Lives phases 3–4** (schedules, director, barks: [#172]–[#174]),
    then the cast and cinematics.
 6. **Keep splitting `main.cpp` ([#151])**, starting with the input handler,
-   since [#491] already touches it.
+   now that its dead handlers are gone.
 7. Righteous Fire, someday ([#148]).
 
 [#65]: https://github.com/mpfaffenberger/privateer_reimagined/issues/65
