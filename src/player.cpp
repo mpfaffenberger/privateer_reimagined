@@ -130,6 +130,30 @@ bool add_cargo(PlayerState& p, const std::string& commodity_id,
     return true;
 }
 
+// ---- gun mounts + turret hardware (#145) ------------------------------------
+
+bool has_turret(const PlayerState& p, const std::string& slot_id) {
+    return std::find(p.turrets.begin(), p.turrets.end(), slot_id) != p.turrets.end();
+}
+
+bool mount_fittable(const PlayerState& p, const ShipClass* klass, int mount) {
+    if (mount < 0) return false;
+    if (!klass) return true;
+    if (mount >= (int)klass->default_guns.size()) return false;
+    const TurretSlot* turret = klass->turret_slot_for_mount(mount);
+    return !turret || has_turret(p, turret->id);
+}
+
+int first_open_mount(const PlayerState& p, const ShipClass* klass) {
+    const int mounts = klass ? (int)klass->default_guns.size() : (int)p.gun_mounts.size();
+    for (int i = 0; i < mounts; ++i) {
+        const bool empty = i >= (int)p.gun_mounts.size() ||
+                           p.gun_mounts[(size_t)i].gun_id.empty();
+        if (empty && mount_fittable(p, klass, i)) return i;
+    }
+    return -1;
+}
+
 // ---- ordnance ---------------------------------------------------------------
 
 int missile_count(const PlayerState& p, int type_index) {

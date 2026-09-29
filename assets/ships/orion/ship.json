@@ -37,8 +37,8 @@
     { "offset_body": [-3.0, 0.0, 3.0], "type": "plasma_gun" },
     { "offset_body": [ 3.0, 0.0, 3.0], "type": "plasma_gun" },
 
-    { "offset_body": [-0.6, 0.0, -3.0], "forward_body": [0, 0, -1], "cone_half_angle_deg": 120, "type": "laser", "turret": true },
-    { "offset_body": [ 0.6, 0.0, -3.0], "forward_body": [0, 0, -1], "cone_half_angle_deg": 120, "type": "laser", "turret": true }
+    { "offset_body": [-0.6, 0.0, -3.0], "forward_body": [0, 0, -1], "cone_half_angle_deg": 120, "type": "laser", "turret": true, "turret_slot": "rear" },
+    { "offset_body": [ 0.6, 0.0, -3.0], "forward_body": [0, 0, -1], "cone_half_angle_deg": 120, "type": "laser", "turret": true, "turret_slot": "rear" }
   ],
 
   "energy_max":      220,

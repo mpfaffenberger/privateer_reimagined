@@ -42,6 +42,18 @@ enum class AIPersonality : uint8_t {
 
 struct ShieldType;
 
+// One purchasable turret POSITION on a hull (#145): "rear", "top", "bottom".
+// Groups the turret=true default_guns entries tagged with the same
+// "turret_slot" key in ship.json (untagged turret mounts share "turret"), so
+// buying the Centurion's rear turret unlocks both of its gun mounts at once.
+// NPC spawns ignore this and fit every turret gun; the player must own the
+// hardware (PlayerState::turrets) before a gun can go into one of its mounts.
+struct TurretSlot {
+    std::string      id;       // stable save/price key, e.g. "rear"
+    std::string      label;    // UI name, e.g. "Rear Turret"
+    std::vector<int> mounts;   // indices into ShipClass::default_guns
+};
+
 // Fallback sensor sphere for a class that doesn't set radar_range, and for
 // class-less ships. 15000 is the original game's sensor cull (0x3a98,
 // docs/ai_model.md section 11).
@@ -161,6 +173,22 @@ struct ShipClass {
     const ShieldType* default_shield = nullptr;
 
     std::vector<GunMount> default_guns;
+
+    // Turret positions this hull SUPPORTS, derived from default_guns at
+    // load (authored order). Empty = the hull can't carry a turret.
+    std::vector<TurretSlot> turret_slots;
+
+    // Header-inline so player.cpp's loadout rules need no ship_class.cpp link.
+    const TurretSlot* find_turret_slot(std::string_view id) const {
+        for (const TurretSlot& t : turret_slots) if (t.id == id) return &t;
+        return nullptr;
+    }
+    // The turret slot owning default_guns[mount]; nullptr for a fixed gun.
+    const TurretSlot* turret_slot_for_mount(int mount) const {
+        for (const TurretSlot& t : turret_slots)
+            for (int m : t.mounts) if (m == mount) return &t;
+        return nullptr;
+    }
 
     // ---- energy --------------------------------------------------------
     float energy_max      = 200.0f;   // GJ

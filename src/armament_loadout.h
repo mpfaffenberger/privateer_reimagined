@@ -16,6 +16,13 @@ inline bool swap_mounted_weapons(PlayerState& player, Ship& ship,
         to >= ship.mounts.size() || player.gun_mounts[from].gun_id.empty()) {
         return false;
     }
+    // Neither gun may land in a mount the player can't fit -- e.g. a turret
+    // whose hardware was never bought (#145). Same rule as the dealer.
+    const bool to_occupied = !player.gun_mounts[to].gun_id.empty();
+    if (!player::mount_fittable(player, ship.klass, (int)to) ||
+        (to_occupied && !player::mount_fittable(player, ship.klass, (int)from))) {
+        return false;
+    }
 
     std::swap(player.gun_mounts[from], player.gun_mounts[to]);
     // Physical geometry and turret behavior belong to the destination mount.

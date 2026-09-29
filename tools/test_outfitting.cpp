@@ -31,6 +31,80 @@
 #include "faction.h"
 
 #include <cstdio>
+#include <vector>
+
+static int g_fail = 0;
+static void check(bool ok, const char* what) {
+    std::printf("  [%s] %s\n", ok ? "PASS" : "FAIL", what);
+    if (!ok) ++g_fail;
+}
+
+// Purchasable turrets (#145): hull slots from ship.json, hardware buy/sell,
+// gun fitting gated on owned hardware, dealer hulls arriving turret-less.
+static void test_turrets() {
+    std::printf("\n== Turret hardware (#145) ==\n");
+    const ShipClass* tarsus = ship_class::find("tarsus");
+    const ShipClass* cent   = ship_class::find("centurion");
+    const ShipClass* galaxy = ship_class::find("galaxy");
+    const ShipClass* orion  = ship_class::find("orion");
+    check(tarsus && tarsus->turret_slots.empty(), "Tarsus supports no turret (vanilla)");
+    check(cent && cent->turret_slots.size() == 1 && cent->turret_slots[0].id == "rear" &&
+          cent->turret_slots[0].mounts == std::vector<int>{4, 5},
+          "Centurion: one rear turret over mounts 4+5");
+    check(orion && orion->find_turret_slot("rear") && orion->turret_slots.size() == 1,
+          "Orion: rear turret");
+    check(galaxy && galaxy->find_turret_slot("top") && galaxy->find_turret_slot("bottom") &&
+          galaxy->find_turret_slot("rear"), "Galaxy: top + bottom + rear turrets");
+    check(cent && cent->turret_slots[0].label == "Rear Turret", "slot label derived from id");
+    check(outfitting::turret_price() > 0, "turret_price loaded from equipment_prices.json");
+    if (!cent || !tarsus) return;
+
+    PlayerState p = player::new_game("troy");
+    p.credits = 1000000;
+    check(p.turrets.empty(), "new game owns no turrets");
+    check(outfitting::buy_hull(p, "centurion"), "buy Centurion");
+    check(p.turrets.empty() && p.gun_mounts.size() == 6 &&
+          p.gun_mounts[4].gun_id.empty() && p.gun_mounts[5].gun_id.empty() &&
+          !p.gun_mounts[0].gun_id.empty(),
+          "dealer hull: forward guns stocked, turret mounts empty + unowned");
+    check(player::first_open_mount(p, cent) == -1,
+          "first_open_mount skips unbought turret mounts");
+
+    const long long c0 = p.credits;
+    check(!outfitting::buy_gun(p, "laser", 4, cent) && p.credits == c0,
+          "gun into unbought turret refused, no charge");
+    check(!outfitting::buy_turret(p, "top", cent), "Centurion has no top turret");
+    check(!outfitting::buy_turret(p, "rear", tarsus), "slot must exist on the given hull");
+
+    check(outfitting::buy_turret(p, "rear", cent) && player::has_turret(p, "rear") &&
+          p.credits == c0 - outfitting::turret_price(), "buy rear turret charges turret_price");
+    check(!outfitting::buy_turret(p, "rear", cent), "second rear turret refused");
+    check(player::first_open_mount(p, cent) == 4, "owned turret mount is now open");
+    check(outfitting::buy_gun(p, "laser", 4, cent) && p.gun_mounts[4].gun_id == "laser",
+          "gun fits into owned turret");
+    check(!outfitting::sell_turret(p, "rear", cent) && player::has_turret(p, "rear"),
+          "can't sell a turret still carrying a gun");
+    check(outfitting::sell_gun(p, 4, cent), "sell the turret gun");
+    const long long c1 = p.credits;
+    check(outfitting::sell_turret(p, "rear", cent) && !player::has_turret(p, "rear") &&
+          p.credits == c1 + outfitting::turret_price(), "empty turret sells for a refund");
+    check(!outfitting::sell_turret(p, "rear", cent), "can't sell what you don't own");
+
+    PlayerState poor = player::new_game("troy");
+    poor.ship_class_name = "centurion";
+    poor.credits = outfitting::turret_price() - 1;
+    check(!outfitting::buy_turret(poor, "rear", cent) && poor.turrets.empty(),
+          "unaffordable turret refused");
+
+    outfitting::buy_turret(p, "rear", cent);
+    outfitting::buy_hull(p, "tarsus");
+    check(p.turrets.empty(), "hull swap drops the old hull's turrets");
+
+    PlayerState dev = player::new_game("troy");
+    outfitting::fit_stock_guns(dev, cent, /*with_turrets=*/true);
+    check(player::has_turret(dev, "rear") && dev.gun_mounts[4].gun_id == "ionic_pulse_cannon",
+          "fit_stock_guns(with_turrets) = fully stocked hull (--ship override)");
+}
 
 static void show(const PlayerState& p, const char* tag) {
     const ShipClass* k = ship_class::find(p.ship_class_name);
@@ -119,6 +193,9 @@ int main() {
     std::printf("  broke pilot still flying: %s (credits %lld)\n",
                 broke.ship_class_name.c_str(), (long long)broke.credits);
 
-    std::printf("\nAll transaction paths exercised.\n");
-    return 0;
+    test_turrets();
+
+    std::printf("\nAll transaction paths exercised. %s\n",
+                g_fail == 0 ? "ALL CHECKS PASS" : "CHECK FAILURES");
+    return g_fail == 0 ? 0 : 1;
 }

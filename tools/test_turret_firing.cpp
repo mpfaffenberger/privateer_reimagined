@@ -165,6 +165,33 @@ void test_turret_arc_and_range() {
                     HMM_V3(0.0f, 0.0f, kRangeM + 500.0f)).empty(),
           "rear turret does not fire beyond gun range");
 }
+
+// #145/#510: an empty slot (sold gun, unbought turret) is an inert
+// GunType::Count mount -- never fires, never armed, never a G-mode group.
+void test_inert_mounts() {
+    GunMount inert_turret = rear_turret();
+    inert_turret.type = GunType::Count;
+    GunMount inert_fixed = fixed_gun();
+    inert_fixed.type = GunType::Count;
+
+    Ship c;  // Centurion bought from the dealer: 4 Neutrons, turret not installed
+    const GunMount neutron = fixed_gun(GunType::NeutronGun);
+    c.mounts = {neutron, neutron, neutron, inert_fixed, inert_turret, inert_turret};
+    firing::arm_all_guns(c);
+    check(firing::gun_mode_count_for_mounts(c.mounts) == 3,
+          "inert mounts add no G-mode group: {UNARMED, NEUTRON, ALL}");
+    check(firing::gun_mode_armed_count(c) == 3 && !firing::mount_armed(c, 3) &&
+          !firing::mount_armed(c, 4) && !firing::mount_armed(c, 5),
+          "ALL arms the 3 real guns; inert fixed + turret mounts stay unarmed");
+
+    check(fire_once(make_player({inert_turret}, {true}), HMM_V3(0.0f, 0.0f, 300.0f)).empty(),
+          "unbought turret mount never fires");
+    Ship sold = make_player({inert_fixed}, {true});
+    sold.energy_gj = 100.0f;
+    sold.controller.fire_guns = true;
+    check(fire_once(sold, HMM_V3(0.0f, 0.0f, -300.0f)).empty(),
+          "sold (empty) fixed mount never fires");
+}
 } // namespace
 
 int main() {
@@ -175,6 +202,7 @@ int main() {
     test_turret_fires_despite_mask();
     test_fixed_gun_gating();
     test_turret_arc_and_range();
+    test_inert_mounts();
 
     std::printf("\n%s\n", failures == 0 ? "ALL PASS" : "FAILURES DETECTED");
     return failures == 0 ? 0 : 1;

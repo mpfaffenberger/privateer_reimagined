@@ -25,18 +25,19 @@
   // Two fixed forward Mass Drivers plus defensive turrets (dorsal +
   // ventral Mass Driver pairs, rear Meson Blaster pair) so this merchant
   // can still sting attackers while the coward AI bolts for the jump.
+  // turret_slot groups each pair into one purchasable position (#145).
   "default_guns": [
     { "offset_body": [-3.0, 0.0, 4.0], "type": "mass_driver" },
     { "offset_body": [ 3.0, 0.0, 4.0], "type": "mass_driver" },
 
-    { "offset_body": [-0.6, 3.0, 0.0], "forward_body": [0,  1, 0], "cone_half_angle_deg": 120, "type": "mass_driver", "turret": true },
-    { "offset_body": [ 0.6, 3.0, 0.0], "forward_body": [0,  1, 0], "cone_half_angle_deg": 120, "type": "mass_driver", "turret": true },
+    { "offset_body": [-0.6, 3.0, 0.0], "forward_body": [0,  1, 0], "cone_half_angle_deg": 120, "type": "mass_driver", "turret": true, "turret_slot": "top" },
+    { "offset_body": [ 0.6, 3.0, 0.0], "forward_body": [0,  1, 0], "cone_half_angle_deg": 120, "type": "mass_driver", "turret": true, "turret_slot": "top" },
 
-    { "offset_body": [-0.6, -3.0, 0.0], "forward_body": [0, -1, 0], "cone_half_angle_deg": 120, "type": "mass_driver", "turret": true },
-    { "offset_body": [ 0.6, -3.0, 0.0], "forward_body": [0, -1, 0], "cone_half_angle_deg": 120, "type": "mass_driver", "turret": true },
+    { "offset_body": [-0.6, -3.0, 0.0], "forward_body": [0, -1, 0], "cone_half_angle_deg": 120, "type": "mass_driver", "turret": true, "turret_slot": "bottom" },
+    { "offset_body": [ 0.6, -3.0, 0.0], "forward_body": [0, -1, 0], "cone_half_angle_deg": 120, "type": "mass_driver", "turret": true, "turret_slot": "bottom" },
 
-    { "offset_body": [-0.6, 0.0, -5.0], "forward_body": [0, 0, -1], "cone_half_angle_deg": 120, "type": "meson_blaster", "turret": true },
-    { "offset_body": [ 0.6, 0.0, -5.0], "forward_body": [0, 0, -1], "cone_half_angle_deg": 120, "type": "meson_blaster", "turret": true }
+    { "offset_body": [-0.6, 0.0, -5.0], "forward_body": [0, 0, -1], "cone_half_angle_deg": 120, "type": "meson_blaster", "turret": true, "turret_slot": "rear" },
+    { "offset_body": [ 0.6, 0.0, -5.0], "forward_body": [0, 0, -1], "cone_half_angle_deg": 120, "type": "meson_blaster", "turret": true, "turret_slot": "rear" }
   ],
 
   "energy_max":      200,

@@ -55,6 +55,7 @@ std::vector<float>                           g_engine_regen_bonus;   // GJ/s by 
 std::vector<float>                           g_shield_regen_drain;   // GJ/s by shield level
 
 int64_t                                      g_cargo_expansion_price = 0;
+int64_t                                      g_turret_price = 0;          // #145
 std::unordered_map<std::string, int64_t>     g_discrete_price;   // np-3dp.27
 
 } // namespace
@@ -70,6 +71,7 @@ int load(const std::string& ship_prices_path, const std::string& equip_prices_pa
     g_engine_regen_bonus.clear();
     g_shield_regen_drain.clear();
     g_cargo_expansion_price = 0;
+    g_turret_price = 0;
     g_discrete_price.clear();
 
     // ---- hull prices --------------------------------------------------------
@@ -110,6 +112,8 @@ int load(const std::string& ship_prices_path, const std::string& equip_prices_pa
                 g_shield_regen_drain.push_back((float)v.as_float());
         if (ep.contains("cargo_expansion_price"))
             g_cargo_expansion_price = (int64_t)ep["cargo_expansion_price"].as_int();
+        if (ep.contains("turret_price"))
+            g_turret_price = (int64_t)ep["turret_price"].as_int();
         if (const json::Value* d = ep.find("discrete_equipment"); d && d->is_object())
             for (const auto& [name, v] : d->as_object())
                 g_discrete_price[name] = (int64_t)v.as_int();
@@ -163,6 +167,8 @@ int64_t engine_upgrade_price(int target_level) {
 }
 
 int64_t cargo_expansion_price() { return g_cargo_expansion_price; }
+
+int64_t turret_price() { return g_turret_price; }
 
 int64_t discrete_price(const std::string& item) {
     const auto it = g_discrete_price.find(item);
@@ -291,11 +297,9 @@ bool buy_hull(PlayerState& p, const std::string& target) {
     p.engine_level    = 0;
     p.armor_name      = "";
     p.cargo_expansion = false;
-    p.gun_mounts.clear();
     // NOTE: permanent_mods are deliberately NOT cleared — installed upgrades
     // live on the player and persist across hull swaps (#92/#94).
-    if (const ShipClass* k = ship_class::find(target))
-        for (const GunMount& m : k->default_guns) p.gun_mounts.push_back(MountSlot{gun::to_name(m.type)});
+    fit_stock_guns(p, ship_class::find(target), /*with_turrets=*/false);
 
     std::printf("[outfit] BUY HULL %s -> %s | net %lld | credits %lld | %zu default mounts\n",
                 old.c_str(), target.c_str(), (long long)net, (long long)p.credits,
@@ -303,12 +307,27 @@ bool buy_hull(PlayerState& p, const std::string& target) {
     return true;
 }
 
+void fit_stock_guns(PlayerState& p, const ShipClass* klass, bool with_turrets) {
+    p.gun_mounts.clear();
+    p.turrets.clear();
+    if (!klass) return;
+    if (with_turrets)
+        for (const TurretSlot& t : klass->turret_slots) p.turrets.push_back(t.id);
+    for (const GunMount& m : klass->default_guns) {
+        const bool stocked = !m.is_turret || with_turrets;
+        p.gun_mounts.push_back(stocked ? MountSlot{gun::to_name(m.type)} : MountSlot{});
+    }
+}
+
 bool buy_gun(PlayerState& p, const std::string& gun_short_name,
              int mount_index, const ShipClass* klass) {
     const int mounts = klass ? (int)klass->default_guns.size() : (int)p.gun_mounts.size();
-    if (mount_index < 0 || mount_index >= mounts) {
-        std::printf("[outfit] BUY GUN refused: mount %d out of range (hull has %d)\n",
-                    mount_index, mounts);
+    if (!player::mount_fittable(p, klass, mount_index) || mount_index >= mounts) {
+        const TurretSlot* t = klass ? klass->turret_slot_for_mount(mount_index) : nullptr;
+        if (t) std::printf("[outfit] BUY GUN refused: mount %d needs the %s (not installed)\n",
+                           mount_index, t->label.c_str());
+        else   std::printf("[outfit] BUY GUN refused: mount %d out of range (hull has %d)\n",
+                           mount_index, mounts);
         return false;
     }
     if (gun::from_name(gun_short_name) == GunType::Count) {
@@ -355,6 +374,52 @@ bool sell_gun(PlayerState& p, int mount_index, const ShipClass* klass) {
     player::add_credits(p, refund);
     std::printf("[outfit] SELL GUN %s <- mount %d refund %lld | credits %lld\n",
                 name.c_str(), mount_index, (long long)refund, (long long)p.credits);
+    return true;
+}
+
+bool buy_turret(PlayerState& p, const std::string& slot_id, const ShipClass* klass) {
+    const TurretSlot* slot = klass ? klass->find_turret_slot(slot_id) : nullptr;
+    if (!slot) {
+        std::printf("[outfit] TURRET refused: hull has no '%s' turret position\n", slot_id.c_str());
+        return false;
+    }
+    if (player::has_turret(p, slot_id)) {
+        std::printf("[outfit] TURRET refused: %s already installed\n", slot->label.c_str());
+        return false;
+    }
+    const int64_t price = turret_price();
+    if (price <= 0) { std::printf("[outfit] TURRET refused: no price\n"); return false; }
+    if (!player::can_afford(p, price)) {
+        std::printf("[outfit] TURRET refused: %s costs %lld, have %lld\n",
+                    slot->label.c_str(), (long long)price, (long long)p.credits);
+        return false;
+    }
+    player::spend_credits(p, price);
+    p.turrets.push_back(slot_id);
+    std::printf("[outfit] TURRET %s installed @ %lld | credits %lld\n",
+                slot->label.c_str(), (long long)price, (long long)p.credits);
+    return true;
+}
+
+bool sell_turret(PlayerState& p, const std::string& slot_id, const ShipClass* klass) {
+    const TurretSlot* slot = klass ? klass->find_turret_slot(slot_id) : nullptr;
+    if (!slot || !player::has_turret(p, slot_id)) {
+        std::printf("[outfit] TURRET sell refused: '%s' not installed\n", slot_id.c_str());
+        return false;
+    }
+    for (int m : slot->mounts) {
+        if (m < (int)p.gun_mounts.size() && !p.gun_mounts[(size_t)m].gun_id.empty()) {
+            std::printf("[outfit] TURRET sell refused: %s still carries a gun (mount %d)\n",
+                        slot->label.c_str(), m);
+            return false;
+        }
+    }
+    const int64_t refund = turret_price();
+    if (refund <= 0) { std::printf("[outfit] TURRET sell refused: no price\n"); return false; }
+    p.turrets.erase(std::find(p.turrets.begin(), p.turrets.end(), slot_id));
+    player::add_credits(p, refund);
+    std::printf("[outfit] TURRET %s sold, refund %lld | credits %lld\n",
+                slot->label.c_str(), (long long)refund, (long long)p.credits);
     return true;
 }
 

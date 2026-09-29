@@ -265,6 +265,12 @@ void firing::tick(ShipRegistry& ships,
 // =============================================================================
 namespace {
 
+// False for an inert mount: the player's empty slot / unbought turret is
+// kept in Ship::mounts as GunType::Count so indices stay aligned (#145).
+bool has_gun(const GunMount& m) {
+    return (int)m.type >= 0 && (int)m.type < kGunTypeCount;
+}
+
 // Thread-local cache of "unique GunTypes in first-occurrence order" for
 // the most-recently-seen mounts pointer. Lets the G-press and HUD paths
 // share the result without recomputing each frame. Keyed by the
@@ -296,8 +302,9 @@ void refresh_unique_cache(const std::vector<GunMount>& mounts) {
     cache.mount_signatures = std::move(current);
     cache.unique_types.clear();
     for (const GunMount& mount : mounts) {
-        // Turrets are autonomous, not a forward-gun group (#379).
-        if (mount.is_turret) continue;
+        // Turrets are autonomous, not a forward-gun group (#379); an inert
+        // (empty) mount has no gun to group (#145).
+        if (mount.is_turret || !has_gun(mount)) continue;
         const int type = (int)mount.type;
         if (std::find(cache.unique_types.begin(), cache.unique_types.end(), type) ==
             cache.unique_types.end()) {
@@ -341,8 +348,9 @@ void firing::arm_all_guns(Ship& s) {
 }
 
 bool firing::mount_armed(const Ship& s, size_t mount_idx) {
-    if (mount_idx >= s.mounts.size())  return false;
-    if (s.mounts[mount_idx].is_turret) return true;
+    if (mount_idx >= s.mounts.size())       return false;
+    if (!has_gun(s.mounts[mount_idx]))      return false;   // inert/empty mount (#145)
+    if (s.mounts[mount_idx].is_turret)      return true;
     return mount_idx >= s.gun_armed.size() || s.gun_armed[mount_idx];
 }
 
