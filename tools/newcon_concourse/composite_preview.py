@@ -137,7 +137,8 @@ def main():
         return
     images = [frame(t) for t in times]
     # One shared palette so the static plate doesn't shimmer frame to frame.
-    palette = images[len(images) // 2].quantize(colors=255, method=Image.Quantize.MEDIANCUT)
+    # MAXCOVERAGE, not MEDIANCUT: median cut drops the thin red guide stripe.
+    palette = images[len(images) // 2].quantize(colors=255, method=Image.Quantize.MAXCOVERAGE)
     images = [im.quantize(palette=palette, dither=Image.Dither.NONE) for im in images]
     images[0].save(out, save_all=True, append_images=images[1:], loop=0,
                    duration=int(round(1000.0 / args.fps)))
