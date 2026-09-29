@@ -37,6 +37,7 @@
 #include "sokol_debugtext.h"
 
 #include "app_cli.h"
+#include "armament_loadout.h"
 #include "armor.h"
 #include "asteroid.h"
 #include "atlas_grid_viewer.h"
@@ -953,15 +954,10 @@ static bool player_scanner_can_lock() {
 // switch rather than be rebuilt.
 // Fit the player's persistent loadout (PlayerState) onto the live slot-0
 // Ship (np-3dp.25): bind the hull class, heal to full, and mount the guns
-// named in p.gun_mounts. Mount POSITIONS + default types come straight from
-// the ship class default_guns (authored in assets/ships/<hull>/ship.json) --
-// the single source of truth for muzzle geometry. p.gun_mounts only decides
-// how many hardpoints are FILLED and with what gun, in list order: a brand-
-// new Tarsus fills slots 0 and 1 with its two lasers. Tune muzzle placement in the JSON, never here. Shared by the boot
-// spawn AND the title NEW handler. Unknown gun names fall back to a Laser; an
-// EMPTY slot (sold gun, or a turret whose hardware isn't owned, #145/#510)
-// stays in pl.mounts as an inert GunType::Count mount so mount indices keep
-// lining up with p.gun_mounts (armament MFD, swap helper, mount_mods).
+// named in p.gun_mounts via armament_loadout::fit_player_mounts (see there
+// for the hardpoint/fill rules; a brand-new Tarsus fills slots 0 and 1 with
+// its two lasers). Tune muzzle placement in the ship JSON, never here.
+// Shared by the boot spawn AND the title NEW handler.
 static void apply_player_loadout(Ship& pl, const PlayerState& p, bool heal = true) {
     if (const ShipClass* k = ship_class::find(p.ship_class_name)) pl.klass = k;
     // Per-hull turn rate for the PLAYER. Unlike NPCs (which scale max_ypr by
@@ -1025,42 +1021,8 @@ static void apply_player_loadout(Ship& pl, const PlayerState& p, bool heal = tru
     // a normal land->launch so battle damage you didn't pay to repair
     // persists across the base visit.
     if (heal) ship::heal_to_full(pl);
-    const ShipClass* k = pl.klass;
-    pl.mounts.clear();
-    // Fill hardpoints from the ship class in list order. Count follows the
-    // player's loadout (2 for a new Tarsus), capped
-    // at the number of hardpoints the hull actually has; with no loadout set
-    // (--ship dev override) fill every hardpoint with its default gun.
-    const size_t slots = k ? k->default_guns.size() : size_t{0};
-    const size_t n = p.gun_mounts.empty()
-                       ? slots
-                       : std::min(p.gun_mounts.size(), slots);
-    for (size_t i = 0; i < n; ++i) {
-        GunMount m = k->default_guns[i];   // position + default type from ship.json
-        if (!p.gun_mounts.empty()) {
-            const std::string& gun_id = p.gun_mounts[i].gun_id;
-            if (gun_id.empty() || !player::mount_fittable(p, k, (int)i)) {
-                m.type = GunType::Count;                              // inert: nothing fitted
-            } else {
-                const GunType t = gun::from_name(gun_id);
-                m.type = (t == GunType::Count) ? GunType::Laser : t;  // player gun overrides type only
-            }
-        }
-        // Keep the authored cone: only turrets read it, and clamping it
-        // (the old 1-degree override) left player turrets unable to fire (#379).
-        pl.mounts.push_back(m);
-    }
-    pl.gun_cooldowns.assign(pl.mounts.size(), 0.0f);
-    // Fresh loadout = ALL mode, so the stored mode index matches the mask
-    // (the legacy default index 3 isn't ALL for every loadout).
-    firing::arm_all_guns(pl);
-    // Carry per-mount weapon mods (#90) onto the live ship, parallel to
-    // mounts. Default WeaponMods{} (1.0/1.0) is a no-op; we overwrite the
-    // entries the player has actually fitted from their MountSlot::mods so
-    // firing::tick applies the rarity fire-rate / energy deltas per shot.
-    pl.mount_mods.assign(pl.mounts.size(), inventory::WeaponMods{});
-    for (size_t i = 0; i < pl.mount_mods.size() && i < p.gun_mounts.size(); ++i)
-        pl.mount_mods[i] = p.gun_mounts[i].mods;
+    // Guns: hardpoints from the hull, fitted types from the loadout (#514).
+    armament_loadout::fit_player_mounts(pl, p);
 }
 
 static void apply_pending_player_health_snapshot(Ship& player) {

@@ -486,8 +486,10 @@ add_executable(test_cockpit_overlay EXCLUDE_FROM_ALL tools/test_cockpit_overlay.
 target_include_directories(test_cockpit_overlay PRIVATE
     ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party)
 
+# Hardpoint swaps + the player loadout -> live mounts build (#514).
 add_executable(test_armament_loadout EXCLUDE_FROM_ALL
-    tools/test_armament_loadout.cpp src/player.cpp src/commodity.cpp src/json.cpp)
+    tools/test_armament_loadout.cpp src/player.cpp src/commodity.cpp src/json.cpp
+    src/firing.cpp src/ship_registry.cpp src/gun.cpp)
 target_include_directories(test_armament_loadout PRIVATE
     ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party)
 
