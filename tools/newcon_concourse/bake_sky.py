@@ -132,12 +132,13 @@ class PaintedStars:
         self.tint = rgb / np.maximum(rgb.max(axis=1, keepdims=True), 1.0)
 
 
-def star_tile(stars, fraction, sigma_range, rng, gain=1.3):
+def star_tile(stars, fraction, sigma_range, rng, gain=1.3, radius=3):
     """Tileable star field: gaussian dots wrapped at the tile edges. `gain`
-    compensates for sub-pixel centres spreading a star's peak."""
+    compensates for sub-pixel centres spreading a star's peak; `radius` (px)
+    bounds each dot, so keep it >= 2.5 sigma for wide glows."""
     n = int(STAR_TILE * STAR_TILE * stars.density * fraction)
     acc = np.zeros((STAR_TILE, STAR_TILE, 3), dtype=np.float32)
-    yy, xx = np.mgrid[-3:4, -3:4]
+    yy, xx = np.mgrid[-radius:radius + 1, -radius:radius + 1]
     for _ in range(n):
         x, y = rng.uniform(0, STAR_TILE, 2)
         sigma = rng.uniform(*sigma_range)

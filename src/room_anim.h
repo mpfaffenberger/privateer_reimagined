@@ -31,9 +31,9 @@ struct SpriteLayer {
 };
 
 struct StarLayer {
-    TextureSlot tile;
-    float       tile_w = 1.0f, tile_h = 1.0f;
-    float       velocity[2] = {0.0f, 0.0f};
+    TextureSlot  tile;
+    float        tile_w = 1.0f, tile_h = 1.0f;
+    StarLayerDef def;                               // velocity + spin
 };
 
 struct RoomAnim {

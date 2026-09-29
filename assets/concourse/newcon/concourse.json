@@ -100,8 +100,9 @@
           "mask": "anim/hangar/{plate}_mask.png",
           "fill": "anim/hangar/{plate}_fill.png",
           "stars": [
-            { "tile": "anim/hangar/stars_far.png", "velocity": [-4.0, 0.8] },
-            { "tile": "anim/hangar/stars_near.png", "velocity": [-6.0, 1.2] }
+            { "tile": "anim/hangar/{plate}_stars_far.png", "velocity": [0, 0], "spin": 4.0 },
+            { "tile": "anim/hangar/{plate}_stars_near.png", "velocity": [0, 0], "spin": 4.0 },
+            { "tile": "anim/hangar/{plate}_stars_hero.png", "velocity": [0, 0], "spin": 4.0 }
           ]
         },
         "anchors": "anim/hangar/anchors.json",

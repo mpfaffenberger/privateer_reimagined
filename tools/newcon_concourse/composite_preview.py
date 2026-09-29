@@ -7,7 +7,8 @@
 
 Reads the room straight from concourse.json (single source of truth) and
 follows src/room_anim.cpp: sky fill stretched, star tiles scrolled at their
-velocity (plate px/s, wrapping), the plate on top with the sky mask as alpha,
+velocity (plate px/s, wrapping) and spun at their spin (deg/s clockwise about
+the anchor, else the plate centre), the plate on top with the sky mask as alpha,
 then each sprite layer's frame for timeline slot
 (floor(t*fps) + offset_frames) mod period_frames, straight-alpha "over".
 "under" layers go between the sky and the plate; anchored layers are
@@ -44,28 +45,47 @@ def over(dst, src):
     dst[...] = src[..., :3] * a + dst * (1.0 - a)
 
 
+def sample_repeat(tile, qx, qy):
+    """Bilinear, wrapping sample of `tile` (H x W x C) at texel coords q,
+    like the engine's LINEAR + REPEAT sampler (texel centres at +0.5)."""
+    th, tw = tile.shape[:2]
+    qx, qy = qx - 0.5, qy - 0.5
+    x0, y0 = np.floor(qx), np.floor(qy)
+    fx, fy = (qx - x0)[:, None], (qy - y0)[:, None]
+    x0, y0 = x0.astype(np.int64) % tw, y0.astype(np.int64) % th
+    x1, y1 = (x0 + 1) % tw, (y0 + 1) % th
+    return (tile[y0, x0] * (1 - fx) * (1 - fy) + tile[y0, x1] * fx * (1 - fy) +
+            tile[y1, x0] * (1 - fx) * fy + tile[y1, x1] * fx * fy)
+
+
 class Sky:
-    def __init__(self, cfg, size):
-        w, h = size
+    def __init__(self, cfg, size, centre):
         self.fill = np.asarray(Image.open(ROOM_DIR / cfg["fill"]).convert("RGB")
                                .resize(size, Image.BILINEAR), dtype=np.float32) / 255.0
         self.mask = np.asarray(Image.open(ROOM_DIR / cfg["mask"]).convert("L"),
                                dtype=np.float32) / 255.0
-        self.stars = []
-        for s in cfg.get("stars", []):
-            tile = Image.open(ROOM_DIR / s["tile"]).convert("RGBA")
-            reps = (h // tile.height + 2, w // tile.width + 2, 1)
-            tiled = Image.fromarray(np.tile(np.asarray(tile), reps))
-            self.stars.append((tiled, tile.size, s["velocity"]))
+        # Only sky pixels can show stars; the plate hides the rest.
+        self.ys, self.xs = np.nonzero(self.mask > 0)
+        self.px, self.py = self.xs + 0.5, self.ys + 0.5          # pixel centres
+        self.centre = centre
+        self.stars = [(np.asarray(Image.open(ROOM_DIR / s["tile"]).convert("RGBA"),
+                                  dtype=np.float32) / 255.0,
+                       s["velocity"], float(s.get("spin", 0.0)))
+                      for s in cfg.get("stars", [])]
 
-    def draw(self, t, size):
+    def draw(self, t):
         canvas = self.fill.copy()
-        for tiled, (tw, th), (vx, vy) in self.stars:
-            # Screen x shows texel x - v*t (mod tile): sample from +(tile - s).
-            sx, sy = tw - (vx * t) % tw, th - (vy * t) % th
-            layer = tiled.transform(size, Image.AFFINE, (1, 0, sx, 0, 1, sy),
-                                    resample=Image.BILINEAR)
-            over(canvas, np.asarray(layer, dtype=np.float32) / 255.0)
+        cx, cy = self.centre
+        dx, dy = self.px - cx, self.py - cy
+        for tile, (vx, vy), spin in self.stars:
+            # Screen p shows texel c + R(-a)(p - c) - v*t (room_anim_data star_uvs).
+            a = np.radians((spin * t) % 360.0)
+            qx = cx + np.cos(a) * dx + np.sin(a) * dy - vx * t
+            qy = cy - np.sin(a) * dx + np.cos(a) * dy - vy * t
+            src = sample_repeat(tile, qx, qy)
+            alpha = src[:, 3:4]
+            dst = canvas[self.ys, self.xs]
+            canvas[self.ys, self.xs] = src[:, :3] * alpha + dst * (1.0 - alpha)
         return canvas
 
 
@@ -130,13 +150,14 @@ def main():
             anchor = json.loads((ROOM_DIR / room["anchors"]).read_text()).get(args.plate)
     plate = rgba(ROOM_DIR / room["background"])
     size = (plate.shape[1], plate.shape[0])
-    sky = Sky(room["sky"], size) if "sky" in room and not args.no_sky else None
+    centre = anchor[:2] if anchor else (size[0] / 2, size[1] / 2)
+    sky = Sky(room["sky"], size, centre) if "sky" in room and not args.no_sky else None
     if sky is not None:
         plate[..., 3] = 1.0 - sky.mask
     layers = [Layer(m, anchor) for m in (args.only or room.get("layers", []))]
 
     def frame(t):
-        canvas = sky.draw(t, size) if sky else np.zeros_like(plate[..., :3])
+        canvas = sky.draw(t) if sky else np.zeros_like(plate[..., :3])
         for layer in (lay for lay in layers if lay.under):
             layer.draw(canvas, t)
         over(canvas, plate)

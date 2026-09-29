@@ -126,6 +126,45 @@ void star_scroll() {
     check(room_anim::scroll_uv(5.0f, 1.0, 0.0f) == 0.0f, "zero-size tile does not divide by 0");
 }
 
+bool near(float a, float b) { return std::fabs(a - b) < 1e-4f; }
+
+void star_spin() {
+    room_anim::StarLayerDef s;
+    s.velocity[0] = -6.0f;
+    s.velocity[1] = 1.5f;
+    const float centre[2] = {700.0f, 300.0f};
+    float uv[4][2];
+    room_anim::star_uvs(s, 512.0f, 512.0f, 1536.0f, 1024.0f, centre, 2.5, uv);
+    const float su = room_anim::scroll_uv(-6.0f, 2.5, 512.0f);
+    const float sv = room_anim::scroll_uv(1.5f, 2.5, 512.0f);
+    check(near(uv[0][0], -su) && near(uv[0][1], -sv) && near(uv[2][0], 3.0f - su) &&
+              near(uv[2][1], 2.0f - sv) && near(uv[1][1], -sv) && near(uv[3][0], -su),
+          "spin 0 is exactly the old axis-aligned drift");
+
+    // 90 deg clockwise (y down): the screen's top-left samples the texel
+    // that sat bottom-left of the centre.
+    room_anim::StarLayerDef spin;
+    spin.spin = 90.0f;
+    const float c[2] = {100.0f, 100.0f};
+    room_anim::star_uvs(spin, 1.0f, 1.0f, 200.0f, 200.0f, c, 1.0, uv);
+    check(near(uv[0][0], 0.0f) && near(uv[0][1], 200.0f), "spin turns the field clockwise");
+    const float origin[2] = {0.0f, 0.0f};
+    spin.spin = 37.0f;
+    room_anim::star_uvs(spin, 64.0f, 64.0f, 200.0f, 200.0f, origin, 3.3, uv);
+    check(near(uv[0][0], 0.0f) && near(uv[0][1], 0.0f), "the spin centre stays put");
+    spin.spin = 4.0f;
+    room_anim::star_uvs(spin, 512.0f, 512.0f, 1536.0f, 1024.0f, centre, 86400.0 * 3 + 0.5, uv);
+    const float d1 = std::hypot(uv[1][0] - uv[0][0], uv[1][1] - uv[0][1]) * 512.0f;
+    check(near(d1 / 1536.0f, 1.0f), "spin stays rigid after three days of uptime");
+
+    room_anim::RoomAnimDef def;
+    room_anim::parse_room_anim(json::parse(R"({"sky":{"mask":"m","fill":"f",
+        "stars":[{"tile":"s.png","velocity":[0,0],"spin":-2.5},{"tile":"t.png","velocity":[1,0]}]}})"),
+                               def);
+    check(def.sky.stars[0].spin == -2.5f && def.sky.stars[1].spin == 0.0f,
+          "spin is read; absent spin means none");
+}
+
 void shipped_newcon() {
     const std::string dir = "assets/concourse/newcon/";
     const json::Value root = json::parse_file(dir + "concourse.json");
@@ -184,16 +223,21 @@ void shipped_newcon_hangar() {
         const std::string ship = entry.path().stem().string();
         const room_anim::RoomAnimDef p = room_anim::for_plate(def, ship);
         float a[3];
-        if (std::filesystem::exists(dir + p.sky.mask) && std::filesystem::exists(dir + p.sky.fill) &&
-            room_anim::read_anchor(anchors, ship, a) && a[0] > 0 && a[0] < 1536 && a[1] > 0 &&
-            a[1] < 1024)
+        bool tiles = true;
+        for (const room_anim::StarLayerDef& s : p.sky.stars)
+            tiles = tiles && std::filesystem::exists(dir + s.tile);
+        if (tiles && std::filesystem::exists(dir + p.sky.mask) &&
+            std::filesystem::exists(dir + p.sky.fill) && room_anim::read_anchor(anchors, ship, a) &&
+            a[0] > 0 && a[0] < 1536 && a[1] > 0 && a[1] < 1024)
             ++complete;
         else
-            check(false, "  hangar sky/anchor for " + ship);
+            check(false, "  hangar sky/stars/anchor for " + ship);
     }
-    check(plates >= 18 && complete == plates, "every landing composite has a mask, fill + anchor");
-    for (const room_anim::StarLayerDef& s : def.sky.stars)
-        check(std::filesystem::exists(dir + s.tile), "hangar star tile exists: " + s.tile);
+    check(plates >= 18 && complete == plates,
+          "every landing composite has a mask, fill, star tiles + anchor");
+    bool spins = !def.sky.stars.empty();
+    for (const room_anim::StarLayerDef& s : def.sky.stars) spins = spins && s.spin != 0.0f;
+    check(spins, "hangar stars spin about the mouth");
 
     int under = 0, over = 0;
     room_anim::SpriteSheet first;
@@ -249,6 +293,7 @@ int main() {
     per_plate();
     anchored_layers();
     star_scroll();
+    star_spin();
     shipped_newcon();
     shipped_newcon_hangar();
     other_archetypes_static();

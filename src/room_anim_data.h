@@ -60,6 +60,8 @@ struct SpriteSheet {
 struct StarLayerDef {
     std::string tile;
     float       velocity[2] = {0.0f, 0.0f};         // plate px / second
+    float       spin = 0.0f;                        // deg / second, clockwise on screen,
+                                                    // about the anchor (else canvas centre)
 };
 
 struct SkyDef {
@@ -102,5 +104,12 @@ const SpriteFrame* frame_at(const SpriteSheet& sheet, double seconds);
 // Texture-space offset (0..1) of a tile of `tile_px` scrolling at
 // `velocity_px` per second, wrapped so precision holds over long sessions.
 float scroll_uv(float velocity_px, double seconds, float tile_px);
+
+// Tile-space UVs of the plate corners (0,0), (w,0), (w,h), (0,h) for star
+// layer `s` at `seconds`: drifting at its velocity and spinning about
+// `centre` (plate px). The map is affine, so a quad with these corner UVs
+// and a REPEAT sampler draws the field exactly. spin 0 = plain drift.
+void star_uvs(const StarLayerDef& s, float tile_w, float tile_h, float canvas_w,
+              float canvas_h, const float centre[2], double seconds, float (&uv)[4][2]);
 
 }  // namespace room_anim

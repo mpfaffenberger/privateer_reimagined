@@ -97,6 +97,7 @@ void parse_room_anim(const json::Value& room, RoomAnimDef& out) {
             for (const json::Value& s : stars->as_array()) {
                 StarLayerDef def;
                 def.tile = field(s, "tile").string_or("");
+                def.spin = (float)field(s, "spin").number_or(0.0);
                 if (!def.tile.empty() && read_floats(s, "velocity", def.velocity))
                     out.sky.stars.push_back(def);
             }
@@ -155,6 +156,23 @@ float scroll_uv(float velocity_px, double seconds, float tile_px) {
     if (tile_px <= 0.0f) return 0.0f;
     const double travelled = std::fmod((double)velocity_px * seconds, (double)tile_px);
     return (float)(travelled / (double)tile_px);
+}
+
+void star_uvs(const StarLayerDef& s, float tile_w, float tile_h, float canvas_w,
+              float canvas_h, const float centre[2], double seconds, float (&uv)[4][2]) {
+    // Screen p shows texel c + R(-a)(p - c) - v*t: rotating the field by a
+    // (clockwise, y down) means sampling it rotated back. Wrap the angle and
+    // the drift so float precision holds over long sessions.
+    const double a = std::fmod((double)s.spin * seconds, 360.0) * 3.14159265358979323846 / 180.0;
+    const float cs = (float)std::cos(a), sn = (float)std::sin(a);
+    const float su = scroll_uv(s.velocity[0], seconds, tile_w);
+    const float sv = scroll_uv(s.velocity[1], seconds, tile_h);
+    const float corners[4][2] = {{0, 0}, {canvas_w, 0}, {canvas_w, canvas_h}, {0, canvas_h}};
+    for (int i = 0; i < 4; ++i) {
+        const float dx = corners[i][0] - centre[0], dy = corners[i][1] - centre[1];
+        uv[i][0] = (centre[0] + cs * dx + sn * dy) / tile_w - su;
+        uv[i][1] = (centre[1] - sn * dx + cs * dy) / tile_h - sv;
+    }
 }
 
 }  // namespace room_anim

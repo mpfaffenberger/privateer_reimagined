@@ -87,7 +87,7 @@ The landing pad isn't one painting: it shows one of 18 full-frame composites
 So nothing is camera-matched to a single plate. Instead:
 
 ```
-bake_hangar.py              -> anim/hangar/<hull>_{mask,fill}.png, anchors.json, stars_*.png
+bake_hangar.py              -> anim/hangar/<hull>_{mask,fill,stars_*}.png, anchors.json
 render_hangar.py (Blender)  -> build/newcon_concourse/hangar/<layer>/  straight-alpha frames
 bake_traffic.py             -> anim/hangar/<layer>_{under,over}.{png,json}
 composite_preview.py --room landing --plate <hull>
@@ -108,7 +108,20 @@ the upper middle, fit a circle to the left/right edges of its top 120 rows
 as on the drayman), and keep only the flood inside that circle. The mask is
 ramped by luminance near the threshold, so the painted light shaft's haze
 fades into space instead of being cut off in a jagged line. The circle is the
-composite's anchor `[cx, cy, r]`.
+composite's anchor `[cx, cy, r]`. The haze ramp measures after an 11 px
+opening, so big painted stars aren't taken for haze and left frozen in view.
+
+**Spinning stars.** Star layers take `"spin"` (deg/s, clockwise) about the
+anchor, so the field turns around the mouth like a rotating station
+(`room_anim_data.cpp star_uvs()`: one affine quad with a REPEAT sampler).
+The paintings disagree (tarsus ~13 stars/10k px, drayman ~2), so every
+composite gets its own tiles from its own painted stars. Sub-pixel tile stars
+partly fall under the detector, so the bake builds each composite, measures
+it like the paint, and corrects the density until they agree (within 10%;
+floor 2/10k px so near-starless mouths still visibly spin). The few big stars
+get a third "hero" tile of two-tone glows (core + blue halo tints), found by
+brightest channel: luma barely counts blue, so vivid blue stars read as dim.
+`--stars-only` re-makes just the tiles in about two minutes.
 
 **Canonical mouth.** `render_hangar.py` renders against a mouth at
 `ANCHOR = (768, 360, 200)` px, 220 m out (focal length exactly 1024 px). The

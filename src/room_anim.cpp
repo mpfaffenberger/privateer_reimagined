@@ -104,8 +104,7 @@ bool load_sky(const std::string& dir, const std::string& plate, const SkyDef& de
             continue;
         }
         image_size(layer.tile, layer.tile_w, layer.tile_h);
-        layer.velocity[0] = s.velocity[0];
-        layer.velocity[1] = s.velocity[1];
+        layer.def = s;
         out.stars.push_back(layer);
     }
     return true;
@@ -186,14 +185,20 @@ bool load(const std::string& dir, const RoomAnimDef& def, const std::string& pla
 void draw_under(ImDrawList* dl, float w, float h, const RoomAnim& anim, double seconds) {
     if (anim.sky_fill.valid) {
         dl->AddImage(linear_clamp(anim.sky_fill), ImVec2(0, 0), ImVec2(w, h));
+        // Stars spin about the plate's anchor (the hangar mouth), else the
+        // middle of the plate.
+        const float centre[2] = {anim.has_anchor ? anim.anchor[0] : anim.canvas_w * 0.5f,
+                                 anim.has_anchor ? anim.anchor[1] : anim.canvas_h * 0.5f};
         for (const StarLayer& s : anim.stars) {
             // Tiles repeat across the whole plate; the masked plate on top
             // only lets them show through the windows.
-            const ImVec2 uv0(-scroll_uv(s.velocity[0], seconds, s.tile_w),
-                             -scroll_uv(s.velocity[1], seconds, s.tile_h));
-            const ImVec2 uv1(uv0.x + anim.canvas_w / s.tile_w,
-                             uv0.y + anim.canvas_h / s.tile_h);
-            dl->AddImage(linear_repeat(s.tile), ImVec2(0, 0), ImVec2(w, h), uv0, uv1);
+            float uv[4][2];
+            star_uvs(s.def, s.tile_w, s.tile_h, anim.canvas_w, anim.canvas_h, centre, seconds,
+                     uv);
+            dl->AddImageQuad(linear_repeat(s.tile), ImVec2(0, 0), ImVec2(w, 0), ImVec2(w, h),
+                             ImVec2(0, h), ImVec2(uv[0][0], uv[0][1]),
+                             ImVec2(uv[1][0], uv[1][1]), ImVec2(uv[2][0], uv[2][1]),
+                             ImVec2(uv[3][0], uv[3][1]));
         }
     }
     draw_layers(dl, w, h, anim, seconds, /*under=*/true);
