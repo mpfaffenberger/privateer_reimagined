@@ -113,7 +113,7 @@ Semantics:
 
 A cinematic is authored against a specific backdrop. The optional top-level
 block records it, and **every play path** (Studio panel, `/cinematic/play`,
-the `play_cinematic:` plot token, triggers, `--play-cinematic`, F8/F9)
+the `play_cinematic:` plot token, triggers, `--play-cinematic`)
 teleports the player there BEFORE the timeline starts:
 
 ```json

@@ -504,8 +504,11 @@ void init() {
 void shutdown() {}
 
 bool handle_event(const sapp_event* e) {
+    // Plain F4 only: Shift+F4 belongs to the Gun Mount Tuner in main.cpp
+    // (#491), which runs after this handler and would otherwise never see it.
     if (e->type == SAPP_EVENTTYPE_KEY_DOWN &&
-        e->key_code == SAPP_KEYCODE_F4) {
+        e->key_code == SAPP_KEYCODE_F4 &&
+        !(e->modifiers & SAPP_MODIFIER_SHIFT)) {
         g_visible = !g_visible;
         return true;     // consumed — don't let it leak to the game
     }

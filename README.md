@@ -188,6 +188,7 @@ The debug and authoring panels have their own bindings:
 | `F2` | Sprite light editor |
 | `F3` | Ship-sprite frame HUD |
 | `F4` | Atlas grid viewer |
+| `Shift+F4` | Gun mount tuner |
 | `F5` | Mesh orientation editor |
 | `F6` | Sprite generation tool |
 | `F7` / `F8` / `F9` | Sound / music / speech labelers |
