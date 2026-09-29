@@ -35,7 +35,7 @@
 // rest of the codebase uses for enum<->disk boundaries.
 //
 // no third-party deps: serialization emits JSON via a tiny local writer
-// (savegame.cpp); deserialization reuses the existing read-only json.cpp
+// (savegame_write.cpp); deserialization reuses the existing read-only json.cpp
 // parser. (json.{h,cpp} is parse-only by design — see its header — so the
 // writer lives here rather than bloating that module's documented scope.)
 // -----------------------------------------------------------------------------

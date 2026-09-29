@@ -15,7 +15,8 @@
 //
 // Build (mirrors tools/test_economy.cpp's recipe):
 //   clang++ -std=c++20 -Isrc -Ithird_party \
-//       tools/test_savegame.cpp src/savegame.cpp src/player.cpp \
+//       tools/test_savegame.cpp src/savegame.cpp src/savegame_read.cpp \
+//       src/savegame_write.cpp src/player.cpp \
 //       src/json.cpp src/faction.cpp -o /tmp/test_savegame
 // -----------------------------------------------------------------------------
 

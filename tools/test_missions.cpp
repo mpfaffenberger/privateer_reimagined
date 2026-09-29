@@ -21,7 +21,8 @@
 //   clang++ -std=c++20 -DMISSIONS_HEADLESS -DCOMM_HEADLESS -Isrc -Ithird_party \
 //       tools/test_missions.cpp src/missions.cpp src/comm.cpp src/faction.cpp \
 //       src/player.cpp src/commodity.cpp src/galaxy.cpp src/system_def.cpp \
-//       src/savegame.cpp src/json.cpp -o /tmp/test_missions
+//       src/savegame.cpp src/savegame_read.cpp src/savegame_write.cpp \
+//       src/json.cpp -o /tmp/test_missions
 // -----------------------------------------------------------------------------
 
 #include "missions.h"

@@ -162,6 +162,14 @@ set(IMGUI_SRC
     ${IMGUI_DIR}/imgui_widgets.cpp
 )
 
+# The savegame module: public API + its PlayerState <-> JSON codec (#525).
+# Every target that links savegame links all three.
+set(SAVEGAME_SRC
+    src/savegame.cpp
+    src/savegame_read.cpp
+    src/savegame_write.cpp
+)
+
 add_executable(new_privateer
     src/main.cpp
     src/app_cli.cpp
@@ -231,7 +239,7 @@ add_executable(new_privateer
     src/drone.cpp
     src/base_screens.cpp
     src/base_art_studio.cpp
-    src/savegame.cpp
+    ${SAVEGAME_SRC}
     src/player.cpp
     src/plot.cpp
     src/fixers.cpp
@@ -525,7 +533,7 @@ add_executable(test_full_loop EXCLUDE_FROM_ALL
     tools/test_full_loop.cpp
     src/game_state.cpp src/player.cpp src/faction.cpp src/comm.cpp
     src/commodity.cpp src/economy.cpp src/outfitting.cpp src/missions.cpp
-    src/galaxy.cpp src/system_def.cpp src/json.cpp src/savegame.cpp src/world_clock.cpp
+    src/galaxy.cpp src/system_def.cpp src/json.cpp ${SAVEGAME_SRC} src/world_clock.cpp
     src/docking.cpp src/autopilot.cpp src/threat.cpp src/jump.cpp
     src/encounters.cpp src/repair.cpp src/missile.cpp src/ship.cpp
     src/ship_class.cpp src/ship_registry.cpp src/ship_ai.cpp
@@ -551,7 +559,7 @@ add_executable(test_ai_brain EXCLUDE_FROM_ALL
     tools/test_ai_brain.cpp
     src/game_state.cpp src/player.cpp src/faction.cpp src/comm.cpp
     src/commodity.cpp src/economy.cpp src/outfitting.cpp src/missions.cpp
-    src/galaxy.cpp src/system_def.cpp src/json.cpp src/savegame.cpp src/world_clock.cpp
+    src/galaxy.cpp src/system_def.cpp src/json.cpp ${SAVEGAME_SRC} src/world_clock.cpp
     src/docking.cpp src/autopilot.cpp src/threat.cpp src/jump.cpp
     src/encounters.cpp src/repair.cpp src/missile.cpp src/ship.cpp
     src/ship_class.cpp src/ship_registry.cpp src/ship_ai.cpp
@@ -580,7 +588,7 @@ add_executable(test_missions EXCLUDE_FROM_ALL
     tools/test_missions.cpp
     src/missions.cpp src/comm.cpp src/player.cpp src/faction.cpp
     src/commodity.cpp
-    src/galaxy.cpp src/system_def.cpp src/json.cpp src/savegame.cpp src/world_clock.cpp
+    src/galaxy.cpp src/system_def.cpp src/json.cpp ${SAVEGAME_SRC} src/world_clock.cpp
     src/ship_class.cpp src/ship_registry.cpp
     src/encounters.cpp
     src/mobility.cpp
@@ -609,7 +617,7 @@ add_executable(test_mission_tracker EXCLUDE_FROM_ALL
     src/mission_tracker.cpp
     src/missions.cpp src/comm.cpp src/player.cpp src/faction.cpp
     src/threat.cpp src/commodity.cpp
-    src/galaxy.cpp src/system_def.cpp src/json.cpp src/savegame.cpp src/world_clock.cpp
+    src/galaxy.cpp src/system_def.cpp src/json.cpp ${SAVEGAME_SRC} src/world_clock.cpp
     src/ship_class.cpp src/ship_registry.cpp
     src/mobility.cpp
     src/gun.cpp src/armor.cpp src/shield.cpp
@@ -629,7 +637,7 @@ add_dependencies(test_mission_tracker mission_templates_gen)
 #   cmake --build build --target test_savegame && ./build/test_savegame
 add_executable(test_savegame EXCLUDE_FROM_ALL
     tools/test_savegame.cpp
-    src/savegame.cpp src/world_clock.cpp src/player.cpp src/plot.cpp src/json.cpp src/faction.cpp
+    ${SAVEGAME_SRC} src/world_clock.cpp src/player.cpp src/plot.cpp src/json.cpp src/faction.cpp
     src/commodity.cpp
     src/ship_class.cpp src/gun.cpp src/shield.cpp src/mobility.cpp   # pre-v9 turret grandfathering
 )
