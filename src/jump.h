@@ -15,10 +15,13 @@
 // rebuilds). Keeping the verdict here keeps it trivially testable and lets the
 // HUD and the keypress share ONE source of truth for "can I jump?".
 //
-// Eligibility gate (mirrors the bead's acceptance criteria):
-//   1. the selected nav is kind=="jump"             (else: no prompt at all)
-//   2. it resolves to a real galaxy edge             (else: "JUMP: NO ROUTE")
-//   3. we're inside the trigger range of the gate    (else: "JUMP: TOO FAR")
+// Eligibility gate (mirrors the bead's acceptance criteria, #380):
+//   1. a kind=="jump" nav sits within trigger range  (else: no prompt at all)
+//      — the NEAREST such gate is the candidate; the nav-computer selection
+//      is irrelevant. Flying up to a gate is enough, like the original.
+//   2. the player has a Jump Drive fitted            (else: "JUMP: NO DRIVE")
+//   3. it resolves to a real galaxy edge             (else: "JUMP: NO ROUTE")
+//   4. the campaign has opened that route            (else: "JUMP: UNSURVEYED")
 //
 // Hostiles are intentionally absent from this list. They block autopilot, not
 // jumping: reaching a valid gate under fire is a legitimate escape.
@@ -49,30 +52,26 @@ namespace jump {
 // ---- tuning knobs -----------------------------------------------------------
 // Tight: you must be basically on top of the gate to jump (Privateer feel).
 constexpr float k_trigger_range_m = 3000.0f;
-// Verdict for a single (player, selected nav) pair.
+// Verdict for the player against the nearest in-range jump gate.
 enum class Status : uint8_t {
     Ready = 0,    // good to jump — "PRESS J TO JUMP - <dest>"
-    NotJumpNav,   // selected nav isn't a jump gate — no prompt (caller falls
-                  // back to the dock prompt for the same MFD slot)
+    NotJumpNav,   // no jump gate within trigger range — no prompt (caller
+                  // falls back to the dock prompt for the same MFD slot)
     NoRoute,      // jump gate but dangling / unsurveyed — "JUMP: NO ROUTE"
     Locked,       // link exists but the campaign hasn't opened it (#130)
                   // — "JUMP: UNSURVEYED"
-    TooFar,       // outside trigger range — "JUMP: TOO FAR"
     NoDrive,      // player has no Jump Drive fitted — "JUMP: NO DRIVE"
 };
 
 struct Eligibility {
     Status      status = Status::NotJumpNav;
+    int         nav_index = -1;      // gate in system.nav_points; -1 = none nearby
     std::string dest_id;        // destination galaxy system id ("pyrenees")
     std::string dest_name;      // destination display name for the prompt ("Pyrenees")
     std::string arrival_nav;    // arrival gate name on the far side ("Troy Jump")
     float       distance_m = 0.0f;   // player -> gate (for logs)
 };
 
-// Evaluate the jump verdict for `selected_nav` (index into
-// system.nav_points; -1 = none). Pure: reads the camera pose, the gate's
-// position, and the galaxy topology — mutates nothing.
-// Pass `has_jump_drive` so the verdict can include NoDrive.
 // Campaign route gate (#130, the locked frontier). When registered, a
 // truthy return for (from_system, to_system) turns a Ready link into
 // Status::Locked. main.cpp registers the campaign predicate (frontier
@@ -81,19 +80,23 @@ struct Eligibility {
 void set_route_gate(
     std::function<bool(const std::string& from, const std::string& to)> gate);
 
+// Evaluate the jump verdict against the nearest jump gate within
+// k_trigger_range_m of the camera (ties keep the lower nav index). Pure:
+// reads the camera pose, gate positions, and the galaxy topology — mutates
+// nothing. No gate in range -> NotJumpNav with nav_index == -1.
+// Pass `has_jump_drive` so the verdict can include NoDrive.
 Eligibility evaluate(const Camera& cam, const StarSystem& system,
                      const galaxy::Galaxy& galaxy,
                      const std::string& current_system_id,
-                     int selected_nav,
                      bool has_jump_drive);
 
 // HUD prompt for an eligibility, or nullptr when nothing should be drawn
-// (NotJumpNav). Sets *ready = true only for the green "PRESS J" line; every
-// refusal line is amber. Returns a pointer into a static buffer — copy it if
+// (NotJumpNav — no gate nearby, so no refusal line either). Sets *ready =
+// true only for the green "PRESS J" line; every refusal line is amber. Returns a pointer into a static buffer — copy it if
 // you need to keep it past the next call (the HUD consumes it immediately).
 const char* prompt(const Eligibility& e, bool* ready);
 
-// Lowercase-ish status label for logs ("ready", "too far", ...).
+// Lowercase-ish status label for logs ("ready", "no drive", ...).
 const char* status_str(Status s);
 
 } // namespace jump

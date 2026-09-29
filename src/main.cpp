@@ -1700,14 +1700,14 @@ void build_system_scene(bool first_time, bool show_progress) {
                     return;
                 }
                 // Dev teleport to the gate lip (same convenience as /dock),
-                // then the honest eligibility check.
-                g.selected_nav    = i;
+                // then the honest nearby-gate eligibility check (#380) — no
+                // nav selection needed, exactly like the J key.
                 g.camera.position = HMM_AddV3(n.position,
                                               HMM_V3(0.0f, 0.0f, 1200.0f));
                 g.camera.velocity = HMM_V3(0.0f, 0.0f, 0.0f);
                 const jump::Eligibility e = jump::evaluate(
                     g.camera, g.system, g.galaxy, g.player.current_system,
-                    i, g.player.has_jump_drive);
+                    g.player.has_jump_drive);
                 if (e.status == jump::Status::Ready) {
                     std::printf("[dev_remote] /jump %s -> %s engaging\n",
                                 g.player.current_system.c_str(), e.dest_id.c_str());
@@ -2986,9 +2986,9 @@ void update_system_switch_timers(float dt) {
 // ---- jump soak dev driver (np-6al.3) ----------------------------------------
 //
 // The headless stand-in for a human pressing J. On the dev_jump_interval,
-// while in Flight with no jump already in flight: select the first surveyed
-// jump gate in the current system, teleport just inside its trigger range,
-// and fire the jump through the EXACT same code path the J keypress uses
+// while in Flight with no jump already in flight: teleport just inside the
+// trigger range of the first surveyed jump gate in the current system, and
+// fire the jump through the EXACT same nearby-gate path the J keypress uses
 // (jump::evaluate -> pending_jump + Loading). Because Troy's first gate leads
 // to Pyrenees and Pyrenees' only gate leads back to Troy, this ping-pongs the
 // round-trip indefinitely — a leak/stability soak over repeated teardown+build.
@@ -3022,9 +3022,9 @@ void update_dev_jump_soak(float dt) {
         into = (len > 1e-3f) ? HMM_DivV3F(into, len) : HMM_V3(0.0f, 0.0f, -1.0f);
         g.camera.position = HMM_AddV3(n.position, HMM_MulV3F(into, 1000.0f));
         g.camera.velocity = HMM_V3(0.0f, 0.0f, 0.0f);
-        e = jump::evaluate(g.camera, g.system, g.galaxy, g.player.current_system, i,
-                            g.player.has_jump_drive);
-        if (e.status == jump::Status::Ready) { idx = i; break; }
+        e = jump::evaluate(g.camera, g.system, g.galaxy, g.player.current_system,
+                           g.player.has_jump_drive);
+        if (e.status == jump::Status::Ready) { idx = e.nav_index; break; }
         std::printf("[dev] --dev-jump-soak: gate '%s' not ready (%s); trying next\n",
                     n.name.c_str(), jump::status_str(e.status));
     }
@@ -3034,7 +3034,6 @@ void update_dev_jump_soak(float dt) {
         return;   // don't burn a jump credit; retry next interval
     }
 
-    g.selected_nav = idx;
     const NavPointDef& gate = g.system.nav_points[idx];
     std::printf("[dev] --dev-jump-soak: auto-J %s -> %s via %s (%d remaining)\n",
                 g.player.current_system.c_str(), e.dest_id.c_str(),
@@ -6434,36 +6433,32 @@ void frame_cb() {
     // F6 — sprite-generation workbench. Front-end only; launches Python jobs.
     sprite_generation_tool::build();
     if (!g.capture_clean) {
-        // Docking prompt for the NAV MFD (np-9cu.1). Probe can_request
-        // against the selected nav: cleared -> "PRESS D TO DOCK" (green),
-        // dockable-but-not-yet -> "DOCK: <reason>" (amber). Non-dockable
-        // navs leave the line blank.
+        // Docking/jump prompt for the NAV MFD (np-9cu.1, np-6al.3, #380).
+        // A jump gate physically nearby owns the slot whatever the nav
+        // computer has selected: jump::prompt feeds the green "PRESS J" /
+        // amber refusal line straight off the verdict. Otherwise probe
+        // can_request against the selected nav: cleared -> "PRESS D TO DOCK"
+        // (green), dockable-but-not-yet -> "DOCK: <reason>" (amber).
+        // Non-dockable navs (far-off gates included) leave the line blank.
         const char* dock_prompt = nullptr;
         bool        dock_ready  = false;
-        if (g.selected_nav >= 0 && g.selected_nav < (int)g.system.nav_points.size()) {
-            const NavPointDef& nav = g.system.nav_points[g.selected_nav];
-            if (nav.kind == "jump") {
-                // Jump gate selected (np-6al.3): surface the J prompt in the
-                // SAME NAV MFD slot dock uses — a gate is never also a dock
-                // base, so they can't collide. jump::prompt feeds the green/
-                // amber line straight off the eligibility verdict.
-                const jump::Eligibility e = jump::evaluate(
-                    g.camera, g.system, g.galaxy, g.player.current_system,
-                    g.selected_nav, g.player.has_jump_drive);
-                bool ready = false;
-                dock_prompt = jump::prompt(e, &ready);
-                dock_ready  = ready;
-            } else {
-                const DockResult r = docking::can_request(
-                    g.docking, g.camera.position, g.camera.velocity, nav);
-                static char buf[48];
-                if (r == DockResult::Cleared) {
-                    dock_prompt = "PRESS D TO DOCK";
-                    dock_ready  = true;
-                } else if (r != DockResult::NotDockable) {
-                    std::snprintf(buf, sizeof(buf), "DOCK: %s", docking::result_str(r));
-                    dock_prompt = buf;
-                }
+        const jump::Eligibility jump_e = jump::evaluate(
+            g.camera, g.system, g.galaxy, g.player.current_system,
+            g.player.has_jump_drive);
+        if (jump_e.status != jump::Status::NotJumpNav) {
+            dock_prompt = jump::prompt(jump_e, &dock_ready);
+        } else if (g.selected_nav >= 0 &&
+                   g.selected_nav < (int)g.system.nav_points.size()) {
+            const DockResult r = docking::can_request(
+                g.docking, g.camera.position, g.camera.velocity,
+                g.system.nav_points[g.selected_nav]);
+            static char buf[48];
+            if (r == DockResult::Cleared) {
+                dock_prompt = "PRESS D TO DOCK";
+                dock_ready  = true;
+            } else if (r != DockResult::NotDockable) {
+                std::snprintf(buf, sizeof(buf), "DOCK: %s", docking::result_str(r));
+                dock_prompt = buf;
             }
         }
         // Skip the entire cockpit HUD while the title is up: the title
@@ -7384,10 +7379,10 @@ void event_cb(const sapp_event* ev) {
             docking::request(g.docking, g.camera.position, g.camera.velocity,
                              g.system.nav_points[g.selected_nav]);
         }
-        // J — jump through the selected jump gate (np-6al.3). Twin of the D
-        // docking key: down-edge only, only acts when the selected nav is a
-        // surveyed jump point we're cleared to take and inside its trigger range.
-        // Nearby hostiles block autopilot, not this gate escape. On success we
+        // J — jump through the nearest jump gate in trigger range (np-6al.3,
+        // #380: no nav selection required). Down-edge only; only acts when
+        // that gate is a surveyed jump point we're cleared to take. With no
+        // gate nearby J is silent. Nearby hostiles block autopilot, not this gate escape. On success we
         // queue the destination + arrival gate and flip to the
         // Loading hyperspace cinematic; execute_jump() does the warp once the
         // flash has held. Refusals log their reason (the HUD already shows it
@@ -7396,9 +7391,9 @@ void event_cb(const sapp_event* ev) {
         if (ev->key_code == SAPP_KEYCODE_J && g.autopilot.phase == AutopilotPhase::Idle) {
             const jump::Eligibility e = jump::evaluate(
                 g.camera, g.system, g.galaxy, g.player.current_system,
-                g.selected_nav, g.player.has_jump_drive);
+                g.player.has_jump_drive);
             if (e.status == jump::Status::Ready) {
-                const char* src_nav = g.system.nav_points[g.selected_nav].name.c_str();
+                const char* src_nav = g.system.nav_points[e.nav_index].name.c_str();
                 std::printf("[jump] %s -> %s via %s (%.0fu out) — engaging\n",
                             g.player.current_system.c_str(), e.dest_id.c_str(),
                             src_nav, e.distance_m);
@@ -7408,17 +7403,17 @@ void event_cb(const sapp_event* ev) {
                 game_state::request_mode(g.game, GameMode::Loading);
             } else if (e.status != jump::Status::NotJumpNav) {
                 if (e.status == jump::Status::NoRoute) {
-                    const std::string& nm = g.system.nav_points[g.selected_nav].name;
+                    const std::string& nm = g.system.nav_points[e.nav_index].name;
                     std::fprintf(stderr, "[jump-dbg] REFUSE NOROUTE: current_system='%s' "
-                                 "g.system.name='%s' selected_nav=%d nav='%s' "
+                                 "g.system.name='%s' gate_nav=%d nav='%s' "
                                  "galaxy(sys=%zu,jumps=%zu) direct_lookup=%d\n",
                                  g.player.current_system.c_str(), g.system.name.c_str(),
-                                 g.selected_nav, nm.c_str(),
+                                 e.nav_index, nm.c_str(),
                                  g.galaxy.systems.size(), g.galaxy.jumps.size(),
                                  (int)g.galaxy.jump_target(g.player.current_system, nm).ok);
                 }
                 std::printf("[jump] refused at %s: %s\n",
-                            g.system.nav_points[g.selected_nav].name.c_str(),
+                            g.system.nav_points[e.nav_index].name.c_str(),
                             jump::status_str(e.status));
             }
         }

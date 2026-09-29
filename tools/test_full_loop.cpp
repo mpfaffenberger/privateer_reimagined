@@ -670,10 +670,11 @@ int main() {
             Camera cam;
             cam.position = troy.nav_points[gate].position;   // sitting on the gate
 
-            const jump::Eligibility clear = jump::evaluate(cam, troy, gal, "troy", gate,
+            const jump::Eligibility clear = jump::evaluate(cam, troy, gal, "troy",
                                                            /*has_jump_drive=*/true);
             bool ready = false; (void)jump::prompt(clear, &ready);
-            check(clear.status == jump::Status::Ready && ready,
+            check(clear.status == jump::Status::Ready && ready &&
+                  clear.nav_index == gate,
                   "jump READY at the gate with no hostiles");
 
             // Drop a pirate nearby. The gate remains a valid escape, but the
@@ -683,7 +684,7 @@ int main() {
                 spawn_npc(w, *talon, Faction::Pirate,
                           HMM_AddV3(cam.position, HMM_V3(2000, 0, 0)));
                 const jump::Eligibility under_fire = jump::evaluate(
-                    cam, troy, gal, "troy", gate, /*has_jump_drive=*/true);
+                    cam, troy, gal, "troy", /*has_jump_drive=*/true);
                 check(under_fire.status == jump::Status::Ready,
                       "jump remains READY with a hostile nearby");
 
