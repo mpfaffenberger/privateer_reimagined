@@ -12,7 +12,7 @@
 //
 //      FIXED forward gun (is_turret == false): fires only when the
 //      ship's controller.fire_guns is set, the mount is off-cooldown,
-//      has energy, AND is currently "armed" (gun_armed[i] == true). A
+//      has energy, AND is currently armed (see mount_armed below). A
 //      successful fire spawns one Projectile along the SHIP's nose
 //      direction (body +Z; player uses the gimballed aim vector),
 //      drains energy_cost_gj from the shared pool, and sets cooldown to
@@ -44,8 +44,9 @@
 //   * N unique types     -> cycle {UNARMED, T1, T2, ..., TN, ALL}
 //                            (N+2 modes, one slot per type)
 // gun_mode_count_for_mounts returns the N+2 count; apply_gun_mode writes
-// the gun_armed[] flags for a mode; gun_mode_label produces the HUD/
-// console label; gun_mode_armed_count tallies "X of M armed" for the HUD.
+// the fixed-gun selection mask for a mode; gun_mode_label produces the HUD/
+// console label; mount_armed is the single armed-state predicate shared by
+// tick and the HUD; gun_mode_armed_count tallies "X of M armed" from it.
 // -----------------------------------------------------------------------------
 
 #include <vector>
@@ -78,12 +79,22 @@ int  gun_mode_count_for_mounts(const std::vector<GunMount>& mounts);
 const std::vector<int>& gun_unique_types_cache(
     const std::vector<GunMount>& mounts);
 
-// Write per-mount gun_armed[] flags for the given mode index. Turret bits are
-// always true; mode selection applies only to fixed guns. mode_idx
-// is taken mod the current mode count, so callers can pass the raw
+// Write the fixed-gun selection mask (Ship::gun_armed) for the given mode
+// index. Turret entries are written but never consulted -- see mount_armed.
+// mode_idx is taken mod the current mode count, so callers can pass the raw
 // ++gun_mode_idx result without % cleanup. Also stores the normalised
 // index back on the ship so the HUD/console can refer to it.
 void apply_gun_mode(Ship& s, uint8_t mode_idx);
+
+// Select the ALL mode (every fixed gun armed). Used when a loadout is
+// (re)applied so the stored mode index always matches the mask.
+void arm_all_guns(Ship& s);
+
+// Single source of truth for "can mount i fire under the current arm state?"
+// Turrets are always armed (autonomous, #379); fixed guns follow the G-mode
+// mask, and absent mask entries (NPCs) count as armed. Consumed by tick and
+// by every HUD armed count/marker so they can never disagree.
+bool mount_armed(const Ship& s, size_t mount_idx);
 
 // Map a mode index to a short, UPPERCASE label for HUD/console:
 // "UNARMED", "<GUN TYPE>" (e.g. "MESON BLASTER"), or "ALL". Caller
@@ -93,9 +104,9 @@ void apply_gun_mode(Ship& s, uint8_t mode_idx);
 const char* gun_mode_label(const std::vector<int>& unique_types,
                            uint8_t mode_idx);
 
-// Count of currently-armed mounts for a ship (used by the HUD's
-// "(N of M armed)" indicator so the player sees what the active mode
-// enables without having to fire first).
+// Count of mounts satisfying mount_armed (used by the HUD's "(N of M
+// armed)" indicator so the player sees what the active mode enables
+// without having to fire first). Includes always-armed turrets.
 int  gun_mode_armed_count(const Ship& s);
 
 } // namespace firing

@@ -1015,11 +1015,14 @@ static void apply_player_loadout(Ship& pl, const PlayerState& p, bool heal = tru
             const GunType t = gun::from_name(p.gun_mounts[i].gun_id);
             m.type = (t == GunType::Count) ? GunType::Laser : t;   // player gun overrides type only
         }
-        m.cone_half_angle_deg = 1.0f;
+        // Keep the authored cone: only turrets read it, and clamping it
+        // (the old 1-degree override) left player turrets unable to fire (#379).
         pl.mounts.push_back(m);
     }
     pl.gun_cooldowns.assign(pl.mounts.size(), 0.0f);
-    pl.gun_armed.assign(pl.mounts.size(), true);
+    // Fresh loadout = ALL mode, so the stored mode index matches the mask
+    // (the legacy default index 3 isn't ALL for every loadout).
+    firing::arm_all_guns(pl);
     // Carry per-mount weapon mods (#90) onto the live ship, parallel to
     // mounts. Default WeaponMods{} (1.0/1.0) is a no-op; we overwrite the
     // entries the player has actually fitted from their MountSlot::mods so
@@ -7303,14 +7306,10 @@ void event_cb(const sapp_event* ev) {
                                       g.selected_nav);
             }
         }
-        // G — cycle gun arm-mode (np-3dp). Modes: 0=unarmed, 1=mesons
-        // only, 2=ionics only, 3=all. Each press advances one step and
-        // wraps. The mode is stored on Ship::gun_mode_idx; firing.cpp
-        // consults Ship::gun_armed[i] to gate which mounts can fire.
-        // If a mode would target zero mounts (e.g. mode 1 when no
-        // mesons are fitted) it still flips the bits and just lets the
-        // player see nothing happen — better than skipping and
-        // desyncing the cycle.
+        // G — cycle gun arm-mode (np-3dp). Modes: {UNARMED, one per unique
+        // fixed-gun type, ALL}. Each press advances one step and wraps.
+        // The mode is stored on Ship::gun_mode_idx; firing::mount_armed
+        // gates fixed guns by it. Turrets stay auto-armed (#379).
         if (ev->key_code == SAPP_KEYCODE_G && g.ships.player()) {
             Ship& p = *g.ships.player();
             // Cycle through {UNARMED, [one mode per unique gun type], ALL}.
@@ -7328,8 +7327,9 @@ void event_cb(const sapp_event* ev) {
             }
             const auto& u  = firing::gun_unique_types_cache(p.mounts);
             const char* lbl = firing::gun_mode_label(u, p.gun_mode_idx);
-            std::printf("[guns] mode=%u (%s) -- %zu mount(s)\n",
-                        p.gun_mode_idx, lbl, p.mounts.size());
+            std::printf("[guns] mode=%u (%s) -- %d/%zu mount(s) armed\n",
+                        p.gun_mode_idx, lbl, firing::gun_mode_armed_count(p),
+                        p.mounts.size());
             sfx::ui_click();
         }
         // C / R toggle their STATUS sub-screens. W is reserved for launcher

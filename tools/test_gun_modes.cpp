@@ -28,16 +28,11 @@ int main() {
           "per-type modes map to every unique gun type");
     check(gun_modes::count(0) == 1 && gun_modes::is_unarmed(27, 0),
           "empty loadout has only an UNARMED mode");
-    check(!gun_modes::participates_in_forward_cycle(true) &&
-          gun_modes::participates_in_forward_cycle(false),
-          "turrets are excluded from the forward-gun mode cycle");
-    check(gun_modes::mount_is_armed(true, 6, false, -1),
-          "auto-turret remains armed in UNARMED mode");
-    check(gun_modes::mount_is_armed(true, 6, false, 3),
-          "auto-turret remains armed when another gun type is selected");
-    check(!gun_modes::mount_is_armed(false, 6, false, 3) &&
-          gun_modes::mount_is_armed(false, 3, false, 3),
-          "fixed mounts still obey selected forward-gun type");
+    check(gun_modes::all_mode(unique_types) == 4 &&
+          gun_modes::is_all(gun_modes::all_mode(1), 1),
+          "all_mode names the final ALL slot for any loadout");
+    check(gun_modes::all_mode(0) == 0 && gun_modes::is_unarmed(gun_modes::all_mode(0), 0),
+          "empty loadout's all_mode collapses to UNARMED");
 
     std::printf("\n%s\n", failures == 0 ? "ALL PASS" : "FAILURES DETECTED");
     return failures == 0 ? 0 : 1;

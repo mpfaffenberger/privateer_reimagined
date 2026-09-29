@@ -156,11 +156,9 @@ void firing::tick(ShipRegistry& ships,
             const float fire_rate_mult = (wm.fire_rate_mult > 0.0f) ? wm.fire_rate_mult : 1.0f;
             const float shot_energy_cost = gs.energy_cost_gj * wm.energy_mult;
 
-            // G-key modes gate only the manually fired forward battery.
-            // Autonomous turrets remain live in every mode—including
-            // UNARMED—so defensive mounts actually behave automatically.
-            // NPCs leave gun_armed empty (treated as armed).
-            if (!m.is_turret && i < s.gun_armed.size() && !s.gun_armed[i]) continue;
+            // G-key modes gate only the manually fired forward battery;
+            // turrets stay live in every mode (#379). See mount_armed.
+            if (!firing::mount_armed(s, i))                continue;
             if (s.gun_cooldowns[i] > 0.0f)                 continue;
 
             // Muzzle position: ship pos + rotated mount offset. (Mutable so
@@ -271,10 +269,13 @@ namespace {
 // the most-recently-seen mounts pointer. Lets the G-press and HUD paths
 // share the result without recomputing each frame. Keyed by the
 // std::vector* address; matches the typical "1 player ship" reality so
-// misses on first call and re-fills after are fine.
+// misses on first call and re-fills after are fine. The cache is
+// invalidated by each mount's MountSignature: its weapon type and whether
+// it's an autonomous turret (turret-only types don't get a G mode).
+using MountSignature = std::pair<GunType, bool>;
 struct UniqueCache {
     const std::vector<GunMount>* key = nullptr;
-    std::vector<int> mount_signatures;
+    std::vector<MountSignature> mount_signatures;
     std::vector<int> unique_types;
 };
 UniqueCache& ucache() {
@@ -284,10 +285,10 @@ UniqueCache& ucache() {
 
 void refresh_unique_cache(const std::vector<GunMount>& mounts) {
     UniqueCache& cache = ucache();
-    std::vector<int> current;
+    std::vector<MountSignature> current;
     current.reserve(mounts.size());
     for (const GunMount& mount : mounts) {
-        current.push_back((int)mount.type | (mount.is_turret ? 0x100 : 0));
+        current.emplace_back(mount.type, mount.is_turret);
     }
     if (cache.key == &mounts && cache.mount_signatures == current) return;
 
@@ -295,7 +296,8 @@ void refresh_unique_cache(const std::vector<GunMount>& mounts) {
     cache.mount_signatures = std::move(current);
     cache.unique_types.clear();
     for (const GunMount& mount : mounts) {
-        if (!gun_modes::participates_in_forward_cycle(mount.is_turret)) continue;
+        // Turrets are autonomous, not a forward-gun group (#379).
+        if (mount.is_turret) continue;
         const int type = (int)mount.type;
         if (std::find(cache.unique_types.begin(), cache.unique_types.end(), type) ==
             cache.unique_types.end()) {
@@ -323,15 +325,25 @@ void firing::apply_gun_mode(Ship& s, uint8_t mode_idx) {
     const int mode = gun_modes::normalize((int)mode_idx, unique_count);
     s.gun_armed.resize(s.mounts.size(), false);
 
+    const bool all = gun_modes::is_all(mode, unique_count);
     const int selected_type_index = gun_modes::type_index(mode, unique_count);
     const int selected_type = selected_type_index >= 0
         ? unique[(size_t)selected_type_index] : -1;
     for (size_t i = 0; i < s.mounts.size(); ++i) {
-        s.gun_armed[i] = gun_modes::mount_is_armed(
-            s.mounts[i].is_turret, (int)s.mounts[i].type,
-            gun_modes::is_all(mode, unique_count), selected_type);
+        s.gun_armed[i] = all || (int)s.mounts[i].type == selected_type;
     }
     s.gun_mode_idx = (uint8_t)mode;
+}
+
+void firing::arm_all_guns(Ship& s) {
+    const int unique_count = (int)gun_unique_types_cache(s.mounts).size();
+    apply_gun_mode(s, (uint8_t)gun_modes::all_mode(unique_count));
+}
+
+bool firing::mount_armed(const Ship& s, size_t mount_idx) {
+    if (mount_idx >= s.mounts.size())  return false;
+    if (s.mounts[mount_idx].is_turret) return true;
+    return mount_idx >= s.gun_armed.size() || s.gun_armed[mount_idx];
 }
 
 const char* firing::gun_mode_label(const std::vector<int>& unique_types,
@@ -354,6 +366,6 @@ const char* firing::gun_mode_label(const std::vector<int>& unique_types,
 
 int firing::gun_mode_armed_count(const Ship& s) {
     int n = 0;
-    for (bool a : s.gun_armed) if (a) ++n;
+    for (size_t i = 0; i < s.mounts.size(); ++i) if (mount_armed(s, i)) ++n;
     return n;
 }
