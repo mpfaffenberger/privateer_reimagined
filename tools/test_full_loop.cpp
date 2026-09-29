@@ -262,7 +262,9 @@ int main() {
     check(player.credits == player::k_new_game_credits,       "starts with 2000 credits");
     check(player.current_system == "troy",                    "starts in Troy");
     // afterburner_fuel field removed; pool merged into Ship::energy_gj.
-    check(!player.docked,                                     "starts undocked (in flight)");
+    // New games start in the Achilles concourse, like the 1995 game.
+    check(player.docked && player.last_docked_base == "achilles",
+          "starts docked at Achilles");
     step_result("a", f0);
 
     // =======================================================================
@@ -279,16 +281,17 @@ int main() {
         };
         auto despawnfn = [&w](uint32_t id) { w.ships.despawn(w.ships.find_handle_by_id(id)); };
 
-        // Roaming raiders (region "anywhere") fire regardless of where the
-        // player sits, so ticking the director from the Troy start point
-        // grows a population without us hand-placing anything.
+        // Live traffic comes from the per-nav entry roll (populate_on_entry);
+        // canonical systems have no continuous director rules. The roll is
+        // clock-seeded and a nav can roll an empty group, so re-roll (as a
+        // fresh launch would) a bounded number of times.
+        (void)despawnfn;
         const HMM_Vec3 ppos = troy.player_start;
-        int ticks = 0;
-        for (; ticks < 60 * 90 && encounters::population() == 0; ++ticks)
-            encounters::tick(w.ships, ppos, dt, spawnfn, despawnfn);
-        std::printf("  director ran %.1fs sim, population=%d, registry=%zu ships\n",
-                    ticks * dt, encounters::population(), w.ships.size());
-        check(encounters::population() > 0, "director spawned at least one NPC");
+        int rolls = 0;
+        while (w.ships.size() == 0 && rolls++ < 32)
+            encounters::populate_on_entry(troy, ppos, troy.star_position, spawnfn);
+        std::printf("  entry roll x%d, registry=%zu ships\n", rolls, w.ships.size());
+        check(w.ships.size() > 0, "system entry spawned at least one NPC");
 
         encounters::shutdown();
         threat::set_world(nullptr, nullptr);
@@ -368,6 +371,7 @@ int main() {
             Camera    cam;
             GameState gs;
             Docking   dock;
+            player.docked = false;   // launched from the starting concourse
             // Slow approach from 1.5 km out — the docking gate's happy path.
             cam.position = HMM_AddV3(achilles->position, HMM_V3(0, 0, 1500.0f));
             cam.velocity = HMM_MulV3F(
@@ -386,12 +390,14 @@ int main() {
             check(player.last_docked_base == "achilles",  "last_docked_base = achilles");
             check(gs.mode == GameMode::Landed,            "game mode transitioned to Landed");
 
-            const savegame::SlotInfo auto_si = savegame::peek(savegame::k_autosave_slot);
-            std::printf("  autosave slot0: exists=%d base='%s' system='%s' cr=%lld\n",
+            // Landing writes a new timestamped autosave (never slot 0).
+            const std::vector<savegame::SlotInfo> saves = savegame::list_saves();
+            const savegame::SlotInfo auto_si = saves.empty() ? savegame::SlotInfo{} : saves.front();
+            std::printf("  newest autosave: exists=%d base='%s' system='%s' cr=%lld\n",
                         (int)auto_si.exists, auto_si.base.c_str(),
                         auto_si.system.c_str(), (long long)auto_si.credits);
             check(auto_si.exists && auto_si.base == "achilles",
-                  "autosave fired on dock (slot 0 reflects Achilles)");
+                  "autosave fired on dock (newest save reflects Achilles)");
         }
     }
     step_result("d", fd);
@@ -479,8 +485,21 @@ int main() {
     int fg = g_fail; banner("g", "missions: cargo delivery + bounty payout");
     {
         const int cap = player::cargo_capacity(player, tarsus);
-        const std::vector<missions::Mission> board =
-            missions::generate("achilles", "troy", gal, /*seed=*/0xC0FFEEu);
+        // Boards are seed-random; take the first seed whose board offers both
+        // a cargo run and a bounty so the test doesn't hinge on one roll.
+        std::vector<missions::Mission> board;
+        for (uint32_t seed = 0xC0FFEEu; seed < 0xC0FFEEu + 64; ++seed) {
+            board = missions::generate("achilles", "troy", gal, seed);
+            bool has_cargo = false, has_bounty = false;
+            for (const missions::Mission& m : board) {
+                has_cargo  |= m.type == missions::MissionType::CargoDelivery;
+                has_bounty |= m.type == missions::MissionType::Bounty;
+            }
+            if (has_cargo && has_bounty) break;
+        }
+        // Out-of-system jobs need a jump drive (a real pilot buys one at the
+        // equipment dealer; step f's purchases don't include it).
+        player.has_jump_drive = true;
         check(!board.empty(), "mission board generated for Achilles");
 
         const missions::Mission* cargo = nullptr;
@@ -539,7 +558,11 @@ int main() {
     // =======================================================================
     int fh = g_fail; banner("h", "paid hull repair");
     {
-        Ship sh = ship::spawn(*tarsus);
+        // Player hull, built like main.cpp does: ship::spawn() is the NPC
+        // path and applies the enemy armor buff that repair rightly ignores.
+        Ship sh = ship::spawn_player();
+        sh.klass = tarsus;
+        ship::heal_to_full(sh);
         const float full = total_armor(sh);
         sh.armor_fore_cm = 0.0f;                  // bash the nose
         const float damaged = total_armor(sh);
@@ -742,6 +765,9 @@ int main() {
               dst.last_docked_base == src.last_docked_base &&
               dst.docked == src.docked,                   "location + docked flag round-trip");
         check(miss_ok,                                    "accepted missions round-trip");
+        // Remove the scratch slot so step l's newest-save lookup can't pick
+        // it (same-second timestamps tie-break on path).
+        std::remove(savegame::slot_path(kSlot).c_str());
     }
     step_result("k", fk);
 
@@ -769,12 +795,13 @@ int main() {
         }
         const long long credits_at_dock = player.credits;
 
-        // Now the player "dies" in flight: main.cpp's respawn_player() reloads
-        // the autosave (slot 0) into the persistent half of the player and
-        // drops them Landed at last_docked_base. Model exactly that restore.
+        // Now the player dies in flight. Death returns to the title screen
+        // (np-3dp.18); Continue resumes the NEWEST save, which is the landing
+        // autosave above. Model exactly that restore.
         PlayerState restored;
-        const bool from_save = savegame::load(restored, savegame::k_autosave_slot);
-        check(from_save, "respawn loaded the autosave");
+        const std::vector<savegame::SlotInfo> saves = savegame::list_saves();
+        const bool from_save = !saves.empty() && savegame::load(restored, saves.front().path);
+        check(from_save, "Continue loaded the newest autosave");
         std::printf("  respawn: base='%s' system='%s' credits=%lld\n",
                     restored.last_docked_base.c_str(), restored.current_system.c_str(),
                     (long long)restored.credits);
@@ -854,7 +881,15 @@ int main() {
             // (64) and the director never spawns again, so cumulative kills
             // would stall well under our target. With the reap, size() stays
             // bounded and spawning continues indefinitely.
-            encounters::init(troy);
+            StarSystem soak = troy;
+            EncounterRuleDef roamers;
+            roamers.name           = "soak_roamers";
+            roamers.region         = "anywhere";
+            roamers.factions       = { {"pirate", 1.0f} };
+            roamers.classes        = { {"talon", 1.0f} };
+            roamers.spawn_interval = 1.0f;
+            soak.encounters = { roamers };
+            encounters::init(soak);
             auto spawnfn   = [&](const encounters::SpawnRequest& r) -> uint32_t {
                 const ShipClass* k = ship_class::find(r.class_name);
                 return k ? spawn_one(r.position, r.faction) : 0u;

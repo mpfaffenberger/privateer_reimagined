@@ -21,8 +21,8 @@ campaign all ship and are covered by headless tests.
 
 The remaining gaps are:
 
-1. **Build and test health.** The broad integration harness is red
-   ([#314]) and there is no CI.
+1. **No CI.** All 29 wired harnesses pass (including `test_full_loop`,
+   green again since [#314]), but nothing runs them automatically.
 2. **Combat-system fidelity.** Per-system component damage, Friend-or-Foe
    missiles, scanner tiers, and buying turrets for hulls that lack them.
 3. **Presentation polish.** HDR/bloom, normal maps, an Orion cockpit, and
@@ -98,11 +98,12 @@ _New tier since the 2026-07-19 audit._
 
 | Gap | Impact | Issue |
 |---|---|---|
-| `test_full_loop` fails 17 checks (start state, director spawns, dock autosave slot 0, cargo run, respawn) because of stale assumptions after the autosave/economy changes | Main integration net is off | [#314] |
 | **No CI.** The Windows Actions workflow was removed on 2026-07-11 after repeated failures. Windows previews are hand-published; Windows-specific bugs are open ([#291], [#239]). | Regressions show up late | — (needs an issue if CI is wanted) |
 
-**Test scoreboard (2026-09-28, macOS Release):** 28/29 wired harnesses pass
-on a fresh clone. `test_full_loop` fails.
+**Test scoreboard (2026-09-29, macOS Release):** 29/29 wired harnesses pass
+on a fresh clone. `test_full_loop` went green in [#314]: its stale
+assumptions (undocked start, continuous director traffic, autosave slot 0,
+NPC-buffed repair hull, one fixed mission-board seed) now match the game.
 
 **Fixed since the audit:**
 - Fresh clones build the game and every harness without recovered data
@@ -245,19 +246,17 @@ judgment call ([#323] was a duplicate of [#322]).
 
 ## 4. Suggested attack order
 
-1. **Get `test_full_loop` green ([#314])** and decide whether to bring CI
-   back (at least a macOS or Linux headless-test job).
-2. **Component damage + Damage Control MFD ([#141]).** It's the biggest
+1. **Component damage + Damage Control MFD ([#141]).** It's the biggest
    remaining gameplay-fidelity gap, and the repair economy hooks are ready.
-3. **Scanner tiers ([#143]) → FF missiles ([#144])**, then purchasable turrets ([#145]/[#379]). All small and
+2. **Scanner tiers ([#143]) → FF missiles ([#144])**, then purchasable turrets ([#145]/[#379]). All small and
    data-driven.
-4. **Presentation:** HDR/bloom ([#488]/[#489]), normal maps ([#473]), Orion
+3. **Presentation:** HDR/bloom ([#488]/[#489]), normal maps ([#473]), Orion
    cockpit + MFD clipping ([#168]/[#430]).
-5. **Gemini Lives phases 3–4** (schedules, director, barks: [#172]–[#174]),
+4. **Gemini Lives phases 3–4** (schedules, director, barks: [#172]–[#174]),
    then the cast and cinematics.
-6. **Keep splitting `main.cpp` ([#151])**, starting with the input handler,
+5. **Keep splitting `main.cpp` ([#151])**, starting with the input handler,
    now that its dead handlers are gone.
-7. Righteous Fire, someday ([#148]).
+6. Righteous Fire, someday ([#148]).
 
 [#65]: https://github.com/mpfaffenberger/privateer_reimagined/issues/65
 [#68]: https://github.com/mpfaffenberger/privateer_reimagined/issues/68
