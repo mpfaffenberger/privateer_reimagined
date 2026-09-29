@@ -17,6 +17,9 @@
 #include <cstdio>
 #include <limits>
 
+static_assert(k_missile_rack_types == kMissileRackTypeCount,
+              "PlayerState::missiles must cover every rack MissileType");
+
 namespace player {
 
 PlayerState new_game(const std::string& start_system) {
@@ -37,9 +40,12 @@ PlayerState new_game(const std::string& start_system) {
     // Start fitted with Shield Generator 1 (10cm / facing). Privateer
     // never drops you WITHOUT a shield gen — np-3dp.28.
     p.shield_level = 1;
+    // Bottom-rung Iris Mk I (#143): no colour IFF, no Target Lock, no ITTS
+    // until the pilot pays for a better scanner.
+    p.scanner_id = k_starting_scanner;
     // Starter missile loadout (np-zte.2): 4 heat-seekers, nothing else.
     // Afterburner shares the ship's energy bank (no separate fuel tank).
-    for (int i = 0; i < 3; ++i) p.missiles[i] = k_new_game_missiles[i];
+    for (int i = 0; i < k_missile_rack_types; ++i) p.missiles[i] = k_new_game_missiles[i];
     // No starter torpedoes -- the dealer is the only place to load them,
     // so a new pilot starts empty on the torpedo rack.
     p.torpedoes = 0;
@@ -124,6 +130,30 @@ bool add_cargo(PlayerState& p, const std::string& commodity_id,
     return true;
 }
 
+// ---- gun mounts + turret hardware (#145) ------------------------------------
+
+bool has_turret(const PlayerState& p, const std::string& slot_id) {
+    return std::find(p.turrets.begin(), p.turrets.end(), slot_id) != p.turrets.end();
+}
+
+bool mount_fittable(const PlayerState& p, const ShipClass* klass, int mount) {
+    if (mount < 0) return false;
+    if (!klass) return true;
+    if (mount >= (int)klass->default_guns.size()) return false;
+    const TurretSlot* turret = klass->turret_slot_for_mount(mount);
+    return !turret || has_turret(p, turret->id);
+}
+
+int first_open_mount(const PlayerState& p, const ShipClass* klass) {
+    const int mounts = klass ? (int)klass->default_guns.size() : (int)p.gun_mounts.size();
+    for (int i = 0; i < mounts; ++i) {
+        const bool empty = i >= (int)p.gun_mounts.size() ||
+                           p.gun_mounts[(size_t)i].gun_id.empty();
+        if (empty && mount_fittable(p, klass, i)) return i;
+    }
+    return -1;
+}
+
 // ---- ordnance ---------------------------------------------------------------
 
 int missile_count(const PlayerState& p, int type_index) {
@@ -145,7 +175,7 @@ bool consume_missile(PlayerState& p, int type_index) {
 }
 
 void add_missiles(PlayerState& p, int type_index, int count) {
-    if (type_index < 0 || type_index >= 3 || count <= 0) return;
+    if (type_index < 0 || type_index >= k_missile_rack_types || count <= 0) return;
     p.missiles[type_index] += count;
 }
 

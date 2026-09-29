@@ -33,12 +33,18 @@
 
 #include "faction.h"
 #include "inventory.h"
+#include "ship_systems.h"
 
 #include <cstdint>
 #include <string>
 #include <vector>
 
 struct ShipClass;
+
+// Missile types that share the missile launcher's rack (DF/HS/IR/FF) —
+// mirrors missile.h's kMissileRackTypeCount without the include (see the
+// PlayerState::missiles note); player.cpp static_asserts they agree.
+constexpr int k_missile_rack_types = 4;
 
 // One fitted gun mount slot (Phase 4d Wave 1, #88). Promoted from a bare
 // std::string gun name so a mounted weapon can carry its rarity + per-shot
@@ -166,6 +172,15 @@ struct PlayerState {
     // purchasable upgrade, so new games / fresh hulls start empty.
     std::string              armor_name;
     bool                     cargo_expansion = false;
+    // Fitted scanner by scanner.h catalog id ("hunter_aw_6i"); empty = none
+    // fitted (hull-default range, monochrome, no lock, no ITTS). New games
+    // start with k_starting_scanner. Survives hull swaps (#143).
+    std::string              scanner_id;
+    // Turret HARDWARE owned on this hull (#145, save v10): TurretSlot ids
+    // ("rear", "top", ...) from the ShipClass. A turret mount in gun_mounts
+    // only takes (and fires) a gun once its slot is listed here. New games
+    // and fresh hulls start empty; buy_hull clears it with the old hull.
+    std::vector<std::string> turrets;
 
     // Discrete buy-once-per-ship flags (np-3dp.27). New games have ALL
     // false, so the starter Tarsus can't jump, has no tractor, etc. until
@@ -222,11 +237,12 @@ struct PlayerState {
 
     // ---- ordnance: finite missile ammo (np-zte.2) -------------------------
     // Unlike guns (energy-limited but never "out"), missiles are consumable.
-    // Indexed by MissileType (DF/HS/IR — missile.h); one fired = one gone,
+    // Indexed by MissileType (DF/HS/IR/FF — missile.h); one fired = one gone,
     // restocked at a base. Kept as a flat array (not a missile.h include) to
     // preserve player.h's "strings + ints, no upstream deps" discipline —
-    // the index meaning is the stable contract, mirrored by MissileType.
-    int missiles[3]  = { 0, 0, 0 };
+    // the index meaning is the stable contract, mirrored by MissileType
+    // (player.cpp static_asserts k_missile_rack_types against it).
+    int missiles[k_missile_rack_types] = {};
 
     // Torpedo rack (separate physical launcher on the hull). Just one
     // canonical ammo type -- Proton Torpedo. Indexing by DF/HS/IR is gone;
@@ -285,6 +301,10 @@ struct PlayerState {
     float hp_shield_port = 0.0f;
     float hp_shield_starboard = 0.0f;
     float hp_energy      = 0.0f;
+    // Per-component integrity (#141, save v11), same hp_valid gate. Only the
+    // integrity is persisted; the installed mask is re-derived from the
+    // loadout on every fit. Pre-v11 saves default to pristine.
+    SystemIntegrity hp_systems = ship_systems::k_pristine;
 
     // ---- persistent world clock (Gemini Lives #171, save v8) ------------
     // Elapsed days since 2669.135. Successful landings advance this exactly
@@ -313,6 +333,11 @@ PlayerState new_game(const std::string& start_system);
 // bankroll barely covering one cargo run, which is the feel we want.
 constexpr int64_t k_new_game_credits = 2000;
 
+// Scanner a new pilot starts with (#143): the canonical bottom rung,
+// monochrome with no Target Lock or ITTS. Also what a pre-scanner save
+// (no scanner_id key) loads with, so old pilots aren't left radar-blind.
+inline constexpr const char* k_starting_scanner = "iris_mk1";
+
 // ---- guild join fees (#16) ----------------------------------------------
 // One-time membership dues, deducted via spend_credits() the first time the
 // player enters a guild screen and accepts. Values are the vanilla Privateer
@@ -332,10 +357,10 @@ constexpr int64_t k_merchant_guild_fee = 1000;
 constexpr float k_afterburner_drain_per_s = 50.0f;  // GJ/s drained from energy_gj
 
 // New-game / new-hull starting missile loadout, indexed by MissileType
-// (DF/HS/IR). The canonical Tarsus start (np-3dp.25) carries a single
+// (DF/HS/IR/FF). The canonical Tarsus start (np-3dp.25) carries a single
 // launcher of 4 heat-seekers and nothing else; the equipment dealer and
 // base rearm restock / diversify it.
-constexpr int k_new_game_missiles[3] = { 0, 4, 0 };
+constexpr int k_new_game_missiles[k_missile_rack_types] = { 0, 4, 0, 0 };
 
 // ---- credits ------------------------------------------------------------
 // spend() refuses (returns false, no mutation) when funds are short.
@@ -394,8 +419,25 @@ int compartment_units_used(const PlayerState& p);
 bool add_compartment_cargo(PlayerState& p, const std::string& commodity_id,
                            int units);
 
+// ---- gun mounts + turret hardware (#145) ------------------------------------
+// True if the player owns turret hardware for `slot_id` on the current hull.
+bool has_turret(const PlayerState& p, const std::string& slot_id);
+
+// True if a gun may live in gun_mounts[mount]: the hull has that mount and,
+// for a turret mount, the player owns its turret hardware. A null klass
+// (catalog not loaded) accepts any mount >= 0 -- nothing to check against.
+// The single rule every fitting path (dealer, hold, campaign, dev) and the
+// launch-time loadout share.
+bool mount_fittable(const PlayerState& p, const ShipClass* klass, int mount);
+
+// First fittable mount with no gun in it, or -1 when every usable mount is
+// full. Replaces the old "first empty slot" scans, which would happily drop
+// a gun into a turret the player never bought.
+int first_open_mount(const PlayerState& p, const ShipClass* klass);
+
 // ---- ordnance (np-zte.2) ----------------------------------------------------
-// type_index is a MissileType (0=DF,1=HS,2=IR); out-of-range is a no-op.
+// type_index is a MissileType (0=DF,1=HS,2=IR,3=FF,4=TORPEDO); out-of-range
+// is a no-op. add_missiles covers the shared missile rack only (not TORPEDO).
 // missile_count reads the stock; consume_missile decrements one and returns
 // true, or false (no mutation) when the rack is empty — the caller turns
 // that into the out-of-ammo click. add_missiles tops up (clamped ≥ 0).

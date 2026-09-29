@@ -10,8 +10,8 @@ Why generate instead of hand-edit:
     one source of truth, idempotent re-run. DRY.
 
 Layout:
-    Alpha-sorted ships → row-major grid (cols × rows). Default 12 × 9 =
-    108 slots — fits today's set with zero waste. If the set grows past
+    Alpha-sorted ships → row-major grid (cols × rows). Default 6 columns,
+    matching the in-game showroom layout (#474). If the set grows past
     that the grid auto-expands (rows increase, cols held constant) so
     the showroom stays rectangular.
 
@@ -244,6 +244,17 @@ def build_layout(stems: list[str], cols: int, spacing: float
     return placed
 
 
+def mesh_obj_asset(stem: str) -> str:
+    """Asset-relative OBJ path for a ship. Single resolver shared with
+    render_3d_sprite_atlases.py so showroom and sprite captures can never
+    disagree about which mesh a ship uses.
+
+    Precedence: explicit PER_SHIP_OVERRIDES `obj` > wcnews. (Reskins from
+    tools/reskin_ship_blender.py replace the wcnews files in place.)
+    """
+    return PER_SHIP_OVERRIDES.get(stem, {}).get("obj", f"{ASSET_PREFIX}{stem}.obj")
+
+
 def build_mesh_entry(stem: str, x: float, z: float,
                      default_length: float) -> dict:
     overrides = PER_SHIP_OVERRIDES.get(stem, {})
@@ -268,7 +279,7 @@ def build_mesh_entry(stem: str, x: float, z: float,
     # spin baked in — see its override. All four ship-specific cases
     # live in PER_SHIP_OVERRIDES above.
     return {
-        "obj":           overrides.get("obj", f"{ASSET_PREFIX}{stem}.obj"),
+        "obj":           mesh_obj_asset(stem),
         "position":      [round(x, 2), 0, round(z, 2)],
         "euler_deg":     overrides.get("euler_deg", [90, 0, 180]),
         "length_meters": overrides.get("length_meters", default_length),
@@ -328,7 +339,7 @@ def build_showroom(stems: list[str], cols: int, spacing: float,
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--cols",    type=int,   default=12,
+    p.add_argument("--cols",    type=int,   default=6,
                    help="ships per row in the grid (default: 12)")
     p.add_argument("--spacing", type=float, default=400.0,
                    help="distance between adjacent ships in metres (default: 400)")

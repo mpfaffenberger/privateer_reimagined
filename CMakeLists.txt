@@ -101,25 +101,33 @@ compile_shader(post_composite)
 # tools/gen_mission_templates.py reads re/mission_text.json (gitignored;
 # user-recovered via re/extract_mission_text.py) and bakes the per-type
 # summary + copy[] variants + ENMY/CORP name pools into
-# src/mission_templates.gen.h. A missing re/mission_text.json is OK at
-# config time -- the checked-in header acts as the fallback until the
-# generator is actually invoked (which we never do at configure time).
-add_custom_command(
-    OUTPUT  ${CMAKE_SOURCE_DIR}/src/mission_templates.gen.h
-    COMMAND ${CMAKE_COMMAND} -E env python3
-            ${CMAKE_SOURCE_DIR}/tools/gen_mission_templates.py
-            ${CMAKE_SOURCE_DIR}/re/mission_text.json
-            ${CMAKE_SOURCE_DIR}/src/mission_templates.gen.h
-    DEPENDS ${CMAKE_SOURCE_DIR}/tools/gen_mission_templates.py
-            ${CMAKE_SOURCE_DIR}/re/mission_text.json
-    COMMENT "gen_mission_templates: re/mission_text.json -> src/mission_templates.gen.h"
-    VERBATIM
-)
-# Wire the rule into every target that compiles missions.cpp so a stale
-# header is regenerated on the next build (see add_dependencies below).
-add_custom_target(mission_templates_gen
-    DEPENDS ${CMAKE_SOURCE_DIR}/src/mission_templates.gen.h
-)
+# src/mission_templates.gen.h.
+#
+# The generator rule exists ONLY when the recovered JSON is present. Fresh
+# clones don't have it, so mission_templates_gen becomes a no-op and the
+# checked-in header is compiled as-is (issue #427). Re-run CMake after
+# recovering re/mission_text.json to switch regeneration on.
+set(MISSION_TEXT_JSON ${CMAKE_SOURCE_DIR}/re/mission_text.json)
+set(MISSION_TEMPLATES_H ${CMAKE_SOURCE_DIR}/src/mission_templates.gen.h)
+if(EXISTS ${MISSION_TEXT_JSON})
+    add_custom_command(
+        OUTPUT  ${MISSION_TEMPLATES_H}
+        COMMAND ${CMAKE_COMMAND} -E env python3
+                ${CMAKE_SOURCE_DIR}/tools/gen_mission_templates.py
+                ${MISSION_TEXT_JSON} ${MISSION_TEMPLATES_H}
+        DEPENDS ${CMAKE_SOURCE_DIR}/tools/gen_mission_templates.py
+                ${MISSION_TEXT_JSON}
+        COMMENT "gen_mission_templates: re/mission_text.json -> src/mission_templates.gen.h"
+        VERBATIM
+    )
+    # Every target that compiles missions.cpp depends on this, so a stale
+    # header is regenerated on the next build (see add_dependencies below).
+    add_custom_target(mission_templates_gen DEPENDS ${MISSION_TEMPLATES_H})
+else()
+    message(STATUS "mission templates: re/mission_text.json not found; "
+                   "using checked-in src/mission_templates.gen.h")
+    add_custom_target(mission_templates_gen)
+endif()
 # Target: new_privateer
 # ---------------------------------------------------------------------------
 # The Obj-C++ TU exists only on Apple (Metal + Foundation headers force ObjC
@@ -152,6 +160,14 @@ set(IMGUI_SRC
     ${IMGUI_DIR}/imgui_draw.cpp
     ${IMGUI_DIR}/imgui_tables.cpp
     ${IMGUI_DIR}/imgui_widgets.cpp
+)
+
+# The savegame module: public API + its PlayerState <-> JSON codec (#525).
+# Every target that links savegame links all three.
+set(SAVEGAME_SRC
+    src/savegame.cpp
+    src/savegame_read.cpp
+    src/savegame_write.cpp
 )
 
 add_executable(new_privateer
@@ -190,6 +206,7 @@ add_executable(new_privateer
     src/economy.cpp
     src/commodity_ui.cpp
     src/outfitting.cpp
+    src/scanner.cpp
     src/dealer_ui.cpp
     src/equipment_hardpoints.cpp
     src/equipment_panels.cpp
@@ -221,8 +238,10 @@ add_executable(new_privateer
     src/escort.cpp
     src/drone.cpp
     src/base_screens.cpp
+    src/room_anim.cpp
+    src/room_anim_data.cpp
     src/base_art_studio.cpp
-    src/savegame.cpp
+    ${SAVEGAME_SRC}
     src/player.cpp
     src/plot.cpp
     src/fixers.cpp
@@ -262,6 +281,8 @@ src/bolt_art.cpp
     src/cockpit_mfd.cpp
     src/cockpit_overlay.cpp
     src/cockpit_armaments.cpp
+    src/hud_text_fit.cpp
+    src/cockpit_damage.cpp
     src/comms_menu.cpp
     ${DEV_REMOTE_SRC}
     ${IMGUI_SRC}
@@ -275,26 +296,28 @@ src/bolt_art.cpp
 # Bake the asset path into the runtime so we can launch from anywhere. For
 # now we just use a relative path + chdir-to-source; for shipping we'd copy
 # assets next to the binary. Good enough for Stage 2.
-# Hardcode "build" relative to source so the symlink lands next to the
-# binary. We can't use $TARGET_FILE_DIR in this POST_BUILD because of
-# how the build system is wired (the binary lives in build/, not in
-# CMAKE_BINARY_DIR's value at config time).
-if(WIN32)
-    # Directory junctions work without administrator privileges, unlike
-    # symbolic links on Windows systems where Developer Mode is disabled.
-    add_custom_command(TARGET new_privateer POST_BUILD
-        COMMAND powershell -NoProfile -Command
-                "if (-not (Test-Path '${CMAKE_SOURCE_DIR}/build/assets')) { New-Item -ItemType Junction -Path '${CMAKE_SOURCE_DIR}/build/assets' -Target '${CMAKE_SOURCE_DIR}/assets' }"
-        COMMENT "junctioning assets/ next to binary"
-        VERBATIM
-    )
-else()
-    add_custom_command(TARGET new_privateer POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E create_symlink
-                ${CMAKE_SOURCE_DIR}/assets
-                ${CMAKE_SOURCE_DIR}/build/assets
-        COMMENT "symlinking assets/ next to binary"
-    )
+# The link goes next to the real binary, whatever the build dir is called
+# (issue #497). In-source builds already have assets/ beside the binary, and
+# linking there would collide with the real directory, so skip them.
+if(NOT CMAKE_BINARY_DIR STREQUAL CMAKE_SOURCE_DIR)
+    set(ASSETS_LINK "$<TARGET_FILE_DIR:new_privateer>/assets")
+    if(WIN32)
+        # Directory junctions work without administrator privileges, unlike
+        # symbolic links on Windows systems where Developer Mode is disabled.
+        add_custom_command(TARGET new_privateer POST_BUILD
+            COMMAND powershell -NoProfile -Command
+                    "if (-not (Test-Path '${ASSETS_LINK}')) { New-Item -ItemType Junction -Path '${ASSETS_LINK}' -Target '${CMAKE_SOURCE_DIR}/assets' }"
+            COMMENT "junctioning assets/ next to binary"
+            VERBATIM
+        )
+    else()
+        add_custom_command(TARGET new_privateer POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E create_symlink
+                    ${CMAKE_SOURCE_DIR}/assets ${ASSETS_LINK}
+            COMMENT "symlinking assets/ next to binary"
+            VERBATIM
+        )
+    endif()
 endif()
 
 target_include_directories(new_privateer PRIVATE
@@ -409,6 +432,18 @@ target_include_directories(test_outfitting PRIVATE
     ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party)
 target_compile_definitions(test_outfitting PRIVATE OUTFITTING_HEADLESS)
 
+# Scanner catalog + fit/sell transactions (#143).
+#   cmake --build build --target test_scanner && ./build/test_scanner
+add_executable(test_scanner EXCLUDE_FROM_ALL
+    tools/test_scanner.cpp src/scanner.cpp
+    src/outfitting.cpp src/ship_class.cpp src/gun.cpp src/shield.cpp
+    src/armor.cpp src/player.cpp src/mobility.cpp src/faction.cpp src/json.cpp
+    src/commodity.cpp
+)
+target_include_directories(test_scanner PRIVATE
+    ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party)
+target_compile_definitions(test_scanner PRIVATE OUTFITTING_HEADLESS)
+
 add_executable(test_equipment_hardpoints EXCLUDE_FROM_ALL
     tools/test_equipment_hardpoints.cpp src/equipment_hardpoints.cpp src/json.cpp)
 target_include_directories(test_equipment_hardpoints PRIVATE
@@ -418,6 +453,14 @@ target_include_directories(test_equipment_hardpoints PRIVATE
 # dragging the renderer, audio, or projectile simulation into a math test.
 add_executable(test_gun_modes EXCLUDE_FROM_ALL tools/test_gun_modes.cpp)
 target_include_directories(test_gun_modes PRIVATE ${CMAKE_SOURCE_DIR}/src)
+
+# Player auto-turret regression: a disarmed forward-gun mask must not suppress
+# autonomous turret target acquisition/fire, while fixed guns remain gated.
+add_executable(test_turret_firing EXCLUDE_FROM_ALL
+    tools/test_turret_firing.cpp
+    src/firing.cpp src/ship_registry.cpp src/gun.cpp src/json.cpp)
+target_include_directories(test_turret_firing PRIVATE
+    ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party)
 
 # Pure launcher hardware/ammo selection harness.
 add_executable(test_launcher_modes EXCLUDE_FROM_ALL tools/test_launcher_modes.cpp)
@@ -430,23 +473,42 @@ add_executable(test_turn_response EXCLUDE_FROM_ALL
 target_include_directories(test_turn_response PRIVATE
     ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party)
 
+# Animated base-room data harness (#515): sprite-sheet manifests, timeline
+# wrapping, star-tile scrolling, plus the shipped New Con manifests.
+add_executable(test_room_anim EXCLUDE_FROM_ALL
+    tools/test_room_anim.cpp src/room_anim_data.cpp src/json.cpp)
+target_include_directories(test_room_anim PRIVATE
+    ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party)
+
 # Pure Flight pause-overlay visibility harness.
 add_executable(test_pause_overlay EXCLUDE_FROM_ALL tools/test_pause_overlay.cpp)
 target_include_directories(test_pause_overlay PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
 # Pure cockpit-art fit + MFD-hole geometry harness (#426).
 # Real ImGui compositing with GPU texture allocation stubbed (#429).
+# Also covers the V cockpit-off toggle's classic HUD placement (#554).
 add_executable(test_cockpit_layers EXCLUDE_FROM_ALL
-    tools/test_cockpit_layers.cpp src/cockpit_overlay.cpp ${IMGUI_SRC})
+    tools/test_cockpit_layers.cpp src/cockpit_overlay.cpp
+    src/cockpit_mfd.cpp src/hud_text_fit.cpp ${IMGUI_SRC})
 target_include_directories(test_cockpit_layers PRIVATE
+    ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party ${IMGUI_DIR})
+
+# Dense HUD lines fit every hull's MFD glass, real ImGui + game font (#430).
+# Run from the repo root.
+add_executable(test_hud_text_fit EXCLUDE_FROM_ALL
+    tools/test_hud_text_fit.cpp src/hud_text_fit.cpp src/cockpit_mfd.cpp
+    src/cockpit_overlay.cpp ${IMGUI_SRC})
+target_include_directories(test_hud_text_fit PRIVATE
     ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party ${IMGUI_DIR})
 
 add_executable(test_cockpit_overlay EXCLUDE_FROM_ALL tools/test_cockpit_overlay.cpp)
 target_include_directories(test_cockpit_overlay PRIVATE
     ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party)
 
+# Hardpoint swaps + the player loadout -> live mounts build (#514).
 add_executable(test_armament_loadout EXCLUDE_FROM_ALL
-    tools/test_armament_loadout.cpp)
+    tools/test_armament_loadout.cpp src/player.cpp src/commodity.cpp src/json.cpp
+    src/firing.cpp src/ship_registry.cpp src/gun.cpp)
 target_include_directories(test_armament_loadout PRIVATE
     ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party)
 
@@ -482,7 +544,7 @@ add_executable(test_full_loop EXCLUDE_FROM_ALL
     tools/test_full_loop.cpp
     src/game_state.cpp src/player.cpp src/faction.cpp src/comm.cpp
     src/commodity.cpp src/economy.cpp src/outfitting.cpp src/missions.cpp
-    src/galaxy.cpp src/system_def.cpp src/json.cpp src/savegame.cpp src/world_clock.cpp
+    src/galaxy.cpp src/system_def.cpp src/json.cpp ${SAVEGAME_SRC} src/world_clock.cpp
     src/docking.cpp src/autopilot.cpp src/threat.cpp src/jump.cpp
     src/encounters.cpp src/repair.cpp src/missile.cpp src/ship.cpp
     src/ship_class.cpp src/ship_registry.cpp src/ship_ai.cpp
@@ -508,7 +570,7 @@ add_executable(test_ai_brain EXCLUDE_FROM_ALL
     tools/test_ai_brain.cpp
     src/game_state.cpp src/player.cpp src/faction.cpp src/comm.cpp
     src/commodity.cpp src/economy.cpp src/outfitting.cpp src/missions.cpp
-    src/galaxy.cpp src/system_def.cpp src/json.cpp src/savegame.cpp src/world_clock.cpp
+    src/galaxy.cpp src/system_def.cpp src/json.cpp ${SAVEGAME_SRC} src/world_clock.cpp
     src/docking.cpp src/autopilot.cpp src/threat.cpp src/jump.cpp
     src/encounters.cpp src/repair.cpp src/missile.cpp src/ship.cpp
     src/ship_class.cpp src/ship_registry.cpp src/ship_ai.cpp
@@ -537,7 +599,7 @@ add_executable(test_missions EXCLUDE_FROM_ALL
     tools/test_missions.cpp
     src/missions.cpp src/comm.cpp src/player.cpp src/faction.cpp
     src/commodity.cpp
-    src/galaxy.cpp src/system_def.cpp src/json.cpp src/savegame.cpp src/world_clock.cpp
+    src/galaxy.cpp src/system_def.cpp src/json.cpp ${SAVEGAME_SRC} src/world_clock.cpp
     src/ship_class.cpp src/ship_registry.cpp
     src/encounters.cpp
     src/mobility.cpp
@@ -566,7 +628,7 @@ add_executable(test_mission_tracker EXCLUDE_FROM_ALL
     src/mission_tracker.cpp
     src/missions.cpp src/comm.cpp src/player.cpp src/faction.cpp
     src/threat.cpp src/commodity.cpp
-    src/galaxy.cpp src/system_def.cpp src/json.cpp src/savegame.cpp src/world_clock.cpp
+    src/galaxy.cpp src/system_def.cpp src/json.cpp ${SAVEGAME_SRC} src/world_clock.cpp
     src/ship_class.cpp src/ship_registry.cpp
     src/mobility.cpp
     src/gun.cpp src/armor.cpp src/shield.cpp
@@ -586,8 +648,9 @@ add_dependencies(test_mission_tracker mission_templates_gen)
 #   cmake --build build --target test_savegame && ./build/test_savegame
 add_executable(test_savegame EXCLUDE_FROM_ALL
     tools/test_savegame.cpp
-    src/savegame.cpp src/world_clock.cpp src/player.cpp src/plot.cpp src/json.cpp src/faction.cpp
+    ${SAVEGAME_SRC} src/world_clock.cpp src/player.cpp src/plot.cpp src/json.cpp src/faction.cpp
     src/commodity.cpp
+    src/ship_class.cpp src/gun.cpp src/shield.cpp src/mobility.cpp   # pre-v9 turret grandfathering
 )
 target_include_directories(test_savegame PRIVATE
     ${CMAKE_SOURCE_DIR}/src
@@ -678,6 +741,11 @@ target_link_options(test_campaign PRIVATE -Wl,-dead_strip)
 # through a fake play hook. Links only the engine-free TUs (+ plot.cpp for
 # the flag gates) — no imgui / sokol / GL / audio.
 #   cmake --build build --target test_cinematic && ./build/test_cinematic
+add_executable(test_mesh_indices EXCLUDE_FROM_ALL tools/test_mesh_indices.cpp
+    src/obj_loader.cpp src/mesh_cache.cpp src/json.cpp)
+target_include_directories(test_mesh_indices PRIVATE
+    ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party)
+
 add_executable(test_cinematic_dialogue EXCLUDE_FROM_ALL tools/test_cinematic_dialogue.cpp)
 target_include_directories(test_cinematic_dialogue PRIVATE
     ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party)
@@ -692,6 +760,45 @@ target_include_directories(test_cinematic PRIVATE
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/third_party
 )
+
+# ---------------------------------------------------------------------------
+# Harnesses revived from tools/ (#493): each exits non-zero on failure.
+add_executable(test_autopilot EXCLUDE_FROM_ALL
+    tools/test_autopilot.cpp src/autopilot.cpp src/camera.cpp src/threat.cpp
+    src/hazards.cpp src/faction.cpp)
+add_executable(test_inventory112 EXCLUDE_FROM_ALL
+    tools/test_inventory112.cpp src/inventory.cpp src/player.cpp src/json.cpp
+    src/commodity.cpp src/ship_class.cpp src/gun.cpp src/shield.cpp src/mobility.cpp
+    src/faction.cpp)
+target_compile_definitions(test_inventory112 PRIVATE INVENTORY_HEADLESS)
+add_executable(test_missile EXCLUDE_FROM_ALL
+    tools/test_missile.cpp src/missile.cpp src/ship.cpp src/player.cpp
+    src/repair.cpp src/ship_class.cpp src/gun.cpp src/shield.cpp src/armor.cpp
+    src/mobility.cpp src/faction.cpp src/ship_ai.cpp src/perception.cpp
+    src/json.cpp src/commodity.cpp src/ai_brain.cpp src/hazards.cpp
+    src/ship_registry.cpp src/comm.cpp)
+target_compile_definitions(test_missile PRIVATE COMM_HEADLESS)
+# Per-component damage (#141): pure model + ship/perception/repair wiring.
+add_executable(test_ship_systems EXCLUDE_FROM_ALL
+    tools/test_ship_systems.cpp src/ship.cpp src/player.cpp src/repair.cpp
+    src/ship_class.cpp src/gun.cpp src/shield.cpp src/armor.cpp
+    src/mobility.cpp src/faction.cpp src/ship_ai.cpp src/perception.cpp
+    src/json.cpp src/commodity.cpp src/ai_brain.cpp src/hazards.cpp
+    src/ship_registry.cpp src/comm.cpp)
+target_compile_definitions(test_ship_systems PRIVATE COMM_HEADLESS)
+add_executable(test_reputation EXCLUDE_FROM_ALL
+    tools/test_reputation.cpp src/comm.cpp src/faction.cpp src/player.cpp
+    src/json.cpp src/commodity.cpp)
+target_compile_definitions(test_reputation PRIVATE COMM_HEADLESS)
+add_executable(test_salvage EXCLUDE_FROM_ALL
+    tools/test_salvage.cpp src/economy.cpp src/commodity.cpp src/player.cpp
+    src/json.cpp)
+target_compile_definitions(test_salvage PRIVATE ECONOMY_HEADLESS)
+foreach(harness test_autopilot test_inventory112 test_missile test_ship_systems
+                test_reputation test_salvage)
+    target_include_directories(${harness} PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party)
+endforeach()
 
 # ---------------------------------------------------------------------------
 # `dist` — portable, relocatable game folder (build/dist/).

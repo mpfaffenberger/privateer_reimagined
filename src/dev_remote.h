@@ -187,7 +187,10 @@ namespace dev_remote {
 // binding fails (e.g. another instance of the game is still listening).
 // The failure path is non-fatal on purpose — the game should keep running
 // even if the dev channel can't open.
-void start(int port = 8765);
+// 47001 avoids common local dev-server ports (3000, 5000, 8080, 8765, ...).
+// Scripts and docs assume it, so this is the only place it's spelled.
+constexpr int k_default_port = 47001;
+void start(int port = k_default_port);
 
 // Tear down the server cleanly. Safe to call unconditionally at shutdown.
 void stop();
@@ -199,6 +202,10 @@ void drain_commands(Camera& cam);
 // Publish the latest FPS reading for `/state` queries. Called whenever
 // the game recomputes it (once per second is enough).
 void publish_fps(int fps);
+
+// For `/state` — the world day counter (PlayerState::day). Main thread
+// publishes it every frame; /state reports it plus its stardate (#171).
+void publish_day(int day);
 
 // End-of-frame hook. If a screenshot command is in flight, this is
 // where it gets taken (after the current frame's swap has completed)
@@ -395,6 +402,11 @@ void set_comms_select_hook(std::function<void(int n)> hook);
 // set_flag|clear_flag|give_item|remove_item. The host wires it to the
 // matching plot::* mutator on the live PlayerState (#138).
 void set_plot_hook(std::function<void(std::string action, std::string id)> hook);
+
+// POST /advance_day {"days":N} (default 1, range 1..3650) enqueues a
+// command; drain_commands invokes this hook on the main thread. Test hook
+// for schedules: skip N days without N dock cycles (#171).
+void set_advance_day_hook(std::function<void(int days)> hook);
 
 // ---------------------------------------------------------------------------
 // /player snapshot — the persistent PlayerState surface (agentic testing).

@@ -18,8 +18,10 @@
 #include "cockpit_hud.h"
 #include "cockpit_hud_internal.h"
 #include "cockpit_armaments.h"
+#include "cockpit_damage.h"
 #include "cockpit_overlay.h"
 #include "comms_menu.h"
+#include "hud_text_fit.h"
 #include "navmap_projection.h"
 
 #include "armor.h"
@@ -32,6 +34,7 @@
 #include "missions.h"
 #include "perception.h"
 #include "player.h"
+#include "scanner.h"
 #include "sfx.h"
 #include "shield.h"
 #include "ship.h"
@@ -424,26 +427,31 @@ void draw_target_mfd(const Camera& cam, const ShipRegistry& ships,
             }
             ImGui::SameLine();
 
-            // Right column: identity + range + stance + HP bars.
+            // Right column: identity + range + stance + HP bars. Lines fit
+            // the column's width (#430): an MFD is far narrower than the
+            // classic box, so long names shrink and faction/stance wraps.
             ImGui::BeginGroup();
 
-            const char* class_name = !target->display_name.empty()
+            // #516: no class or faction until the scanner identifies it.
+            const bool known = target->identified_by_player;
+            const char* class_name = !known ? "UNKNOWN"
+                : !target->display_name.empty()
                 ? target->display_name.c_str()
                 : (target->klass ? target->klass->display_name.c_str()
                                  : (target->is_player ? "PLAYER" : "?"));
-            ImGui::PushStyleColor(ImGuiCol_Text, kHudWhite);
-            ImGui::Text("%s", class_name);
-            ImGui::PopStyleColor();
+            hud_text_fit::text(class_name, kHudWhite);
 
             // Faction + stance — find the player's perception entry to
             // get the stance the AI uses (so target-panel colors match
             // the on-screen indicator + radar). Distance from the
             // contact entry too — already filtered by radar range.
-            const char*  fac_name = target->klass
-                ? faction::to_name(target->faction) : "?";
+            const char*  fac_name = !known ? "---"
+                : target->klass ? faction::to_name(target->faction) : "?";
             float        dist_m   = 0.0f;
             Stance       stance   = Stance::Neutral;
+            bool         iff      = false;   // #143: stance needs colour IFF
             if (const Ship* player = ships.player(); player) {
+                iff = scanner::color_iff(player->fitted_scanner);
                 for (const PerceivedContact& c : player->perception.visible) {
                     if (c.ship_id == target_ship_id) {
                         dist_m = c.distance_m;
@@ -452,23 +460,19 @@ void draw_target_mfd(const Camera& cam, const ShipRegistry& ships,
                     }
                 }
             }
-            const ImU32 stance_col =
-                (stance == Stance::Hostile) ? IM_COL32(255,  90,  90, 255)
-              : (stance == Stance::Allied)  ? IM_COL32( 90, 255, 110, 255)
-              :                                IM_COL32(255, 220,  60, 255);
+            const ImU32 stance_col = contact_color(stance, iff);
             const char* stance_str =
-                (stance == Stance::Hostile) ? "HOSTILE"
+                !iff                        ? "NO IFF"
+              : (stance == Stance::Hostile) ? "HOSTILE"
               : (stance == Stance::Allied)  ? "ALLIED"
               :                                "NEUTRAL";
 
-            ImGui::PushStyleColor(ImGuiCol_Text, stance_col);
-            ImGui::Text("%s  %s", fac_name, stance_str);
-            ImGui::PopStyleColor();
+            hud_text_fit::pair_or_wrap(fac_name, stance_str, stance_col);
 
-            ImGui::PushStyleColor(ImGuiCol_Text, kHudWhite);
-            if (dist_m < 10000.0f) ImGui::Text("DIST  %6.0f m",  dist_m);
-            else                   ImGui::Text("DIST  %5.1f km", dist_m * 0.001f);
-            ImGui::PopStyleColor();
+            char dist[32];
+            if (dist_m < 10000.0f) std::snprintf(dist, sizeof(dist), "DIST  %6.0f m",  dist_m);
+            else                   std::snprintf(dist, sizeof(dist), "DIST  %5.1f km", dist_m * 0.001f);
+            hud_text_fit::text(dist, kHudWhite);
 
             ImGui::EndGroup();
 
@@ -648,8 +652,8 @@ void draw_player_status(ShipRegistry& ships,
 
       // Dispatch the STATUS window to its active sub-screen. Ship keeps the
       // canonical hull diagram; Comms hosts the data-driven hail menu;
-      // Damage remains a stub until component health exists; Weapons reads
-      // the live mount/arm/energy state.
+      // Damage lists live component integrity (#141); Weapons reads the
+      // live mount/arm/energy state.
       switch (g_status_screen) {
       case StatusScreen::Comms: {
         static const PlayerReputation kNoRep{};
@@ -658,7 +662,7 @@ void draw_player_status(ShipRegistry& ships,
         break;
       }
       case StatusScreen::Damage:
-        draw_status_stub("DAMAGE CONTROL", "system damage not yet modeled");
+        cockpit_damage::draw(player);
         break;
       case StatusScreen::Weapons:
         draw_weapons_status(player_state, player, selected_ordnance);
@@ -855,13 +859,14 @@ void draw_radar_mfd(const Camera& cam, const StarSystem& system, int selected_na
 
         const ImVec2 ctr  = ImVec2(disc.x + disc.w * 0.5f, disc.y + disc.h * 0.5f);
         const float  rad  = std::min(disc.w, disc.h) * 0.5f - (panel.in_display ? 3.0f : 6.0f);
-        // 35 km radar radius (np-rad.1) — expanded from the legacy 15 km so
-        // a single screen frame can show more of the local traffic around
-        // the player. Anything past 35k clamps to the rim, so nav points
-        // 100+ km away overlap at the edge — that's the intended trade:
-        // the MFD is a "where's the contact NEAR me" display, not a
-        // system overview.
-        constexpr float max_range = 35000.0f;       // u — beyond 35km, clamp to rim
+        // The disc's rim is the player's radar sphere (perception::
+        // radar_range_m, #492), so a contact at the rim is exactly one that
+        // is about to drop off radar and out of lock. Anything farther
+        // (nav points 100+ km away) clamps to the rim: the MFD is a
+        // "where's the contact NEAR me" display, not a system overview.
+        const Ship* radar_owner = ships.player();
+        const float max_range = radar_owner ? perception::radar_range_m(*radar_owner)
+                                            : k_default_radar_range_m;
 
         // Concentric range rings + crosshair. Drawn before sweep so the
         // sweep line passes over them.
@@ -914,13 +919,14 @@ void draw_radar_mfd(const Camera& cam, const StarSystem& system, int selected_na
         // Plot ship contacts from the player's perception. Same
         // camera-relative projection as the nav loop above; stance
         // colors mirror the on-screen target indicator (red=hostile,
-        // green=allied, yellow=neutral) so the radar reads at a glance.
-        // Ships at < ~14% of radar (35 km vs 250 km) cluster near
-        // center — that's the steady-state engagement bubble; nav
-        // points spread out farther because they're system-scale
+        // green=allied, yellow=neutral) so the radar reads at a glance —
+        // on a colour-IFF scanner; monochrome ones show one tint (#143).
+        // Ships cluster toward the center (the engagement bubble); nav
+        // points sit at or near the rim because they're system-scale
         // (planets, jump points 100+ km away).
         if (const Ship* player_p = ships.player(); player_p) {
             const Ship& player = *player_p;
+            const bool iff = scanner::color_iff(player.fitted_scanner);
             for (const PerceivedContact& c : player.perception.visible) {
                 // Reconstruct world position from cached unit + distance.
                 const HMM_Vec3 contact_pos =
@@ -939,10 +945,7 @@ void draw_radar_mfd(const Camera& cam, const StarSystem& system, int selected_na
                 const ImVec2 dot { ctr.x + dx_norm * r_norm * rad,
                                    ctr.y + dy_norm * r_norm * rad };
 
-                const ImU32 col =
-                    (c.stance == Stance::Hostile) ? IM_COL32(255,  90,  90, 255)
-                  : (c.stance == Stance::Allied)  ? IM_COL32( 90, 255, 110, 255)
-                  :                                 IM_COL32(255, 220,  60, 255);
+                const ImU32 col = contact_color(c.stance, iff);
                 const bool   sel = (c.ship_id == target_ship_id);
                 const float  dot_r = sel ? 4.0f : 2.5f;
                 dl->AddCircleFilled(dot, dot_r, col);
@@ -1213,6 +1216,16 @@ std::string base_label(const StarSystem& sys, const std::string& base_id) {
 }
 
 } // anonymous namespace
+
+uint32_t contact_color(Stance stance, bool color_iff, uint8_t alpha) {
+    if (!color_iff) return IM_COL32(190, 205, 215, alpha);   // monochrome radar tint
+    switch (stance) {
+        case Stance::Hostile: return IM_COL32(255,  90,  90, alpha);
+        case Stance::Allied:  return IM_COL32( 90, 255, 110, alpha);
+        case Stance::Neutral: break;
+    }
+    return IM_COL32(255, 220, 60, alpha);
+}
 
 // STATUS sub-screen accessors. File-static g_status_screen lives in the
 // anonymous namespace above; these are the public seam main.cpp + the
@@ -1772,15 +1785,13 @@ void build_navmap(const Camera& cam, const StarSystem& system,
         // densely packed ship dots.
         if (const Ship* player_p = ships.player(); player_p) {
             const Ship& player = *player_p;
+            const bool iff = scanner::color_iff(player.fitted_scanner);
             for (const PerceivedContact& c : player.perception.visible) {
                 const HMM_Vec3 p = HMM_AddV3(
                     player.position, HMM_MulV3F(c.to_unit, c.distance_m));
                 const HMM_Vec2 mp = world_map_pos(p);
                 const ImVec2 sp = to_screen(mp.X, mp.Y);
-                const ImU32 col =
-                    (c.stance == Stance::Hostile) ? IM_COL32(255,  90,  90, 230)
-                  : (c.stance == Stance::Allied)  ? IM_COL32( 90, 255, 110, 230)
-                  :                                  IM_COL32(255, 220,  60, 230);
+                const ImU32 col = contact_color(c.stance, iff, 230);
                 dl->AddCircleFilled(sp, 3.0f, col, 8);
             }
         }

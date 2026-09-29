@@ -3,14 +3,17 @@
 
 #include "armor.h"
 #include "gun.h"
+#include "missile.h"
 #include "outfitting.h"
 #include "player.h"
 #include "repair.h"
+#include "scanner.h"
 #include "ship.h"
 #include "ship_class.h"
 #include "sfx.h"
 #include "imgui.h"
 
+#include <algorithm>
 #include <array>
 #include <cstdio>
 #include <string>
@@ -36,17 +39,52 @@ void status(bool installed, const char* installed_text = "INSTALLED") {
                        "%s", installed ? installed_text : "EMPTY");
 }
 
+// Turret HARDWARE block for a turret mount (#145). Returns true when the
+// turret is installed, i.e. its mounts can take a gun.
+bool draw_turret_hardware(const PanelContext& ctx, const TurretSlot& turret) {
+    PlayerState& p = ctx.player;
+    const bool owned = player::has_turret(p, turret.id);
+    ImGui::TextUnformatted(turret.label.c_str());
+    status(owned);
+    const int64_t price = turret_price();
+    if (!owned) {
+        ImGui::TextColored(kDim, "Install the turret to fit guns into its %zu mount%s.",
+                           turret.mounts.size(), turret.mounts.size() == 1 ? "" : "s");
+        char buy[64]; std::snprintf(buy, sizeof buy, "INSTALL TURRET  %lld CR", (long long)price);
+        ImGui::BeginDisabled(price <= 0 || !player::can_afford(p, price));
+        if (ImGui::Button(buy, ImVec2(-1.0f, 36.0f)) &&
+            buy_turret(p, turret.id, ctx.ship_class)) sfx::ui_click();
+        ImGui::EndDisabled();
+        return false;
+    }
+    const bool armed = std::any_of(turret.mounts.begin(), turret.mounts.end(), [&](int m) {
+        return m < (int)p.gun_mounts.size() && !p.gun_mounts[(size_t)m].gun_id.empty();
+    });
+    char sell[64]; std::snprintf(sell, sizeof sell, "REMOVE TURRET  +%lld CR", (long long)price);
+    ImGui::BeginDisabled(armed);
+    if (ImGui::Button(sell, ImVec2(-1.0f, 32.0f)) &&
+        sell_turret(p, turret.id, ctx.ship_class)) sfx::ui_click();
+    ImGui::EndDisabled();
+    if (armed) ImGui::TextColored(kDim, "Sell the turret's guns before removing it.");
+    ImGui::Separator();
+    return true;
+}
+
 void draw_guns(const PanelContext& ctx) {
     PlayerState& player = ctx.player;
     const int slot = ctx.zone.slot;
     const bool valid = slot >= 0 && slot < (int)player.gun_mounts.size();
-    heading(ctx.zone.kind == equipment_hardpoints::Kind::Turret
-                ? "TURRET HARDPOINT" : "FORWARD GUN HARDPOINT",
+    // Turret-ness is a property of the HULL's mount (ship.json), not of the
+    // schematic zone -- fallback layouts label every mount a forward gun.
+    const TurretSlot* turret =
+        ctx.ship_class ? ctx.ship_class->turret_slot_for_mount(slot) : nullptr;
+    heading(turret ? "TURRET HARDPOINT" : "FORWARD GUN HARDPOINT",
             ctx.zone.label.c_str());
     if (!valid) {
         ImGui::TextColored(kBad, "Mount %d does not exist on this hull.", slot + 1);
         return;
     }
+    if (turret && !draw_turret_hardware(ctx, *turret)) return;
 
     const std::string& fitted = player.gun_mounts[(size_t)slot].gun_id;
     ImGui::Text("MOUNT %d", slot + 1);
@@ -141,10 +179,10 @@ void draw_launcher(const PanelContext& ctx) {
     ImGui::Spacing();
     ImGui::Separator();
     ImGui::TextColored(kDim, "ORDNANCE INVENTORY");
-    const char* labels[] = {"DF", "HS", "IR"};
-    for (int type = 0; type < 3; ++type) {
+    for (int type = 0; type < kMissileRackTypeCount; ++type) {
         ImGui::PushID(type);
-        ImGui::Text("%s MISSILES    %d", labels[type], p.missiles[type]);
+        ImGui::Text("%s MISSILES    %d", missile::to_name((MissileType)type),
+                    p.missiles[type]);
         ImGui::SameLine(180.0f);
         const bool room = repair::missiles_total(p) < repair::missile_rack_capacity(p);
         ImGui::BeginDisabled(!room || !player::can_afford(p, repair::missile_price(type)));
@@ -263,17 +301,53 @@ bool discrete_owned(const PlayerState& p, const char* id) {
     return false;
 }
 
+// Scanner bay (#143): one scanner fitted at a time. Fitting over the
+// current unit trades it in at full price, so each row shows the NET charge.
+void draw_scanners(PlayerState& p) {
+    const ScannerType* fitted = scanner::find(p.scanner_id);
+    ImGui::Spacing();
+    heading("SCANNER", fitted ? fitted->name.c_str() : "No scanner fitted");
+    if (fitted) {
+        char sell[80]; std::snprintf(sell, sizeof sell, "SELL %s   +%lld CR",
+                                     fitted->name.c_str(), (long long)fitted->price);
+        if (ImGui::Button(sell, ImVec2(-1.0f, 36.0f)) && scanner::sell(p)) sfx::ui_click();
+    }
+    const int64_t trade_in = fitted ? fitted->price : 0;
+    for (const ScannerType& s : scanner::catalog()) {
+        ImGui::PushID(s.id.c_str());
+        ImGui::TextUnformatted(s.name.c_str());
+        ImGui::TextColored(kDim, "%.1f km  %s%s%s", s.range_m * 0.001f,
+                           s.color_iff ? "COLOUR IFF" : "MONOCHROME",
+                           s.target_lock ? "  LOCK" : "", s.itts ? "  ITTS" : "");
+        ImGui::SameLine(ImGui::GetWindowWidth() - 145.0f);
+        if (&s == fitted) {
+            ImGui::TextColored(kGood, "FITTED");
+        } else {
+            const int64_t net = s.price - trade_in;
+            char buy[48];
+            if (net >= 0) std::snprintf(buy, sizeof buy, "FIT  %lld", (long long)net);
+            else          std::snprintf(buy, sizeof buy, "FIT  +%lld", (long long)-net);
+            ImGui::BeginDisabled(net > 0 && !player::can_afford(p, net));
+            if (ImGui::Button(buy, ImVec2(125.0f, 34.0f)) && scanner::buy(p, s.id))
+                sfx::ui_click();
+            ImGui::EndDisabled();
+        }
+        ImGui::Separator();
+        ImGui::PopID();
+    }
+}
+
 void draw_systems(const PanelContext& ctx) {
     PlayerState& p = ctx.player;
-    heading("SHIP SYSTEMS", "Avionics, navigation, ECM, and damage control");
+    heading("SHIP SYSTEMS", "Avionics, navigation, ECM, damage control, and scanners");
     struct Item { const char* id; const char* label; const char* detail; };
     constexpr std::array<Item, 6> items{{
         {"jump_drive", "Jump Drive", "Enables inter-system jump points"},
         {"ecm_l1", "ECM Level 1", "Basic missile lock disruption"},
         {"ecm_l2", "ECM Level 2", "Improved disruption; requires L1"},
         {"ecm_l3", "ECM Level 3", "Advanced disruption; requires L2"},
-        {"repair_droid", "Repair Droid", "Repairs hull damage in flight"},
-        {"adv_repair_droid", "Advanced Repair Droid", "Faster repair; requires standard droid"},
+        {"repair_droid", "Repair Droid", "Fixes damaged non-weapon systems in flight"},
+        {"adv_repair_droid", "Advanced Repair Droid", "Repairs 2x faster; requires standard droid"},
     }};
     for (const Item& item : items) {
         ImGui::PushID(item.id);
@@ -294,6 +368,7 @@ void draw_systems(const PanelContext& ctx) {
         ImGui::Separator();
         ImGui::PopID();
     }
+    draw_scanners(p);
 }
 
 void draw_service(const PanelContext& ctx) {
@@ -310,6 +385,26 @@ void draw_service(const PanelContext& ctx) {
         if (ImGui::Button(repair_label, ImVec2(-1.0f, 40.0f)) &&
             repair::repair_hull(*ctx.live_ship, p)) sfx::ui_click();
         ImGui::EndDisabled();
+    }
+    // Per-component repairs (#141): one button per damaged system, priced
+    // by how much of it is missing.
+    if (ctx.live_ship && !quote.systems_damaged) {
+        ImGui::TextColored(kGood, "ALL SYSTEMS NOMINAL");
+    } else if (ctx.live_ship) {
+        for (int i = 0; i < kShipSystemCount; ++i) {
+            if (quote.system_cost[i] <= 0) continue;
+            const ShipSystem sys = ship_systems::at(i);
+            const float left = ship_systems::integrity(ctx.live_ship->systems, sys);
+            char label[96];
+            std::snprintf(label, sizeof label, "REPAIR %-10s %s   %lld CR##sys%d",
+                          ship_systems::label(sys),
+                          left > 0.0f ? "DAMAGED  " : "DESTROYED",
+                          (long long)quote.system_cost[i], i);
+            ImGui::BeginDisabled(!player::can_afford(p, quote.system_cost[i]));
+            if (ImGui::Button(label, ImVec2(-1.0f, 28.0f)) &&
+                repair::repair_system(*ctx.live_ship, p, sys)) sfx::ui_click();
+            ImGui::EndDisabled();
+        }
     }
     ImGui::Spacing();
     ImGui::Text("MISSILE RACK    %d / %d",

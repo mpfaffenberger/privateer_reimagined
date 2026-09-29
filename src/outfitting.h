@@ -18,7 +18,8 @@
 //     fitted guns/upgrades on the old hull are lost with no refund — the UI
 //     WARNS before committing. Keeps the swap math a single clean credits
 //     line instead of a per-part part-out economy.
-//   * Equipment — buy guns into the hull's mounts (capped by mount count),
+//   * Equipment — buy guns into the hull's mounts (capped by mount count;
+//     a turret mount first needs its turret hardware bought, #145),
 //     climb the shield/engine upgrade ladders (capped by the hull's
 //     max_shield_level / max_engine_level), and buy the one-time cargo
 //     expansion (the flag player::cargo_capacity already reads).
@@ -27,9 +28,8 @@
 // engine_level is folded into the player's effective top speed by scaling the
 // camera's speed caps off the hull's cruise/afterburner numbers. See
 // effective_speed_caps + the note in outfitting.cpp; main.cpp applies it on
-// launch and at startup. (This is the engine-multiplier wiring the np-9cu.3
-// brief asked for; the ship.cpp:305 TODO it referenced is actually about the
-// SHIELD effect_pct, a separate concern left in place — see that comment.)
+// launch and at startup. (The SHIELD effect_pct TODO in ship.cpp is a
+// separate concern; see that comment.)
 //
 // The pricing + transaction MODEL is pure data (no ImGui) so the offline
 // harness (tools/test_outfitting.cpp) links it under OUTFITTING_HEADLESS,
@@ -67,6 +67,8 @@ int64_t armor_price(const std::string& armor_name);
 int64_t shield_upgrade_price(int target_level);
 int64_t engine_upgrade_price(int target_level);
 int64_t cargo_expansion_price();
+// Turret hardware, one flat price per position (#145, `turret_price`).
+int64_t turret_price();
 
 // Effective top-speed caps for the player's current hull. Pure hull value;
 // engine upgrades no longer scale speed (gamefaq 4.6.2 — engine upgrades
@@ -90,14 +92,29 @@ float shield_recharge_drain_for(int shield_level);
 // (no mutation) on refusal. `klass` is the player's CURRENT hull class.
 
 // Swap to `target` hull. Charges hull_net_cost, resets loadout to the new
-// hull's default guns and stock shield/engine/cargo (see header — lossy in
-// v1, the UI warns). No-op+false if target == current or unaffordable.
+// hull's default FORWARD guns and stock shield/engine/cargo (see header —
+// lossy in v1, the UI warns). Turret hardware is NOT included (#145): the
+// turret mounts start empty until bought. No-op+false if target == current
+// or unaffordable.
 bool buy_hull(PlayerState& p, const std::string& target);
 
+// Reset gun_mounts + turrets to `klass`'s stock guns (free, no credits).
+// with_turrets=false (dealer hulls) leaves turret mounts empty and unowned;
+// true (the --ship dev override) also grants every turret slot + its gun.
+void fit_stock_guns(PlayerState& p, const ShipClass* klass, bool with_turrets);
+
 // Fit `gun_short_name` into mount slot `mount_index` (0-based). Refused if the
-// slot is out of the hull's mount count or the gun isn't for sale.
+// slot isn't player::mount_fittable (out of range / unbought turret) or the
+// gun isn't for sale.
 bool buy_gun(PlayerState& p, const std::string& gun_short_name,
              int mount_index, const ShipClass* klass);
+
+// Buy / sell the turret HARDWARE for one of the hull's TurretSlots (#145).
+// Buying refuses an unknown slot, one already owned, or a short wallet.
+// Selling refunds turret_price() and refuses while any of the slot's mounts
+// still carries a gun -- sell the guns first, nothing vanishes silently.
+bool buy_turret(PlayerState& p, const std::string& slot_id, const ShipClass* klass);
+bool sell_turret(PlayerState& p, const std::string& slot_id, const ShipClass* klass);
 
 // Sell the gun currently fitted at `mount_index` back to the dealer for a
 // full-price refund. Refused if the mount is empty (or out of range).
@@ -133,7 +150,7 @@ bool sell_cargo_expansion(PlayerState& p);
 // jump eligibility, ECM breaks missile locks, etc.). Known items:
 //   * jump_drive      — allows taking a jump gate (the J prompt)
 //   * ecm_lN (N=1..3) — passive missile-lock break chance per second
-//   * repair_droid    — hull repair while flying
+//   * repair_droid    — in-flight component repair (ship_systems::droid_tick)
 //   * adv_repair_droid (Righteous Fire) — repair_droid twice as fast
 //   * tractor_beam    — pull loot cargo
 int64_t discrete_price(const std::string& item);

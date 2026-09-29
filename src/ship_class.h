@@ -23,6 +23,7 @@
 
 #include "faction.h"
 #include "gun.h"
+#include "missile.h"
 #include "mobility.h"
 
 // AI personality — gates how the state machine reacts to perceived
@@ -41,6 +42,23 @@ enum class AIPersonality : uint8_t {
 #include <vector>
 
 struct ShieldType;
+
+// One purchasable turret POSITION on a hull (#145): "rear", "top", "bottom".
+// Groups the turret=true default_guns entries tagged with the same
+// "turret_slot" key in ship.json (untagged turret mounts share "turret"), so
+// buying the Centurion's rear turret unlocks both of its gun mounts at once.
+// NPC spawns ignore this and fit every turret gun; the player must own the
+// hardware (PlayerState::turrets) before a gun can go into one of its mounts.
+struct TurretSlot {
+    std::string      id;       // stable save/price key, e.g. "rear"
+    std::string      label;    // UI name, e.g. "Rear Turret"
+    std::vector<int> mounts;   // indices into ShipClass::default_guns
+};
+
+// Fallback sensor sphere for a class that doesn't set radar_range, and for
+// class-less ships. 15000 is the original game's sensor cull (0x3a98,
+// docs/ai_model.md section 11).
+constexpr float k_default_radar_range_m = 15000.0f;
 
 struct ShipClass {
     // ---- identity ------------------------------------------------------
@@ -90,10 +108,10 @@ struct ShipClass {
     //
     // radar_range is the SENSOR / DETECTION / AWARENESS sphere — this is
     // what actually wakes the AI and starts an engage (gated by faction
-    // stance in perception.cpp). Live-corrected to the Privateer-canonical
-    // 15000 world units (docs/ai_model.md §11 / sensor cull 0x3a98). It is
+    // stance in perception.cpp). It applies to the player's hull too: read
+    // it through perception::radar_range_m(), never a literal (#492). It is
     // NOT CNST f1 — f1 is the cosmetic comm/taunt range (see comms_f1).
-    float radar_range   = 15000.0f;   // m  (sensor/detection, §11)
+    float radar_range   = k_default_radar_range_m;   // m  (sensor/detection, §11)
     float weapons_range =  3000.0f;   // m
 
     // ---- AI tuning: Privateer CNST skill vector (raw 1:1 world units) --
@@ -156,6 +174,28 @@ struct ShipClass {
     const ShieldType* default_shield = nullptr;
 
     std::vector<GunMount> default_guns;
+
+    // Turret positions this hull SUPPORTS, derived from default_guns at
+    // load (authored order). Empty = the hull can't carry a turret.
+    std::vector<TurretSlot> turret_slots;
+
+    // Stock missile load per rack type (#524), authored in ship.json as
+    // "default_missiles": { "FF": 6, "HS": 3 } from the hull's canonical
+    // privateer_ship_data.json "Weapons" line. NPCs spawn with it
+    // (missile::arm_npc_rack); the player's ordnance lives in PlayerState.
+    MissileRack default_missiles{};
+
+    // Header-inline so player.cpp's loadout rules need no ship_class.cpp link.
+    const TurretSlot* find_turret_slot(std::string_view id) const {
+        for (const TurretSlot& t : turret_slots) if (t.id == id) return &t;
+        return nullptr;
+    }
+    // The turret slot owning default_guns[mount]; nullptr for a fixed gun.
+    const TurretSlot* turret_slot_for_mount(int mount) const {
+        for (const TurretSlot& t : turret_slots)
+            for (int m : t.mounts) if (m == mount) return &t;
+        return nullptr;
+    }
 
     // ---- energy --------------------------------------------------------
     float energy_max      = 200.0f;   // GJ

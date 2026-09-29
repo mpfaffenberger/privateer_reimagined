@@ -1,5 +1,6 @@
 #include "perception.h"
 
+#include "scanner.h"
 #include "ship.h"
 #include "ship_registry.h"
 #include "ship_class.h"
@@ -50,26 +51,14 @@ void perception::tick(ShipRegistry& ships, const PlayerReputation& player_rep) {
 
         if (!observer.alive) continue;
 
-        // Player has no class -> use a generous default radar range so
-        // the player's HUD shows nearby contacts. Bumped to 35 km so
-        // the targeting cycle (T key) reaches well past most engagement
-        // distances — chasing ships through their afterburner extensions
-        // routinely opens the gap to 10+ km and you don't want to lose
-        // your target lock just because you can't see far enough.
-        //
-        // NPCs use their class radar = the SENSOR / DETECTION / AWARENESS
-        // sphere, now the Privateer-canonical 15000 world units
-        // (docs/ai_model.md §11.2 — live-confirmed: NPCs detect & close
-        // from ~10 km, far beyond CNST f1=1500). THIS radius + faction
-        // stance (classify_pair below) is what actually wakes the AI and
-        // starts an engage. CNST f1 is NOT consulted here — it is the
-        // cosmetic comm/taunt range (wired in ship_ai/comm), not detection.
-        // Player radar matches the NPC/Privateer-canonical 15 km sphere
-        // (no enhanced-HUD advantage) — contacts appear at the same range
-        // the AI sees you.
-        constexpr float k_player_radar_m = 15000.0f;
-        const float radar_r = observer.is_player ? k_player_radar_m
-                            : (observer.klass ? observer.klass->radar_range : 0.0f);
+        // Every ship, player included, senses out to its hull's radar
+        // sphere. THIS radius + faction stance (classify_pair below) is what
+        // wakes the AI and starts an engage (docs/ai_model.md section 11).
+        // CNST f1 is NOT consulted here: it is the cosmetic comm/taunt range.
+        // Because the player uses the same rule, contacts appear at the
+        // range the AI sees you (no enhanced-HUD advantage). A radar of 0
+        // (derelicts) senses nothing.
+        const float radar_r = radar_range_m(observer);
         if (radar_r <= 0.0f) continue;
         const float    r2     = radar_r * radar_r;
         const HMM_Vec3 my_pos = observer.position;
@@ -123,4 +112,12 @@ void perception::tick(ShipRegistry& ships, const PlayerReputation& player_rep) {
             }
         }
     }
+}
+
+float perception::radar_range_m(const Ship& s) {
+    const float hull = s.klass ? s.klass->radar_range : k_default_radar_range_m;
+    // A shot-up radar (#141) shrinks whatever scanner is fitted, for
+    // detection, the HUD rim and target locks alike -- they all read this.
+    return scanner::range_m(s.fitted_scanner, hull)
+         * ship_systems::radar_mult(s.systems);
 }

@@ -71,12 +71,14 @@ struct SfxTable {
     SampleId impact_armor_npc  = 0;   // armor hit,  NPC victim     (sfx_24)
     SampleId explosion_small   = 0;
     SampleId explosion_big     = 0;
+    SampleId component_damage  = 0;   // player system hit            (sfx_38)
     SampleId engine_hum        = 0;
     SampleId cruise_windup     = 0;
     SampleId ui_click          = 0;
     SampleId missile_fire      = 0;
     SampleId lock_seeking      = 0;
     SampleId lock_acquired     = 0;
+    SampleId missile_warning   = 0;   // inbound-missile alarm (#523, procedural)
     SampleId jump_sting        = 0;   // sfx_41 — plays first on jump
     SampleId jump_sting2       = 0;   // sfx_42 — follows ~3.3s later
     // Per-GunType firing samples, indexed by (int)GunType. Player guns use
@@ -147,6 +149,13 @@ uint64_t g_last_impact_ticks         = 0;
 uint64_t g_last_suppress_log_ticks   = 0;
 int      g_suppressed_since_last_log = 0;
 
+// ---- component-damage cue throttle (#519) -------------------------------------
+// Sustained fire through bare armor chips a system with EVERY bolt; one
+// "something just broke" cue per half second carries all the information.
+// No suppression log: ship::take_damage already logs every component hit.
+uint64_t g_last_component_cue_ticks = 0;
+constexpr double k_component_cue_spacing_s = 0.5;
+
 // ---- NPC gunfire coalescing (np-3va) -------------------------------------------
 // The impact gate above already collapses thunk-spam; NPC gunfire had NO
 // gate, so a 17-ship furball fired one play_world() per shot per mount
@@ -199,6 +208,18 @@ constexpr float k_npc_impact_max_m    = 20000.0f;
 constexpr float k_explosion_ref_m     = 400.0f;
 constexpr float k_explosion_max_m     = 20000.0f;
 
+// Stepped NPC distance zone (above) for a world point. Returns the gain, or
+// a negative value past the quiet zone (caller drops the sound). Shared by
+// NPC gunfire and NPC missile launches (#523) so the two can't drift.
+float npc_zone_gain(HMM_Vec3 world_pos) {
+    const float dist = HMM_LenV3(
+        HMM_SubV3(world_pos, audio::listener_position()));
+    if (dist < k_gun_zone_full_m)  return k_gun_zone_gain_full;
+    if (dist < k_gun_zone_med_m)   return k_gun_zone_gain_med;
+    if (dist < k_gun_zone_quiet_m) return k_gun_zone_gain_quiet;
+    return -1.0f;
+}
+
 } // namespace
 
 namespace sfx {
@@ -211,12 +232,14 @@ void load_all() {
     g_sfx.impact_armor_npc  = load_pref("impact_armor_npc");
     g_sfx.explosion_small   = load_pref("explosion_small");
     g_sfx.explosion_big     = load_pref("explosion_big");
+    g_sfx.component_damage  = load_pref("component_damage");
     g_sfx.engine_hum        = load_pref("engine_hum");
     g_sfx.cruise_windup     = load_pref("cruise_windup");
     g_sfx.ui_click          = load_pref("ui_click");
     g_sfx.missile_fire      = load_pref("missile_fire");
     g_sfx.lock_seeking      = load_pref("lock_seeking");
     g_sfx.lock_acquired     = load_pref("lock_acquired");
+    g_sfx.missile_warning   = load_pref("missile_warning");
     g_sfx.jump_sting        = load_pref("jump");    // sfx_41
     g_sfx.jump_sting2       = load_pref("jump2");   // sfx_42
 
@@ -228,9 +251,10 @@ void load_all() {
     std::printf("[sfx]   impact_armor  player<-sfx_23 npc<-sfx_24\n");
     std::printf("[sfx]   impact_shield player<-sfx_25 npc<-sfx_26\n");
     std::printf("[sfx]   explosion_big<-sfx_27 explosion_small<-sfx_28\n");
+    std::printf("[sfx]   component_damage<-sfx_38 (player internal system hit)\n");
     std::printf("[sfx]   missile_fire<-sfx_18 afterburner<-sfx_22(HELD LOOP) jump<-sfx_41(+sfx_42)\n");
     std::printf("[sfx]   ui_click<-sfx_34 lock_acquired<-sfx_31\n");
-    std::printf("[sfx]   engine_hum<-procedural(de-buzzed idle loop) lock_seeking<-procedural (no canon original)\n");
+    std::printf("[sfx]   engine_hum<-procedural(de-buzzed idle loop) lock_seeking<-procedural (no canon original) missile_warning<-procedural\n");
 
     // Per-gun firing sounds: LOUD(player) + QUIET(NPC) twin per GunType.
     // Each variant prefers its own local-only original
@@ -294,13 +318,8 @@ void gun_fired(GunType type, HMM_Vec3 world_pos, bool is_player) {
         // Stepped distance zone -> 2D play with computed gain. We lose 3D
         // pan vs play_world, but the user-authored curve is exact (see the
         // constants above) and pan was a minor effect at combat distances.
-        const float dist = HMM_LenV3(
-            HMM_SubV3(world_pos, audio::listener_position()));
-        float zone_gain;
-        if      (dist < k_gun_zone_full_m)  zone_gain = k_gun_zone_gain_full;
-        else if (dist < k_gun_zone_med_m)   zone_gain = k_gun_zone_gain_med;
-        else if (dist < k_gun_zone_quiet_m) zone_gain = k_gun_zone_gain_quiet;
-        else                                return;   // past 15 km -- silent
+        const float zone_gain = npc_zone_gain(world_pos);
+        if (zone_gain < 0.0f) return;   // past 15 km -- silent
         v = audio::play(s, zone_gain);
     }
     // Throttled visibility: one log line per second summarizing the
@@ -364,6 +383,20 @@ void ship_exploded(HMM_Vec3 world_pos, bool big) {
     std::printf("[sfx] explosion (%s) voice %u gain L/R %.2f/%.2f pos %.0f,%.0f,%.0f\n",
                 big ? "big" : "small", v, gl, gr,
                 world_pos.X, world_pos.Y, world_pos.Z);
+}
+
+void component_damaged(bool destroyed) {
+    if (g_sfx.component_damage == 0) return;
+    const uint64_t now = stm_now();
+    if (!destroyed && g_last_component_cue_ticks != 0 &&
+        stm_sec(stm_diff(now, g_last_component_cue_ticks)) < k_component_cue_spacing_s)
+        return;
+    g_last_component_cue_ticks = now;
+    // Sits above player gunfire (0.35) like a missile launch; a destroyed
+    // system is the loudest thing short of an explosion.
+    audio::play(g_sfx.component_damage, destroyed ? 0.95f : 0.65f);
+    std::printf("[sfx] component damage cue (%s)\n",
+                destroyed ? "system DESTROYED" : "system damaged");
 }
 
 void update_engine_hum(float speed_frac, float cruise_level,
@@ -474,6 +507,22 @@ void missile_fired() {
     if (s == 0) return;
     audio::play(s, 0.7f);
     std::printf("[sfx] missile fired\n");
+}
+
+void npc_missile_fired(HMM_Vec3 world_pos) {
+    // Same launch sample as the player's rack, gain-stepped by distance like
+    // NPC gunfire (a launch is rare, so no coalescer needed).
+    const SampleId s = g_sfx.missile_fire != 0 ? g_sfx.missile_fire : g_sfx.cruise_windup;
+    if (s == 0) return;
+    const float gain = npc_zone_gain(world_pos);
+    if (gain < 0.0f) return;   // out of earshot
+    audio::play(s, 0.7f * gain);
+    std::printf("[sfx] npc missile fired (gain %.2f)\n", 0.7f * gain);
+}
+
+void missile_warning() {
+    if (g_sfx.missile_warning == 0) return;
+    audio::play(g_sfx.missile_warning, 0.6f);
 }
 
 void out_of_ammo() {

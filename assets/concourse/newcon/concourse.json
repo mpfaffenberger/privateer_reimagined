@@ -8,6 +8,20 @@
         200
       ],
       "overlays": [],
+      "sky": {
+        "mask": "anim/sky_mask.png",
+        "fill": "anim/sky_fill.png",
+        "stars": [
+          { "tile": "anim/stars_far.png", "velocity": [-6.5, 1.1] },
+          { "tile": "anim/stars_near.png", "velocity": [-9.5, 1.6] }
+        ]
+      },
+      "layers": [
+        "anim/walker_away.json",
+        "anim/walker_toward.json",
+        "anim/car_approaching.json",
+        "anim/car_receding.json"
+      ],
       "links": [
         {
           "target": "MercenariesGuild",
@@ -81,6 +95,24 @@
         200
       ],
       "overlays": [],
+      "composite": {
+        "sky": {
+          "mask": "anim/hangar/{plate}_mask.png",
+          "fill": "anim/hangar/{plate}_fill.png",
+          "stars": [
+            { "tile": "anim/hangar/{plate}_stars_far.png", "velocity": [0, 0], "spin": 4.0 },
+            { "tile": "anim/hangar/{plate}_stars_near.png", "velocity": [0, 0], "spin": 4.0 },
+            { "tile": "anim/hangar/{plate}_stars_hero.png", "velocity": [0, 0], "spin": 4.0 }
+          ]
+        },
+        "anchors": "anim/hangar/anchors.json",
+        "layers": [
+          "anim/hangar/ship_depart_under.json",
+          "anim/hangar/ship_arrive_under.json",
+          "anim/hangar/ship_depart_over.json",
+          "anim/hangar/ship_arrive_over.json"
+        ]
+      },
       "links": [
         {
           "target": "Launch",

@@ -87,7 +87,7 @@ def _mirror_source_az(az: float) -> float | None:
 # picked up here on the next render run. No drift, one canonical list.
 sys.path.insert(0, str(Path(__file__).parent))
 from regenerate_mesh_showroom import (        # noqa: E402  (path hack)
-    KEEP_AND_RENAME, PER_SHIP_OVERRIDES,
+    KEEP_AND_RENAME, PER_SHIP_OVERRIDES, mesh_obj_asset,
 )
 
 # Defaults applied when a ship has no PER_SHIP_OVERRIDES entry. MUST
@@ -196,10 +196,25 @@ def _camera_for_orbit(az_deg: float, el_deg: float, radius: float
     return x, y, z, yaw_deg, pitch
 
 
-def _set_camera(az: float, el: float, radius: float) -> None:
+def _set_camera(az: float, el: float, radius: float,
+                deadline_s: float = 10.0) -> None:
+    """Pose the camera and block until the main loop has applied it.
+
+    /camera/set only queues a command; the main thread drains it on its next
+    frame. A fixed sleep raced engine boot and captured stale poses, so we
+    poll /state (which reads the live camera) until the position matches.
+    """
     x, y, z, yaw, pitch = _camera_for_orbit(az, el, radius)
     _api_post("/camera/set", {"x": x, "y": y, "z": z,
                               "yaw": yaw, "pitch": pitch})
+    end = time.time() + deadline_s
+    while time.time() < end:
+        with urllib.request.urlopen(f"{API}/state", timeout=2.0) as r:
+            pos = json.loads(r.read())["pos"]
+        if max(abs(a - b) for a, b in zip(pos, (x, y, z))) < 0.05:
+            return
+        time.sleep(0.02)
+    raise TimeoutError(f"camera never reached az={az} el={el}")
 
 
 def _take_screenshot(deadline_s: float = 3.0) -> Path:
@@ -240,7 +255,7 @@ def _write_capture_scene(ship: dict) -> Path:
         "placed_sprites":      [],
         "placed_ship_sprites": [],
         "placed_meshes": [{
-            "obj":           f"meshes/ships_wcnews/{ship['codename']}.obj",
+            "obj":           mesh_obj_asset(ship["codename"]),
             "position":      [0, 0, 0],
             "euler_deg":     ship["euler_deg"],
             "length_meters": CAPTURE_LENGTH_M,
@@ -352,7 +367,9 @@ def _boot_game(scene_stem: str, log_path: Path) -> subprocess.Popen:
     log_path.parent.mkdir(parents=True, exist_ok=True)
     log_f = open(log_path, "w")
     proc  = subprocess.Popen(
-        [str(GAME_BIN), "--system", scene_stem, "--capture-clean"],
+        # --skip-title: the title screen freezes simulation and renders a
+        # separate fly-in camera, so captures would ignore /camera/set.
+        [str(GAME_BIN), "--system", scene_stem, "--capture-clean", "--skip-title"],
         stdout=log_f, stderr=subprocess.STDOUT,
         # New process group so a Ctrl-C on us also kills the engine.
         preexec_fn=os.setsid)
@@ -391,11 +408,14 @@ def _project_via_engine(flat: list[float]) -> list[dict]:
 
 def _load_lights3d(codename: str) -> dict | None:
     """Load the 3D feature-light definition for a ship, or None if the
-    extraction step hasn't been run for it."""
+    extraction step hasn't been run for it or found no lights. None leaves
+    existing per-cell .lights.json sidecars (hand-placed in the F2 editor)
+    untouched instead of deleting them as "no lights at this angle"."""
     p = REPO / "assets" / "meshes" / "ships_wcnews" / f"{codename}.lights3d.json"
     if not p.exists():
         return None
-    return json.loads(p.read_text())
+    data = json.loads(p.read_text())
+    return data if data.get("lights") else None
 
 
 def _aabb_corners(aabb: list) -> list[tuple[float, float, float]]:
@@ -527,7 +547,6 @@ def _render_one_ship(ship: dict, cell_size: int, skip_render: bool
             for el in ELEVATIONS:
                 for az in UNIQUE_AZIMUTHS:
                     _set_camera(az, el, ORBIT_RADIUS_M)
-                    time.sleep(0.08)              # let camera apply
                     if lights3d is not None:
                         pr = _project_cell(lights3d)
                         if pr is not None:
@@ -544,7 +563,6 @@ def _render_one_ship(ship: dict, cell_size: int, skip_render: bool
             # of polar cells.
             for polar_el in POLAR_ELEVATIONS:
                 _set_camera(0.0, polar_el, ORBIT_RADIUS_M)
-                time.sleep(0.08)
                 if lights3d is not None:
                     pr = _project_cell(lights3d)
                     if pr is not None:

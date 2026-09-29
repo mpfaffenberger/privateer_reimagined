@@ -5,6 +5,8 @@
 #include "mobility.h"
 #include "shield.h"
 
+#include <algorithm>
+#include <cctype>
 #include <cstdio>
 #include <filesystem>
 #include <unordered_map>
@@ -44,6 +46,21 @@ HMM_Vec3 read_vec3(const json::Value* v, HMM_Vec3 fallback = {0,0,0}) {
     out.Y = (*v)[1].as_float();
     out.Z = (*v)[2].as_float();
     return out;
+}
+
+// File default_guns[mount] under its turret slot, creating the slot on first
+// sight so turret_slots keeps ship.json's authored order. "rear" -> "Rear
+// Turret"; the untagged default "turret" -> "Turret".
+void add_turret_mount(ShipClass& c, const std::string& slot_id, int mount) {
+    for (TurretSlot& t : c.turret_slots) {
+        if (t.id == slot_id) { t.mounts.push_back(mount); return; }
+    }
+    TurretSlot t;
+    t.id    = slot_id;
+    t.label = slot_id == "turret" ? slot_id : slot_id + " Turret";
+    if (!t.label.empty()) t.label[0] = (char)std::toupper((unsigned char)t.label[0]);
+    t.mounts.push_back(mount);
+    c.turret_slots.push_back(std::move(t));
 }
 
 // Parse a single ship.json file. On success appends to g_classes and
@@ -192,8 +209,10 @@ bool parse_one(const fs::path& path) {
     c.cargo_units_max = (int)opt_num(root, "cargo_units_max", c.cargo_units);
 
     // Guns. Each entry: { offset_body: [x,y,z], type: "mass_driver",
-    // forward_body?: [...], cone_half_angle_deg?: float, turret?: bool }.
-    // turret=true flags an NPC auto-firing turret mount (firing.cpp).
+    // forward_body?: [...], cone_half_angle_deg?: float, turret?: bool,
+    // turret_slot?: "rear" }. turret=true flags an auto-firing turret mount
+    // (firing.cpp, NPC and player alike); turret_slot names the purchasable
+    // position it belongs to (#145, default "turret").
     if (auto* gs = root.find("default_guns"); gs && gs->is_array()) {
         for (const auto& gv : gs->as_array()) {
             if (!gv.is_object()) continue;
@@ -210,7 +229,24 @@ bool parse_one(const fs::path& path) {
             m.type = t;
             m.cone_half_angle_deg = opt_num(gv, "cone_half_angle_deg", 1.0f);
             m.is_turret           = opt_bool(gv, "turret", false);
+            if (m.is_turret)
+                add_turret_mount(c, opt_str(gv, "turret_slot", "turret"),
+                                 (int)c.default_guns.size());
             c.default_guns.push_back(m);
+        }
+    }
+
+    // Stock missile rack (#524): { "DF": 3, "HS": 4 }. Rack types only —
+    // torpedoes have their own tube and aren't an NPC load.
+    if (auto* ms = root.find("default_missiles"); ms && ms->is_object()) {
+        for (const auto& [code, count] : ms->as_object()) {
+            const MissileType t = missile::from_name(code.c_str());
+            if ((int)t >= kMissileRackTypeCount || !count.is_number()) {
+                std::fprintf(stderr, "[ship_class] '%s': bad default_missiles entry '%s'\n",
+                             c.name.c_str(), code.c_str());
+                continue;
+            }
+            c.default_missiles[(int)t] = std::max(0, (int)count.as_number());
         }
     }
 
@@ -252,14 +288,14 @@ int ship_class::load_all(const std::string& ships_dir) {
 
         const auto& c = g_classes.back();
         std::printf("[ship_class] %-12s (%s, %s)  hull=%.0f/%.0f/%.0f/%.0f cm  "
-                    "speed=%.0f/%.0f m/s  guns=%zu\n",
+                    "speed=%.0f/%.0f m/s  guns=%zu  turret_slots=%zu\n",
                     c.name.c_str(),
                     c.class_label.empty() ? "?" : c.class_label.c_str(),
                     faction::to_name(c.default_faction),
                     c.armor_fore_cm, c.armor_aft_cm,
                     c.armor_port_cm, c.armor_starboard_cm,
                     c.cruise_speed, c.afterburner_speed,
-                    c.default_guns.size());
+                    c.default_guns.size(), c.turret_slots.size());
     }
 
     std::printf("[ship_class] loaded %zu ship classes (%d total gun mounts)\n",

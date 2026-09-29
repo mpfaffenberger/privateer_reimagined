@@ -24,6 +24,27 @@ namespace {
 // everything open (sandbox default).
 std::function<bool(const std::string&, const std::string&)> g_route_gate;
 
+// Index of the nearest kind=="jump" nav within the trigger range of `pos`,
+// or -1 when none is close enough. The range is inclusive; strict < keeps
+// the lower index on distance ties.
+int nearest_gate_in_range(const StarSystem& system, HMM_Vec3 pos,
+                          float* out_distance) {
+    int   best      = -1;
+    float best_dist = 0.0f;
+    for (int i = 0; i < (int)system.nav_points.size(); ++i) {
+        const NavPointDef& nav = system.nav_points[i];
+        if (nav.kind != "jump") continue;
+        const float d = HMM_LenV3(HMM_SubV3(nav.position, pos));
+        if (d > jump::k_trigger_range_m) continue;
+        if (best < 0 || d < best_dist) {
+            best      = i;
+            best_dist = d;
+        }
+    }
+    if (best >= 0 && out_distance) *out_distance = best_dist;
+    return best;
+}
+
 } // namespace
 
 namespace jump {
@@ -36,30 +57,34 @@ void set_route_gate(
 Eligibility evaluate(const Camera& cam, const StarSystem& system,
                      const galaxy::Galaxy& galaxy,
                      const std::string& current_system_id,
-                     int selected_nav,
-                     bool has_jump_drive) {
+                     Drive drive) {
     Eligibility e;
 
-    // 1. Must have a selected nav, and it must be a jump gate. Anything
-    // else leaves the verdict at NotJumpNav (the HUD then falls back to the
-    // dock prompt for the same MFD slot).
-    if (selected_nav < 0 || selected_nav >= (int)system.nav_points.size()) {
+    // 1. A jump gate must be physically nearby (#380) — whatever is
+    // selected in the nav computer doesn't matter. Nothing in range leaves
+    // the verdict at NotJumpNav (the HUD then falls back to the dock prompt
+    // for the same MFD slot, and J stays silent).
+    e.nav_index = nearest_gate_in_range(system, cam.position, &e.distance_m);
+    if (e.nav_index < 0) {
         return e;
     }
-    const NavPointDef& nav = system.nav_points[selected_nav];
-    if (nav.kind != "jump") {
-        return e;
-    }
+    const NavPointDef& nav = system.nav_points[e.nav_index];
 
-    // (np-3dp.27): the player needs a fitted Jump Drive to USE the gate.
+    // 2. (np-3dp.27): the player needs a fitted Jump Drive to USE the gate.
     // The prompt string still says "PRESS J"; we refuse with a dedicated
     // NoDrive status so the UI can render a distinct amber "JUMP: NO DRIVE".
-    if (!has_jump_drive) {
+    if (drive == Drive::None) {
         e.status = Status::NoDrive;
         return e;
     }
+    // (#141) A shot-out drive is still fitted -- say so, so the pilot knows
+    // the fix is the repair desk, not the equipment dealer.
+    if (drive == Drive::Destroyed) {
+        e.status = Status::DriveDamaged;
+        return e;
+    }
 
-    // 2. Resolve the destination through the authoritative galaxy graph.
+    // 3. Resolve the destination through the authoritative galaxy graph.
     // A dangling / unsurveyed gate (Troy's "War Jump") returns ok=false.
     const galaxy::JumpTarget jt =
         galaxy.jump_target(current_system_id, nav.name);
@@ -67,7 +92,7 @@ Eligibility evaluate(const Camera& cam, const StarSystem& system,
         e.status = Status::NoRoute;
         return e;
     }
-    // 2b. Campaign route gate (#130): the link exists in the galaxy graph
+    // 4. Campaign route gate (#130): the link exists in the galaxy graph
     // but the plot hasn't opened it yet (Exploratory Services hasn't
     // surveyed the frontier). Distinct verdict so the HUD can explain.
     if (g_route_gate && g_route_gate(current_system_id, jt.system)) {
@@ -80,13 +105,6 @@ Eligibility evaluate(const Camera& cam, const StarSystem& system,
         e.dest_name = se->display_name;
     } else {
         e.dest_name = jt.system;   // fall back to the raw id if uncatalogued
-    }
-
-    // 3. Range gate. distance carried out for logs regardless of verdict.
-    e.distance_m = HMM_LenV3(HMM_SubV3(nav.position, cam.position));
-    if (e.distance_m > k_trigger_range_m) {
-        e.status = Status::TooFar;
-        return e;
     }
 
     // Hostiles deliberately do not participate in jump eligibility. They
@@ -107,8 +125,8 @@ const char* prompt(const Eligibility& e, bool* ready) {
             return buf;
         case Status::NoRoute:  return "JUMP: NO ROUTE";
         case Status::Locked:   return "JUMP: UNSURVEYED";
-        case Status::TooFar:   return "JUMP: TOO FAR";
         case Status::NoDrive:  return "JUMP: NO DRIVE";
+        case Status::DriveDamaged: return "JUMP: DRIVE DAMAGED";
         case Status::NotJumpNav:
         default:               return nullptr;   // not a gate — no prompt
     }
@@ -120,8 +138,8 @@ const char* status_str(Status s) {
         case Status::NotJumpNav: return "not a jump nav";
         case Status::NoRoute:    return "no route";
         case Status::Locked:     return "locked (unsurveyed)";
-        case Status::TooFar:     return "too far";
         case Status::NoDrive:    return "no drive";
+        case Status::DriveDamaged: return "drive damaged";
         default:                 return "?";
     }
 }

@@ -1,0 +1,7 @@
+{
+  "_doc": "Loop timing per baked layer (#515). period = loop length in seconds (the pass plus a blank gap); offset = phase in seconds (positive = further into the pass at t=0). Mismatched periods keep the traffic from visibly repeating.",
+  "car_receding":    { "period": 23, "offset": 0 },
+  "car_approaching": { "period": 29, "offset": -4 },
+  "walker_toward":   { "period": 47, "offset": 12 },
+  "walker_away":     { "period": 53, "offset": 8 }
+}

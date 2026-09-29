@@ -35,7 +35,7 @@
 // rest of the codebase uses for enum<->disk boundaries.
 //
 // no third-party deps: serialization emits JSON via a tiny local writer
-// (savegame.cpp); deserialization reuses the existing read-only json.cpp
+// (savegame_write.cpp); deserialization reuses the existing read-only json.cpp
 // parser. (json.{h,cpp} is parse-only by design — see its header — so the
 // writer lives here rather than bloating that module's documented scope.)
 // -----------------------------------------------------------------------------
@@ -72,7 +72,14 @@ namespace savegame {
 // loading (and playing) exactly as before.
 // v8 (Gemini Lives #171) added the persistent `day` counter. Older saves
 // default to day zero (stardate 2669.135).
-constexpr int k_format_version = 8;
+// v9 (#143) added the fitted `scanner_id`. Older saves load with
+// player::k_starting_scanner (a v8 pilot never had one to sell).
+// v10 (#145) added `turrets`, the owned turret-hardware slot ids. A pre-v10
+// save is grandfathered: every turret slot with a gun already fitted in one
+// of its mounts counts as owned, so an old Centurion keeps its rear turret.
+// v11 (#141) added per-component integrity under ship_health.systems, keyed
+// by ship_systems::key. Older saves default every component to pristine.
+constexpr int k_format_version = 11;
 
 // Slot 0 is the autosave; manual saves start at 1.
 constexpr int k_autosave_slot = 0;

@@ -20,7 +20,6 @@
   // ponderous.
   "ypr_rate_multiplier": 1.75,
 
-  "radar_range":   25000,
   // Doubled from canonical 3000 m — gives the AI room to start firing
   // before getting in scissors range, more interesting opening passes.
   "weapons_range": 6000,
@@ -42,6 +41,9 @@
     { "offset_body": [ 6.0, 0.0, 4.0], "type": "laser"       },
     { "offset_body": [ 0.0, 2.0, 5.0], "type": "mass_driver" }
   ],
+
+  // Stock missile rack (#524), from privateer_ship_data.json "Weapons".
+  "default_missiles": { "HS": 2 },
 
   "energy_max":      150,
   "energy_recharge": 25

@@ -17,7 +17,8 @@
 //       tools/test_mission_tracker.cpp src/mission_tracker.cpp src/missions.cpp \
 //       src/comm.cpp src/threat.cpp src/player.cpp src/faction.cpp \
 //       src/commodity.cpp src/galaxy.cpp src/system_def.cpp src/json.cpp \
-//       src/savegame.cpp src/ship_registry.cpp src/mobility.cpp src/gun.cpp \
+//       src/savegame.cpp src/savegame_read.cpp src/savegame_write.cpp \
+//       src/ship_registry.cpp src/mobility.cpp src/gun.cpp \
 //       src/armor.cpp src/shield.cpp -o /tmp/test_mission_tracker
 // -----------------------------------------------------------------------------
 

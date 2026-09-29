@@ -35,21 +35,21 @@
 
 #include "faction.h"
 #include "gun.h"
+#include "hit_facing.h"
 #include "inventory.h"
+#include "missile.h"
 #include "perception.h"
 #include "ship_ai.h"
+#include "ship_systems.h"
 
 #include <HandmadeMath.h>
 #include <cstdint>
 #include <vector>
 
 struct ArmorType;
+struct ScannerType;
 struct ShipClass;
 struct ShipSpriteObject;
-
-// Hit facing classification — top-level so collision code (projectile.cpp)
-// and ship code (ship.cpp) can share without nested-namespace gymnastics.
-enum class HitFacing : uint8_t { Fore, Aft, Port, Starboard };
 
 // What the controller is aiming for THIS tick. Behaviors write here;
 // the flight controller reads here.
@@ -111,6 +111,12 @@ struct Ship {
     // Authored identity for named NPCs ("Old Mack", "Reesa Kort"). Empty
     // for procedural traffic, whose UI label falls back to the hull class.
     std::string       display_name;
+
+    // Player-scanner identification (#516, scanner.h). Until the player's
+    // fitted scanner wins an identify roll on this contact, the target panel
+    // and bracket label read UNKNOWN (no class/faction). Sticky until
+    // death/despawn. Transient — not serialized.
+    bool              identified_by_player = false;
 
     // Player grievance (np): repeated player hits on an otherwise non-hostile
     // ship provoke it. Once player_hit_count reaches k_provoke_hits the ship
@@ -221,6 +227,12 @@ struct Ship {
     // Per-instance so it never mutates the shared ShipClass.
     const ArmorType* fitted_armor = nullptr;
 
+    // Per-instance fitted scanner (#143, scanner.h). Only the player fits
+    // one (apply_player_loadout, from PlayerState::scanner_id); null means
+    // the hull's class radar_range and no colour IFF / lock / ITTS, which
+    // is how every NPC flies.
+    const ScannerType* fitted_scanner = nullptr;
+
     // Engine recharge — additive ABSOLUTE GJ/s from the engine upgrade
     // ladder (np-3dp.27 / gamefaq 4.6.2). Refreshed on the player in
     // apply_player_loadout from outfitting::engine_recharge_bonus_for.
@@ -236,6 +248,17 @@ struct Ship {
     // Legacy engine multiplier hook (kept for ABI; not currently used by
     // firing.cpp — the additive fields above take over). 1.0 is a no-op.
     float engine_recharge_mult = 1.0f;
+
+    // Per-component damage (#141). Armor-penetrating hits chip one system
+    // each (ship::take_damage); effects are read where each system acts
+    // (firing, flight controller, perception, shield regen, jump, tractor).
+    // heal_to_full restores integrity but keeps the installed mask, which
+    // the player's loadout owns (apply_player_loadout); NPCs fit everything.
+    ShipSystems systems;
+    // Worst component hit since the last consume (#519). take_damage latches
+    // it for every ship; main.cpp std::exchange()s the PLAYER's once per
+    // frame into sfx::component_damaged (ship.cpp stays sfx-free/headless).
+    SystemHit pending_system_hit = SystemHit::None;
 
     // ---- weapons ------------------------------------------------------
     // Per-instance copy of the fitted gun mounts. Initialised from
@@ -260,16 +283,23 @@ struct Ship {
     // wholly unaffected. Only apply_player_loadout (main.cpp) fills it.
     std::vector<inventory::WeaponMods> mount_mods;
 
-    // Per-mount "armed" gate (np-3dp). Parallel to mounts/gun_cooldowns.
-    // Default-on so the existing fire_guns flow keeps working; the G
-    // key cycles through {unarmed, mesons, ionics, all} and flips
-    // these bits per the mode. firing::tick consults gun_armed[i] and
-    // skips mounts the player has disarmed.
+    // Fixed-gun selection mask (np-3dp). Parallel to mounts/gun_cooldowns.
+    // Written by firing::apply_gun_mode; turret entries are ignored because
+    // turrets are always auto-armed (#379). Never read this directly --
+    // query firing::mount_armed so firing and the HUD agree.
     std::vector<bool>    gun_armed;
-    // Current arm-mode index 0..3: 0=unarmed, 1=mesons, 2=ionics, 3=all.
-    // Stored on the ship so a non-player ship can also be inspected
-    // (even if v1 only the player cycles it).
+    // Current arm-mode index into {UNARMED, one per unique fixed-gun type,
+    // ALL} (see gun_modes.h). The player loadout sets it via
+    // firing::arm_all_guns; the default is only a placeholder for NPCs,
+    // which never cycle modes.
     uint8_t              gun_mode_idx = 3;
+
+    // NPC missile rack (#144, #524). Rounds left per type (seeded by
+    // missile::arm_npc_rack from the hull) + seconds until the next launch
+    // is allowed; missile::npc_launch owns both. The player's ordnance
+    // lives in PlayerState, never here, so this stays empty for it.
+    MissileRack npc_missiles{};
+    float       missile_cooldown_s = 0.0f;
 
     bool  alive = true;
 };
@@ -306,7 +336,8 @@ void sync_from_sprite(Ship& s);
 
 // Refill a ship to full from its class: armor + shield (incl. fitted
 // armor/shield tiers) to max, energy to max, all shield-regen pauses
-// cleared, alive=true. Null-class-safe (leaves the player's
+// cleared, every component back to full integrity (#141; the installed
+// mask is untouched), alive=true. Null-class-safe (leaves the player's
 // zero-by-default health untouched). The single source of truth for
 // "health from class" — both the initial player spawn (main.cpp) and
 // respawn (np-ma2.2) call it so the two paths can't drift. Does NOT

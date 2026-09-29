@@ -26,7 +26,7 @@
 // projectile::collide_and_damage, so there's a single damage definition
 // (no forked damage logic, per the task constraint).
 //
-// Guidance kinds (the DF / HS / IR of the bead title):
+// Guidance kinds (the DF / HS / IR / FF of the bead title):
 //   DF  Dumbfire     — no lock, no steering. Flies straight; turn_rate 0.
 //   HS  Heat-seeking — needs a locked target; homes toward it. Modelled as
 //                      a slower turn rate (it chases the engine glow, so
@@ -34,6 +34,14 @@
 //   IR  Image-recog  — needs a locked target HELD in the reticle for a
 //                      build-up window (the lock delay lives in main.cpp);
 //                      once away, homes hard (high turn rate, any aspect).
+//   FF  Friend-or-Foe — fire-and-forget, NO lock (#144). HS-grade homing,
+//                      but it picks its own mark: the nearest ship whose
+//                      IFF reads hostile TO THE SHOOTER (read straight off
+//                      the shooter's perception, so it can't disagree with
+//                      the radar colours). Re-acquires if its mark dies —
+//                      and, vanilla-accurately, gets spoofed onto a
+//                      friendly whose IFF reads hostile (e.g. one the
+//                      shooter provoked).
 //
 // The lock STATE MACHINE (seeking -> locked, tones, the IR build-up timer)
 // lives at the call site (main.cpp) because it's bound up with the camera
@@ -42,18 +50,36 @@
 // -----------------------------------------------------------------------------
 
 #include <HandmadeMath.h>
+#include <array>
 #include <cstdint>
+#include <cstring>
 #include <vector>
 
 enum class MissileType : uint8_t {
     DF = 0,   // dumbfire
     HS,       // heat-seeking
     IR,       // image-recognition
+    FF,       // friend-or-foe (#144) — auto-acquires the nearest IFF hostile
     TORPEDO,  // torpedo (np-3dp.26 + np-zte.2) — its own launcher + ammo rack
     Count
 };
 constexpr int kMissileTypeCount = (int)MissileType::Count;
+// Every type before TORPEDO shares the missile launcher's rack
+// (PlayerState::missiles); torpedoes have their own tube + counter.
+constexpr int kMissileRackTypeCount = (int)MissileType::TORPEDO;
 
+// Short codes ("DF", "HS", ...), indexed by MissileType. The ONE string
+// table: g_missile_stats' short_name and from_name/to_name all read it.
+// Header-inline so data loaders (ship_class.cpp's default_missiles) can
+// parse codes without linking missile.cpp.
+inline constexpr const char* k_missile_codes[kMissileTypeCount] = {
+    "DF", "HS", "IR", "FF", "TORP",
+};
+
+// Rounds per launcher-rack type (DF/HS/IR/FF), indexed by MissileType.
+// A hull's authored stock load (ShipClass::default_missiles) and an NPC's
+// live rack (Ship::npc_missiles) — #524. Torpedoes are not in it.
+using MissileRack = std::array<int, kMissileRackTypeCount>;
 struct MissileStats {
     const char* short_name;        // "DF", "HS", "IR" — HUD readout
     const char* long_name;         // "Dumbfire", "Heat-Seeker", "Image-Rec"
@@ -65,6 +91,7 @@ struct MissileStats {
     float prox_radius_m    = 0.0f; // detonation distance to target center
     bool  needs_lock       = false;// HS/IR require a target id
     bool  lock_buildup     = false;// IR needs the held-reticle delay
+    bool  auto_acquire     = false;// FF picks (and re-picks) its own IFF target
 };
 
 // Per-type stats. Indexed by MissileType. Hand-tuned constants (this is
@@ -88,6 +115,10 @@ struct Missile {
     uint32_t    target_id       = 0;    // homing target; 0 = dumbfire
     MissileType type            = MissileType::DF;
     bool        alive           = true;
+    // ECM (#523): time homing on an ECM-fitted victim since the last jam
+    // roll, and how long a jammed seeker stays blind (no re-acquire).
+    float       ecm_roll_s      = 0.0f;
+    float       seeker_blind_s  = 0.0f;
 };
 
 struct Ship;
@@ -95,9 +126,24 @@ class ShipRegistry;
 
 namespace missile {
 
-// String <-> enum for HUD + logs. Returns Count on unknown.
-MissileType from_name(const char* s);
-const char* to_name(MissileType t);
+// String <-> enum for HUD, logs, and ship.json. Returns Count on unknown.
+inline MissileType from_name(const char* s) {
+    if (!s) return MissileType::Count;
+    for (int i = 0; i < kMissileTypeCount; ++i)
+        if (std::strcmp(s, k_missile_codes[i]) == 0) return (MissileType)i;
+    return MissileType::Count;
+}
+inline const char* to_name(MissileType t) {
+    const int i = (int)t;
+    return (i >= 0 && i < kMissileTypeCount) ? k_missile_codes[i] : "?";
+}
+
+// Rounds left across every rack type.
+inline int rack_total(const MissileRack& rack) {
+    int n = 0;
+    for (int c : rack) n += c;
+    return n;
+}
 
 // Build a freshly-armed Missile from its type, launch pose, and target.
 // `forward` is the launch direction (unit); `shooter_vel` is inherited so
@@ -122,5 +168,54 @@ void tick(std::vector<Missile>& missiles, ShipRegistry& ships, float dt);
 // match the value passed to tick (for the swept previous-position reconstruct).
 void collide_and_damage(std::vector<Missile>& missiles, ShipRegistry& ships,
                         float dt);
+
+// ---- IFF seeker (#144) ------------------------------------------------------
+// Id of the nearest-to-`from` alive ship the shooter's IFF reads as hostile
+// (Stance::Hostile in the owner's perception list), or 0 if none / the owner
+// is gone. Reusing perception means FF sees exactly what the shooter's radar
+// sees — including the spoof case of a provoked friendly.
+uint32_t acquire_iff_target(const ShipRegistry& ships, uint32_t owner_id,
+                            const HMM_Vec3& from);
+
+// ---- NPC racks (#144, #524) -------------------------------------------------
+// An NPC's ordnance is a typed round count (Ship::npc_missiles), no launcher
+// hardware model. Seeded from the hull's authored stock load
+// (ShipClass::default_missiles, from privateer_ship_data.json's "Weapons").
+// Fits that rack onto a freshly spawned NPC (call once its faction is
+// final). Pirates keep their vanilla FF preference (#144): every round on a
+// pirate hull is refit as FF, count preserved. No class = empty rack.
+void arm_npc_rack(Ship& s);
+
+// The rack type an NPC fires next, or Count if it has nothing it can fire.
+// Strongest seeker first (IR > HS > FF > DF) so even a short fight sees the
+// dangerous rounds; lock types (IR/HS) are skipped without a live target.
+MissileType npc_pick_round(const MissileRack& rack, bool has_lock);
+
+// Per-frame NPC launch pass: an armed NPC mid gun-run (Engage + guns hot)
+// fires one round along its nose each time its refire cooldown elapses.
+// Lock types (HS/IR) lock the AI's current target (ai.target_id), not an
+// IFF pick; FF self-acquires; DF flies straight. New rounds are APPENDED
+// to `missiles`, so this frame's launches are the last N entries. Returns
+// N (for logging + launch sfx).
+int npc_launch(std::vector<Missile>& missiles, ShipRegistry& ships, float dt);
+
+// ---- inbound warning + ECM (#523) ------------------------------------------
+// True when `m` is a live round homing on `victim_id` that someone ELSE
+// fired — the "MISSILE" warning condition. Pure; no registry lookup.
+bool is_inbound(const Missile& m, uint32_t victim_id);
+// Number of live rounds homing on `victim_id` (drives the HUD + tone).
+int count_inbound(const std::vector<Missile>& missiles, uint32_t victim_id);
+
+// The victim's fitted ECM (level 1..3) rolls once per second of homing, per
+// inbound round, at 25/50/75% (canonical Privateer). A successful roll drops
+// the round's target_id AND blinds its seeker for k_ecm_blind_s, so an FF
+// can't instantly re-acquire the same ship through IFF — it coasts, then
+// seeks again (and gets rolled against again). HS/IR never re-acquire.
+// `roll_pct` returns a uniform int in [0,100) (injected for testability).
+// Returns the number of rounds jammed this call.
+constexpr float k_ecm_roll_period_s = 1.0f;
+constexpr float k_ecm_blind_s       = 1.5f;
+int ecm_jam(std::vector<Missile>& missiles, uint32_t victim_id, int ecm_level,
+            float dt, int (*roll_pct)());
 
 } // namespace missile

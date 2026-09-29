@@ -21,6 +21,7 @@
 #include "json.h"
 #include "player.h"
 #include "plot.h"       // has_item("secret_compartment") — hold header (#116)
+#include "ship_class.h" // equip_weapon's mount rule (turret hardware, #145)
 
 // The model is pure data; the screen body drags in the UI/audio stack.
 // INVENTORY_HEADLESS compiles only the model (mirrors OUTFITTING_HEADLESS).
@@ -28,7 +29,6 @@
 #include "base_screens.h"
 #include "economy.h"
 #include "gun.h"
-#include "ship_class.h"
 #include "sfx.h"
 #include "imgui.h"
 #include "sokol_app.h"
@@ -213,8 +213,9 @@ bool equip_weapon(PlayerState& p, int item_index, int mount_index) {
                     item_index, p.items.size());
         return false;
     }
-    if (mount_index < 0) {
-        std::printf("[inventory] EQUIP refused: bad mount index %d\n", mount_index);
+    if (!player::mount_fittable(p, ship_class::find(p.ship_class_name), mount_index)) {
+        std::printf("[inventory] EQUIP refused: mount %d not fittable "
+                    "(out of range or turret not installed)\n", mount_index);
         return false;
     }
     // Copy by value first: the erase below invalidates the reference, and we
@@ -476,12 +477,9 @@ void draw_items_table(PlayerState& p, ImVec2 sz, bool allow_sell) {
             if (install_index >= 0) {
                 if (install_upgrade(p, install_index)) sfx::ui_click();
             } else if (equip_index >= 0) {
-                // Fit into the FIRST empty mount (gun_id == ""); if every
-                // mount is occupied, overwrite mount 0.
-                int mount = -1;
-                for (int mi = 0; mi < (int)p.gun_mounts.size(); ++mi) {
-                    if (p.gun_mounts[(size_t)mi].gun_id.empty()) { mount = mi; break; }
-                }
+                // Fit into the first OPEN mount (empty + fittable, so never
+                // an unbought turret, #145); if all are full, overwrite mount 0.
+                int mount = player::first_open_mount(p, ship_class::find(p.ship_class_name));
                 if (mount < 0) mount = 0;
                 if (equip_weapon(p, equip_index, mount)) sfx::ui_click();
             } else if (sell_index >= 0) {

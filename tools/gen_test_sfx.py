@@ -16,6 +16,9 @@ separate backlog issue. The gameplay set (np-3gw.2):
                         (the looping engine bed; gain ridden by throttle)
     cruise_windup.wav - 1.5s rising sweep (cruise engage)
     ui_click.wav      - 5ms tick (nav/target cycle)
+    component_damage.wav - 350ms electrical crackle over a sagging tone
+                        (player internal system hit, #519; original sfx_38)
+    missile_warning.wav - 300ms hi-lo warble (inbound-missile alarm, #523)
     hum.wav           - kept for back-compat with the np-3gw.1 debug button
 
 All PCM16 mono 44.1kHz, written to assets/sfx/. Idempotent; rerun freely.
@@ -213,6 +216,42 @@ def lock_acquired() -> list[float]:
     return out
 
 
+def component_damage() -> list[float]:
+    """350ms 'something inside just shorted out': gated noise crackle
+    (random ~8ms sparks) over a 900->250Hz sagging square-ish tone. Sparky
+    and wounded, so it reads apart from the plain armor-hit crack."""
+    rng = random.Random(38)
+    n = int(RATE * 0.350)
+    spark_len = int(RATE * 0.008)
+    out, phase, gate = [], 0.0, 0
+    for t in range(n):
+        k = t / n
+        if t % spark_len == 0:
+            gate = 1 if rng.random() < 0.55 else 0
+        env = math.exp(-k * 3.5)
+        crackle = (rng.random() * 2 - 1) * gate
+        freq = 900 * (1 - k) + 250 * k
+        phase += 2 * math.pi * freq / RATE
+        tone = math.tanh(3.0 * math.sin(phase)) * 0.5
+        out.append((0.6 * crackle + tone) * env * 0.7)
+    return lowpass(out, 0.6)
+
+
+def missile_warning() -> list[float]:
+    """300ms two-tone warble (1000/700Hz flipping every 50ms) - the inbound-
+    missile alarm (#523). The rapid hi-lo flip reads as an ALARM, distinct
+    from the single-pitch lock beeps, so a threat is never mistaken for
+    your own seeker."""
+    n = int(RATE * 0.300)
+    out, phase = [], 0.0
+    for t in range(n):
+        freq = 1000 if (t // int(RATE * 0.050)) % 2 == 0 else 700
+        phase += 2 * math.pi * freq / RATE
+        env = min(t / (RATE * 0.005), 1.0) * min((n - t) / (RATE * 0.015), 1.0)
+        out.append(math.sin(phase) * env * 0.5)
+    return out
+
+
 def main() -> None:
     os.makedirs(OUT_DIR, exist_ok=True)
     write_wav("blip.wav", blip())
@@ -229,6 +268,8 @@ def main() -> None:
     write_wav("missile_fire.wav", missile_fire())
     write_wav("lock_seeking.wav", lock_seeking())
     write_wav("lock_acquired.wav", lock_acquired())
+    write_wav("component_damage.wav", component_damage())
+    write_wav("missile_warning.wav", missile_warning())
 
 
 if __name__ == "__main__":

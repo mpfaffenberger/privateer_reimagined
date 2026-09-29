@@ -4,7 +4,7 @@
 // ship sprite atlas at once and live-mutate per-cell properties.
 //
 // Workflow:
-//   1. Press F4. A grid window appears showing all 82 cells of the
+//   1. Press F4 (unmodified; Shift+F4 is the gun mount tuner). A grid window appears showing all 82 cells of the
 //      currently-selected ship atlas, laid out by (elevation row, azimuth
 //      column). Pole cells (el = ±90°) get their own single-entry rows.
 //   2. Click a cell → select. Click another → SWAP their (az, el) labels

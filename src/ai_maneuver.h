@@ -86,7 +86,7 @@ enum class AIScalarToken : uint8_t {
     PursueSwitch,  // 1000 -- pursue->attack-run boundary
     GunRange,      // class weapons_range
     FleeThreshold, // f6-derived flee HP fraction
-    Sensor,        // class radar_range (15000 sensor/awareness)
+    Sensor,        // class radar_range (sensor/awareness sphere)
 };
 
 struct AIScalar {

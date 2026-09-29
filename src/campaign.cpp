@@ -382,9 +382,9 @@ void m21_take_gun(PlayerState& p) {
     if ((int)p.gun_mounts.size() < mounts)
         p.gun_mounts.resize((size_t)mounts, MountSlot{});
     if (!p.gun_mounts.empty()) {
-        size_t slot = 0;
-        for (size_t i = 0; i < p.gun_mounts.size(); ++i)
-            if (p.gun_mounts[i].gun_id.empty()) { slot = i; break; }
+        // First OPEN mount -- never an unbought turret (#145) -- else mount 0.
+        const int open = player::first_open_mount(p, klass);
+        const size_t slot = open >= 0 ? (size_t)open : 0;
         p.gun_mounts[slot] = MountSlot{"steltek_gun"};
         std::printf("[campaign] steltek gun fitted to mount %zu\n", slot);
     }

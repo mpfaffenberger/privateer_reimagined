@@ -2,47 +2,74 @@
 
 **Privateer Reimagined** is a from-scratch C++20 reimagining of **Wing
 Commander: Privateer**. It rebuilds the Gemini Sector as a modern standalone
-space sim while preserving the original game's open-ended mix of trading,
-combat, contracts, ship upgrades, exploration, and story-driven adventure.
+space sim and keeps the original's open-ended mix of trading, combat,
+contracts, ship upgrades, exploration, and story.
 
-Explore all 69 systems, make your fortune, follow the complete campaign, and
-generally discover why space insurance premiums are obscene.
+Explore all 69 systems, make your fortune, play through the full campaign, and
+find out why space insurance premiums are so high.
 
 ![The New Detroit bar — someone here wants a word](docs/screenshots/new_detroit_bar.png)
 *The New Detroit bar. Ernesto Sandoval wants a word. It's probably fine.*
 
-This is an unofficial standalone implementation, with no game engine, ECS
+This is an unofficial standalone implementation. It uses no game engine, ECS
 framework, or runtime dependency manager. Rendering, window/input, audio, and
 debug UI are built on small vendored libraries under `third_party/`.
 
 ## Current state
 
-The playable sandbox includes:
+The playable sandbox and campaign include:
 
-- 69 systems, 170 jump links, and 59 landable bases
-- 18 ship classes, 9 gun types, missiles, torpedoes, turrets, shields, armor,
-  ECM, repair systems, tractor beams, and ship upgrades
-- six-axis flight, afterburner, autopilot, autodocking, jumping, nav maps,
-  targeting, and combat HUDs
-- data-driven combat AI, faction standings, dynamic encounters, hailing, and
-  voiced comms
-- commodity trading, cargo, salvage, ship sales, equipment dealers, guilds,
-  and generated missions
-- versioned saves and accumulating autosaves
-- the complete 23-mission Privateer campaign, including fixers, escorts,
-  scripted encounters, Steltek systems, and the drone finale
-- cinematics, an in-game cinematic studio, music, SFX, speech, and extensive
-  development/debug tooling
-- a persistent Confed calendar beginning at stardate `2669.135`
+- **The Gemini Sector:** 69 systems across four quadrants, 170 jump links, 59
+  landable bases plus the Steltek derelict, and a classic-style four-quadrant
+  sector star chart that hides unrevealed systems.
+- **Ships and gear:** 18 ship definitions (4 player hulls, plus NPC,
+  Kilrathi, and Steltek craft), 9 gun types, DF/HS/IR missiles and
+  torpedoes, turrets that auto-fire, shields, armor, ECM, repair droids, a
+  tractor beam, and a jump drive. Ships render from multi-view sprite atlases
+  baked from 3D meshes.
+- **Flight and combat:** fly-by-wire flight with a critically damped turn
+  response, afterburner, autopilot, autodock, jumps, nav and sector maps,
+  targeting with ITTS lead, and an interactive ARMAMENTS schematic.
+- **Cockpits:** painted cockpit overlays with live instruments in the MFD
+  holes for the Tarsus, Galaxy, and Centurion. The Orion still uses the
+  HUD-only view.
+- **World:** data-driven combat AI decoded from the original's skill
+  vectors, 9 factions with player reputation, dynamic and scripted
+  encounters, hails, contraband scans, and voiced comms.
+- **Economy:** a commodity exchange, cargo and salvage, contraband (sold
+  only at pirate bases), a ship dealer with trade-in, and a visual
+  hardpoint equipment bay.
+- **Missions:** shared contract boards (Mission Computer, Mercenaries'
+  Guild, Merchants' Guild) offering 6 mission types.
+- **Campaign:** the full 23-mission Privateer campaign (Sandoval through
+  the Terrell/drone finale) with bar fixers, portrait conversations,
+  escorts, a secret compartment, plot-gated Steltek systems, and in-flight
+  cinematics.
+- **Persistence:** versioned saves (format v11) with accumulating autosaves,
+  and a Confed calendar that starts at stardate `2669.135` and advances one
+  day per landing.
+- **Audio and tooling:** dynamic music, per-scene bar music, SFX, speech,
+  an in-game cinematic studio, and a lot of development tooling.
 
-For a detailed feature audit, see [`docs/GAP_ANALYSIS.md`](docs/GAP_ANALYSIS.md).
-The current living-world work is documented in
-[`docs/persistent_world_plan.md`](docs/persistent_world_plan.md) and its
+Not built yet, in short: Friend-or-Foe missiles, scanner tiers, buying turrets for hulls that don't have them,
+rumors from the bartender, NPC schedules for the living world, and
+Righteous Fire. The full, evidence-backed list is in
+[`docs/GAP_ANALYSIS.md`](docs/GAP_ANALYSIS.md). Living-world work is covered
+in [`docs/persistent_world_plan.md`](docs/persistent_world_plan.md) and its
 [frozen interface contracts](docs/persistent_world_contracts.md).
 
 ## Build
 
-### macOS
+All platforms need Git LFS: most runtime media and mesh sources are stored
+in LFS.
+
+Mission briefing text comes from the checked-in
+`src/mission_templates.gen.h`. If you own the original game, you can recover
+`re/mission_text.json` with `re/extract_mission_text.py` and re-run CMake.
+The header is then regenerated from your data. Neither step is needed to
+build or play.
+
+### macOS (primary platform)
 
 Requirements: CMake 3.20+, a C++20 compiler, and a Metal-capable Mac.
 
@@ -54,41 +81,56 @@ cmake --build build -j
 ```
 
 The macOS build uses Metal and links the required Apple frameworks directly.
+It is also the only platform with the `dev_remote` HTTP API. Other platforms
+compile a stub.
 
 ### Windows
 
-Windows uses D3D11. The GitHub Actions workflow builds a portable static-CRT
-executable and publishes a rolling `nightly` zip from `main`.
+Windows uses D3D11 and MSVC. The simplest path is the helper script. It
+enters the VS developer shell, downloads `sokol-shdc.exe` if needed, and
+builds a Release binary with Ninja:
 
-For a local Visual Studio developer shell:
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\build_and_run.ps1
+.\build\new_privateer.exe
+```
+
+To build by hand from a VS developer shell:
 
 ```powershell
 cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 cmake --build build --target new_privateer
-.\build\new_privateer.exe
 ```
 
-`third_party/bin/sokol-shdc.exe` must be present; CI downloads it automatically.
+`third_party/bin/sokol-shdc.exe` must be present. There is **no CI**: the
+GitHub Actions Windows workflow was removed in July 2026. Windows builds are
+published by hand as preview pre-releases on the GitHub Releases page.
+Configure with `-DNP_WINDOWS_CONSOLE=ON` to get a debug console.
 
 ### Linux
 
-CMake has an OpenGL/X11 backend. It is less exercised than macOS and Windows,
-so consider it a porting target rather than a polished supported release.
+CMake has an OpenGL (`SOKOL_GLCORE`) + X11 backend. It gets much less
+testing than macOS and Windows, so treat it as a porting target rather than
+a supported release.
 
 ## Command-line options
 
-Useful development overrides include:
+The CLI is parsed in `src/app_cli.cpp`. These are developer interfaces, not
+a stable player-facing CLI.
 
-```bash
-./build/new_privateer --system troy
-./build/new_privateer --ship centurion
-./build/new_privateer --skip-title
-./build/new_privateer --play-cinematic demo_flyby
-```
-
-Additional `--dev-*`, capture, load, and system-soak switches live near
-`sokol_main()` in `src/main.cpp`; they are developer interfaces rather than a
-stable player-facing CLI.
+| Flag | Effect |
+|---|---|
+| `--system <id>` | Start in a specific system (for example `troy`) |
+| `--ship <class>` | Start in a specific hull (for example `centurion`) |
+| `--skip-title` | Skip the title screen |
+| `--windowed` | Force windowed mode |
+| `--continue` | Resume the newest save (autosaves accumulate as timestamped files) |
+| `--load <slot>` | Load a legacy numbered save slot |
+| `--play-cinematic <id>` (+ `--cine-at <s>`) | Play a cinematic, optionally seeking to a time |
+| `--goto <system>` (+ `--goto-at`) | Dev teleport to a system after a delay |
+| `--dev-invuln`, `--dev-missions`, `--dev-land`, `--dev-kill-at`, `--dev-jump-drive` | Dev conveniences |
+| `--dev-jump-soak`, `--goto-soak`, `--*-interval` | Long-running jump/system soak tests |
+| `--capture-clean` | Hide HUD/cockpit overlay for clean atlas screenshots |
 
 ## Core controls
 
@@ -99,23 +141,25 @@ stable player-facing CLI.
 | Mouse | Fly-by-wire aiming (when engaged) |
 | `Space` | Toggle fly-by-wire ⇄ free cursor |
 | `+` / `-` | Increase/decrease throttle |
-| Hold `Tab` | Afterburner |
+| Hold `Tab` | Afterburner (also takes back control from autopilot) |
 | `,` / `.` | Roll left/right |
 | Hold left mouse or `Ctrl` | Fire guns |
 | `G` | Cycle gun arm-mode (unarmed → each gun type → all) |
+| `W` | Cycle the loaded launcher and open ARMAMENTS |
+| `F` | Compatibility alias for `W` |
 | `Enter` | Fire missile |
-| `F` | Compatibility alias: cycle loaded ordnance |
-| `T` | Cycle targets (nearest → farthest, ≤15 km) |
-| `Z` | Tractor loose loot into the hold |
+| `T` | Cycle targets within radar range (15 km), nearest to farthest |
+| `Z` | Tractor loose loot into the hold (2.5 km) |
 | `I` | In-flight inventory |
-| `P` | Pause/unpause (shows centred instructions) |
+| `V` | Toggle cockpit art (off = open full-screen view with the classic floating HUD) |
+| `P` | Pause/unpause (shows centered instructions) |
 
 ### Navigation
 
 | Input | Action |
 |---|---|
-| `N` | Open local nav map / cycle nav targets |
-| `M` | Sector nav map (whole galaxy: systems + jump links) |
+| `N` | Open the local nav map / cycle nav targets |
+| `M` | Sector star chart (inside the `N` map it opens as a side pane) |
 | `A` | Autopilot to the selected nav point |
 | `D` | Dock at the selected base |
 | `J` | Jump through the selected jump gate |
@@ -125,67 +169,87 @@ stable player-facing CLI.
 | Input | Action |
 |---|---|
 | `C` | Comms screen (then `1`–`9` pick replies) |
-| `R` | Damage report screen |
-| `W` | Cycle loaded launcher ordnance and open ARMAMENTS |
+| `R` | Damage Control page (live per-system integrity: guns, engines, radar, ...) |
 | `Esc` | Back/close; double-tap in flight to quit |
 
-Additional context-sensitive bindings are shown by the in-game HUD. Debug and
-content-authoring panels intentionally have their own development bindings —
-`Ctrl+M` toggles the ImGui debug panel, and `]` / `[` scale/reset sim time for
-watching AI brawls in fast-forward.
+The in-game HUD shows more context-sensitive bindings.
+
+### Developer hotkeys
+
+The debug and authoring panels have their own bindings:
+
+| Input | Tool |
+|---|---|
+| `Ctrl+M` | ImGui debug panel |
+| `Ctrl+K` | Cinematic Studio |
+| `Ctrl+B` | Bar-music DJ |
+| `]` / `[` | Scale / reset sim time (watch AI brawls in fast-forward) |
+| `F1` | Base Art Studio (landed rooms) |
+| `F2` | Sprite light editor |
+| `F3` | Ship-sprite frame HUD |
+| `F4` | Atlas grid viewer |
+| `Shift+F4` | Gun mount tuner |
+| `F5` | Mesh orientation editor |
+| `F6` | Sprite generation tool |
+| `F7` / `F8` / `F9` | Sound / music / speech labelers |
+| `F10` | Nav map auditor |
+
+On macOS, a loopback-only `dev_remote` HTTP server (`127.0.0.1:47001`) lets
+scripts and agents drive the game. Endpoints are documented in
+`src/dev_remote.h`.
 
 ## Tests
 
-The CMake harnesses are opt-in so a normal build remains a game-only build.
-Build and run a focused test like this:
+Test harnesses are opt-in CMake targets (`EXCLUDE_FROM_ALL`), so a normal
+build only builds the game. Build and run one from the repo root, because
+harnesses load assets relative to the working directory:
 
 ```bash
-cmake --build build --target test_world_clock
-./build/test_world_clock
-
-cmake --build build --target test_docking
-./build/test_docking
-
-cmake --build build --target test_savegame
-./build/test_savegame
+cmake --build build --target test_campaign
+./build/test_campaign
 ```
 
-Other wired targets include:
+To list every wired harness:
 
-- `test_app_cli`
-- `test_ai_brain`
-- `test_missions`
-- `test_mission_tracker`
-- `test_fixers`
-- `test_campaign`
-- `test_cinematic`
-- `test_full_loop` — broad sandbox integration harness; currently undergoing
-  modernization as older assumptions are replaced by accumulating autosaves
-  and newer content behavior
+```bash
+cmake --build build --target help | grep test_
+```
 
-More focused standalone harnesses live under `tools/test_*.cpp`.
+For current pass/fail status and known-broken harnesses, see the test
+scoreboard in [`docs/GAP_ANALYSIS.md`](docs/GAP_ANALYSIS.md#p0--build-and-test-health).
+
+Harnesses never touch your real saves. Any harness that can reach
+`savegame` must call `test_sandbox::isolate_saves("<name>")` (in
+`tools/test_sandbox.h`) first thing in `main()`. It points `NP_DATA_DIR` at
+a per-harness temp directory and aborts if that doesn't take effect.
 
 ## Architecture
 
 ```text
-src/
-  main.cpp                 application host and orchestration
-  camera/autopilot/...     flight, navigation, docking, jumping
-  ship/ai_brain/...        ships, combat, weapons, and AI
-  economy/outfitting/...   trading, inventory, repairs, and equipment
-  missions/campaign/...    generated missions and scripted story
-  cinematic*               runtime, parser, triggers, and studio
-  savegame/player/plot     persistent player and campaign state
-  mesh/sprite/postprocess  rendering and visual effects
+src/                       ~60k lines of C++, flat module layout
+  main.cpp                 application host, input, sim loop (~7.7k lines; being split)
+  app_cli / game_state     CLI parsing and top-level state
+  camera/autopilot/jump/docking/turn_response    flight and navigation
+  ship*/ai_brain/firing/gun/missile/perception   ships, combat, weapons, AI
+  cockpit_hud/cockpit_mfd/cockpit_overlay/...    HUD, MFDs, painted cockpits
+  economy/commodity*/outfitting/equipment_*      trading and ship fitting
+  missions*/campaign/fixers/plot/escort/drone    contracts and story
+  scripted_encounters/encounters/hailing/comm*   the living sector
+  cinematic*                                     runtime, triggers, studio
+  savegame/player/world_clock                    persistence and calendar
+  mesh*/sprite*/skybox*/sun*/postprocess*        rendering
+  *_labeler/*_editor/*_studio/dev_remote/...     dev and authoring tools
 shaders/                   GLSL cross-compiled by sokol-shdc
 assets/
-  systems/ ships/ bases/   world and entity definitions
-  data/                    economy, encounters, dialogue, and equipment
-  cinematics/ speech/ ...  authored media
+  galaxy.json systems/ bases/ ships/   world and entity definitions
+  data/                    economy, encounters, fixers, characters, dialogue
+  cockpits/ concourse/ meshes/ sprites/  art
+  cinematics/ speech/ music/ sfx/      authored media
 third_party/               vendored Sokol, ImGui, stb, and HandmadeMath
-tools/                     extraction, generation, authoring, and test tools
+tools/                     ~150 extraction, generation, authoring, and test tools
 docs/                      architecture notes, reverse engineering, and plans
 re/                        recovered data and reverse-engineering material
+scripts/                   platform build helpers
 ```
 
 ### Runtime stack
@@ -195,41 +259,42 @@ re/                        recovered data and reverse-engineering material
 | Language | C++20 |
 | Build | CMake 3.20+ |
 | Window/input | `sokol_app` |
-| Graphics | `sokol_gfx` — Metal, D3D11, or OpenGL |
+| Graphics | `sokol_gfx`: Metal (macOS), D3D11 (Windows), OpenGL (Linux) |
 | Audio | Sokol audio plus project mixers/content |
 | Debug/content UI | Dear ImGui |
 | Images | `stb_image` |
 | Math | HandmadeMath |
 | Shaders | GLSL → `sokol-shdc` generated platform code |
 
-The code favors plain modules and explicit state over framework machinery.
-Game/content boundaries are mostly JSON-driven, while headless compile guards
-keep logic testable without a GPU or audio device.
+The code uses plain modules and explicit state instead of framework
+machinery. Game content is mostly driven by JSON. Headless compile guards
+(`*_HEADLESS`) let logic be tested without a GPU or audio device.
 
 ## Development priorities
 
-Near-term work is tracked in the docs rather than a pretend-static checkbox
-list. The major active areas are:
+Work is tracked in [GitHub issues][issues]. The ranked gap list, test
+scoreboard, and suggested attack order live in one place:
+[`docs/GAP_ANALYSIS.md`](docs/GAP_ANALYSIS.md). Broadly, the active areas are
+build/test health, combat fidelity (component damage, FF missiles, scanner
+tiers), presentation (HDR, cockpits), the Gemini Lives living world, and
+later Righteous Fire.
 
-1. **Gemini Lives:** world calendar, scheduled named NPCs, recurring encounters,
-   richer character/voice content, and persistent living-world events.
-2. **Combat fidelity:** component damage, useful Damage/Weapons MFDs,
-   Friend-or-Foe missiles, scanner tiers, and remaining turret UX.
-3. **Engineering:** split cohesive responsibilities out of `src/main.cpp`, keep
-   headless harnesses current, and continue improving cross-platform builds.
-4. **Later:** Righteous Fire content and campaign.
+When you change key bindings, CLI flags, the save format, or test targets,
+update this README and the gap analysis in the same pull request.
 
 ## Asset and tooling notes
 
-Many tools under `tools/` recover or transform data from an original Privateer
-installation. Generated/intermediate material is intentionally separate from
-runtime data where practical. Do not assume every script is needed to play the
-game; most are authoring or reverse-engineering utilities.
+Many tools under `tools/` recover or transform data from an original
+Privateer installation. Generated and intermediate material is kept apart
+from runtime data where practical. You don't need most scripts to play the
+game; they're authoring or reverse-engineering utilities.
 
-The project uses Git LFS for large media. If assets appear to be tiny pointer
-files, run `git lfs pull` before blaming the renderer. The renderer has enough
-to answer for already.
+The project uses Git LFS for large media and mesh sources. If assets show up
+as tiny pointer files, run `git lfs pull` before blaming the renderer. The
+renderer has enough to answer for already.
 
 ## License
 
 MIT. See [`LICENSE`](LICENSE).
+
+[issues]: https://github.com/mpfaffenberger/privateer_reimagined/issues

@@ -17,16 +17,26 @@
 //                      already-open navmap.
 //   A              — autopilot to selected nav (hostile-gated; any input cancels)
 //   D              — dock at selected base when cleared
+//   J              — jump through the gate in range
+//   T              — cycle targets in radar range
+//   G              — cycle gun arm-mode
+//   W (F alias)    — cycle the loaded launcher (opens ARMAMENTS)
+//   Enter          — fire the selected missile
+//   C / R          — STATUS Comms / Damage Control page (1-9 pick in Comms)
+//   Z              — tractor loose loot into the hold
+//   I              — in-flight inventory
+//   M              — sector map
+//   V              — toggle cockpit art (off = open full-screen view, #554)
+//   Space          — toggle fly-by-wire / free cursor
+//   P              — pause
+//   [ / ]          — reset / cycle sim time scale
 //   Escape (×2)    — quit (double-tap within 1s so accidental taps are safe)
 //
-//   Open / unbound (free for new bindings — W, S, Q, E, R, F, Z, C, X):
-//     W/S — no longer forward/back throttle
-//     Q/E — no longer strafe
-//     R/F — no longer pitch (up/down)
-//     Z/C — no longer roll
-//     X   — no longer brake / fire (now used by gun cycle as alt-fire)
-//   Bind them to new features (shield level toggle, weapon group cycling,
-//   etc.) and update this header + the in-game reminder.
+//   Open / unbound letters in flight: B, E, H, K, L, O, Q, S, U, X, Y
+//   (Ctrl+B / Ctrl+K are taken by dev tools; F1-F10 are dev tools too).
+//   Bind them to new features and update this header + README controls.
+//   Check event_cb and the keys_down polling in frame_cb first: this list
+//   has gone stale before.
 // -----------------------------------------------------------------------------
 
 #include "sokol_log.h"
@@ -37,6 +47,7 @@
 #include "sokol_debugtext.h"
 
 #include "app_cli.h"
+#include "armament_loadout.h"
 #include "armor.h"
 #include "asteroid.h"
 #include "atlas_grid_viewer.h"
@@ -54,6 +65,7 @@
 #include "commodity.h"
 #include "economy.h"
 #include "outfitting.h"
+#include "scanner.h"
 #include "inventory.h"
 #include "missions.h"
 #include "mission_tracker.h"
@@ -100,6 +112,7 @@ HMM_Mat4 model_matrix(HMM_Vec3 pos, HMM_Vec3 euler_deg, float s);
 #include "bolt_art.h"
 #include "projectile.h"
 #include "missile.h"
+#include "repair.h"
 #include "launcher_modes.h"
 #include "pause_overlay.h"
 #include "sfx.h"
@@ -139,6 +152,7 @@ HMM_Mat4 model_matrix(HMM_Vec3 pos, HMM_Vec3 euler_deg, float s);
 #include "imgui.h"   // ImGui::GetIO() for WantCaptureMouse handoff
 
 #include <algorithm>   // std::clamp, std::min, std::max, std::sort
+#include <limits>
 #include <array>
 #include <chrono>       // std::chrono::steady_clock
 #include <cmath>       // std::sin/cos/sqrt; needs _USE_MATH_DEFINES for M_PI on MSVC
@@ -339,7 +353,7 @@ struct AppState {
     // projectile tracers. Empty until the player launches one.
     std::vector<Missile>                                 missiles;
     // Currently-selected missile type for the fire key (index into
-    // MissileType: 0=DF,1=HS,2=IR,3=TORPEDO. Cycled with W (F alias).
+    // MissileType: 0=DF,1=HS,2=IR,3=FF,4=TORPEDO. Cycled with W (F alias).
     // Transient UI state — NOT persisted (ammo counts are, in PlayerState).
     int                                                  selected_missile = 0;
     // Edge-triggered fire request: the missile-fire key sets this in
@@ -358,6 +372,9 @@ struct AppState {
         uint32_t locked_id    = 0;
         float    seek_beep_s  = 0.0f;
     } missile_lock;
+    // Inbound-missile alarm cadence (#523): counts down while a hostile
+    // round is homing on the player; the tone re-fires when it hits 0.
+    float                                                missile_warn_beep_s = 0.0f;
 
     // Active explosion FX. One Explosion per ship death, lifetime ~1.2s.
     // Drawn additively via the same spot pipeline as tracers, just with
@@ -528,6 +545,8 @@ struct AppState {
     // any future ship-array reshuffles. Resolved to a pointer each frame
     // when we need to display it.
     uint32_t player_target_id = 0;
+    // Once-per-second identify-roll clock for player_target_id (#516).
+    scanner::IdentifyTimer target_identify;
 
     // Navmap overlay. N opens it when closed; while open, N cycles
     // through nav points in place (no close). Esc or the X button
@@ -631,9 +650,18 @@ struct AppState {
 struct _PreG { _PreG()  { std::fprintf(stderr, "[trace] pre-g\n");  std::fflush(stderr); } };
 static _PreG g_trace_pre_g;
 AppState g;
-// Dev gun-mount tuner overlay — hidden by default, F4 toggles it. Kept in
-// the build for future per-ship muzzle tuning; off so it doesn't clutter.
+// Dev gun-mount tuner overlay — hidden by default, Shift+F4 toggles it. Kept
+// in the build for future per-ship muzzle tuning; off so it doesn't clutter.
 static bool g_show_mount_tuner = false;
+
+// The one definition of "the player is holding the gun trigger" (Ctrl or
+// left mouse). Shared by the per-frame fire input and the gun-mode cycle so
+// the two can't drift apart again (#491).
+static bool player_trigger_held(const AppState& app) {
+    return app.keys_down[SAPP_KEYCODE_LEFT_CONTROL] ||
+           app.keys_down[SAPP_KEYCODE_RIGHT_CONTROL] ||
+           app.mouse_left_held;
+}
 struct _PostG { _PostG() { std::fprintf(stderr, "[trace] post-g\n"); std::fflush(stderr); } };
 static _PostG g_trace_post_g;
 
@@ -924,6 +952,14 @@ void init_cb() {
     }
 }
 
+// Guided missiles only acquire a lock through a Target Lock scanner (#143,
+// gamefaq 4.6.6); without one HS/IR launch unguided, like a dumbfire.
+// One predicate for the lock state machine, the launch, and the MFD.
+static bool player_scanner_can_lock() {
+    const Ship* pl = g.ships.player();
+    return pl && scanner::target_lock(pl->fitted_scanner);
+}
+
 // ---- runtime-rerunnable scene build (np-6al.1) ------------------------------
 //
 // Builds the live scene from g.system (already parsed by the caller). Split
@@ -933,12 +969,10 @@ void init_cb() {
 // switch rather than be rebuilt.
 // Fit the player's persistent loadout (PlayerState) onto the live slot-0
 // Ship (np-3dp.25): bind the hull class, heal to full, and mount the guns
-// named in p.gun_mounts. Mount POSITIONS + default types come straight from
-// the ship class default_guns (authored in assets/ships/<hull>/ship.json) --
-// the single source of truth for muzzle geometry. p.gun_mounts only decides
-// how many hardpoints are FILLED and with what gun, in list order: a brand-
-// new Tarsus fills slots 0 and 1 with its two lasers. Tune muzzle placement in the JSON, never here. Shared by the boot
-// spawn AND the title NEW handler. Unknown / empty gun names fall back to a Laser.
+// named in p.gun_mounts via armament_loadout::fit_player_mounts (see there
+// for the hardpoint/fill rules; a brand-new Tarsus fills slots 0 and 1 with
+// its two lasers). Tune muzzle placement in the ship JSON, never here.
+// Shared by the boot spawn AND the title NEW handler.
 static void apply_player_loadout(Ship& pl, const PlayerState& p, bool heal = true) {
     if (const ShipClass* k = ship_class::find(p.ship_class_name)) pl.klass = k;
     // Per-hull turn rate for the PLAYER. Unlike NPCs (which scale max_ypr by
@@ -977,6 +1011,12 @@ static void apply_player_loadout(Ship& pl, const PlayerState& p, bool heal = tru
         std::printf("[outfit] WARN: armor '%s' not found; using hull default\n",
                     p.armor_name.c_str());
     }
+    // Fitted scanner (#143): radar range, colour IFF, missile lock, ITTS.
+    pl.fitted_scanner = scanner::find(p.scanner_id);
+    if (!p.scanner_id.empty() && !pl.fitted_scanner) {
+        std::printf("[outfit] WARN: scanner '%s' not found; flying without one\n",
+                    p.scanner_id.c_str());
+    }
     // Energy regen bookkeeping (np-3dp.27, np-3dp.28). Engine upgrade
     // ADDS GJ/s to the recharge rate (more power); shield gen DRAINS GJ/s
     // from it whenever installed (running cost). Net effect on energy_gj
@@ -985,38 +1025,19 @@ static void apply_player_loadout(Ship& pl, const PlayerState& p, bool heal = tru
     pl.engine_recharge_mult   = 1.0f;
     pl.engine_recharge_add_gj = outfitting::engine_recharge_bonus_for(p.engine_level);
     pl.shield_recharge_drain_gj = outfitting::shield_recharge_drain_for(p.shield_level);
+    // Which components exist to be shot out (#141): only hardware the player
+    // actually owns. Guns/engines/radar/tractor are always fitted.
+    ship_systems::set_installed(pl.systems, ShipSystem::Launchers,
+                                launcher_modes::has_missile_hardware(p) ||
+                                launcher_modes::has_torpedo_hardware(p));
+    ship_systems::set_installed(pl.systems, ShipSystem::ShieldGen, p.shield_level > 0);
+    ship_systems::set_installed(pl.systems, ShipSystem::JumpDrive, p.has_jump_drive);
     // heal=true on a fresh hull (boot / NEW / respawn / ship-swap); false on
     // a normal land->launch so battle damage you didn't pay to repair
     // persists across the base visit.
     if (heal) ship::heal_to_full(pl);
-    const ShipClass* k = pl.klass;
-    pl.mounts.clear();
-    // Fill hardpoints from the ship class in list order. Count follows the
-    // player's loadout (2 for a new Tarsus), capped
-    // at the number of hardpoints the hull actually has; with no loadout set
-    // (--ship dev override) fill every hardpoint with its default gun.
-    const size_t slots = k ? k->default_guns.size() : size_t{0};
-    const size_t n = p.gun_mounts.empty()
-                       ? slots
-                       : std::min(p.gun_mounts.size(), slots);
-    for (size_t i = 0; i < n; ++i) {
-        GunMount m = k->default_guns[i];   // position + default type from ship.json
-        if (i < p.gun_mounts.size() && !p.gun_mounts[i].gun_id.empty()) {
-            const GunType t = gun::from_name(p.gun_mounts[i].gun_id);
-            m.type = (t == GunType::Count) ? GunType::Laser : t;   // player gun overrides type only
-        }
-        m.cone_half_angle_deg = 1.0f;
-        pl.mounts.push_back(m);
-    }
-    pl.gun_cooldowns.assign(pl.mounts.size(), 0.0f);
-    pl.gun_armed.assign(pl.mounts.size(), true);
-    // Carry per-mount weapon mods (#90) onto the live ship, parallel to
-    // mounts. Default WeaponMods{} (1.0/1.0) is a no-op; we overwrite the
-    // entries the player has actually fitted from their MountSlot::mods so
-    // firing::tick applies the rarity fire-rate / energy deltas per shot.
-    pl.mount_mods.assign(pl.mounts.size(), inventory::WeaponMods{});
-    for (size_t i = 0; i < pl.mount_mods.size() && i < p.gun_mounts.size(); ++i)
-        pl.mount_mods[i] = p.gun_mounts[i].mods;
+    // Guns: hardpoints from the hull, fitted types from the loadout (#514).
+    armament_loadout::fit_player_mounts(pl, p);
 }
 
 static void apply_pending_player_health_snapshot(Ship& player) {
@@ -1033,7 +1054,34 @@ static void apply_pending_player_health_snapshot(Ship& player) {
     player.shield_port_cm     = g.player.hp_shield_port;
     player.shield_starboard_cm = g.player.hp_shield_starboard;
     player.energy_gj          = g.player.hp_energy;
+    ship_systems::restore(player.systems, g.player.hp_systems);
     std::printf("[save] applied loaded ship damage to hull\n");
+}
+
+// Jump verdict for the player against the nearest in-range gate (#380): ONE
+// place folds the owned drive and its component damage (#141) into
+// jump::evaluate, so the HUD prompt, the J key and the dev hooks can never
+// disagree.
+static jump::Eligibility player_jump_eligibility() {
+    jump::Drive drive = jump::Drive::None;
+    if (g.player.has_jump_drive) {
+        const Ship* pl = g.ships.player();
+        drive = (pl && !ship_systems::operational(pl->systems, ShipSystem::JumpDrive))
+              ? jump::Drive::Destroyed : jump::Drive::Online;
+    }
+    return jump::evaluate(g.camera, g.system, g.galaxy, g.player.current_system,
+                          drive);
+}
+
+// Engage a Ready jump (#512): queue the destination + arrival gate and flip
+// to the Loading hyperspace cinematic; execute_jump() does the warp. ONE
+// place shared by the J key and the dev drivers (/jump hook, jump soak) so
+// the dev paths keep proving the real J path. Caller has checked Ready.
+static void engage_jump(const jump::Eligibility& e) {
+    g.pending_jump_system = e.dest_id;
+    g.pending_jump_nav    = e.arrival_nav;
+    sfx::jump();
+    game_state::request_mode(g.game, GameMode::Loading);
 }
 
 void build_system_scene(bool first_time, bool show_progress) {
@@ -1111,6 +1159,8 @@ void build_system_scene(bool first_time, bool show_progress) {
     outfitting::load("assets/data/ship_prices.json",
                      "assets/data/equipment_prices.json");
     outfitting::register_screens();
+    // Scanner catalog (#143) lives in the same equipment price file.
+    scanner::load("assets/data/equipment_prices.json");
     // Loot pricing + the Cargo Hold sell screen (Phase 4f, #95/96/97):
     // value table for salvage/loot, and the CargoHold screen body registered
     // via the same np-9cu.4 hook seam. Missing prices file is non-fatal.
@@ -1226,9 +1276,7 @@ void build_system_scene(bool first_time, bool show_progress) {
     if (!g_player_ship_override.empty()) {
         if (const ShipClass* k = ship_class::find(g_player_ship_override)) {
             g.player.ship_class_name = g_player_ship_override;
-            g.player.gun_mounts.clear();
-            for (const GunMount& m : k->default_guns)
-                g.player.gun_mounts.push_back(MountSlot{gun::to_name(m.type)});
+            outfitting::fit_stock_guns(g.player, k, /*with_turrets=*/true);
             std::printf("[player] --ship override: flying '%s' with %zu stock guns\n",
                         g_player_ship_override.c_str(), g.player.gun_mounts.size());
         } else {
@@ -1437,10 +1485,8 @@ void build_system_scene(bool first_time, bool show_progress) {
     // Dev remote: HTTP control channel on 127.0.0.1. Lets external
     // tools (code puppy, curl, shell scripts) teleport the camera,
     // grab screenshots, and read state. Non-fatal if it can't bind.
-    // Port 47001 picked to avoid collisions with common local dev
-    // servers (3000, 5000, 8080, 8765, …).
     if (first_time) {
-        dev_remote::start(47001);
+        dev_remote::start();
 
         // Agentic-testing event stream: every comm feed line (mission
         // accept/complete, rep deltas, taunts) is mirrored into the
@@ -1604,6 +1650,11 @@ void build_system_scene(bool first_time, bool show_progress) {
             // — the judge's generic lever until #154's click endpoints.
             else if (action == "run")         plot::run_action(g.player, id);
         });
+        dev_remote::set_advance_day_hook([](int days) {
+            // Same overflow guard as the dock tick in docking.cpp.
+            const int room = std::numeric_limits<int>::max() - g.player.day;
+            g.player.day += std::min(days, room);
+        });
         // POST /base/screen — navigate the Landed base UI (Bar, boards...).
         dev_remote::set_base_screen_hook([](std::string name) {
             base_screens::dev_open(name);
@@ -1687,21 +1738,16 @@ void build_system_scene(bool first_time, bool show_progress) {
                     return;
                 }
                 // Dev teleport to the gate lip (same convenience as /dock),
-                // then the honest eligibility check.
-                g.selected_nav    = i;
+                // then the honest nearby-gate eligibility check (#380) — no
+                // nav selection needed, exactly like the J key.
                 g.camera.position = HMM_AddV3(n.position,
                                               HMM_V3(0.0f, 0.0f, 1200.0f));
                 g.camera.velocity = HMM_V3(0.0f, 0.0f, 0.0f);
-                const jump::Eligibility e = jump::evaluate(
-                    g.camera, g.system, g.galaxy, g.player.current_system,
-                    i, g.player.has_jump_drive);
+                const jump::Eligibility e = player_jump_eligibility();
                 if (e.status == jump::Status::Ready) {
                     std::printf("[dev_remote] /jump %s -> %s engaging\n",
                                 g.player.current_system.c_str(), e.dest_id.c_str());
-                    g.pending_jump_system = e.dest_id;
-                    g.pending_jump_nav    = e.arrival_nav;
-                    sfx::jump();
-                    game_state::request_mode(g.game, GameMode::Loading);
+                    engage_jump(e);
                 } else {
                     std::printf("[dev_remote] /jump refused at %s: %s\n",
                                 nav.c_str(), jump::status_str(e.status));
@@ -1952,19 +1998,15 @@ void build_system_scene(bool first_time, bool show_progress) {
         // POST /inventory/equip — fit the Weapon-kind item at item_index
         // into a gun mount, routing through the SAME inventory::equip_weapon
         // the Cargo Hold screen uses. A negative mount_index means "first
-        // empty mount (else 0)" — resolved here so the screen + dev path
+        // open mount (player::first_open_mount, else 0)" — resolved here so the screen + dev path
         // share one fitting policy. Takes effect on the next launch when
         // apply_player_loadout re-reads gun_mounts onto the live ship.
         dev_remote::set_inventory_equip_hook(
             [](int item_index, int mount_index) {
                 if (mount_index < 0) {
-                    mount_index = 0;
-                    for (int mi = 0; mi < (int)g.player.gun_mounts.size(); ++mi) {
-                        if (g.player.gun_mounts[(size_t)mi].gun_id.empty()) {
-                            mount_index = mi;
-                            break;
-                        }
-                    }
+                    const int open = player::first_open_mount(
+                        g.player, ship_class::find(g.player.ship_class_name));
+                    mount_index = open >= 0 ? open : 0;
                 }
                 const bool ok = inventory::equip_weapon(g.player, item_index, mount_index);
                 std::printf("[dev_remote] inventory/equip: item=%d mount=%d ok=%s\n",
@@ -2425,6 +2467,7 @@ void build_system_scene(bool first_time, bool show_progress) {
                              sd.faction_override.c_str(), class_name.c_str());
             }
         }
+        missile::arm_npc_rack(inst);   // faction is final: hull rack, pirates FF (#524)
 
         // Translate the JSON behaviour string into the Ship enum.
         if (sd.behavior_kind == "pursue_target") {
@@ -2905,6 +2948,7 @@ void apply_ship_debug_requests() {
             Ship inst   = ship::spawn(*klass);
             inst.sprite = &spr;
             inst.ai.enabled = true;             // joins the brawl like its JSON kin
+            missile::arm_npc_rack(inst);        // same hull rack as its JSON kin (#524)
             const ShipHandle h = g.ships.spawn(std::move(inst));
             std::printf("[debug_spawn] talon spawned: handle {%u, %u}, sprite slot %zu\n",
                         h.index, h.generation, slot);
@@ -2987,9 +3031,9 @@ void update_system_switch_timers(float dt) {
 // ---- jump soak dev driver (np-6al.3) ----------------------------------------
 //
 // The headless stand-in for a human pressing J. On the dev_jump_interval,
-// while in Flight with no jump already in flight: select the first surveyed
-// jump gate in the current system, teleport just inside its trigger range,
-// and fire the jump through the EXACT same code path the J keypress uses
+// while in Flight with no jump already in flight: teleport just inside the
+// trigger range of the first surveyed jump gate in the current system, and
+// fire the jump through the EXACT same nearby-gate path the J keypress uses
 // (jump::evaluate -> pending_jump + Loading). Because Troy's first gate leads
 // to Pyrenees and Pyrenees' only gate leads back to Troy, this ping-pongs the
 // round-trip indefinitely — a leak/stability soak over repeated teardown+build.
@@ -3023,9 +3067,8 @@ void update_dev_jump_soak(float dt) {
         into = (len > 1e-3f) ? HMM_DivV3F(into, len) : HMM_V3(0.0f, 0.0f, -1.0f);
         g.camera.position = HMM_AddV3(n.position, HMM_MulV3F(into, 1000.0f));
         g.camera.velocity = HMM_V3(0.0f, 0.0f, 0.0f);
-        e = jump::evaluate(g.camera, g.system, g.galaxy, g.player.current_system, i,
-                            g.player.has_jump_drive);
-        if (e.status == jump::Status::Ready) { idx = i; break; }
+        e = player_jump_eligibility();
+        if (e.status == jump::Status::Ready) { idx = e.nav_index; break; }
         std::printf("[dev] --dev-jump-soak: gate '%s' not ready (%s); trying next\n",
                     n.name.c_str(), jump::status_str(e.status));
     }
@@ -3035,15 +3078,11 @@ void update_dev_jump_soak(float dt) {
         return;   // don't burn a jump credit; retry next interval
     }
 
-    g.selected_nav = idx;
     const NavPointDef& gate = g.system.nav_points[idx];
     std::printf("[dev] --dev-jump-soak: auto-J %s -> %s via %s (%d remaining)\n",
                 g.player.current_system.c_str(), e.dest_id.c_str(),
                 gate.name.c_str(), g.dev_jump_remaining - 1);
-    g.pending_jump_system = e.dest_id;
-    g.pending_jump_nav    = e.arrival_nav;
-    sfx::jump();
-    game_state::request_mode(g.game, GameMode::Loading);
+    engage_jump(e);
 
     --g.dev_jump_remaining;
     if (g.dev_jump_remaining <= 0) g.dev_jump_quit = true;
@@ -3253,6 +3292,7 @@ static uint32_t encounter_spawn(const encounters::SpawnRequest& req) {
     inst.sprite       = &spr;
     inst.faction      = req.faction;
     inst.display_name = req.display_name;
+    missile::arm_npc_rack(inst);   // hull missile rack; pirates refit FF (#524)
 
     // Talon loadout rule (global): the ONLY Talons that keep the stock
     // 2x laser + center mass driver (the ship.json default) are PIRATE
@@ -3517,6 +3557,7 @@ static void update_mission_forces() {
 // assert against credits/rep/missions while flying, docked, dying, or
 // loading. Flat POD mirrors only; dev_remote never sees PlayerState.
 void publish_dev_remote_snapshots() {
+    dev_remote::publish_day(g.player.day);
     dev_remote::PlayerInfo pi;
     pi.credits        = g.player.credits;
     pi.ship_class     = g.player.ship_class_name;
@@ -3601,11 +3642,11 @@ void publish_dev_remote_snapshots() {
     }
 }
 
-// ---- non-Flight stub screens ------------------------------------------------
+// ---- non-Flight screens (Landed / Loading) ----------------------------------
 //
-// Landed / Dying / Loading don't have real screens yet (np-eag.2 only adds
-// the state machine). Each renders a dark clear + a one-line debugtext
-// label so it's unmistakable which mode you're in, plus the debug panel
+// Landed draws the base screens. Loading draws the jump flash, or a
+// one-line debugtext label for a non-jump load. (Dying never gets here: its
+// death cinematic runs in the normal flight frame.) Both keep the debug panel
 // (so the Game Mode combo can drive you back out) and the dev_remote
 // hooks (so /screenshot keeps working for validation). Escape returns to
 // Flight — wired in event_cb. ASCII-only labels because the sokol
@@ -4306,7 +4347,7 @@ void frame_cb() {
         respawn_player(/*to_title=*/true);
     }
 
-    // Landed / Loading render a stub screen and skip the entire sim +
+    // Landed (base screens) and Loading (jump flash) skip the entire sim +
     // render path below. Flight (and the Dying cinematic) fall through.
     if (g.game.mode != GameMode::Flight && g.game.mode != GameMode::Dying) {
         frame_stub();
@@ -4800,7 +4841,12 @@ void frame_cb() {
             g.player.hp_shield_port    = player->shield_port_cm;
             g.player.hp_shield_starboard = player->shield_starboard_cm;
             g.player.hp_energy         = player->energy_gj;
+            g.player.hp_systems        = player->systems.integrity;
         }
+        // Engine damage (#141) derates the camera-flown player's top speed
+        // and turn rates; NPCs get the same curve in their flight controller.
+        g.camera.speed_derate = ship_systems::speed_mult(player->systems);
+        g.camera.turn_derate  = ship_systems::turn_mult(player->systems);
     }
     for (Ship& s : g.ships) {
         if (!s.is_player) ship::sync_from_sprite(s);
@@ -4891,9 +4937,7 @@ void frame_cb() {
                 cinematic::triggers::TriggerCtx tc;
                 tc.system_id  = g.player.current_system;
                 tc.ship_class = g.player.ship_class_name;
-                tc.missiles_total = player::missile_count(g.player, 0) +
-                                    player::missile_count(g.player, 1) +
-                                    player::missile_count(g.player, 2);
+                tc.missiles_total = repair::missiles_total(g.player);
                 tc.player_pos = pl->position;
                 tc.nav_pos = [](const std::string& name, HMM_Vec3& out) {
                     const NavPointDef* n = find_nav_by_name(name);
@@ -4990,13 +5034,14 @@ void frame_cb() {
     // within a small cone — same lead math as the on-screen ITTS
     // reticle, so the player sees "green crosshair → tracers go
     // there". Outside the cone, falls back to camera-forward and the
-    // player has to rotate the ship to engage.
+    // player has to rotate the ship to engage. The gimbal IS the ITTS, so
+    // it needs an ITTS-capable scanner, same as the reticle (#143).
     if (Ship* player_p = g.ships.player(); player_p) {
         Ship& player = *player_p;
 
         // Drop the player's ship-target lock if the contact has wandered
-        // past the 15 km radar/lock ceiling — mirrors the HUD-targeting
-        // rule that nothing beyond 15 km is targetable in the first place.
+        // past the hull's radar sphere, the same edge the T-cycle and the
+        // radar MFD use (perception::radar_range_m, #492).
         // Also clears a target that's gone dead (sprite reaped) so the
         // firing/missile paths below don't aim at a corpse.
         if (g.player_target_id != 0) {
@@ -5005,24 +5050,33 @@ void frame_cb() {
                 g.player_target_id = 0;
             } else {
                 const float d = HMM_LenV3(HMM_SubV3(t->position, player.position));
-                if (d > 15000.0f) {
-                    std::printf("[target] dropped: out of range (%.0f m > 15000)\n", d);
+                const float radar = perception::radar_range_m(player);
+                if (d > radar) {
+                    std::printf("[target] dropped: out of range (%.0f m > %.0f)\n", d, radar);
                     g.player_target_id = 0;
                 }
             }
         }
 
-        player.controller.fire_guns =
-            g.keys_down[SAPP_KEYCODE_LEFT_CONTROL] ||
-            g.keys_down[SAPP_KEYCODE_RIGHT_CONTROL] ||
-            g.mouse_left_held;
+        // Scanner identification (#516): the held target stays UNKNOWN
+        // until the fitted scanner wins a once-per-second roll on it.
+        if (Ship* t = g.ships.find_by_id(g.player_target_id);
+            t && !t->identified_by_player) {
+            if (scanner::tick_identify(g.target_identify, t->id, player.fitted_scanner, dt,
+                                       [] { return (float)(std::rand() % 10000) / 10000.0f; })) {
+                t->identified_by_player = true;
+                std::printf("[target] identified id=%u\n", t->id);
+            }
+        }
+
+        player.controller.fire_guns = player_trigger_held(g);
         if (g.show_title)    player.controller.fire_guns = false;   // frozen on briefing
         // Navmap overlay owns the click — left-mouse would otherwise fire guns
         // every time the player aimed for a navmap button or scrolled the map.
         if (g.show_navmap)   player.controller.fire_guns = false;
 
         HMM_Vec3 aim = g.camera.forward();
-        if (g.player_target_id != 0) {
+        if (g.player_target_id != 0 && scanner::itts(player.fitted_scanner)) {
             const Ship* target = g.ships.find_by_id(g.player_target_id);
             if (target && !target->alive) target = nullptr;
             if (target) {
@@ -5095,8 +5149,9 @@ void frame_cb() {
                         ? g.ships.find_by_id(g.player_target_id) : nullptr;
         const bool have_target = tgt && tgt->alive;
 
-        if (!sel.needs_lock || !have_target) {
-            // Dumbfire selected, or nothing to lock onto: drop any lock.
+        if (!sel.needs_lock || !have_target || !player_scanner_can_lock()) {
+            // Dumbfire selected, nothing to lock onto, or a scanner with no
+            // Target Lock (#143): drop any lock.
             lk = AppState::MissileLock{};
         } else {
             // Target changed since last frame -> restart the acquire.
@@ -5122,27 +5177,9 @@ void frame_cb() {
                 }
             }
         }
-
-        // ---- ECM break check (np-3dp.27) --------------------------------
-        // The player's fitted ECM has a per-second chance to drop any held
-        // missile lock. Canonical Privateer rates: L1 25%, L2 50%, L3 75%
-        // per second. Roll ONCE per second so the chance is independent of
-        // dt (not "every frame at 25%" which is way too strong).
-        if (g.player.ecm_level > 0 && lk.locked) {
-            constexpr float k_ecm_check_period = 1.0f;
-            static float  rate_dt = 0.0f;
-            rate_dt += dt;
-            if (rate_dt >= k_ecm_check_period) {
-                rate_dt = 0.0f;
-                const int ecm_pct = (int)g.player.ecm_level * 25;   // 25/50/75
-                if ((rand() % 100) < ecm_pct) {
-                    lk.locked = false;
-                    lk.progress_s = 0.0f;     // force IR to rebuild
-                    std::printf("[ecm] break (%d%% roll): missile lock dropped\n",
-                                ecm_pct);
-                }
-            }
-        }
+        // ECM no longer rolls against the player's OWN lock here (#523) —
+        // it jams enemy rounds homing on the player; see missile::ecm_jam
+        // below the missile tick.
     }
 
     // ---- missile fire (np-zte.2) ---------------------------------------
@@ -5159,11 +5196,17 @@ void frame_cb() {
             const bool has_hardware =
                 launcher_modes::has_compatible_hardware(g.player, ti);
             const bool has_ammo = player::missile_count(g.player, ti) > 0;
-            const bool lock_ok  = !sel.needs_lock || g.missile_lock.locked;
+            // A guided type without a Target Lock scanner still launches,
+            // it just flies straight (#143: "missiles won't guide").
+            const bool guided   = sel.needs_lock && player_scanner_can_lock();
+            const bool lock_ok  = !guided || g.missile_lock.locked;
             if (!has_hardware) {
                 sfx::out_of_ammo();
                 std::printf("[missile] FIRE refused: no compatible %s launcher\n",
                             sel.short_name);
+            } else if (!ship_systems::operational(pl->systems, ShipSystem::Launchers)) {
+                sfx::out_of_ammo();
+                std::printf("[missile] FIRE refused: launchers destroyed\n");
             } else if (!has_ammo) {
                 sfx::out_of_ammo();
                 std::printf("[missile] FIRE refused: %s rack empty\n", sel.short_name);
@@ -5172,7 +5215,7 @@ void frame_cb() {
                 std::printf("[missile] FIRE refused: %s needs a lock (none)\n", sel.short_name);
             } else {
                 player::consume_missile(g.player, ti);
-                const uint32_t target_id = sel.needs_lock ? g.missile_lock.locked_id : 0;
+                const uint32_t target_id = guided ? g.missile_lock.locked_id : 0;
                 const HMM_Vec3 muzzle = HMM_AddV3(pl->position,
                                           HMM_MulV3F(g.camera.forward(), 30.0f));
                 Missile m = missile::spawn((MissileType)ti, muzzle,
@@ -5202,7 +5245,38 @@ void frame_cb() {
     // Guided missiles (np-zte.2): steer + advance BEFORE the snapshot/damage
     // pass below, exactly like projectiles, so their detonations are caught
     // by the same kill-detection + explosion FX that gunfire uses.
+    // NPC missile racks (#144, #524): armed NPCs mid gun-run launch from
+    // their hull's rack. Same cinematic gate as gunfire, and before tick so
+    // a fresh round gets its first integration step this frame.
+    if (!cinematic::active()) {
+        if (const int n = missile::npc_launch(g.missiles, g.ships, dt); n > 0) {
+            std::printf("[missile] NPC launched %d missile(s)\n", n);
+            // npc_launch appends, so this frame's rounds are the last n.
+            for (size_t i = g.missiles.size() - (size_t)n; i < g.missiles.size(); ++i)
+                sfx::npc_missile_fired(g.missiles[i].position);
+        }
+    }
     missile::tick(g.missiles, g.ships, dt);
+
+    // ---- inbound missiles: ECM + warning tone (#523) -------------------
+    // After tick, so a fresh FF has already picked its mark. The player's
+    // fitted ECM rolls 25/50/75% per second per inbound round to break its
+    // track (and briefly blind its seeker); anything still homing on us
+    // sounds the alarm on a cadence. The HUD banner queries the same count.
+    if (const Ship* pl = g.ships.player(); pl && !dying) {
+        const int jammed = missile::ecm_jam(g.missiles, pl->id, g.player.ecm_level, dt,
+                                            [] { return rand() % 100; });
+        if (jammed > 0)
+            std::printf("[ecm] L%d jammed %d inbound missile(s)\n",
+                        g.player.ecm_level, jammed);
+        constexpr float k_missile_warn_period_s = 0.6f;
+        if (missile::count_inbound(g.missiles, pl->id) == 0) {
+            g.missile_warn_beep_s = 0.0f;          // next threat alarms at once
+        } else if ((g.missile_warn_beep_s -= dt) <= 0.0f) {
+            sfx::missile_warning();
+            g.missile_warn_beep_s = k_missile_warn_period_s;
+        }
+    }
 
     // Snapshot alive flags BEFORE damage so we can detect kills this
     // frame and spawn explosions at the right positions. Cheap (one
@@ -5269,6 +5343,14 @@ void frame_cb() {
     // through the identical death-detection below.
     missile::collide_and_damage(g.missiles, g.ships, dt);
     for (Ship& s : g.ships) ship::regen_shields(s, dt);
+    // Repair droid (#517): the player's droid patches damaged, non-weapon
+    // components while flying. Runs after this frame's hits so a part shot
+    // to 0% this frame counts as destroyed (base-only) straight away.
+    if (Ship* pl = g.ships.player(); pl && pl->alive) {
+        ship_systems::droid_tick(pl->systems,
+            ship_systems::droid_rate(g.player.has_repair_droid, g.player.adv_repair_droid),
+            dt);
+    }
 
     // Death detection. For NPCs we trigger on ANY occupied dead ship
     // (not just the alive:true->false edge), because some damage sources
@@ -5469,6 +5551,16 @@ void frame_cb() {
             f.lifetime_s = 0.18f;
             g.armor_flashes.push_back(f);
         }
+    }
+
+    // Component-damage cue (#519). ship::take_damage latches the worst
+    // system hit from ANY source (guns, missiles, sun, collisions); consume
+    // the player's here. A hit landing after this point (e.g. collisions
+    // below) is simply heard next frame. Throttling lives in sfx.cpp.
+    if (Ship* pl = g.ships.player()) {
+        const SystemHit hit = std::exchange(pl->pending_system_hit, SystemHit::None);
+        if (hit != SystemHit::None)
+            sfx::component_damaged(hit == SystemHit::Destroyed);
     }
 
     // Flash tick + prune. Inline (small structs, single use site each).
@@ -6242,7 +6334,7 @@ void frame_cb() {
 
             // Missile tracers (np-zte.2). Bigger + hotter than a bullet so a
             // missile reads as a distinct burning mote streaking toward its
-            // mark; a faint per-type tint (DF white, HS orange, IR cyan)
+            // mark; a faint per-type tint (DF white, HS orange, IR cyan, FF green)
             // hints at what's inbound. Reuses the same additive-glow path —
             // no bespoke missile mesh in v1.
             for (const Missile& m : g.missiles) {
@@ -6252,6 +6344,7 @@ void frame_cb() {
                 switch (m.type) {
                     case MissileType::HS: t.color = HMM_V3(2.4f, 1.2f, 0.5f); break;
                     case MissileType::IR: t.color = HMM_V3(0.7f, 1.8f, 2.4f); break;
+                    case MissileType::FF: t.color = HMM_V3(0.8f, 2.4f, 0.9f); break;
                     default:              t.color = HMM_V3(2.2f, 2.2f, 2.0f); break;
                 }
                 t.size = 22.0f;
@@ -6458,36 +6551,30 @@ void frame_cb() {
     // F6 — sprite-generation workbench. Front-end only; launches Python jobs.
     sprite_generation_tool::build();
     if (!g.capture_clean) {
-        // Docking prompt for the NAV MFD (np-9cu.1). Probe can_request
-        // against the selected nav: cleared -> "PRESS D TO DOCK" (green),
-        // dockable-but-not-yet -> "DOCK: <reason>" (amber). Non-dockable
-        // navs leave the line blank.
+        // Docking/jump prompt for the NAV MFD (np-9cu.1, np-6al.3, #380).
+        // A jump gate physically nearby owns the slot whatever the nav
+        // computer has selected: jump::prompt feeds the green "PRESS J" /
+        // amber refusal line straight off the verdict. Otherwise probe
+        // can_request against the selected nav: cleared -> "PRESS D TO DOCK"
+        // (green), dockable-but-not-yet -> "DOCK: <reason>" (amber).
+        // Non-dockable navs (far-off gates included) leave the line blank.
         const char* dock_prompt = nullptr;
         bool        dock_ready  = false;
-        if (g.selected_nav >= 0 && g.selected_nav < (int)g.system.nav_points.size()) {
-            const NavPointDef& nav = g.system.nav_points[g.selected_nav];
-            if (nav.kind == "jump") {
-                // Jump gate selected (np-6al.3): surface the J prompt in the
-                // SAME NAV MFD slot dock uses — a gate is never also a dock
-                // base, so they can't collide. jump::prompt feeds the green/
-                // amber line straight off the eligibility verdict.
-                const jump::Eligibility e = jump::evaluate(
-                    g.camera, g.system, g.galaxy, g.player.current_system,
-                    g.selected_nav, g.player.has_jump_drive);
-                bool ready = false;
-                dock_prompt = jump::prompt(e, &ready);
-                dock_ready  = ready;
-            } else {
-                const DockResult r = docking::can_request(
-                    g.docking, g.camera.position, g.camera.velocity, nav);
-                static char buf[48];
-                if (r == DockResult::Cleared) {
-                    dock_prompt = "PRESS D TO DOCK";
-                    dock_ready  = true;
-                } else if (r != DockResult::NotDockable) {
-                    std::snprintf(buf, sizeof(buf), "DOCK: %s", docking::result_str(r));
-                    dock_prompt = buf;
-                }
+        const jump::Eligibility jump_e = player_jump_eligibility();
+        if (jump_e.status != jump::Status::NotJumpNav) {
+            dock_prompt = jump::prompt(jump_e, &dock_ready);
+        } else if (g.selected_nav >= 0 &&
+                   g.selected_nav < (int)g.system.nav_points.size()) {
+            const DockResult r = docking::can_request(
+                g.docking, g.camera.position, g.camera.velocity,
+                g.system.nav_points[g.selected_nav]);
+            static char buf[48];
+            if (r == DockResult::Cleared) {
+                dock_prompt = "PRESS D TO DOCK";
+                dock_ready  = true;
+            } else if (r != DockResult::NotDockable) {
+                std::snprintf(buf, sizeof(buf), "DOCK: %s", docking::result_str(r));
+                dock_prompt = buf;
             }
         }
         // Skip the entire cockpit HUD while the title is up: the title
@@ -6508,7 +6595,8 @@ void frame_cb() {
             // the render camera is OUTSIDE the hull (autopilot chase cam,
             // death cinematic): a cockpit frame over a 3rd-person view is
             // nonsense, and skipping it drops the HUD back to the classic
-            // floating panels for those frames automatically.
+            // floating panels for those frames automatically. The pilot's
+            // V toggle (#554) takes the same fallback inside draw().
             if (!g.orbit_active)
                 cockpit_overlay::draw(g.player.ship_class_name, g.camera);
             cockpit_hud::build(g.camera, g.system, g.selected_nav,
@@ -6593,11 +6681,21 @@ void frame_cb() {
             // (DF) and TORPEDO apart at a glance.
             if ((MissileType)g.selected_missile == MissileType::TORPEDO)
                 w.no_lock_label = "TORPEDO";
-            w.needs_lock    = sel.needs_lock;
+            // FF seeks by transponder, not reticle lock, so it needs no
+            // Target Lock scanner either (#144 x #143).
+            else if (sel.auto_acquire)
+                w.no_lock_label = "IFF SEEK";
+            // No Target Lock scanner (#143): guided types fire unguided.
+            w.needs_lock    = sel.needs_lock && player_scanner_can_lock();
+            if (sel.needs_lock && !w.needs_lock) w.no_lock_label = "UNGUIDED";
             w.lock_state    = g.missile_lock.locked ? 2
-                            : (g.player_target_id != 0 && sel.needs_lock ? 1 : 0);
+                            : (g.player_target_id != 0 && w.needs_lock ? 1 : 0);
             w.lock_progress = sel.lock_buildup ? (g.missile_lock.progress_s / 1.5f) : 1.0f;
             cockpit_hud::build_weapons_status(w);
+            // Inbound-missile banner (#523): shown even with an empty rack.
+            if (const Ship* pl = g.ships.player(); pl && pl->alive)
+                cockpit_hud::draw_missile_warning(
+                    missile::count_inbound(g.missiles, pl->id));
         }
         // Big system navmap (N to open/cycle). Drawn AFTER the regular
         // HUD so it overlays on top. Mutates selected_nav when the
@@ -6864,24 +6962,28 @@ void frame_cb() {
                                 || std::fabs(ndc_y) > 1.0f;
 
             // Stance from the player's perception entry for this ship.
-            // Drives indicator color: red=hostile, yellow=neutral,
-            // green=allied. Default red if not in perception (e.g. the
-            // moment after acquisition before the next perception tick).
-            ImU32 col_hostile = IM_COL32(255,  80,  80, 255);
-            ImU32 col_neutral = IM_COL32(255, 220,  60, 255);
-            ImU32 col_allied  = IM_COL32( 80, 255,  80, 255);
-            ImU32 color = col_hostile;
+            // Drives indicator color via the shared HUD palette (red=hostile,
+            // yellow=neutral, green=allied) — only on a colour-IFF scanner;
+            // monochrome scanners get one tint (#143). Default hostile if not
+            // in perception (e.g. the moment after acquisition before the
+            // next perception tick).
+            const bool iff = scanner::color_iff(g.ships.player()->fitted_scanner);
+            Stance stance = Stance::Hostile;
             float distance_m = HMM_LenV3(HMM_SubV3(target->position, g.ships.player()->position));
             const ShipPerception& pp = g.ships.player()->perception;
             for (const PerceivedContact& c : pp.visible) {
                 if (c.ship_id == g.player_target_id) {
                     distance_m = c.distance_m;
-                    color = (c.stance == Stance::Hostile) ? col_hostile
-                          : (c.stance == Stance::Allied)  ? col_allied
-                          :                                  col_neutral;
+                    stance = c.stance;
                     break;
                 }
             }
+            const ImU32 color = cockpit_hud::contact_color(stance, iff);
+            // Bracket / edge-arrow label: UNKNOWN until the scanner IDs it (#516).
+            const bool  known = target->identified_by_player;
+            const char* tname = !known ? "UNKNOWN"
+                              : target->klass ? target->klass->name.c_str()
+                              : target->is_player ? "player" : "?";
 
             // Target brackets, labels, edge arrows and lead pips belong to
             // the world behind cockpit metal, not the foreground UI (#429).
@@ -6912,17 +7014,15 @@ void frame_cb() {
                     dl->AddCircle(ImVec2(sx, sy), r + 9.0f, ace_purple, 28, 2.5f);
                 }
 
-                // Label below the bracket. Aces read "<Faction> Ace"; every
-                // other target reads its hull class name.
+                // Label below the bracket. Identified aces read "<Faction>
+                // Ace"; every other target reads tname.
                 char buf[96];
-                if (target->is_ace) {
+                if (target->is_ace && known) {
                     char fac[24];
                     std::snprintf(fac, sizeof(fac), "%s", faction::to_name(target->faction));
                     if (fac[0] >= 'a' && fac[0] <= 'z') fac[0] -= 32;   // capitalise
                     std::snprintf(buf, sizeof(buf), "%s Ace   %.1f km", fac, distance_m * 0.001f);
                 } else {
-                    const char* tname = target->klass ? target->klass->name.c_str()
-                                      : target->is_player ? "player" : "?";
                     std::snprintf(buf, sizeof(buf), "%s   %.1f km", tname, distance_m * 0.001f);
                 }
                 dl->AddText(ImVec2(sx - r, sy + r + 6.0f), color, buf);
@@ -6957,8 +7057,6 @@ void frame_cb() {
 
                     // Label tucked just inside the arrow toward center.
                     char buf[96];
-                    const char* tname = target->klass ? target->klass->name.c_str()
-                                      : target->is_player ? "player" : "?";
                     std::snprintf(buf, sizeof(buf), "%s  %.1f km", tname, distance_m * 0.001f);
                     const float lx = ax - dx * 60.0f - 30.0f;
                     const float ly = ay - dy * 60.0f - 7.0f;
@@ -6984,8 +7082,9 @@ void frame_cb() {
             // Drawn ONLY when on-screen (in the camera's view frustum)
             // — an off-screen ITTS would be confusing because it isn't
             // the target itself, just where to aim. Off-screen targets
-            // already have the directional arrow above.
-            if (!offscreen) {
+            // already have the directional arrow above. And only with an
+            // ITTS-capable scanner (#143) — lesser scanners show no lead.
+            if (!offscreen && scanner::itts(g.ships.player()->fitted_scanner)) {
                 const Ship& player = *g.ships.player();
                 HMM_Vec3 t_pos = target->sprite ? target->sprite->position
                                                  : target->position;
@@ -7256,7 +7355,7 @@ void event_cb(const sapp_event* ev) {
     // Ctrl+K — Cinematic Studio. Ahead of debug_panel so the toggle beats
     // ImGui widget focus, same trick as the F-key tools above.
     if (cinematic::studio::handle_event(ev))     return;
-    // F11 Base Art Studio; available only when its landed-room seam resolves.
+    // F1 Base Art Studio; available only when its landed-room seam resolves.
     if (base_art_studio::handle_event(ev))        return;
     if (debug_panel::handle_event(ev)) return;
 
@@ -7290,24 +7389,12 @@ void event_cb(const sapp_event* ev) {
 
     switch (ev->type) {
     case SAPP_EVENTTYPE_KEY_DOWN:
-        // Cinematic controls (np-cinematic Phase 1). While a cutscene
-        // plays, Esc SKIPS it (if skippable) instead of arming quit. F8
-        // is the dev trigger — plays the demo cinematic from Flight (the
-        // dev_remote /cinematic/play endpoint lands in Phase 2).
-        if (cinematic::active()) {
-            if (ev->key_code == SAPP_KEYCODE_ESCAPE) { cinematic::skip(g.player); return; }
-        } else if (ev->key_code == SAPP_KEYCODE_F8 && !ev->key_repeat &&
-                   g.game.mode == GameMode::Flight) {
-            std::string err;
-            if (!cinematic_play_located("demo_flyby", err))
-                std::printf("[cinematic] F8 demo refused: %s\n", err.c_str());
-            return;
-        }
-        if (ev->key_code == SAPP_KEYCODE_F9 && !ev->key_repeat &&
-            g.game.mode == GameMode::Flight && !cinematic::active()) {
-            std::string err;
-            if (!cinematic_play_located("demo_exchange", err))
-                std::printf("[cinematic] F9 demo refused: %s\n", err.c_str());
+        // While a cutscene plays, Esc SKIPS it (if skippable) instead of
+        // arming quit. Dev playback goes through dev_remote
+        // POST /cinematic/play (the old F8/F9 demo keys were shadowed by the
+        // music/speech labelers and never fired, #491).
+        if (cinematic::active() && ev->key_code == SAPP_KEYCODE_ESCAPE) {
+            cinematic::skip(g.player);
             return;
         }
         // N — cycle target through nav_points. KEY_DOWN (not keys_down
@@ -7344,14 +7431,10 @@ void event_cb(const sapp_event* ev) {
                                       g.selected_nav);
             }
         }
-        // G — cycle gun arm-mode (np-3dp). Modes: 0=unarmed, 1=mesons
-        // only, 2=ionics only, 3=all. Each press advances one step and
-        // wraps. The mode is stored on Ship::gun_mode_idx; firing.cpp
-        // consults Ship::gun_armed[i] to gate which mounts can fire.
-        // If a mode would target zero mounts (e.g. mode 1 when no
-        // mesons are fitted) it still flips the bits and just lets the
-        // player see nothing happen — better than skipping and
-        // desyncing the cycle.
+        // G — cycle gun arm-mode (np-3dp). Modes: {UNARMED, one per unique
+        // fixed-gun type, ALL}. Each press advances one step and wraps.
+        // The mode is stored on Ship::gun_mode_idx; firing::mount_armed
+        // gates fixed guns by it. Turrets stay auto-armed (#379).
         if (ev->key_code == SAPP_KEYCODE_G && g.ships.player()) {
             Ship& p = *g.ships.player();
             // Cycle through {UNARMED, [one mode per unique gun type], ALL}.
@@ -7364,13 +7447,14 @@ void event_cb(const sapp_event* ev) {
             }
             // Match on-fire HUD: if the player isn't holding the trigger,
             // force fire_guns off so the cycle is unambiguous.
-            if (!g.keys_down[SAPP_KEYCODE_X] && !g.keys_down[SAPP_KEYCODE_TAB]) {
+            if (!player_trigger_held(g)) {
                 p.controller.fire_guns = false;
             }
             const auto& u  = firing::gun_unique_types_cache(p.mounts);
             const char* lbl = firing::gun_mode_label(u, p.gun_mode_idx);
-            std::printf("[guns] mode=%u (%s) -- %zu mount(s)\n",
-                        p.gun_mode_idx, lbl, p.mounts.size());
+            std::printf("[guns] mode=%u (%s) -- %d/%zu mount(s) armed\n",
+                        p.gun_mode_idx, lbl, firing::gun_mode_armed_count(p),
+                        p.mounts.size());
             sfx::ui_click();
         }
         // C / R toggle their STATUS sub-screens. W is reserved for launcher
@@ -7420,41 +7504,36 @@ void event_cb(const sapp_event* ev) {
             docking::request(g.docking, g.camera.position, g.camera.velocity,
                              g.system.nav_points[g.selected_nav]);
         }
-        // J — jump through the selected jump gate (np-6al.3). Twin of the D
-        // docking key: down-edge only, only acts when the selected nav is a
-        // surveyed jump point we're cleared to take and inside its trigger range.
-        // Nearby hostiles block autopilot, not this gate escape. On success we
+        // J — jump through the nearest jump gate in trigger range (np-6al.3,
+        // #380: no nav selection required). Down-edge only; only acts when
+        // that gate is a surveyed jump point we're cleared to take. With no
+        // gate nearby J is silent. Nearby hostiles block autopilot, not this gate escape. On success we
         // queue the destination + arrival gate and flip to the
         // Loading hyperspace cinematic; execute_jump() does the warp once the
         // flash has held. Refusals log their reason (the HUD already shows it
         // via the jump prompt). Re-checks eligibility here so a stale prompt
         // frame can't smuggle through an out-of-range or newly locked jump.
         if (ev->key_code == SAPP_KEYCODE_J && g.autopilot.phase == AutopilotPhase::Idle) {
-            const jump::Eligibility e = jump::evaluate(
-                g.camera, g.system, g.galaxy, g.player.current_system,
-                g.selected_nav, g.player.has_jump_drive);
+            const jump::Eligibility e = player_jump_eligibility();
             if (e.status == jump::Status::Ready) {
-                const char* src_nav = g.system.nav_points[g.selected_nav].name.c_str();
+                const char* src_nav = g.system.nav_points[e.nav_index].name.c_str();
                 std::printf("[jump] %s -> %s via %s (%.0fu out) — engaging\n",
                             g.player.current_system.c_str(), e.dest_id.c_str(),
                             src_nav, e.distance_m);
-                g.pending_jump_system = e.dest_id;
-                g.pending_jump_nav    = e.arrival_nav;
-                sfx::jump();
-                game_state::request_mode(g.game, GameMode::Loading);
+                engage_jump(e);
             } else if (e.status != jump::Status::NotJumpNav) {
                 if (e.status == jump::Status::NoRoute) {
-                    const std::string& nm = g.system.nav_points[g.selected_nav].name;
+                    const std::string& nm = g.system.nav_points[e.nav_index].name;
                     std::fprintf(stderr, "[jump-dbg] REFUSE NOROUTE: current_system='%s' "
-                                 "g.system.name='%s' selected_nav=%d nav='%s' "
+                                 "g.system.name='%s' gate_nav=%d nav='%s' "
                                  "galaxy(sys=%zu,jumps=%zu) direct_lookup=%d\n",
                                  g.player.current_system.c_str(), g.system.name.c_str(),
-                                 g.selected_nav, nm.c_str(),
+                                 e.nav_index, nm.c_str(),
                                  g.galaxy.systems.size(), g.galaxy.jumps.size(),
                                  (int)g.galaxy.jump_target(g.player.current_system, nm).ok);
                 }
                 std::printf("[jump] refused at %s: %s\n",
-                            g.system.nav_points[g.selected_nav].name.c_str(),
+                            g.system.nav_points[e.nav_index].name.c_str(),
                             jump::status_str(e.status));
             }
         }
@@ -7468,11 +7547,11 @@ void event_cb(const sapp_event* ev) {
             const Ship& player = *g.ships.player();
             std::vector<PerceivedContact> sorted;
             sorted.reserve(player.perception.visible.size());
-            // Hard 15 km cap: contacts past that are off-radar and not
-            // lockable. Same number that drops a stale lock per-frame
-            // up in the firing block — keep the two in lockstep.
+            // Only contacts inside the radar sphere are lockable: the same
+            // radius that drops a stale lock in the firing block.
+            const float radar = perception::radar_range_m(player);
             for (const PerceivedContact& c : player.perception.visible) {
-                if (c.distance_m <= 15000.0f) sorted.push_back(c);
+                if (c.distance_m <= radar) sorted.push_back(c);
             }
             std::sort(sorted.begin(), sorted.end(),
                       [](const PerceivedContact& a, const PerceivedContact& b) {
@@ -7516,12 +7595,18 @@ void event_cb(const sapp_event* ev) {
         // path the trading screen uses (no per-frame heap math).
         if (ev->key_code == SAPP_KEYCODE_Z && !ev->key_repeat &&
             g.game.mode == GameMode::Flight) {
-            const ShipClass* klass = ship_class::find(g.player.ship_class_name);
-            const int capacity = player::cargo_capacity(g.player, klass);
-            // The camera sits at the player ship, so camera.position IS
-            // the player's world position for proximity checks.
-            loot::try_pull(g.camera.position, /*range=*/2500.0f,
-                           g.player, capacity);
+            const Ship* pl = g.ships.player();
+            if (pl && !ship_systems::operational(pl->systems, ShipSystem::Tractor)) {
+                // Shot-out tractor emitter (#141): repair it at a base.
+                std::printf("[tractor] refused: tractor destroyed\n");
+            } else {
+                const ShipClass* klass = ship_class::find(g.player.ship_class_name);
+                const int capacity = player::cargo_capacity(g.player, klass);
+                // The camera sits at the player ship, so camera.position IS
+                // the player's world position for proximity checks.
+                loot::try_pull(g.camera.position, /*range=*/2500.0f,
+                               g.player, capacity);
+            }
         }
         // ']' cycles the sim time scale: 1x -> 2x -> 4x -> 8x -> 1x.
         if (ev->key_code == SAPP_KEYCODE_RIGHT_BRACKET && !ev->key_repeat) {
@@ -7553,8 +7638,10 @@ void event_cb(const sapp_event* ev) {
             std::printf("[hud] ship-frame HUD %s\n",
                         g.show_ship_frame_hud ? "on" : "off");
         }
-        // F4 — toggle the dev Gun Mount Tuner overlay (off by default).
-        if (ev->key_code == SAPP_KEYCODE_F4 && !ev->key_repeat) {
+        // Shift+F4 — toggle the dev Gun Mount Tuner overlay (off by default).
+        // Plain F4 is the atlas grid viewer, which consumes it first (#491).
+        if (ev->key_code == SAPP_KEYCODE_F4 && !ev->key_repeat &&
+            (ev->modifiers & SAPP_MODIFIER_SHIFT)) {
             g_show_mount_tuner = !g_show_mount_tuner;
             std::printf("[mount-tuner] %s\n", g_show_mount_tuner ? "on" : "off");
         }
@@ -7593,6 +7680,14 @@ void event_cb(const sapp_event* ev) {
             g.show_inventory = !g.show_inventory;
             std::printf("[inventory] in-flight panel %s\n",
                         g.show_inventory ? "OPEN" : "CLOSED");
+        }
+        // V — toggle the cockpit art (#554). Off gives the open full-screen
+        // view; the HUD drops to its classic floating panels. Session-only.
+        if (ev->key_code == SAPP_KEYCODE_V && !ev->key_repeat) {
+            cockpit_overlay::set_enabled(!cockpit_overlay::enabled());
+            sfx::ui_click();
+            std::printf("[cockpit] art %s\n",
+                        cockpit_overlay::enabled() ? "ON" : "OFF");
         }
         if ((size_t)ev->key_code < g.keys_down.size()) g.keys_down[ev->key_code] = true;
         break;

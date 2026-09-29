@@ -20,7 +20,6 @@
 
   "personality":       "standard",
 
-  "radar_range":   30000,
   "weapons_range": 6000,
 
   "max_engine_level": 1,
@@ -48,6 +47,9 @@
     { "offset_body": [-0.6, 0.0, -9.0], "forward_body": [0, 0, -1], "cone_half_angle_deg": 120, "type": "tachyon_cannon", "turret": true },
     { "offset_body": [ 0.6, 0.0, -9.0], "forward_body": [0, 0, -1], "cone_half_angle_deg": 120, "type": "tachyon_cannon", "turret": true }
   ],
+
+  // Stock missile rack (#524), from privateer_ship_data.json "Weapons".
+  "default_missiles": { "DF": 10, "IR": 2, "HS": 1 },
 
   "energy_max":      420,
   "energy_recharge": 65,

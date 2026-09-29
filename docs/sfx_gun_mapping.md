@@ -62,9 +62,21 @@ The labels distinguish who took the hit, and the damage pass knows the victim's
 | explosion_big   | sfx_27 (both) |            | "ship destroyed" (unchanged) |
 | explosion_small | sfx_28 (both) |            | "missile explosion" (was wrongly sfx_30 "asteroid flying by") |
 | missile_fire    | sfx_18 (both) |            | "missile launch" (was wrongly sfx_40 "unknown") |
+| component_damage | **sfx_38**   | —          | "internal system damage taken" — player only (#519) |
 
 The global impact rate-limiter (~8/sec) and the NPC-gunfire coalescer (np-3va)
 are both preserved.
+
+### Component-damage cue (#519)
+
+`ship::take_damage` latches the worst component hit (`SystemHit::Damaged` /
+`Destroyed`) on the `Ship`; `main.cpp` consumes the player's latch once per
+frame and calls `sfx::component_damaged` (ship.cpp stays sfx-free). It plays
+2D, at most once per 0.5 s for plain damage; a *destroyed* system plays louder
+and bypasses the throttle. Hits on an already-dead system don't cue. sfx_38's
+old "tachyon_cannon gun" binding was stale metadata — the Tachyon Cannon has
+fired sfx_07 since np-4dr, so nothing else moves. Clean clones fall back to the
+procedural `assets/sfx/component_damage.wav` (`tools/gen_test_sfx.py`).
 
 ## Flight / UI
 
@@ -95,7 +107,6 @@ discovered-from beads for future wiring:
 | sfx_33 | "radar damaged flicker" | radar-system-damaged ambience |
 | sfx_36 | "unknown" | — |
 | sfx_37 | "send comms (to NPC)" | comms-send blip |
-| sfx_38 | "internal system damage taken" | component-damage cue |
 | sfx_39 | "dumping cargo" | cargo-jettison |
 | sfx_40 | "unknown" | — |
 

@@ -26,13 +26,42 @@ namespace {
 constexpr double k_credits_per_armor_cm = 20.0;   // hull repair
 // k_credits_per_fuel removed: afterburner now shares the ship's energy bank
 // (recharges for free, no top-off service to sell).
-// Per-missile price, indexed by MissileType (DF/HS/IR). Canonical Privateer
-// (gamefaq): Dumb-Fire 20, Heat-Seeker 35, Image-Rec 75.
-constexpr int64_t k_missile_price[3] = { 20, 35, 75 };
+// Per-missile price, indexed by MissileType (DF/HS/IR/FF). Canonical Privateer
+// (gamefaq): Dumb-Fire 20, Heat-Seeker 35, Image-Rec 75. FF (#144) is tuned,
+// not sourced: priced above IR because it needs no lock at all.
+constexpr int64_t k_missile_price[k_missile_rack_types] = { 20, 35, 75, 100 };
+
+// "DF/HS/IR/FF = a/b/c/d" for the dealer logs, so every log line agrees on
+// the rack layout instead of hand-listing indices.
+static_assert(k_missile_rack_types == 4, "rack_summary lists every rack type");
+struct RackSummary { char text[64]; };
+RackSummary rack_summary(const PlayerState& p) {
+    RackSummary r;
+    std::snprintf(r.text, sizeof r.text, "DF/HS/IR/FF = %d/%d/%d/%d",
+                  p.missiles[0], p.missiles[1], p.missiles[2], p.missiles[3]);
+    return r;
+}
+
+bool valid_rack_type(int type) {
+    return type >= 0 && type < k_missile_rack_types;
+}
 
 // Per-torpedo price (single rate). Torpedoes don't split into DF/HS/IR
 // variants in Privateer canon -- there's just one Proton Torpedo.
 constexpr int64_t k_torpedo_unit_price = 35;
+
+// Full-repair price per component (#141), indexed by ShipSystem. A repair
+// costs this times the fraction of integrity missing, so a scratched radar
+// is pocket change and a slagged jump drive (10k new) hurts.
+constexpr int64_t k_system_repair_price[kShipSystemCount] = {
+    1500,   // Guns
+    1000,   // Launchers
+    2000,   // Engines
+    1500,   // ShieldGen
+    1000,   // Radar
+    2500,   // JumpDrive
+    1000,   // Tractor
+};
 
 // Full per-facing armor for a ship's class (base + fitted armor tier).
 // Mirrors ship::heal_to_full's armor math so the "missing" calc agrees with
@@ -67,6 +96,23 @@ float armor_missing(const Ship& s) {
     return miss;
 }
 
+// Landed repairs happen outside the Flight-frame Ship -> PlayerState mirror,
+// so persist the repaired condition immediately. Otherwise a save made while
+// still landed could keep the old damage snapshot.
+void snapshot_health(const Ship& ship, PlayerState& p) {
+    p.hp_valid = true;
+    p.hp_armor_fore       = ship.armor_fore_cm;
+    p.hp_armor_aft        = ship.armor_aft_cm;
+    p.hp_armor_port       = ship.armor_port_cm;
+    p.hp_armor_starboard  = ship.armor_starboard_cm;
+    p.hp_shield_fore      = ship.shield_fore_cm;
+    p.hp_shield_aft       = ship.shield_aft_cm;
+    p.hp_shield_port      = ship.shield_port_cm;
+    p.hp_shield_starboard = ship.shield_starboard_cm;
+    p.hp_energy           = ship.energy_gj;
+    p.hp_systems          = ship.systems.integrity;
+}
+
 } // namespace
 
 Quote quote(const Ship* ship, const PlayerState& p) {
@@ -80,6 +126,19 @@ Quote quote(const Ship* ship, const PlayerState& p) {
         }
     }
 
+    if (ship) {
+        for (int i = 0; i < kShipSystemCount; ++i) {
+            const ShipSystem sys = ship_systems::at(i);
+            if (!ship_systems::damaged(ship->systems, sys)) continue;
+            const float missing = 1.0f - ship_systems::integrity(ship->systems, sys);
+            // Round up, but never quote a free repair for a real scratch.
+            q.system_cost[i] = std::max<int64_t>(
+                1, (int64_t)std::ceil(missing * (float)k_system_repair_price[i]));
+            q.systems_cost += q.system_cost[i];
+            q.systems_damaged = true;
+        }
+    }
+
     const float fuel_missing = 0.0f;   // afterburner shares energy_gj now;
                                        // no top-off charge any more.
     if (fuel_missing > 0.5f) {
@@ -87,7 +146,7 @@ Quote quote(const Ship* ship, const PlayerState& p) {
         q.fuel_cost = 0;
     }
 
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < k_missile_rack_types; ++i) {
         const int need = player::k_new_game_missiles[i] - p.missiles[i];
         if (need > 0) {
             q.missiles_low = true;
@@ -95,7 +154,7 @@ Quote quote(const Ship* ship, const PlayerState& p) {
         }
     }
 
-    q.total = q.hull_cost + q.fuel_cost + q.missile_cost;
+    q.total = q.hull_cost + q.fuel_cost + q.missile_cost + q.systems_cost;
     return q;
 }
 
@@ -116,20 +175,12 @@ bool repair_hull(Ship& ship, PlayerState& p) {
     }
     const float before = ship.armor_fore_cm + ship.armor_aft_cm
                         + ship.armor_port_cm + ship.armor_starboard_cm;
+    // heal_to_full also restores components; those are sold separately
+    // (repair_system), so keep the paid-for-nothing ones broken.
+    const ShipSystems components = ship.systems;
     ship::heal_to_full(ship);
-    // Landed repair happens outside the Flight-frame Ship -> PlayerState
-    // mirror, so persist the repaired condition immediately. Otherwise a
-    // save made while still landed could keep the old damage snapshot.
-    p.hp_valid = true;
-    p.hp_armor_fore      = ship.armor_fore_cm;
-    p.hp_armor_aft       = ship.armor_aft_cm;
-    p.hp_armor_port      = ship.armor_port_cm;
-    p.hp_armor_starboard = ship.armor_starboard_cm;
-    p.hp_shield_fore     = ship.shield_fore_cm;
-    p.hp_shield_aft      = ship.shield_aft_cm;
-    p.hp_shield_port     = ship.shield_port_cm;
-    p.hp_shield_starboard = ship.shield_starboard_cm;
-    p.hp_energy          = ship.energy_gj;
+    ship.systems = components;
+    snapshot_health(ship, p);
     const float after = ship.armor_fore_cm + ship.armor_aft_cm
                        + ship.armor_port_cm + ship.armor_starboard_cm;
     std::printf("[repair] hull restored: armor %.0f -> %.0f cm | paid %lld | credits %lld\n",
@@ -137,8 +188,29 @@ bool repair_hull(Ship& ship, PlayerState& p) {
     return true;
 }
 
+bool repair_system(Ship& ship, PlayerState& p, ShipSystem sys) {
+    if (sys >= ShipSystem::Count) return false;
+    const char* name = ship_systems::label(sys);
+    const int64_t cost = quote(&ship, p).system_cost[(int)sys];
+    if (cost <= 0) {
+        std::printf("[repair] %s refused: not damaged\n", name);
+        return false;
+    }
+    if (!player::spend_credits(p, cost)) {
+        std::printf("[repair] %s refused: costs %lld, have %lld\n",
+                    name, (long long)cost, (long long)p.credits);
+        return false;
+    }
+    const float before = ship_systems::integrity(ship.systems, sys);
+    ship_systems::repair(ship.systems, sys);
+    snapshot_health(ship, p);
+    std::printf("[repair] %s restored: %.0f%% -> 100%% | paid %lld | credits %lld\n",
+                name, before * 100.0f, (long long)cost, (long long)p.credits);
+    return true;
+}
+
 int64_t missile_price(int type) {
-    return (type >= 0 && type < 3) ? k_missile_price[type] : 0;
+    return valid_rack_type(type) ? k_missile_price[type] : 0;
 }
 
 int missile_rack_capacity(const PlayerState& p) {
@@ -168,7 +240,9 @@ bool right_hardpoint_free(const PlayerState& p) {
 }
 
 int missiles_total(const PlayerState& p) {
-    return p.missiles[0] + p.missiles[1] + p.missiles[2];
+    int total = 0;
+    for (int m : p.missiles) total += m;
+    return total;
 }
 
 int64_t torpedo_price() {
@@ -180,7 +254,7 @@ int torpedoes_total(const PlayerState& p) {
 }
 
 bool buy_missiles(PlayerState& p, int type, int count) {
-    if (type < 0 || type >= 3 || count <= 0) {
+    if (!valid_rack_type(type) || count <= 0) {
         std::printf("[repair] buy missiles refused: bad type/count %d x%d\n", type, count);
         return false;
     }
@@ -199,10 +273,8 @@ bool buy_missiles(PlayerState& p, int type, int count) {
         return false;
     }
     player::add_missiles(p, type, n);
-    std::printf("[repair] bought %d type%d missile(s) | DF/HS/IR = %d/%d/%d | "
-                "paid %lld | credits %lld\n",
-                n, type, p.missiles[0], p.missiles[1], p.missiles[2],
-                (long long)cost, (long long)p.credits);
+    std::printf("[repair] bought %d type%d missile(s) | %s | paid %lld | credits %lld\n",
+                n, type, rack_summary(p).text, (long long)cost, (long long)p.credits);
     return true;
 }
 
@@ -344,7 +416,7 @@ bool sell_torpedo_launcher_right(PlayerState& p) {
 }
 
 bool sell_missile(PlayerState& p, int type) {
-    if (type < 0 || type >= 3) {
+    if (!valid_rack_type(type)) {
         std::printf("[repair] sell missile refused: bad type %d\n", type);
         return false;
     }
@@ -355,8 +427,8 @@ bool sell_missile(PlayerState& p, int type) {
     }
     --p.missiles[type];
     player::add_credits(p, k_missile_price[type]);
-    std::printf("[repair] sold 1 type%d missile | now %d/%d/%d | +%lld | credits %lld\n",
-                type, p.missiles[0], p.missiles[1], p.missiles[2],
+    std::printf("[repair] sold 1 type%d missile | %s | +%lld | credits %lld\n",
+                type, rack_summary(p).text,
                 (long long)k_missile_price[type], (long long)p.credits);
     return true;
 }
@@ -385,13 +457,12 @@ bool rearm(PlayerState& p) {
                     (long long)q.missile_cost, (long long)p.credits);
         return false;
     }
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < k_missile_rack_types; ++i) {
         const int need = player::k_new_game_missiles[i] - p.missiles[i];
         if (need > 0) player::add_missiles(p, i, need);
     }
-    std::printf("[repair] missiles restocked DF/HS/IR = %d/%d/%d | paid %lld | credits %lld\n",
-                p.missiles[0], p.missiles[1], p.missiles[2],
-                (long long)q.missile_cost, (long long)p.credits);
+    std::printf("[repair] missiles restocked %s | paid %lld | credits %lld\n",
+                rack_summary(p).text, (long long)q.missile_cost, (long long)p.credits);
     return true;
 }
 

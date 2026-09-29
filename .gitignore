@@ -83,9 +83,9 @@ compile_commands.json
 # runtime logs
 *.log
 
-# Imported ship meshes from ../privateer_wcu. Derived from Origin/EA game
-# assets — local use only, regenerate with tools/import_wcu_meshes.sh.
-assets/meshes/
+# Mesh assets are versioned through Git LFS in this private repository.
+# Wavefront meshes are assets, not the compiled objects ignored above.
+!assets/meshes/**/*.obj
 
 # Beads / Dolt files (added by bd init)
 .dolt/

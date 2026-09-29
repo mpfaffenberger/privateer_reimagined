@@ -55,6 +55,7 @@ Homography         g_head_transform;
 int                g_frame = -1;
 DisplayFrame       g_displays[kDisplayCount];
 LightState         g_lights;
+bool               g_enabled = true;   // pilot toggle (#554)
 
 // Display glass: opaque dark screen so world markers cannot bleed through a
 // bright sun or nebula. Bled under the bezel so no sliver of space shows —
@@ -151,8 +152,12 @@ const char* display_window_id(Display d) {
     }
 }
 
+void set_enabled(bool on) { g_enabled = on; }
+bool enabled() { return g_enabled; }
+
 void draw(const std::string& ship_class, const Camera& camera) {
     g_lights = {};
+    if (!g_enabled) return;   // pilot hid the cockpit -> classic HUD
     const CockpitArt* art = find_art(ship_class.c_str());
     if (!art) return;
     const TextureSlot* tex = texture_for(*art);

@@ -6,9 +6,9 @@
 // injection isn't available over dev_remote, so this is the deterministic
 // proof of the controller; the live game provides the HUD-banner screenshots.
 //
-// Build:
-//   clang++ -std=c++20 -Isrc -Ithird_party tools/test_autopilot.cpp \
-//       src/autopilot.cpp src/camera.cpp src/threat.cpp -o /tmp/test_autopilot
+// Build + run (from the repo root):
+//   cmake --build build --target test_autopilot && ./build/test_autopilot
+// Exits non-zero if any lifecycle check fails.
 // -----------------------------------------------------------------------------
 
 #include "autopilot.h"
@@ -16,6 +16,16 @@
 #include "system_def.h"
 
 #include <cstdio>
+
+static int g_fail = 0;
+static void check(bool ok, const char* what) {
+    if (!ok) ++g_fail;
+    std::printf("  [%s] %s\n", ok ? "OK  " : "FAIL", what);
+}
+
+// The sun sits far off the flight path so sun avoidance never engages; this
+// harness is about the engage/cruise/arrive/cancel lifecycle.
+static const HMM_Vec3 k_far_sun = HMM_V3(0.0f, 1.0e9f, 0.0f);
 
 // sfx.cpp drags in the whole audio mixer; the autopilot module only calls
 // this one entry point, so stub it for the offline harness.
@@ -49,19 +59,22 @@ int main() {
     // ---- 1. refuse: no nav selected ---------------------------------------
     std::printf("-- case: NO NAV SELECTED --\n");
     autopilot::try_engage(ap, cam, system, /*selected_nav=*/-1);
-    std::printf("[harness] engaged=%d  banner='%s'\n\n",
+    std::printf("[harness] engaged=%d  banner='%s'\n",
                 (int)autopilot::engaged(ap), ap.msg);
+    check(!autopilot::engaged(ap), "refuses to engage without a nav target");
+    std::printf("\n");
 
     // ---- 2. engage toward Helen + fly the whole trip ----------------------
     std::printf("-- case: ENGAGE -> cruise -> arrive --\n");
     autopilot::try_engage(ap, cam, system, /*selected_nav=*/0);
     std::printf("[harness] engaged=%d  banner='%s'\n", (int)autopilot::engaged(ap), ap.msg);
+    check(autopilot::engaged(ap), "engages toward a selected nav");
 
     const HMM_Vec3 target = system.nav_points[0].position;
     float peak_speed = 0.0f;
     int   guard      = 0;
     while (autopilot::engaged(ap) && guard++ < 60 * 600) {  // 600s safety cap
-        autopilot::tick(ap, cam, dt);
+        autopilot::tick(ap, cam, system, dt, k_far_sun);
         const float spd = HMM_LenV3(cam.velocity);
         if (spd > peak_speed) peak_speed = spd;
     }
@@ -75,21 +88,25 @@ int main() {
     std::printf("[harness]   final speed = %.0fu/s\n", HMM_LenV3(cam.velocity));
     std::printf("[harness]   engaged=%d  banner='%s'\n",
                 (int)autopilot::engaged(ap), ap.msg);
-    std::printf("[harness]   arrived within radius? %s\n",
-                final_dist <= autopilot::k_arrival_radius_m ? "YES" : "NO");
+    check(!autopilot::engaged(ap), "hands control back after the trip");
+    check(final_dist <= autopilot::k_arrival_radius_m, "arrives within the arrival radius");
+    check(peak_speed > 0.0f, "actually cruised (peak speed > 0)");
 
     // ---- 3. mid-flight cancel (manual override style) ---------------------
     std::printf("\n-- case: CANCEL mid-flight (A again / manual input) --\n");
     cam.position = HMM_V3(0.0f, 0.0f, 30000.0f);   // far out again
     cam.velocity = HMM_V3(0.0f, 0.0f, 0.0f);
     autopilot::try_engage(ap, cam, system, /*selected_nav=*/0);
-    for (int i = 0; i < 30; ++i) autopilot::tick(ap, cam, dt);  // ~0.5s of cruise
+    for (int i = 0; i < 30; ++i) autopilot::tick(ap, cam, system, dt, k_far_sun);  // ~0.5s
+    check(autopilot::engaged(ap), "still engaged mid-flight");
     std::printf("[harness] mid-flight engaged=%d, speed=%.0fu/s\n",
                 (int)autopilot::engaged(ap), HMM_LenV3(cam.velocity));
     autopilot::disengage(ap, cam, "AUTOPILOT DISENGAGED");
     std::printf("[harness] after cancel: engaged=%d  cruise_target=%.1f  banner='%s'\n",
                 (int)autopilot::engaged(ap), cam.cruise_target, ap.msg);
+    check(!autopilot::engaged(ap), "manual cancel disengages");
 
-    std::printf("\n=== done ===\n");
-    return 0;
+    std::printf("\n=== %s (%d failure%s) ===\n", g_fail ? "FAIL" : "PASS",
+                g_fail, g_fail == 1 ? "" : "s");
+    return g_fail ? 1 : 0;
 }

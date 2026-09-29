@@ -23,7 +23,6 @@
 
   "personality":       "standard",
 
-  "radar_range":   25000,
   "weapons_range": 4000,
 
   "max_engine_level": 2,
@@ -36,6 +35,9 @@
     { "offset_body": [-2.0, 0.0, 3.0], "type": "mass_driver" },
     { "offset_body": [ 2.0, 0.0, 3.0], "type": "mass_driver" }
   ],
+
+  // Stock missile rack (#524), from privateer_ship_data.json "Weapons".
+  "default_missiles": { "HS": 2 },
 
   "energy_max":      150,
   "energy_recharge": 30,

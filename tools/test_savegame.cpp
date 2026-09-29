@@ -15,14 +15,20 @@
 //
 // Build (mirrors tools/test_economy.cpp's recipe):
 //   clang++ -std=c++20 -Isrc -Ithird_party \
-//       tools/test_savegame.cpp src/savegame.cpp src/player.cpp \
+//       tools/test_savegame.cpp src/savegame.cpp src/savegame_read.cpp \
+//       src/savegame_write.cpp src/player.cpp \
 //       src/json.cpp src/faction.cpp -o /tmp/test_savegame
 // -----------------------------------------------------------------------------
 
 #include "faction.h"
+#include "gun.h"
 #include "player.h"
 #include "plot.h"
 #include "savegame.h"
+#include "shield.h"
+#include "ship_class.h"
+#include "test_sandbox.h"
+#include "test_stderr_capture.h"
 
 #include <cstdio>
 #include <cstdlib>
@@ -33,23 +39,6 @@
 namespace {
 
 int g_fail = 0;
-
-// Hermetic sandbox (#242): every slot/timestamped write in this harness —
-// including the deliberately corrupt fixtures — lands in a throwaway temp
-// tree instead of the player's real save directory and save picker.
-std::filesystem::path sandbox_data_dir() {
-    namespace fs = std::filesystem;
-    const fs::path dir = fs::temp_directory_path() / "new_privateer_test_saves";
-    std::error_code ec;
-    fs::remove_all(dir, ec);              // stale fixtures from a prior run
-    fs::create_directories(dir, ec);
-#ifdef _WIN32
-    _putenv_s("NP_DATA_DIR", dir.string().c_str());
-#else
-    setenv("NP_DATA_DIR", dir.string().c_str(), 1);
-#endif
-    return dir;
-}
 
 // Compare one field; log PASS/FAIL with both values.
 template <typename T>
@@ -92,6 +81,8 @@ PlayerState make_mutated() {
     p.shield_level    = 3;
     p.engine_level    = 2;
     p.cargo_expansion = true;
+    p.scanner_id      = "hunter_aw_6i";           // #143: not the new-game default
+    p.turrets         = { "rear" };               // #145 (v10) turret hardware
     // #16: guild memberships should survive the round-trip.
     p.merc_guild_member     = true;
     p.merchant_guild_member = true;
@@ -109,7 +100,7 @@ PlayerState make_mutated() {
     };
     // np-zte.2: distinctive missile counts. afterburner_fuel field removed
     // (merged into Ship::energy_gj), so nothing to round-trip there.
-    p.missiles[0] = 3; p.missiles[1] = 1; p.missiles[2] = 5;
+    p.missiles[0] = 3; p.missiles[1] = 1; p.missiles[2] = 5; p.missiles[3] = 2;
     // np-3dp.19: career faction-kill tallies + a live ship-damage snapshot.
     p.faction_kills[(int)Faction::Pirate]   = 17;
     p.faction_kills[(int)Faction::Kilrathi] = 9;
@@ -124,6 +115,9 @@ PlayerState make_mutated() {
     p.hp_shield_port = 0.75f;
     p.hp_shield_starboard = 0.0f;
     p.hp_energy      = 99.0f;
+    // #141 (v9): per-component integrity. Binary-exact fractions so the
+    // to_string round-trip can be compared with ==.
+    p.hp_systems     = { 1.0f, 0.5f, 0.25f, 0.0f, 0.75f, 1.0f, 0.125f };
     p.day                = 321;
     p.current_system     = "pentonville";
     p.last_docked_base   = "achilles";
@@ -262,7 +256,9 @@ bool missions_equal(const std::vector<ActiveMission>& a, const std::vector<Activ
 int main() {
     std::printf("=== np-ymp.1 save/load round-trip harness ===\n\n");
 
-    const std::filesystem::path sandbox = sandbox_data_dir();
+    // Every write here, including the deliberately corrupt fixtures, stays
+    // out of the player's real saves.
+    const std::filesystem::path sandbox = test_sandbox::isolate_saves("savegame");
     std::printf("[0] sandbox data dir: %s\n\n", sandbox.string().c_str());
 
     // ---- 1+2. round-trip --------------------------------------------------
@@ -301,6 +297,8 @@ int main() {
     CHECK_EQ("shield_level",    dst.shield_level,    src.shield_level);
     CHECK_EQ("engine_level",    dst.engine_level,    src.engine_level);
     CHECK_EQ("cargo_expansion", dst.cargo_expansion, src.cargo_expansion);
+    CHECK_EQ("scanner_id",      dst.scanner_id,      src.scanner_id);
+    CHECK_EQ("turrets",         dst.turrets,         src.turrets);
     CHECK_EQ("merc_guild_member",     dst.merc_guild_member,     src.merc_guild_member);
     CHECK_EQ("merchant_guild_member", dst.merchant_guild_member, src.merchant_guild_member);
 
@@ -328,12 +326,13 @@ int main() {
     CHECK_EQ("docked",           dst.docked,           src.docked);
 
     // np-zte.2: missile inventory + afterburner fuel survive the round-trip.
-    std::printf("  missiles:         %d/%d/%d vs %d/%d/%d\n",
-                src.missiles[0], src.missiles[1], src.missiles[2],
-                dst.missiles[0], dst.missiles[1], dst.missiles[2]);
+    std::printf("  missiles:         %d/%d/%d/%d vs %d/%d/%d/%d\n",
+                src.missiles[0], src.missiles[1], src.missiles[2], src.missiles[3],
+                dst.missiles[0], dst.missiles[1], dst.missiles[2], dst.missiles[3]);
     CHECK_EQ("missiles[DF]", dst.missiles[0], src.missiles[0]);
     CHECK_EQ("missiles[HS]", dst.missiles[1], src.missiles[1]);
     CHECK_EQ("missiles[IR]", dst.missiles[2], src.missiles[2]);
+    CHECK_EQ("missiles[FF]", dst.missiles[3], src.missiles[3]);
     // afterburner_fuel round-trip removed: field merged into Ship::energy_gj
     // (np-zte.2), no longer persisted on PlayerState.
 
@@ -357,6 +356,7 @@ int main() {
     CHECK_EQ("hp_shield_port",    dst.hp_shield_port,    src.hp_shield_port);
     CHECK_EQ("hp_shield_starboard", dst.hp_shield_starboard, src.hp_shield_starboard);
     CHECK_EQ("hp_energy",         dst.hp_energy,         src.hp_energy);
+    CHECK_EQ("hp_systems",        dst.hp_systems,        src.hp_systems);
 
     // (#8) accepted missions round-trip — Patrol + Bounty + Cargo + DefendBase,
     // each populated with every new field, plus a field-by-field compare.
@@ -475,15 +475,18 @@ int main() {
         { std::ofstream f(path, std::ios::trunc);
           f << "{ \"version\": 1, \"label\": \"old-save\",\n"
                "  \"player\": { \"credits\": \"99\", \"current_system\": \"troy\",\n"
-               "    \"last_docked_base\": \"achilles\" } }"; }
+               "    \"last_docked_base\": \"achilles\",\n"
+               "    \"missiles\": { \"df\": 2, \"hs\": 4, \"ir\": 1 } } }"; }
         PlayerState p;
+        p.missiles[3] = 7;   // must not survive: pre-#144 saves have no "ff"
         const bool r = savegame::load(p, kOldNoMissSlot);
         const bool ok = r && p.credits == 99 &&
                         p.current_system == "troy" &&
                         p.last_docked_base == "achilles" &&
-                        p.missions.empty();
+                        p.missions.empty() &&
+                        p.missiles[1] == 4 && p.missiles[3] == 0;
         if (!ok) ++g_fail;
-        std::printf("  [%s] v1 save (no missions key) loads with missions=[], rest intact\n",
+        std::printf("  [%s] v1 save (no missions key, no ff key) loads with missions=[], FF=0, rest intact\n",
                     ok ? "OK  " : "FAIL");
     }
 
@@ -540,6 +543,149 @@ int main() {
         const bool ok = r && p.credits == 888 && p.day == 0;
         if (!ok) ++g_fail;
         std::printf("  [%s] v7 save loads with day=0 (world-clock epoch)\n",
+                    ok ? "OK  " : "FAIL");
+    }
+
+    // 3g'. (#143) a v8 save has no scanner_id and loads with the new-game
+    //      scanner; a v9 save that SOLD its scanner ("") stays scannerless.
+    {
+        const std::string path = savegame::slot_path(kOldNoMissSlot);
+        { std::ofstream f(path, std::ios::trunc);
+          f << "{ \"version\": 8, \"label\": \"v8-pre-scanner\",\n"
+               "  \"player\": { \"credits\": \"999\", \"current_system\": \"troy\" } }"; }
+        PlayerState p;
+        bool ok = savegame::load(p, kOldNoMissSlot) &&
+                  p.scanner_id == player::k_starting_scanner;
+        { std::ofstream f(path, std::ios::trunc);
+          f << "{ \"version\": 9, \"label\": \"v9-sold-scanner\",\n"
+               "  \"player\": { \"credits\": \"999\", \"current_system\": \"troy\",\n"
+               "    \"scanner_id\": \"\" } }"; }
+        PlayerState q;
+        ok = ok && savegame::load(q, kOldNoMissSlot) && q.scanner_id.empty();
+        if (!ok) ++g_fail;
+        std::printf("  [%s] v8 save -> starting scanner; sold scanner stays sold\n",
+                    ok ? "OK  " : "FAIL");
+    }
+
+    // 3i. (#145) a pre-v10 save has no turrets key: turret slots whose
+    //     mounts already carry a gun are grandfathered as owned; a hull
+    //     with empty turret mounts gets none. Needs the ship catalog.
+    {
+        faction::init();
+        gun::load_table("assets/data/privateer_ship_data.json");
+        shield::load_table("assets/data/privateer_ship_data.json");
+        ship_class::load_all("assets/ships");
+        auto load_v9 = [](const char* mounts) {
+            const std::string path = savegame::slot_path(kOldNoMissSlot);
+            { std::ofstream f(path, std::ios::trunc);
+              f << "{ \"version\": 9, \"label\": \"v9-pre-turrets\",\n"
+                   "  \"player\": { \"ship_class_name\": \"centurion\","
+                   " \"gun_mounts\": " << mounts << " } }"; }
+            PlayerState p;
+            const bool r = savegame::load(p, kOldNoMissSlot);
+            return r ? p.turrets : std::vector<std::string>{"<load failed>"};
+        };
+        const bool armed = load_v9("[\"laser\",\"laser\",\"\",\"\",\"\",\"ionic_pulse_cannon\"]")
+                           == std::vector<std::string>{"rear"};
+        const bool bare  = load_v9("[\"laser\",\"laser\",\"\",\"\",\"\",\"\"]").empty();
+        if (!armed || !bare) ++g_fail;
+        std::printf("  [%s] v9 Centurion with a turret gun keeps its rear turret\n",
+                    armed ? "OK  " : "FAIL");
+        std::printf("  [%s] v9 Centurion with empty turret mounts owns no turret\n",
+                    bare ? "OK  " : "FAIL");
+    }
+
+    // 3j. (#141) a v10 save has no ship_health.systems object and migrates
+    //      to pristine components; a v11 save with out-of-range junk clamps
+    //      into [0, 1] per key and leaves missing keys pristine.
+    {
+        const std::string path = savegame::slot_path(kOldNoMissSlot);
+        { std::ofstream f(path, std::ios::trunc);
+          f << "{ \"version\": 10, \"label\": \"v10-pre-components\",\n"
+               "  \"player\": { \"credits\": \"999\", \"current_system\": \"troy\",\n"
+               "    \"ship_health\": { \"valid\": true, \"armor_fore\": 3 } } }"; }
+        PlayerState p;
+        p.hp_systems[0] = 0.5f;   // prove load overwrites with the default
+        const bool r = savegame::load(p, kOldNoMissSlot);
+        const bool ok = r && p.credits == 999 && p.hp_valid &&
+                        p.hp_systems == ship_systems::k_pristine;
+        if (!ok) ++g_fail;
+        std::printf("  [%s] v10 save loads with pristine components\n",
+                    ok ? "OK  " : "FAIL");
+    }
+    {
+        const std::string path = savegame::slot_path(kOldNoMissSlot);
+        { std::ofstream f(path, std::ios::trunc);
+          f << "{ \"version\": 11, \"label\": \"v11-junk-components\",\n"
+               "  \"player\": { \"credits\": \"1\", \"current_system\": \"troy\",\n"
+               "    \"ship_health\": { \"valid\": true,\n"
+               "      \"systems\": { \"guns\": 7, \"radar\": -2, \"engines\": 0.5 } } } }"; }
+        PlayerState p;
+        const bool r = savegame::load(p, kOldNoMissSlot);
+        const bool ok = r &&
+            p.hp_systems[(int)ShipSystem::Guns]      == 1.0f &&
+            p.hp_systems[(int)ShipSystem::Radar]     == 0.0f &&
+            p.hp_systems[(int)ShipSystem::Engines]   == 0.5f &&
+            p.hp_systems[(int)ShipSystem::JumpDrive] == 1.0f;
+        if (!ok) ++g_fail;
+        std::printf("  [%s] v11 component junk clamps; missing keys stay pristine\n",
+                    ok ? "OK  " : "FAIL");
+    }
+
+    // 3k. (#239) an uncreatable saves dir returns "" and its log names the
+    //     FULL path. fs::path::c_str() is wchar_t* on Windows, so passing it
+    //     to "%s" logged just the drive letter.
+    {
+        const std::filesystem::path blocker = sandbox / "blocker";
+        { std::ofstream f(blocker); }   // a FILE where a directory must go
+        const std::string want = (blocker / "new_privateer" / "saves").string();
+        test_sandbox::set_data_dir(blocker);
+        std::string dir = "<not called>";
+        const std::string log = test_stderr::capture(
+            sandbox / "stderr.txt", [&] { dir = savegame::saves_dir(); });
+        test_sandbox::set_data_dir(sandbox);
+        const bool ok = dir.empty() && log.find(want) != std::string::npos;
+        if (!ok) ++g_fail;
+        std::printf("  [%s] uncreatable saves dir -> \"\" + log names full path\n",
+                    ok ? "OK  " : "FAIL");
+        if (!ok) std::printf("         want '%s' in log: %s", want.c_str(), log.c_str());
+    }
+
+    // 3l. (#538) a half-written per-side launcher pair loads with the missing
+    //     side off, instead of dereferencing null (_left only) or discarding
+    //     the present side for the legacy default (_right only).
+    {
+        const std::string path = savegame::slot_path(kOldNoMissSlot);
+        { std::ofstream f(path, std::ios::trunc);
+          f << "{ \"version\": " << savegame::k_format_version << ",\n"
+               "  \"player\": { \"credits\": \"1\", \"current_system\": \"troy\",\n"
+               "    \"missile_launcher_left\": true, \"torpedo_launcher_right\": true } }"; }
+        PlayerState p;
+        const bool r = savegame::load(p, kOldNoMissSlot);
+        const bool ok = r && p.missile_launcher_left && !p.missile_launcher_right &&
+                        !p.torpedo_launcher_left && p.torpedo_launcher_right;
+        if (!ok) ++g_fail;
+        std::printf("  [%s] half launcher pairs load; missing side reads off\n",
+                    ok ? "OK  " : "FAIL");
+    }
+
+    // 3m. (#539) load diagnostics name the save FILE; they used to say
+    //     "slot -1" for every load. One fixture per layer: load() itself
+    //     (corrupt), the decode envelope (newer version), a field reader
+    //     (out-of-range mission type).
+    {
+        bool ok = true;
+        for (int slot : {kCorruptSlot, kVersionSlot, kOldBadTypeSlot}) {
+            PlayerState p;
+            const std::string log = test_stderr::capture(
+                sandbox / "stderr.txt", [&] { savegame::load(p, slot); });
+            const bool named =
+                log.find("'" + savegame::slot_path(slot) + "'") != std::string::npos &&
+                log.find("slot -1") == std::string::npos;
+            if (!named) { ok = false; std::printf("         slot %d log: %s", slot, log.c_str()); }
+        }
+        if (!ok) ++g_fail;
+        std::printf("  [%s] load diagnostics name the save file, not slot -1\n",
                     ok ? "OK  " : "FAIL");
     }
 
