@@ -4,8 +4,9 @@
 // Samplers: full-resolution sprites use sokol-imgui's default NEAREST sampler,
 // the same one the plate is drawn with, so each sprite texel lands exactly on
 // the plate texel it was encoded against (bake_layer.py) at any window size.
-// Half-resolution sprites and the stretched sky fill use LINEAR, and the star
-// tiles use LINEAR + REPEAT so they drift smoothly by sub-pixel amounts.
+// Half-resolution and anchored (rescaled) sprites and the stretched sky fill
+// use LINEAR, and the star tiles use LINEAR + REPEAT so they drift smoothly
+// by sub-pixel amounts.
 // -----------------------------------------------------------------------------
 
 #include "room_anim.h"
@@ -117,6 +118,11 @@ void load_layer(const std::string& manifest_path, RoomAnim& out) {
         std::fprintf(stderr, "[room_anim] layer '%s': %s\n", manifest_path.c_str(), err.c_str());
         return;
     }
+    if (layer.sheet.anchored && !out.has_anchor) {
+        std::fprintf(stderr, "[room_anim] layer '%s' is anchored but the plate has no anchor\n",
+                     manifest_path.c_str());
+        return;
+    }
     const std::string atlas = parent_dir(manifest_path) + layer.sheet.atlas;
     if (!load_texture_png(atlas, layer.atlas)) {
         std::fprintf(stderr, "[room_anim] layer atlas '%s' missing\n", atlas.c_str());
@@ -126,49 +132,75 @@ void load_layer(const std::string& manifest_path, RoomAnim& out) {
     out.layers.push_back(std::move(layer));
 }
 
+void load_anchor(const std::string& path, const std::string& plate, RoomAnim& out) {
+    out.has_anchor = read_anchor(json::parse_file(path), plate, out.anchor);
+    if (!out.has_anchor)
+        std::fprintf(stderr, "[room_anim] no anchor for '%s' in '%s'\n", plate.c_str(),
+                     path.c_str());
+}
+
+// Sprite layers on one side of the plate (`under` or not), in JSON order.
+void draw_layers(ImDrawList* dl, float w, float h, const RoomAnim& anim, double seconds,
+                 bool under) {
+    for (const SpriteLayer& layer : anim.layers) {
+        if (layer.sheet.under != under) continue;
+        const SpriteFrame* f = frame_at(layer.sheet, seconds);
+        if (!f) continue;
+        float dst[4];
+        place(layer.sheet, *f, anim.has_anchor ? anim.anchor : nullptr, dst);
+        const float sx = w / layer.sheet.canvas_w, sy = h / layer.sheet.canvas_h;
+        const ImVec2 p0(dst[0] * sx, dst[1] * sy);
+        const ImVec2 p1((dst[0] + dst[2]) * sx, (dst[1] + dst[3]) * sy);
+        const ImVec2 uv0(f->src[0] / layer.atlas_w, f->src[1] / layer.atlas_h);
+        const ImVec2 uv1((f->src[0] + f->src[2]) / layer.atlas_w,
+                         (f->src[1] + f->src[3]) / layer.atlas_h);
+        const bool texel_exact = !layer.sheet.anchored && f->src[2] == dst[2] &&
+                                 f->src[3] == dst[3];
+        dl->AddImage(texel_exact ? simgui_imtextureid(layer.atlas.view)
+                                 : linear_clamp(layer.atlas),
+                     p0, p1, uv0, uv1);
+    }
+}
+
 }  // namespace
 
 bool load(const std::string& dir, const json::Value& room, TextureSlot& background,
           RoomAnim& out) {
-    out = RoomAnim{};
     RoomAnimDef def;
     parse_room_anim(room, def);
     const json::Value* bg = room.find("background");
-    const std::string plate = dir + (bg ? bg->string_or("") : std::string());
-    const bool sky = def.has_sky && load_sky(dir, plate, def.sky, background, out);
-    if (!sky && !load_texture_png(plate, background)) return false;
+    return load(dir, def, dir + (bg ? bg->string_or("") : std::string()), background, out);
+}
+
+bool load(const std::string& dir, const RoomAnimDef& def, const std::string& plate_path,
+          TextureSlot& background, RoomAnim& out) {
+    out = RoomAnim{};
+    const bool sky = def.has_sky && load_sky(dir, plate_path, def.sky, background, out);
+    if (!sky && !load_texture_png(plate_path, background)) return false;
     image_size(background, out.canvas_w, out.canvas_h);
+    if (!def.anchors.empty()) load_anchor(dir + def.anchors, def.plate, out);
     for (const std::string& manifest : def.layers) load_layer(dir + manifest, out);
     return true;
 }
 
 void draw_under(ImDrawList* dl, float w, float h, const RoomAnim& anim, double seconds) {
-    if (!anim.sky_fill.valid) return;
-    dl->AddImage(linear_clamp(anim.sky_fill), ImVec2(0, 0), ImVec2(w, h));
-    for (const StarLayer& s : anim.stars) {
-        // Tiles repeat across the whole plate; the masked plate on top only
-        // lets them show through the windows.
-        const ImVec2 uv0(-scroll_uv(s.velocity[0], seconds, s.tile_w),
-                         -scroll_uv(s.velocity[1], seconds, s.tile_h));
-        const ImVec2 uv1(uv0.x + anim.canvas_w / s.tile_w, uv0.y + anim.canvas_h / s.tile_h);
-        dl->AddImage(linear_repeat(s.tile), ImVec2(0, 0), ImVec2(w, h), uv0, uv1);
+    if (anim.sky_fill.valid) {
+        dl->AddImage(linear_clamp(anim.sky_fill), ImVec2(0, 0), ImVec2(w, h));
+        for (const StarLayer& s : anim.stars) {
+            // Tiles repeat across the whole plate; the masked plate on top
+            // only lets them show through the windows.
+            const ImVec2 uv0(-scroll_uv(s.velocity[0], seconds, s.tile_w),
+                             -scroll_uv(s.velocity[1], seconds, s.tile_h));
+            const ImVec2 uv1(uv0.x + anim.canvas_w / s.tile_w,
+                             uv0.y + anim.canvas_h / s.tile_h);
+            dl->AddImage(linear_repeat(s.tile), ImVec2(0, 0), ImVec2(w, h), uv0, uv1);
+        }
     }
+    draw_layers(dl, w, h, anim, seconds, /*under=*/true);
 }
 
 void draw_over(ImDrawList* dl, float w, float h, const RoomAnim& anim, double seconds) {
-    for (const SpriteLayer& layer : anim.layers) {
-        const SpriteFrame* f = frame_at(layer.sheet, seconds);
-        if (!f) continue;
-        const float sx = w / layer.sheet.canvas_w, sy = h / layer.sheet.canvas_h;
-        const ImVec2 p0(f->dst[0] * sx, f->dst[1] * sy);
-        const ImVec2 p1((f->dst[0] + f->dst[2]) * sx, (f->dst[1] + f->dst[3]) * sy);
-        const ImVec2 uv0(f->src[0] / layer.atlas_w, f->src[1] / layer.atlas_h);
-        const ImVec2 uv1((f->src[0] + f->src[2]) / layer.atlas_w,
-                         (f->src[1] + f->src[3]) / layer.atlas_h);
-        const bool full_res = f->src[2] == f->dst[2] && f->src[3] == f->dst[3];
-        dl->AddImage(full_res ? simgui_imtextureid(layer.atlas.view) : linear_clamp(layer.atlas),
-                     p0, p1, uv0, uv1);
-    }
+    draw_layers(dl, w, h, anim, seconds, /*under=*/false);
 }
 
 void release(RoomAnim& anim) {

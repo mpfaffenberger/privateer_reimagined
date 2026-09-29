@@ -1,0 +1,4 @@
+{
+  "ship_depart": { "period": 30.0, "offset": 0.0 },
+  "ship_arrive": { "period": 30.0, "offset": -15.0 }
+}

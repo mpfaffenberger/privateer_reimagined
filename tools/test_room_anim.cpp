@@ -73,6 +73,51 @@ void room_keys() {
     check(!def.has_sky, "sky without a mask is dropped");
 }
 
+void per_plate() {
+    room_anim::RoomAnimDef def;
+    room_anim::parse_room_anim(json::parse(R"({"anchors":"h/anchors.json",
+        "sky":{"mask":"h/{plate}_mask.png","fill":"h/{plate}_fill.png",
+                "stars":[{"tile":"s.png","velocity":[1,0]}]},
+        "layers":["h/ship.json"]})"), def);
+    const room_anim::RoomAnimDef t = room_anim::for_plate(def, "tarsus");
+    check(t.sky.mask == "h/tarsus_mask.png" && t.sky.fill == "h/tarsus_fill.png",
+          "{plate} is substituted in sky paths");
+    check(t.plate == "tarsus" && t.anchors == "h/anchors.json" && t.layers[0] == "h/ship.json",
+          "paths without {plate} are left alone");
+    check(def.sky.mask == "h/{plate}_mask.png", "for_plate does not modify its input");
+
+    const json::Value anchors = json::parse(R"({"tarsus":[662,312,173],"bad":[1,2,0]})");
+    float a[3] = {0, 0, 0};
+    check(room_anim::read_anchor(anchors, "tarsus", a) && a[0] == 662.0f && a[2] == 173.0f,
+          "anchor read for a known plate");
+    check(!room_anim::read_anchor(anchors, "galaxy", a), "unknown plate has no anchor");
+    check(!room_anim::read_anchor(anchors, "bad", a), "zero-radius anchor is rejected");
+    check(!room_anim::read_anchor(anchors, "", a), "unnamed plate has no anchor");
+}
+
+void anchored_layers() {
+    room_anim::SpriteSheet s;
+    std::string err;
+    check(room_anim::parse_sprite_sheet(json::parse(R"({"atlas":"a.png","canvas":[1536,1024],
+        "fps":24,"period_frames":1,"under":true,"anchor":[768,360,200],
+        "frames":[{"slot":0,"src":[0,0,10,10],"dst":[768,360,20,10]}]})"), s, err),
+          "anchored under-plate sheet parses");
+    check(s.under && s.anchored && s.anchor[2] == 200.0f, "under + anchor read");
+    const float to[3] = {668.0f, 300.0f, 100.0f};
+    float r[4];
+    room_anim::place(s, s.frames[0], to, r);
+    check(r[0] == 668.0f && r[1] == 300.0f && r[2] == 10.0f && r[3] == 5.0f,
+          "anchored frame maps onto the plate's anchor (move + scale)");
+    room_anim::place(s, s.frames[0], nullptr, r);
+    check(r[0] == 768.0f && r[2] == 20.0f, "no target anchor leaves dst unchanged");
+    s.anchored = false;
+    room_anim::place(s, s.frames[0], to, r);
+    check(r[0] == 768.0f && r[2] == 20.0f, "unanchored sheet ignores the plate anchor");
+    check(!room_anim::parse_sprite_sheet(json::parse(R"({"atlas":"a.png","canvas":[10,10],
+        "fps":1,"period_frames":1,"anchor":[1,2],"frames":[]})"), s, err),
+          "malformed anchor is rejected");
+}
+
 void star_scroll() {
     check(std::fabs(room_anim::scroll_uv(-2.0f, 1.0, 512.0f) - (-2.0f / 512.0f)) < 1e-6f,
           "stars move velocity/tile per second");
@@ -122,6 +167,62 @@ void shipped_newcon() {
     check(bar, "Bar hotspot rect unchanged");
 }
 
+// #553: every hull's landing composite gets a sky + a mouth anchor, and the
+// ship traffic layers are anchored and split under/over on shared timelines.
+void shipped_newcon_hangar() {
+    const std::string dir = "assets/concourse/newcon/";
+    const json::Value root = json::parse_file(dir + "concourse.json");
+    room_anim::RoomAnimDef def;
+    room_anim::parse_room_anim(root["rooms"]["landing"]["composite"], def);
+    check(def.has_sky && def.sky.stars.size() >= 2 && !def.anchors.empty(),
+          "hangar composite has a starry sky and mouth anchors");
+    const json::Value anchors = json::parse_file(dir + def.anchors);
+    int plates = 0, complete = 0;
+    for (const auto& entry : std::filesystem::directory_iterator(dir + "landing_ships")) {
+        if (entry.path().extension() != ".png") continue;
+        ++plates;
+        const std::string ship = entry.path().stem().string();
+        const room_anim::RoomAnimDef p = room_anim::for_plate(def, ship);
+        float a[3];
+        if (std::filesystem::exists(dir + p.sky.mask) && std::filesystem::exists(dir + p.sky.fill) &&
+            room_anim::read_anchor(anchors, ship, a) && a[0] > 0 && a[0] < 1536 && a[1] > 0 &&
+            a[1] < 1024)
+            ++complete;
+        else
+            check(false, "  hangar sky/anchor for " + ship);
+    }
+    check(plates >= 18 && complete == plates, "every landing composite has a mask, fill + anchor");
+    for (const room_anim::StarLayerDef& s : def.sky.stars)
+        check(std::filesystem::exists(dir + s.tile), "hangar star tile exists: " + s.tile);
+
+    int under = 0, over = 0;
+    room_anim::SpriteSheet first;
+    for (const std::string& layer : def.layers) {
+        room_anim::SpriteSheet s;
+        std::string err;
+        const bool ok = room_anim::parse_sprite_sheet(json::parse_file(dir + layer), s, err);
+        check(ok && s.anchored && !s.frames.empty(), "hangar layer parses, anchored: " + layer);
+        if (!ok) continue;
+        check(std::filesystem::exists(dir + layer.substr(0, layer.find_last_of('/') + 1) + s.atlas),
+              "  atlas exists");
+        (s.under ? under : over)++;
+        if (first.frames.empty()) first = s;
+        check(s.period == first.period, "  shares the hangar loop length");
+    }
+    check(under >= 1 && over >= 1, "ships fly both beyond the mouth and through the tunnel");
+
+    // Acceptance: the landing pad's hotspots (links.json overrides) are untouched.
+    const json::Value links = json::parse_file(dir + "links.json")["landing"];
+    bool launch = false;
+    for (const json::Value& l : links.as_array())
+        if (l["target"].string_or("") == "Launch") {
+            const json::Value& r = l["rect"];
+            launch = r[size_t{0}].as_float() == -0.105f && r[size_t{1}].as_float() == 0.50167f &&
+                     r[size_t{2}].as_float() == 0.8975f && r[size_t{3}].as_float() == 0.54f;
+        }
+    check(links.as_array().size() == 2 && launch, "landing keeps its Launch + Concourse hotspots");
+}
+
 void other_archetypes_static() {
     int animated = 0, rooms = 0;
     for (const auto& entry : std::filesystem::directory_iterator("assets/concourse")) {
@@ -145,8 +246,11 @@ int main() {
     timeline();
     rejects_bad_manifests();
     room_keys();
+    per_plate();
+    anchored_layers();
     star_scroll();
     shipped_newcon();
+    shipped_newcon_hangar();
     other_archetypes_static();
     std::printf("\n%s\n", failures == 0 ? "ALL PASS" : "FAILURES DETECTED");
     return failures == 0 ? 0 : 1;

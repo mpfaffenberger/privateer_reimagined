@@ -183,7 +183,15 @@ def bake(layer, period, offset):
     if not sprites:
         raise SystemExit(f"{layer}: every frame is empty")
     period_frames = max(int(info["frames"]), int(math.ceil(period * fps)))
+    write_sheet(OUT, layer, sprites, slots, (plate.shape[1], plate.shape[0]), fps,
+                period_frames, int(round(offset * fps)))
 
+
+def write_sheet(out_dir, name, sprites, slots, canvas, fps, period_frames, offset_frames,
+                **extra):
+    """Pack (sprite RGBA, dst rect) frames into <name>.png and write the
+    <name>.json manifest room_anim_data.h reads. `extra` adds manifest keys
+    (e.g. "under", "anchor")."""
     pos, height = shelf_pack([(s.shape[1], s.shape[0]) for s, _ in sprites], ATLAS_W)
     atlas = np.zeros((height, ATLAS_W, 4), dtype=np.uint8)
     frames = []
@@ -191,13 +199,13 @@ def bake(layer, period, offset):
         atlas[y:y + img.shape[0], x:x + img.shape[1]] = img
         frames.append({"slot": slot, "src": [x, y, img.shape[1], img.shape[0]], "dst": dst})
 
-    OUT.mkdir(parents=True, exist_ok=True)
-    Image.fromarray(atlas).save(OUT / f"{layer}.png", optimize=True)
-    manifest = {"atlas": f"{layer}.png", "canvas": [plate.shape[1], plate.shape[0]],
-                "fps": fps, "period_frames": period_frames,
-                "offset_frames": int(round(offset * fps)), "frames": frames}
-    (OUT / f"{layer}.json").write_text(json.dumps(manifest, separators=(",", ":")) + "\n")
-    print(f"{layer}: {len(frames)} sprites, atlas {ATLAS_W}x{height}, "
+    out_dir.mkdir(parents=True, exist_ok=True)
+    Image.fromarray(atlas).save(out_dir / f"{name}.png", optimize=True)
+    manifest = {"atlas": f"{name}.png", "canvas": list(canvas), "fps": fps,
+                "period_frames": period_frames, "offset_frames": offset_frames,
+                **extra, "frames": frames}
+    (out_dir / f"{name}.json").write_text(json.dumps(manifest, separators=(",", ":")) + "\n")
+    print(f"{name}: {len(frames)} sprites, atlas {ATLAS_W}x{height}, "
           f"loop {period_frames} frames @ {fps:g} fps")
 
 

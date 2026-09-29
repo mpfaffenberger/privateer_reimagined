@@ -10,6 +10,10 @@ follows src/room_anim.cpp: sky fill stretched, star tiles scrolled at their
 velocity (plate px/s, wrapping), the plate on top with the sky mask as alpha,
 then each sprite layer's frame for timeline slot
 (floor(t*fps) + offset_frames) mod period_frames, straight-alpha "over".
+"under" layers go between the sky and the plate; anchored layers are
+remapped onto the plate's anchor (room_anim_data.cpp place()).
+With --plate NAME the room's per-plate "composite" animation is used over
+landing_ships/NAME.png, with {plate} -> NAME (#553).
 Nothing here reads Blender output, so it checks what ships.
 
 Usage (from the repo root):
@@ -18,6 +22,7 @@ Usage (from the repo root):
     ... --out preview.gif --scale 0.5 --fps 12     # GIF for the PR
     ... --at 3.5 --out still.png                   # one frame
     ... --only anim/walker_toward.json             # isolate one layer
+    ... --room landing --plate tarsus --out hangar.mp4   # a hangar composite
 """
 import argparse
 import json
@@ -65,11 +70,20 @@ class Sky:
 
 
 class Layer:
-    def __init__(self, manifest):
+    def __init__(self, manifest, anchor=None):
         path = ROOM_DIR / manifest
         self.meta = json.loads(path.read_text())
         self.atlas = Image.open(path.parent / self.meta["atlas"]).convert("RGBA")
         self.by_slot = {f["slot"]: f for f in self.meta["frames"]}
+        self.under = bool(self.meta.get("under", False))
+        self.anchor = anchor if "anchor" in self.meta else None
+
+    def place(self, dst):
+        if self.anchor is None:
+            return dst
+        (fx, fy, fr), (tx, ty, tr) = self.meta["anchor"], self.anchor
+        s = tr / fr
+        return [tx + (dst[0] - fx) * s, ty + (dst[1] - fy) * s, dst[2] * s, dst[3] * s]
 
     def draw(self, canvas, t):
         m = self.meta
@@ -78,16 +92,23 @@ class Layer:
         if frame is None:
             return
         sx, sy, sw, sh = frame["src"]
-        dx, dy, dw, dh = frame["dst"]
+        dx, dy, dw, dh = (int(round(v)) for v in self.place(frame["dst"]))
+        if dw < 1 or dh < 1:
+            return
         spr = self.atlas.crop((sx, sy, sx + sw, sy + sh))
-        if (sw, sh) != (dw, dh):                     # half-res frame: linear upscale
+        if (sw, sh) != (dw, dh):                     # half-res or anchored: linear
             spr = spr.resize((dw, dh), Image.BILINEAR)
-        over(canvas[dy:dy + dh, dx:dx + dw], np.asarray(spr, dtype=np.float32) / 255.0)
+        spr = np.asarray(spr, dtype=np.float32) / 255.0
+        h, w = canvas.shape[:2]                      # clip to the plate
+        x0, y0, x1, y1 = max(dx, 0), max(dy, 0), min(dx + dw, w), min(dy + dh, h)
+        if x0 < x1 and y0 < y1:
+            over(canvas[y0:y1, x0:x1], spr[y0 - dy:y1 - dy, x0 - dx:x1 - dx])
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--room", default="concourse")
+    ap.add_argument("--plate", help="per-plate composite (e.g. tarsus) for --room landing")
     ap.add_argument("--only", action="append", help="draw only these layer manifests")
     ap.add_argument("--no-sky", action="store_true")
     ap.add_argument("--out", required=True, help=".mp4, .gif, or .png with --at")
@@ -101,17 +122,25 @@ def main():
     args = ap.parse_args()
 
     room = json.loads((ROOM_DIR / "concourse.json").read_text())["rooms"][args.room]
+    anchor = None
+    if args.plate:
+        room = json.loads(json.dumps(room["composite"]).replace("{plate}", args.plate))
+        room["background"] = f"landing_ships/{args.plate}.png"
+        if "anchors" in room:
+            anchor = json.loads((ROOM_DIR / room["anchors"]).read_text()).get(args.plate)
     plate = rgba(ROOM_DIR / room["background"])
     size = (plate.shape[1], plate.shape[0])
     sky = Sky(room["sky"], size) if "sky" in room and not args.no_sky else None
     if sky is not None:
         plate[..., 3] = 1.0 - sky.mask
-    layers = [Layer(m) for m in (args.only or room.get("layers", []))]
+    layers = [Layer(m, anchor) for m in (args.only or room.get("layers", []))]
 
     def frame(t):
         canvas = sky.draw(t, size) if sky else np.zeros_like(plate[..., :3])
+        for layer in (lay for lay in layers if lay.under):
+            layer.draw(canvas, t)
         over(canvas, plate)
-        for layer in layers:
+        for layer in (lay for lay in layers if not lay.under):
             layer.draw(canvas, t)
         im = Image.fromarray((np.clip(canvas, 0.0, 1.0) * 255.0 + 0.5).astype(np.uint8))
         if args.crop:

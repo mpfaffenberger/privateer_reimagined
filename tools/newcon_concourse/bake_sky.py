@@ -75,14 +75,19 @@ def sky_mask(plate):
     limit = np.asarray(limit, dtype=np.float32)
     dark = Image.fromarray(((base <= limit) & (limit > 0)).astype(np.uint8) * 255)
     # Opening drops thin dark rib seams inside a window.
-    sky = dark.filter(ImageFilter.MinFilter(7)).filter(ImageFilter.MaxFilter(7))
-    # Bright stars survive star_removed() and punch not-sky holes. A hole is
-    # any not-sky pixel that the floor cannot reach: flood the reachable
-    # not-sky area to 128, then everything still 0 is a hole -> sky.
-    ImageDraw.floodfill(sky, FLOOR_SEED, 128)
+    return solidify(dark.filter(ImageFilter.MinFilter(7)).filter(ImageFilter.MaxFilter(7)),
+                    FLOOR_SEED)
+
+
+def solidify(sky, outside_seed):
+    """Binary L sky (255) -> finished mask. Bright stars survive
+    star_removed() and punch not-sky holes; a hole is any not-sky pixel that
+    `outside_seed` (certainly not sky) cannot reach. Then blur + re-threshold
+    rounds off square-kernel stair-steps, and a light feather gives a ~1 px
+    antialiased edge."""
+    sky = sky.copy()
+    ImageDraw.floodfill(sky, outside_seed, 128)
     sky = Image.fromarray(np.where(np.asarray(sky) == 128, 0, 255).astype(np.uint8))
-    # Blur + re-threshold rounds off the square kernel's stair-steps, then a
-    # light feather gives a ~1 px antialiased edge.
     rounded = np.asarray(sky.filter(ImageFilter.GaussianBlur(2.0))) >= 128
     return (Image.fromarray(rounded.astype(np.uint8) * 255)
             .filter(ImageFilter.GaussianBlur(0.8)))

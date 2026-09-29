@@ -95,6 +95,23 @@
         200
       ],
       "overlays": [],
+      "composite": {
+        "sky": {
+          "mask": "anim/hangar/{plate}_mask.png",
+          "fill": "anim/hangar/{plate}_fill.png",
+          "stars": [
+            { "tile": "anim/hangar/stars_far.png", "velocity": [-4.0, 0.8] },
+            { "tile": "anim/hangar/stars_near.png", "velocity": [-6.0, 1.2] }
+          ]
+        },
+        "anchors": "anim/hangar/anchors.json",
+        "layers": [
+          "anim/hangar/ship_depart_under.json",
+          "anim/hangar/ship_arrive_under.json",
+          "anim/hangar/ship_depart_over.json",
+          "anim/hangar/ship_arrive_over.json"
+        ]
+      },
       "links": [
         {
           "target": "Launch",

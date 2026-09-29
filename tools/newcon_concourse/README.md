@@ -1,4 +1,4 @@
-# New Constantinople concourse animation pipeline (#515)
+# New Constantinople concourse + hangar animation pipeline (#515, #553)
 
 The painted concourse (`assets/concourse/newcon/concourse_bg.png`, 1536x1024)
 stays the hero plate. Animated layers are rendered in Blender against a
@@ -79,6 +79,60 @@ plate with the mask as alpha.
 * Off-screen frames are skipped, not rendered: the bake takes timeline slots
   from frame numbers in file names, so gaps stay blank.
 * OptiX fails to compile on the dev box's driver; CUDA is used.
+
+## The hangar (#553)
+
+The landing pad isn't one painting: it shows one of 18 full-frame composites
+(`landing_ships/<hull>.png`, one per player hull), each framed differently.
+So nothing is camera-matched to a single plate. Instead:
+
+```
+bake_hangar.py              -> anim/hangar/<hull>_{mask,fill}.png, anchors.json, stars_*.png
+render_hangar.py (Blender)  -> build/newcon_concourse/hangar/<layer>/  straight-alpha frames
+bake_traffic.py             -> anim/hangar/<layer>_{under,over}.{png,json}
+composite_preview.py --room landing --plate <hull>
+```
+
+```sh
+uv run tools/newcon_concourse/bake_hangar.py --debug build/newcon_concourse/mouths.png
+blender --background --factory-startup \
+    --python tools/newcon_concourse/render_hangar.py -- --layer all
+uv run tools/newcon_concourse/bake_traffic.py --all
+uv run tools/newcon_concourse/composite_preview.py --room landing --plate tarsus \
+    --seconds 30 --out build/newcon_concourse/hangar.mp4
+```
+
+**Finding the mouth.** Per composite: flood the darkest star-removed blob in
+the upper middle, fit a circle to the left/right edges of its top 120 rows
+(the top arc is clean everywhere; lower down hull shadow can join the flood,
+as on the drayman), and keep only the flood inside that circle. The mask is
+ramped by luminance near the threshold, so the painted light shaft's haze
+fades into space instead of being cut off in a jagged line. The circle is the
+composite's anchor `[cx, cy, r]`.
+
+**Canonical mouth.** `render_hangar.py` renders against a mouth at
+`ANCHOR = (768, 360, 200)` px, 220 m out (focal length exactly 1024 px). The
+engine moves and scales each frame from that anchor onto the composite's
+(`room_anim_data.cpp place()`), so one render fits all 18 framings.
+
+**Under and over.** A ship beyond the mouth plane is drawn *under* the plate
+(through the sky mask), so the tunnel rim and the parked ship occlude it. In
+the tunnel it's drawn *over*. One render is split into two sheets on one
+timeline, so there's no pop at the crossing (the ship is inside the open disc
+there). In-tunnel paths stay above the parked hulls, whose tallest (drayman)
+reaches cy - 0.23 r; `bake_traffic.py` refuses frames below cy - 0.25 r.
+
+**Ships.** Real game meshes (`assets/meshes/ships_wcnews`), textured from
+their `<stem>.materials.json` sidecars by `ships.py`; `ships.lookdev()`
+renders marked axes to find each mesh's orientation fix.
+
+| file | runs in | what |
+|---|---|---|
+| `bake_hangar.py` | uv | per-composite mouth mask, fill, anchor; hangar star tiles |
+| `ships.py` | Blender | game-mesh import, sidecar materials, orientation |
+| `render_hangar.py` | Blender | canonical camera, lights, flight paths, frames |
+| `bake_traffic.py` | uv | trim, split at the mouth plane, pack |
+| `hangar_layers.json` | - | per-layer loop period and phase |
 
 ## Adding a layer
 

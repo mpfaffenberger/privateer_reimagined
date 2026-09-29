@@ -19,6 +19,15 @@
 // `period_frames` slots at `fps`; slots without a frame draw nothing (the gap
 // between passes). Sprites are encoded against the plate, so plain
 // straight-alpha "over" reproduces their reflections and shadows exactly.
+// A manifest may add "under": true (drawn beneath the plate, so it only
+// shows through the sky mask) and "anchor": [cx, cy, r], the circle it was
+// rendered against (#553). Anchored frames are remapped onto the room's own
+// anchor, so one layer fits every framing of a scene.
+//
+// Per-plate rooms (#553): the New Con landing pad shows one of many
+// full-frame composites, one per player hull. Its "composite" object holds
+// the same keys plus "anchors" (json {"<plate>": [cx, cy, r]}), and any
+// "{plate}" in its paths is replaced by the composite's name (for_plate).
 //
 // No GPU or ImGui here — see room_anim.h for loading and drawing.
 // -----------------------------------------------------------------------------
@@ -43,6 +52,9 @@ struct SpriteSheet {
     int                      offset = 0;            // phase, in slots
     std::vector<int>         slot_frame;            // slot -> frames index, -1 = blank
     std::vector<SpriteFrame> frames;
+    bool                     under = false;         // beneath the plate (seen through the sky)
+    bool                     anchored = false;      // dst is relative to `anchor`
+    float                    anchor[3] = {0, 0, 0}; // cx, cy, r rendered against
 };
 
 struct StarLayerDef {
@@ -59,6 +71,8 @@ struct RoomAnimDef {
     bool                     has_sky = false;
     SkyDef                   sky;
     std::vector<std::string> layers;                // manifest paths, room-relative
+    std::string              anchors;               // anchors json path ("" = none)
+    std::string              plate;                 // set by for_plate()
     bool empty() const { return !has_sky && layers.empty(); }
 };
 
@@ -68,6 +82,16 @@ bool parse_sprite_sheet(const json::Value& manifest, SpriteSheet& out, std::stri
 // Read the optional "sky" / "layers" keys of a room object. Missing keys
 // leave `out` empty; a present-but-malformed sky is dropped (has_sky=false).
 void parse_room_anim(const json::Value& room, RoomAnimDef& out);
+
+// `def` for one named plate: every "{plate}" in its paths becomes `plate`.
+RoomAnimDef for_plate(const RoomAnimDef& def, const std::string& plate);
+
+// anchors[plate] as [cx, cy, r]; false if absent or malformed (r <= 0).
+bool read_anchor(const json::Value& anchors, const std::string& plate, float (&out)[3]);
+
+// Plate-pixel rect for frame `f`: its dst, remapped from the sheet's anchor
+// onto `to` (cx, cy, r) when the sheet is anchored and `to` is given.
+void place(const SpriteSheet& sheet, const SpriteFrame& f, const float* to, float (&out)[4]);
 
 // Timeline slot shown at `seconds` (non-negative modulo the period).
 int slot_at(const SpriteSheet& sheet, double seconds);
