@@ -12,8 +12,8 @@
         "mask": "anim/sky_mask.png",
         "fill": "anim/sky_fill.png",
         "stars": [
-          { "tile": "anim/stars_far.png", "velocity": [-1.8, 0.3] },
-          { "tile": "anim/stars_near.png", "velocity": [-2.6, 0.45] }
+          { "tile": "anim/stars_far.png", "velocity": [-6.5, 1.1] },
+          { "tile": "anim/stars_near.png", "velocity": [-9.5, 1.6] }
         ]
       },
       "layers": [
