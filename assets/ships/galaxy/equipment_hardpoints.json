@@ -6,8 +6,6 @@
     { "id": "gun_2", "label": "Gun 3", "kind": "gun", "slot": 2, "rect": [0.53081, 0.19253, 0.05100, 0.08613] },
     { "id": "gun_4", "label": "Gun 5", "kind": "turret", "slot": 4, "rect": [0.41286, 0.58542, 0.05100, 0.08613] },
     { "id": "gun_5", "label": "Gun 6", "kind": "turret", "slot": 5, "rect": [0.53692, 0.58542, 0.05100, 0.08613] },
-    { "id": "gun_6", "label": "Gun 7", "kind": "turret", "slot": 6, "rect": [0.53694, 0.70487, 0.05100, 0.08613] },
-    { "id": "gun_7", "label": "Gun 8", "kind": "turret", "slot": 7, "rect": [0.40678, 0.70334, 0.05100, 0.08613] },
     { "id": "launcher_left", "label": "Left Launcher", "kind": "launcher", "slot": 0, "rect": [0.21657, 0.37424, 0.03500, 0.14135] },
     { "id": "launcher_right", "label": "Right Launcher", "kind": "launcher", "slot": 1, "rect": [0.75144, 0.34055, 0.03500, 0.14135] }
   ]

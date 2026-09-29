@@ -157,7 +157,7 @@ NPC-buffed repair hull, one fixed mission-board seed) now match the game.
    target ([#516]).
 4. **Turrets** **(done)**. Firing is done. Turret hardware is bought per hull
    position (`turret_slot` in ship.json: Centurion/Orion rear, Galaxy
-   top/bottom/rear) before a gun can be fitted into it ([#145]), and player
+   top/bottom) before a gun can be fitted into it ([#145]), and player
    turrets stay auto-armed across gun groups ([#379]). A manual turret view
    is probably a deliberate non-goal
    (auto-fire plays better).

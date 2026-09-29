@@ -90,7 +90,7 @@
   ],
 
   // Turret hardware (#145): price per turret POSITION a hull supports
-  // (ship.json turret_slot: Centurion/Orion rear, Galaxy top/bottom/rear).
+  // (ship.json turret_slot: Centurion/Orion rear, Galaxy top/bottom).
   // Buys the empty turret; each gun fitted into it is bought separately at
   // the "guns" price above. Hand-authored (the gamefaq lists no price).
   "turret_price": 10000,

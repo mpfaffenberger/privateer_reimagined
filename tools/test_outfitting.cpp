@@ -53,8 +53,9 @@ static void test_turrets() {
           "Centurion: one rear turret over mounts 4+5");
     check(orion && orion->find_turret_slot("rear") && orion->turret_slots.size() == 1,
           "Orion: rear turret");
-    check(galaxy && galaxy->find_turret_slot("top") && galaxy->find_turret_slot("bottom") &&
-          galaxy->find_turret_slot("rear"), "Galaxy: top + bottom + rear turrets");
+    check(galaxy && galaxy->turret_slots.size() == 2 && galaxy->find_turret_slot("top") &&
+          galaxy->find_turret_slot("bottom") && !galaxy->find_turret_slot("rear"),
+          "Galaxy: top + bottom turrets only (vanilla, #527)");
     check(cent && cent->turret_slots[0].label == "Rear Turret", "slot label derived from id");
     check(outfitting::turret_price() > 0, "turret_price loaded from equipment_prices.json");
     if (!cent || !tarsus) return;
