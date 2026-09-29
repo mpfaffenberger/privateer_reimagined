@@ -283,26 +283,28 @@ src/bolt_art.cpp
 # Bake the asset path into the runtime so we can launch from anywhere. For
 # now we just use a relative path + chdir-to-source; for shipping we'd copy
 # assets next to the binary. Good enough for Stage 2.
-# Hardcode "build" relative to source so the symlink lands next to the
-# binary. We can't use $TARGET_FILE_DIR in this POST_BUILD because of
-# how the build system is wired (the binary lives in build/, not in
-# CMAKE_BINARY_DIR's value at config time).
-if(WIN32)
-    # Directory junctions work without administrator privileges, unlike
-    # symbolic links on Windows systems where Developer Mode is disabled.
-    add_custom_command(TARGET new_privateer POST_BUILD
-        COMMAND powershell -NoProfile -Command
-                "if (-not (Test-Path '${CMAKE_SOURCE_DIR}/build/assets')) { New-Item -ItemType Junction -Path '${CMAKE_SOURCE_DIR}/build/assets' -Target '${CMAKE_SOURCE_DIR}/assets' }"
-        COMMENT "junctioning assets/ next to binary"
-        VERBATIM
-    )
-else()
-    add_custom_command(TARGET new_privateer POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E create_symlink
-                ${CMAKE_SOURCE_DIR}/assets
-                ${CMAKE_SOURCE_DIR}/build/assets
-        COMMENT "symlinking assets/ next to binary"
-    )
+# The link goes next to the real binary, whatever the build dir is called
+# (issue #497). In-source builds already have assets/ beside the binary, and
+# linking there would collide with the real directory, so skip them.
+if(NOT CMAKE_BINARY_DIR STREQUAL CMAKE_SOURCE_DIR)
+    set(ASSETS_LINK "$<TARGET_FILE_DIR:new_privateer>/assets")
+    if(WIN32)
+        # Directory junctions work without administrator privileges, unlike
+        # symbolic links on Windows systems where Developer Mode is disabled.
+        add_custom_command(TARGET new_privateer POST_BUILD
+            COMMAND powershell -NoProfile -Command
+                    "if (-not (Test-Path '${ASSETS_LINK}')) { New-Item -ItemType Junction -Path '${ASSETS_LINK}' -Target '${CMAKE_SOURCE_DIR}/assets' }"
+            COMMENT "junctioning assets/ next to binary"
+            VERBATIM
+        )
+    else()
+        add_custom_command(TARGET new_privateer POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E create_symlink
+                    ${CMAKE_SOURCE_DIR}/assets ${ASSETS_LINK}
+            COMMENT "symlinking assets/ next to binary"
+            VERBATIM
+        )
+    endif()
 endif()
 
 target_include_directories(new_privateer PRIVATE
