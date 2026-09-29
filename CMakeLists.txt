@@ -238,6 +238,8 @@ add_executable(new_privateer
     src/escort.cpp
     src/drone.cpp
     src/base_screens.cpp
+    src/room_anim.cpp
+    src/room_anim_data.cpp
     src/base_art_studio.cpp
     ${SAVEGAME_SRC}
     src/player.cpp
@@ -469,6 +471,13 @@ target_include_directories(test_launcher_modes PRIVATE
 add_executable(test_turn_response EXCLUDE_FROM_ALL
     tools/test_turn_response.cpp src/camera.cpp)
 target_include_directories(test_turn_response PRIVATE
+    ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party)
+
+# Animated base-room data harness (#515): sprite-sheet manifests, timeline
+# wrapping, star-tile scrolling, plus the shipped New Con manifests.
+add_executable(test_room_anim EXCLUDE_FROM_ALL
+    tools/test_room_anim.cpp src/room_anim_data.cpp src/json.cpp)
+target_include_directories(test_room_anim PRIVATE
     ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party)
 
 # Pure Flight pause-overlay visibility harness.

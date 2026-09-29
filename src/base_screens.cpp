@@ -23,6 +23,7 @@
 #include "json.h"
 #include "material.h"   // TextureSlot, load_texture_png
 #include "player.h"
+#include "room_anim.h"     // sky + baked sprite layers for animated rooms (#515)
 #include "ship.h"          // Ship (g_player_ship->klass) for the parked-ship pose
 #include "ship_class.h"    // ship_class::all() for the landing-pad ship picker
 #include "ship_sprite.h"   // atlas load + choose_ship_sprite_frame_by_angles
@@ -68,19 +69,7 @@ struct BaseDef {
     bool                 loaded = false;
 };
 
-// ---- animated concourse art (WCU import, tools/extract_wcu_concourse.py) ----
-// A flipbook overlay composited over the static background: a grid atlas of
-// `real_frames` packed cols x rows, played at `fps`. The animation has
-// `total_frames` timeline slots; the first `lead_blanks` draw NOTHING (the
-// car-absent gap), the rest index the atlas. `rect` is normalized 0..1
-// top-left, matching the hotspot convention.
-struct AnimOverlay {
-    TextureSlot tex;
-    float rect[4]      = {0, 0, 0, 0};
-    int   total_frames = 1, lead_blanks = 0;
-    int   cols = 1, rows = 1, frame_w = 0, frame_h = 0, atlas_w = 1, atlas_h = 1;
-    float fps = 5.0f;
-};
+// ---- per-archetype room art (assets/concourse/<type>/concourse.json) -------
 // A placed transition: a clickable rect (normalized) that moves to `target`.
 // Authored per base-TYPE (positioned on the shared art) by the F3 editor;
 // at runtime a concourse link is only shown if THIS base actually offers
@@ -89,13 +78,14 @@ struct Link {
     BaseScreen target = BaseScreen::Concourse;
     float      rect[4] = {0, 0, 0, 0};
 };
-// One room of a base's art set: a static background + animated overlays +
-// the transition links placed on it (doors to other rooms / launch).
+// One room of a base's art set: a painted background, optional animation
+// around it (room_anim.h: drifting sky + baked sprite layers), and the
+// transition links placed on it (doors to other rooms / launch).
 struct Room {
-    bool                     valid = false;
-    TextureSlot              background;
-    std::vector<AnimOverlay> overlays;
-    std::vector<Link>        links;
+    bool                 valid = false;
+    TextureSlot          background;
+    room_anim::RoomAnim  anim;
+    std::vector<Link>    links;
 };
 constexpr int kBaseScreenCount = (int)BaseScreen::OpenMenu + 1;
 // The parked ship shown on the landing pad: which hull, at what view-sphere
@@ -570,12 +560,12 @@ void draw_subscreen(ImDrawList* dl, const ScreenSize& ss, BaseScreen cur,
 // Load an animated concourse set (assets/concourse/<type>/concourse.json) if
 // one exists for this base's archetype. Best-effort: any miss leaves
 // g_concourse.valid==false and the caller falls back to the static PNG.
-// Parse one room object. Legacy GIF-derived overlays are intentionally not
-// loaded: their tiny frames blur badly against the high-resolution room art.
+// Parse one room object. Legacy GIF-derived "overlays" are intentionally not
+// loaded (#205): their tiny frames blur badly against the high-resolution
+// room art. Animation now comes from the room's "sky"/"layers" keys.
 bool load_room(const std::string& dir, const json::Value& r, Room& out) {
     if (!r.is_object()) return false;
-    if (!load_texture_png(dir + r["background"].string_or(""), out.background))
-        return false;
+    if (!room_anim::load(dir, r, out.background, out.anim)) return false;
     // Placed transition links: [{ "target": "Bar", "rect": [x,y,w,h] }, ...].
     if (const json::Value* ls = r.find("links"); ls && ls->is_array()) {
         for (const json::Value& l : ls->as_array()) {
@@ -652,30 +642,15 @@ void load_concourse_set(const std::string& archetype) {
                 archetype.c_str(), loaded);
 }
 
-// Draw one room: static background stretched to fill, then each flipbook
-// overlay's current frame composited on top (alpha from the atlas). A global
-// speed factor (>1) plays the canonical 5/10fps flipbooks a touch livelier.
+// Draw one room: the sky behind the plate (if any), the painted background
+// stretched to fill, then the baked sprite layers on top.
 void draw_room(ImDrawList* dl, const ScreenSize& ss, const Room& room) {
-    constexpr float k_anim_speed = 1.6f;
+    const double t = ImGui::GetTime();
+    room_anim::draw_under(dl, ss.w, ss.h, room.anim, t);
     if (room.background.valid)
         dl->AddImage(simgui_imtextureid(room.background.view),
                      ImVec2(0, 0), ImVec2(ss.w, ss.h));
-    const double t = ImGui::GetTime();
-    for (const AnimOverlay& ov : room.overlays) {
-        if (!ov.tex.valid || ov.total_frames <= 0) continue;
-        int f = (int)(t * (double)ov.fps * k_anim_speed) % ov.total_frames;
-        if (f < ov.lead_blanks) continue;          // blank timeline slot
-        const int rf  = f - ov.lead_blanks;        // index into packed atlas
-        const int col = rf % ov.cols, row = rf / ov.cols;
-        const ImVec2 uv0((float)(col * ov.frame_w) / ov.atlas_w,
-                         (float)(row * ov.frame_h) / ov.atlas_h);
-        const ImVec2 uv1((float)((col + 1) * ov.frame_w) / ov.atlas_w,
-                         (float)((row + 1) * ov.frame_h) / ov.atlas_h);
-        const ImVec2 pmin(ov.rect[0] * ss.w, ov.rect[1] * ss.h);
-        const ImVec2 pmax((ov.rect[0] + ov.rect[2]) * ss.w,
-                          (ov.rect[1] + ov.rect[3]) * ss.h);
-        dl->AddImage(simgui_imtextureid(ov.tex.view), pmin, pmax, uv0, uv1);
-    }
+    room_anim::draw_over(dl, ss.w, ss.h, room.anim, t);
 }
 
 // Short label shown inside a transition box (the door's destination).
@@ -1082,6 +1057,12 @@ bool reload_current_room_texture(const std::string& png_path) {
     release_texture(room.background);
     room.background = replacement;
     room.valid = true;
+    // Baked layers and the sky mask are encoded against the old plate's
+    // pixels; over new art they would print patches of the old painting.
+    if (!room.anim.layers.empty() || room.anim.sky_fill.valid)
+        std::printf("[base] %s animation dropped: baked against the previous art\n",
+                    room_key(g_stack.back()));
+    room_anim::release(room.anim);
     std::printf("[base] hot reloaded %s from %s\n", room_key(g_stack.back()), png_path.c_str());
     return true;
 }
@@ -1380,17 +1361,10 @@ void build(PlayerState& player, Ship* player_ship, Docking& d, Camera& cam, Game
 void exit() {
     release_texture(g_art);
     clear_current_landing_composite_preview();
-    // Release the animated concourse set's GPU textures (both rooms).
+    // Release every room's GPU textures (background + animation).
     auto free_room = [](Room& rm) {
-        if (rm.background.valid) {
-            sg_destroy_view(rm.background.view);
-            sg_destroy_image(rm.background.image);
-        }
-        for (AnimOverlay& ov : rm.overlays) {
-            if (!ov.tex.valid) continue;
-            sg_destroy_view(ov.tex.view);
-            sg_destroy_image(ov.tex.image);
-        }
+        release_texture(rm.background);
+        room_anim::release(rm.anim);
     };
     for (Room& rm : g_concourse.rooms) free_room(rm);
     g_concourse = ConcourseSet{};

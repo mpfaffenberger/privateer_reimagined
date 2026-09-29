@@ -8,6 +8,20 @@
         200
       ],
       "overlays": [],
+      "sky": {
+        "mask": "anim/sky_mask.png",
+        "fill": "anim/sky_fill.png",
+        "stars": [
+          { "tile": "anim/stars_far.png", "velocity": [-6.5, 1.1] },
+          { "tile": "anim/stars_near.png", "velocity": [-9.5, 1.6] }
+        ]
+      },
+      "layers": [
+        "anim/walker_away.json",
+        "anim/walker_toward.json",
+        "anim/car_approaching.json",
+        "anim/car_receding.json"
+      ],
       "links": [
         {
           "target": "MercenariesGuild",
