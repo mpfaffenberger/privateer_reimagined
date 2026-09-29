@@ -146,9 +146,9 @@ clone. `test_full_loop` fails.
 - **Rendering:** HDR scene with highlight roll-off and dithering ([#488],
   branch in progress), a bloom kernel that's 4× taller than wide ([#489]), 3DS
   bump maps fed in as tangent-space normals ([#473]), mesh showroom drift
-  ([#474]), and the pixel sky-props PR ([#468]/#425). Atlas regeneration for the
+  ([#474]), and the pixel sky-props PR ([#468]/[#425]). Atlas regeneration for the
   reskinned hulls is done ([#482]).
-- **Art passes:** equipment dealer rooms ([#322]/#323), vanilla upgrade-screen
+- **Art passes:** equipment dealer rooms ([#322]/[#323]), vanilla upgrade-screen
   art ([#230]), refinery landing composites ([#293]), AI art for base
   backgrounds/animated concourses ([#165]), character art for fixers, comms
   pilots, and Grayson ([#166]), and skybox depth ([#167]).
@@ -244,10 +244,10 @@ human judgment call.
 2. **Component damage + Damage Control MFD ([#141]).** It's the biggest
    remaining gameplay-fidelity gap, and the repair economy hooks are ready.
 3. **Unify radar range ([#492]) → scanner tiers ([#143]) → FF missiles
-   ([#144])**, then purchasable turrets ([#145]/#379). All small and
+   ([#144])**, then purchasable turrets ([#145]/[#379]). All small and
    data-driven.
-4. **Presentation:** HDR/bloom ([#488]/#489), normal maps ([#473]), Orion
-   cockpit + MFD clipping ([#168]/#430).
+4. **Presentation:** HDR/bloom ([#488]/[#489]), normal maps ([#473]), Orion
+   cockpit + MFD clipping ([#168]/[#430]).
 5. **Gemini Lives phases 3–4** (schedules, director, barks: [#172]–[#174]),
    then the cast and cinematics.
 6. **Keep splitting `main.cpp` ([#151])**, starting with the input handler,
@@ -297,6 +297,7 @@ human judgment call.
 [#379]: https://github.com/mpfaffenberger/privateer_reimagined/issues/379
 [#380]: https://github.com/mpfaffenberger/privateer_reimagined/issues/380
 [#383]: https://github.com/mpfaffenberger/privateer_reimagined/issues/383
+[#425]: https://github.com/mpfaffenberger/privateer_reimagined/issues/425
 [#427]: https://github.com/mpfaffenberger/privateer_reimagined/issues/427
 [#430]: https://github.com/mpfaffenberger/privateer_reimagined/issues/430
 [#468]: https://github.com/mpfaffenberger/privateer_reimagined/issues/468
