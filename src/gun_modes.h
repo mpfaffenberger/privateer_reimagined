@@ -17,9 +17,14 @@ constexpr bool is_unarmed(int mode, int unique_type_count) {
     return normalize(mode, unique_type_count) == 0;
 }
 
+// ALL is always the last mode. An empty loadout has only UNARMED (index 0).
+constexpr int all_mode(int unique_type_count) {
+    return count(unique_type_count) - 1;
+}
+
 constexpr bool is_all(int mode, int unique_type_count) {
     return unique_type_count > 0 &&
-           normalize(mode, unique_type_count) == unique_type_count + 1;
+           normalize(mode, unique_type_count) == all_mode(unique_type_count);
 }
 
 // Returns the zero-based unique-type index, or -1 for UNARMED / ALL.

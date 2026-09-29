@@ -110,7 +110,7 @@ void draw_hardpoint(PlayerState& player, Ship& ship, const Zone& zone,
     const bool fitted = slot < player.gun_mounts.size() &&
                         !player.gun_mounts[slot].gun_id.empty();
     const bool live = slot < ship.mounts.size();
-    const bool armed = live && slot < ship.gun_armed.size() && ship.gun_armed[slot];
+    const bool armed = live && firing::mount_armed(ship, slot);
     // Preserve the authored normalized rectangle exactly. Scaling the whole
     // schematic scales every hardpoint uniformly; no per-axis clamping that
     // fattens narrow gun slots into generic square buttons.

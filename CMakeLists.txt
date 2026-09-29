@@ -430,6 +430,14 @@ target_include_directories(test_equipment_hardpoints PRIVATE
 add_executable(test_gun_modes EXCLUDE_FROM_ALL tools/test_gun_modes.cpp)
 target_include_directories(test_gun_modes PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
+# Player auto-turret regression: a disarmed forward-gun mask must not suppress
+# autonomous turret target acquisition/fire, while fixed guns remain gated.
+add_executable(test_turret_firing EXCLUDE_FROM_ALL
+    tools/test_turret_firing.cpp
+    src/firing.cpp src/ship_registry.cpp src/gun.cpp src/json.cpp)
+target_include_directories(test_turret_firing PRIVATE
+    ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party)
+
 # Pure launcher hardware/ammo selection harness.
 add_executable(test_launcher_modes EXCLUDE_FROM_ALL tools/test_launcher_modes.cpp)
 target_include_directories(test_launcher_modes PRIVATE

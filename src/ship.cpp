@@ -224,8 +224,8 @@ Ship ship::spawn(const ShipClass& klass) {
     // the shared ShipClass.
     s.mounts        = klass.default_guns;
     s.gun_cooldowns.assign(s.mounts.size(), 0.0f);
-    // gun_armed starts ALL TRUE (gun_mode_idx=3 default) so existing
-    // ships fire normally out of spawn; the G-key cycle toggles bits.
+    // gun_armed starts ALL TRUE so ships fire normally out of spawn; the
+    // player loadout then selects ALL explicitly (firing::arm_all_guns).
     s.gun_armed.assign(s.mounts.size(), true);
 
     // Controller idle until a behavior fills it in.
