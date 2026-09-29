@@ -1,190 +1,249 @@
-# Gap Analysis — new_privateer vs. Wing Commander: Privateer (1993)
+# Gap Analysis — Privateer Reimagined vs. Wing Commander: Privateer (1993)
 
-_Audit date: repo state as inspected. Reference: original Privateer +
-Righteous Fire (gamefaq in repo root, docs/ai_model.md, re/ Ghidra work)._
+_Audit: 2026-09-28 against `origin/main` @ `4c9427bf` (issue #490).
+Reference: original Privateer + Righteous Fire (`gamefaq`,
+`docs/ai_model.md`, `re/` Ghidra work)._
+
+**Method.** Every "Done" row below was checked against source or data in
+this commit, not against older docs. All 24 CMake test targets were built
+and run on macOS (Release). Where the earlier version of this document
+(2026-07-19) was wrong, the correction is marked **(corrected)** so drift
+is easy to spot next time.
 
 ---
 
 ## 1. Executive summary
 
-The sandbox layer is **substantially complete**: flight, combat, AI,
-trading, outfitting, generated missions, guilds, factions/reputation,
-docking/base screens, saves, audio/music/voice, and a full 69-system
-Gemini sector across all four quadrants. What's **missing is the game's
-spine**: the scripted story campaign (Sandoval → Tayla → Lynch →
-Monkhouse → Palan → Steltek drone), fixers in bars, per-system
-component damage, scanner/radar tiers, and Friend-or-Foe missiles.
-Righteous Fire exists only as two stray equipment entries.
+The **sandbox and the story are both done**. Flight, combat, AI, trading,
+outfitting, contracts, guilds, factions, docking and base screens, saves,
+audio, the full 69-system Gemini sector, and the complete 23-mission
+campaign all ship and are covered by headless tests.
 
-Rough completion: **sandbox ~90%, story ~0%, combat systems ~85%,
-base experience ~85%**.
+The remaining gaps are:
+
+1. **Build and test health.** A fresh clone can't build the game (#427).
+   Three harnesses write into the player's real save directory (#383). The
+   broad integration harness is red (#314). There is no CI.
+2. **Combat-system fidelity.** Per-system component damage, Friend-or-Foe
+   missiles, scanner tiers, and buying turrets for hulls that lack them.
+3. **Presentation polish.** HDR/bloom, normal maps, an Orion cockpit, and
+   HUD pages that fit inside the cockpit MFDs.
+4. **The living world** (Gemini Lives phases 2–6) and **Righteous Fire**.
+
+Rough completion: **sandbox ~92%, story ~100% (base game), combat systems
+~85%, base experience ~90%, living world ~15%, Righteous Fire ~3%.**
 
 ---
 
-## 2. What's already done (verified in source/assets)
+## 2. What's done (verified)
 
 | Area | Status | Evidence |
 |---|---|---|
-| Universe: 69 systems, 4 quadrants (Humboldt 13 / Fariss 22 / Potter 18 / Clarke 16), 170 jump links | Done | `assets/galaxy.json`, `assets/systems/*` |
-| 59 bases with per-base concourse art, 7 concourse archetypes (agri/mining/refinery/pleasure/pirate/military/newcon) | Done | `assets/bases/*`, `assets/concourse/*` |
-| Base screens: Landing Pad, Concourse, Commodity Exchange, Ship Dealer, Equipment, Mission Computer, Merc + Merchant Guilds, Cargo Hold | Done | `base_screens.{h,cpp}` + registered hooks |
-| 18 ship classes incl. all 4 player hulls (Tarsus/Orion/Galaxy/Centurion), Talon, Demon, Gladius, Stiletto, Broadsword, Paradigm, Drayman, Dralthi, Gothri, Kamekh, Strakha, Drone | Done | `assets/ships/*`, `ship_class.*` |
-| Guns: Laser, Mass Driver, Meson, Neutron, Particle, Ionic Pulse, Tachyon, Plasma, Steltek | Done | `gun.cpp` |
-| Missiles: DF / HS / IR / Torpedo + left/right launchers, torpedo launcher, ammo economy | Done | `missile.h`, `repair.cpp`, `outfitting.cpp` |
-| Turrets: auto-firing, lead-predicting, arc-gated, energy-free; work for NPCs AND the player (rear-turret basis fix in place) | Done | `firing.cpp:171-247`, `GunMount::is_turret` |
-| Upgrades: shield levels, engine levels, armor packages, cargo expansion, jump drive, ECM 1–3, repair droid, adv. repair droid (RF), tractor beam | Done | `outfitting.*`, `equipment_prices.json` |
-| Ship dealer with trade-in (55%) | Done | `outfitting.cpp buy_hull/hull_trade_in` |
-| Economy: commodity catalog, per-archetype price/stock, contraband list, loot/salvage tables | Done | `economy.*`, `assets/data/*.json` |
-| Missions: 6 vanilla types (Patrol/Scout/Attack/Defend/Bounty/Cargo), 3 sources (Computer/MercGuild/MerchGuild), decoded original mission-text grammar ($EN/$DB/$DS…), tracker, fail-on-land | Done | `missions.*`, `mission_templates.gen.h`, `mission_tracker.*` |
-| Factions: 8-faction stance matrix + per-faction player rep (-100..100) + baselines, kill attribution, rep deltas | Done | `faction.*`, `comm.*` |
-| AI: decoded CNST skill vectors from PRCD.EXE (f0/f1/f2/f3/f6), personalities, maneuver system, per-ship AI tables, capital-ship spacing | Done | `ai_brain.*`, `docs/ai_model.md`, `re/` Ghidra project |
-| Encounters: dynamic spawner + data-driven scripted encounter director (triggers/dialogue/spawn/reward) | Done | `encounters.*`, `scripted_encounters.*` |
-| Comms: hails, taunts, contraband branch, rumors-over-comms, player comm menu with voice | Done | `comm.*`, `hailing.*`, `comms_menu.*` |
-| Autopilot (hostile-gated), autodock, jump mechanic, nav map overlay, cross-system route (BFS/Dijkstra) | Done | `autopilot.*`, `docking.*`, `jump.*`, `missions::hops_between` |
-| Saves: versioned (v6), autosave-on-dock, timestamped accumulation, load menu metadata | Done | `savegame.*` |
-| Audio: SFX, dynamic music, extracted original speech w/ labeling + voice-bank pipeline | Done | `audio/music/sfx/voice/*`, `tools/` |
-| Hazards, asteroids, loot/tractor, explosions, warp streaks, title scene, death (Dying mode) | Done | respective modules |
-| Dev infra: headless test seams (MISSIONS/ECONOMY/COMM_HEADLESS), dev remote, debug panel, sprite/light editors, huge asset pipeline in `tools/` | Done | — |
+| Universe: 69 systems in 4 quadrants, 170 jump links | Done | `assets/galaxy.json` (69 / 170), `assets/systems/*` (plus ~26 demo/atlas/test systems) |
+| 59 landable bases + the Steltek derelict; per-archetype concourse art | Done | `assets/bases/*` (60 dirs incl. `derelict_base`), `assets/concourse/*` |
+| Base screens: landing pad, concourse, bar, commodity exchange, ship dealer, equipment bay, contract boards, guilds, cargo hold | Done | `base_screens.*`, `commodity_ui.*`, `dealer_ui.cpp`, `equipment_ui.cpp`, `missions_ui.cpp` |
+| Visual **hardpoint equipment bay**: click a hull schematic to fit guns into forward **and turret** hardpoints and to fit launchers | Done | `equipment_hardpoints.*`, `equipment_panels.cpp`, per-ship `equipment_hardpoints.json` |
+| 18 ship definitions: 4 player hulls (Tarsus/Orion/Galaxy/Centurion) plus Talon, Demon, Gladius, Stiletto, Broadsword, Paradigm, Drayman, Dralthi, Gothri, Kamekh, Strakha, Drone, Scout, Derelict | Done | `assets/ships/*/ship.json` |
+| Ship rendering: multi-view sprite atlases baked from 3D meshes; Demon/Orion/Kamekh/Gladius reskinned; 32-bit mesh indices | Done | `ship_sprite.*`, `assets/ships/*/sprites_3d`, `assets/meshes/`, #484 |
+| Guns: Laser, Mass Driver, Meson, Neutron, Particle, Tachyon, Ionic Pulse, Plasma, Steltek | Done | `GunType` in `gun.h` (9) |
+| Missiles: DF / HS / IR / Torpedo, left/right launchers, launcher cycling (`W`) | Done | `MissileType` in `missile.h`, `launcher_modes.h`, `cockpit_armaments.*` |
+| Turrets: auto-fire, lead-predicting, arc-gated, for NPCs and the player; guns can be bought into existing turret mounts | Done | `firing.cpp`, `GunMount::is_turret`, `equipment_panels.cpp` |
+| Upgrades: shield ladder (capped per hull), engines, Plasteel/Tungsten armor, cargo expansion, jump drive, ECM 1–3, repair droid, advanced repair droid, tractor beam | Done | `outfitting.*`, `equipment_prices.json` |
+| Ship dealer with trade-in | Done | `outfitting.cpp` `buy_hull` / `hull_trade_in` |
+| Economy: reworked commodity exchange, per-archetype price/stock, contraband only at pirate bases, loot/salvage tables | Done | `economy.*`, `commodity*.{h,cpp}`, `assets/data/*.json` |
+| Contracts: 6 mission types, 3 sources, shared contract boards, decoded original briefing grammar, tracker, auto-fail on dock for any incomplete mission | Done | `missions.*`, `mission_tracker.*`, `mission_templates.gen.h` |
+| Factions: **9** (incl. **Steltek**, #146) stance matrix + per-faction player rep, kill attribution | Done **(corrected)** | `Faction` enum in `faction.h` |
+| AI: decoded CNST skill vectors, personalities, maneuver system, per-ship AI tables, pursuit commitment | Done | `ai_brain.*`, `docs/ai_model.md`, `docs/ai_maneuver_system.md` |
+| Encounters: dynamic spawner + data-driven scripted director (36 entries) | Done | `encounters.*`, `scripted_encounters.*` |
+| Comms: hails, taunts, contraband scans, in-flight rumors, voiced reply menu | Done | `comm.*`, `hailing.*`, `comms_menu.*` |
+| Navigation: hostile-gated autopilot, autodock, jumps (incl. escaping under fire), local nav map, **four-quadrant sector star chart** with canonical coordinates, unrevealed Fariss systems hidden | Done **(corrected)** | `autopilot.*`, `docking.*`, `jump.*`, `cockpit_hud.cpp` (#339) |
+| Flight feel: critically damped fly-by-wire turn response, pilot head lean, rigid cockpit slide | Done | `turn_response.h`, `pilot_head_motion.h`, `test_turn_response` |
+| Cockpits: painted overlays with live MFD instruments and lamps for **Tarsus, Galaxy, Centurion** (+ Talon for dev); world markers occluded by cockpit structure | Done **(corrected; the old doc said "deliberately not used")** | `cockpit_overlay*.{h,cpp}`, `assets/cockpits/`, `test_cockpit_overlay`, `test_cockpit_layers` |
+| Weapons/ARMAMENTS MFD: live arm mode, mounts, energy, turret markers, interactive schematic | Done | `cockpit_mfd.cpp`, `cockpit_armaments.*`, `test_armament_loadout` |
+| Saves: format **v8**, accumulating timestamped autosaves, `--continue` resumes newest, load-menu metadata, progress UI during rebuilds | Done **(corrected; was v6)** | `savegame.h` `k_format_version = 8` |
+| Calendar: stardate `2669.135`, +1 day per landing, persisted, shown on base screens | Done (Gemini Lives phase 1, #171) | `world_clock.*`, `docking.cpp`, `test_world_clock` |
+| Audio: SFX, dynamic music, per-scene bar music + DJ tool, extracted original speech, voice bank, per-line voice direction | Done | `audio/music/sfx/voice/*`, `music_dj.*` |
+| Hazards, asteroids, loot/tractor, explosions, warp streaks, title scene, death | Done | respective modules |
+| Dev infra: headless test seams, loopback `dev_remote` HTTP API (macOS), debug panel, cinematic studio, labelers, sprite/mesh/light editors, ~150 tools | Done | `dev_remote.*`, `tools/` |
 
-That is a *lot* of remake. Now, the gaps.
+### The campaign — **DONE** (epic #136)
+
+All 23 missions are playable end to end: Sandoval (M01), the Tayla smuggling
+arc (M02–M05), Lynch/Miggs (M06–M09), Masterson and the Oxford escorts
+(M10–M13), Lynn Murphy/Palan (M14–M16), Dr. Monkhouse (M17), the Cross
+frontier surveys (M18–M21), Goodin (M22), and the Terrell/drone finale at
+Blockade Point Tango (M23, `campaign_complete`).
+
+- **Plot layer** (`plot.*`): string-keyed flags and plot items on
+  `PlayerState`. With the campaign off (the default), nothing changes.
+- **Bar and fixers** (`fixers.*`, 37 scene entries in `fixers.json`):
+  auto-advancing portrait conversations with Grayson, original-actor voice
+  clones, artifact prop shots, refusal epilogues, and per-scene music. The
+  same framework runs the Oxford Library and Terrell's office.
+- **In-flight cinematics** (`cinematic*`): M03 militia bust, M04 customs
+  interception, M05 Riordian ambush, M06 Seelig, M22 Vera Crusader, the Troy
+  tours, and dressed offer/debrief scenes for Murphy, Cross, Terrell, and
+  Garrovick.
+- **Steltek content:** plot-gated frontier jumps, Delta Prime derelict and
+  gun pickup, the invulnerable cross-system drone, and weapon-whitelist
+  damage gating so only the boosted Steltek gun can kill the drone.
+- **Verification:** `test_campaign` walks M01→M23 headlessly (passing).
 
 ---
 
 ## 3. Gaps — ranked by importance
 
-### P0 — The story campaign — **DONE** (epic #136)
+### P0 — Build and test health (new since the last audit)
 
-The full 23-mission campaign is implemented and playable end to end:
-Sandoval (M01), the Tayla smuggling arc (M02-M05), Roman Lynch/Miggs
-(M06-M09), Masterson + the Oxford escorts (M10-M13), Lynn Murphy/Palan
-(M14-M16), Dr. Monkhouse (M17), the Cross frontier surveys (M18-M21),
-Goodin (M22), and the Terrell/drone finale at Blockade Point Tango
-(M23, `campaign_complete`).
+| Gap | Impact | Issue |
+|---|---|---|
+| **Fresh clones can't build the game.** `mission_templates_gen` lists the gitignored `re/mission_text.json` as a DEPENDS, and both `new_privateer` and 4 test targets depend on it. The CMake comment saying a missing file is OK is wrong. | Anyone new is blocked | #427 |
+| **Tests write into the player's real saves.** `test_savegame`, `test_missions` (slot 7) and `test_full_loop` (slot 9 + a timestamped autosave). Because `--continue` loads the newest save, a test run can hijack the player's next resume. | Data hazard | #383 |
+| `test_full_loop` fails 17 checks (start state, director spawns, dock autosave slot 0, cargo run, respawn) because of stale assumptions after the autosave/economy changes | Main integration net is off | #314 |
+| 6 `tools/test_*.cpp` harnesses aren't wired into CMake (`autopilot`, `inventory112`, `light_rec`, `missile`, `reputation`, `salvage`) | Coverage that looks real but isn't | #493 |
+| **No CI.** The Windows Actions workflow was removed on 2026-07-11 after repeated failures. Windows previews are hand-published; Windows-specific bugs are open (#291, #239). | Regressions show up late | — (needs an issue if CI is wanted) |
 
-What was built (issues #113-#135, infra #137-#140/#146):
-
-- **Plot-flag layer** (`plot.*`, #138): string-keyed flags + plot items
-  on `PlayerState`, savegame v7 (v6 saves migrate: plot lists default
-  empty = campaign off). Debug panel + `POST /plot` for get/set.
-- **Bar screen + fixer framework** (`fixers.*`, #137): data-driven
-  registry (`assets/data/fixers.json`) with fixed-base AND
-  archetype-predicate placement (Goodin: any mining base except
-  Rygannon/Perry), plot-flag gating, portrait conversation UI with
-  accept/refuse, reused for the Oxford library and Terrell's office.
-- **Scripted-encounter extensions** (#139): `in_system` / `at_nav` /
-  `on_launch` triggers, multi-wave kill-alls, named NPCs with
-  kill-memory (`killed:<id>`), conditional re-ambush, talk-then-attack,
-  wingman + prop spawns — all in `assets/data/scripted_encounters.json`.
-- **Escort missions** (`escort.*`, #140), the Palan blockade
-  docking-refusal gate, mission-scoped stance overrides (Tayla's pirate
-  neutrality), the secret compartment (scan-exempt contraband hold).
-- **Steltek content is now gameplay** (#130-#135): plot-gated frontier
-  jump links (`JUMP: UNSURVEYED` until `monkhouse_done`), fleshed-out
-  delta/beta/gamma/delta_prime systems, the Delta Prime derelict + gun
-  pickup, the cross-system invulnerable drone pursuer (`drone.*`), the
-  Steltek boost event, and weapon-whitelist damage gating
-  (`Ship::immune_bypass_gun`) so ONLY the boosted gun kills the drone.
-  The gun is unbuyable/unsellable (no shop price row).
-- **Verification**: headless `test_campaign` walks M01→M23 against the
-  shipped data; `test_savegame` proves the v6→v7 migration; live smoke
-  runs drive every phase over the dev_remote HTTP API (`/fixer`,
-  `/plot`, `/damage`, `/ships`, `/events`).
-
-The sandbox remains untouched for players who never talk to Sandoval
-— campaign-off is the default and stays invisible.
+**Test scoreboard (2026-09-28, macOS Release):** 23/24 pass (3 of them only
+with `re/mission_text.json` present). `test_full_loop` fails.
 
 ### P1 — Combat-system gaps
 
-1. **Turret gaps (core is DONE — auto-fire works)** — remaining edges:
-   turrets aren't purchasable in outfitting (no turret rows in
-   `outfitting.cpp` / `equipment_prices.json`; they exist only as
-   `is_turret` mounts in ship.json loadouts), and there's no manual
-   turret view (original let you man the Galaxy/Centurion turret
-   yourself — arguably auto-fire is the better design, so this may be
-   an intentional non-goal). The stale turret comments in `ship_class.h`
-   and `gun.h` have been corrected to match `firing.cpp`.
-2. **Friend-or-Foe missiles** — missing. `MissileType` = DF/HS/IR/
-   Torpedo only. Original had FF as the pirate favorite.
-3. **Per-system component damage** — `cockpit_hud.cpp:683`:
-   `"DAMAGE CONTROL — system damage not yet modeled"`. Original damaged
-   individual systems (guns, engines, radar, jump drive) and made you
-   pay per-system repair. `repair.*` covers hull/armor only.
-4. **Weapons MFD — DONE.** The STATUS/Weapons page now reads the live ship
-   and shows arm mode, armed mount count, energy, fitted gun names, turret
-   markers, and per-mount armed state.
-5. **Scanner/radar tiers** — no scanner products at all (grep confirms:
-   only a coincidental "Skybird Scanners" company name). Original had
-   Iris/Hunter/B&S lines with color-coded IFF, ITTS, and lock quality.
-   Radar is currently a flat 15 km sphere for everyone.
+1. **Per-system component damage + Damage Control MFD** (#141). The `R`
+   page still draws `"system damage not yet modeled"`
+   (`cockpit_hud.cpp:661`). The original damaged guns, engines, radar, and
+   the jump drive individually and charged per-system repairs. `repair.*`
+   only covers hull and armor.
+2. **Friend-or-Foe missiles** (#144). `MissileType` is still DF/HS/IR/
+   Torpedo. The source data already lists FF on several loadouts
+   (`privateer_ship_data.json`), so they're referenced but can't be fired.
+3. **Scanner/radar tiers** (#143). There are no scanner products. Sensor
+   range is also inconsistent right now: NPC `radar_range` is 25–30 km, the
+   player's perception and targeting are hard-coded to 15 km in three
+   places, and the HUD radar draws 35 km **(corrected; the old doc said a
+   flat 15 km)**. Unify this first (#492), then add tiers on top.
+4. **Turrets.** Firing is done, and guns can be bought into *existing*
+   turret hardpoints **(corrected)**. Still missing: adding turrets to hulls
+   that don't have them (#145), and keeping turrets auto-armed across gun
+   groups (#379). A manual turret view is probably a deliberate non-goal
+   (auto-fire plays better).
 
-### P2 — Base/UX gaps
+### P2 — Presentation and art
 
-- **Rumors-in-bar** — the Bar screen now exists (fixers, #137) but
-  rumor delivery still happens in-flight over comms; porting the rumor
-  tables into bartender small-talk is an open nicety.
-- **Cockpit art**: deliberately not used — the Tarsus frame exists in
-  `assets/cockpits/` but was judged not good enough and is unwired.
-  Not a gap so much as an open art-direction question: either commit
-  to the clean HUD-only look (fine, Freelancer did it) or budget for
-  four per-hull cockpit frames that don't suck. Recording the decision
-  here so nobody "helpfully" re-wires the bad one.
-- **Quine 4000 personal computer** fiction — mission/manifest/status
-  exist as screens, but the original's unified in-flight MFD computer
-  (cargo manifest view, quadrant map paging) is partial. Verify the
-  navmap covers cross-quadrant browsing.
+- **Cockpits:** the Orion has no cockpit overlay, so it falls back to the
+  HUD-only view. The ticket to make "every flyable ship" have a cockpit is
+  #168. Dense HUD pages (TARGET faction line, STATUS Weapons) clip inside
+  the cockpit MFD holes (#430). The old decision in #153 ("commit or drop")
+  has in practice been made: commit.
+- **Rendering:** HDR scene with highlight roll-off and dithering (#488,
+  branch in progress), a bloom kernel that's 4× taller than wide (#489), 3DS
+  bump maps fed in as tangent-space normals (#473), sprite atlases to
+  regenerate for reskinned hulls (#482), mesh showroom drift (#474), and the
+  pixel sky-props PR (#468/#425).
+- **Art passes:** equipment dealer rooms (#322/#323), vanilla upgrade-screen
+  art (#230), refinery landing composites (#293), AI art for base
+  backgrounds/animated concourses (#165), character art for fixers, comms
+  pilots, and Grayson (#166), and skybox depth (#167).
 
-### P3 — Faction/world fidelity
+### P3 — Base and UX gaps
 
-- **No Drone/Steltek faction** — enum caps at 8; the drone can't have
-  its canonical everyone-hostile behavior without borrowing Kilrathi.
-- **Asymmetric stances** — acknowledged TODO in `faction.h` (Retro
-  hatred was asymmetric in the original).
-- **Hidden systems / exploration** — original had unexplored Rygannon
-  frontier + Delta Prime gating via plot. All 170 jump links are
-  presumably visible/usable from day one.
-- **Merchant/Merc guild membership** exists (save v6 bools) — verify
-  join fees + member-only pay bands match original (they appear
-  implemented via `MissionSource` pay bands; spot-check values).
+- **Bar rumors / bartender talk** (#164). The bar and fixers exist, but
+  rumors still only come over in-flight comms (`rumor_lines.json` →
+  `comms_menu`).
+- **Jump through a nearby gate without selecting its nav** (#380).
+- **Contraband-scan behavior during the M03/M04 smuggling legs** needs a
+  design call (#319).
+- **dev_remote phase 2 write endpoints** for full agentic campaign driving
+  (#154).
 
-### P4 — Righteous Fire
+### P4 — Living world ("Gemini Lives", epic #170)
 
-Only `adv_repair_droid` and the Steltek gun row exist. Missing: RF
-campaign (Mordecai Jones cult arc), RF-only gear (isometal armor, speed
-enhancer, thrust enhancer, shield levels 6–7, gun cooler, secret
-compartment for contraband). Fine to defer — base game first.
+| Phase | Status | Evidence / issue |
+|---|---|---|
+| 1. Calendar + save v8 + dock hook + stardate UI | **Done** (the plan's checkbox is still unticked) | `world_clock.*`, #171 |
+| 2. Character bible expansion | Partial: 24 characters in `characters.json`; new cast pending | #175–#180 |
+| 3. NPC schedules + `npc_director` + schedule lint | Not started (no `npc_schedules.json`, no director module) | #172, #173 |
+| 4. Trigger extensions (`npc_present`, day gates) + Tier-1 barks | Not started | #174 |
+| 5. Tier-2 Grayson cinematics | Not started | #182 |
+| 6. The Defector arc | Not started | #181 |
 
-### P5 — Platform & engineering hygiene (not game features, but real gaps)
+Also here: Kilrathi voices are broken (#179), and the older Phase-2 Confed
+distress scenario tickets (#65–#68) are still open.
 
-- **Platform confidence is uneven.** macOS/Metal is the primary development
-  path and Windows/D3D11 has a build + rolling-nightly CI workflow. The
-  Linux OpenGL/X11 path remains comparatively untested.
-- **`src/main.cpp` is roughly 390 KB / 7,500 lines.** The repo's own style
-  rules (and mine — woof) say split it by cohesive responsibility: input,
-  sim loop, lock-state machine, HUD glue.
-- **Repo hygiene — DONE for source control.** Root build products, compile
-  databases, binaries, logs, and the accidental literal `~/` directory are
-  untracked and covered by `.gitignore`. Local copies may remain for developer
-  convenience without polluting commits.
-- **README refresh — DONE.** It now documents the actual game, architecture,
-  build/test entry points, and current roadmap instead of the old skybox demo.
-- **Stale-comment scrub — initial pass DONE.** Turret, threat/autopilot, and
-  base-screen integration comments now match the live implementations; keep
-  treating comments as code when behavior changes.
+### P5 — Faction and world fidelity
+
+- **Asymmetric stances** are still an acknowledged TODO (`faction.h`:
+  "Stance is symmetric for v1").
+- **Guild membership fees and pay bands** haven't been checked against
+  vanilla (#147).
+- ~~No Drone/Steltek faction~~ **Done (corrected)**: `Faction::Steltek`
+  (#146).
+- ~~Hidden systems / exploration~~ **Done (corrected)**: frontier jumps are
+  plot-gated (`JUMP: UNSURVEYED` until `monkhouse_done`) and unrevealed
+  Fariss systems are hidden on the sector chart (#339).
+
+### P6 — Righteous Fire (#148)
+
+Only the advanced repair droid exists. Missing: the RF campaign (Mordecai
+Jones cult arc) and RF-only gear (isometal armor, speed/thrust enhancers,
+shield levels beyond the base-game ladder, gun cooler). The **secret
+compartment already exists** as a campaign plot item (M04), so it isn't an
+RF gap **(corrected)**. Fine to defer.
+
+### P7 — Engineering hygiene
+
+- **`src/main.cpp` is 7,661 lines / 400 KB and still growing** (#151 was
+  filed at 337 KB). **17 other files are over the 600-line guideline**,
+  led by `cockpit_hud.cpp` (2,482), `dev_remote.cpp` (2,216),
+  `base_screens.cpp` (1,451), `missions.cpp` (1,304), and
+  `scripted_encounters.cpp` (1,165).
+- **Dead or shadowed input handlers** (#491): `F4`/`F8`/`F9` in `main.cpp`
+  (mount tuner, demo cinematics) can never fire because the atlas viewer
+  and music/speech labelers consume those keys first. There's also a stale
+  "F11 Base Art Studio" comment (it's `F1` now) and a gun-mode handler that
+  still checks `X`/`Tab` as the trigger.
+- **Magic numbers:** the 15 km radar literal appears in 3 places (#492).
+  `dev_remote::start()` defaults to port 8765, but the only caller passes
+  47001.
+- **Comment debt is low:** 8 TODO/FIXME/HACK markers across `src/`. The
+  stale-comment pass (#149) mostly worked, apart from the lying CMake
+  comment (#427) and the input comments above.
+- **Repo hygiene (#150): done.** The tracked root is clean. Local build
+  products and logs stay untracked.
+- **Doc drift:** `persistent_world_plan.md` phase 1 is unticked even
+  though it shipped. This audit replaces a gap doc that had drifted for
+  about 60 PRs. Update the README and this file together whenever
+  bindings, CLI flags, save format, or test targets change.
+
+### Issue-tracker housekeeping (suggested, not done in #490)
+
+These open issues look finished in code. Verify and close them if you
+agree:
+
+| Issue | Why it looks done |
+|---|---|
+| #171 Canon stardate calendar | `world_clock`, +1 day per landing, save v8, stardate UI all shipped |
+| #142 Weapons MFD loadout panel | Live Weapons/ARMAMENTS page + interactive schematic + `test_armament_loadout` |
+| #150 Repo cleanup | Tracked root is clean; artifacts are gitignored |
+| #153 Cockpit art: commit or drop | Committed: 3 hulls ship painted cockpits (the rest is #168) |
 
 ---
 
 ## 4. Suggested attack order
 
-1. **Bar + fixers screen** (art & speech already extracted; unlocks
-   everything narrative).
-2. **Plot-flag layer + first campaign chapter (Sandoval)** on top of
-   scripted_encounters — proves the pipeline end-to-end.
-3. **Component damage + Damage/Weapons MFDs** (repair economy hooks
-   already exist).
-4. **Scanners/FF missiles + purchasable turrets** (small, data-driven,
-   big fidelity win).
-5. **Steltek arc wiring** (derelict base + drone into real systems,
-   hidden-jump gating, Steltek gun as pickup not purchase).
-6. Hygiene pass: continue splitting main.cpp. Ignore coverage, README rewrite,
-   and the first stale-comment pass are complete.
-7. Righteous Fire, someday.
+1. **Unblock fresh builds (#427)** and **isolate test saves (#383)**. Both
+   are small, and both protect other people (and their save files).
+2. **Get `test_full_loop` green (#314)**, wire the orphaned harnesses
+   (#493), and decide whether to bring CI back (at least a macOS or Linux
+   headless-test job).
+3. **Component damage + Damage Control MFD (#141).** It's the biggest
+   remaining gameplay-fidelity gap, and the repair economy hooks are ready.
+4. **Unify radar range (#492) → scanner tiers (#143) → FF missiles
+   (#144)**, then purchasable turrets (#145/#379). All small and
+   data-driven.
+5. **Presentation:** HDR/bloom (#488/#489), normal maps (#473), Orion
+   cockpit + MFD clipping (#168/#430).
+6. **Gemini Lives phases 3–4** (schedules, director, barks: #172–#174),
+   then the cast and cinematics.
+7. **Keep splitting `main.cpp` (#151)**, starting with the input handler,
+   since #491 already touches it.
+8. Righteous Fire, someday (#148).
