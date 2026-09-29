@@ -21,7 +21,9 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `bake_layer.py` | uv | plate-aware sprite encoding + atlas packing (`--base`) |
 | `sky.py` | uv | star removal, mask solidify, sky fill, painted-star stats, star tiles |
 | `composite_preview.py` | uv | engine-faithful preview from `concourse.json` (`--base`) |
+| `stage.py` | Blender | render settings, boxes, materials, lights, straight passes |
 | `newcon/` | | New Constantinople: concourse (#515) and hangar (#553) |
+| `mining/` | | Mining base concourse: the ore train (#558) |
 
 ## New Con concourse
 
@@ -161,6 +163,45 @@ renders marked axes to find each mesh's orientation fix.
 | `render_hangar.py` | Blender | canonical camera, lights, flight paths, frames |
 | `bake_traffic.py` | uv | trim, split at the mouth plane, pack |
 | `hangar_layers.json` | - | per-layer loop period and phase |
+
+## Mining concourse (#558)
+
+The original game's mining concourse had a small yellow tug towing an ore
+hopper across the floor (the legacy `concourse_car` overlay). It's rebuilt
+from the original base-vehicle meshes (`ships_wcnews/truck.obj`, `cart.obj`),
+with a heap of ore, headlights and a turning amber beacon, driving down the
+floor's plated guide strip toward the camera.
+
+```sh
+blender --background --factory-startup \
+    --python tools/room_anim/mining/render_layers.py -- --check      # camera-match overlay
+blender --background --factory-startup \
+    --python tools/room_anim/mining/render_layers.py -- --layer all
+uv run tools/room_anim/bake_layer.py --base mining --all
+uv run tools/room_anim/composite_preview.py --base mining --seconds 32 \
+    --out build/room_anim/mining/preview.mp4
+```
+
+**Camera.** Unlike New Con this plate is two-point: the camera is level but
+yawed ~16 deg right of the tunnel, so the cross-floor grates tilt. Tunnel
+vanishing point (475, 557) from the guide strip and walls; cross vanishing
+point ~(4500, 565) from a Hough fit of the grates. Two perpendicular
+vanishing points on one horizon give f^2 = (768 - 475)(4500 - 768), so
+f ~ 1050 px (24.6 mm) and yaw = atan(293 / f). `scene.floor_point()` maps
+plate pixels to the floor; guide-strip points 5-52 m deep all land at
+X ~ 3.7 m, and `--check` draws the strip edges and cross lines over the
+plate to confirm.
+
+| `mining/` file | runs in | what |
+|---|---|---|
+| `scene.py` | Blender | two-point camera match, floor + guide-strip deck, lights |
+| `actors.py` | Blender | tug + ore hopper (game meshes), ore pile, headlights, beacon |
+| `render_layers.py` | Blender | the ore-train layer; `--check` overlay |
+| `layers.json` | - | loop period and phase |
+
+Shared Blender helpers (render settings, boxes, materials, lights, straight
+passes) live in `stage.py`; `ships.import_ship()` takes `grounded=` (origin on
+the underside, for vehicles) and `tint=` (multiply the textures, e.g. grime).
 
 ## Adding a layer
 

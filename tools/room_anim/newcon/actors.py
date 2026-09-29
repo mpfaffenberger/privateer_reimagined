@@ -9,6 +9,7 @@ import math
 import bpy
 
 from scene import AMBER, box_object, material
+from stage import animate_straight_pass  # noqa: F401  (shared; used as actors.*)
 
 
 def _box(name, size, loc, mat, bevel=0.0, parent=None, nose_taper=1.0, nose_drop=0.0,
@@ -124,16 +125,3 @@ def animate_walk(root, limbs, start, end, z, fps, speed=1.3, step_m=0.72, swing_
             hip.keyframe_insert("rotation_euler", frame=f)
             shoulder.keyframe_insert("rotation_euler", frame=f)
     return frame_end
-
-
-def animate_straight_pass(obj, x, y_start, y_end, hover_z, frame_start, frame_end,
-                          bob=0.06, heading_deg=0.0):
-    """Constant-speed pass down the lane with a gentle hover bob. Every frame
-    is keyed, so interpolation mode is irrelevant."""
-    obj.rotation_euler = (0.0, 0.0, math.radians(heading_deg))
-    span = frame_end - frame_start
-    for f in range(frame_start, frame_end + 1):
-        t = (f - frame_start) / span
-        obj.location = (x, y_start + (y_end - y_start) * t,
-                        hover_z + bob * math.sin(f * 0.35))
-        obj.keyframe_insert("location", frame=f)

@@ -6,7 +6,9 @@
 #include <cmath>
 #include <cstdio>
 #include <filesystem>
+#include <fstream>
 #include <string>
+#include <vector>
 
 namespace {
 
@@ -165,6 +167,56 @@ void star_spin() {
           "spin is read; absent spin means none");
 }
 
+// PNG width/height from the IHDR chunk (big-endian u32s at bytes 16 and 20).
+bool png_size(const std::string& path, unsigned& w, unsigned& h) {
+    std::ifstream f(path, std::ios::binary);
+    unsigned char b[24] = {};
+    if (!f.read(reinterpret_cast<char*>(b), sizeof b)) return false;
+    auto be32 = [&](int i) { return (unsigned)b[i] << 24 | b[i + 1] << 16 | b[i + 2] << 8 | b[i + 3]; };
+    w = be32(16);
+    h = be32(20);
+    return b[1] == 'P' && b[2] == 'N' && b[3] == 'G';
+}
+
+// Atlases must load on the GPU (16384 max on D3D11/Metal); bake_layer.py
+// widens them to stay under 8192.
+constexpr unsigned kMaxAtlasSide = 8192;
+
+// Every shipped plate-aware layer parses, has a GPU-loadable atlas, matches
+// the plate, and never draws outside it.
+void check_layers(const std::string& dir, const std::vector<std::string>& layers) {
+    for (const std::string& layer : layers) {
+        room_anim::SpriteSheet s;
+        std::string err;
+        const bool ok = room_anim::parse_sprite_sheet(json::parse_file(dir + layer), s, err);
+        check(ok, "layer parses: " + layer + (ok ? "" : " (" + err + ")"));
+        if (!ok) continue;
+        const std::string atlas = dir + layer.substr(0, layer.find_last_of('/') + 1) + s.atlas;
+        unsigned aw = 0, ah = 0;
+        check(png_size(atlas, aw, ah), "  atlas exists");
+        check(aw <= kMaxAtlasSide && ah <= kMaxAtlasSide,
+              "  atlas " + std::to_string(aw) + "x" + std::to_string(ah) + " fits the GPU");
+        check(s.canvas_w == 1536.0f && s.canvas_h == 1024.0f, "  canvas matches the plate");
+        bool inside = !s.frames.empty();
+        for (const room_anim::SpriteFrame& f : s.frames)
+            inside = inside && f.dst[0] >= 0 && f.dst[1] >= 0 &&
+                     f.dst[0] + f.dst[2] <= s.canvas_w && f.dst[1] + f.dst[3] <= s.canvas_h;
+        check(inside, "  every frame lands inside the plate");
+    }
+}
+
+// The `target` link in a links list has exactly this rect.
+bool link_rect_is(const json::Value& links, const char* target, float x, float y, float w,
+                  float h) {
+    for (const json::Value& l : links.as_array())
+        if (l["target"].string_or("") == target) {
+            const json::Value& r = l["rect"];
+            return r[size_t{0}].as_float() == x && r[size_t{1}].as_float() == y &&
+                   r[size_t{2}].as_float() == w && r[size_t{3}].as_float() == h;
+        }
+    return false;
+}
+
 void shipped_newcon() {
     const std::string dir = "assets/concourse/newcon/";
     const json::Value root = json::parse_file(dir + "concourse.json");
@@ -177,33 +229,28 @@ void shipped_newcon() {
     for (const room_anim::StarLayerDef& s : def.sky.stars)
         check(std::filesystem::exists(dir + s.tile), "star tile exists: " + s.tile);
     check(def.layers.size() >= 4, "New Con concourse has vehicle + pedestrian layers");
-    for (const std::string& layer : def.layers) {
-        room_anim::SpriteSheet s;
-        std::string err;
-        const bool ok = room_anim::parse_sprite_sheet(json::parse_file(dir + layer), s, err);
-        check(ok, "layer parses: " + layer + (ok ? "" : " (" + err + ")"));
-        if (!ok) continue;
-        const std::string atlas = dir + layer.substr(0, layer.find_last_of('/') + 1) + s.atlas;
-        check(std::filesystem::exists(atlas), "  atlas exists");
-        check(s.canvas_w == 1536.0f && s.canvas_h == 1024.0f, "  canvas matches the plate");
-        bool inside = !s.frames.empty();
-        for (const room_anim::SpriteFrame& f : s.frames)
-            inside = inside && f.dst[0] >= 0 && f.dst[1] >= 0 &&
-                     f.dst[0] + f.dst[2] <= s.canvas_w && f.dst[1] + f.dst[3] <= s.canvas_h;
-        check(inside, "  every frame lands inside the plate");
-    }
+    check_layers(dir, def.layers);
     // Acceptance: the clickable hotspots are untouched by the animation work.
     const json::Value* links = room.find("links");
     check(links && links->is_array() && links->as_array().size() == 7,
           "concourse keeps its seven link hotspots");
-    bool bar = false;
-    for (const json::Value& l : links->as_array())
-        if (l["target"].string_or("") == "Bar") {
-            const json::Value& r = l["rect"];
-            bar = r[size_t{0}].as_float() == 0.575f && r[size_t{1}].as_float() == 0.49f &&
-                  r[size_t{2}].as_float() == 0.10312f && r[size_t{3}].as_float() == 0.1f;
-        }
-    check(bar, "Bar hotspot rect unchanged");
+    check(link_rect_is(*links, "Bar", 0.575f, 0.49f, 0.10312f, 0.1f),
+          "Bar hotspot rect unchanged");
+}
+
+// #558: the mining concourse's ore train.
+void shipped_mining() {
+    const std::string dir = "assets/concourse/mining/";
+    room_anim::RoomAnimDef def;
+    room_anim::parse_room_anim(json::parse_file(dir + "concourse.json")["rooms"]["concourse"],
+                               def);
+    check(!def.has_sky && def.layers.size() == 1, "mining concourse has its ore-train layer");
+    check_layers(dir, def.layers);
+    // Acceptance: the hotspots (links.json overrides) are untouched.
+    const json::Value links = json::parse_file(dir + "links.json")["concourse"];
+    check(links.as_array().size() == 8 &&
+              link_rect_is(links, "ShipDealer", 0.42054f, 0.4304f, 0.10286f, 0.15483f),
+          "mining keeps its eight hotspots (ShipDealer rect unchanged)");
 }
 
 // #553: every hull's landing composite gets a sky + a mouth anchor, and the
@@ -270,7 +317,8 @@ void shipped_newcon_hangar() {
 void other_archetypes_static() {
     int animated = 0, rooms = 0;
     for (const auto& entry : std::filesystem::directory_iterator("assets/concourse")) {
-        if (!entry.is_directory() || entry.path().filename() == "newcon") continue;
+        const std::string base = entry.path().filename().string();
+        if (!entry.is_directory() || base == "newcon" || base == "mining") continue;
         const json::Value root = json::parse_file((entry.path() / "concourse.json").string());
         const json::Value* rs = root.find("rooms");
         if (!rs || !rs->is_object()) continue;
@@ -295,6 +343,7 @@ int main() {
     star_scroll();
     star_spin();
     shipped_newcon();
+    shipped_mining();
     shipped_newcon_hangar();
     other_archetypes_static();
     std::printf("\n%s\n", failures == 0 ? "ALL PASS" : "FAILURES DETECTED");

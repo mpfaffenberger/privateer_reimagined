@@ -44,7 +44,11 @@ from base import paths
 NOISE = 5.0 / 255.0     # visible plate change below this is noise or invisible light
 SOURCE_LSB = 3.0 / 255.0  # A-B below this in the 8-bit render is quantisation, not light
 BIG_FRAME_PX = 40_000   # frames larger than this are stored at half resolution
-ATLAS_W = 1024
+ATLAS_W = 1024          # atlas width to try first; doubled until the height fits
+MAX_ATLAS_W = 4096
+# Keep atlases well inside GPU texture limits (16384 on D3D11/Metal): PIL
+# (the preview) will happily read a 1024x22586 atlas the engine can't load.
+MAX_ATLAS_H = 8192
 PAD = 1
 
 
@@ -191,8 +195,16 @@ def write_sheet(out_dir, name, sprites, slots, canvas, fps, period_frames, offse
     """Pack (sprite RGBA, dst rect) frames into <name>.png and write the
     <name>.json manifest room_anim_data.h reads. `extra` adds manifest keys
     (e.g. "under", "anchor")."""
-    pos, height = shelf_pack([(s.shape[1], s.shape[0]) for s, _ in sprites], ATLAS_W)
-    atlas = np.zeros((height, ATLAS_W, 4), dtype=np.uint8)
+    sizes = [(s.shape[1], s.shape[0]) for s, _ in sprites]
+    width = ATLAS_W
+    pos, height = shelf_pack(sizes, width)
+    while height > MAX_ATLAS_H and width < MAX_ATLAS_W:
+        width *= 2
+        pos, height = shelf_pack(sizes, width)
+    if height > MAX_ATLAS_H:
+        raise SystemExit(f"{name}: {len(sizes)} sprites need a {width}x{height} atlas, over "
+                         f"the {MAX_ATLAS_H} px limit; shorten the pass or shrink frames")
+    atlas = np.zeros((height, width, 4), dtype=np.uint8)
     frames = []
     for (img, dst), (x, y), slot in zip(sprites, pos, slots):
         atlas[y:y + img.shape[0], x:x + img.shape[1]] = img
@@ -204,7 +216,7 @@ def write_sheet(out_dir, name, sprites, slots, canvas, fps, period_frames, offse
                 "period_frames": period_frames, "offset_frames": offset_frames,
                 **extra, "frames": frames}
     (out_dir / f"{name}.json").write_text(json.dumps(manifest, separators=(",", ":")) + "\n")
-    print(f"{name}: {len(frames)} sprites, atlas {ATLAS_W}x{height}, "
+    print(f"{name}: {len(frames)} sprites, atlas {width}x{height}, "
           f"loop {period_frames} frames @ {fps:g} fps")
 
 

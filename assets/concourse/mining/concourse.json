@@ -48,6 +48,9 @@
           "atlas_h": 320,
           "real_frames": 145
         }
+      ],
+      "layers": [
+        "anim/ore_train.json"
       ]
     },
     "landing": {
