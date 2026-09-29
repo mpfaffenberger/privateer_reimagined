@@ -64,7 +64,7 @@ in [`docs/persistent_world_plan.md`](docs/persistent_world_plan.md) and its
 All platforms need Git LFS: most runtime media and mesh sources are stored
 in LFS.
 
-> **Known issue ([#427](https://github.com/mpfaffenberger/privateer_reimagined/issues/427)):**
+> **Known issue ([#427]):**
 > the build rule for `src/mission_templates.gen.h` depends on
 > `re/mission_text.json`. That file is gitignored and recovered from an
 > original Privateer install with `re/extract_mission_text.py`. Without it, a
@@ -210,26 +210,24 @@ cmake --build build --target test_campaign
 ./build/test_campaign
 ```
 
-There are 24 wired targets. Status as of the last audit (macOS, Release):
+To list every wired harness:
 
-| Status | Targets |
-|---|---|
-| Pass | `test_economy`, `test_outfitting`, `test_equipment_hardpoints`, `test_gun_modes`, `test_launcher_modes`, `test_turn_response`, `test_pause_overlay`, `test_cockpit_layers`, `test_cockpit_overlay`, `test_armament_loadout`, `test_jump`, `test_savegame`, `test_app_cli`, `test_world_clock`, `test_docking`, `test_fixers`, `test_campaign`, `test_mesh_indices`, `test_cinematic_dialogue`, `test_cinematic` |
-| Pass, but need `re/mission_text.json` (#427) | `test_ai_brain`, `test_missions`, `test_mission_tracker` |
-| Failing (stale assumptions, #314) | `test_full_loop` |
+```bash
+cmake --build build --target help | grep test_
+```
 
-> **Warning ([#383](https://github.com/mpfaffenberger/privateer_reimagined/issues/383)):**
-> `test_savegame`, `test_missions`, and `test_full_loop` currently write into
-> your **real** save directory (slots 7/9 plus an autosave). Back up your
-> saves before running them.
+For current pass/fail status and known-broken harnesses, see the test
+scoreboard in [`docs/GAP_ANALYSIS.md`](docs/GAP_ANALYSIS.md#p0--build-and-test-health).
 
-Six more `tools/test_*.cpp` files aren't wired into CMake yet (#493).
+> **Warning ([#383]):** `test_savegame`, `test_missions`, and
+> `test_full_loop` currently write into your **real** save directory (slots
+> 7/9 plus an autosave). Back up your saves before running them.
 
 ## Architecture
 
 ```text
 src/                       ~60k lines of C++, flat module layout
-  main.cpp                 application host, input, sim loop (~7.7k lines; being split, #151)
+  main.cpp                 application host, input, sim loop (~7.7k lines; being split)
   app_cli / game_state     CLI parsing and top-level state
   camera/autopilot/jump/docking/turn_response    flight and navigation
   ship*/ai_brain/firing/gun/missile/perception   ships, combat, weapons, AI
@@ -274,23 +272,15 @@ machinery. Game content is mostly driven by JSON. Headless compile guards
 
 ## Development priorities
 
-Near-term work is tracked in GitHub issues and in
-[`docs/GAP_ANALYSIS.md`](docs/GAP_ANALYSIS.md). The major active areas are:
+Work is tracked in [GitHub issues][issues]. The ranked gap list, test
+scoreboard, and suggested attack order live in one place:
+[`docs/GAP_ANALYSIS.md`](docs/GAP_ANALYSIS.md). Broadly, the active areas are
+build/test health, combat fidelity (component damage, FF missiles, scanner
+tiers), presentation (HDR, cockpits), the Gemini Lives living world, and
+later Righteous Fire.
 
-1. **Build and test health:** fix fresh-clone builds (#427), isolate test
-   saves (#383), repair `test_full_loop` (#314), and wire the orphaned
-   harnesses (#493).
-2. **Combat fidelity:** per-system component damage and the Damage Control
-   MFD (#141), Friend-or-Foe missiles (#144), scanner tiers (#143) on top
-   of a single radar range (#492), and purchasable turrets (#145).
-3. **Presentation:** HDR and bloom (#488/#489), normal maps (#473), atlas
-   regeneration (#482), an Orion cockpit and cockpits for other flyable
-   hulls (#168), and HUD pages that fit inside the cockpit MFDs (#430).
-4. **Gemini Lives:** NPC schedules, a named-NPC director, schedule-aware
-   barks, and new cast (#170–#182). The calendar is already done.
-5. **Engineering:** split `src/main.cpp` (#151) and the other 17 files over
-   600 lines.
-6. **Later:** Righteous Fire (#148).
+When you change key bindings, CLI flags, the save format, or test targets,
+update this README and the gap analysis in the same pull request.
 
 ## Asset and tooling notes
 
@@ -306,3 +296,8 @@ renderer has enough to answer for already.
 ## License
 
 MIT. See [`LICENSE`](LICENSE).
+
+[issues]: https://github.com/mpfaffenberger/privateer_reimagined/issues
+
+[#383]: https://github.com/mpfaffenberger/privateer_reimagined/issues/383
+[#427]: https://github.com/mpfaffenberger/privateer_reimagined/issues/427
