@@ -198,9 +198,48 @@ plate to confirm.
 | `actors.py` | Blender | tug + ore hopper (game meshes), ore pile, headlights, beacon |
 | `render_layers.py` | Blender | the ore-train layer; `--check` overlay |
 | `layers.json` | - | loop period and phase |
+| `bake_landing.py` | uv | landing pad: sky masks + rim anchors, star tiles, freighter sheet |
+| `render_landing.py` | Blender | the Galaxy freighter pass over the landing pad |
+| `landing_layers.json` | - | landing sky layer timing |
 
-Shared Blender helpers (render settings, boxes, materials, lights, straight
-passes) live in `stage.py`; `ships.import_ship()` takes `grounded=` (origin on
+### Mining landing pad (#561)
+
+The landing pad is an open crater: a thin strip of black sky over a jagged
+rim, in 18 per-hull composites framed differently. Stars drift slowly through
+the strip, and every 55 s a Galaxy freighter (`ships_wcnews/mrchship.obj`)
+climbs out from behind the right rim and crosses overhead, the original
+game's `landing_shp` beat.
+
+```sh
+uv run tools/room_anim/mining/bake_landing.py --debug build/room_anim/mining/skies.png
+# (bake the skies first: render_landing.py reads tarsus's rim from anchors.json)
+blender --background --factory-startup --python tools/room_anim/mining/render_landing.py
+uv run tools/room_anim/mining/bake_landing.py --layers-only
+uv run tools/room_anim/composite_preview.py --base mining --room landing --plate tarsus \
+    --crop 0 0 1536 400 --seconds 55 --out build/room_anim/mining/landing.mp4
+```
+
+- **Sky.** Each composite has its own black level (max channel 0 to 19), some
+  skies are shaded, and the rock's crevices are about as dark, so no
+  brightness threshold works (a loose one floods down crevices, a tight one
+  punches holes in shaded skies). Structure does: the rim is a height field.
+  Each column is sky down to its first sustained run of rock (level + 12),
+  and a 1-D opening of that rim profile removes the drips down crevices that
+  are dark right up to the rim. The painted sky is starless; the tiles are a
+  sparse synthetic field.
+- **Anchor.** The composites differ mainly in rim height, so the anchor is
+  vertical only: `cy` = the rim's median height, and `cx`/`r` are fixed.
+  Anchored layers slide with the rim and are never rescaled.
+- **Freighter.** Rendered against tarsus (its rim height is read from
+  `anchors.json`) with a level f = 1024 px camera. It flies at a constant
+  altitude while closing on the camera, so it rises and grows gently. The
+  path is solved from rim-relative screen targets: its centre goes from
+  rim + 10 to rim - 30, which keeps the ~50 px ship inside even the
+  tightest sky (~61 px).
+
+Shared Blender helpers (render settings, boxes, materials, lights, emitters,
+straight passes) live in `stage.py`; `bake_layer.load_frame()` trims a
+straight-alpha pass for sky layers; `ships.import_ship()` takes `grounded=` (origin on
 the underside, for vehicles) and `tint=` (multiply the textures, e.g. grime).
 
 ## Adding a layer

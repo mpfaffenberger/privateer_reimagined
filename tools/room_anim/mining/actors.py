@@ -13,7 +13,7 @@ import bpy
 from mathutils import Vector
 
 import ships
-from stage import animate_straight_pass, material
+from stage import animate_straight_pass, emitter, material
 
 TUG_LENGTH, HOPPER_LENGTH = 3.0, 3.4        # m
 COUPLING_GAP = 0.5                          # m between tug and hopper
@@ -22,19 +22,6 @@ BEACON_AMBER = (1.0, 0.45, 0.08)
 ORE_ROCK = (0.34, 0.17, 0.07)               # the painting's orange rock, in shadow
 HOPPER_GRIME = (0.38, 0.36, 0.34)           # the stock hopper is near-white; mine dirt
 TUG_GRIME = (0.8, 0.76, 0.7)                # keep the yellow, knock off the showroom shine
-
-
-def _emitter(name, parent, loc, radius, rgb, strength):
-    mesh = bpy.data.meshes.new(name)
-    bm = bmesh.new()
-    bmesh.ops.create_uvsphere(bm, u_segments=12, v_segments=8, radius=radius)
-    bm.to_mesh(mesh)
-    bm.free()
-    mesh.materials.append(material(name, (0.0, 0.0, 0.0), emission=rgb, strength=strength))
-    obj = bpy.data.objects.new(name, mesh)
-    bpy.context.scene.collection.objects.link(obj)
-    obj.parent, obj.location = parent, loc
-    return obj
 
 
 def _spot(name, parent, loc, rot, rgb, energy, angle_deg, blend=0.4):
@@ -76,13 +63,13 @@ def build_ore_train():
     nose = Vector((0.0, length / 2, h * 0.45))
     for side in (-1, 1):
         lamp = nose + Vector((side * w * 0.3, 0.0, 0.0))
-        _emitter(f"Headlamp{side}", tug, lamp, 0.07, HEADLIGHT, 6.0)
+        emitter(f"Headlamp{side}", tug, lamp, 0.07, HEADLIGHT, 6.0)
         # Spots shine down local -Z; +80 deg about X aims them forward (+Y)
         # and 10 deg down onto the floor ahead.
         _spot(f"Headlight{side}", tug, lamp + Vector((0, 0.1, 0)),
               (math.radians(80.0), 0.0, 0.0), HEADLIGHT, 30.0, 50.0)
     beacon_at = Vector((0.0, -length * 0.1, h * 1.05))
-    _emitter("BeaconGlass", tug, beacon_at, 0.09, BEACON_AMBER, 5.0)
+    emitter("BeaconGlass", tug, beacon_at, 0.09, BEACON_AMBER, 5.0)
     beacon = _spot("Beacon", tug, beacon_at, (math.radians(60.0), 0.0, 0.0),
                    BEACON_AMBER, 60.0, 40.0, blend=0.6)
 

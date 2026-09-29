@@ -26,6 +26,7 @@ FIX_EULER = {
     "talon5": (0.0, 0.0, 180.0),
     "truck": (0.0, 0.0, 180.0),
     "cart": (0.0, 0.0, 180.0),
+    "mrchship": (0.0, 0.0, 180.0),     # Galaxy: cockpit spike at -Y, nacelles +Y
 }
 
 

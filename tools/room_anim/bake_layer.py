@@ -112,6 +112,22 @@ def shrink(rgba):
     return (np.clip(np.dstack([rgb, a]), 0.0, 1.0) * 255.0 + 0.5).astype(np.uint8)
 
 
+def load_frame(path):
+    """-> (sprite RGBA, dst [x, y, w, h]) trimmed to its alpha, or None.
+    For straight-alpha passes with no plate to encode against (ships in
+    open sky), the counterpart of bake_frame()."""
+    rgba = np.asarray(Image.open(path).convert("RGBA"))
+    box = bbox(rgba[..., 3])
+    if box is None:
+        return None
+    x0, y0, x1, y1 = box
+    sprite = rgba[y0:y1, x0:x1]
+    dst = [x0, y0, x1 - x0, y1 - y0]
+    if sprite.shape[0] * sprite.shape[1] > BIG_FRAME_PX:
+        sprite = shrink(sprite)
+    return sprite, dst
+
+
 def bake_frame(plate, empty, beauty_path, mask_path, gain):
     """One rendered frame -> (sprite RGBA, dst [x,y,w,h] in plate px) or None."""
     beauty = load_rgba(beauty_path)
