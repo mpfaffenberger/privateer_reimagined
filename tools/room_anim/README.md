@@ -1,44 +1,60 @@
-# New Constantinople concourse + hangar animation pipeline (#515, #553)
+# Animated base rooms: the art pipeline (#515, #553, #557)
 
-The painted concourse (`assets/concourse/newcon/concourse_bg.png`, 1536x1024)
-stays the hero plate. Animated layers are rendered in Blender against a
-camera-matched proxy of the painting and baked into sprites that the engine
-composites with plain alpha-over (`src/room_anim.{h,cpp}`).
+Each base's painted plate (`assets/concourse/<base>/concourse_bg.png`,
+1536x1024) stays the hero image. Animated layers are rendered in Blender
+against a camera-matched proxy of the painting and baked into sprites that
+the engine composites with plain alpha-over (`src/room_anim.{h,cpp}`).
+
+## Layout
+
+Shared, base-agnostic machinery lives here; everything tied to one painting
+lives in `<base>/`. `base.py` is the single source of truth for paths:
+`assets/concourse/<base>/` (plates, `concourse.json`, baked `anim/`),
+`build/room_anim/<base>/` (raw renders, never committed) and
+`tools/room_anim/<base>/` (scripts and loop timing).
+
+| file | runs in | what |
+|---|---|---|
+| `base.py` | both | per-base paths |
+| `render.py` | Blender | beauty / mask / empty passes, render border |
+| `ships.py` | Blender | game-mesh import, sidecar materials, orientation |
+| `bake_layer.py` | uv | plate-aware sprite encoding + atlas packing (`--base`) |
+| `sky.py` | uv | star removal, mask solidify, sky fill, painted-star stats, star tiles |
+| `composite_preview.py` | uv | engine-faithful preview from `concourse.json` (`--base`) |
+| `newcon/` | | New Constantinople: concourse (#515) and hangar (#553) |
+
+## New Con concourse
 
 ```
-render_layers.py (Blender) -> build/newcon_concourse/<layer>/   raw passes
-bake_layer.py              -> assets/concourse/newcon/anim/<layer>.{png,json}
-bake_sky.py                -> assets/concourse/newcon/anim/sky_*.png, stars_*.png
-composite_preview.py       -> preview GIF/MP4/PNG, drawn exactly like the engine
+newcon/render_layers.py (Blender) -> build/room_anim/newcon/<layer>/   raw passes
+bake_layer.py --base newcon       -> assets/concourse/newcon/anim/<layer>.{png,json}
+newcon/bake_sky.py                -> assets/concourse/newcon/anim/sky_*.png, stars_*.png
+composite_preview.py              -> preview GIF/MP4/PNG, drawn exactly like the engine
 ```
-
-## Rebuild everything
 
 From the repo root (Blender 5.2, `uv`; a CUDA GPU makes it ~40 min):
 
 ```sh
 blender --background --factory-startup \
-    --python tools/newcon_concourse/render_layers.py -- --layer all
-uv run tools/newcon_concourse/bake_layer.py --all
-uv run tools/newcon_concourse/bake_sky.py
-uv run tools/newcon_concourse/composite_preview.py --seconds 16 --out build/newcon_concourse/preview.mp4
+    --python tools/room_anim/newcon/render_layers.py -- --layer all
+uv run tools/room_anim/bake_layer.py --base newcon --all
+uv run tools/room_anim/newcon/bake_sky.py
+uv run tools/room_anim/composite_preview.py --base newcon --seconds 16 \
+    --out build/room_anim/newcon/preview.mp4
 ```
 
-`--review-blend` regenerates `newcon_concourse.blend` (the hall, occluders,
-lights and every layer's actors, a collection each) for poking at the setup
-in Blender. Renders never come from that file; the scripts are the source.
+`--review-blend` regenerates `newcon/newcon_concourse.blend` (the hall,
+occluders, lights and every layer's actors, a collection each) for poking at
+the setup in Blender. Renders never come from that file; the scripts are the
+source.
 
-## Files
-
-| file | runs in | what |
+| `newcon/` file | runs in | what |
 |---|---|---|
 | `scene.py` | Blender | camera match, proxy decks, holdout occluders, lights |
 | `actors.py` | Blender | procedural hover-car and pedestrian proxies + animation |
-| `render_layers.py` | Blender | layer definitions; beauty / mask / empty passes |
-| `bake_layer.py` | uv | plate-aware sprite encoding + atlas packing |
+| `render_layers.py` | Blender | layer definitions |
 | `layers.json` | - | per-layer loop period and phase |
-| `bake_sky.py` | uv | sky mask, starless sky fill, star tiles |
-| `composite_preview.py` | uv | engine-faithful preview from `concourse.json` |
+| `bake_sky.py` | uv | window polygons -> sky mask, fill, star tiles |
 
 ## How it fits the painting
 
@@ -88,18 +104,18 @@ So nothing is camera-matched to a single plate. Instead:
 
 ```
 bake_hangar.py              -> anim/hangar/<hull>_{mask,fill,stars_*}.png, anchors.json
-render_hangar.py (Blender)  -> build/newcon_concourse/hangar/<layer>/  straight-alpha frames
+render_hangar.py (Blender)  -> build/room_anim/newcon/hangar/<layer>/  straight-alpha frames
 bake_traffic.py             -> anim/hangar/<layer>_{under,over}.{png,json}
 composite_preview.py --room landing --plate <hull>
 ```
 
 ```sh
-uv run tools/newcon_concourse/bake_hangar.py --debug build/newcon_concourse/mouths.png
+uv run tools/room_anim/newcon/bake_hangar.py --debug build/room_anim/newcon/mouths.png
 blender --background --factory-startup \
-    --python tools/newcon_concourse/render_hangar.py -- --layer all
-uv run tools/newcon_concourse/bake_traffic.py --all
-uv run tools/newcon_concourse/composite_preview.py --room landing --plate tarsus \
-    --seconds 30 --out build/newcon_concourse/hangar.mp4
+    --python tools/room_anim/newcon/render_hangar.py -- --layer all
+uv run tools/room_anim/newcon/bake_traffic.py --all
+uv run tools/room_anim/composite_preview.py --base newcon --room landing --plate tarsus \
+    --seconds 30 --out build/room_anim/newcon/hangar.mp4
 ```
 
 **Finding the mouth.** Per composite: flood the darkest star-removed blob in
@@ -139,18 +155,28 @@ reaches cy - 0.23 r; `bake_traffic.py` refuses frames below cy - 0.25 r.
 their `<stem>.materials.json` sidecars by `ships.py`; `ships.lookdev()`
 renders marked axes to find each mesh's orientation fix.
 
-| file | runs in | what |
+| `newcon/` file | runs in | what |
 |---|---|---|
 | `bake_hangar.py` | uv | per-composite mouth mask, fill, anchor; hangar star tiles |
-| `ships.py` | Blender | game-mesh import, sidecar materials, orientation |
 | `render_hangar.py` | Blender | canonical camera, lights, flight paths, frames |
 | `bake_traffic.py` | uv | trim, split at the mouth plane, pack |
 | `hangar_layers.json` | - | per-layer loop period and phase |
 
 ## Adding a layer
 
-1. Add a builder to `LAYERS` in `render_layers.py` (actors from `actors.py`).
-2. Add its loop timing to `layers.json`.
-3. Render, bake, and list `anim/<layer>.json` in the room's `"layers"` in
-   `assets/concourse/newcon/concourse.json` (drawn in list order: far first).
-4. Preview with `composite_preview.py`, then run `test_room_anim`.
+1. Add a builder to `LAYERS` in `<base>/render_layers.py`.
+2. Add its loop timing to `<base>/layers.json`.
+3. Render, `bake_layer.py --base <base>`, and list `anim/<layer>.json` in the
+   room's `"layers"` in `assets/concourse/<base>/concourse.json` (drawn in
+   list order: far first).
+4. Preview with `composite_preview.py --base <base>`, then run `test_room_anim`.
+
+## Adding a base
+
+1. Make `tools/room_anim/<base>/` with a camera-matched `scene.py` (see
+   `newcon/scene.py`: camera, proxy decks, holdout occluders, lights), a
+   `render_layers.py` that builds actors and calls `render.render_passes()`
+   into `paths("<base>").build`, and a `layers.json`.
+2. Scripts in `<base>/` put `tools/room_anim/` on `sys.path` to import the
+   shared modules (see the top of `newcon/render_layers.py`).
+3. Then follow *Adding a layer*.

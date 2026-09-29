@@ -22,22 +22,25 @@ OVER_FLOOR.
 Loop timing (period / phase, seconds) is in hangar_layers.json.
 
 Usage (from the repo root):
-    uv run tools/newcon_concourse/bake_traffic.py --all
+    uv run tools/room_anim/newcon/bake_traffic.py --all
 """
 import argparse
 import json
 import math
+import sys
 from pathlib import Path
 
 import numpy as np
 from PIL import Image
 
-from bake_layer import BIG_FRAME_PX, bbox, shrink, write_sheet
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from bake_layer import BIG_FRAME_PX, bbox, shrink, write_sheet  # noqa: E402
+from base import paths  # noqa: E402
 
-REPO = Path(__file__).resolve().parents[2]
-BUILD = REPO / "build/newcon_concourse/hangar"
-OUT = REPO / "assets/concourse/newcon/anim/hangar"
-TIMING = Path(__file__).resolve().parent / "hangar_layers.json"
+NEWCON = paths("newcon")
+BUILD = NEWCON.build / "hangar"
+OUT = NEWCON.anim / "hangar"
+TIMING = NEWCON.tools / "hangar_layers.json"
 CANVAS = (1536, 1024)
 OVER_FLOOR = -0.25       # over-plate sprites end above cy + OVER_FLOOR * r
 VISIBLE_ALPHA = 8        # alpha below this is motion-blur haze, ignored by the check

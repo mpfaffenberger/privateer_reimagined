@@ -13,7 +13,8 @@ from pathlib import Path
 import bpy
 from mathutils import Euler, Vector
 
-REPO = Path(__file__).resolve().parents[2]
+from base import REPO
+
 MESHES = REPO / "assets/meshes/ships_wcnews"
 
 # Source-axes -> ship-frame rotation (degrees, XYZ) per mesh, found by eye
