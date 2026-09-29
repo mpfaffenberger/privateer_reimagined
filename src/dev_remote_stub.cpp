@@ -21,6 +21,7 @@ void start(int /*port*/)                                   {}
 void stop()                                                {}
 void drain_commands(Camera& /*cam*/)                       {}
 void publish_fps(int /*fps*/)                              {}
+void publish_day(int /*day*/)                              {}
 void maybe_capture_screenshot()                            {}
 void publish_system_name(const char* /*name*/)             {}
 void publish_render_matrices(const HMM_Mat4& /*view_proj*/,
@@ -62,6 +63,7 @@ void set_inventory_equip_hook(std::function<void(int, int)> /*hook*/)  {}
 void set_panel_hook(std::function<void(std::string)> /*hook*/)         {}
 void set_comms_select_hook(std::function<void(int)> /*hook*/)          {}
 void set_plot_hook(std::function<void(std::string, std::string)> /*hook*/) {}
+void set_advance_day_hook(std::function<void(int)> /*hook*/)           {}
 void set_base_screen_hook(std::function<void(std::string)> /*hook*/)   {}
 void set_goto_hook(std::function<void(std::string)> /*hook*/)          {}
 void set_dock_hook(std::function<void(std::string)> /*hook*/)          {}
