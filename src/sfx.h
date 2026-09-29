@@ -69,6 +69,12 @@ void gun_fired(GunType type, HMM_Vec3 world_pos, bool is_player);
 // shield: sfx_25/sfx_26). The damage pass knows who took the hit.
 void impact(HMM_Vec3 world_pos, bool shield, bool victim_is_player);
 void ship_exploded(HMM_Vec3 world_pos, bool big);  // big: cargo/capital hulls
+// Internal-system damage cue (sfx_38, "internal system damage taken"; #519):
+// a penetrating hit chipped one of the PLAYER's components. 2D (it's inside
+// our own hull). Throttled so a sustained burst doesn't machine-gun it;
+// destroyed=true plays louder and bypasses the throttle — losing a system
+// outright is rare (once per system per repair) and is the news that matters.
+void component_damaged(bool destroyed);
 
 // ---- missiles + lock (np-zte.2) ---------------------------------------------
 // missile_fired: 2D launch whoosh (the player's own rack). out_of_ammo: a

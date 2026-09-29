@@ -56,6 +56,7 @@ enc 25 impact_shield;  enc 26 impact_shield_npc    # player / NPC shield hit
 enc 27 explosion_big                               # ship destroyed
 enc 28 explosion_small                             # missile explosion (smaller boom)
 enc 18 missile_fire                                # missile launch
+enc 38 component_damage                            # player internal system hit (#519)
 
 echo "[remap] flight / UI"
 enc 22 cruise_windup   # afterburner / cruise spool

@@ -16,6 +16,8 @@ separate backlog issue. The gameplay set (np-3gw.2):
                         (the looping engine bed; gain ridden by throttle)
     cruise_windup.wav - 1.5s rising sweep (cruise engage)
     ui_click.wav      - 5ms tick (nav/target cycle)
+    component_damage.wav - 350ms electrical crackle over a sagging tone
+                        (player internal system hit, #519; original sfx_38)
     hum.wav           - kept for back-compat with the np-3gw.1 debug button
 
 All PCM16 mono 44.1kHz, written to assets/sfx/. Idempotent; rerun freely.
@@ -213,6 +215,27 @@ def lock_acquired() -> list[float]:
     return out
 
 
+def component_damage() -> list[float]:
+    """350ms 'something inside just shorted out': gated noise crackle
+    (random ~8ms sparks) over a 900->250Hz sagging square-ish tone. Sparky
+    and wounded, so it reads apart from the plain armor-hit crack."""
+    rng = random.Random(38)
+    n = int(RATE * 0.350)
+    spark_len = int(RATE * 0.008)
+    out, phase, gate = [], 0.0, 0
+    for t in range(n):
+        k = t / n
+        if t % spark_len == 0:
+            gate = 1 if rng.random() < 0.55 else 0
+        env = math.exp(-k * 3.5)
+        crackle = (rng.random() * 2 - 1) * gate
+        freq = 900 * (1 - k) + 250 * k
+        phase += 2 * math.pi * freq / RATE
+        tone = math.tanh(3.0 * math.sin(phase)) * 0.5
+        out.append((0.6 * crackle + tone) * env * 0.7)
+    return lowpass(out, 0.6)
+
+
 def main() -> None:
     os.makedirs(OUT_DIR, exist_ok=True)
     write_wav("blip.wav", blip())
@@ -229,6 +252,7 @@ def main() -> None:
     write_wav("missile_fire.wav", missile_fire())
     write_wav("lock_seeking.wav", lock_seeking())
     write_wav("lock_acquired.wav", lock_acquired())
+    write_wav("component_damage.wav", component_damage())
 
 
 if __name__ == "__main__":

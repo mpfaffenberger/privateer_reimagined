@@ -38,7 +38,7 @@
   "sfx_35": { "label": "same as 31", "current_use": "(unused)" },
   "sfx_36": { "label": "unknown", "current_use": "(unused)" },
   "sfx_37": { "label": "send comms (to NPC) ", "current_use": "(unused)" },
-  "sfx_38": { "label": "internal system damage taken", "current_use": "tachyon_cannon gun" },
+  "sfx_38": { "label": "internal system damage taken", "current_use": "component_damage event (#519)" },
   "sfx_39": { "label": "dumping cargo", "current_use": "(unused)" },
   "sfx_40": { "label": "unknown", "current_use": "missile_fire event" },
   "sfx_41": { "label": "This sound plays immedially followed by 42 when you press j inside of a jump gate", "current_use": "cruise_windup event (+ jump sting)" },

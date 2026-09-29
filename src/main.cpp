@@ -5545,6 +5545,16 @@ void frame_cb() {
         }
     }
 
+    // Component-damage cue (#519). ship::take_damage latches the worst
+    // system hit from ANY source (guns, missiles, sun, collisions); consume
+    // the player's here. A hit landing after this point (e.g. collisions
+    // below) is simply heard next frame. Throttling lives in sfx.cpp.
+    if (Ship* pl = g.ships.player()) {
+        const SystemHit hit = std::exchange(pl->pending_system_hit, SystemHit::None);
+        if (hit != SystemHit::None)
+            sfx::component_damaged(hit == SystemHit::Destroyed);
+    }
+
     // Flash tick + prune. Inline (small structs, single use site each).
     for (auto& f : g.shield_flashes) {
         f.age_s += dt;
