@@ -486,8 +486,10 @@ target_include_directories(test_pause_overlay PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
 # Pure cockpit-art fit + MFD-hole geometry harness (#426).
 # Real ImGui compositing with GPU texture allocation stubbed (#429).
+# Also covers the V cockpit-off toggle's classic HUD placement (#554).
 add_executable(test_cockpit_layers EXCLUDE_FROM_ALL
-    tools/test_cockpit_layers.cpp src/cockpit_overlay.cpp ${IMGUI_SRC})
+    tools/test_cockpit_layers.cpp src/cockpit_overlay.cpp
+    src/cockpit_mfd.cpp src/hud_text_fit.cpp ${IMGUI_SRC})
 target_include_directories(test_cockpit_layers PRIVATE
     ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party ${IMGUI_DIR})
 

@@ -17,16 +17,26 @@
 //                      already-open navmap.
 //   A              — autopilot to selected nav (hostile-gated; any input cancels)
 //   D              — dock at selected base when cleared
+//   J              — jump through the gate in range
+//   T              — cycle targets in radar range
+//   G              — cycle gun arm-mode
+//   W (F alias)    — cycle the loaded launcher (opens ARMAMENTS)
+//   Enter          — fire the selected missile
+//   C / R          — STATUS Comms / Damage Control page (1-9 pick in Comms)
+//   Z              — tractor loose loot into the hold
+//   I              — in-flight inventory
+//   M              — sector map
+//   V              — toggle cockpit art (off = open full-screen view, #554)
+//   Space          — toggle fly-by-wire / free cursor
+//   P              — pause
+//   [ / ]          — reset / cycle sim time scale
 //   Escape (×2)    — quit (double-tap within 1s so accidental taps are safe)
 //
-//   Open / unbound (free for new bindings — W, S, Q, E, R, F, Z, C, X):
-//     W/S — no longer forward/back throttle
-//     Q/E — no longer strafe
-//     R/F — no longer pitch (up/down)
-//     Z/C — no longer roll
-//     X   — no longer brake / fire (now used by gun cycle as alt-fire)
-//   Bind them to new features (shield level toggle, weapon group cycling,
-//   etc.) and update this header + the in-game reminder.
+//   Open / unbound letters in flight: B, E, H, K, L, O, Q, S, U, X, Y
+//   (Ctrl+B / Ctrl+K are taken by dev tools; F1-F10 are dev tools too).
+//   Bind them to new features and update this header + README controls.
+//   Check event_cb and the keys_down polling in frame_cb first: this list
+//   has gone stale before.
 // -----------------------------------------------------------------------------
 
 #include "sokol_log.h"
@@ -6549,7 +6559,8 @@ void frame_cb() {
             // the render camera is OUTSIDE the hull (autopilot chase cam,
             // death cinematic): a cockpit frame over a 3rd-person view is
             // nonsense, and skipping it drops the HUD back to the classic
-            // floating panels for those frames automatically.
+            // floating panels for those frames automatically. The pilot's
+            // V toggle (#554) takes the same fallback inside draw().
             if (!g.orbit_active)
                 cockpit_overlay::draw(g.player.ship_class_name, g.camera);
             cockpit_hud::build(g.camera, g.system, g.selected_nav,
@@ -7633,6 +7644,14 @@ void event_cb(const sapp_event* ev) {
             g.show_inventory = !g.show_inventory;
             std::printf("[inventory] in-flight panel %s\n",
                         g.show_inventory ? "OPEN" : "CLOSED");
+        }
+        // V — toggle the cockpit art (#554). Off gives the open full-screen
+        // view; the HUD drops to its classic floating panels. Session-only.
+        if (ev->key_code == SAPP_KEYCODE_V && !ev->key_repeat) {
+            cockpit_overlay::set_enabled(!cockpit_overlay::enabled());
+            sfx::ui_click();
+            std::printf("[cockpit] art %s\n",
+                        cockpit_overlay::enabled() ? "ON" : "OFF");
         }
         if ((size_t)ev->key_code < g.keys_down.size()) g.keys_down[ev->key_code] = true;
         break;

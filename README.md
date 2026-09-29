@@ -151,6 +151,7 @@ a stable player-facing CLI.
 | `T` | Cycle targets within radar range (15 km), nearest to farthest |
 | `Z` | Tractor loose loot into the hold (2.5 km) |
 | `I` | In-flight inventory |
+| `V` | Toggle cockpit art (off = open full-screen view with the classic floating HUD) |
 | `P` | Pause/unpause (shows centered instructions) |
 
 ### Navigation
