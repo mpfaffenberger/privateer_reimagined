@@ -32,6 +32,9 @@
     { "offset_body": [ 0.6, 0.0, -3.0], "forward_body": [0, 0, -1], "cone_half_angle_deg": 120, "type": "meson_blaster", "turret": true }
   ],
 
+  // Stock missile rack (#524), from privateer_ship_data.json "Weapons".
+  "default_missiles": { "FF": 1, "DF": 1, "IR": 3 },
+
   "energy_max":      220,
   "energy_recharge": 34,
 

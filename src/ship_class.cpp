@@ -5,6 +5,7 @@
 #include "mobility.h"
 #include "shield.h"
 
+#include <algorithm>
 #include <cctype>
 #include <cstdio>
 #include <filesystem>
@@ -232,6 +233,20 @@ bool parse_one(const fs::path& path) {
                 add_turret_mount(c, opt_str(gv, "turret_slot", "turret"),
                                  (int)c.default_guns.size());
             c.default_guns.push_back(m);
+        }
+    }
+
+    // Stock missile rack (#524): { "DF": 3, "HS": 4 }. Rack types only —
+    // torpedoes have their own tube and aren't an NPC load.
+    if (auto* ms = root.find("default_missiles"); ms && ms->is_object()) {
+        for (const auto& [code, count] : ms->as_object()) {
+            const MissileType t = missile::from_name(code.c_str());
+            if ((int)t >= kMissileRackTypeCount || !count.is_number()) {
+                std::fprintf(stderr, "[ship_class] '%s': bad default_missiles entry '%s'\n",
+                             c.name.c_str(), code.c_str());
+                continue;
+            }
+            c.default_missiles[(int)t] = std::max(0, (int)count.as_number());
         }
     }
 

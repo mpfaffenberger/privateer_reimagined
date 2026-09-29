@@ -50,7 +50,9 @@
 // -----------------------------------------------------------------------------
 
 #include <HandmadeMath.h>
+#include <array>
 #include <cstdint>
+#include <cstring>
 #include <vector>
 
 enum class MissileType : uint8_t {
@@ -66,6 +68,18 @@ constexpr int kMissileTypeCount = (int)MissileType::Count;
 // (PlayerState::missiles); torpedoes have their own tube + counter.
 constexpr int kMissileRackTypeCount = (int)MissileType::TORPEDO;
 
+// Short codes ("DF", "HS", ...), indexed by MissileType. The ONE string
+// table: g_missile_stats' short_name and from_name/to_name all read it.
+// Header-inline so data loaders (ship_class.cpp's default_missiles) can
+// parse codes without linking missile.cpp.
+inline constexpr const char* k_missile_codes[kMissileTypeCount] = {
+    "DF", "HS", "IR", "FF", "TORP",
+};
+
+// Rounds per launcher-rack type (DF/HS/IR/FF), indexed by MissileType.
+// A hull's authored stock load (ShipClass::default_missiles) and an NPC's
+// live rack (Ship::npc_missiles) — #524. Torpedoes are not in it.
+using MissileRack = std::array<int, kMissileRackTypeCount>;
 struct MissileStats {
     const char* short_name;        // "DF", "HS", "IR" — HUD readout
     const char* long_name;         // "Dumbfire", "Heat-Seeker", "Image-Rec"
@@ -108,9 +122,24 @@ class ShipRegistry;
 
 namespace missile {
 
-// String <-> enum for HUD + logs. Returns Count on unknown.
-MissileType from_name(const char* s);
-const char* to_name(MissileType t);
+// String <-> enum for HUD, logs, and ship.json. Returns Count on unknown.
+inline MissileType from_name(const char* s) {
+    if (!s) return MissileType::Count;
+    for (int i = 0; i < kMissileTypeCount; ++i)
+        if (std::strcmp(s, k_missile_codes[i]) == 0) return (MissileType)i;
+    return MissileType::Count;
+}
+inline const char* to_name(MissileType t) {
+    const int i = (int)t;
+    return (i >= 0 && i < kMissileTypeCount) ? k_missile_codes[i] : "?";
+}
+
+// Rounds left across every rack type.
+inline int rack_total(const MissileRack& rack) {
+    int n = 0;
+    for (int c : rack) n += c;
+    return n;
+}
 
 // Build a freshly-armed Missile from its type, launch pose, and target.
 // `forward` is the launch direction (unit); `shooter_vel` is inherited so
@@ -144,16 +173,25 @@ void collide_and_damage(std::vector<Missile>& missiles, ShipRegistry& ships,
 uint32_t acquire_iff_target(const ShipRegistry& ships, uint32_t owner_id,
                             const HMM_Vec3& from);
 
-// ---- NPC racks (#144) -------------------------------------------------------
-// NPC missiles are FF-only today (pirates' vanilla favourite): a flat round
-// count on Ship::ff_missiles, no launcher hardware model.
-// Fits the faction's default FF rack onto a freshly spawned NPC (call once
-// its faction is final). Pirates carry FF; everyone else flies without.
+// ---- NPC racks (#144, #524) -------------------------------------------------
+// An NPC's ordnance is a typed round count (Ship::npc_missiles), no launcher
+// hardware model. Seeded from the hull's authored stock load
+// (ShipClass::default_missiles, from privateer_ship_data.json's "Weapons").
+// Fits that rack onto a freshly spawned NPC (call once its faction is
+// final). Pirates keep their vanilla FF preference (#144): every round on a
+// pirate hull is refit as FF, count preserved. No class = empty rack.
 void arm_npc_rack(Ship& s);
 
+// The rack type an NPC fires next, or Count if it has nothing it can fire.
+// Strongest seeker first (IR > HS > FF > DF) so even a short fight sees the
+// dangerous rounds; lock types (IR/HS) are skipped without a live target.
+MissileType npc_pick_round(const MissileRack& rack, bool has_lock);
+
 // Per-frame NPC launch pass: an armed NPC mid gun-run (Engage + guns hot)
-// fires one FF along its nose each time its refire cooldown elapses.
-// Returns the number launched this frame (for logging).
+// fires one round along its nose each time its refire cooldown elapses.
+// Lock types (HS/IR) lock the AI's current target (ai.target_id), not an
+// IFF pick; FF self-acquires; DF flies straight. Returns the number
+// launched this frame (for logging).
 int npc_launch(std::vector<Missile>& missiles, ShipRegistry& ships, float dt);
 
 } // namespace missile

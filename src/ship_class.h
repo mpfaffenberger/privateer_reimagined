@@ -23,6 +23,7 @@
 
 #include "faction.h"
 #include "gun.h"
+#include "missile.h"
 #include "mobility.h"
 
 // AI personality — gates how the state machine reacts to perceived
@@ -177,6 +178,12 @@ struct ShipClass {
     // Turret positions this hull SUPPORTS, derived from default_guns at
     // load (authored order). Empty = the hull can't carry a turret.
     std::vector<TurretSlot> turret_slots;
+
+    // Stock missile load per rack type (#524), authored in ship.json as
+    // "default_missiles": { "FF": 6, "HS": 3 } from the hull's canonical
+    // privateer_ship_data.json "Weapons" line. NPCs spawn with it
+    // (missile::arm_npc_rack); the player's ordnance lives in PlayerState.
+    MissileRack default_missiles{};
 
     // Header-inline so player.cpp's loadout rules need no ship_class.cpp link.
     const TurretSlot* find_turret_slot(std::string_view id) const {

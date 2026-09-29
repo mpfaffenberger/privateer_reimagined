@@ -2438,7 +2438,7 @@ void build_system_scene(bool first_time, bool show_progress) {
                              sd.faction_override.c_str(), class_name.c_str());
             }
         }
-        missile::arm_npc_rack(inst);   // faction is final: pirates get FF (#144)
+        missile::arm_npc_rack(inst);   // faction is final: hull rack, pirates FF (#524)
 
         // Translate the JSON behaviour string into the Ship enum.
         if (sd.behavior_kind == "pursue_target") {
@@ -2919,7 +2919,7 @@ void apply_ship_debug_requests() {
             Ship inst   = ship::spawn(*klass);
             inst.sprite = &spr;
             inst.ai.enabled = true;             // joins the brawl like its JSON kin
-            missile::arm_npc_rack(inst);        // same FF rack as its JSON kin (#144)
+            missile::arm_npc_rack(inst);        // same hull rack as its JSON kin (#524)
             const ShipHandle h = g.ships.spawn(std::move(inst));
             std::printf("[debug_spawn] talon spawned: handle {%u, %u}, sprite slot %zu\n",
                         h.index, h.generation, slot);
@@ -3263,7 +3263,7 @@ static uint32_t encounter_spawn(const encounters::SpawnRequest& req) {
     inst.sprite       = &spr;
     inst.faction      = req.faction;
     inst.display_name = req.display_name;
-    missile::arm_npc_rack(inst);   // pirates carry FF racks (#144)
+    missile::arm_npc_rack(inst);   // hull missile rack; pirates refit FF (#524)
 
     // Talon loadout rule (global): the ONLY Talons that keep the stock
     // 2x laser + center mass driver (the ship.json default) are PIRATE
@@ -5223,12 +5223,12 @@ void frame_cb() {
     // Guided missiles (np-zte.2): steer + advance BEFORE the snapshot/damage
     // pass below, exactly like projectiles, so their detonations are caught
     // by the same kill-detection + explosion FX that gunfire uses.
-    // NPC FF racks (#144): pirates mid gun-run lob Friend-or-Foes. Same
-    // cinematic gate as gunfire, and before tick so a fresh round gets its
-    // first integration step this frame.
+    // NPC missile racks (#144, #524): armed NPCs mid gun-run launch from
+    // their hull's rack. Same cinematic gate as gunfire, and before tick so
+    // a fresh round gets its first integration step this frame.
     if (!cinematic::active()) {
         if (const int n = missile::npc_launch(g.missiles, g.ships, dt); n > 0)
-            std::printf("[missile] NPC launched %d FF\n", n);
+            std::printf("[missile] NPC launched %d missile(s)\n", n);
     }
     missile::tick(g.missiles, g.ships, dt);
 

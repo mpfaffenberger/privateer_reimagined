@@ -41,6 +41,9 @@
     { "offset_body": [ 0.6, 0.0, -3.0], "forward_body": [0, 0, -1], "cone_half_angle_deg": 120, "type": "laser", "turret": true, "turret_slot": "rear" }
   ],
 
+  // Stock missile rack (#524), from privateer_ship_data.json "Weapons".
+  "default_missiles": { "HS": 3 },
+
   "energy_max":      220,
   "energy_recharge": 30,
 

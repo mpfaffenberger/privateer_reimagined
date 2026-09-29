@@ -43,6 +43,9 @@
     { "offset_body": [ 5.6, 0.0, -24.0], "forward_body": [0, 0, -1], "cone_half_angle_deg": 120, "type": "ionic_pulse_cannon", "turret": true, "turret_slot": "rear" }
   ],
 
+  // Stock missile rack (#524), from privateer_ship_data.json "Weapons".
+  "default_missiles": { "FF": 2, "IR": 2 },
+
   "energy_max":      250,
   "energy_recharge": 35,
 
