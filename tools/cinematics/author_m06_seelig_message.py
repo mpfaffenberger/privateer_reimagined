@@ -1,13 +1,13 @@
 """Author Captain Seelig's Roman Lynch dismissal ambush (#388)."""
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 from PIL import Image
 
 from tools.cinematics.audio_timing import mp3_duration_seconds
 from tools.cinematics.builder import Cinematic, repo_root
+from tools.cinematics.publish import publish
 
 CID = "m06_seelig_message"
 ROOT = repo_root()
@@ -64,31 +64,21 @@ def verify_assets(c: Cinematic) -> None:
                 raise RuntimeError(f"line {index} missing mandatory {field}: {path}")
 
 
-def merge_trigger() -> None:
-    path = CIN_DIR / "triggers.json"
-    document = json.loads(path.read_text(encoding="utf-8"))
-    triggers = document.get("triggers")
-    if not isinstance(triggers, list):
-        raise RuntimeError("triggers.json has no triggers array; refusing to clobber it")
-    if any(item.get("cinematic") == CID for item in triggers):
-        raise RuntimeError(f"trigger for {CID} already exists")
-    triggers.append({
-        "cinematic": CID,
-        "once": True,
-        "cooldown_s": 0,
-        "when": {
-            "system": "pentonville",
-            "near_nav": {"nav": "119CE Jump", "radius_m": 20000},
-            "requires_flags": ["m06_active"],
-            "forbids_flags": [
-                "m06_message_delivered",
-                "killed:seelig",
-                f"{CID}_seen",
-            ],
-        },
-    })
-    path.write_text(json.dumps(document, indent=2, ensure_ascii=False) + "\n",
-                    encoding="utf-8")
+TRIGGER = {
+    "cinematic": CID,
+    "once": True,
+    "cooldown_s": 0,
+    "when": {
+        "system": "pentonville",
+        "near_nav": {"nav": "119CE Jump", "radius_m": 20000},
+        "requires_flags": ["m06_active"],
+        "forbids_flags": [
+            "m06_message_delivered",
+            "killed:seelig",
+            f"{CID}_seen",
+        ],
+    },
+}
 
 
 def main() -> None:
@@ -161,8 +151,8 @@ def main() -> None:
         "set_flag:m06_message_delivered",
     ])
     verify_assets(c)
-    c.save()
-    merge_trigger()
+    # Cinematic + trigger land together or not at all (#368).
+    publish(c, TRIGGER)
     print(CID)
 
 

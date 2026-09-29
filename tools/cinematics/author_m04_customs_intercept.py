@@ -1,13 +1,13 @@
 """Author the New Constantinople M04 customs-fleet interception (#347)."""
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 from PIL import Image
 
 from tools.cinematics.audio_timing import mp3_duration_seconds
 from tools.cinematics.builder import Cinematic, repo_root
+from tools.cinematics.publish import publish
 
 CID = "m04_customs_intercept"
 ROOT = repo_root()
@@ -155,16 +155,8 @@ def main() -> None:
             if not asset.is_file() or asset.stat().st_size == 0:
                 raise RuntimeError(f"line {index} {field} does not resolve: {asset}")
 
-    c.save()
-
-    triggers_path = CIN_DIR / "triggers.json"
-    triggers_doc = json.loads(triggers_path.read_text(encoding="utf-8"))
-    triggers = triggers_doc.get("triggers")
-    if not isinstance(triggers, list):
-        raise RuntimeError("triggers.json has no triggers array; refusing to clobber it")
-    if any(item.get("cinematic") == CID for item in triggers):
-        raise RuntimeError(f"trigger for {CID} already exists; refusing duplicate merge")
-    triggers.append({
+    # Cinematic + trigger land together or not at all (#368).
+    publish(c, {
         "cinematic": CID,
         "once": True,
         "cooldown_s": 0,
@@ -176,8 +168,6 @@ def main() -> None:
             "forbids_flags": [f"{CID}_seen"],
         },
     })
-    triggers_path.write_text(json.dumps(triggers_doc, indent=2, ensure_ascii=False) + "\n",
-                             encoding="utf-8")
     print(CID)
 
 

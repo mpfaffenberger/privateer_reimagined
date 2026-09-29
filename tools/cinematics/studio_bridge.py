@@ -425,11 +425,12 @@ def build_author_prompt(req: dict) -> str:
         parts.append(f"Portrait style direction for every line: {style}")
     parts.append(
         "Steps: 1) author the cinematic with tools/cinematics/builder.py "
-        "Cinematic(auto_portraits=True, auto_voices=True) and save it; "
-        "2) apply the trigger + outcome as above; "
-        "3) run `python -m tools.cinematics.validate " + cid + "` and fix any "
-        "errors; 4) verify all voice files and portrait PNGs exist on disk; "
-        "5) finish by printing the cinematic id on its own line.")
+        "Cinematic(auto_portraits=True, auto_voices=True) and set the outcome "
+        "as above; 2) write it with tools.cinematics.publish.publish(c, "
+        "trigger) instead of c.save() plus a hand-edited triggers.json: it "
+        "validates first and writes both files or neither; 3) fix any errors "
+        "it raises; 4) verify all voice files and portrait PNGs exist on "
+        "disk; 5) finish by printing the cinematic id on its own line.")
     return "\n\n".join(parts)
 
 
