@@ -21,8 +21,7 @@ campaign all ship and are covered by headless tests.
 
 The remaining gaps are:
 
-1. **Build and test health.** A fresh clone can't build the game ([#427]).
-   Three harnesses write into the player's real save directory ([#383]). The
+1. **Build and test health.** Three harnesses write into the player's real save directory ([#383]). The
    broad integration harness is red ([#314]). There is no CI.
 2. **Combat-system fidelity.** Per-system component damage, Friend-or-Foe
    missiles, scanner tiers, and buying turrets for hulls that lack them.
@@ -99,14 +98,17 @@ _New tier since the 2026-07-19 audit._
 
 | Gap | Impact | Issue |
 |---|---|---|
-| **Fresh clones can't build the game.** `mission_templates_gen` lists the gitignored `re/mission_text.json` as a DEPENDS, and both `new_privateer` and 4 test targets depend on it. The CMake comment saying a missing file is OK is wrong. | Anyone new is blocked | [#427] |
 | **Tests write into the player's real saves.** `test_savegame`, `test_missions` (slot 7) and `test_full_loop` (slot 9 + a timestamped autosave). Because `--continue` loads the newest save, a test run can hijack the player's next resume. | Data hazard | [#383] |
 | `test_full_loop` fails 17 checks (start state, director spawns, dock autosave slot 0, cargo run, respawn) because of stale assumptions after the autosave/economy changes | Main integration net is off | [#314] |
 | 6 `tools/test_*.cpp` harnesses aren't wired into CMake (`autopilot`, `inventory112`, `light_rec`, `missile`, `reputation`, `salvage`) | Coverage that looks real but isn't | [#493] |
 | **No CI.** The Windows Actions workflow was removed on 2026-07-11 after repeated failures. Windows previews are hand-published; Windows-specific bugs are open ([#291], [#239]). | Regressions show up late | — (needs an issue if CI is wanted) |
 
-**Test scoreboard (2026-09-28, macOS Release):** 23/24 pass (3 of them only
-with `re/mission_text.json` present). `test_full_loop` fails.
+**Test scoreboard (2026-09-28, macOS Release):** 23/24 pass on a fresh
+clone. `test_full_loop` fails.
+
+**Fixed since the audit:** fresh clones build the game and every harness
+without recovered data ([#427]). Still open nearby: the post-build assets
+link assumes the build dir is `<repo>/build` ([#497]).
 
 ### P1 — Combat-system gaps
 
@@ -209,8 +211,7 @@ RF gap **(corrected)**. Fine to defer.
 - **Comment debt is low but not zero:** 8 TODO/FIXME/HACK markers across
   `src/`. Stale-comment liars remain ([#149]): `game_state.h` still calls
   live screens "today a stub screen", `autopilot.cpp` describes the hostile
-  gate as a stub, and the CMake comment says a missing mission file is OK
-  ([#427]). The input comments are listed above.
+  gate as a stub. The input comments are listed above.
 - **Repo hygiene: done** ([#150] closed). The tracked root is clean. Local
   build products and logs stay untracked.
 - **Doc drift:** this audit replaced a gap doc that had drifted for about 60
@@ -232,8 +233,9 @@ human judgment call.
 
 ## 4. Suggested attack order
 
-1. **Unblock fresh builds ([#427])** and **isolate test saves ([#383])**. Both
-   are small, and both protect other people (and their save files).
+1. **Isolate test saves ([#383])** and fix the build-dir assumption
+   ([#497]). Both are small, and they protect players' save files and
+   contributors' build setups.
 2. **Get `test_full_loop` green ([#314])**, wire the orphaned harnesses
    ([#493]), and decide whether to bring CI back (at least a macOS or Linux
    headless-test job).
@@ -306,3 +308,4 @@ human judgment call.
 [#491]: https://github.com/mpfaffenberger/privateer_reimagined/issues/491
 [#492]: https://github.com/mpfaffenberger/privateer_reimagined/issues/492
 [#493]: https://github.com/mpfaffenberger/privateer_reimagined/issues/493
+[#497]: https://github.com/mpfaffenberger/privateer_reimagined/issues/497

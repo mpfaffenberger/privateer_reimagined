@@ -64,13 +64,11 @@ in [`docs/persistent_world_plan.md`](docs/persistent_world_plan.md) and its
 All platforms need Git LFS: most runtime media and mesh sources are stored
 in LFS.
 
-> **Known issue ([#427]):**
-> the build rule for `src/mission_templates.gen.h` depends on
-> `re/mission_text.json`. That file is gitignored and recovered from an
-> original Privateer install with `re/extract_mission_text.py`. Without it, a
-> **fresh clone fails to build** with `No rule to make target
-> re/mission_text.json`, even though a checked-in fallback header exists.
-> Existing development checkouts that already have the file build normally.
+Mission briefing text comes from the checked-in
+`src/mission_templates.gen.h`. If you own the original game, you can recover
+`re/mission_text.json` with `re/extract_mission_text.py` and re-run CMake.
+The header is then regenerated from your data. Neither step is needed to
+build or play.
 
 ### macOS (primary platform)
 
@@ -300,4 +298,3 @@ MIT. See [`LICENSE`](LICENSE).
 [issues]: https://github.com/mpfaffenberger/privateer_reimagined/issues
 
 [#383]: https://github.com/mpfaffenberger/privateer_reimagined/issues/383
-[#427]: https://github.com/mpfaffenberger/privateer_reimagined/issues/427

@@ -101,25 +101,33 @@ compile_shader(post_composite)
 # tools/gen_mission_templates.py reads re/mission_text.json (gitignored;
 # user-recovered via re/extract_mission_text.py) and bakes the per-type
 # summary + copy[] variants + ENMY/CORP name pools into
-# src/mission_templates.gen.h. A missing re/mission_text.json is OK at
-# config time -- the checked-in header acts as the fallback until the
-# generator is actually invoked (which we never do at configure time).
-add_custom_command(
-    OUTPUT  ${CMAKE_SOURCE_DIR}/src/mission_templates.gen.h
-    COMMAND ${CMAKE_COMMAND} -E env python3
-            ${CMAKE_SOURCE_DIR}/tools/gen_mission_templates.py
-            ${CMAKE_SOURCE_DIR}/re/mission_text.json
-            ${CMAKE_SOURCE_DIR}/src/mission_templates.gen.h
-    DEPENDS ${CMAKE_SOURCE_DIR}/tools/gen_mission_templates.py
-            ${CMAKE_SOURCE_DIR}/re/mission_text.json
-    COMMENT "gen_mission_templates: re/mission_text.json -> src/mission_templates.gen.h"
-    VERBATIM
-)
-# Wire the rule into every target that compiles missions.cpp so a stale
-# header is regenerated on the next build (see add_dependencies below).
-add_custom_target(mission_templates_gen
-    DEPENDS ${CMAKE_SOURCE_DIR}/src/mission_templates.gen.h
-)
+# src/mission_templates.gen.h.
+#
+# The generator rule exists ONLY when the recovered JSON is present. Fresh
+# clones don't have it, so mission_templates_gen becomes a no-op and the
+# checked-in header is compiled as-is (issue #427). Re-run CMake after
+# recovering re/mission_text.json to switch regeneration on.
+set(MISSION_TEXT_JSON ${CMAKE_SOURCE_DIR}/re/mission_text.json)
+set(MISSION_TEMPLATES_H ${CMAKE_SOURCE_DIR}/src/mission_templates.gen.h)
+if(EXISTS ${MISSION_TEXT_JSON})
+    add_custom_command(
+        OUTPUT  ${MISSION_TEMPLATES_H}
+        COMMAND ${CMAKE_COMMAND} -E env python3
+                ${CMAKE_SOURCE_DIR}/tools/gen_mission_templates.py
+                ${MISSION_TEXT_JSON} ${MISSION_TEMPLATES_H}
+        DEPENDS ${CMAKE_SOURCE_DIR}/tools/gen_mission_templates.py
+                ${MISSION_TEXT_JSON}
+        COMMENT "gen_mission_templates: re/mission_text.json -> src/mission_templates.gen.h"
+        VERBATIM
+    )
+    # Every target that compiles missions.cpp depends on this, so a stale
+    # header is regenerated on the next build (see add_dependencies below).
+    add_custom_target(mission_templates_gen DEPENDS ${MISSION_TEMPLATES_H})
+else()
+    message(STATUS "mission templates: re/mission_text.json not found; "
+                   "using checked-in src/mission_templates.gen.h")
+    add_custom_target(mission_templates_gen)
+endif()
 # Target: new_privateer
 # ---------------------------------------------------------------------------
 # The Obj-C++ TU exists only on Apple (Metal + Foundation headers force ObjC
