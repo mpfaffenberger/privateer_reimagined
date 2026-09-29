@@ -187,7 +187,10 @@ namespace dev_remote {
 // binding fails (e.g. another instance of the game is still listening).
 // The failure path is non-fatal on purpose — the game should keep running
 // even if the dev channel can't open.
-void start(int port = 8765);
+// 47001 avoids common local dev-server ports (3000, 5000, 8080, 8765, ...).
+// Scripts and docs assume it, so this is the only place it's spelled.
+constexpr int k_default_port = 47001;
+void start(int port = k_default_port);
 
 // Tear down the server cleanly. Safe to call unconditionally at shutdown.
 void stop();

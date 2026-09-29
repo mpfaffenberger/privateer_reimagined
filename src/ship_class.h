@@ -42,6 +42,11 @@ enum class AIPersonality : uint8_t {
 
 struct ShieldType;
 
+// Fallback sensor sphere for a class that doesn't set radar_range, and for
+// class-less ships. 15000 is the original game's sensor cull (0x3a98,
+// docs/ai_model.md section 11).
+constexpr float k_default_radar_range_m = 15000.0f;
+
 struct ShipClass {
     // ---- identity ------------------------------------------------------
     std::string name;             // lowercase: "talon", "tarsus" — used as registry key
@@ -90,10 +95,10 @@ struct ShipClass {
     //
     // radar_range is the SENSOR / DETECTION / AWARENESS sphere — this is
     // what actually wakes the AI and starts an engage (gated by faction
-    // stance in perception.cpp). Live-corrected to the Privateer-canonical
-    // 15000 world units (docs/ai_model.md §11 / sensor cull 0x3a98). It is
+    // stance in perception.cpp). It applies to the player's hull too: read
+    // it through perception::radar_range_m(), never a literal (#492). It is
     // NOT CNST f1 — f1 is the cosmetic comm/taunt range (see comms_f1).
-    float radar_range   = 15000.0f;   // m  (sensor/detection, §11)
+    float radar_range   = k_default_radar_range_m;   // m  (sensor/detection, §11)
     float weapons_range =  3000.0f;   // m
 
     // ---- AI tuning: Privateer CNST skill vector (raw 1:1 world units) --

@@ -855,13 +855,14 @@ void draw_radar_mfd(const Camera& cam, const StarSystem& system, int selected_na
 
         const ImVec2 ctr  = ImVec2(disc.x + disc.w * 0.5f, disc.y + disc.h * 0.5f);
         const float  rad  = std::min(disc.w, disc.h) * 0.5f - (panel.in_display ? 3.0f : 6.0f);
-        // 35 km radar radius (np-rad.1) — expanded from the legacy 15 km so
-        // a single screen frame can show more of the local traffic around
-        // the player. Anything past 35k clamps to the rim, so nav points
-        // 100+ km away overlap at the edge — that's the intended trade:
-        // the MFD is a "where's the contact NEAR me" display, not a
-        // system overview.
-        constexpr float max_range = 35000.0f;       // u — beyond 35km, clamp to rim
+        // The disc's rim is the player's radar sphere (perception::
+        // radar_range_m, #492), so a contact at the rim is exactly one that
+        // is about to drop off radar and out of lock. Anything farther
+        // (nav points 100+ km away) clamps to the rim: the MFD is a
+        // "where's the contact NEAR me" display, not a system overview.
+        const Ship* radar_owner = ships.player();
+        const float max_range = radar_owner ? perception::radar_range_m(*radar_owner)
+                                            : k_default_radar_range_m;
 
         // Concentric range rings + crosshair. Drawn before sweep so the
         // sweep line passes over them.
@@ -915,9 +916,8 @@ void draw_radar_mfd(const Camera& cam, const StarSystem& system, int selected_na
         // camera-relative projection as the nav loop above; stance
         // colors mirror the on-screen target indicator (red=hostile,
         // green=allied, yellow=neutral) so the radar reads at a glance.
-        // Ships at < ~14% of radar (35 km vs 250 km) cluster near
-        // center — that's the steady-state engagement bubble; nav
-        // points spread out farther because they're system-scale
+        // Ships cluster toward the center (the engagement bubble); nav
+        // points sit at or near the rim because they're system-scale
         // (planets, jump points 100+ km away).
         if (const Ship* player_p = ships.player(); player_p) {
             const Ship& player = *player_p;

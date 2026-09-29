@@ -24,7 +24,6 @@
   // transition — "hostile in radar" maps to Flee, regardless of HP.
   "personality":       "coward",
 
-  "radar_range":   25000,
   // Doubled from canonical 2500 m to match the longer-range demo regime.
   "weapons_range": 5000,
 

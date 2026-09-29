@@ -149,7 +149,7 @@ a stable player-facing CLI.
 | `W` | Cycle the loaded launcher and open ARMAMENTS |
 | `F` | Compatibility alias for `W` |
 | `Enter` | Fire missile |
-| `T` | Cycle targets, nearest to farthest (≤15 km) |
+| `T` | Cycle targets within radar range (15 km), nearest to farthest |
 | `Z` | Tractor loose loot into the hold (2.5 km) |
 | `I` | In-flight inventory |
 | `P` | Pause/unpause (shows centered instructions) |

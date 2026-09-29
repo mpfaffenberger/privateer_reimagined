@@ -1446,10 +1446,8 @@ void build_system_scene(bool first_time, bool show_progress) {
     // Dev remote: HTTP control channel on 127.0.0.1. Lets external
     // tools (code puppy, curl, shell scripts) teleport the camera,
     // grab screenshots, and read state. Non-fatal if it can't bind.
-    // Port 47001 picked to avoid collisions with common local dev
-    // servers (3000, 5000, 8080, 8765, …).
     if (first_time) {
-        dev_remote::start(47001);
+        dev_remote::start();
 
         // Agentic-testing event stream: every comm feed line (mission
         // accept/complete, rep deltas, taunts) is mirrored into the
@@ -4990,8 +4988,8 @@ void frame_cb() {
         Ship& player = *player_p;
 
         // Drop the player's ship-target lock if the contact has wandered
-        // past the 15 km radar/lock ceiling — mirrors the HUD-targeting
-        // rule that nothing beyond 15 km is targetable in the first place.
+        // past the hull's radar sphere, the same edge the T-cycle and the
+        // radar MFD use (perception::radar_range_m, #492).
         // Also clears a target that's gone dead (sprite reaped) so the
         // firing/missile paths below don't aim at a corpse.
         if (g.player_target_id != 0) {
@@ -5000,8 +4998,9 @@ void frame_cb() {
                 g.player_target_id = 0;
             } else {
                 const float d = HMM_LenV3(HMM_SubV3(t->position, player.position));
-                if (d > 15000.0f) {
-                    std::printf("[target] dropped: out of range (%.0f m > 15000)\n", d);
+                const float radar = perception::radar_range_m(player);
+                if (d > radar) {
+                    std::printf("[target] dropped: out of range (%.0f m > %.0f)\n", d, radar);
                     g.player_target_id = 0;
                 }
             }
@@ -7426,11 +7425,11 @@ void event_cb(const sapp_event* ev) {
             const Ship& player = *g.ships.player();
             std::vector<PerceivedContact> sorted;
             sorted.reserve(player.perception.visible.size());
-            // Hard 15 km cap: contacts past that are off-radar and not
-            // lockable. Same number that drops a stale lock per-frame
-            // up in the firing block — keep the two in lockstep.
+            // Only contacts inside the radar sphere are lockable: the same
+            // radius that drops a stale lock in the firing block.
+            const float radar = perception::radar_range_m(player);
             for (const PerceivedContact& c : player.perception.visible) {
-                if (c.distance_m <= 15000.0f) sorted.push_back(c);
+                if (c.distance_m <= radar) sorted.push_back(c);
             }
             std::sort(sorted.begin(), sorted.end(),
                       [](const PerceivedContact& a, const PerceivedContact& b) {

@@ -117,6 +117,12 @@ on a fresh clone. `test_full_loop` fails.
   unreachable F8/F9 demo-cinematic handlers were removed (use
   `POST /cinematic/play`), and one `player_trigger_held()` replaced a stale
   `X`/`Tab` trigger check in the gun-mode cycle.
+- One radar range ([#492]): perception, target lock/drop, the `T` cycle, and
+  the radar MFD scale all use the hull's `radar_range`. It is 15 km, the
+  original game's sensor cull (`0x3a98`). April placeholder data had quietly
+  set most hulls to 25–30 km, so NPCs spotted the player from farther away
+  than they were meant to. `dev_remote`'s default port is now the 47001
+  every script uses.
 - Five orphaned harnesses are wired into CMake and green ([#493]):
   `test_autopilot`, `test_inventory112`, `test_missile`, `test_reputation`,
   `test_salvage`. Their failures were test rot (API drift, NPC-vs-player
@@ -134,11 +140,10 @@ on a fresh clone. `test_full_loop` fails.
 2. **Friend-or-Foe missiles** ([#144]). `MissileType` is still DF/HS/IR/
    Torpedo. The source data already lists FF on several loadouts
    (`privateer_ship_data.json`), so they're referenced but can't be fired.
-3. **Scanner/radar tiers** ([#143]). There are no scanner products. Sensor
-   range is also inconsistent right now: NPC `radar_range` is 25–30 km, the
-   player's perception and targeting are hard-coded to 15 km in three
-   places, and the HUD radar draws 35 km **(corrected; the old doc said a
-   flat 15 km)**. Unify this first ([#492]), then add tiers on top.
+3. **Scanner/radar tiers** ([#143]). There are no scanner products. The
+   foundation is ready: every ship, player included, now reads one per-hull
+   `ShipClass::radar_range` through `perception::radar_range_m()` ([#492]),
+   so a tier only has to change that value.
 4. **Turrets.** Firing is done, and guns can be bought into *existing*
    turret hardpoints **(corrected)**. Still missing: adding turrets to hulls
    that don't have them ([#145]), and keeping turrets auto-armed across gun
@@ -214,9 +219,6 @@ RF gap **(corrected)**. Fine to defer.
   led by `cockpit_hud.cpp` (2,482), `dev_remote.cpp` (2,216),
   `base_screens.cpp` (1,451), `missions.cpp` (1,304), and
   `scripted_encounters.cpp` (1,165).
-- **Magic numbers:** the 15 km radar literal appears in 3 places ([#492]).
-  `dev_remote::start()` defaults to port 8765, but the only caller passes
-  47001.
 - **Comment debt is low but not zero:** 8 TODO/FIXME/HACK markers across
   `src/`. Stale-comment liars remain ([#149]): `game_state.h` still calls
   live screens "today a stub screen", `autopilot.cpp` describes the hostile
@@ -246,8 +248,7 @@ human judgment call.
    back (at least a macOS or Linux headless-test job).
 2. **Component damage + Damage Control MFD ([#141]).** It's the biggest
    remaining gameplay-fidelity gap, and the repair economy hooks are ready.
-3. **Unify radar range ([#492]) → scanner tiers ([#143]) → FF missiles
-   ([#144])**, then purchasable turrets ([#145]/[#379]). All small and
+3. **Scanner tiers ([#143]) → FF missiles ([#144])**, then purchasable turrets ([#145]/[#379]). All small and
    data-driven.
 4. **Presentation:** HDR/bloom ([#488]/[#489]), normal maps ([#473]), Orion
    cockpit + MFD clipping ([#168]/[#430]).

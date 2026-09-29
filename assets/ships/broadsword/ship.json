@@ -23,7 +23,6 @@
   "personality":       "standard",
   "ai_table":          "heavy",
 
-  "radar_range":   25000,
   "weapons_range": 4500,
 
   "max_engine_level": 3,

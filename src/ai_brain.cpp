@@ -438,7 +438,7 @@ float resolve_scalar(const AIScalar& sc, const Ctx& c) {
         case AIScalarToken::PursueSwitch:  return k_pursue_attack_switch;
         case AIScalarToken::GunRange:      return c.gun_range;
         case AIScalarToken::FleeThreshold: return ai_brain::flee_threshold_for(s);
-        case AIScalarToken::Sensor:        return (k ? k->radar_range : 15000.0f) * kPvtScale;
+        case AIScalarToken::Sensor:        return (k ? k->radar_range : k_default_radar_range_m) * kPvtScale;
     }
     return sc.lit;
 }
