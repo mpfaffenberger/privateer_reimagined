@@ -82,10 +82,13 @@ struct Link {
 // around it (room_anim.h: drifting sky + baked sprite layers), and the
 // transition links placed on it (doors to other rooms / launch).
 struct Room {
-    bool                 valid = false;
-    TextureSlot          background;
-    room_anim::RoomAnim  anim;
-    std::vector<Link>    links;
+    bool                   valid = false;
+    TextureSlot            background;
+    room_anim::RoomAnim    anim;
+    std::vector<Link>      links;
+    // Landing pad only: animation for its per-hull full-frame composites
+    // ("composite" key, paths templated on {plate}; #553).
+    room_anim::RoomAnimDef composite;
 };
 constexpr int kBaseScreenCount = (int)BaseScreen::OpenMenu + 1;
 // The parked ship shown on the landing pad: which hull, at what view-sphere
@@ -114,6 +117,7 @@ BaseDef                  g_def;
 TextureSlot              g_art;            // concourse PNG; valid==false if missing
 ConcourseSet             g_concourse;      // animated WCU art set (optional, by archetype)
 TextureSlot              g_landing_composite; // installed full-frame ship × archetype art
+room_anim::RoomAnim      g_landing_anim;      // its animation (Room::composite)
 TextureSlot              g_landing_preview;   // temporary F11 full-frame override
 std::string              g_landing_composite_key;
 std::string              g_landing_preview_ship;
@@ -123,6 +127,11 @@ void release_texture(TextureSlot& texture) {
     sg_destroy_view(texture.view);
     sg_destroy_image(texture.image);
     texture = TextureSlot{};
+}
+
+void release_landing_composite() {
+    release_texture(g_landing_composite);
+    room_anim::release(g_landing_anim);
 }
 
 // "Shop menu open" gate for rooms with an OpenMenu zone (ship dealer, guild
@@ -566,6 +575,8 @@ void draw_subscreen(ImDrawList* dl, const ScreenSize& ss, BaseScreen cur,
 bool load_room(const std::string& dir, const json::Value& r, Room& out) {
     if (!r.is_object()) return false;
     if (!room_anim::load(dir, r, out.background, out.anim)) return false;
+    if (const json::Value* c = r.find("composite"))
+        room_anim::parse_room_anim(*c, out.composite);
     // Placed transition links: [{ "target": "Bar", "rect": [x,y,w,h] }, ...].
     if (const json::Value* ls = r.find("links"); ls && ls->is_array()) {
         for (const json::Value& l : ls->as_array()) {
@@ -642,15 +653,19 @@ void load_concourse_set(const std::string& archetype) {
                 archetype.c_str(), loaded);
 }
 
-// Draw one room: the sky behind the plate (if any), the painted background
-// stretched to fill, then the baked sprite layers on top.
-void draw_room(ImDrawList* dl, const ScreenSize& ss, const Room& room) {
+// Draw an animated plate: the sky (and anything out in it) behind the plate,
+// the painted plate stretched to fill, then the sprite layers on top.
+void draw_plate(ImDrawList* dl, const ScreenSize& ss, const TextureSlot& plate,
+                const room_anim::RoomAnim& anim) {
     const double t = ImGui::GetTime();
-    room_anim::draw_under(dl, ss.w, ss.h, room.anim, t);
-    if (room.background.valid)
-        dl->AddImage(simgui_imtextureid(room.background.view),
-                     ImVec2(0, 0), ImVec2(ss.w, ss.h));
-    room_anim::draw_over(dl, ss.w, ss.h, room.anim, t);
+    room_anim::draw_under(dl, ss.w, ss.h, anim, t);
+    if (plate.valid)
+        dl->AddImage(simgui_imtextureid(plate.view), ImVec2(0, 0), ImVec2(ss.w, ss.h));
+    room_anim::draw_over(dl, ss.w, ss.h, anim, t);
+}
+
+void draw_room(ImDrawList* dl, const ScreenSize& ss, const Room& room) {
+    draw_plate(dl, ss, room.background, room.anim);
 }
 
 // Short label shown inside a transition box (the door's destination).
@@ -766,17 +781,16 @@ void draw_landing(ImDrawList* dl, const ScreenSize& ss) {
     } else if (!player_class.empty()) {
         const std::string key = g_concourse.type + "|" + player_class;
         if (key != g_landing_composite_key) {
-            release_texture(g_landing_composite);
+            release_landing_composite();
             g_landing_composite_key = key;
-            const std::string path = "assets/concourse/" + g_concourse.type +
-                                     "/landing_ships/" + player_class + ".png";
+            const std::string dir  = "assets/concourse/" + g_concourse.type + "/";
+            const std::string path = dir + "landing_ships/" + player_class + ".png";
             if (std::filesystem::is_regular_file(path))
-                load_texture_png(path, g_landing_composite);
+                room_anim::load(dir, room_anim::for_plate(lp.composite, player_class), path,
+                                g_landing_composite, g_landing_anim);
         }
         complete_frame = g_landing_composite.valid;
-        if (complete_frame)
-            dl->AddImage(simgui_imtextureid(g_landing_composite.view),
-                         ImVec2(0, 0), ImVec2(ss.w, ss.h));
+        if (complete_frame) draw_plate(dl, ss, g_landing_composite, g_landing_anim);
     }
 
     if (!complete_frame) {
@@ -1097,7 +1111,7 @@ void clear_current_landing_composite_preview() {
     g_landing_preview_ship.clear();
     // An install may have replaced the file behind the installed texture.
     // Force lazy discovery/reload on the next landing frame.
-    release_texture(g_landing_composite);
+    release_landing_composite();
     g_landing_composite_key.clear();
 }
 

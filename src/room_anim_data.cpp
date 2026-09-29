@@ -39,6 +39,13 @@ int wrap(long long v, int period) {
     return (int)(m < 0 ? m + period : m);
 }
 
+void replace_plate(std::string& path, const std::string& plate) {
+    static const std::string kToken = "{plate}";
+    for (size_t at = path.find(kToken); at != std::string::npos;
+         at = path.find(kToken, at + plate.size()))
+        path.replace(at, kToken.size(), plate);
+}
+
 }  // namespace
 
 bool parse_sprite_sheet(const json::Value& m, SpriteSheet& out, std::string& err) {
@@ -72,6 +79,11 @@ bool parse_sprite_sheet(const json::Value& m, SpriteSheet& out, std::string& err
         out.slot_frame[(size_t)slot] = (int)out.frames.size();
         out.frames.push_back(fr);
     }
+    out.under = field(m, "under").bool_or(false);
+    if (m.find("anchor")) {
+        out.anchored = read_floats(m, "anchor", out.anchor) && out.anchor[2] > 0.0f;
+        if (!out.anchored) { err = "anchor must be [cx, cy, r] with r > 0"; return false; }
+    }
     return true;
 }
 
@@ -85,6 +97,7 @@ void parse_room_anim(const json::Value& room, RoomAnimDef& out) {
             for (const json::Value& s : stars->as_array()) {
                 StarLayerDef def;
                 def.tile = field(s, "tile").string_or("");
+                def.spin = (float)field(s, "spin").number_or(0.0);
                 if (!def.tile.empty() && read_floats(s, "velocity", def.velocity))
                     out.sky.stars.push_back(def);
             }
@@ -97,6 +110,35 @@ void parse_room_anim(const json::Value& room, RoomAnimDef& out) {
             if (!path.empty()) out.layers.push_back(path);
         }
     }
+    out.anchors = field(room, "anchors").string_or("");
+}
+
+RoomAnimDef for_plate(const RoomAnimDef& def, const std::string& plate) {
+    RoomAnimDef out = def;
+    out.plate = plate;
+    replace_plate(out.sky.mask, plate);
+    replace_plate(out.sky.fill, plate);
+    for (StarLayerDef& s : out.sky.stars) replace_plate(s.tile, plate);
+    for (std::string& l : out.layers) replace_plate(l, plate);
+    replace_plate(out.anchors, plate);
+    return out;
+}
+
+bool read_anchor(const json::Value& anchors, const std::string& plate, float (&out)[3]) {
+    return !plate.empty() && anchors.is_object() && read_floats(anchors, plate.c_str(), out) &&
+           out[2] > 0.0f;
+}
+
+void place(const SpriteSheet& sheet, const SpriteFrame& f, const float* to, float (&out)[4]) {
+    if (!sheet.anchored || !to) {
+        for (int i = 0; i < 4; ++i) out[i] = f.dst[i];
+        return;
+    }
+    const float s = to[2] / sheet.anchor[2];
+    out[0] = to[0] + (f.dst[0] - sheet.anchor[0]) * s;
+    out[1] = to[1] + (f.dst[1] - sheet.anchor[1]) * s;
+    out[2] = f.dst[2] * s;
+    out[3] = f.dst[3] * s;
 }
 
 int slot_at(const SpriteSheet& sheet, double seconds) {
@@ -114,6 +156,23 @@ float scroll_uv(float velocity_px, double seconds, float tile_px) {
     if (tile_px <= 0.0f) return 0.0f;
     const double travelled = std::fmod((double)velocity_px * seconds, (double)tile_px);
     return (float)(travelled / (double)tile_px);
+}
+
+void star_uvs(const StarLayerDef& s, float tile_w, float tile_h, float canvas_w,
+              float canvas_h, const float centre[2], double seconds, float (&uv)[4][2]) {
+    // Screen p shows texel c + R(-a)(p - c) - v*t: rotating the field by a
+    // (clockwise, y down) means sampling it rotated back. Wrap the angle and
+    // the drift so float precision holds over long sessions.
+    const double a = std::fmod((double)s.spin * seconds, 360.0) * 3.14159265358979323846 / 180.0;
+    const float cs = (float)std::cos(a), sn = (float)std::sin(a);
+    const float su = scroll_uv(s.velocity[0], seconds, tile_w);
+    const float sv = scroll_uv(s.velocity[1], seconds, tile_h);
+    const float corners[4][2] = {{0, 0}, {canvas_w, 0}, {canvas_w, canvas_h}, {0, canvas_h}};
+    for (int i = 0; i < 4; ++i) {
+        const float dx = corners[i][0] - centre[0], dy = corners[i][1] - centre[1];
+        uv[i][0] = (centre[0] + cs * dx + sn * dy) / tile_w - su;
+        uv[i][1] = (centre[1] - sn * dx + cs * dy) / tile_h - sv;
+    }
 }
 
 }  // namespace room_anim

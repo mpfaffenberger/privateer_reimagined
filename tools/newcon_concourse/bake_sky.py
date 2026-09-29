@@ -75,14 +75,19 @@ def sky_mask(plate):
     limit = np.asarray(limit, dtype=np.float32)
     dark = Image.fromarray(((base <= limit) & (limit > 0)).astype(np.uint8) * 255)
     # Opening drops thin dark rib seams inside a window.
-    sky = dark.filter(ImageFilter.MinFilter(7)).filter(ImageFilter.MaxFilter(7))
-    # Bright stars survive star_removed() and punch not-sky holes. A hole is
-    # any not-sky pixel that the floor cannot reach: flood the reachable
-    # not-sky area to 128, then everything still 0 is a hole -> sky.
-    ImageDraw.floodfill(sky, FLOOR_SEED, 128)
+    return solidify(dark.filter(ImageFilter.MinFilter(7)).filter(ImageFilter.MaxFilter(7)),
+                    FLOOR_SEED)
+
+
+def solidify(sky, outside_seed):
+    """Binary L sky (255) -> finished mask. Bright stars survive
+    star_removed() and punch not-sky holes; a hole is any not-sky pixel that
+    `outside_seed` (certainly not sky) cannot reach. Then blur + re-threshold
+    rounds off square-kernel stair-steps, and a light feather gives a ~1 px
+    antialiased edge."""
+    sky = sky.copy()
+    ImageDraw.floodfill(sky, outside_seed, 128)
     sky = Image.fromarray(np.where(np.asarray(sky) == 128, 0, 255).astype(np.uint8))
-    # Blur + re-threshold rounds off the square kernel's stair-steps, then a
-    # light feather gives a ~1 px antialiased edge.
     rounded = np.asarray(sky.filter(ImageFilter.GaussianBlur(2.0))) >= 128
     return (Image.fromarray(rounded.astype(np.uint8) * 255)
             .filter(ImageFilter.GaussianBlur(0.8)))
@@ -127,12 +132,13 @@ class PaintedStars:
         self.tint = rgb / np.maximum(rgb.max(axis=1, keepdims=True), 1.0)
 
 
-def star_tile(stars, fraction, sigma_range, rng, gain=1.3):
+def star_tile(stars, fraction, sigma_range, rng, gain=1.3, radius=3):
     """Tileable star field: gaussian dots wrapped at the tile edges. `gain`
-    compensates for sub-pixel centres spreading a star's peak."""
+    compensates for sub-pixel centres spreading a star's peak; `radius` (px)
+    bounds each dot, so keep it >= 2.5 sigma for wide glows."""
     n = int(STAR_TILE * STAR_TILE * stars.density * fraction)
     acc = np.zeros((STAR_TILE, STAR_TILE, 3), dtype=np.float32)
-    yy, xx = np.mgrid[-3:4, -3:4]
+    yy, xx = np.mgrid[-radius:radius + 1, -radius:radius + 1]
     for _ in range(n):
         x, y = rng.uniform(0, STAR_TILE, 2)
         sigma = rng.uniform(*sigma_range)

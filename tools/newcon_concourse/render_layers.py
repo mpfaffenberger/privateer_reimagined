@@ -152,10 +152,11 @@ def _set_actor_visibility(roots, visible):
             obj.hide_render = not visible
 
 
-def _set_border(sc, roots, margin=0.35, pad_px=12, min_px=4):
-    """Limit rendering to the actor's screen box plus its footprint on the
-    deck (where reflections and glow land), widened by `margin`. Returns False
-    when that box is off-screen, so the frame can be skipped."""
+def set_border(sc, roots, margin=0.35, pad_px=12, min_px=4, footprint=True):
+    """Limit rendering to the actor's screen box plus (with `footprint`) its
+    footprint on the deck (where reflections and glow land), widened by
+    `margin`. Returns False when that box is off-screen, so the frame can be
+    skipped. Assumes the camera looks down +Y."""
     cam, pts = sc.camera, []
     for root in roots:
         for obj in root.children_recursive:
@@ -163,7 +164,8 @@ def _set_border(sc, roots, margin=0.35, pad_px=12, min_px=4):
                 continue
             for corner in obj.bound_box:
                 world = obj.matrix_world @ Vector(corner)
-                for p in (world, Vector((world.x, world.y, 0.0))):
+                ground = (Vector((world.x, world.y, 0.0)),) if footprint else ()
+                for p in (world, *ground):
                     if p.y > cam.location.y + 0.5:             # in front of the lens
                         pts.append(world_to_camera_view(sc, cam, p))
     if not pts:
@@ -203,7 +205,7 @@ def render_passes(sc, decks, roots, out_dir, frames=None, mask_samples=16):
 
     for f in range(first, last + 1):
         sc.frame_set(f)
-        if not _set_border(sc, roots):
+        if not set_border(sc, roots):
             continue            # off-screen: no files; bake treats it as a gap
         _set_decks(sc, decks, mask_pass=False)
         sc.cycles.samples, sc.cycles.use_denoising = beauty_samples, True
