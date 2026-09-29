@@ -18,6 +18,7 @@ separate backlog issue. The gameplay set (np-3gw.2):
     ui_click.wav      - 5ms tick (nav/target cycle)
     component_damage.wav - 350ms electrical crackle over a sagging tone
                         (player internal system hit, #519; original sfx_38)
+    missile_warning.wav - 300ms hi-lo warble (inbound-missile alarm, #523)
     hum.wav           - kept for back-compat with the np-3gw.1 debug button
 
 All PCM16 mono 44.1kHz, written to assets/sfx/. Idempotent; rerun freely.
@@ -236,6 +237,21 @@ def component_damage() -> list[float]:
     return lowpass(out, 0.6)
 
 
+def missile_warning() -> list[float]:
+    """300ms two-tone warble (1000/700Hz flipping every 50ms) - the inbound-
+    missile alarm (#523). The rapid hi-lo flip reads as an ALARM, distinct
+    from the single-pitch lock beeps, so a threat is never mistaken for
+    your own seeker."""
+    n = int(RATE * 0.300)
+    out, phase = [], 0.0
+    for t in range(n):
+        freq = 1000 if (t // int(RATE * 0.050)) % 2 == 0 else 700
+        phase += 2 * math.pi * freq / RATE
+        env = min(t / (RATE * 0.005), 1.0) * min((n - t) / (RATE * 0.015), 1.0)
+        out.append(math.sin(phase) * env * 0.5)
+    return out
+
+
 def main() -> None:
     os.makedirs(OUT_DIR, exist_ok=True)
     write_wav("blip.wav", blip())
@@ -253,6 +269,7 @@ def main() -> None:
     write_wav("lock_seeking.wav", lock_seeking())
     write_wav("lock_acquired.wav", lock_acquired())
     write_wav("component_damage.wav", component_damage())
+    write_wav("missile_warning.wav", missile_warning())
 
 
 if __name__ == "__main__":

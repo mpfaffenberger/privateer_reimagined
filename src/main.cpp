@@ -362,6 +362,9 @@ struct AppState {
         uint32_t locked_id    = 0;
         float    seek_beep_s  = 0.0f;
     } missile_lock;
+    // Inbound-missile alarm cadence (#523): counts down while a hostile
+    // round is homing on the player; the tone re-fires when it hits 0.
+    float                                                missile_warn_beep_s = 0.0f;
 
     // Active explosion FX. One Explosion per ship death, lifetime ~1.2s.
     // Drawn additively via the same spot pipeline as tracers, just with
@@ -5150,27 +5153,9 @@ void frame_cb() {
                 }
             }
         }
-
-        // ---- ECM break check (np-3dp.27) --------------------------------
-        // The player's fitted ECM has a per-second chance to drop any held
-        // missile lock. Canonical Privateer rates: L1 25%, L2 50%, L3 75%
-        // per second. Roll ONCE per second so the chance is independent of
-        // dt (not "every frame at 25%" which is way too strong).
-        if (g.player.ecm_level > 0 && lk.locked) {
-            constexpr float k_ecm_check_period = 1.0f;
-            static float  rate_dt = 0.0f;
-            rate_dt += dt;
-            if (rate_dt >= k_ecm_check_period) {
-                rate_dt = 0.0f;
-                const int ecm_pct = (int)g.player.ecm_level * 25;   // 25/50/75
-                if ((rand() % 100) < ecm_pct) {
-                    lk.locked = false;
-                    lk.progress_s = 0.0f;     // force IR to rebuild
-                    std::printf("[ecm] break (%d%% roll): missile lock dropped\n",
-                                ecm_pct);
-                }
-            }
-        }
+        // ECM no longer rolls against the player's OWN lock here (#523) —
+        // it jams enemy rounds homing on the player; see missile::ecm_jam
+        // below the missile tick.
     }
 
     // ---- missile fire (np-zte.2) ---------------------------------------
@@ -5240,10 +5225,34 @@ void frame_cb() {
     // their hull's rack. Same cinematic gate as gunfire, and before tick so
     // a fresh round gets its first integration step this frame.
     if (!cinematic::active()) {
-        if (const int n = missile::npc_launch(g.missiles, g.ships, dt); n > 0)
+        if (const int n = missile::npc_launch(g.missiles, g.ships, dt); n > 0) {
             std::printf("[missile] NPC launched %d missile(s)\n", n);
+            // npc_launch appends, so this frame's rounds are the last n.
+            for (size_t i = g.missiles.size() - (size_t)n; i < g.missiles.size(); ++i)
+                sfx::npc_missile_fired(g.missiles[i].position);
+        }
     }
     missile::tick(g.missiles, g.ships, dt);
+
+    // ---- inbound missiles: ECM + warning tone (#523) -------------------
+    // After tick, so a fresh FF has already picked its mark. The player's
+    // fitted ECM rolls 25/50/75% per second per inbound round to break its
+    // track (and briefly blind its seeker); anything still homing on us
+    // sounds the alarm on a cadence. The HUD banner queries the same count.
+    if (const Ship* pl = g.ships.player(); pl && !dying) {
+        const int jammed = missile::ecm_jam(g.missiles, pl->id, g.player.ecm_level, dt,
+                                            [] { return rand() % 100; });
+        if (jammed > 0)
+            std::printf("[ecm] L%d jammed %d inbound missile(s)\n",
+                        g.player.ecm_level, jammed);
+        constexpr float k_missile_warn_period_s = 0.6f;
+        if (missile::count_inbound(g.missiles, pl->id) == 0) {
+            g.missile_warn_beep_s = 0.0f;          // next threat alarms at once
+        } else if ((g.missile_warn_beep_s -= dt) <= 0.0f) {
+            sfx::missile_warning();
+            g.missile_warn_beep_s = k_missile_warn_period_s;
+        }
+    }
 
     // Snapshot alive flags BEFORE damage so we can detect kills this
     // frame and spawn explosions at the right positions. Cheap (one
@@ -6636,6 +6645,10 @@ void frame_cb() {
                             : (g.player_target_id != 0 && w.needs_lock ? 1 : 0);
             w.lock_progress = sel.lock_buildup ? (g.missile_lock.progress_s / 1.5f) : 1.0f;
             cockpit_hud::build_weapons_status(w);
+            // Inbound-missile banner (#523): shown even with an empty rack.
+            if (const Ship* pl = g.ships.player(); pl && pl->alive)
+                cockpit_hud::draw_missile_warning(
+                    missile::count_inbound(g.missiles, pl->id));
         }
         // Big system navmap (N to open/cycle). Drawn AFTER the regular
         // HUD so it overlays on top. Mutates selected_nav when the

@@ -115,6 +115,10 @@ struct Missile {
     uint32_t    target_id       = 0;    // homing target; 0 = dumbfire
     MissileType type            = MissileType::DF;
     bool        alive           = true;
+    // ECM (#523): time homing on an ECM-fitted victim since the last jam
+    // roll, and how long a jammed seeker stays blind (no re-acquire).
+    float       ecm_roll_s      = 0.0f;
+    float       seeker_blind_s  = 0.0f;
 };
 
 struct Ship;
@@ -190,8 +194,28 @@ MissileType npc_pick_round(const MissileRack& rack, bool has_lock);
 // Per-frame NPC launch pass: an armed NPC mid gun-run (Engage + guns hot)
 // fires one round along its nose each time its refire cooldown elapses.
 // Lock types (HS/IR) lock the AI's current target (ai.target_id), not an
-// IFF pick; FF self-acquires; DF flies straight. Returns the number
-// launched this frame (for logging).
+// IFF pick; FF self-acquires; DF flies straight. New rounds are APPENDED
+// to `missiles`, so this frame's launches are the last N entries. Returns
+// N (for logging + launch sfx).
 int npc_launch(std::vector<Missile>& missiles, ShipRegistry& ships, float dt);
+
+// ---- inbound warning + ECM (#523) ------------------------------------------
+// True when `m` is a live round homing on `victim_id` that someone ELSE
+// fired — the "MISSILE" warning condition. Pure; no registry lookup.
+bool is_inbound(const Missile& m, uint32_t victim_id);
+// Number of live rounds homing on `victim_id` (drives the HUD + tone).
+int count_inbound(const std::vector<Missile>& missiles, uint32_t victim_id);
+
+// The victim's fitted ECM (level 1..3) rolls once per second of homing, per
+// inbound round, at 25/50/75% (canonical Privateer). A successful roll drops
+// the round's target_id AND blinds its seeker for k_ecm_blind_s, so an FF
+// can't instantly re-acquire the same ship through IFF — it coasts, then
+// seeks again (and gets rolled against again). HS/IR never re-acquire.
+// `roll_pct` returns a uniform int in [0,100) (injected for testability).
+// Returns the number of rounds jammed this call.
+constexpr float k_ecm_roll_period_s = 1.0f;
+constexpr float k_ecm_blind_s       = 1.5f;
+int ecm_jam(std::vector<Missile>& missiles, uint32_t victim_id, int ecm_level,
+            float dt, int (*roll_pct)());
 
 } // namespace missile

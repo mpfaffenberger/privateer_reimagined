@@ -138,6 +138,12 @@ struct WeaponsHudState {
 };
 void build_weapons_status(const WeaponsHudState& w);
 
+// Inbound-missile warning (#523): a flashing red "MISSILE" ("MISSILE x2"
+// for a salvo) just under the crosshair while `inbound` > 0 hostile rounds
+// are homing on the player. Independent of the player's own ordnance, and
+// drawn in classic and cockpit-art modes alike. No-op when inbound <= 0.
+void draw_missile_warning(int inbound);
+
 // Prominent centred Flight-pause overlay. The caller owns visibility state;
 // this function only draws the dimmer, frame, and instructions.
 void draw_pause_overlay();

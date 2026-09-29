@@ -179,6 +179,35 @@ int npc_launch(std::vector<Missile>& missiles, ShipRegistry& ships, float dt) {
     return launched;
 }
 
+bool is_inbound(const Missile& m, uint32_t victim_id) {
+    return m.alive && victim_id != 0 && m.target_id == victim_id
+        && m.owner_id != victim_id;
+}
+
+int count_inbound(const std::vector<Missile>& missiles, uint32_t victim_id) {
+    return (int)std::count_if(missiles.begin(), missiles.end(),
+        [victim_id](const Missile& m) { return is_inbound(m, victim_id); });
+}
+
+int ecm_jam(std::vector<Missile>& missiles, uint32_t victim_id, int ecm_level,
+            float dt, int (*roll_pct)()) {
+    const int pct = std::clamp(ecm_level, 0, 3) * 25;   // 25/50/75 per second
+    if (pct == 0 || !roll_pct) return 0;
+    int jammed = 0;
+    for (Missile& m : missiles) {
+        if (!is_inbound(m, victim_id)) { m.ecm_roll_s = 0.0f; continue; }
+        // Roll once per second of homing so the odds are dt-independent.
+        m.ecm_roll_s += dt;
+        if (m.ecm_roll_s < k_ecm_roll_period_s) continue;
+        m.ecm_roll_s = 0.0f;
+        if (roll_pct() >= pct) continue;
+        m.target_id      = 0;
+        m.seeker_blind_s = k_ecm_blind_s;
+        ++jammed;
+    }
+    return jammed;
+}
+
 void tick(std::vector<Missile>& missiles, ShipRegistry& ships, float dt) {
     const float scaled_dt = dt * world_scale::k_world_velocity_scale;
 
@@ -190,8 +219,11 @@ void tick(std::vector<Missile>& missiles, ShipRegistry& ships, float dt) {
         // homer whose target died / fell out of the registry) coasts on its
         // last heading — exactly what you want when a lock breaks. An FF
         // with no live mark asks the shooter's IFF for a new one first.
+        // An ECM-jammed seeker (#523) coasts blind until its window ends.
         const bool seeks = g_missile_stats[(int)m.type].auto_acquire;
-        if (m.turn_rate_radps > 0.0f && (m.target_id != 0 || seeks)) {
+        if (m.seeker_blind_s > 0.0f) {
+            m.seeker_blind_s -= dt;
+        } else if (m.turn_rate_radps > 0.0f && (m.target_id != 0 || seeks)) {
             const Ship* tgt = m.target_id ? ships.find_by_id(m.target_id) : nullptr;
             if ((!tgt || !tgt->alive) && seeks) {
                 m.target_id = acquire_iff_target(ships, m.owner_id, m.position);

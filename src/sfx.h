@@ -80,6 +80,12 @@ void component_damaged(bool destroyed);
 // missile_fired: 2D launch whoosh (the player's own rack). out_of_ammo: a
 // dry click when the trigger's pulled on an empty rack / with no lock.
 void missile_fired();
+// NPC launch (#523): the same whoosh, gain-stepped by distance from the
+// listener exactly like NPC gunfire; silent past earshot (15 km).
+void npc_missile_fired(HMM_Vec3 world_pos);
+// Inbound-missile alarm (#523): a 2D warble the caller re-triggers on a
+// cadence while any hostile round is homing on the player.
+void missile_warning();
 void out_of_ammo();
 // Target-lock tones, played while the player holds a lock-requiring missile
 // selected with a target in the reticle. lock_seeking is a slow beep the

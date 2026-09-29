@@ -12,6 +12,9 @@
 //      out-of-ammo path) — we assert player::consume_missile's contract.
 //   4. Repair: damage a ship, quote + pay to restore hull to full; assert the
 //      credits left and the armor came back; assert refusal when broke.
+//   ...
+//  11. Inbound warning + ECM (#523): inbound detection, the once-per-second
+//      ECM roll at 25/50/75%, and the blind window after a jam.
 //
 // Build + run:
 //   cmake --build build --target test_missile && ./build/test_missile
@@ -72,6 +75,12 @@ Ship make_target(const ShipClass& k, ShipSpriteObject& spr, HMM_Vec3 pos, uint32
     s.sprite   = &spr;
     return s;
 }
+
+// Scripted ECM dice (#523): ecm_jam takes a plain function pointer, so the
+// "die" reads a global face and counts how often it was thrown.
+int g_roll_face  = 0;
+int g_roll_count = 0;
+int scripted_roll() { ++g_roll_count; return g_roll_face; }
 
 } // namespace
 
@@ -540,6 +549,103 @@ int main() {
                   !ms.empty() && ms[0].type == MissileType::DF && ms[0].target_id == 0 &&
                   std::fabs(ms[0].heading.Z - 1.0f) < 1e-4f);
         }
+    }
+
+    // -------------------------------------------------------------------
+    // 11. Inbound warning + ECM (#523): detect rounds homing on the player,
+    //     roll the player's ECM once per second, blind a jammed seeker.
+    // -------------------------------------------------------------------
+    std::printf("\n--- 11. inbound warning + ECM ---\n");
+    {
+        constexpr uint32_t kPlayer = 10000, kPirate = 10001, kOther = 10002;
+        auto round = [](uint32_t owner, uint32_t target) {
+            Missile m = missile::spawn(MissileType::HS, HMM_V3(0, 0, 0),
+                                       HMM_V3(0, 0, 1), HMM_V3(0, 0, 0),
+                                       owner, target);
+            return m;
+        };
+        Missile hostile = round(kPirate, kPlayer);
+        Missile mine    = round(kPlayer, kPirate);
+        Missile elsewhere = round(kPirate, kOther);
+        Missile dead    = round(kPirate, kPlayer);
+        dead.alive = false;
+        CHECK("hostile round on the player is inbound",
+              missile::is_inbound(hostile, kPlayer));
+        CHECK("the player's own round is never inbound",
+              !missile::is_inbound(mine, kPlayer));
+        CHECK("a round on someone else is not inbound",
+              !missile::is_inbound(elsewhere, kPlayer));
+        CHECK("a dead round is not inbound", !missile::is_inbound(dead, kPlayer));
+        CHECK("victim id 0 never matches an unguided round",
+              !missile::is_inbound(round(kPirate, 0), 0));
+        std::vector<Missile> salvo = { hostile, mine, elsewhere, dead, hostile };
+        CHECK("count_inbound counts only live hostile rounds on the player",
+              missile::count_inbound(salvo, kPlayer) == 2);
+
+        // No ECM fitted: a sure-hit die never jams, and is never thrown.
+        std::vector<Missile> ms = { hostile };
+        g_roll_face = 0; g_roll_count = 0;
+        CHECK("no ECM -> no jam",
+              missile::ecm_jam(ms, kPlayer, 0, 5.0f, scripted_roll) == 0 &&
+              ms[0].target_id == kPlayer && g_roll_count == 0);
+
+        // Rolls once per SECOND of homing, not per frame.
+        const float dt = 1.0f / 60.0f;
+        g_roll_face = 99; g_roll_count = 0;   // 99 beats even L3's 75%
+        for (int f = 0; f < 59; ++f) missile::ecm_jam(ms, kPlayer, 3, dt, scripted_roll);
+        CHECK("no roll before a full second of homing", g_roll_count == 0);
+        // +30 frames = ~1.5 s total: past the first roll, clear of the second.
+        for (int f = 0; f < 30; ++f) missile::ecm_jam(ms, kPlayer, 3, dt, scripted_roll);
+        CHECK("one roll per second, and a miss keeps the track",
+              g_roll_count == 1 && ms[0].target_id == kPlayer);
+
+        // Level sets the odds: L1 = 25% -> faces 0..24 jam, 25+ don't.
+        g_roll_face = 25;
+        std::vector<Missile> l1 = { hostile };
+        missile::ecm_jam(l1, kPlayer, 1, 1.0f, scripted_roll);
+        CHECK("L1 misses on a 25", l1[0].target_id == kPlayer);
+        g_roll_face = 24;
+        CHECK("L1 jams on a 24",
+              missile::ecm_jam(l1, kPlayer, 1, 1.0f, scripted_roll) == 1 &&
+              l1[0].target_id == 0 &&
+              l1[0].seeker_blind_s == missile::k_ecm_blind_s);
+        CHECK("a jammed round no longer counts as inbound",
+              missile::count_inbound(l1, kPlayer) == 0);
+        g_roll_face = 0;
+        std::vector<Missile> own = { mine };
+        CHECK("ECM never touches rounds that aren't inbound",
+              missile::ecm_jam(own, kPlayer, 3, 1.0f, scripted_roll) == 0 &&
+              own[0].target_id == kPirate);
+
+        // End to end: a pirate FF acquires the player, gets jammed, coasts
+        // blind (no instant IFF re-lock), then seeks again.
+        ShipRegistry ships;
+        ShipSpriteObject spr_p;
+        Ship pl = ship::spawn_player();
+        pl.id = kPlayer;
+        pl.position = HMM_V3(0, 0, 3000);
+        ships.spawn(std::move(pl));
+        Ship pir = make_target(*k, spr_p, HMM_V3(0, 0, 0), kPirate);
+        pir.faction = Faction::Pirate;
+        ships.spawn(std::move(pir));
+        perception::tick(ships, PlayerReputation{});
+
+        std::vector<Missile> ff;
+        ff.push_back(missile::spawn(MissileType::FF, HMM_V3(0, 0, 0),
+                                    HMM_V3(0, 1, 0), HMM_V3(0, 0, 0),
+                                    kPirate, 0));
+        missile::tick(ff, ships, dt);
+        CHECK("pirate FF acquires the player -> MISSILE warning",
+              missile::count_inbound(ff, kPlayer) == 1);
+        missile::ecm_jam(ff, kPlayer, 3, missile::k_ecm_roll_period_s, scripted_roll);
+        missile::tick(ff, ships, dt);
+        CHECK("jammed FF stays blind instead of re-locking at once",
+              !ff.empty() && ff[0].target_id == 0);
+        const int blind_frames = (int)(missile::k_ecm_blind_s / dt) + 2;
+        for (int f = 0; f < blind_frames && !ff.empty(); ++f)
+            missile::tick(ff, ships, dt);
+        CHECK("after the blind window FF seeks (and finds) the player again",
+              !ff.empty() && ff[0].target_id == kPlayer);
     }
 
     std::printf("\n=== %s ===\n", g_fail == 0 ? "ALL CHECKS PASSED" : "FAILURES DETECTED");
