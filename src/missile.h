@@ -26,7 +26,7 @@
 // projectile::collide_and_damage, so there's a single damage definition
 // (no forked damage logic, per the task constraint).
 //
-// Guidance kinds (the DF / HS / IR of the bead title):
+// Guidance kinds (the DF / HS / IR / FF of the bead title):
 //   DF  Dumbfire     — no lock, no steering. Flies straight; turn_rate 0.
 //   HS  Heat-seeking — needs a locked target; homes toward it. Modelled as
 //                      a slower turn rate (it chases the engine glow, so
@@ -34,6 +34,14 @@
 //   IR  Image-recog  — needs a locked target HELD in the reticle for a
 //                      build-up window (the lock delay lives in main.cpp);
 //                      once away, homes hard (high turn rate, any aspect).
+//   FF  Friend-or-Foe — fire-and-forget, NO lock (#144). HS-grade homing,
+//                      but it picks its own mark: the nearest ship whose
+//                      IFF reads hostile TO THE SHOOTER (read straight off
+//                      the shooter's perception, so it can't disagree with
+//                      the radar colours). Re-acquires if its mark dies —
+//                      and, vanilla-accurately, gets spoofed onto a
+//                      friendly whose IFF reads hostile (e.g. one the
+//                      shooter provoked).
 //
 // The lock STATE MACHINE (seeking -> locked, tones, the IR build-up timer)
 // lives at the call site (main.cpp) because it's bound up with the camera
@@ -49,10 +57,14 @@ enum class MissileType : uint8_t {
     DF = 0,   // dumbfire
     HS,       // heat-seeking
     IR,       // image-recognition
+    FF,       // friend-or-foe (#144) — auto-acquires the nearest IFF hostile
     TORPEDO,  // torpedo (np-3dp.26 + np-zte.2) — its own launcher + ammo rack
     Count
 };
 constexpr int kMissileTypeCount = (int)MissileType::Count;
+// Every type before TORPEDO shares the missile launcher's rack
+// (PlayerState::missiles); torpedoes have their own tube + counter.
+constexpr int kMissileRackTypeCount = (int)MissileType::TORPEDO;
 
 struct MissileStats {
     const char* short_name;        // "DF", "HS", "IR" — HUD readout
@@ -65,6 +77,7 @@ struct MissileStats {
     float prox_radius_m    = 0.0f; // detonation distance to target center
     bool  needs_lock       = false;// HS/IR require a target id
     bool  lock_buildup     = false;// IR needs the held-reticle delay
+    bool  auto_acquire     = false;// FF picks (and re-picks) its own IFF target
 };
 
 // Per-type stats. Indexed by MissileType. Hand-tuned constants (this is
@@ -122,5 +135,25 @@ void tick(std::vector<Missile>& missiles, ShipRegistry& ships, float dt);
 // match the value passed to tick (for the swept previous-position reconstruct).
 void collide_and_damage(std::vector<Missile>& missiles, ShipRegistry& ships,
                         float dt);
+
+// ---- IFF seeker (#144) ------------------------------------------------------
+// Id of the nearest-to-`from` alive ship the shooter's IFF reads as hostile
+// (Stance::Hostile in the owner's perception list), or 0 if none / the owner
+// is gone. Reusing perception means FF sees exactly what the shooter's radar
+// sees — including the spoof case of a provoked friendly.
+uint32_t acquire_iff_target(const ShipRegistry& ships, uint32_t owner_id,
+                            const HMM_Vec3& from);
+
+// ---- NPC racks (#144) -------------------------------------------------------
+// NPC missiles are FF-only today (pirates' vanilla favourite): a flat round
+// count on Ship::ff_missiles, no launcher hardware model.
+// Fits the faction's default FF rack onto a freshly spawned NPC (call once
+// its faction is final). Pirates carry FF; everyone else flies without.
+void arm_npc_rack(Ship& s);
+
+// Per-frame NPC launch pass: an armed NPC mid gun-run (Engage + guns hot)
+// fires one FF along its nose each time its refire cooldown elapses.
+// Returns the number launched this frame (for logging).
+int npc_launch(std::vector<Missile>& missiles, ShipRegistry& ships, float dt);
 
 } // namespace missile

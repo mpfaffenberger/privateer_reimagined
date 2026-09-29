@@ -45,7 +45,7 @@ Rough completion: **sandbox ~92%, story ~100% (base game), combat systems
 | 18 ship definitions: 4 player hulls (Tarsus/Orion/Galaxy/Centurion) plus Talon, Demon, Gladius, Stiletto, Broadsword, Paradigm, Drayman, Dralthi, Gothri, Kamekh, Strakha, Drone, Scout, Derelict | Done | `assets/ships/*/ship.json` |
 | Ship rendering: multi-view sprite atlases baked from 3D meshes; Demon/Orion/Kamekh/Gladius reskinned; 32-bit mesh indices | Done | `ship_sprite.*`, `assets/ships/*/sprites_3d`, `assets/meshes/`, [#484] |
 | Guns: Laser, Mass Driver, Meson, Neutron, Particle, Tachyon, Ionic Pulse, Plasma, Steltek | Done | `GunType` in `gun.h` (9) |
-| Missiles: DF / HS / IR / Torpedo, left/right launchers, launcher cycling (`W`) | Done | `MissileType` in `missile.h`, `launcher_modes.h`, `cockpit_armaments.*` |
+| Missiles: DF / HS / IR / FF / Torpedo, left/right launchers, launcher cycling (`W`); pirates fire FF ([#144]) | Done | `MissileType` in `missile.h`, `launcher_modes.h`, `cockpit_armaments.*` |
 | Turrets: auto-fire, lead-predicting, arc-gated, for NPCs and the player; guns can be bought into existing turret mounts | Done | `firing.cpp`, `GunMount::is_turret`, `equipment_panels.cpp` |
 | Upgrades: shield ladder (capped per hull), engines, Plasteel/Tungsten armor, cargo expansion, jump drive, ECM 1–3, repair droid, advanced repair droid, tractor beam | Done | `outfitting.*`, `equipment_prices.json` |
 | Ship dealer with trade-in | Done | `outfitting.cpp` `buy_hull` / `hull_trade_in` |
@@ -142,9 +142,10 @@ NPC-buffed repair hull, one fixed mission-board seed) now match the game.
    (`cockpit_hud.cpp:661`). The original damaged guns, engines, radar, and
    the jump drive individually and charged per-system repairs. `repair.*`
    only covers hull and armor.
-2. **Friend-or-Foe missiles** ([#144]). `MissileType` is still DF/HS/IR/
-   Torpedo. The source data already lists FF on several loadouts
-   (`privateer_ship_data.json`), so they're referenced but can't be fired.
+2. **Friend-or-Foe missiles** ([#144]) **(done)**. `MissileType::FF`
+   needs no lock and seeks the nearest ship the shooter's IFF reads as
+   hostile, re-acquiring when its mark dies. Sold at the dealer, saved
+   under the `ff` key, and carried by pirates.
 3. **Scanner/radar tiers** ([#143]) **(done)**. All nine gamefaq scanners
    (Iris, Hunter AW, and B&S) are in the `scanners` list in
    `equipment_prices.json` and sold on the Equipment SYSTEMS page. The fitted

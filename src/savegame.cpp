@@ -46,6 +46,12 @@ namespace savegame {
 
 namespace {
 
+// On-disk key per missile rack slot, indexed like PlayerState::missiles.
+// A persistence contract: append new types, never rename or reorder.
+constexpr const char* k_missile_save_keys[k_missile_rack_types] = {
+    "df", "hs", "ir", "ff"
+};
+
 // ---- tiny JSON writer -------------------------------------------------------
 // Builds a pretty-printed JSON document. Tracks whether the current container
 // already has a child so it can place commas correctly, and an indent depth
@@ -389,10 +395,11 @@ static std::string serialize_player(const PlayerState& p) {
         // object (df/hs/ir) so adding a 4th type later doesn't shift array
         // meaning; fuel as a plain number (a float tank reading needs no
         // int64 bit-exactness). Absent on v1/v2 saves -> defaults on load.
+        // FF (#144) joined as "ff" — that's the payoff of fixed keys.
         w.key("missiles"); w.member_object_begin();
-          w.key("df"); w.value_int(p.missiles[0]);
-          w.key("hs"); w.value_int(p.missiles[1]);
-          w.key("ir"); w.value_int(p.missiles[2]);
+        for (int i = 0; i < k_missile_rack_types; ++i) {
+            w.key(k_missile_save_keys[i]); w.value_int(p.missiles[i]);
+        }
         w.end_object();
         // Torpedo rack (np-zte.2 expansion, np-9cu-launchers-bump).
         // Single counter now (was a DF/HS/IR fan-out; that was overkill
@@ -743,10 +750,12 @@ bool load(PlayerState& p, const std::string& path) {
         // longer a PlayerState field — the fuel pool merged into the
         // player Ship's energy_gj. We tolerate the key in older saves by
         // just ignoring it; new saves don't emit it.
+        // A key missing from an older save (e.g. "ff" pre-#144) reads 0.
         if (const json::Value* ms = pl.find("missiles"); ms && ms->is_object()) {
-            out.missiles[0] = ms->contains("df") ? (int)(*ms)["df"].number_or(0) : 0;
-            out.missiles[1] = ms->contains("hs") ? (int)(*ms)["hs"].number_or(0) : 0;
-            out.missiles[2] = ms->contains("ir") ? (int)(*ms)["ir"].number_or(0) : 0;
+            for (int i = 0; i < k_missile_rack_types; ++i) {
+                const char* key = k_missile_save_keys[i];
+                out.missiles[i] = ms->contains(key) ? (int)(*ms)[key].number_or(0) : 0;
+            }
         }
         // Torpedo rack (np-zte.2, np-launchers-bump). Absent on v1/v2
         // saves -> defaults to 0, which is the correct empty state. v1/v2

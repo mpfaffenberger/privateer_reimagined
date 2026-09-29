@@ -20,7 +20,9 @@
 
 #include "armor.h"
 #include "gun.h"
+#include "faction.h"
 #include "missile.h"
+#include "perception.h"
 #include "player.h"
 #include "repair.h"
 #include "ship.h"
@@ -31,6 +33,7 @@
 
 #include <cmath>
 #include <cstdio>
+#include <string>
 
 namespace {
 
@@ -81,6 +84,7 @@ int main() {
     gun::load_table("assets/data/privateer_ship_data.json");
     shield::load_table("assets/data/privateer_ship_data.json");
     armor::load_table("assets/data/privateer_ship_data.json");
+    faction::init();   // stance matrix for the FF IFF cases (#144)
     const int n_classes = ship_class::load_all("assets/ships");
     std::printf("[setup] loaded %d ship classes\n\n", n_classes);
 
@@ -173,7 +177,7 @@ int main() {
         // silently turn this case into a false failure again (#493).
         PlayerState p = player::new_game("troy");
         int rack = -1;
-        for (int i = 0; i < 3 && rack < 0; ++i)
+        for (int i = 0; i < k_missile_rack_types && rack < 0; ++i)
             if (player::k_new_game_missiles[i] > 0) rack = i;
         CHECK("starter loadout includes missiles", rack >= 0);
         if (rack < 0) rack = 0;
@@ -270,6 +274,143 @@ int main() {
         CHECK("whitelist open: steltek hit LANDS", total_health(s) < h0);
         ship::take_damage(s, 1.0e6f, HitFacing::Fore, GunType::SteltekGun);
         CHECK("whitelist open: steltek overkill is lethal", !s.alive);
+    }
+
+    // -------------------------------------------------------------------
+    // 7. FF (#144): no lock, seeks the nearest IFF-hostile, re-acquires
+    //    when its mark dies, ignores friendlies/neutrals.
+    // -------------------------------------------------------------------
+    std::printf("\n--- 7. FF friend-or-foe seeker ---\n");
+    {
+        CHECK("FF needs no lock", !g_missile_stats[(int)MissileType::FF].needs_lock);
+        CHECK("FF is the only auto-acquire type",
+              g_missile_stats[(int)MissileType::FF].auto_acquire &&
+              !g_missile_stats[(int)MissileType::HS].auto_acquire);
+        CHECK("FF name round-trips",
+              missile::from_name("FF") == MissileType::FF &&
+              std::string(missile::to_name(MissileType::FF)) == "FF");
+
+        ShipRegistry ships;
+        ShipSpriteObject spr_owner, spr_near, spr_far, spr_ally;
+        // Militia shooter at the origin. Merchant ally is CLOSEST but must
+        // be ignored; pirate A (near) is the pick, pirate B the fallback.
+        Ship owner = make_target(*k, spr_owner, HMM_V3(0, 0, 0), 7000);
+        owner.faction = Faction::Militia;
+        Ship ally  = make_target(*k, spr_ally, HMM_V3(-1200, 0, 300), 7001);
+        ally.faction = Faction::Merchant;
+        Ship near_p = make_target(*k, spr_near, HMM_V3(0, 0, 3000), 7002);
+        near_p.faction = Faction::Pirate;
+        Ship far_p  = make_target(*k, spr_far, HMM_V3(4000, 0, 0), 7003);
+        far_p.faction = Faction::Pirate;
+        ships.spawn(std::move(owner));
+        ships.spawn(std::move(ally));
+        ships.spawn(std::move(near_p));
+        ships.spawn(std::move(far_p));
+        perception::tick(ships, PlayerReputation{});
+
+        const uint32_t pick = missile::acquire_iff_target(ships, 7000, HMM_V3(0, 0, 0));
+        std::printf("  acquire from origin -> %u\n", pick);
+        CHECK("FF picks the nearest hostile, skipping a closer ally", pick == 7002);
+        CHECK("unknown shooter has no IFF reference",
+              missile::acquire_iff_target(ships, 9999, HMM_V3(0, 0, 0)) == 0);
+
+        // Fired straight UP (90 degrees off every bearing) with NO target:
+        // must pick A on its first tick without any lock.
+        std::vector<Missile> ms;
+        ms.push_back(missile::spawn(MissileType::FF, HMM_V3(0, 0, 0),
+                                    HMM_V3(0, 1, 0), HMM_V3(0, 0, 0),
+                                    /*owner*/ 7000, /*target*/ 0));
+        CHECK("FF launches without a target", ms[0].target_id == 0);
+        const float dt = 1.0f / 60.0f;
+        missile::tick(ms, ships, dt);
+        CHECK("FF acquired the nearest hostile on its first tick",
+              !ms.empty() && ms[0].target_id == 7002);
+
+        // Kill its mark mid-flight: it should swing onto pirate B.
+        ships.find_by_id(7002)->alive = false;
+        missile::tick(ms, ships, dt);
+        CHECK("FF re-acquires when its first mark dies",
+              !ms.empty() && ms[0].target_id == 7003);
+
+        const float b_before = total_health(*ships.find_by_id(7003));
+        const float ally_before = total_health(*ships.find_by_id(7001));
+        bool detonated = false;
+        for (int frame = 0; frame < 1800 && !ms.empty(); ++frame) {
+            missile::tick(ms, ships, dt);
+            missile::collide_and_damage(ms, ships, dt);
+            if (ms.empty()) { detonated = true; break; }
+        }
+        CHECK("FF homed + detonated on the re-acquired hostile",
+              detonated && total_health(*ships.find_by_id(7003)) < b_before);
+        CHECK("FF left the friendly alone",
+              total_health(*ships.find_by_id(7001)) == ally_before);
+
+        // No hostiles left on the scope: acquire comes back empty.
+        ships.find_by_id(7003)->alive = false;
+        perception::tick(ships, PlayerReputation{});
+        CHECK("no hostile contact -> nothing to acquire",
+              missile::acquire_iff_target(ships, 7000, HMM_V3(0, 0, 0)) == 0);
+    }
+
+    // -------------------------------------------------------------------
+    // 8. FF spoofing (#144): a friendly whose IFF reads hostile to the
+    //    shooter (here: one the player provoked) is fair game.
+    // -------------------------------------------------------------------
+    std::printf("\n--- 8. FF IFF spoof ---\n");
+    {
+        ShipRegistry ships;
+        ShipSpriteObject spr_mer;
+        Ship pl = ship::spawn_player();
+        pl.id = 8000;
+        const uint32_t pl_id = pl.id;
+        ships.spawn(std::move(pl));
+        Ship mer = make_target(*k, spr_mer, HMM_V3(0, 0, 2000), 8001);
+        mer.faction = Faction::Merchant;
+        ships.spawn(std::move(mer));
+
+        perception::tick(ships, PlayerReputation{});
+        CHECK("a friendly merchant is not an FF target",
+              missile::acquire_iff_target(ships, pl_id, HMM_V3(0, 0, 0)) == 0);
+
+        ships.find_by_id(8001)->provoked_by_player = true;
+        perception::tick(ships, PlayerReputation{});
+        CHECK("a provoked friendly reads hostile and gets targeted",
+              missile::acquire_iff_target(ships, pl_id, HMM_V3(0, 0, 0)) == 8001);
+    }
+
+    // -------------------------------------------------------------------
+    // 9. NPC FF racks (#144): pirates carry them, launch only mid gun-run.
+    // -------------------------------------------------------------------
+    std::printf("\n--- 9. NPC FF racks ---\n");
+    {
+        ShipRegistry ships;
+        ShipSpriteObject spr_p, spr_m;
+        Ship pir = make_target(*k, spr_p, HMM_V3(0, 0, 0), 9001);
+        pir.faction = Faction::Pirate;
+        missile::arm_npc_rack(pir);
+        Ship mer = make_target(*k, spr_m, HMM_V3(0, 0, 5000), 9002);
+        mer.faction = Faction::Merchant;
+        missile::arm_npc_rack(mer);
+        const int rack = pir.ff_missiles;
+        CHECK("pirates spawn with an FF rack", rack > 0);
+        CHECK("merchants spawn without one", mer.ff_missiles == 0);
+        ships.spawn(std::move(pir));
+        ships.spawn(std::move(mer));
+
+        std::vector<Missile> ms;
+        Ship& p = *ships.find_by_id(9001);
+        for (int i = 0; i < 30; ++i) missile::npc_launch(ms, ships, 1.0f);
+        CHECK("idle pirate never launches", ms.empty() && p.ff_missiles == rack);
+
+        p.ai.state = AIState::Engage;
+        p.controller.fire_guns = true;
+        int launched = 0;
+        for (int i = 0; i < 120; ++i) launched += missile::npc_launch(ms, ships, 1.0f);
+        std::printf("  engaged pirate launched %d of %d\n", launched, rack);
+        CHECK("engaged pirate empties its rack, one round at a time",
+              launched == rack && p.ff_missiles == 0 && (int)ms.size() == rack);
+        CHECK("NPC rounds are FF owned by the pirate",
+              !ms.empty() && ms[0].type == MissileType::FF && ms[0].owner_id == 9001);
     }
 
     std::printf("\n=== %s ===\n", g_fail == 0 ? "ALL CHECKS PASSED" : "FAILURES DETECTED");

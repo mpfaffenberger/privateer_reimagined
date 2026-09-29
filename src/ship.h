@@ -278,6 +278,12 @@ struct Ship {
     // which never cycle modes.
     uint8_t              gun_mode_idx = 3;
 
+    // NPC Friend-or-Foe rack (#144). Rounds left + seconds until the next
+    // launch is allowed; missile::npc_launch owns both. The player's
+    // ordnance lives in PlayerState, never here, so this stays 0 for it.
+    int   ff_missiles        = 0;
+    float missile_cooldown_s = 0.0f;
+
     bool  alive = true;
 };
 

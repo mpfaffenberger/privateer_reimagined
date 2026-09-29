@@ -101,6 +101,7 @@ HMM_Mat4 model_matrix(HMM_Vec3 pos, HMM_Vec3 euler_deg, float s);
 #include "bolt_art.h"
 #include "projectile.h"
 #include "missile.h"
+#include "repair.h"
 #include "launcher_modes.h"
 #include "pause_overlay.h"
 #include "sfx.h"
@@ -341,7 +342,7 @@ struct AppState {
     // projectile tracers. Empty until the player launches one.
     std::vector<Missile>                                 missiles;
     // Currently-selected missile type for the fire key (index into
-    // MissileType: 0=DF,1=HS,2=IR,3=TORPEDO. Cycled with W (F alias).
+    // MissileType: 0=DF,1=HS,2=IR,3=FF,4=TORPEDO. Cycled with W (F alias).
     // Transient UI state — NOT persisted (ammo counts are, in PlayerState).
     int                                                  selected_missile = 0;
     // Edge-triggered fire request: the missile-fire key sets this in
@@ -2444,6 +2445,7 @@ void build_system_scene(bool first_time, bool show_progress) {
                              sd.faction_override.c_str(), class_name.c_str());
             }
         }
+        missile::arm_npc_rack(inst);   // faction is final: pirates get FF (#144)
 
         // Translate the JSON behaviour string into the Ship enum.
         if (sd.behavior_kind == "pursue_target") {
@@ -2924,6 +2926,7 @@ void apply_ship_debug_requests() {
             Ship inst   = ship::spawn(*klass);
             inst.sprite = &spr;
             inst.ai.enabled = true;             // joins the brawl like its JSON kin
+            missile::arm_npc_rack(inst);        // same FF rack as its JSON kin (#144)
             const ShipHandle h = g.ships.spawn(std::move(inst));
             std::printf("[debug_spawn] talon spawned: handle {%u, %u}, sprite slot %zu\n",
                         h.index, h.generation, slot);
@@ -3271,6 +3274,7 @@ static uint32_t encounter_spawn(const encounters::SpawnRequest& req) {
     inst.sprite       = &spr;
     inst.faction      = req.faction;
     inst.display_name = req.display_name;
+    missile::arm_npc_rack(inst);   // pirates carry FF racks (#144)
 
     // Talon loadout rule (global): the ONLY Talons that keep the stock
     // 2x laser + center mass driver (the ship.json default) are PIRATE
@@ -4910,9 +4914,7 @@ void frame_cb() {
                 cinematic::triggers::TriggerCtx tc;
                 tc.system_id  = g.player.current_system;
                 tc.ship_class = g.player.ship_class_name;
-                tc.missiles_total = player::missile_count(g.player, 0) +
-                                    player::missile_count(g.player, 1) +
-                                    player::missile_count(g.player, 2);
+                tc.missiles_total = repair::missiles_total(g.player);
                 tc.player_pos = pl->position;
                 tc.nav_pos = [](const std::string& name, HMM_Vec3& out) {
                     const NavPointDef* n = find_nav_by_name(name);
@@ -5224,6 +5226,13 @@ void frame_cb() {
     // Guided missiles (np-zte.2): steer + advance BEFORE the snapshot/damage
     // pass below, exactly like projectiles, so their detonations are caught
     // by the same kill-detection + explosion FX that gunfire uses.
+    // NPC FF racks (#144): pirates mid gun-run lob Friend-or-Foes. Same
+    // cinematic gate as gunfire, and before tick so a fresh round gets its
+    // first integration step this frame.
+    if (!cinematic::active()) {
+        if (const int n = missile::npc_launch(g.missiles, g.ships, dt); n > 0)
+            std::printf("[missile] NPC launched %d FF\n", n);
+    }
     missile::tick(g.missiles, g.ships, dt);
 
     // Snapshot alive flags BEFORE damage so we can detect kills this
@@ -6242,7 +6251,7 @@ void frame_cb() {
 
             // Missile tracers (np-zte.2). Bigger + hotter than a bullet so a
             // missile reads as a distinct burning mote streaking toward its
-            // mark; a faint per-type tint (DF white, HS orange, IR cyan)
+            // mark; a faint per-type tint (DF white, HS orange, IR cyan, FF green)
             // hints at what's inbound. Reuses the same additive-glow path —
             // no bespoke missile mesh in v1.
             for (const Missile& m : g.missiles) {
@@ -6252,6 +6261,7 @@ void frame_cb() {
                 switch (m.type) {
                     case MissileType::HS: t.color = HMM_V3(2.4f, 1.2f, 0.5f); break;
                     case MissileType::IR: t.color = HMM_V3(0.7f, 1.8f, 2.4f); break;
+                    case MissileType::FF: t.color = HMM_V3(0.8f, 2.4f, 0.9f); break;
                     default:              t.color = HMM_V3(2.2f, 2.2f, 2.0f); break;
                 }
                 t.size = 22.0f;
@@ -6589,6 +6599,10 @@ void frame_cb() {
             // (DF) and TORPEDO apart at a glance.
             if ((MissileType)g.selected_missile == MissileType::TORPEDO)
                 w.no_lock_label = "TORPEDO";
+            // FF seeks by transponder, not reticle lock, so it needs no
+            // Target Lock scanner either (#144 x #143).
+            else if (sel.auto_acquire)
+                w.no_lock_label = "IFF SEEK";
             // No Target Lock scanner (#143): guided types fire unguided.
             w.needs_lock    = sel.needs_lock && player_scanner_can_lock();
             if (sel.needs_lock && !w.needs_lock) w.no_lock_label = "UNGUIDED";

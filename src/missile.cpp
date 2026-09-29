@@ -7,6 +7,8 @@
 
 #include "missile.h"
 
+#include "faction.h"
+#include "perception.h"
 #include "ship.h"
 #include "ship_registry.h"
 #include "ship_sprite.h"
@@ -22,7 +24,7 @@
 // (chasing the engine plume), DF doesn't turn at all. prox_radius gives the
 // homing types a forgiving "close enough" so a near-miss still detonates.
 const MissileStats g_missile_stats[kMissileTypeCount] = {
-    //                short long          dmg   speed  turn   life  range   prox  lock  build
+    //                short long          dmg   speed  turn   life  range   prox  lock  build auto
     // Damage = canonical Privateer cm-of-durasteel (Wing Commander CIC
     // reference): DF 13.0, HS 16.0, IR 17.5. The old 45/55/70 numbers hit
     // ~3-5x too hard (a single HS one-shot a Tarsus through armour+shield);
@@ -35,6 +37,10 @@ const MissileStats g_missile_stats[kMissileTypeCount] = {
     /* DF */ { "DF", "Dumbfire",       13.0f, 1400.0f, 0.0f, 6.0f, 8000.0f, 60.0f, false, false },
     /* HS */ { "HS", "Heat-Seeker",    16.0f, 1200.0f, 1.2f, 8.0f, 9000.0f, 90.0f, true,  false },
     /* IR */ { "IR", "Image-Rec",      17.5f, 1100.0f, 2.4f, 9.0f,10000.0f,100.0f, true,  true  },
+    // FF (#144): canon 17cm @900kps, 7200m. Speed/range scaled like HS
+    // (same demo-scale bump); steering deliberately IS the HS seeker — FF
+    // is "HS that picks its own target", not a better tracker.
+    /* FF */ { "FF", "Friend-or-Foe",  17.0f, 1150.0f, 1.2f, 8.0f, 9000.0f, 90.0f, false, false, true },
     /* TORP*/ { "TORP","Torpedo",       60.0f,  600.0f, 0.0f,12.0f,14000.0f,100.0f, false, false },
 };
 
@@ -75,7 +81,8 @@ Missile spawn(MissileType type, const HMM_Vec3& muzzle_pos,
     m.range_remaining = ms.range_m;
     m.prox_radius_m   = ms.prox_radius_m;
     m.owner_id        = owner_id;
-    // Unguided types ignore the target id entirely.
+    // Only lock types take the launcher's target; DF/torpedo fly blind and
+    // FF finds its own on the first tick (fire-and-forget, no lock).
     m.target_id       = ms.needs_lock ? target_id : 0;
     m.type            = type;
     m.alive           = true;
@@ -90,7 +97,66 @@ HMM_Vec3 ship_world_pos(const Ship& s) {
     return s.sprite ? s.sprite->position : s.position;
 }
 
+// NPC FF rack tuning (#144). Two rounds keeps a pirate wing dangerous
+// without turning every Talon into a missile boat; the first-launch delay
+// means the opening gun pass comes before the first missile.
+constexpr int   k_pirate_ff_rack       = 2;
+constexpr float k_npc_ff_first_launch_s = 4.0f;
+constexpr float k_npc_ff_refire_s       = 10.0f;
+
+HMM_Vec3 ship_forward(const Ship& s) {
+    const HMM_Mat4 r = HMM_QToM4(s.orientation);
+    const HMM_Vec4 f = HMM_MulM4V4(r, HMM_V4(0.0f, 0.0f, 1.0f, 0.0f));
+    return HMM_V3(f.X, f.Y, f.Z);
+}
+
 } // namespace
+
+uint32_t acquire_iff_target(const ShipRegistry& ships, uint32_t owner_id,
+                            const HMM_Vec3& from) {
+    const Ship* owner = ships.find_by_id(owner_id);
+    if (!owner || !owner->alive) return 0;   // no launcher, no IFF reference
+
+    uint32_t best    = 0;
+    float    best_d2 = 0.0f;
+    for (const PerceivedContact& c : owner->perception.visible) {
+        if (c.stance != Stance::Hostile) continue;
+        const Ship* s = ships.find_by_id(c.ship_id);
+        if (!s || !s->alive || s->id == owner_id) continue;
+        const HMM_Vec3 d  = HMM_SubV3(ship_world_pos(*s), from);
+        const float    d2 = HMM_DotV3(d, d);
+        if (best == 0 || d2 < best_d2) { best = s->id; best_d2 = d2; }
+    }
+    return best;
+}
+
+void arm_npc_rack(Ship& s) {
+    s.ff_missiles        = (s.faction == Faction::Pirate) ? k_pirate_ff_rack : 0;
+    s.missile_cooldown_s = k_npc_ff_first_launch_s;
+}
+
+int npc_launch(std::vector<Missile>& missiles, ShipRegistry& ships, float dt) {
+    int launched = 0;
+    for (Ship& s : ships) {
+        if (s.is_player || !s.alive || s.ff_missiles <= 0) continue;
+        // Only mid gun-run (target in arc + range): the refire clock
+        // pauses otherwise, so a pirate never lobs one at a contact it
+        // isn't actually fighting.
+        if (s.ai.state != AIState::Engage || !s.controller.fire_guns) continue;
+        s.missile_cooldown_s -= dt;
+        if (s.missile_cooldown_s > 0.0f) continue;
+
+        const HMM_Vec3 fwd    = ship_forward(s);
+        const HMM_Vec3 muzzle = HMM_AddV3(ship_world_pos(s),
+                                          HMM_MulV3F(fwd, ship::hit_radius_m(s)));
+        missiles.push_back(spawn(MissileType::FF, muzzle, fwd, s.world_velocity,
+                                 s.id, /*target: FF self-acquires*/ 0));
+        --s.ff_missiles;
+        s.missile_cooldown_s = k_npc_ff_refire_s;
+        ++launched;
+    }
+    return launched;
+}
 
 void tick(std::vector<Missile>& missiles, ShipRegistry& ships, float dt) {
     const float scaled_dt = dt * world_scale::k_world_velocity_scale;
@@ -101,9 +167,15 @@ void tick(std::vector<Missile>& missiles, ShipRegistry& ships, float dt) {
         // ---- guidance: steer heading toward the target ----------------
         // Only homing missiles with a still-alive target steer. A DF (or a
         // homer whose target died / fell out of the registry) coasts on its
-        // last heading — exactly what you want when a lock breaks.
-        if (m.turn_rate_radps > 0.0f && m.target_id != 0) {
-            const Ship* tgt = ships.find_by_id(m.target_id);
+        // last heading — exactly what you want when a lock breaks. An FF
+        // with no live mark asks the shooter's IFF for a new one first.
+        const bool seeks = g_missile_stats[(int)m.type].auto_acquire;
+        if (m.turn_rate_radps > 0.0f && (m.target_id != 0 || seeks)) {
+            const Ship* tgt = m.target_id ? ships.find_by_id(m.target_id) : nullptr;
+            if ((!tgt || !tgt->alive) && seeks) {
+                m.target_id = acquire_iff_target(ships, m.owner_id, m.position);
+                tgt = m.target_id ? ships.find_by_id(m.target_id) : nullptr;
+            }
             if (tgt && tgt->alive) {
                 const HMM_Vec3 to_t = HMM_SubV3(ship_world_pos(*tgt), m.position);
                 const float    d2   = HMM_DotV3(to_t, to_t);

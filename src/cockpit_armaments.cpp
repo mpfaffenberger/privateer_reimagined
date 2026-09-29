@@ -184,8 +184,9 @@ void draw_launcher(const PlayerState& player, const Zone& zone,
                     image_lo.y + (zone.rect[1] + zone.rect[3]) * side);
     const ImVec2 center = zone_center(zone, image_lo, side);
     const ImU32 color = !fitted ? kEmpty : active ? kArmed : kOff;
+    // Zone-sized labels: the torpedo gets a one-letter tag to fit.
     static constexpr const char* kNames[kMissileTypeCount] = {
-        "DF", "HS", "IR", "T"
+        "DF", "HS", "IR", "FF", "T"
     };
     const char* label = active ? kNames[selected_ordnance]
                       : missile_installed && torpedo_installed ? "M/T"
@@ -211,9 +212,9 @@ void draw_launcher(const PlayerState& player, const Zone& zone,
                                              : ImVec4(0.50f, 0.50f, 0.50f, 1.0f),
                            "TORPEDO LAUNCHER  %s", torpedo_installed ? "INSTALLED" : "EMPTY");
         ImGui::Separator();
-        ImGui::Text("DF %d   HS %d   IR %d   TORP %d",
+        ImGui::Text("DF %d   HS %d   IR %d   FF %d   TORP %d",
                     player.missiles[0], player.missiles[1], player.missiles[2],
-                    player.torpedoes);
+                    player.missiles[3], player.torpedoes);
         if (active) ImGui::TextColored(ImVec4(0.42f, 0.94f, 0.55f, 1.0f), "ACTIVE");
         ImGui::EndTooltip();
     }
@@ -226,10 +227,8 @@ void draw(PlayerState& player, Ship& live_ship, int selected_ordnance) {
     ensure_sampler();
     ensure_layout(player, live_ship);
     const auto& unique = firing::gun_unique_types_cache(live_ship.mounts);
-    static constexpr const char* kNames[kMissileTypeCount] = {
-        "DF", "HS", "IR", "TORP"
-    };
     const int selected = std::clamp(selected_ordnance, 0, kMissileTypeCount - 1);
+    const char* ordnance = missile::to_name((MissileType)selected);
 
     // Header readouts, full wording in the classic box. A cockpit MFD is
     // ~half as wide (#430), so compact phrasings drop only what the
@@ -241,10 +240,10 @@ void draw(PlayerState& player, Ship& live_ship, int selected_ordnance) {
     std::snprintf(gun_short, sizeof gun_short, "%s  %d/%zu", mode, armed, live_ship.mounts.size());
     const int ammo = launcher_modes::ammo_count(player, selected);
     std::snprintf(launch, sizeof launch, "%s x%d  [MSL %d / TORP %d]",
-        kNames[selected], ammo,
+        ordnance, ammo,
         launcher_modes::missile_launcher_count(player),
         launcher_modes::torpedo_launcher_count(player));
-    std::snprintf(launch_short, sizeof launch_short, "%s x%d", kNames[selected], ammo);
+    std::snprintf(launch_short, sizeof launch_short, "%s x%d", ordnance, ammo);
     const hud_text_fit::Phrasing gun_line[] = { { "ARMAMENTS", gun }, { "GUN", gun_short } };
     const hud_text_fit::Phrasing launch_line[] = { { "LAUNCH", launch }, { "LAUNCH", launch_short } };
     const ImU32 detail = ImGui::GetColorU32(ImGuiCol_TextDisabled);

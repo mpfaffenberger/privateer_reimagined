@@ -69,6 +69,18 @@ int main() {
     check(right_torpedo.active,
           "HUD marks installed right torpedo launcher active for torpedo");
 
+    // Friend-or-Foe (#144) shares the missile rack + launcher.
+    const int ff = (int)MissileType::FF;
+    player.missiles[ff] = 2;
+    check(launcher_modes::next_selection(player, 2) == ff,
+          "cycle includes loaded friend-or-foe after image-recognition");
+    check(launcher_modes::next_selection(player, ff)
+              == (int)MissileType::TORPEDO,
+          "cycle advances from friend-or-foe to torpedo");
+    check(launcher_modes::side_state(player, 0, ff).active,
+          "HUD marks the missile launcher active for FF");
+    player.missiles[ff] = 0;
+
     player.missiles[1] = player.missiles[2] = player.torpedoes = 0;
     check(launcher_modes::next_selection(player, 2) == 2,
           "empty installed launchers keep current HUD selection");

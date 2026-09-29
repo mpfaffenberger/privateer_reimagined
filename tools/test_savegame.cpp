@@ -94,7 +94,7 @@ PlayerState make_mutated() {
     };
     // np-zte.2: distinctive missile counts. afterburner_fuel field removed
     // (merged into Ship::energy_gj), so nothing to round-trip there.
-    p.missiles[0] = 3; p.missiles[1] = 1; p.missiles[2] = 5;
+    p.missiles[0] = 3; p.missiles[1] = 1; p.missiles[2] = 5; p.missiles[3] = 2;
     // np-3dp.19: career faction-kill tallies + a live ship-damage snapshot.
     p.faction_kills[(int)Faction::Pirate]   = 17;
     p.faction_kills[(int)Faction::Kilrathi] = 9;
@@ -316,12 +316,13 @@ int main() {
     CHECK_EQ("docked",           dst.docked,           src.docked);
 
     // np-zte.2: missile inventory + afterburner fuel survive the round-trip.
-    std::printf("  missiles:         %d/%d/%d vs %d/%d/%d\n",
-                src.missiles[0], src.missiles[1], src.missiles[2],
-                dst.missiles[0], dst.missiles[1], dst.missiles[2]);
+    std::printf("  missiles:         %d/%d/%d/%d vs %d/%d/%d/%d\n",
+                src.missiles[0], src.missiles[1], src.missiles[2], src.missiles[3],
+                dst.missiles[0], dst.missiles[1], dst.missiles[2], dst.missiles[3]);
     CHECK_EQ("missiles[DF]", dst.missiles[0], src.missiles[0]);
     CHECK_EQ("missiles[HS]", dst.missiles[1], src.missiles[1]);
     CHECK_EQ("missiles[IR]", dst.missiles[2], src.missiles[2]);
+    CHECK_EQ("missiles[FF]", dst.missiles[3], src.missiles[3]);
     // afterburner_fuel round-trip removed: field merged into Ship::energy_gj
     // (np-zte.2), no longer persisted on PlayerState.
 
@@ -463,15 +464,18 @@ int main() {
         { std::ofstream f(path, std::ios::trunc);
           f << "{ \"version\": 1, \"label\": \"old-save\",\n"
                "  \"player\": { \"credits\": \"99\", \"current_system\": \"troy\",\n"
-               "    \"last_docked_base\": \"achilles\" } }"; }
+               "    \"last_docked_base\": \"achilles\",\n"
+               "    \"missiles\": { \"df\": 2, \"hs\": 4, \"ir\": 1 } } }"; }
         PlayerState p;
+        p.missiles[3] = 7;   // must not survive: pre-#144 saves have no "ff"
         const bool r = savegame::load(p, kOldNoMissSlot);
         const bool ok = r && p.credits == 99 &&
                         p.current_system == "troy" &&
                         p.last_docked_base == "achilles" &&
-                        p.missions.empty();
+                        p.missions.empty() &&
+                        p.missiles[1] == 4 && p.missiles[3] == 0;
         if (!ok) ++g_fail;
-        std::printf("  [%s] v1 save (no missions key) loads with missions=[], rest intact\n",
+        std::printf("  [%s] v1 save (no missions key, no ff key) loads with missions=[], FF=0, rest intact\n",
                     ok ? "OK  " : "FAIL");
     }
 
