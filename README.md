@@ -45,14 +45,13 @@ The playable sandbox and campaign include:
   the Terrell/drone finale) with bar fixers, portrait conversations,
   escorts, a secret compartment, plot-gated Steltek systems, and in-flight
   cinematics.
-- **Persistence:** versioned saves (format v8) with accumulating autosaves,
+- **Persistence:** versioned saves (format v11) with accumulating autosaves,
   and a Confed calendar that starts at stardate `2669.135` and advances one
   day per landing.
 - **Audio and tooling:** dynamic music, per-scene bar music, SFX, speech,
   an in-game cinematic studio, and a lot of development tooling.
 
-Not built yet, in short: per-system component damage, Friend-or-Foe
-missiles, scanner tiers, buying turrets for hulls that don't have them,
+Not built yet, in short: Friend-or-Foe missiles, scanner tiers, buying turrets for hulls that don't have them,
 rumors from the bartender, NPC schedules for the living world, and
 Righteous Fire. The full, evidence-backed list is in
 [`docs/GAP_ANALYSIS.md`](docs/GAP_ANALYSIS.md). Living-world work is covered
@@ -169,7 +168,7 @@ a stable player-facing CLI.
 | Input | Action |
 |---|---|
 | `C` | Comms screen (then `1`–`9` pick replies) |
-| `R` | Damage page (hull/armor only; per-system damage isn't modeled yet) |
+| `R` | Damage Control page (live per-system integrity: guns, engines, radar, ...) |
 | `Esc` | Back/close; double-tap in flight to quit |
 
 The in-game HUD shows more context-sensitive bindings.

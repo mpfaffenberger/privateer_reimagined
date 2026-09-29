@@ -9,6 +9,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
+#include <random>
 
 namespace {
 
@@ -130,7 +132,9 @@ void flight_controller_step(Ship& s, float dt) {
                                             mobility::pitch_rate_deg(s.klass->max_ypr))
                                    * s.klass->ypr_rate_multiplier
                                    * k_deg_to_rad;
-        const float omega_mag    = std::min(Kp * angle, max_rate_rad);
+        // Damaged engines/maneuvering thrusters (#141) derate the turn rate.
+        const float omega_mag    = std::min(Kp * angle,
+                                            max_rate_rad * ship_systems::turn_mult(s.systems));
         s.sprite->angular_velocity = HMM_MulV3F(axis_body, omega_mag);
     } else {
         // Aligned — kill any residual rotation so the integrator doesn't
@@ -139,8 +143,10 @@ void flight_controller_step(Ship& s, float dt) {
         s.sprite->angular_velocity = HMM_V3(0.0f, 0.0f, 0.0f);
     }
 
-    // Throttle: lerp forward_speed toward desired at class accel.
-    const float ds       = s.controller.desired_speed - s.sprite->forward_speed;
+    // Throttle: lerp forward_speed toward desired at class accel. Damaged
+    // engines (#141) cap whatever speed the behavior asked for.
+    const float want_speed = s.controller.desired_speed * ship_systems::speed_mult(s.systems);
+    const float ds       = want_speed - s.sprite->forward_speed;
     const float max_step = mobility::accel_mps2(s.klass->acceleration) * dt;
     s.sprite->forward_speed += std::clamp(ds, -max_step, +max_step);
 
@@ -282,6 +288,10 @@ void ship::heal_to_full(Ship& s) {
     s.shield_pause_aft  = 0.0f;
     s.shield_pause_port = 0.0f;
     s.shield_pause_starboard = 0.0f;
+    // Fresh components too (#141). The installed mask is loadout-owned and
+    // survives; callers that must NOT fix components (repair_hull) save and
+    // restore s.systems around this call.
+    ship_systems::repair_all(s.systems);
     if (!s.klass) return;   // class-less player: health doesn't apply yet
     const ShipClass& k = *s.klass;
     s.armor_fore_cm = k.armor_fore_cm;
@@ -391,6 +401,13 @@ HitTarget hit_target(Ship& s, HitFacing f) {
     return { &s.shield_fore_cm, &s.armor_fore_cm, &s.shield_pause_fore, sh_max_fore };
 }
 
+// Component-hit roll (#141). Module-local fixed-seed generator, the same
+// pattern loot.cpp / encounters.cpp use: reproducible feel, no shared state.
+float component_roll() {
+    static std::mt19937 rng{ 0x5C0FFEE1u };
+    return std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+}
+
 const char* facing_name(HitFacing f) {
     switch (f) { case HitFacing::Fore: return "fore";
                  case HitFacing::Aft:  return "aft";
@@ -441,6 +458,21 @@ void ship::take_damage(Ship& s, float damage_cm, HitFacing facing,
             if (s.sprite) s.sprite->world_size = 0.001f;
             std::printf("[ship] killed: id=%u (%s hit)\n",
                         s.id, facing_name(facing));
+        } else {
+            // It got through the armor and we're still flying: something
+            // behind that plating just took the hit (#141).
+            const ShipSystem hit = ship_systems::apply_hit(
+                s.systems, facing, damage_cm, component_roll());
+            if (hit != ShipSystem::Count && s.is_player) {
+                const float left = ship_systems::integrity(s.systems, hit);
+                if (left > 0.0f)
+                    std::printf("[damage] %s hit: %s at %.0f%%\n",
+                                facing_name(facing), ship_systems::label(hit),
+                                left * 100.0f);
+                else
+                    std::printf("[damage] %s hit: %s DESTROYED\n",
+                                facing_name(facing), ship_systems::label(hit));
+            }
         }
     }
 }
@@ -460,7 +492,10 @@ void ship::regen_shields(Ship& s, float dt) {
             return;          // suppressed this frame
         }
         if (q < max_cm) {
-            const float regen_rate = max_cm * world_scale::k_shield_regen_frac_per_s;
+            // A damaged generator (#141) recharges proportionally slower;
+            // a destroyed one not at all.
+            const float regen_rate = max_cm * world_scale::k_shield_regen_frac_per_s
+                                   * ship_systems::shield_regen_mult(s.systems);
             q = std::min(q + regen_rate * dt, max_cm);
         }
     };

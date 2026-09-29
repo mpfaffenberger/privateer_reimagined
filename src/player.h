@@ -33,6 +33,7 @@
 
 #include "faction.h"
 #include "inventory.h"
+#include "ship_systems.h"
 
 #include <cstdint>
 #include <string>
@@ -300,6 +301,10 @@ struct PlayerState {
     float hp_shield_port = 0.0f;
     float hp_shield_starboard = 0.0f;
     float hp_energy      = 0.0f;
+    // Per-component integrity (#141, save v11), same hp_valid gate. Only the
+    // integrity is persisted; the installed mask is re-derived from the
+    // loadout on every fit. Pre-v11 saves default to pristine.
+    SystemIntegrity hp_systems = ship_systems::k_pristine;
 
     // ---- persistent world clock (Gemini Lives #171, save v8) ------------
     // Elapsed days since 2669.135. Successful landings advance this exactly

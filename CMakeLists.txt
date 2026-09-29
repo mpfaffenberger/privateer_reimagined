@@ -272,6 +272,7 @@ src/bolt_art.cpp
     src/cockpit_overlay.cpp
     src/cockpit_armaments.cpp
     src/hud_text_fit.cpp
+    src/cockpit_damage.cpp
     src/comms_menu.cpp
     ${DEV_REMOTE_SRC}
     ${IMGUI_SRC}
@@ -744,6 +745,14 @@ add_executable(test_missile EXCLUDE_FROM_ALL
     src/json.cpp src/commodity.cpp src/ai_brain.cpp src/hazards.cpp
     src/ship_registry.cpp src/comm.cpp)
 target_compile_definitions(test_missile PRIVATE COMM_HEADLESS)
+# Per-component damage (#141): pure model + ship/perception/repair wiring.
+add_executable(test_ship_systems EXCLUDE_FROM_ALL
+    tools/test_ship_systems.cpp src/ship.cpp src/player.cpp src/repair.cpp
+    src/ship_class.cpp src/gun.cpp src/shield.cpp src/armor.cpp
+    src/mobility.cpp src/faction.cpp src/ship_ai.cpp src/perception.cpp
+    src/json.cpp src/commodity.cpp src/ai_brain.cpp src/hazards.cpp
+    src/ship_registry.cpp src/comm.cpp)
+target_compile_definitions(test_ship_systems PRIVATE COMM_HEADLESS)
 add_executable(test_reputation EXCLUDE_FROM_ALL
     tools/test_reputation.cpp src/comm.cpp src/faction.cpp src/player.cpp
     src/json.cpp src/commodity.cpp)
@@ -752,7 +761,8 @@ add_executable(test_salvage EXCLUDE_FROM_ALL
     tools/test_salvage.cpp src/economy.cpp src/commodity.cpp src/player.cpp
     src/json.cpp)
 target_compile_definitions(test_salvage PRIVATE ECONOMY_HEADLESS)
-foreach(harness test_autopilot test_inventory112 test_missile test_reputation test_salvage)
+foreach(harness test_autopilot test_inventory112 test_missile test_ship_systems
+                test_reputation test_salvage)
     target_include_directories(${harness} PRIVATE
         ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party)
 endforeach()

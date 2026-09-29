@@ -121,6 +121,9 @@ void firing::tick(ShipRegistry& ships,
         s.energy_gj = std::min(s.energy_gj + std::max(0.0f, regen) * dt, energy_max);
 
         if (s.mounts.empty()) continue;
+        // Destroyed gun systems (#141) silence every mount, fixed and
+        // turret alike. Cooldowns + energy above keep ticking regardless.
+        if (!ship_systems::operational(s.systems, ShipSystem::Guns)) continue;
 
         // Shared nose-forward aim for FIXED guns (player gimbal handled
         // inside ship_forward_world). No convergence — mounts fire

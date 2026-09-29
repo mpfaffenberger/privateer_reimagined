@@ -50,6 +50,19 @@ bool valid_rack_type(int type) {
 // variants in Privateer canon -- there's just one Proton Torpedo.
 constexpr int64_t k_torpedo_unit_price = 35;
 
+// Full-repair price per component (#141), indexed by ShipSystem. A repair
+// costs this times the fraction of integrity missing, so a scratched radar
+// is pocket change and a slagged jump drive (10k new) hurts.
+constexpr int64_t k_system_repair_price[kShipSystemCount] = {
+    1500,   // Guns
+    1000,   // Launchers
+    2000,   // Engines
+    1500,   // ShieldGen
+    1000,   // Radar
+    2500,   // JumpDrive
+    1000,   // Tractor
+};
+
 // Full per-facing armor for a ship's class (base + fitted armor tier).
 // Mirrors ship::heal_to_full's armor math so the "missing" calc agrees with
 // what a repair actually restores.
@@ -83,6 +96,23 @@ float armor_missing(const Ship& s) {
     return miss;
 }
 
+// Landed repairs happen outside the Flight-frame Ship -> PlayerState mirror,
+// so persist the repaired condition immediately. Otherwise a save made while
+// still landed could keep the old damage snapshot.
+void snapshot_health(const Ship& ship, PlayerState& p) {
+    p.hp_valid = true;
+    p.hp_armor_fore       = ship.armor_fore_cm;
+    p.hp_armor_aft        = ship.armor_aft_cm;
+    p.hp_armor_port       = ship.armor_port_cm;
+    p.hp_armor_starboard  = ship.armor_starboard_cm;
+    p.hp_shield_fore      = ship.shield_fore_cm;
+    p.hp_shield_aft       = ship.shield_aft_cm;
+    p.hp_shield_port      = ship.shield_port_cm;
+    p.hp_shield_starboard = ship.shield_starboard_cm;
+    p.hp_energy           = ship.energy_gj;
+    p.hp_systems          = ship.systems.integrity;
+}
+
 } // namespace
 
 Quote quote(const Ship* ship, const PlayerState& p) {
@@ -93,6 +123,19 @@ Quote quote(const Ship* ship, const PlayerState& p) {
         if (miss > 0.5f) {
             q.hull_damaged = true;
             q.hull_cost = (int64_t)std::ceil(miss * k_credits_per_armor_cm);
+        }
+    }
+
+    if (ship) {
+        for (int i = 0; i < kShipSystemCount; ++i) {
+            const ShipSystem sys = ship_systems::at(i);
+            if (!ship_systems::damaged(ship->systems, sys)) continue;
+            const float missing = 1.0f - ship_systems::integrity(ship->systems, sys);
+            // Round up, but never quote a free repair for a real scratch.
+            q.system_cost[i] = std::max<int64_t>(
+                1, (int64_t)std::ceil(missing * (float)k_system_repair_price[i]));
+            q.systems_cost += q.system_cost[i];
+            q.systems_damaged = true;
         }
     }
 
@@ -111,7 +154,7 @@ Quote quote(const Ship* ship, const PlayerState& p) {
         }
     }
 
-    q.total = q.hull_cost + q.fuel_cost + q.missile_cost;
+    q.total = q.hull_cost + q.fuel_cost + q.missile_cost + q.systems_cost;
     return q;
 }
 
@@ -132,24 +175,37 @@ bool repair_hull(Ship& ship, PlayerState& p) {
     }
     const float before = ship.armor_fore_cm + ship.armor_aft_cm
                         + ship.armor_port_cm + ship.armor_starboard_cm;
+    // heal_to_full also restores components; those are sold separately
+    // (repair_system), so keep the paid-for-nothing ones broken.
+    const ShipSystems components = ship.systems;
     ship::heal_to_full(ship);
-    // Landed repair happens outside the Flight-frame Ship -> PlayerState
-    // mirror, so persist the repaired condition immediately. Otherwise a
-    // save made while still landed could keep the old damage snapshot.
-    p.hp_valid = true;
-    p.hp_armor_fore      = ship.armor_fore_cm;
-    p.hp_armor_aft       = ship.armor_aft_cm;
-    p.hp_armor_port      = ship.armor_port_cm;
-    p.hp_armor_starboard = ship.armor_starboard_cm;
-    p.hp_shield_fore     = ship.shield_fore_cm;
-    p.hp_shield_aft      = ship.shield_aft_cm;
-    p.hp_shield_port     = ship.shield_port_cm;
-    p.hp_shield_starboard = ship.shield_starboard_cm;
-    p.hp_energy          = ship.energy_gj;
+    ship.systems = components;
+    snapshot_health(ship, p);
     const float after = ship.armor_fore_cm + ship.armor_aft_cm
                        + ship.armor_port_cm + ship.armor_starboard_cm;
     std::printf("[repair] hull restored: armor %.0f -> %.0f cm | paid %lld | credits %lld\n",
                 before, after, (long long)q.hull_cost, (long long)p.credits);
+    return true;
+}
+
+bool repair_system(Ship& ship, PlayerState& p, ShipSystem sys) {
+    if (sys >= ShipSystem::Count) return false;
+    const char* name = ship_systems::label(sys);
+    const int64_t cost = quote(&ship, p).system_cost[(int)sys];
+    if (cost <= 0) {
+        std::printf("[repair] %s refused: not damaged\n", name);
+        return false;
+    }
+    if (!player::spend_credits(p, cost)) {
+        std::printf("[repair] %s refused: costs %lld, have %lld\n",
+                    name, (long long)cost, (long long)p.credits);
+        return false;
+    }
+    const float before = ship_systems::integrity(ship.systems, sys);
+    ship_systems::repair(ship.systems, sys);
+    snapshot_health(ship, p);
+    std::printf("[repair] %s restored: %.0f%% -> 100%% | paid %lld | credits %lld\n",
+                name, before * 100.0f, (long long)cost, (long long)p.credits);
     return true;
 }
 

@@ -18,6 +18,7 @@
 #include "cockpit_hud.h"
 #include "cockpit_hud_internal.h"
 #include "cockpit_armaments.h"
+#include "cockpit_damage.h"
 #include "cockpit_overlay.h"
 #include "comms_menu.h"
 #include "hud_text_fit.h"
@@ -648,8 +649,8 @@ void draw_player_status(ShipRegistry& ships,
 
       // Dispatch the STATUS window to its active sub-screen. Ship keeps the
       // canonical hull diagram; Comms hosts the data-driven hail menu;
-      // Damage remains a stub until component health exists; Weapons reads
-      // the live mount/arm/energy state.
+      // Damage lists live component integrity (#141); Weapons reads the
+      // live mount/arm/energy state.
       switch (g_status_screen) {
       case StatusScreen::Comms: {
         static const PlayerReputation kNoRep{};
@@ -658,7 +659,7 @@ void draw_player_status(ShipRegistry& ships,
         break;
       }
       case StatusScreen::Damage:
-        draw_status_stub("DAMAGE CONTROL", "system damage not yet modeled");
+        cockpit_damage::draw(player);
         break;
       case StatusScreen::Weapons:
         draw_weapons_status(player_state, player, selected_ordnance);

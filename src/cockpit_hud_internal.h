@@ -1,6 +1,7 @@
 // cockpit_hud_internal.h — shared guts of the cockpit HUD TUs (#426).
 //
-// NOT a public API: included only by cockpit_hud.cpp and cockpit_mfd.cpp.
+// NOT a public API: included only by the cockpit HUD TUs (cockpit_hud.cpp,
+// cockpit_mfd.cpp, cockpit_damage.cpp).
 // Holds the one HUD palette, the HUD window styling, and the panel
 // placement seam that lets every panel land either in its classic screen
 // corner or inside a cockpit-art MFD hole (see cockpit_overlay.h).

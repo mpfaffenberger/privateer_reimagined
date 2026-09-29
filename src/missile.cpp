@@ -139,6 +139,8 @@ int npc_launch(std::vector<Missile>& missiles, ShipRegistry& ships, float dt) {
     int launched = 0;
     for (Ship& s : ships) {
         if (s.is_player || !s.alive || s.ff_missiles <= 0) continue;
+        // Shot-out launchers (#141) ground the rack, same as the player's.
+        if (!ship_systems::operational(s.systems, ShipSystem::Launchers)) continue;
         // Only mid gun-run (target in arc + range): the refire clock
         // pauses otherwise, so a pirate never lobs one at a contact it
         // isn't actually fighting.

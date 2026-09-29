@@ -2,7 +2,7 @@
 // tools/test_jump.cpp — offline driver for the jump eligibility oracle
 // (np-6al.3, nearby-gate discovery #380). Links the REAL jump.cpp +
 // galaxy.cpp and walks every verdict the HUD/J-key share (Ready / NotJumpNav
-// / NoDrive / NoRoute / Locked), the nearest-gate choice, and the reciprocal
+// / NoDrive / DriveDamaged / NoRoute / Locked), the nearest-gate choice, and the reciprocal
 // round-trip (a Troy->Pyrenees arrival is immediately jumpable back to Troy).
 //
 // The oracle takes NO nav selection: the gate is whichever jump nav sits
@@ -81,7 +81,7 @@ int g_fails = 0;
 // Evaluate at `pos` and print a one-line verdict; returns the eligibility so
 // the caller can assert on whatever fields matter for that case.
 jump::Eligibility eval_at(const StarSystem& sys, const galaxy::Galaxy& gal,
-                          const char* system_id, HMM_Vec3 pos, bool drive) {
+                          const char* system_id, HMM_Vec3 pos, jump::Drive drive) {
     Camera cam;
     cam.position = pos;
     return jump::evaluate(cam, sys, gal, system_id, drive);
@@ -113,7 +113,7 @@ int main() {
 
     // ---- Ready with nothing selected: flying up to the gate is enough ------
     {
-        const auto e = eval_at(troy, gal, "troy", offset(pyr_gate, 1000.0f), true);
+        const auto e = eval_at(troy, gal, "troy", offset(pyr_gate, 1000.0f), jump::Drive::Online);
         check("unselected ready", e,
               e.status == jump::Status::Ready && e.nav_index == k_pyr_gate &&
               e.dest_id == "pyrenees" && e.dest_name == "Pyrenees" &&
@@ -123,7 +123,7 @@ int main() {
     // ---- Station selected in the nav computer: selection is not an input,
     //      so the verdict names the gate, never the selected station. -------
     {
-        const auto e = eval_at(troy, gal, "troy", pyr_gate, true);
+        const auto e = eval_at(troy, gal, "troy", pyr_gate, jump::Drive::Online);
         check("station-selected ready", e,
               e.status == jump::Status::Ready && e.nav_index == k_pyr_gate &&
               e.nav_index != k_station);
@@ -133,40 +133,50 @@ int main() {
     {
         StarSystem twin = troy;   // park the dangling War Jump 2000u off Pyrenees Jump
         twin.nav_points[k_war_gate].position = offset(pyr_gate, 2000.0f);
-        const auto near_pyr = eval_at(twin, gal, "troy", offset(pyr_gate, 500.0f), true);
+        const auto near_pyr = eval_at(twin, gal, "troy", offset(pyr_gate, 500.0f), jump::Drive::Online);
         check("nearest: pyrenees", near_pyr,
               near_pyr.status == jump::Status::Ready && near_pyr.nav_index == k_pyr_gate);
-        const auto near_war = eval_at(twin, gal, "troy", offset(pyr_gate, 1500.0f), true);
+        const auto near_war = eval_at(twin, gal, "troy", offset(pyr_gate, 1500.0f), jump::Drive::Online);
         check("nearest: war", near_war,
               near_war.status == jump::Status::NoRoute && near_war.nav_index == k_war_gate);
     }
 
     // ---- No gate nearby: no verdict and no refusal prompt at all ----------
     {
-        const auto far = eval_at(troy, gal, "troy", offset(pyr_gate, 50000.0f), true);
+        const auto far = eval_at(troy, gal, "troy", offset(pyr_gate, 50000.0f), jump::Drive::Online);
         check("no gate: 50k out", far,
               far.status == jump::Status::NotJumpNav && far.nav_index == -1 &&
               jump::prompt(far, nullptr) == nullptr);
         const auto edge = eval_at(troy, gal, "troy",
-                                  offset(pyr_gate, jump::k_trigger_range_m + 1.0f), true);
+                                  offset(pyr_gate, jump::k_trigger_range_m + 1.0f),
+                                  jump::Drive::Online);
         check("no gate: just outside", edge,
               edge.status == jump::Status::NotJumpNav && jump::prompt(edge, nullptr) == nullptr);
-        const auto at_sta = eval_at(troy, gal, "troy", troy.nav_points[k_station].position, true);
+        const auto at_sta = eval_at(troy, gal, "troy", troy.nav_points[k_station].position, jump::Drive::Online);
         check("no gate: at station", at_sta,
               at_sta.status == jump::Status::NotJumpNav && jump::prompt(at_sta, nullptr) == nullptr);
     }
 
     // ---- NoDrive: a valid nearby gate still requires jump hardware --------
     {
-        const auto e = eval_at(troy, gal, "troy", pyr_gate, false);
+        const auto e = eval_at(troy, gal, "troy", pyr_gate, jump::Drive::None);
         check("no drive", e,
               e.status == jump::Status::NoDrive && e.nav_index == k_pyr_gate &&
               !prompt_ready(e) && jump::prompt(e, nullptr) != nullptr);
     }
 
+    // ---- DriveDamaged: fitted but shot out (#141) refuses distinctly ------
+    {
+        const auto e = eval_at(troy, gal, "troy", pyr_gate, jump::Drive::Destroyed);
+        const char* p = jump::prompt(e, nullptr);
+        check("drive damaged", e,
+              e.status == jump::Status::DriveDamaged && e.nav_index == k_pyr_gate &&
+              !prompt_ready(e) && p && std::string(p) == "JUMP: DRIVE DAMAGED");
+    }
+
     // ---- NoRoute: the dangling War Jump (no galaxy edge) ------------------
     {
-        const auto e = eval_at(troy, gal, "troy", troy.nav_points[k_war_gate].position, true);
+        const auto e = eval_at(troy, gal, "troy", troy.nav_points[k_war_gate].position, jump::Drive::Online);
         check("no route", e,
               e.status == jump::Status::NoRoute && e.nav_index == k_war_gate &&
               !prompt_ready(e));
@@ -177,7 +187,7 @@ int main() {
         jump::set_route_gate([](const std::string& from, const std::string& to) {
             return from == "troy" && to == "pyrenees";
         });
-        const auto e = eval_at(troy, gal, "troy", pyr_gate, true);
+        const auto e = eval_at(troy, gal, "troy", pyr_gate, jump::Drive::Online);
         jump::set_route_gate(nullptr);   // restore the sandbox default
         check("locked route", e,
               e.status == jump::Status::Locked && e.nav_index == k_pyr_gate &&
@@ -191,7 +201,7 @@ int main() {
         const HMM_Vec3   gate = pyr.nav_points[0].position;
         const HMM_Vec3   into = HMM_NormV3(HMM_MulV3F(gate, -1.0f));
         const HMM_Vec3   arrival = HMM_AddV3(gate, HMM_MulV3F(into, k_arrival_offset_m));
-        const auto e = eval_at(pyr, gal, "pyrenees", arrival, true);
+        const auto e = eval_at(pyr, gal, "pyrenees", arrival, jump::Drive::Online);
         check("reciprocal route", e,
               e.status == jump::Status::Ready && e.nav_index == 0 &&
               e.dest_id == "troy" && e.arrival_nav == "Pyrenees Jump" && prompt_ready(e));

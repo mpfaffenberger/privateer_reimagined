@@ -116,5 +116,8 @@ void perception::tick(ShipRegistry& ships, const PlayerReputation& player_rep) {
 
 float perception::radar_range_m(const Ship& s) {
     const float hull = s.klass ? s.klass->radar_range : k_default_radar_range_m;
-    return scanner::range_m(s.fitted_scanner, hull);
+    // A shot-up radar (#141) shrinks whatever scanner is fitted, for
+    // detection, the HUD rim and target locks alike -- they all read this.
+    return scanner::range_m(s.fitted_scanner, hull)
+         * ship_systems::radar_mult(s.systems);
 }

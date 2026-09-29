@@ -77,7 +77,9 @@ namespace savegame {
 // v10 (#145) added `turrets`, the owned turret-hardware slot ids. A pre-v10
 // save is grandfathered: every turret slot with a gun already fitted in one
 // of its mounts counts as owned, so an old Centurion keeps its rear turret.
-constexpr int k_format_version = 10;
+// v11 (#141) added per-component integrity under ship_health.systems, keyed
+// by ship_systems::key. Older saves default every component to pristine.
+constexpr int k_format_version = 11;
 
 // Slot 0 is the autosave; manual saves start at 1.
 constexpr int k_autosave_slot = 0;

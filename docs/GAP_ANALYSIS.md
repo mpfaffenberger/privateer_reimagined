@@ -23,8 +23,8 @@ The remaining gaps are:
 
 1. **No CI.** All 29 wired harnesses pass (including `test_full_loop`,
    green again since [#314]), but nothing runs them automatically.
-2. **Combat-system fidelity.** Per-system component damage, Friend-or-Foe
-   missiles, scanner tiers, and buying turrets for hulls that lack them.
+2. **Combat-system fidelity.** Friend-or-Foe missiles, scanner tiers, and
+   buying turrets for hulls that lack them.
 3. **Presentation polish.** HDR/bloom, normal maps, an Orion cockpit, and
    HUD pages that fit inside the cockpit MFDs.
 4. **The living world** (Gemini Lives phases 2–6) and **Righteous Fire**.
@@ -137,11 +137,12 @@ NPC-buffed repair hull, one fixed mission-board seed) now match the game.
 
 ### P1 — Combat-system gaps
 
-1. **Per-system component damage + Damage Control MFD** ([#141]). The `R`
-   page still draws `"system damage not yet modeled"`
-   (`cockpit_hud.cpp:661`). The original damaged guns, engines, radar, and
-   the jump drive individually and charged per-system repairs. `repair.*`
-   only covers hull and armor.
+1. **Per-system component damage + Damage Control MFD** ([#141]) **(done)**.
+   Armor-penetrating hits damage guns, launchers, engines, shield gen,
+   radar, jump drive or tractor (`ship_systems.h`, player and NPCs alike);
+   the `R` page shows live integrity (`cockpit_damage.cpp`); the repair
+   desk prices each component; save v11 persists it. The Repair Droid is
+   still sold but does nothing in flight ([#517]).
 2. **Friend-or-Foe missiles** ([#144]) **(done)**. `MissileType::FF`
    needs no lock and seeks the nearest ship the shooter's IFF reads as
    hostile, re-acquiring when its mark dies. Sold at the dealer, saved
@@ -252,8 +253,8 @@ judgment call ([#323] was a duplicate of [#322]).
 
 ## 4. Suggested attack order
 
-1. **Component damage + Damage Control MFD ([#141]).** It's the biggest
-   remaining gameplay-fidelity gap, and the repair economy hooks are ready.
+1. **Component damage + Damage Control MFD ([#141]) (done).** Next up
+   there: make the Repair Droid fix components in flight ([#517]).
 2. **Scanner tiers ([#143]) → FF missiles ([#144])**, then purchasable turrets ([#145]/[#379]). All small and
    data-driven.
 3. **Presentation:** HDR/bloom ([#488]/[#489]), normal maps ([#473]), Orion
@@ -320,6 +321,7 @@ judgment call ([#323] was a duplicate of [#322]).
 [#489]: https://github.com/mpfaffenberger/privateer_reimagined/issues/489
 [#490]: https://github.com/mpfaffenberger/privateer_reimagined/issues/490
 [#491]: https://github.com/mpfaffenberger/privateer_reimagined/issues/491
+[#517]: https://github.com/mpfaffenberger/privateer_reimagined/issues/517
 [#492]: https://github.com/mpfaffenberger/privateer_reimagined/issues/492
 [#493]: https://github.com/mpfaffenberger/privateer_reimagined/issues/493
 [#497]: https://github.com/mpfaffenberger/privateer_reimagined/issues/497

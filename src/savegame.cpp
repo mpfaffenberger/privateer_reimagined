@@ -458,6 +458,13 @@ static std::string serialize_player(const PlayerState& p) {
           w.key("shield_port");    w.value_raw(std::to_string(p.hp_shield_port));
           w.key("shield_starboard"); w.value_raw(std::to_string(p.hp_shield_starboard));
           w.key("energy");         w.value_raw(std::to_string(p.hp_energy));
+          // Component integrity (#141, v11), keyed by the stable system key.
+          w.key("systems"); w.member_object_begin();
+            for (int i = 0; i < kShipSystemCount; ++i) {
+                w.key(ship_systems::key(ship_systems::at(i)));
+                w.value_raw(std::to_string(p.hp_systems[i]));
+            }
+          w.end_object();
         w.end_object();
 
         // Persistent world clock (Gemini Lives #171, format v8).
@@ -894,6 +901,16 @@ bool load(PlayerState& p, const std::string& path) {
                 out.hp_shield_port = out.hp_shield_starboard = v;
             } else {
                 out.hp_shield_port = out.hp_shield_starboard = 0.0f;
+            }
+            // Component integrity (#141, v11). Missing object/key (pre-v11
+            // save) = pristine; junk clamps into [0, 1].
+            if (const json::Value* sys = h.find("systems"); sys && sys->is_object()) {
+                for (int i = 0; i < kShipSystemCount; ++i) {
+                    const char* k = ship_systems::key(ship_systems::at(i));
+                    if (sys->contains(k))
+                        out.hp_systems[i] = std::clamp(
+                            (float)(*sys)[k].number_or(1.0), 0.0f, 1.0f);
+                }
             }
         }
 

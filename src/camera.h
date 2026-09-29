@@ -104,6 +104,13 @@ float mouse_dead_zone = 0.05f;
     float max_speed_cruise0 = 300.0f;
     float max_speed_cruise1 = 600.0f;
 
+    // Performance derates in (0, 1], owned by the host (main.cpp sets them
+    // every Flight frame from the player's engine damage, #141). Applied on
+    // top of the caps above rather than baked into them so nothing that
+    // stashes/restores a cap (autopilot) can smear damage into it.
+    float speed_derate = 1.0f;   // scales the live top-speed cap
+    float turn_derate  = 1.0f;   // scales yaw / pitch / roll rates
+
     // ---- Cruise engine (Freelancer-style high-speed traversal) ---------
     // Hold TAB in main to drive `cruise_target` up; integrate() lerps
     // cruise_level toward it, so engage/disengage takes ~1 second and

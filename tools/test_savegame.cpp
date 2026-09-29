@@ -113,6 +113,9 @@ PlayerState make_mutated() {
     p.hp_shield_port = 0.75f;
     p.hp_shield_starboard = 0.0f;
     p.hp_energy      = 99.0f;
+    // #141 (v9): per-component integrity. Binary-exact fractions so the
+    // to_string round-trip can be compared with ==.
+    p.hp_systems     = { 1.0f, 0.5f, 0.25f, 0.0f, 0.75f, 1.0f, 0.125f };
     p.day                = 321;
     p.current_system     = "pentonville";
     p.last_docked_base   = "achilles";
@@ -351,6 +354,7 @@ int main() {
     CHECK_EQ("hp_shield_port",    dst.hp_shield_port,    src.hp_shield_port);
     CHECK_EQ("hp_shield_starboard", dst.hp_shield_starboard, src.hp_shield_starboard);
     CHECK_EQ("hp_energy",         dst.hp_energy,         src.hp_energy);
+    CHECK_EQ("hp_systems",        dst.hp_systems,        src.hp_systems);
 
     // (#8) accepted missions round-trip — Patrol + Bounty + Cargo + DefendBase,
     // each populated with every new field, plus a field-by-field compare.
@@ -587,6 +591,43 @@ int main() {
                     armed ? "OK  " : "FAIL");
         std::printf("  [%s] v9 Centurion with empty turret mounts owns no turret\n",
                     bare ? "OK  " : "FAIL");
+    }
+
+    // 3j. (#141) a v10 save has no ship_health.systems object and migrates
+    //      to pristine components; a v11 save with out-of-range junk clamps
+    //      into [0, 1] per key and leaves missing keys pristine.
+    {
+        const std::string path = savegame::slot_path(kOldNoMissSlot);
+        { std::ofstream f(path, std::ios::trunc);
+          f << "{ \"version\": 10, \"label\": \"v10-pre-components\",\n"
+               "  \"player\": { \"credits\": \"999\", \"current_system\": \"troy\",\n"
+               "    \"ship_health\": { \"valid\": true, \"armor_fore\": 3 } } }"; }
+        PlayerState p;
+        p.hp_systems[0] = 0.5f;   // prove load overwrites with the default
+        const bool r = savegame::load(p, kOldNoMissSlot);
+        const bool ok = r && p.credits == 999 && p.hp_valid &&
+                        p.hp_systems == ship_systems::k_pristine;
+        if (!ok) ++g_fail;
+        std::printf("  [%s] v10 save loads with pristine components\n",
+                    ok ? "OK  " : "FAIL");
+    }
+    {
+        const std::string path = savegame::slot_path(kOldNoMissSlot);
+        { std::ofstream f(path, std::ios::trunc);
+          f << "{ \"version\": 11, \"label\": \"v11-junk-components\",\n"
+               "  \"player\": { \"credits\": \"1\", \"current_system\": \"troy\",\n"
+               "    \"ship_health\": { \"valid\": true,\n"
+               "      \"systems\": { \"guns\": 7, \"radar\": -2, \"engines\": 0.5 } } } }"; }
+        PlayerState p;
+        const bool r = savegame::load(p, kOldNoMissSlot);
+        const bool ok = r &&
+            p.hp_systems[(int)ShipSystem::Guns]      == 1.0f &&
+            p.hp_systems[(int)ShipSystem::Radar]     == 0.0f &&
+            p.hp_systems[(int)ShipSystem::Engines]   == 0.5f &&
+            p.hp_systems[(int)ShipSystem::JumpDrive] == 1.0f;
+        if (!ok) ++g_fail;
+        std::printf("  [%s] v11 component junk clamps; missing keys stay pristine\n",
+                    ok ? "OK  " : "FAIL");
     }
 
     // 3h. (#138) plot:: mutator invariants: idempotent set/give, clear/
