@@ -532,6 +532,8 @@ struct AppState {
     // any future ship-array reshuffles. Resolved to a pointer each frame
     // when we need to display it.
     uint32_t player_target_id = 0;
+    // Once-per-second identify-roll clock for player_target_id (#516).
+    scanner::IdentifyTimer target_identify;
 
     // Navmap overlay. N opens it when closed; while open, N cycles
     // through nav points in place (no close). Esc or the X button
@@ -5029,6 +5031,17 @@ void frame_cb() {
             }
         }
 
+        // Scanner identification (#516): the held target stays UNKNOWN
+        // until the fitted scanner wins a once-per-second roll on it.
+        if (Ship* t = g.ships.find_by_id(g.player_target_id);
+            t && !t->identified_by_player) {
+            if (scanner::tick_identify(g.target_identify, t->id, player.fitted_scanner, dt,
+                                       [] { return (float)(std::rand() % 10000) / 10000.0f; })) {
+                t->identified_by_player = true;
+                std::printf("[target] identified id=%u\n", t->id);
+            }
+        }
+
         player.controller.fire_guns = player_trigger_held(g);
         if (g.show_title)    player.controller.fire_guns = false;   // frozen on briefing
         // Navmap overlay owns the click — left-mouse would otherwise fire guns
@@ -6906,6 +6919,11 @@ void frame_cb() {
                 }
             }
             const ImU32 color = cockpit_hud::contact_color(stance, iff);
+            // Bracket / edge-arrow label: UNKNOWN until the scanner IDs it (#516).
+            const bool  known = target->identified_by_player;
+            const char* tname = !known ? "UNKNOWN"
+                              : target->klass ? target->klass->name.c_str()
+                              : target->is_player ? "player" : "?";
 
             // Target brackets, labels, edge arrows and lead pips belong to
             // the world behind cockpit metal, not the foreground UI (#429).
@@ -6936,17 +6954,15 @@ void frame_cb() {
                     dl->AddCircle(ImVec2(sx, sy), r + 9.0f, ace_purple, 28, 2.5f);
                 }
 
-                // Label below the bracket. Aces read "<Faction> Ace"; every
-                // other target reads its hull class name.
+                // Label below the bracket. Identified aces read "<Faction>
+                // Ace"; every other target reads tname.
                 char buf[96];
-                if (target->is_ace) {
+                if (target->is_ace && known) {
                     char fac[24];
                     std::snprintf(fac, sizeof(fac), "%s", faction::to_name(target->faction));
                     if (fac[0] >= 'a' && fac[0] <= 'z') fac[0] -= 32;   // capitalise
                     std::snprintf(buf, sizeof(buf), "%s Ace   %.1f km", fac, distance_m * 0.001f);
                 } else {
-                    const char* tname = target->klass ? target->klass->name.c_str()
-                                      : target->is_player ? "player" : "?";
                     std::snprintf(buf, sizeof(buf), "%s   %.1f km", tname, distance_m * 0.001f);
                 }
                 dl->AddText(ImVec2(sx - r, sy + r + 6.0f), color, buf);
@@ -6981,8 +6997,6 @@ void frame_cb() {
 
                     // Label tucked just inside the arrow toward center.
                     char buf[96];
-                    const char* tname = target->klass ? target->klass->name.c_str()
-                                      : target->is_player ? "player" : "?";
                     std::snprintf(buf, sizeof(buf), "%s  %.1f km", tname, distance_m * 0.001f);
                     const float lx = ax - dx * 60.0f - 30.0f;
                     const float ly = ay - dy * 60.0f - 7.0f;
