@@ -206,12 +206,12 @@ plate to confirm.
 | `bake_bar.py` | uv | bar: clean-plate patch + patron sheet each; `--preview` crops |
 | `sources/bar_*_clean_gen.png` | - | AI clean-plate edits of each patron's crop (painted out) |
 
-### Mining bar: 3D patrons (#564, #566, #568, #570)
+### Mining bar: 3D patrons (#564, #566, #568, #570, #572)
 
 Painted patrons are replaced by rigged 3D models (Meshy AI, `characters/`)
 idling on seamless loops: the woman in orange on the bench (#564), the
-man at the back table (#566), the bartender (#568) and the woman at the left
-table (#570). `bar_bg.png` is untouched: per patron, a
+man at the back table (#566), the bartender (#568), and the woman at the left
+table (#570) with the bald man across from her (#572). `bar_bg.png` is untouched: per patron, a
 one-frame clean-plate patch paints them out, then their render draws over
 it. If the layers are missing, the painting shows as painted. Each patron is
 one entry in `bar_patrons.json`; the camera and lighting are the room's.
@@ -286,6 +286,16 @@ uv run --with scipy tools/room_anim/mining/bake_bar.py --patron patron_orange --
   crown (her feet are hidden), `pitch` 12, arms `aim`ed at the painted
   elbows and mug. The clip slumps her head almost to the table halfway
   through; `lean` 0.25 (the fraction of torso motion *kept*) takes it out.
+- **The bald man** (Weathered Enforcer) borrows the Blue Jacket Worker's
+  `Sitting_Answering_Questions`: from behind, its gestures read as him
+  talking to the woman. The painter drew him narrow but long-backed, so
+  `scale` takes `[width, depth, height]` in the body's frame: [0.82, 0.82, 1].
+  Uniform 0.8 fit his width but left his hips hovering over the stool,
+  because the crown is pinned. He's lit at key/fill x1.7 (the render ran
+  darker than the painted jacket). His painted jeans still show through the
+  foreground's glass bottle (a `front` occluder is never patched): the same
+  glass compromise as the bartender's bottle. Going 3D, he leaves the
+  woman's `front` list, so her sheet is re-baked here.
 - **Blender MCP gotcha:** a freshly `images.load()`ed camera background can
   sit at 0x0 and draw nothing until its pixels are touched
   (`img.pixels[0]`).

@@ -267,14 +267,17 @@ def _patron(sc, p):
         _nod(arm, p["head_up"])
     # `scale`: painters cheat, and some painted patrons are burlier than any
     # model at their depth (the back-table man is ~1.3x broad, ~1.13x tall).
+    # A list is [width, depth, height] in the body's frame: the bald man is
+    # painted narrower but longer-backed than any model.
     s = p.get("scale", 1.0)
-    root.scale = (s, s, s)
+    root.scale = s if isinstance(s, list) else (s, s, s)
     # pitch: leans the whole body towards the camera, from the feet.
     root.rotation_euler = (math.radians(p.get("pitch", 0.0)), 0.0, math.radians(p["yaw"]))
     if "head" in p:            # a bust (feet hidden): the crown is the anchor
         _anchor_head(root, arm, *p["head"])
     else:                       # seated: the hips, feet on the floor
-        root.location = (plate_to_world_x(p["hip_px"], p["hip_depth"]), p["hip_depth"], -feet * s)
+        root.location = (plate_to_world_x(p["hip_px"], p["hip_depth"]), p["hip_depth"],
+                         -feet * root.scale.z)
     _aim(sc, arm, p.get("aim", {}))
     act = bpy.data.actions[0]
     return root, body, act

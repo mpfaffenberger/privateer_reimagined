@@ -5,7 +5,7 @@
     "crop: plate rect rendered and patched; clean_gen: sources/<file>, an AI edit of that crop with the painted patron removed.",
     "hip_px / hip_depth (m) / yaw (deg, 0 = facing camera, -90 = screen-left): fitted live against the clean plate. A bust whose feet are hidden is placed by head [px, y, depth] (the crown at frame 0) instead of the hips.",
     "pitch (deg): leans the whole body towards the camera. aim: {bone: [px, depth, z]} points bones at fixed spots (hands planted on a counter while the idle sways the body). head_up (deg): raises the chin through the neck/head keys, undoing pitch's downward gaze. light: {key, fill, rim} energy multipliers on the room's lights.",
-    "seat_reach: seat catcher (sideways, back) m from the hips. phase: loop offset, frames. scale (optional): for painted patrons burlier than the model at their depth. tint (optional): multiplies the model's textures, when its clothes don't match the painted ones. saturation (optional): scales their saturation (a painter's vivid palette). lean (optional, 0-1): damps the torso's motion towards the clip's first frame (a borrowed clip that moves more than the painted patron would). set (default [floor, seat, railing]): the shadow catchers built from the pose; list only what the painted patron really sits on / against.",
+    "seat_reach: seat catcher (sideways, back) m from the hips. phase: loop offset, frames. scale (optional): for painted patrons burlier than the model at their depth; a list is [width, depth, height] (a painted body with other proportions). tint (optional): multiplies the model's textures, when its clothes don't match the painted ones. saturation (optional): scales their saturation (a painter's vivid palette). lean (optional, 0-1): damps the torso's motion towards the clip's first frame (a borrowed clip that moves more than the painted patron would). set (default [floor, seat, railing]): the shadow catchers built from the pose; list only what the painted patron really sits on / against.",
     "Crop px: box = where the painted patron is; keep = rects always taken from the clean plate; reg = a rect away from the patron where the clean plate must match the plate (registration check); front = occluders in front of the patron, never patched and clipped out of the render ({below_line: [[x0, y0], [x1, y1]]} or {polygon: [[x, y], ...]}).",
     "props: painted furniture as catchers (render_bar._props): they hold the patron out where the prop is and catch its shadow. px = plate x of the centre, depth/z0/z1 in m, and radius (a cylinder) or size [w, d] (a box), fitted from the prop's floor contact and outline."
   ],
@@ -95,11 +95,29 @@
     "box": [30, 45, 200, 312],
     "keep": [],
     "reg": [10, 5, 110, 50],
-    "front": [{"polygon": [[243, 70], [283, 76], [292, 104], [320, 116], [320, 300], [228, 300], [220, 250], [196, 212], [198, 160], [214, 128], [238, 108]]},
-              {"polygon": [[152, 246], [226, 238], [232, 300], [150, 300]]},
-              {"polygon": [[147, 186], [174, 186], [174, 218], [147, 218]]},
+    "front": [{"polygon": [[147, 186], [174, 186], [174, 218], [147, 218]]},
               {"polygon": [[186, 261], [210, 261], [212, 276], [226, 292], [226, 320], [177, 320], [177, 292], [188, 276]]},
               {"polygon": [[96, 300], [148, 300], [148, 320], [96, 320]]},
               {"polygon": [[0, 160], [18, 162], [22, 200], [12, 240], [42, 268], [62, 320], [0, 320]]}]
+  },
+  "patron_bald": {
+    "model": "weathered_enforcer_sitting_answering_questions.glb",
+    "crop": [300, 360, 620, 680],
+    "head": [488, 402, 4.35],
+    "scale": [0.82, 0.82, 1.0],
+    "yaw": -150.0,
+    "light": {"key": 1.7, "fill": 1.7, "rim": 1.0},
+    "props": [{"name": "TableTop", "px": 350, "depth": 4.85, "radius": 0.38, "z0": 0.68, "z1": 0.75},
+              {"name": "TablePost", "px": 350, "depth": 4.85, "radius": 0.05, "z0": 0.0, "z1": 0.68}],
+    "set": ["floor"],
+    "phase": 67,
+    "clean_gen": "bar_bald_clean_gen.png",
+    "box": [70, 30, 262, 280],
+    "keep": [],
+    "reg": [10, 5, 100, 40],
+    "front": [{"polygon": [[111, 229], [128, 229], [129, 252], [142, 266], [144, 320], [97, 320], [99, 266], [110, 252]]},
+              {"polygon": [[9, 272], [69, 272], [69, 320], [9, 320]]},
+              {"below_line": [[0, 278], [320, 296]]},
+              {"polygon": [[0, 150], [12, 150], [12, 320], [0, 320]]}]
   }
 }
