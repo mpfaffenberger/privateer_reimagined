@@ -6,10 +6,13 @@
     sky_fill()      starless sky colour, extrapolated past the mask edge
     hazy_sky_fill() the plate's own starless sky, full res, for glare and haze
     PaintedStars    a painting's own star population (density, brightness, colour)
+    synthetic_stars()  a made-up population, for skies painted starless
     star_tile()     tileable star field drawn from such a population
 
 Per-base cut-outs live with each base (newcon/bake_sky.py, newcon/bake_hangar.py).
 """
+from types import SimpleNamespace
+
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 
@@ -110,6 +113,20 @@ class PaintedStars:
         self.density = peaks.sum() / max(sky.sum(), 1)
         self.contrast = (lum - base)[peaks] / 255.0
         self.tint = rgb / np.maximum(rgb.max(axis=1, keepdims=True), 1.0)
+
+
+# A clear sky: white-to-blue with the odd warm star (#561, #588).
+STAR_TINTS = ((1.0, 1.0, 1.0), (0.78, 0.86, 1.0), (0.66, 0.78, 1.0), (1.0, 0.9, 0.75))
+STAR_TINT_ODDS = (0.45, 0.3, 0.15, 0.1)
+
+
+def synthetic_stars(rng, density, population=400, tints=STAR_TINTS, odds=STAR_TINT_ODDS):
+    """A PaintedStars stand-in for a sky painted starless: `density` stars
+    per sky pixel, mostly faint with a few bright, tinted by `odds`."""
+    return SimpleNamespace(
+        density=density,
+        contrast=0.12 + 0.8 * rng.random(population) ** 3,
+        tint=np.asarray(tints, np.float32)[rng.choice(len(tints), population, p=odds)])
 
 
 def star_tile(stars, fraction, sigma_range, rng, gain=1.3, radius=3):

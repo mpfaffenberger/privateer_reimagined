@@ -1,0 +1,4 @@
+{
+  "_doc": "Military concourse sky layers (bake_sky.py): loop timing in seconds; period >= the pass, the rest is empty sky.",
+  "fighter_pair": { "period": 37.0, "offset": 0.0 }
+}

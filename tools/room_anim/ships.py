@@ -32,6 +32,7 @@ FIX_EULER = {
     "transprt": (0.0, 0.0, 180.0),     # transport: engine block at +Y
     "trailer": (0.0, 0.0, 180.0),      # cargo pod: sloped, lamp-eyed nose at -Y
     "nd_airca": (0.0, 0.0, 180.0),     # New Detroit aircar: canopy at -Y, fins + glow +Y
+    "stiletto": (0.0, 0.0, 180.0),     # Confed Stiletto: nose -Y, engines +Y (#588)
 }
 
 # Faces to drop per mesh, by material: the original game's baked-in effects,
