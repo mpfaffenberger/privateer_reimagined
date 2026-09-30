@@ -31,16 +31,14 @@ Usage (from the repo root):
 """
 import argparse
 import json
-import math
-from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
 from PIL import Image, ImageDraw
 
 from base import paths
-from bake_layer import load_frame, write_sheet
-from sky import RNG_SEED, sky_fill, solidify, star_tile
+from bake_layer import bake_passes
+from sky import RNG_SEED, contact_sheet, sky_fill, solidify, star_tile
 
 CANVAS = (1536, 1024)
 
@@ -173,13 +171,8 @@ def bake_skies(where, debug, find=None):
             d.text((12, 12), hull, fill=(255, 255, 0))
             thumbs.append(thumb.resize((384, 256)))
     (out / "anchors.json").write_text(json.dumps(anchors, indent=1) + "\n")
-    if debug and thumbs:
-        cols = 6
-        sheet = Image.new("RGB", (cols * 384, math.ceil(len(thumbs) / cols) * 256))
-        for i, t in enumerate(thumbs):
-            sheet.paste(t, ((i % cols) * 384, (i // cols) * 256))
-        Path(debug).parent.mkdir(parents=True, exist_ok=True)
-        sheet.save(debug)
+    if debug:
+        contact_sheet(thumbs, debug)
 
 
 def bake_stars(where):
@@ -199,22 +192,8 @@ def bake_stars(where):
 
 def bake_layers(where):
     """Rendered sky passes -> under-plate, anchored sprite sheets."""
-    timing = json.loads(where.timing.read_text())
-    for layer, t in timing.items():
-        if layer.startswith("_"):
-            continue
-        src = where.build / layer
-        info = json.loads((src / "pass.json").read_text())
-        sprites, slots = [], []
-        for path in sorted(src.glob("*.png")):
-            baked = load_frame(path)
-            if baked is not None:
-                sprites.append(baked)
-                slots.append(int(path.stem) - 1)          # frame N -> slot N-1
-        fps = float(info["fps"])
-        period_frames = max(int(info["frames"]), int(math.ceil(t["period"] * fps)))
-        write_sheet(where.out, layer, sprites, slots, CANVAS, fps, period_frames,
-                    int(round(t["offset"] * fps)), under=True, anchor=info["anchor"])
+    bake_passes(where.timing, where.build, where.out, CANVAS)
+
 
 
 def main():

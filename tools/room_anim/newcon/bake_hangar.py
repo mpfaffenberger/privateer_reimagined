@@ -35,7 +35,8 @@ from PIL import Image, ImageDraw, ImageFilter
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from base import paths  # noqa: E402
-from sky import RNG_SEED, PaintedStars, sky_fill, solidify, star_removed, star_tile  # noqa: E402
+from sky import (RNG_SEED, PaintedStars, contact_sheet, sky_fill, solidify,  # noqa: E402
+                 star_removed, star_tile)
 
 NEWCON = paths("newcon")
 COMPOSITES = NEWCON.room / "landing_ships"
@@ -164,13 +165,8 @@ def bake_mouths(debug):
             thumbs.append(thumb.resize((384, 256)))
     (OUT / "anchors.json").write_text(json.dumps(anchors, indent=1) + "\n")
 
-    if debug and thumbs:
-        cols = 6
-        sheet = Image.new("RGB", (cols * 384, math.ceil(len(thumbs) / cols) * 256))
-        for i, t in enumerate(thumbs):
-            sheet.paste(t, ((i % cols) * 384, (i // cols) * 256))
-        Path(debug).parent.mkdir(parents=True, exist_ok=True)
-        sheet.save(debug)
+    if debug:
+        contact_sheet(thumbs, debug)
 
 
 def painted_heroes(plate, mask):

@@ -25,8 +25,6 @@ Usage (from the repo root):
     uv run tools/room_anim/military/bake_sky.py --layers-only     # after render_flyby.py
 """
 import argparse
-import json
-import math
 import sys
 from pathlib import Path
 
@@ -35,7 +33,7 @@ from PIL import Image, ImageDraw, ImageFilter
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from base import paths  # noqa: E402
-from bake_layer import load_frame, write_sheet  # noqa: E402
+from bake_layer import bake_passes  # noqa: E402
 from sky import RNG_SEED, PaintedStars, sky_fill, solidify, star_tile  # noqa: E402
 
 MILITARY = paths("military")
@@ -102,22 +100,9 @@ def bake_stars():
 
 def bake_layers():
     """Straight-alpha sky passes -> under-plate sprite sheets."""
-    canvas = Image.open(MILITARY.plate).size
-    for layer, t in json.loads(TIMING.read_text()).items():
-        if layer.startswith("_"):
-            continue
-        src = MILITARY.build / layer
-        info = json.loads((src / "pass.json").read_text())
-        sprites, slots = [], []
-        for path in sorted(src.glob("*.png")):
-            baked = load_frame(path, max_px=None)          # small and sharp: keep full size
-            if baked is not None:
-                sprites.append(baked)
-                slots.append(int(path.stem) - 1)          # frame N -> slot N-1
-        fps = float(info["fps"])
-        period_frames = max(int(info["frames"]), int(math.ceil(t["period"] * fps)))
-        write_sheet(MILITARY.anim, layer, sprites, slots, canvas, fps, period_frames,
-                    int(round(t["offset"] * fps)), under=True)
+    bake_passes(TIMING, MILITARY.build, MILITARY.anim, Image.open(MILITARY.plate).size,
+                max_px=None)                       # small and sharp: keep full size
+
 
 
 def main():

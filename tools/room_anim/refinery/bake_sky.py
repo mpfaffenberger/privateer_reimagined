@@ -21,7 +21,6 @@ Usage (from the repo root):
     uv run tools/room_anim/refinery/bake_sky.py --layers-only     # after render_sky.py
 """
 import argparse
-import json
 import math
 import sys
 from pathlib import Path
@@ -31,7 +30,7 @@ from PIL import Image, ImageFilter
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from base import paths  # noqa: E402
-from bake_layer import load_frame, write_sheet  # noqa: E402
+from bake_layer import bake_passes  # noqa: E402
 from sky import (RNG_SEED, PaintedStars, hazy_sky_fill, star_removed, star_tile,  # noqa: E402
                  window_mask)
 
@@ -121,22 +120,8 @@ def bake_sky(debug):
 
 def bake_layers():
     """Straight-alpha sky passes (render_sky.py) -> under-plate sprite sheets."""
-    timing = json.loads(SKY_TIMING.read_text())
-    for layer, t in timing.items():
-        if layer.startswith("_"):
-            continue
-        src = REFINERY.build / "sky" / layer
-        info = json.loads((src / "pass.json").read_text())
-        sprites, slots = [], []
-        for path in sorted(src.glob("*.png")):
-            baked = load_frame(path)
-            if baked is not None:
-                sprites.append(baked)
-                slots.append(int(path.stem) - 1)          # frame N -> slot N-1
-        fps = float(info["fps"])
-        period_frames = max(int(info["frames"]), int(math.ceil(t["period"] * fps)))
-        write_sheet(REFINERY.anim, layer, sprites, slots, (1536, 1024), fps, period_frames,
-                    int(round(t["offset"] * fps)), under=True)
+    bake_passes(SKY_TIMING, REFINERY.build / "sky", REFINERY.anim, (1536, 1024))
+
 
 
 def main():

@@ -27,7 +27,6 @@ Usage (from the repo root):
 """
 import argparse
 import json
-import math
 import sys
 from pathlib import Path
 
@@ -36,7 +35,8 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from base import paths  # noqa: E402
-from bake_layer import load_frame, write_sheet  # noqa: E402
+from bake_layer import bake_passes  # noqa: E402
+from sky import contact_sheet  # noqa: E402
 
 NEWDETROIT = paths("newdetroit")
 COMPOSITES = NEWDETROIT.room / "landing_ships"
@@ -110,14 +110,8 @@ def bake_anchors(debug):
             thumbs.append(_overlap(path, k, tx, ty))
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / "anchors.json").write_text(json.dumps(anchors, indent=1) + "\n")
-    if debug and thumbs:
-        cols = 6
-        tw, th = thumbs[0].size
-        sheet = Image.new("RGB", (cols * tw, math.ceil(len(thumbs) / cols) * th))
-        for i, t in enumerate(thumbs):
-            sheet.paste(t, ((i % cols) * tw, (i // cols) * th))
-        Path(debug).parent.mkdir(parents=True, exist_ok=True)
-        sheet.save(debug)
+    if debug:
+        contact_sheet(thumbs, debug)
 
 
 def _overlap(path, k, tx, ty):
@@ -136,23 +130,9 @@ def _overlap(path, k, tx, ty):
 
 def bake_layers():
     """Rendered aircar passes -> anchored sprite sheets over the plate."""
-    anchor = [CANVAS[0] / 2, CANVAS[1] / 2, ANCHOR_R]       # tarsus, by definition
-    timing = json.loads(TIMING.read_text())
-    for layer, t in timing.items():
-        if layer.startswith("_"):
-            continue
-        src = BUILD / layer
-        info = json.loads((src / "pass.json").read_text())
-        sprites, slots = [], []
-        for path in sorted(src.glob("*.png")):
-            baked = load_frame(path)
-            if baked is not None:
-                sprites.append(baked)
-                slots.append(int(path.stem) - 1)          # frame N -> slot N-1
-        fps = float(info["fps"])
-        period_frames = max(int(info["frames"]), int(math.ceil(t["period"] * fps)))
-        write_sheet(OUT, layer, sprites, slots, CANVAS, fps, period_frames,
-                    int(round(t["offset"] * fps)), anchor=anchor)
+    bake_passes(TIMING, BUILD, OUT, CANVAS, under=False,
+                anchor=[CANVAS[0] / 2, CANVAS[1] / 2, ANCHOR_R])     # tarsus, by definition
+
 
 
 def main():
