@@ -13,9 +13,9 @@ between the stars and the plate, so the window's lattice and pillar occlude
 the ships exactly where the painting says.
 
 The path is solved from screen targets (_path): the leader's centre enters
-off the left edge at y ~190 and leaves past the pillar at y ~290, through the
-upper panes (lower, the transom at y ~400 hid the pair half the way), closing
-from 300 m to 260 m, so it descends and grows a little. The wingman trails
+off the left edge at y ~320 and leaves past the pillar and the slot beside
+it at y ~390, through the middle row of panes, closing from 230 m to 190 m,
+so it descends and grows a little. The wingman trails
 back and above, the legacy overlay's echelon.
 
 Writes build/room_anim/military/fighter_pair/:
@@ -47,16 +47,18 @@ LAYER = "fighter_pair"
 FPS = 24
 PASS_SECONDS = 6.5
 
-LENGTH = 20.0                       # m; ~210-240 px long at these depths
+LENGTH = 20.0                       # m; ~160-200 px long at these depths
 # Leader's screen path: (plate x, plate y, depth m) at the start and the end.
-# Through the upper panes: the transom at y ~400 would hide the pair.
-ENTER = (-300.0, 190.0, 300.0)
-LEAVE = (2150.0, 290.0, 260.0)
-WINGMAN = Vector((-14.0, -34.0, 9.0))   # m, in the leader's frame (right, fwd, up)
+# Through the middle row of panes (transoms at y ~203 and ~450), the wingman
+# ~60 px above the leader, clear of both.
+ENTER = (-220.0, 320.0, 230.0)
+LEAVE = (1750.0, 400.0, 190.0)   # off the right edge: the trailing wingman
+                                  # must clear the slot beside the pillar
+WINGMAN = Vector((-14.0, -34.0, 7.0))   # m, in the leader's frame (right, fwd, up)
 BANK = 12.0                         # deg, rolled toward the camera: undersides show
 
 SUN = (1.0, 0.95, 0.88)
-STATION_TEAL = (0.22, 0.3, 0.3)     # bounce off the base's teal hull
+STATION_STEEL = (0.22, 0.26, 0.32)  # bounce off the base's gunmetal hull
 ENGINE = (0.6, 0.8, 1.0)
 NAV_RED, NAV_GREEN = (1.0, 0.1, 0.05), (0.1, 1.0, 0.3)
 
@@ -75,7 +77,7 @@ def _path():
 def _lights(sc):
     world = bpy.data.worlds.new("Space")
     world.use_nodes = True
-    world.node_tree.nodes["Background"].inputs["Color"].default_value = (*STATION_TEAL, 1.0)
+    world.node_tree.nodes["Background"].inputs["Color"].default_value = (*STATION_STEEL, 1.0)
     sc.world = world
     # Sun high, ahead and to the left, so the side facing the window is lit.
     stage.light(sc, "Sun", 'SUN', (0.0, 0.0, 0.0), SUN, 8.0,
@@ -96,7 +98,7 @@ def _fighter(name):
 
 def build(samples):
     sc = hall.reset()
-    hall.setup(sc, samples=samples)
+    hall.setup_render(sc, samples=samples)
     sc.view_settings.exposure = 0.0             # plain straight alpha: no plate encode
     sc.render.film_transparent = True
     frames = round(PASS_SECONDS * FPS)

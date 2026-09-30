@@ -458,6 +458,38 @@ void shipped_agricultural() {
           "agricultural keeps its eight hotspots (ShipDealer rect unchanged)");
 }
 
+// #588: the military concourse's stars through the window, the Stiletto pair
+// beyond it (under the plate) and the munitions train down the lane (over).
+void shipped_military() {
+    const std::string dir = "assets/concourse/military/";
+    room_anim::RoomAnimDef def;
+    room_anim::parse_room_anim(json::parse_file(dir + "concourse.json")["rooms"]["concourse"],
+                               def);
+    check(def.has_sky && def.sky.stars.size() == 2, "military concourse has a starry window");
+    for (const std::string* p : {&def.sky.mask, &def.sky.fill})
+        check(std::filesystem::exists(dir + *p), "sky asset exists: " + *p);
+    unsigned pw = 0, ph = 0, mw = 0, mh = 0;
+    check(png_size(dir + "concourse_bg.png", pw, ph) && png_size(dir + def.sky.mask, mw, mh) &&
+              mw == pw && mh == ph,
+          "sky mask matches the plate");
+    check(def.layers.size() == 2, "military concourse has its fighter + munitions layers");
+    check_layers(dir, def.layers);
+    int under = 0;
+    for (const std::string& layer : def.layers) {
+        room_anim::SpriteSheet s;
+        std::string err;
+        if (room_anim::parse_sprite_sheet(json::parse_file(dir + layer), s, err) && s.under &&
+            !s.anchored)
+            ++under;
+    }
+    check(under == 1, "  the fighters fly under the plate (the lattice occludes them)");
+    // Acceptance: the hotspots (links.json overrides) are untouched.
+    const json::Value links = json::parse_file(dir + "links.json")["concourse"];
+    check(links.as_array().size() == 8 &&
+              link_rect_is(links, "ShipDealer", 0.655f, 0.65333f, 0.3275f, 0.44667f),
+          "military keeps its eight hotspots (ShipDealer rect unchanged)");
+}
+
 // #594: the Pleasure concourse's skylight stars, marquee chase and neon stutter.
 void shipped_pleasure() {
     const std::string dir = "assets/concourse/pleasure/";
@@ -737,7 +769,8 @@ void other_archetypes_static() {
         if (!entry.is_directory() || base == "newcon" || base == "mining" ||
             base == "agricultural" || base == "pleasure" || base == "pirate" ||
             base == "newdetroit" ||
-            base == "oxford" || base == "refinery")
+            base == "oxford" || base == "refinery" ||
+            base == "military")
             continue;
         const json::Value root = json::parse_file((entry.path() / "concourse.json").string());
         const json::Value* rs = root.find("rooms");
@@ -775,6 +808,7 @@ int main() {
     shipped_oxford_landing();
     shipped_mining_bar();
     shipped_pleasure();
+    shipped_military();
     shipped_pirate();
     shipped_refinery();
     shipped_newcon_hangar();

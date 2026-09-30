@@ -9,7 +9,7 @@ from the original base-vehicle meshes.
                                      wheelless pod: it floated over the lane)
 
 Unlike the mining ore train (mining/actors.py), this one turns a corner: it
-comes out from under the teal ramp at the lane's far end. Both vehicles
+comes out from behind the armoured ramp's far end. Both vehicles
 follow one path by arc length, so the trailer tracks the tug through the bend.
 """
 import math
@@ -25,7 +25,8 @@ TUG_LENGTH, TRAILER_LENGTH = 3.0, 3.0       # m; the hopper is ~0.73 as wide as 
 COUPLING_GAP = 0.5                          # m between tug and trailer
 HEADLIGHT = (1.0, 0.88, 0.7)
 BEACON_AMBER = (1.0, 0.45, 0.08)
-TUG_GRIME = (0.85, 0.8, 0.72)               # keep the yellow, knock off the shine
+TUG_GRIME = (0.6, 0.54, 0.42)               # a worn, dusty hazard yellow, as dim as
+                                            # the painting's own hazard stripes
 TRAILER_PAINT = (0.3, 0.33, 0.28)           # the stock hopper is near-white: gunmetal
 MISSILE_WHITE, MISSILE_BAND, MISSILE_NOSE = (0.6, 0.61, 0.58), (0.55, 0.05, 0.03), (0.1, 0.1, 0.1)
 

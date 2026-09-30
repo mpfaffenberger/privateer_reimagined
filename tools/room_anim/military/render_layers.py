@@ -32,13 +32,13 @@ from base import paths  # noqa: E402
 
 MILITARY = paths("military")
 TRAIN_SPEED = 4.5          # m/s, a loaded ordnance tug
-# Out from under the teal ramp at the lane's far end, round the bend, then
-# straight down the lane at the camera, leaving past the bottom edge.
+# Out from behind the armoured ramp's far end, round the bend, then straight
+# down the lane at the camera, leaving past the bottom edge.
 TRAIN_ROUTE = [(hall.RAMP_X + 9.0, hall.WINDOW_Y - 10.0), (hall.LANE_X, hall.WINDOW_Y - 10.0),
                (hall.LANE_X, 10.0)]
 TRAIN_FILLET = 5.0         # m
-# The painted emblems (centre px, ring width px) for --check.
-EMBLEMS = [((1060.0, 1386.0), 410.0), ((1035.0, 1582.0), 590.0)]
+# The painted middle emblem (centre px, ring width px) for --check.
+EMBLEMS = [((587.0, 808.0), 325.0)]
 
 
 def _route():
@@ -60,7 +60,7 @@ LAYERS = {"munitions_train": _munitions_train}
 
 def _build_hall(samples=48):
     sc = hall.reset()
-    hall.setup(sc, samples)
+    hall.setup_render(sc, samples)
     cam = hall.add_plate_camera(sc)
     hall.attach_plate_reference(cam, str(MILITARY.plate))
     decks = hall.add_deck(sc)
@@ -95,7 +95,7 @@ def _ring(name, centre, radius, mat, sc, width=0.12):
 def check(out_png):
     """Floor guides from the matched camera, overlaid on the plate."""
     sc = hall.reset()
-    hall.setup(sc, samples=4)
+    hall.setup_render(sc, samples=4)
     sc.view_settings.exposure = 0.0
     sc.render.film_transparent = True
     sc.render.use_motion_blur = False

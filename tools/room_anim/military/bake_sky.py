@@ -3,14 +3,14 @@
 # requires-python = ">=3.10"
 # dependencies = ["pillow", "numpy"]
 # ///
-"""Cut the Military concourse's window out of the plate and fill it with stars (#588).
+"""Cut the Military concourse's window out of the plate and drift its stars (#588).
 
-The plate (assets/concourse/military/concourse_bg.png, 2564x2016) looks out
-through a huge gold-latticed window, plus a narrow slot right of the teal
-pillar. The sky is painted pure black (max channel 0) and starless, so the
-stars are a sparse synthetic field (sky.synthetic_stars), like the mining
-landing pad's. The original game drifted a star overlay across this window
-(the legacy concourse_stt/stb overlays).
+The plate (assets/concourse/military/concourse_bg.png, the #621 repaint)
+looks out through a huge brass-latticed window, plus a narrow slot right of
+the pillar. As on New Con (newcon/bake_sky.py), the drifting tiles are drawn
+from the painting's own stars (sky.PaintedStars), so they match the paint.
+The original game drifted a star overlay across this window (the legacy
+concourse_stt/stb overlays).
 
 Outputs (assets/concourse/military/anim/):
     sky_mask.png    L8, 255 = sky: the engine's plate alpha, so stars and the
@@ -36,31 +36,25 @@ from PIL import Image, ImageDraw, ImageFilter
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from base import paths  # noqa: E402
 from bake_layer import load_frame, write_sheet  # noqa: E402
-from sky import RNG_SEED, sky_fill, solidify, star_tile, synthetic_stars  # noqa: E402
+from sky import RNG_SEED, PaintedStars, sky_fill, solidify, star_tile  # noqa: E402
 
 MILITARY = paths("military")
 TIMING = MILITARY.tools / "sky_layers.json"
 
 # Coarse window regions (plate px). Anything outside them is never sky,
-# however dark: the plate has a black border (left 2 px, bottom 14 px) and
-# black outlines everywhere. Inside, the star-removed max channel decides.
+# however dark. Inside, the star-removed max channel decides.
 WINDOWS = [
-    # The big latticed window, down to the sill behind the walkway; the left
-    # teal wall and the gold arch are bright, so the threshold drops them.
-    [(24, 0), (1575, 0), (1575, 1222), (560, 1222), (24, 900)],
-    # The slot between the teal pillar and the arch on the right.
-    [(1740, 0), (1930, 0), (1930, 830), (1740, 830)],
+    # The big latticed window, down to the sill behind the walkway; the
+    # brass lattice and the arch are bright, so the threshold drops them.
+    [(12, 0), (880, 0), (880, 598), (12, 598)],
+    # The slot between the pillar and the arch on the right.
+    [(985, 0), (1085, 0), (1085, 395), (985, 395)],
 ]
-SKY_MAX = 24               # max channel at or below this is sky (the paint is 0)
-# The painting outlines every lattice bar and frame in near-black, which
-# reads as sky. Keep OUTLINE px off anything bright, so stars and ships don't
-# eat the outlines.
-OUTLINE = 3
-FLOOR_SEED = (1280, 1800)  # certainly not sky (the walkway)
-
-# Sparse: the legacy overlay's field, at this plate's ~1.7x resolution
-# (mining's landing sky is 8e-4 per px at 1536 wide).
-STAR_DENSITY = 3.2e-4
+SKY_MAX = 30               # star-removed max channel at or below this is sky
+# Keep OUTLINE px off anything bright, so stars and ships don't creep onto
+# the lattice's dark edges.
+OUTLINE = 2
+FLOOR_SEED = (768, 900)    # certainly not sky (the walkway)
 
 
 def sky_mask(plate):
@@ -70,7 +64,9 @@ def sky_mask(plate):
     draw = ImageDraw.Draw(inside)
     for poly in WINDOWS:
         draw.polygon(poly, fill=255)
-    bright = Image.fromarray(((np.asarray(peak) > SKY_MAX) * 255).astype(np.uint8))
+    # Bright = the lattice and frame, on the star-removed plate: painted stars
+    # mustn't count, or each one punches a hole that eats the window's edge.
+    bright = Image.fromarray(((base > SKY_MAX) * 255).astype(np.uint8))
     near_bright = np.asarray(bright.filter(ImageFilter.MaxFilter(2 * OUTLINE + 1))) > 0
     dark = (base <= SKY_MAX) & (np.asarray(inside) > 0) & ~near_bright
     return solidify(Image.fromarray(dark.astype(np.uint8) * 255), FLOOR_SEED)
@@ -82,9 +78,7 @@ def bake_sky(debug):
     mask = sky_mask(plate)
     out.mkdir(parents=True, exist_ok=True)
     mask.save(out / "sky_mask.png", optimize=True)
-    fill = sky_fill(plate, mask)
-    fill.resize((fill.width // 4, fill.height // 4), Image.BOX).save(out / "sky_fill.png",
-                                                                     optimize=True)
+    sky_fill(plate, mask).save(out / "sky_fill.png", optimize=True)
     print(f"sky {np.mean(np.asarray(mask) > 127):.1%} of plate")
     if debug:
         vis = np.asarray(plate, dtype=np.float32)
@@ -95,14 +89,15 @@ def bake_sky(debug):
 
 
 def bake_stars():
-    rng = np.random.default_rng(RNG_SEED + 588)
-    stars = synthetic_stars(rng, STAR_DENSITY)
     out = MILITARY.anim
-    out.mkdir(parents=True, exist_ok=True)
-    # Sigmas ~1.7x mining's: this plate has ~1.7x the pixels per degree.
-    star_tile(stars, 0.7, (0.5, 0.9), rng, radius=4).save(out / "stars_far.png", optimize=True)
-    star_tile(stars, 0.3, (0.75, 1.35), rng, radius=5).save(out / "stars_near.png", optimize=True)
-    print("stars: far + near tiles")
+    plate = Image.open(MILITARY.plate).convert("RGB")
+    stars = PaintedStars(plate, Image.open(out / "sky_mask.png"))
+    rng = np.random.default_rng(RNG_SEED + 588)
+    # As on New Con: most stars small and far, a third larger and near.
+    star_tile(stars, 0.65, (0.32, 0.55), rng).save(out / "stars_far.png", optimize=True)
+    star_tile(stars, 0.35, (0.4, 0.75), rng).save(out / "stars_near.png", optimize=True)
+    print(f"stars: painted {stars.density * 1e4:.1f}/10k px, contrast median "
+          f"{np.median(stars.contrast) * 255:.0f}")
 
 
 def bake_layers():
