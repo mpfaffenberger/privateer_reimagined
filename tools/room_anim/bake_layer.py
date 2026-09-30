@@ -154,8 +154,9 @@ def inset_border(rendered, px=BORDER_INSET):
     return out
 
 
-def bake_frame(plate, empty, beauty_path, mask_path, gain):
-    """One rendered frame -> (sprite RGBA, dst [x,y,w,h] in plate px) or None."""
+def bake_frame(plate, empty, beauty_path, mask_path, gain, max_px=BIG_FRAME_PX):
+    """One rendered frame -> (sprite RGBA, dst [x,y,w,h] in plate px) or None.
+    Sprites over `max_px` are stored at half size; None keeps them sharp."""
     beauty = load_rgba(beauty_path)
     rendered = inset_border(beauty[..., 3] > 0.5)
     box = bbox(rendered)                       # only the render border can change
@@ -171,7 +172,7 @@ def bake_frame(plate, empty, beauty_path, mask_path, gain):
     tx0, ty0, tx1, ty1 = tight
     sprite = rgba[ty0:ty1, tx0:tx1]
     dst = [x0 + tx0, y0 + ty0, tx1 - tx0, ty1 - ty0]
-    if sprite.shape[0] * sprite.shape[1] > BIG_FRAME_PX:
+    if max_px and sprite.shape[0] * sprite.shape[1] > max_px:
         sprite = shrink(sprite)
     return sprite, dst
 
@@ -208,10 +209,13 @@ def main():
         cfg = timing[layer]
         bake(where, layer,
              cfg["period"] if args.period is None else args.period,
-             cfg["offset"] if args.offset is None else args.offset)
+             cfg["offset"] if args.offset is None else args.offset,
+             cfg.get("max_px", BIG_FRAME_PX))
 
 
-def bake(where, layer, period, offset):
+def bake(where, layer, period, offset, max_px=BIG_FRAME_PX):
+    """`max_px` (layers.json, optional): frames larger than this are stored at
+    half size; null keeps a small hero actor sharp at every size."""
     src = where.build / layer
     info = json.loads((src / "pass.json").read_text())   # written by render.render_passes
     if "exposure_ev" not in info:
@@ -221,7 +225,8 @@ def bake(where, layer, period, offset):
     empty = load_rgba(src / "empty.png")[..., :3]
     sprites, slots = [], []
     for beauty_path in sorted((src / "beauty").glob("*.png")):
-        baked = bake_frame(plate, empty, beauty_path, src / "mask" / beauty_path.name, gain)
+        baked = bake_frame(plate, empty, beauty_path, src / "mask" / beauty_path.name, gain,
+                           max_px)
         if baked is not None:
             sprites.append(baked)
             slots.append(int(beauty_path.stem) - 1)   # frame N -> slot N-1; gaps stay blank

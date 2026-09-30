@@ -8,6 +8,10 @@
         200
       ],
       "overlays": [],
+      "layers": [
+        "anim/aircar_top.json",
+        "anim/aircar_avenue.json"
+      ],
       "links": [
         {
           "target": "Bar",

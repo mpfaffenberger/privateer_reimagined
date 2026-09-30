@@ -610,13 +610,41 @@ void shipped_newdetroit() {
           "New Detroit keeps its eight hotspots (ShipDealer, LandingPad rects unchanged)");
 }
 
+// #592: the Oxford concourse's air-cars, down the avenue and along the
+// banner street. Their routes cross, so their loops are locked: one period is
+// a whole multiple of the other (see tools/room_anim/oxford/layers.json).
+void shipped_oxford() {
+    const std::string dir = "assets/concourse/oxford/";
+    room_anim::RoomAnimDef def;
+    room_anim::parse_room_anim(json::parse_file(dir + "concourse.json")["rooms"]["concourse"],
+                               def);
+    check(!def.has_sky && def.layers.size() == 2, "Oxford concourse has its two air-car layers");
+    check_layers(dir, def.layers);
+    std::vector<int> periods;
+    for (const std::string& layer : def.layers) {
+        room_anim::SpriteSheet s;
+        std::string err;
+        if (room_anim::parse_sprite_sheet(json::parse_file(dir + layer), s, err))
+            periods.push_back(s.period);
+    }
+    std::sort(periods.begin(), periods.end());
+    check(periods.size() == 2 && periods[0] > 0 && periods[1] % periods[0] == 0,
+          "  air-car loops locked: they never meet where their routes cross");
+    // Acceptance: the hotspots (links.json overrides) are untouched.
+    const json::Value links = json::parse_file(dir + "links.json")["concourse"];
+    check(links.as_array().size() == 9 &&
+              link_rect_is(links, "Library", 0.67141f, 0.04125f, 0.19719f, 0.29125f),
+          "Oxford keeps its nine hotspots (Library rect unchanged)");
+}
+
 void other_archetypes_static() {
     int animated = 0, rooms = 0;
     for (const auto& entry : std::filesystem::directory_iterator("assets/concourse")) {
         const std::string base = entry.path().filename().string();
         if (!entry.is_directory() || base == "newcon" || base == "mining" ||
             base == "agricultural" || base == "pleasure" || base == "pirate" ||
-            base == "newdetroit")
+            base == "newdetroit" ||
+            base == "oxford")
             continue;
         const json::Value root = json::parse_file((entry.path() / "concourse.json").string());
         const json::Value* rs = root.find("rooms");
@@ -654,6 +682,7 @@ int main() {
     shipped_pleasure();
     shipped_pirate();
     shipped_newcon_hangar();
+    shipped_oxford();
     cross_dir_layer_paths();
     shipped_mercguild();
     shipped_merchguild();
