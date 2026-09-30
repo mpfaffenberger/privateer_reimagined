@@ -1,5 +1,6 @@
 """Ships crossing a crater landing pad's strip of sky (#561; shared in #587 by
-the mining and pirate bases). Runs inside Blender.
+the mining and pirate bases; Oxford's dusk pad, #593, brings its own
+`lights=`). Runs inside Blender.
 
 The landing pad is 18 differently framed composites (bake_crater.py), so
 nothing is matched to one painting. The scene is built for a CANONICAL
@@ -104,27 +105,29 @@ def nav_lights(ship, frames, radius, strength, strobe_radius, strobe_strength,
         strobe.keyframe_insert("hide_render", frame=f)
 
 
-def build(samples, frames):
-    """The empty sky stage: camera, sun, crater bounce."""
+def build(samples, frames, lights=None):
+    """The empty sky stage: camera, then `lights(sc)`: by default the sun
+    and crater bounce."""
     sc = stage.reset()
     stage.setup_render(sc, samples=samples)
     sc.view_settings.exposure = 0.0             # plain straight alpha: no plate encode
     sc.render.film_transparent = True
     sc.frame_start, sc.frame_end = 1, frames
     _camera(sc)
-    _lights(sc)
+    (lights or _lights)(sc)
     return sc
 
 
-def run(argv, base, layer, seconds, build_ships, doc=None):
-    """Parse --frames/--samples, build the stage, let `build_ships(frames,
-    rim_y)` add the ships (-> their root objects) and render the pass."""
+def run(argv, base, layer, seconds, build_ships, doc=None, lights=None):
+    """Parse --frames/--samples, build the stage (`lights`: see build()), let
+    `build_ships(frames, rim_y)` add the ships (-> their root objects) and
+    render the pass. rim_y is the canonical anchor's cy."""
     ap = argparse.ArgumentParser(description=doc)
     ap.add_argument("--frames", help="first:last[:step], e.g. 1:384:48 for a quick look")
     ap.add_argument("--samples", type=int, default=32)
     args = ap.parse_args(argv)
     frames = round(seconds * FPS)
-    sc = build(args.samples, frames)
+    sc = build(args.samples, frames, lights)
     rim = anchor(base)
     roots = build_ships(frames, rim[1])
     out = paths(base).build / "landing" / layer

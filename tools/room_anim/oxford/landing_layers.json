@@ -1,0 +1,5 @@
+{
+  "_doc": "Landing-pad sky layers (#593, bake_landing.py). Loop timing, seconds: period >= the pass; the rest is empty sky.",
+  "_offset": "The engine adds offset to the clock, so 36 of 40 starts the pass 4 s into the loop.",
+  "oxship_departure": { "period": 40.0, "offset": 36.0 }
+}
