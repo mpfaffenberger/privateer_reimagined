@@ -446,7 +446,8 @@ uv run tools/room_anim/composite_preview.py --base agricultural --seconds 30 \
 |---|---|---|
 | `windows.py` | uv | hand-traced window glass (centre + right panes) |
 | `bake_sky.py` | uv | cloud fill, streak tiles, sky mask |
-| `render_traffic.py` | Blender | horizon-matched camera, dusk light, the two craft |
+| `flight.py` | Blender | horizon-matched camera, paths from screen targets, the render loop |
+| `render_traffic.py` | Blender | dusk light and the two craft |
 | `bake_traffic.py` | uv | haze, clip to the glass, pack |
 | `traffic_layers.json` | - | loop period and phase |
 

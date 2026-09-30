@@ -7,10 +7,9 @@ Run inside Blender (headless):
 
 The windows look out over farmland at dusk: a glass farm dome, a lit
 settlement, far ridges. Nothing outside is near enough to match in 3D, so the
-camera is only matched to the horizon: level at the origin looking down +Y,
-f = FOCAL_PX, the horizon (the far ridges) at plate y HORIZON_Y. A point
-(x, depth, z) lands at (768 + f x / depth, HORIZON_Y - f z / depth), and each
-pass is solved from screen targets (_solve), like mining/render_landing.py.
+camera is only matched to the horizon (flight.py): level, f = FOCAL_PX, the
+far ridges at plate y HORIZON_Y, and each pass is solved from screen
+targets.
 The farmland lies EYE_HEIGHT below the camera: at that height the farm dome
 (its base at y ~255, 500 px wide) is ~370 m across and ~45 m tall.
 
@@ -24,7 +23,6 @@ Writes build/room_anim/agricultural/traffic/<layer>/:
                hazes each frame by its depth and clips it to the glass.
 """
 import argparse
-import json
 import math
 import sys
 from pathlib import Path
@@ -36,7 +34,7 @@ for path in (HERE, HERE.parent):              # this base's modules, then shared
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-import render  # noqa: E402
+import flight  # noqa: E402
 import ships  # noqa: E402
 import stage  # noqa: E402
 from base import paths  # noqa: E402
@@ -55,19 +53,6 @@ ENGINE = (1.0, 0.72, 0.42)
 HEADLAMP = (1.0, 0.9, 0.72)
 
 
-def _camera(sc):
-    data = bpy.data.cameras.new("WindowCam")
-    data.sensor_fit, data.sensor_width = 'HORIZONTAL', 36.0
-    data.lens = FOCAL_PX * 36.0 / stage.PLATE_W
-    data.shift_y = (HORIZON_Y - stage.PLATE_H / 2) / stage.PLATE_W    # frame up: horizon high
-    data.clip_start, data.clip_end = 1.0, 20000.0
-    cam = bpy.data.objects.new("WindowCam", data)
-    sc.collection.objects.link(cam)
-    cam.rotation_euler = (math.radians(90.0), 0.0, 0.0)      # level, looking +Y
-    sc.camera = cam
-    return cam
-
-
 def _lights(sc):
     world = bpy.data.worlds.new("Dusk")
     world.use_nodes = True
@@ -81,35 +66,7 @@ def _lights(sc):
 
 
 def _solve(screen, depth):
-    """Screen target (px, py) at `depth` m -> world (x, depth, z)."""
-    px, py = screen
-    return ((px - stage.PLATE_W / 2) * depth / FOCAL_PX, depth,
-            (HORIZON_Y - py) * depth / FOCAL_PX)
-
-
-def _strobe(obj, frames, every_s, on_s=0.1, phase_s=0.0):
-    for f in range(1, frames + 1):
-        t = (f - 1) / FPS + phase_s
-        obj.hide_render = (t % every_s) >= on_s
-        obj.keyframe_insert("hide_render", frame=f)
-
-
-def _fly(root, start, end, frames, ease_in=0.0, bank_deg=0.0):
-    """Straight flight from `start` to `end` (world points), nose along the
-    track, pitched to the climb. `ease_in` 0..1 makes it accelerate (a
-    departure). Returns the depth per frame."""
-    dx, dy, dz = (e - s for s, e in zip(start, end))
-    heading = math.atan2(-dx, dy)
-    pitch = math.atan2(dz, math.hypot(dx, dy))
-    root.rotation_euler = (pitch, math.radians(bank_deg), heading)
-    depths = []
-    for f in range(1, frames + 1):
-        t = (f - 1) / (frames - 1)
-        s = (1.0 - ease_in) * t + ease_in * t * t
-        root.location = tuple(a + (b - a) * s for a, b in zip(start, end))
-        root.keyframe_insert("location", frame=f)
-        depths.append(round(root.location.y, 1))
-    return depths
+    return flight.solve(screen, depth, FOCAL_PX, HORIZON_Y)
 
 
 def _freighter_departure(sc):
@@ -123,9 +80,10 @@ def _freighter_departure(sc):
         stage.emitter(f"Engine{i}", ship, (x, -length / 2, 0.0), 2.6, ENGINE, 40.0)
     stage.emitter("NavPort", ship, (-w / 2, 0.0, 0.0), 1.4, NAV_RED, 40.0)
     stage.emitter("NavStarboard", ship, (w / 2, 0.0, 0.0), 1.4, NAV_GREEN, 40.0)
-    _strobe(stage.emitter("Strobe", ship, (0.0, 0.0, h / 2), 1.6, STROBE, 80.0), frames, 1.5)
-    depths = _fly(ship, _solve((1510.0, 170.0), 900.0), _solve((560.0, 95.0), 1900.0), frames,
-                  ease_in=0.45, bank_deg=-8.0)
+    flight.strobe(stage.emitter("Strobe", ship, (0.0, 0.0, h / 2), 1.6, STROBE, 80.0),
+                  frames, FPS, 1.5)
+    depths = flight.fly(ship, _solve((1510.0, 170.0), 900.0), _solve((560.0, 95.0), 1900.0),
+                        frames, ease_in=0.45, bank_deg=-8.0)
     return ship, frames, depths
 
 
@@ -138,10 +96,10 @@ def _aircar_crossing(sc):
     for i, x in enumerate((-w / 5, w / 5)):
         stage.emitter(f"Headlamp{i}", car, (x, length / 2, 0.0), 0.28, HEADLAMP, 60.0)
     stage.emitter("Tail", car, (0.0, -length / 2, 0.0), 0.3, NAV_RED, 30.0)
-    _strobe(stage.emitter("Beacon", car, (0.0, 0.0, h / 2), 0.3, (1.0, 0.55, 0.1), 60.0),
-            frames, 0.8, on_s=0.15)
-    depths = _fly(car, _solve((560.0, 196.0), 160.0), _solve((1530.0, 204.0), 160.0), frames,
-                  bank_deg=6.0)
+    flight.strobe(stage.emitter("Beacon", car, (0.0, 0.0, h / 2), 0.3, (1.0, 0.55, 0.1), 60.0),
+                  frames, FPS, 0.8, on_s=0.15)
+    depths = flight.fly(car, _solve((560.0, 196.0), 160.0), _solve((1530.0, 204.0), 160.0),
+                        frames, bank_deg=6.0)
     return car, frames, depths
 
 
@@ -154,7 +112,7 @@ def build(layer, samples):
     stage.setup_render(sc, samples=samples)
     sc.view_settings.exposure = 0.0             # plain straight alpha: no plate encode
     sc.render.film_transparent = True
-    _camera(sc)
+    flight.add_camera(sc, "WindowCam", FOCAL_PX, HORIZON_Y)
     _lights(sc)
     root, frames, depths = LAYERS[layer](sc)
     sc.frame_start, sc.frame_end = 1, frames
@@ -169,23 +127,7 @@ def main(argv):
     args = ap.parse_args(argv)
     for layer in (sorted(LAYERS) if "all" in args.layer else args.layer):
         sc, root, frames, depths = build(layer, args.samples)
-        out = BUILD / layer
-        out.mkdir(parents=True, exist_ok=True)
-        if args.frames:
-            first, last, *step = (int(v) for v in args.frames.split(":"))
-            todo = range(first, min(last, frames) + 1, step[0] if step else 1)
-        else:
-            for old in out.glob("*.png"):       # off-screen frames write nothing,
-                old.unlink()                    # so stale ones must not survive
-            todo = range(1, frames + 1)
-        for f in todo:
-            sc.frame_set(f)
-            if not render.set_border(sc, [root], margin=0.15, footprint=False):
-                continue
-            sc.render.filepath = str(out / f"{f:04d}.png")
-            bpy.ops.render.render(write_still=True)
-        (out / "pass.json").write_text(json.dumps(
-            {"frames": frames, "fps": FPS, "depth": depths}) + "\n")
+        flight.render_pass(sc, root, BUILD / layer, frames, FPS, args.frames, depth=depths)
         print(f"[render_traffic] {layer} done", flush=True)
 
 
