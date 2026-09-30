@@ -40,7 +40,7 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `pleasure/` | | Pleasure: concourse skylight stars, marquee chase, neon (#594), landing pad transport (#595) |
 | `pirate/` | | Pirate base concourse: lanterns, pirates, a grav pod (#586) |
 | `newdetroit/` | | New Detroit: concourse walkers on the platform and plaza (#590), aircars past the landing pad (#591) |
-| `oxford/` | | Oxford concourse: air-cars in the garden square (#592) |
+| `oxford/` | | Oxford: concourse air-cars in the garden square (#592), landing pad departure at dusk (#593) |
 
 ## New Con concourse
 
@@ -802,6 +802,55 @@ uv run tools/room_anim/composite_preview.py --base oxford --seconds 48 \
 | `render_layers.py` | Blender | one layer per route; `--check` camera vs `camera_match` |
 | `routes.json` | - | each car's route, hover, speed and paint |
 | `layers.json` | - | loop period, phase, `max_px` |
+| `bake_landing.py` | uv | landing pad: sky masks, half-size fills, moon anchors; layer sheet |
+| `render_landing.py` | Blender | the Oxford ship lifting off (`../flyover.py`, dusk `lights=`) |
+| `landing_layers.json` | - | landing layer timing |
+
+### Oxford landing pad (#593)
+
+A spaceport at dusk: 18 per-hull composites, each framed and zoomed a little
+differently, under a purple-to-orange sky with a big moon and a small one.
+Every 40 s an Oxford ship (`ships_wcnews/oxship.obj`, the original game's)
+climbs out from behind the hangar roofs and away off the left edge, engines
+hot, passing in front of the clouds and behind everything on the ground.
+
+```sh
+uv run tools/room_anim/oxford/bake_landing.py --debug build/room_anim/oxford/skies.png
+# (bake the skies first: render_landing.py reads tarsus's moon from anchors.json)
+blender --background --factory-startup --python tools/room_anim/oxford/render_landing.py
+uv run tools/room_anim/oxford/bake_landing.py --layers-only
+uv run tools/room_anim/composite_preview.py --base oxford --room landing --plate tarsus \
+    --seconds 20 --out build/room_anim/oxford/landing.mp4
+```
+
+- **Sky.** A smooth painted gradient, and everything else has edges: the sky
+  is the edge-free region connected to the top edge. Some composites are
+  soft (drone's skyline leaks at the default threshold and the flood reaches
+  the tarmac), so the threshold steps down until the flood stops above 80%
+  of the height. Holes the ground can't reach (painted clouds, specks) are
+  sky: they're kilometres off, so the ship passes in front of them, and the
+  fill, which is the plate's own sky at half size, redraws them beneath it.
+  Only the moons stay painted over the ship. There are no star tiles: it's
+  dusk.
+- **Anchor.** The framings differ in zoom as well as position, so the anchor
+  is the big moon (`[cx, cy, r]`), found in each composite by RANSAC circle
+  fits to the edges inside the sky, where nearly every edge is a moon's
+  limb. The moons are chosen as a *pair* (the small one ~half the size, lower
+  right, in its expected place), because one circle alone may be a hangar
+  arch, and the crisp small moon out-votes the big one's soft limb. Paradigm's
+  small moon loses to its arches, so there a lone big moon high in the frame
+  is taken and the small one is searched for where the pair puts it. The big
+  moon's centre must sit in the top third; lower pairs are arches.
+- **Ship.** Rendered on the crater pads' shared stage (`flyover.py`: level
+  f = 1024 px camera against tarsus, nav lights, render loop), passing its
+  own `lights=`: dusk, a warm sun just set ahead of the camera and a purple
+  sky fill. It climbs, so unlike `fly_straight()` its path is a 3D line
+  solved from two screen targets at two depths; that projects to a straight
+  screen path that stays clear of the moons. From 2 km out it read as a
+  bird; receding 5x in depth front-loaded the motion, so it only doubles
+  (200 m to 420 m, ~43 m/s). The mesh has the old game's
+  afterburner baked in as solid red and yellow flames: `ships.STRIP_MATERIALS`
+  drops those faces at import, before the bbox sets the scale.
 
 ## 3D patrons in any room (#577)
 

@@ -11,6 +11,7 @@ import math
 import re
 from pathlib import Path
 
+import bmesh
 import bpy
 from mathutils import Euler, Vector
 
@@ -31,6 +32,12 @@ FIX_EULER = {
     "transprt": (0.0, 0.0, 180.0),     # transport: engine block at +Y
     "trailer": (0.0, 0.0, 180.0),      # cargo pod: sloped, lamp-eyed nose at -Y
     "nd_airca": (0.0, 0.0, 180.0),     # New Detroit aircar: canopy at -Y, fins + glow +Y
+}
+
+# Faces to drop per mesh, by material: the original game's baked-in effects,
+# which read as solid blobs in a render and stretch the bbox that sets scale.
+STRIP_MATERIALS = {
+    "oxship": ("TEST", "TEST-1"),       # the red + yellow afterburner flames
 }
 
 
@@ -77,6 +84,23 @@ def _apply_sidecar(stem, objs, tint=None):
                 slot.material = _material(stem, entry, tint)
 
 
+def _strip(objs, names):
+    """Delete the faces whose material is one of `names` (Blender's .001
+    suffixes ignored)."""
+    names = {n.lower() for n in names}
+    for obj in objs if names else ():
+        drop = {i for i, s in enumerate(obj.material_slots) if s.material and
+                re.sub(r"\.\d{3}$", "", s.material.name).lower() in names}
+        if not drop:
+            continue
+        bm = bmesh.new()
+        bm.from_mesh(obj.data)
+        bmesh.ops.delete(bm, geom=[f for f in bm.faces if f.material_index in drop],
+                         context='FACES')
+        bm.to_mesh(obj.data)
+        bm.free()
+
+
 def import_ship(stem, length_m, name=None, grounded=False, tint=None):
     """-> root empty (+Y nose, +Z top), origin at the hull's bbox centre, or
     with `grounded` at the centre of its underside (for ground vehicles).
@@ -86,6 +110,7 @@ def import_ship(stem, length_m, name=None, grounded=False, tint=None):
     bpy.ops.wm.obj_import(filepath=str(MESHES / f"{stem}.obj"),
                           forward_axis='Y', up_axis='Z')        # raw file axes
     objs = [o for o in bpy.data.objects if o not in before and o.type == 'MESH']
+    _strip(objs, STRIP_MATERIALS.get(stem, ()))
     _apply_sidecar(stem, objs, tint)
 
     fix = Euler([math.radians(a) for a in FIX_EULER.get(stem, (0.0, 0.0, 0.0))], 'XYZ')

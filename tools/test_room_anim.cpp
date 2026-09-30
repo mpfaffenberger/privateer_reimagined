@@ -388,6 +388,31 @@ void shipped_newdetroit_landing() {
           "newdetroit landing keeps its Launch + Concourse hotspots");
 }
 
+// #593: the Oxford landing pad's dusk sky and a ship lifting off beyond the
+// hangars. No stars (it's dusk); the anchor is the big moon, which stays painted.
+void shipped_oxford_landing() {
+    const std::string dir = "assets/concourse/oxford/";
+    room_anim::RoomAnimDef def;
+    room_anim::parse_room_anim(
+        json::parse_file(dir + "concourse.json")["rooms"]["landing"]["composite"], def);
+    check(def.has_sky && def.sky.stars.empty() && !def.anchors.empty(),
+          "oxford landing has a starless dusk sky and moon anchors");
+    check_composite_skies(dir, def, "oxford landing");
+    check(def.layers.size() == 1, "oxford landing has its departure layer");
+    check_layers(dir, def.layers);
+    for (const std::string& layer : def.layers) {
+        room_anim::SpriteSheet s;
+        std::string err;
+        check(room_anim::parse_sprite_sheet(json::parse_file(dir + layer), s, err) && s.under &&
+                  s.anchored,
+              "  the ship flies under the plate (the hangars occlude it), anchored");
+    }
+    const json::Value links = json::parse_file(dir + "links.json")["landing"];
+    check(links.as_array().size() == 2 &&
+              link_rect_is(links, "Launch", 0.13418f, 0.29021f, 0.56035f, 0.67021f),
+          "oxford landing keeps its Launch + Concourse hotspots");
+}
+
 // #558: the mining concourse's ore train.
 void shipped_mining() {
     const std::string dir = "assets/concourse/mining/";
@@ -718,6 +743,7 @@ int main() {
     shipped_pleasure_landing();
     shipped_pirate_landing();
     shipped_newdetroit_landing();
+    shipped_oxford_landing();
     shipped_mining_bar();
     shipped_pleasure();
     shipped_pirate();
