@@ -34,6 +34,7 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `newcon/` | | New Constantinople: concourse (#515) and hangar (#553) |
 | `mining/` | | Mining base concourse: the ore train (#558) |
 | `agricultural/` | | Agricultural: concourse clouds and aircraft (#582), landing pad sky traffic (#583) |
+| `pleasure/` | | Pleasure concourse: skylight stars, marquee chase, neon (#594) |
 
 ## New Con concourse
 
@@ -499,6 +500,45 @@ Shared Blender helpers (render settings, boxes, materials, lights, emitters,
 straight passes) live in `stage.py`; `bake_layer.load_frame()` trims a
 straight-alpha pass for sky layers; `ships.import_ship()` takes `grounded=` (origin on
 the underside, for vehicles) and `tint=` (multiply the textures, e.g. grime).
+
+## Pleasure concourse (#594)
+
+The casino hall was repainted at 1536x1024 for this (#596; it was the last
+320x200 concourse). Everything that moves here is light that's already in the
+painting, so there's no Blender pass:
+
+```sh
+uv run tools/room_anim/pleasure/bake_sky.py --debug build/room_anim/pleasure/sky_debug.png
+uv run tools/room_anim/pleasure/bake_lights.py --debug build/room_anim/pleasure/bulbs.png
+uv run tools/room_anim/composite_preview.py --base pleasure --seconds 18 \
+    --out build/room_anim/pleasure/preview.mp4
+```
+
+- **Skylight.** Stars drift through the glass pyramid's apex pane and one
+  right-hand pane. The rafters are wide dark beams with lit rims, as dark as
+  the sky, so the panes are hand-traced between them (no threshold keeps
+  stars off a beam's face). Inside a pane, the glare streaks are separated
+  from stars by shape: a blob brighter than the local sky is a star if it's
+  small and glass if it's long. Unlike `sky.solidify()`, no holes are filled,
+  since that would paint out the streaks. Most painted stars are faint, so
+  `PaintedStars(rise=8)` counts them (~49/10k px vs ~10/10k at the default 18).
+- **Marquee chase.** Warm bulb cores are found inside each canopy's outline
+  and chained into rows (each bulb's successor is its nearest neighbour
+  toward the rows' vanishing point); a bulb's place in its row is its chase
+  phase. Each step dims every third bulb and its glow cone to 25% in linear
+  light, and the step marches at 4 Hz. A 3-frame loop per canopy.
+- **Neon.** The red sign stutters like a tired tube once every 9 s. The neon's
+  share of each pixel (red excess, plus the near-white tube cores) is dimmed
+  in linear light. Only the stutter frames have sprites, and the painted sign
+  shows the rest of the time.
+- Pedestrians were left out: the free floor is either a 1 m aisle behind the
+  painted couches or right under the camera, where the proxy walkers would
+  be 300+ px tall.
+
+| `pleasure/` file | runs in | what |
+|---|---|---|
+| `bake_sky.py` | uv | skylight panes -> sky mask, fill, star tiles |
+| `bake_lights.py` | uv | marquee chase (both canopies) and neon stutter sprites |
 
 ## 3D patrons in any room (#577)
 

@@ -358,6 +358,26 @@ void shipped_agricultural() {
           "agricultural keeps its eight hotspots (ShipDealer rect unchanged)");
 }
 
+// #594: the Pleasure concourse's skylight stars, marquee chase and neon stutter.
+void shipped_pleasure() {
+    const std::string dir = "assets/concourse/pleasure/";
+    room_anim::RoomAnimDef def;
+    room_anim::parse_room_anim(json::parse_file(dir + "concourse.json")["rooms"]["concourse"],
+                               def);
+    check(def.has_sky && def.sky.stars.size() >= 2, "Pleasure concourse has skylight stars");
+    for (const std::string* p : {&def.sky.mask, &def.sky.fill})
+        check(std::filesystem::exists(dir + *p), "sky asset exists: " + *p);
+    for (const room_anim::StarLayerDef& s : def.sky.stars)
+        check(std::filesystem::exists(dir + s.tile), "star tile exists: " + s.tile);
+    check(def.layers.size() == 3, "Pleasure concourse has its marquee + neon layers");
+    check_layers(dir, def.layers);
+    // Acceptance: the hotspots (links.json overrides) are untouched.
+    const json::Value links = json::parse_file(dir + "links.json")["concourse"];
+    check(links.as_array().size() == 8 &&
+              link_rect_is(links, "LandingPad", 0.80174f, 0.6784f, 0.10639f, 0.18281f),
+          "Pleasure keeps its eight hotspots (LandingPad rect unchanged)");
+}
+
 // #564, #566, #568, #570, #572, #571: the mining bar's 3D patrons (all six). Each has a one-frame
 // clean-plate patch that paints the painted one out, and an idle loop. The
 // patrons overlap (the left table), so every patch draws first, then every
@@ -526,7 +546,7 @@ void other_archetypes_static() {
     for (const auto& entry : std::filesystem::directory_iterator("assets/concourse")) {
         const std::string base = entry.path().filename().string();
         if (!entry.is_directory() || base == "newcon" || base == "mining" ||
-            base == "agricultural")
+            base == "agricultural" || base == "pleasure")
             continue;
         const json::Value root = json::parse_file((entry.path() / "concourse.json").string());
         const json::Value* rs = root.find("rooms");
@@ -559,6 +579,7 @@ int main() {
     shipped_mining_landing();
     shipped_agricultural_landing();
     shipped_mining_bar();
+    shipped_pleasure();
     shipped_newcon_hangar();
     cross_dir_layer_paths();
     shipped_mercguild();

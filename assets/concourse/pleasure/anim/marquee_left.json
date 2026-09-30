@@ -1,0 +1,1 @@
+{"atlas":"marquee_left.png","canvas":[1536,1024],"fps":4.0,"period_frames":3,"offset_frames":0,"frames":[{"slot":0,"src":[0,0,476,451],"dst":[0,72,476,451]},{"slot":1,"src":[477,0,455,345],"dst":[9,180,455,345]},{"slot":2,"src":[0,452,405,304],"dst":[39,205,405,304]}]}
