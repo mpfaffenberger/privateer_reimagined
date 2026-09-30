@@ -85,6 +85,13 @@
         200
       ],
       "overlays": [],
+      "composite": {
+        "anchors": "anim/landing/anchors.json",
+        "layers": [
+          "anim/landing/aircar_low.json",
+          "anim/landing/aircar_high.json"
+        ]
+      },
       "links": [
         {
           "target": "Concourse",
