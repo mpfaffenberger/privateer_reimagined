@@ -158,6 +158,35 @@ def _tint(body, rgb):
         links.new(mul.outputs["Result"], base)
 
 
+TORSO = ("Hips", "Spine", "Spine01", "Spine02", "Spine1", "Spine2", "Neck", "Head")
+
+
+def _fcurves(arm):
+    ad = arm.animation_data
+    if hasattr(ad.action, "fcurves"):              # legacy actions
+        return ad.action.fcurves
+    from bpy_extras import anim_utils              # Blender 4.4+: slotted actions
+    return anim_utils.action_get_channelbag_for_slot(ad.action, ad.action_slot).fcurves
+
+
+def _calm(arm, k):
+    """Scale the torso's rotation keys towards the clip's first frame by `k`
+    (0 = frozen upright, 1 = as animated). The clip starts and ends upright,
+    so the loop stays seamless; only the depth of a lean shrinks. Blender
+    normalises pose quaternions, so a per-component lerp is safe."""
+    f0 = arm.animation_data.action.frame_range[0]
+    for fc in _fcurves(arm):
+        if not fc.data_path.endswith("rotation_quaternion"):
+            continue
+        if fc.data_path.split('"')[1].split(":")[-1] not in TORSO:
+            continue
+        ref = fc.evaluate(f0)
+        for kp in fc.keyframe_points:
+            for point in (kp.co, kp.handle_left, kp.handle_right):
+                point[1] = ref + (point[1] - ref) * k
+        fc.update()
+
+
 def _patron(sc, p):
     before = set(bpy.data.objects)
     bpy.ops.import_scene.gltf(filepath=str(CHARACTERS / p["model"]))
@@ -178,6 +207,8 @@ def _patron(sc, p):
             obj.hide_render = obj.hide_viewport = True
     if "tint" in p:
         _tint(body, p["tint"])
+    if "lean" in p:
+        _calm(next(o for o in new if o.type == 'ARMATURE'), p["lean"])
     # `scale`: painters cheat, and some painted patrons are burlier than any
     # model at their depth (the back-table man is ~1.3x broad, ~1.13x tall).
     s = p.get("scale", 1.0)

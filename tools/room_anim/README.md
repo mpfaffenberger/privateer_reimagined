@@ -246,6 +246,11 @@ uv run --with scipy tools/room_anim/mining/bake_bar.py --patron patron_orange --
   needn't match the painted ones, so its textures can be `tint`ed (his grey
   work jacket towards the painting's navy denim: saturation 0.17 -> 0.21 vs
   the painting's 0.25, midtones matched at lum 18).
+- **Borrowed clips can overact.** `lean` damps the torso's rotation keys
+  towards the clip's (upright) first frame: `Chair_Sit_Idle_M` dives over
+  the table; at 0.65 its deepest lean is the painted man's hunch. At 0.4 he
+  sat bolt upright and his hands, still fully animated, hovered at his
+  chest. The clip starts and ends upright, so the loop stays seamless.
 - **Blender MCP gotcha:** a freshly `images.load()`ed camera background can
   sit at 0x0 and draw nothing until its pixels are touched
   (`img.pixels[0]`).
