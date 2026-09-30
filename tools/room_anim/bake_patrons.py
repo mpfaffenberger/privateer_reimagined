@@ -93,9 +93,10 @@ def clean_patch(p, plate):
     return np.dstack([np.asarray(gen, np.uint8), (alpha * 255).round().astype(np.uint8)])
 
 
-def patron_frame(p, path):
-    """-> (sprite RGBA, dst) of one render, clipped at the occluders, or None."""
-    rgba = np.asarray(Image.open(path).convert("RGBA")).copy()
+def patron_frame(p, src):
+    """-> (sprite RGBA, dst) of one render (a path or a plate-sized RGBA
+    array), clipped at the occluders, or None."""
+    rgba = (np.asarray(Image.open(src).convert("RGBA")) if isinstance(src, Path) else src).copy()
     x0, y0, x1, y1 = p["crop"]
     rgba[y0:y1, x0:x1, 3][front_mask(p, y1 - y0, x1 - x0)] = 0
     rgba[..., 3][rgba[..., 3] < SHADOW_FLOOR] = 0
@@ -105,6 +106,45 @@ def patron_frame(p, path):
     # one atlas at full size (`half_size`: the foreground man, 258 frames of
     # ~350x580 px, needs 4096x25799; the limit is 8192).
     return load_frame(tmp, max_px=1 if p.get("half_size") else None)
+
+
+def glance(rgba, eyes, dx):
+    """The render with what's inside each eye opening nudged `dx` px to
+    screen right: the iris moves between the lids, which stay put. `eyes`:
+    [cx, cy, rx, ry] ellipses, plate px. Each row inside one is resampled
+    with its ends held, so a corner never pulls in skin."""
+    out = rgba.copy()
+    for cx, cy, rx, ry in eyes:
+        for y in range(int(cy - ry), int(np.ceil(cy + ry)) + 1):
+            t = 1.0 - ((y - cy) / ry) ** 2
+            if t <= 0.0:
+                continue
+            x0, x1 = int(np.ceil(cx - rx * t ** 0.5)), int(cx + rx * t ** 0.5)
+            if x1 - x0 < 2:
+                continue
+            xs = np.arange(x0, x1 + 1, dtype=float)
+            for c in range(4):
+                row = rgba[y, x0:x1 + 1, c].astype(float)
+                out[y, x0:x1 + 1, c] = np.interp(xs - dx, xs, row).round()   # clamps at the ends
+    return out
+
+
+def still(name, p, fps):
+    """-> (sprites, slots, period) for a patron frozen at the clip's first
+    frame whose eyes glance now and then (`still`, #578): every slot shows
+    the one render, except each glance's, which show it with the eyes
+    shifted. Eyes jump (saccades), so there are no in-betweens."""
+    s = p["still"]
+    first = json.loads((ROOM.build / name / "pass.json").read_text())["first"]
+    rgba = np.asarray(Image.open(ROOM.build / name / f"{first:04d}.png").convert("RGBA"))
+    rest = patron_frame(p, rgba)
+    period = round(s["period_s"] * fps)
+    shown = [rest] * period
+    for start, hold, direction in s["glances"]:
+        look = patron_frame(p, glance(rgba, s["eyes"], direction * s["shift_px"]))
+        for slot in range(round(start * fps), round((start + hold) * fps)):
+            shown[slot % period] = look
+    return shown, list(range(period)), period
 
 
 def cleaned_plate(name):
@@ -133,6 +173,10 @@ def bake(name):
     # A one-slot loop: slots without a frame draw nothing, so on the patron's
     # loop the painted one would flicker back every other slot.
     write_sheet(ROOM.out, f"{name}_patch", [(sprite, dst)], [0], CANVAS, fps, 1, 0)
+    if "still" in p:
+        sprites, slots, frames = still(name, p, fps)
+        write_sheet(ROOM.out, name, sprites, slots, CANVAS, fps, frames, int(p["phase"]))
+        return
     sprites, slots = [], []
     for path in sorted((ROOM.build / name).glob("[0-9]*.png")):
         baked = patron_frame(p, path)

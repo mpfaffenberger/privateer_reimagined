@@ -379,10 +379,11 @@ def render(room_file, name, frames, samples, save_blend=None):
     if frames:
         first, last, *step = (int(v) for v in frames.split(":"))
         todo = range(first, last + 1, step[0] if step else 1)
-    else:
+    else:                                        # a full pass: no stale frames
         for old in out.glob("*.png"):
             old.unlink()
-        todo = range(f0, f1 + 1)
+        # still: frozen at the first frame; the bake makes the glances.
+        todo = range(f0, f0 + 1) if "still" in ROOM.patrons[name] else range(f0, f1 + 1)
     for f in todo:
         sc.frame_set(f)
         sc.render.filepath = str(out / f"{f:04d}.png")

@@ -212,8 +212,19 @@ def write_sheet(out_dir, name, sprites, slots, canvas, fps, period_frames, offse
                 **extra):
     """Pack (sprite RGBA, dst rect) frames into <name>.png and write the
     <name>.json manifest room_anim_data.h reads. `extra` adds manifest keys
-    (e.g. "under", "anchor")."""
-    sizes = [(s.shape[1], s.shape[0]) for s, _ in sprites]
+    (e.g. "under", "anchor").
+
+    Each distinct sprite is packed once, however many frames show it: a
+    still patron shows one image in almost every slot (#578). Distinct means
+    a distinct array object (callers reuse the object), so all-unique
+    frames pack exactly as they always have."""
+    unique, index, seen = [], [], {}
+    for img, _ in sprites:
+        if id(img) not in seen:
+            seen[id(img)] = len(unique)
+            unique.append(img)
+        index.append(seen[id(img)])
+    sizes = [(s.shape[1], s.shape[0]) for s in unique]
     width = ATLAS_W
     pos, height = shelf_pack(sizes, width)
     while height > MAX_ATLAS_H and width < MAX_ATLAS_W:
@@ -223,9 +234,11 @@ def write_sheet(out_dir, name, sprites, slots, canvas, fps, period_frames, offse
         raise SystemExit(f"{name}: {len(sizes)} sprites need a {width}x{height} atlas, over "
                          f"the {MAX_ATLAS_H} px limit; shorten the pass or shrink frames")
     atlas = np.zeros((height, width, 4), dtype=np.uint8)
-    frames = []
-    for (img, dst), (x, y), slot in zip(sprites, pos, slots):
+    for img, (x, y) in zip(unique, pos):
         atlas[y:y + img.shape[0], x:x + img.shape[1]] = img
+    frames = []
+    for (_, dst), i, slot in zip(sprites, index, slots):
+        (x, y), img = pos[i], unique[i]
         frames.append({"slot": slot, "src": [x, y, img.shape[1], img.shape[0]], "dst": dst})
 
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -234,7 +247,7 @@ def write_sheet(out_dir, name, sprites, slots, canvas, fps, period_frames, offse
                 "period_frames": period_frames, "offset_frames": offset_frames,
                 **extra, "frames": frames}
     (out_dir / f"{name}.json").write_text(json.dumps(manifest, separators=(",", ":")) + "\n")
-    print(f"{name}: {len(frames)} sprites, atlas {width}x{height}, "
+    print(f"{name}: {len(unique)} sprites, atlas {width}x{height}, "
           f"loop {period_frames} frames @ {fps:g} fps")
 
 

@@ -3,7 +3,7 @@
     "Mercenaries' Guild 3D patron (#578): the woman behind the counter. Room file for render_patrons.py / bake_patrons.py (format: patron_room.py; patron keys: mining/bar_patrons.json's _doc).",
     "mercguild_bg.png is byte-identical in every base, so this renders against mining's copy and bakes once to assets/shared_rooms/mercguild/; each base's concourse.json names the layers as ../../shared_rooms/mercguild/<layer>.json.",
     "camera: one-point, measured (build-time LSD + RANSAC over the receding ceiling, wall and floor edges): the vanishing point is (856, 330), on her eyes, right of the plate centre with the counter square-on, so a shifted camera (vp_x), not a yawed one. f and eye come from her and the counter as the ruler: f ~ 1000 from her head size, eye 1.43 m from her head just above the horizon while leaning. Her depth comes from her arms: the painted upper arms are vertical (shoulders x 767/935 right above elbows 785/925, her weight on the counter), and a vertical 0.29 m upper arm spanning y 385-520 puts her at ~2.15 m (her face size agrees; the first guess from it, 2.7 m, left the arms too short to reach the counter). Her elbows on the counter top at 2.12 m (y 525) put it at 1.02 m, and its back/front edges (y 517/577) at 2.21/1.67 m deep, 1.65 m wide. Her hands are in front of her chest, at 2.0 m.",
-    "Her clip is Scheming_Hand_Rub (318): of the three idles tried it's the only one square to the camera (Idle stands 38 deg turned and looks 81 deg away mid-loop; Idle_02 is 16 deg turned) and its hands rub together at her chest, which is her painted fiddling. Its arms hang with the forearms level, so the upper arms aim at the painted elbows on the counter and the forearms at the painted wrists (where a 0.26 m forearm from the elbow lands: aimed at the hands, forearm + hand overshot to her forehead); the hands stay free, so the rub still plays. lean damps its mid-loop hunch (with bend it put her face on the counter), and hip_sway its hips' ~13 cm walk to screen right (it lifted her elbows off the counter): Mike found a lean-in of 12 px right / 24 px down far too much: at 0.06 / 0.03 her crown drifts <= 3 px right and 4 px down, which is breathing. bend folds her at the hips over the counter (pitch would tip her rigidly from the feet and leave her waist above it), and head_up raises her head back from the bend's full tilt to the painted downward gaze.",
+    "Her clip is Scheming_Hand_Rub (318): of the three idles tried it's the only one square to the camera (Idle stands 38 deg turned and looks 81 deg away mid-loop; Idle_02 is 16 deg turned) and its hands rub together at her chest, which is her painted fiddling. Its arms hang with the forearms level, so the upper arms aim at the painted elbows on the counter and the forearms at the painted wrists (where a 0.26 m forearm from the elbow lands: aimed at the hands, forearm + hand overshot to her forehead); the hands' aims pinch her fingers towards the painted object. She is still (Mike's review: even a damped idle was far too much motion): frozen at the clip's first frame, only her eyes glance left and then right once in a 10 s loop. The rig has no eye bones and her texture's UVs are auto-unwrapped confetti, so the glances are made in screen space by the bake (bake_patrons.glance): inside each eye opening (still.eyes: [cx, cy, rx, ry] ellipses, plate px, measured at 12x) the pixels shift shift_px sideways, lids and face untouched. still.glances: [start s, hold s, -1 = screen left / 1 = right]. bend folds her at the hips over the counter (pitch would tip her rigidly from the feet and leave her waist above it), and head_up raises her head back from the bend's full tilt to the painted downward gaze.",
     "room.lights: she's lit warm and frontal, with no hard shadows (the bar's high hard key cast her hair's shadow across her face): a big soft key and a warm fill, not the bar's blue counter glow. Tuned to the painted woman's brightness (chest/arm lum 129 vs 112 at 170/120 W) once her model was matte (prep_character.fix_materials).",
     "front: the counter top in front of her elbows. It's glossy and carries her painted reflection, which a transparent render can't make: it's never patched, so the reflection stays."
   ],
@@ -24,8 +24,12 @@
     "bend": 25.0,
     "head_up": 22.0,
     "saturation": 1.15,
-    "lean": 0.06,
-    "hip_sway": 0.03,
+    "still": {
+      "period_s": 10.0,
+      "glances": [[4.0, 1.0, -1], [7.2, 0.8, 1]],
+      "shift_px": 2.0,
+      "eyes": [[831.5, 365.5, 9.0, 3.5], [860.5, 363.0, 7.5, 3.5]]
+    },
     "aim": {
       "RightArm": [785, 2.12, 1.06],
       "LeftArm": [925, 2.12, 1.06],
