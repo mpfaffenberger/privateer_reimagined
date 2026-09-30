@@ -40,6 +40,7 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `pleasure/` | | Pleasure: concourse skylight stars, marquee chase, neon (#594), landing pad transport (#595) |
 | `pirate/` | | Pirate base concourse: lanterns, pirates, a grav pod (#586) |
 | `newdetroit/` | | New Detroit concourse: walkers on the platform and plaza (#590) |
+| `oxford/` | | Oxford concourse: air-cars in the garden square (#592) |
 
 ## New Con concourse
 
@@ -738,6 +739,69 @@ fold, a sole kept near level, opposing arm swing, pelvis sway and drop.
   him (the bake's maths assumes nothing clips), and the proxy deck's mirror
   images of the lamps only added noise, printed as coloured specks. They
   cancel in A - B anyway; the painting has its own reflections.
+
+## Oxford concourse (#592)
+
+The university town's garden square, seen from high up. Two of the original
+game's air-cars (`ships_wcnews/aircar.obj`) glide down its streets: an
+oxblood one down the lamp-lit avenue toward the camera, slipping past the
+striped market tents, and a racing-green one along the banner street, out
+from under a roof, behind the clock tower and off to the right.
+
+```sh
+uv run tools/room_anim/oxford/check_camera.py          # street grid + routes over the plate
+blender --background --factory-startup \
+    --python tools/room_anim/oxford/render_layers.py -- --check --layer all
+uv run tools/room_anim/bake_layer.py --base oxford --all
+uv run tools/room_anim/composite_preview.py --base oxford --seconds 48 \
+    --out build/room_anim/oxford/preview.mp4
+```
+
+- **Camera from the lines.** The plate is a long-lens, three-point view
+  looking ~34 deg down, streets at ~45 deg to it: nothing to eyeball. OpenCV's
+  line-segment detector finds the street edges and roof lines in two
+  orthogonal families plus the tower's verticals, and a least-squares fit of
+  focal length, pitch and roll to all three families' vanishing points
+  (principal point at the centre) leaves ~0.4 deg median residual:
+  f = 2895 px, pitch 34.4 deg, roll -0.4 deg. Scale: the street lamps (~4 m)
+  and the tower's arches (~4.5 m) both give an eye 80 m up. The fit lives in
+  `camera_match.py`, pure stdlib, so the Blender camera and uv scripts share
+  it; `render_layers.py --check` holds Blender's projection to it (< 0.5 px).
+- **Routes in a street frame.** Resampling the plate onto the street plane
+  (u along one street direction, v the other) gives a top-down map where the
+  flower beds come out as ~20 m squares, a check on the fit, and the routes
+  (`routes.json`) are read straight off it in metres.
+- **Painted silhouettes, not 3D fits, for occluders.** A 3D tent fitted from
+  its eave corners needs an eave height, which was a guess: the car showed
+  over the painted canopies. A grid-aligned tower box is seen corner-on
+  (190 px wide to the painted spire's 125). Instead each occluder is traced
+  on the plate and stood, camera-facing, at the view depth of its footprint
+  (`scene.silhouette()`): anything farther is hidden exactly where the paint
+  is. They're camera-only, so they cast no phantom shadows.
+- **The air-car's look.** Its stock textures (low-res gold on everything)
+  smear into an orange blob at 60-90 px, so every material slot gets a clean
+  shader; from above the canopy dome is most of the car, and in glossy paint
+  it catches the lamps as it passes (as dark glass it read as a hole). Light
+  was calibrated against the plate: the rendered empty street is within
+  ~0.75-1.6x of the painted one in linear light (the first pass was 2-8x
+  darker, and the car came out black).
+- **Sharp small heroes.** A car plus its light on the street runs just over
+  `bake_layer`'s half-size threshold, which blurred it; `"max_px": null` in a
+  layer's `layers.json` entry keeps every frame full size (atlas 4096 wide,
+  like the bar patrons').
+- **They never crash.** The routes cross, so the loops are locked (48 s is
+  twice 24 s) with offsets that put the two cars at the crossing 12 s apart
+  every time; `test_room_anim` checks the lock.
+
+| `oxford/` file | runs in | what |
+|---|---|---|
+| `camera_match.py` | both | the fitted camera and the street frame, pure math |
+| `check_camera.py` | uv | street grid, lamp posts and routes over the plate |
+| `scene.py` | Blender | camera, street deck + beds, silhouette holdouts, lights |
+| `actors.py` | Blender | the air-car (game mesh, clean shaders, lamps) and its drive |
+| `render_layers.py` | Blender | one layer per route; `--check` camera vs `camera_match` |
+| `routes.json` | - | each car's route, hover, speed and paint |
+| `layers.json` | - | loop period, phase, `max_px` |
 
 ## 3D patrons in any room (#577)
 

@@ -1,0 +1,11 @@
+{
+  "_doc": "Traffic routes in camera_match's street frame (u down-right, v up-right on screen; metres), read off the rectified plate. Each runs from off-frame to off-frame. hover = underside height (m), speed m/s, paint = actors.PAINTS key.",
+  "aircar_avenue": {
+    "_why": "Down the lamp-lit avenue toward the camera, between the central flower bed (u 20) and the market tents (u 23.5), which hide it as it passes.",
+    "uv": [[21.0, 58.0], [21.0, -20.0]], "hover": 0.6, "speed": 7.0, "paint": "oxblood"
+  },
+  "aircar_top": {
+    "_why": "Along the banner street in front of the college, out from under the roof at the top edge, behind the clock tower, and off to the right. Mid-street (v 50.5), behind the lamp at the avenue crossing.",
+    "uv": [[-60.0, 50.5], [30.0, 50.5]], "hover": 0.6, "speed": 7.5, "paint": "racing_green"
+  }
+}
