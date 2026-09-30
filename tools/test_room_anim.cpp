@@ -392,38 +392,39 @@ void cross_dir_layer_paths() {
 
 // Rooms whose painting every base shares, animated once in
 // assets/shared_rooms/<room>/ (#577).
-const std::vector<std::string> kSharedRooms = {"mercguild"};
+const std::vector<std::string> kSharedRooms = {"mercguild", "merchguild"};
 
-// #578: the Mercenaries' Guild woman. Every base shows the same painting and
-// names the same two shared layers: her clean-plate patch, then her idle.
-void shipped_mercguild() {
-    std::vector<std::string> first;
+// A shared room (#577): every base shows the same painting and names exactly
+// `layers` (each <name>.json under assets/shared_rooms/<room>/), in order;
+// they resolve, and the first, the clean-plate patch, is always on screen.
+void shipped_shared_room(const std::string& room, const std::vector<std::string>& names) {
+    std::vector<std::string> want;
+    for (const std::string& n : names)
+        want.push_back("../../shared_rooms/" + room + "/" + n + ".json");
     int bases = 0;
     for (const auto& entry : std::filesystem::directory_iterator("assets/concourse")) {
         if (!entry.is_directory()) continue;
         const std::string dir = entry.path().generic_string() + "/";
         room_anim::RoomAnimDef def;
-        room_anim::parse_room_anim(json::parse_file(dir + "concourse.json")["rooms"]["mercguild"],
-                                   def);
-        const std::string base = entry.path().filename().string();
-        check(def.layers.size() == 2 &&
-                  def.layers[0] == "../../shared_rooms/mercguild/merc_woman_patch.json" &&
-                  def.layers[1] == "../../shared_rooms/mercguild/merc_woman.json",
-              base + " mercguild: her patch, then her idle, from the shared bake");
-        if (bases++ == 0) {
-            first = def.layers;
-            check_layers(dir, def.layers);   // one base resolves them; the rest match it
-        }
-        check(def.layers == first, "  " + base + " names the same layers as every base");
+        room_anim::parse_room_anim(json::parse_file(dir + "concourse.json")["rooms"][room], def);
+        check(def.layers == want,
+              entry.path().filename().string() + " " + room + ": the shared layers, in order");
+        if (bases++ == 0) check_layers(dir, def.layers);   // one resolves them; all match
     }
-    check(bases == 9, "all nine bases checked");
+    check(bases == 9, "  all nine bases checked");
     room_anim::SpriteSheet patch;
     std::string err;
     check(room_anim::parse_sprite_sheet(
-              json::parse_file("assets/shared_rooms/mercguild/merc_woman_patch.json"), patch,
-              err) &&
+              json::parse_file("assets/shared_rooms/" + room + "/" + names[0] + ".json"),
+              patch, err) &&
               patch.frames.size() == 1 && patch.period == 1,
-          "  her patch is one frame on a one-slot loop (always on screen)");
+          "  " + names[0] + " is one frame on a one-slot loop (always on screen)");
+}
+
+// #578: the Mercenaries' Guild woman: her clean-plate patch, then her idle.
+void shipped_mercguild() {
+    shipped_shared_room("mercguild", {"merc_woman_patch", "merc_woman"});
+    std::string err;
     // Mike's review: she holds one pose; only small things move (her
     // fingers at her nails, her eyes, a little smile). So no frame's sprite
     // lands more than a few px from the rest frame's, and the distinct
@@ -444,6 +445,26 @@ void shipped_mercguild() {
               std::to_string(static_cast<int>(drift)) + " px)");
     check(ok && srcs.size() <= 64,
           "  her small moves are few images (" + std::to_string(srcs.size()) + ")");
+}
+
+// #579: the Merchants' Guild man, smoking: his patch, his loop (a drag on
+// his cigar), then the smoke he exhales, drawn over him. He's on screen in
+// every slot; the smoke comes and goes (slots without a frame draw nothing).
+void shipped_merchguild() {
+    shipped_shared_room("merchguild", {"merch_man_patch", "merch_man", "merch_man_smoke"});
+    room_anim::SpriteSheet man, smoke;
+    std::string err;
+    const std::string dir = "assets/shared_rooms/merchguild/";
+    const bool ok = room_anim::parse_sprite_sheet(json::parse_file(dir + "merch_man.json"), man,
+                                                  err) &&
+                    room_anim::parse_sprite_sheet(json::parse_file(dir + "merch_man_smoke.json"),
+                                                  smoke, err);
+    check(ok && man.frames.size() == static_cast<size_t>(man.period),
+          "  he's drawn in every slot of his loop");
+    check(ok && !smoke.frames.empty() && smoke.frames.size() < static_cast<size_t>(smoke.period) &&
+              smoke.period == man.period,
+          "  his smoke comes and goes on his loop (" + std::to_string(smoke.frames.size()) + "/" +
+              std::to_string(smoke.period) + " slots)");
 }
 
 void other_archetypes_static() {
@@ -483,6 +504,7 @@ int main() {
     shipped_newcon_hangar();
     cross_dir_layer_paths();
     shipped_mercguild();
+    shipped_merchguild();
     other_archetypes_static();
     std::printf("\n%s\n", failures == 0 ? "ALL PASS" : "FAILURES DETECTED");
     return failures == 0 ? 0 : 1;

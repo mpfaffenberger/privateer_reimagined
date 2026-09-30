@@ -20,6 +20,11 @@ The room file's `still` block (plate px, seconds):
     smile      {corners: [[x, y]], lift_px, widen_px, lids: [[x, y]], lid_px,
                 sigma_px, at: [[start, rise, hold, fall]]}
 
+    smoke      {puffs: [{at, from: [x, y]}], particles, emit_s, life_s,
+                velocity: [vx, vy] px/s, rise_px_s, drift_px_s, wobble_px,
+                radius_px: [start, end], alpha, color, seed}: exhaled
+               smoke (the merchant, #579), its own layer over the patron
+
 Every slot shows one composition of (fidget frame, glance, smile level);
 each distinct one is built once and packed once (write_sheet).
 """
@@ -79,6 +84,59 @@ def smile(rgba, spec, k):
     return out
 
 
+def smoke(spec, fps, period):
+    """-> (sprites, slots): puffs of smoke, as (sprite, dst) frames on the
+    loop (slots without smoke draw nothing). Each puff is `particles` soft
+    Gaussian splats born over emit_s at `from`: they leave at `velocity`
+    (slowing), rise and drift, grow and fade over life_s. Seeded, so a bake
+    is reproducible. Straight alpha: the colour is flat, the alpha is the
+    smoke."""
+    rng = np.random.default_rng(spec["seed"])
+    life, (r0, r1) = spec["life_s"], spec["radius_px"]
+    parts = []              # (birth s, x0, y0, vx, vy, alpha scale, sway phase, sway Hz)
+    for puff in spec["puffs"]:
+        for _ in range(spec["particles"]):
+            vx, vy = np.array(spec["velocity"]) * rng.uniform(0.6, 1.4, 2)
+            parts.append((puff["at"] + rng.uniform(0, spec["emit_s"]), *puff["from"],
+                          vx, vy, rng.uniform(0.5, 1.0), rng.uniform(0, 2 * np.pi),
+                          rng.uniform(0.3, 0.8)))
+    sprites, slots = [], []
+    for slot in range(period):
+        t = slot / fps
+        blobs = []
+        for born, x0, y0, vx, vy, scale, phase, hz in parts:
+            age = (t - born) % (period / fps)        # wraps: a puff may cross the loop
+            if age >= life:
+                continue
+            u = age / life
+            ease = 1.0 - np.exp(-age / 0.5)          # the exhale slows down
+            # Each splat sways on its own phase, more as it rises: wisps, not a lump.
+            sway = spec.get("wobble_px", 0.0) * u * np.sin(2 * np.pi * hz * age + phase)
+            x = x0 + vx * 0.5 * ease + spec["drift_px_s"] * age + sway
+            y = y0 + vy * 0.5 * ease - spec["rise_px_s"] * age
+            fade = min(1.0, age / 0.15) * (1.0 - u) ** 2
+            blobs.append((x, y, r0 + (r1 - r0) * u, spec["alpha"] * scale * fade))
+        if not blobs:
+            continue
+        pad = 3 * max(r for _, _, r, _ in blobs)
+        bx0 = int(min(x for x, _, _, _ in blobs) - pad)
+        by0 = int(min(y for _, y, _, _ in blobs) - pad)
+        bx1 = int(max(x for x, _, _, _ in blobs) + pad) + 1
+        by1 = int(max(y for _, y, _, _ in blobs) + pad) + 1
+        yy, xx = np.mgrid[by0:by1, bx0:bx1].astype(float)
+        clear = np.ones_like(xx)                     # 1 - alpha, splat by splat
+        for x, y, r, a in blobs:
+            clear *= 1.0 - a * np.exp(-((xx - x) ** 2 + (yy - y) ** 2) / (2 * r * r))
+        alpha = np.clip((1.0 - clear) * 255, 0, 255).round().astype(np.uint8)
+        if alpha.max() < 3:
+            continue
+        rgba = np.zeros((*alpha.shape, 4), np.uint8)
+        rgba[..., :3], rgba[..., 3] = spec["color"], alpha
+        sprites.append((rgba, [bx0, by0, bx1 - bx0, by1 - by0]))
+        slots.append(slot)
+    return sprites, slots
+
+
 def _smile_level(t, windows):
     """0..1 at time `t`: eased up over rise, held, eased down over fall."""
     for start, rise, hold, fall in windows:
@@ -97,8 +155,9 @@ def _smile_level(t, windows):
 
 def timeline(still, fps, frames, bake):
     """-> (sprites, slots, period). `frames`: the rendered fidget cycle
-    (plate-sized RGBA; frames[0] is the rest pose). `bake`: RGBA ->
-    (sprite, dst), the patron's clip-and-trim."""
+    (plate-sized RGBA; frames[0] is the rest pose; bit-identical frames
+    may be one array). `bake`: RGBA -> (sprite, dst), the patron's
+    clip-and-trim."""
     period = round(still["period_s"] * fps)
     cache, shown = {}, []
     for slot in range(period):
@@ -109,7 +168,7 @@ def timeline(still, fps, frames, bake):
         look = next((d for start, hold, d in still.get("glances", [])
                      if start <= t < start + hold), 0)
         k = _smile_level(t, still["smile"]["at"]) if "smile" in still else 0.0
-        key = (pose, look, k)
+        key = (id(frames[pose]), look, k)       # identical frames share an array
         if key not in cache:
             rgba = frames[pose]
             if k:
