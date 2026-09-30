@@ -1,0 +1,6 @@
+{
+  "_doc": "Landing-pad aircar layers (bake_landing.py). Loop timing, seconds: period >= the pass; the rest is empty sky.",
+  "_offset": "The engine adds offset to the clock, so 15 of 17 starts the pass 2 s into the loop.",
+  "aircar_low": { "period": 17.0, "offset": 15.0 },
+  "aircar_high": { "period": 23.0, "offset": 14.0 }
+}

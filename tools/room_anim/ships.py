@@ -30,6 +30,7 @@ FIX_EULER = {
     "aircar": (0.0, 0.0, 180.0),       # yellow ND aircar: tail fins at +Y
     "transprt": (0.0, 0.0, 180.0),     # transport: engine block at +Y
     "trailer": (0.0, 0.0, 180.0),      # cargo pod: sloped, lamp-eyed nose at -Y
+    "nd_airca": (0.0, 0.0, 180.0),     # New Detroit aircar: canopy at -Y, fins + glow +Y
 }
 
 

@@ -349,6 +349,45 @@ void shipped_pleasure_landing() {
           "Pleasure landing keeps its Launch + Concourse hotspots");
 }
 
+// #591: aircars fly past the New Detroit landing pad. One pass for every hull's
+// composite, anchored to each (bake_landing.py registers them to tarsus), and
+// drawn over the plate: they fly in front of the pad, so nothing covers them.
+void shipped_newdetroit_landing() {
+    const std::string dir = "assets/concourse/newdetroit/";
+    room_anim::RoomAnimDef def;
+    room_anim::parse_room_anim(
+        json::parse_file(dir + "concourse.json")["rooms"]["landing"]["composite"], def);
+    check(!def.has_sky && def.layers.size() == 2 && !def.anchors.empty(),
+          "newdetroit landing has its two aircar layers and anchors");
+    check_layers(dir, def.layers);
+    for (const std::string& layer : def.layers) {
+        room_anim::SpriteSheet s;
+        std::string err;
+        check(room_anim::parse_sprite_sheet(json::parse_file(dir + layer), s, err) && !s.under &&
+                  s.anchored,
+              "  " + layer + " flies over the plate, anchored");
+    }
+    // Every hull's composite frames the pad within a few percent of tarsus.
+    const json::Value anchors = json::parse_file(dir + def.anchors);
+    int plates = 0, anchored = 0;
+    for (const auto& entry : std::filesystem::directory_iterator(dir + "landing_ships")) {
+        if (entry.path().extension() != ".png") continue;
+        ++plates;
+        const std::string ship = entry.path().stem().string();
+        float a[3];
+        if (room_anim::read_anchor(anchors, ship, a) && a[0] > 0 && a[0] < 1536 && a[1] > 0 &&
+            a[1] < 1024 && a[2] > 85.0f && a[2] < 115.0f)
+            ++anchored;
+        else
+            check(false, "  newdetroit landing anchor for " + ship);
+    }
+    check(plates >= 18 && anchored == plates, "every newdetroit landing composite is anchored");
+    const json::Value links = json::parse_file(dir + "links.json")["landing"];
+    check(links.as_array().size() == 3 &&
+              link_rect_is(links, "Launch", 0.225f, 0.31f, 0.29688f, 0.27f),
+          "newdetroit landing keeps its Launch + Concourse hotspots");
+}
+
 // #558: the mining concourse's ore train.
 void shipped_mining() {
     const std::string dir = "assets/concourse/mining/";
@@ -678,6 +717,7 @@ int main() {
     shipped_agricultural_landing();
     shipped_pleasure_landing();
     shipped_pirate_landing();
+    shipped_newdetroit_landing();
     shipped_mining_bar();
     shipped_pleasure();
     shipped_pirate();

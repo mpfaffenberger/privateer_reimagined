@@ -39,7 +39,7 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `agricultural/` | | Agricultural: concourse clouds and aircraft (#582), landing pad sky traffic (#583) |
 | `pleasure/` | | Pleasure: concourse skylight stars, marquee chase, neon (#594), landing pad transport (#595) |
 | `pirate/` | | Pirate base concourse: lanterns, pirates, a grav pod (#586) |
-| `newdetroit/` | | New Detroit concourse: walkers on the platform and plaza (#590) |
+| `newdetroit/` | | New Detroit: concourse walkers on the platform and plaza (#590), aircars past the landing pad (#591) |
 | `oxford/` | | Oxford concourse: air-cars in the garden square (#592) |
 
 ## New Con concourse
@@ -892,6 +892,49 @@ The engine joins the base dir and that path as-is, and the atlas resolves
 next to its manifest. They stay out of `assets/concourse/`, whose every
 subdirectory is treated as a base (archetype walkers, and
 `other_archetypes_static` in `test_room_anim`).
+
+## New Detroit landing pad (#591)
+
+The landing pad is a platform high over a night city, one composite per hull
+(`landing_ships/<hull>.png`). Two aircars, the original game's New Detroit
+aircar (`ships_wcnews/nd_airca.obj`, drive glow emitting), fly past it:
+
+* `aircar_low` crosses right to left over the drop in front of the pad's
+  near rim, close and big (~150 px);
+* `aircar_high` crosses left to right above the far side and the hangar.
+
+| `newdetroit/` file | runs in | what |
+|---|---|---|
+| `render_landing.py` | Blender | camera, lights, the aircar passes (`--layer`, `--frames`) |
+| `bake_landing.py` | uv | registers every composite to tarsus -> `anchors.json`; bakes the passes |
+| `landing_layers.json` | - | loop period and phase |
+
+```sh
+blender --background --factory-startup \
+    --python tools/room_anim/newdetroit/render_landing.py -- --layer all
+uv run tools/room_anim/newdetroit/bake_landing.py --debug build/room_anim/newdetroit/reg.png
+uv run tools/room_anim/composite_preview.py --base newdetroit --room landing --plate tarsus \
+    --seconds 23 --out build/room_anim/newdetroit/landing.mp4
+```
+
+- **In front of everything.** The composites aren't one painting reframed:
+  the pad was rendered from a slightly different camera for each hull and
+  the city painted afresh. So nothing goes *behind* anything painted: the
+  cars fly between the camera and the pad, 20-25 m above its deck, and
+  cover the plate (`under` is false). One pass fits every hull.
+- **Anchored by registration.** Each composite frames the pad up to ~8%
+  smaller or bigger and ~50 px off tarsus's. `bake_landing.py` finds each
+  one's zoom + shift from the hangar block and the near rim only (the
+  parked ship and the city differ on every composite): for every zoom, a
+  phase correlation of the edges gives the shift, and the best-correlating
+  zoom wins. `--debug` shows tarsus red, the composite cyan: grey where they
+  agree. Stiletto's camera also moved (the pad's far-left rim still doubles
+  by ~50 px), which a zoom + shift can't express; its cars are near enough.
+- **Paths from screen targets.** `render_landing.py` places each pass by
+  plate pixel and depth along the view (`_screen_point`), so the numbers in
+  `PASSES` are where the car is seen, not world metres.
+- **Orientation.** `nd_airca`'s canopy is at -Y and its fins and drive glow
+  at +Y, so `ships.FIX_EULER` turns it 180 degrees, like the Galaxy.
 
 ## Adding a layer
 
