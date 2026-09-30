@@ -42,6 +42,7 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `newdetroit/` | | New Detroit: concourse walkers on the platform and plaza (#590), aircars past the landing pad (#591) |
 | `oxford/` | | Oxford: concourse air-cars in the garden square (#592), landing pad departure at dusk (#593) |
 | `refinery/` | | Refinery concourse: stars, ships over the dome, the ore train (#584) |
+| `military/` | | Military base concourse: stars, a fighter pair, the munitions train (#588) |
 
 ## New Con concourse
 
@@ -922,6 +923,69 @@ mining base; the stock yellow glared in this dimmer, browner room.
 | `render_sky.py` | Blender | the ships over the dome, straight alpha |
 | `sky_layers.json` | - | the ships' loop timing |
 
+## Military concourse (#588)
+
+The original game's military concourse drifted stars across its big window
+(the legacy `concourse_stt`/`stb` overlays), flew a fighter pair past it
+(`sh0`) and ran a tug towing a flatbed of munitions down the lane (`car`).
+All three are rebuilt on the #621 repaint: the painting's own stars drifting
+behind the window, two Confed Stilettos (`ships_wcnews/stiletto.obj`)
+crossing beyond it, and the tug (`truck.obj`) towing the hopper (`cart.obj`,
+gunmetal, racked with missiles) out from behind the armoured ramp and down
+the lane at the camera.
+
+```sh
+uv run tools/room_anim/military/bake_sky.py --debug build/room_anim/military/sky_debug.png
+blender --background --factory-startup \
+    --python tools/room_anim/military/render_layers.py -- --check     # camera-match overlay
+blender --background --factory-startup \
+    --python tools/room_anim/military/render_layers.py -- --layer all
+blender --background --factory-startup --python tools/room_anim/military/render_flyby.py
+uv run tools/room_anim/bake_layer.py --base military --all
+uv run tools/room_anim/military/bake_sky.py --layers-only
+uv run tools/room_anim/composite_preview.py --base military --seconds 38 \
+    --out build/room_anim/military/preview.mp4
+```
+
+- **Camera.** One-point, level and unyawed (the window lattice is square to
+  the frame). The walkway's kerb lamps and the lane's orange dashes
+  (least-squares fits) meet at (465, 414), on the window's lower transom,
+  and lens shift puts it there. The middle emblem's ring foreshortens to
+  ~325 x 68 px at y 808, so f = (808 - 414) * 325 / 68 ~ 1880 px; f = 1860
+  px. `--check` draws the kerb, dashes, ramp foot, the emblem's ring and
+  the train's route over the plate.
+- **Scale.** A floor line at X satisfies (x - 465)/(y - 414) = X / eye:
+  dashes 1.256, the lamps along the ramp's foot 1.565. An 8 m eye makes the
+  lane right of the dashes 2.5 m: room for the 2.2 m hopper, whose missile
+  rack clears the ramp-foot gutter 1.1 m right of the dashes.
+- **Round the corner.** The train enters from behind the ramp's far end (a
+  holdout box whose face is the ramp's foot). Tug and hopper follow one
+  filleted `Route` by arc length, so the hopper tracks the tug through the
+  bend; headings are unwrapped, or motion blur spins the tug at the +-180 deg
+  flip.
+- **`trailer.obj` is a wheelless pod.** On the lane it floated like a
+  capsule; the wheeled hopper with a procedural missile rack reads as the
+  legacy munitions flatbed.
+- **Sky.** As on New Con, the drifting tiles draw from the painting's own
+  stars (`sky.PaintedStars`). The mask tests the star-removed plate: tested
+  raw, every painted star next to the lattice punched a notch into it.
+- **Fighters** are a straight-alpha pass from the same plate camera, baked
+  by `bake_sky.py --layers-only` (timing in `sky_layers.json`, since
+  `bake_layer.py --all` reads `layers.json`) as an `under` layer: the
+  lattice and pillar occlude them. The pair flies through the middle row of
+  panes and leaves off the right edge. The pass holds its last pose, so a
+  pair stopping on the plate would park the trailing wingman in the slot
+  beside the pillar.
+
+| `military/` file | runs in | what |
+|---|---|---|
+| `scene.py` | Blender | camera match, lane deck, ramp holdout, lights |
+| `actors.py` | Blender | tug + missile hopper, `Route` (filleted path by arc length) |
+| `render_layers.py` | Blender | the munitions-train layer; `--check` overlay |
+| `render_flyby.py` | Blender | the Stilettos beyond the window (straight alpha) |
+| `bake_sky.py` | uv | window mask, fill, star tiles; `--layers-only` bakes the flyby |
+| `layers.json` / `sky_layers.json` | - | loop timing (plate-aware / sky layers) |
+
 ## 3D patrons in any room (#577)
 
 The bar's patron pipeline works for any room with painted people in it. A
@@ -1009,8 +1073,7 @@ all nine) bake once to `assets/shared_rooms/<room>/`, and each base's
 `concourse.json` names the layers as `../../shared_rooms/<room>/<layer>.json`.
 The engine joins the base dir and that path as-is, and the atlas resolves
 next to its manifest. They stay out of `assets/concourse/`, whose every
-subdirectory is treated as a base (archetype walkers, and
-`other_archetypes_static` in `test_room_anim`).
+subdirectory is treated as a base (archetype walkers).
 
 ## New Detroit landing pad (#591)
 

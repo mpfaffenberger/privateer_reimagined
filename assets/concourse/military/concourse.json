@@ -89,6 +89,18 @@
           "real_frames": 32
         }
       ],
+      "sky": {
+        "mask": "anim/sky_mask.png",
+        "fill": "anim/sky_fill.png",
+        "stars": [
+          { "tile": "anim/stars_far.png", "velocity": [-7.0, 1.2] },
+          { "tile": "anim/stars_near.png", "velocity": [-11.0, 1.9] }
+        ]
+      },
+      "layers": [
+        "anim/fighter_pair.json",
+        "anim/munitions_train.json"
+      ],
       "links": [
         {
           "target": "LandingPad",

@@ -1,0 +1,4 @@
+{
+  "_doc": "Per-layer loop timing, seconds (bake_layer.py --base military). period >= the pass; the rest is a gap.",
+  "munitions_train": { "period": 38.0, "offset": 0.0 }
+}

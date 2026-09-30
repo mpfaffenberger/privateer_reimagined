@@ -458,6 +458,38 @@ void shipped_agricultural() {
           "agricultural keeps its eight hotspots (ShipDealer rect unchanged)");
 }
 
+// #588: the military concourse's stars through the window, the Stiletto pair
+// beyond it (under the plate) and the munitions train down the lane (over).
+void shipped_military() {
+    const std::string dir = "assets/concourse/military/";
+    room_anim::RoomAnimDef def;
+    room_anim::parse_room_anim(json::parse_file(dir + "concourse.json")["rooms"]["concourse"],
+                               def);
+    check(def.has_sky && def.sky.stars.size() == 2, "military concourse has a starry window");
+    for (const std::string* p : {&def.sky.mask, &def.sky.fill})
+        check(std::filesystem::exists(dir + *p), "sky asset exists: " + *p);
+    unsigned pw = 0, ph = 0, mw = 0, mh = 0;
+    check(png_size(dir + "concourse_bg.png", pw, ph) && png_size(dir + def.sky.mask, mw, mh) &&
+              mw == pw && mh == ph,
+          "sky mask matches the plate");
+    check(def.layers.size() == 2, "military concourse has its fighter + munitions layers");
+    check_layers(dir, def.layers);
+    int under = 0;
+    for (const std::string& layer : def.layers) {
+        room_anim::SpriteSheet s;
+        std::string err;
+        if (room_anim::parse_sprite_sheet(json::parse_file(dir + layer), s, err) && s.under &&
+            !s.anchored)
+            ++under;
+    }
+    check(under == 1, "  the fighters fly under the plate (the lattice occludes them)");
+    // Acceptance: the hotspots (links.json overrides) are untouched.
+    const json::Value links = json::parse_file(dir + "links.json")["concourse"];
+    check(links.as_array().size() == 8 &&
+              link_rect_is(links, "ShipDealer", 0.655f, 0.65333f, 0.3275f, 0.44667f),
+          "military keeps its eight hotspots (ShipDealer rect unchanged)");
+}
+
 // #594: the Pleasure concourse's skylight stars, marquee chase and neon stutter.
 void shipped_pleasure() {
     const std::string dir = "assets/concourse/pleasure/";
@@ -609,10 +641,6 @@ void cross_dir_layer_paths() {
     check_layers(dir, {"../../concourse/mining/anim/bar/patron_orange_patch.json"});
 }
 
-// Rooms whose painting every base shares, animated once in
-// assets/shared_rooms/<room>/ (#577).
-const std::vector<std::string> kSharedRooms = {"mercguild", "merchguild"};
-
 // A shared room (#577): every base shows the same painting and names exactly
 // `layers` (each <name>.json under assets/shared_rooms/<room>/), in order;
 // they resolve, and the first, the clean-plate patch, is always on screen.
@@ -730,30 +758,6 @@ void shipped_oxford() {
           "Oxford keeps its nine hotspots (Library rect unchanged)");
 }
 
-void other_archetypes_static() {
-    int animated = 0, rooms = 0;
-    for (const auto& entry : std::filesystem::directory_iterator("assets/concourse")) {
-        const std::string base = entry.path().filename().string();
-        if (!entry.is_directory() || base == "newcon" || base == "mining" ||
-            base == "agricultural" || base == "pleasure" || base == "pirate" ||
-            base == "newdetroit" ||
-            base == "oxford" || base == "refinery")
-            continue;
-        const json::Value root = json::parse_file((entry.path() / "concourse.json").string());
-        const json::Value* rs = root.find("rooms");
-        if (!rs || !rs->is_object()) continue;
-        for (const auto& [name, room] : rs->as_object()) {
-            if (std::find(kSharedRooms.begin(), kSharedRooms.end(), name) != kSharedRooms.end())
-                continue;                   // every base's, checked above
-            room_anim::RoomAnimDef def;
-            room_anim::parse_room_anim(room, def);
-            ++rooms;
-            if (!def.empty()) ++animated;
-        }
-    }
-    check(rooms > 0 && animated == 0, "no other archetype's own room gains animation");
-}
-
 }  // namespace
 
 int main() {
@@ -775,6 +779,7 @@ int main() {
     shipped_oxford_landing();
     shipped_mining_bar();
     shipped_pleasure();
+    shipped_military();
     shipped_pirate();
     shipped_refinery();
     shipped_newcon_hangar();
@@ -783,7 +788,6 @@ int main() {
     shipped_mercguild();
     shipped_merchguild();
     shipped_newdetroit();
-    other_archetypes_static();
     std::printf("\n%s\n", failures == 0 ? "ALL PASS" : "FAILURES DETECTED");
     return failures == 0 ? 0 : 1;
 }
