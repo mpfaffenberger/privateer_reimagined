@@ -21,7 +21,8 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `bake_layer.py` | uv | plate-aware sprite encoding + atlas packing (`--base`) |
 | `sky.py` | uv | star removal, mask solidify, sky fill, painted-star stats, star tiles |
 | `composite_preview.py` | uv | engine-faithful preview from `concourse.json` (`--base`) |
-| `stage.py` | Blender | render settings, boxes, materials, lights, straight passes |
+| `stage.py` | Blender | render settings, boxes, materials, lights, straight/polyline paths |
+| `walkers.py` | Blender | pedestrian proxies and their walk (New Con, pirate) |
 | `patron_room.py` | both | loads a room file: camera, lights, paths, patrons (#577) |
 | `render_patrons.py` | Blender | a room's 3D patrons, camera-matched (`--room`, `--patron`) |
 | `bake_patrons.py` | uv | clean-plate patch + patron sheet each (`--room`); `--preview` crops |
@@ -35,6 +36,7 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `mining/` | | Mining base concourse: the ore train (#558) |
 | `agricultural/` | | Agricultural: concourse clouds and aircraft (#582), landing pad sky traffic (#583) |
 | `pleasure/` | | Pleasure: concourse skylight stars, marquee chase, neon (#594), landing pad transport (#595) |
+| `pirate/` | | Pirate base concourse: lanterns, pirates, a grav pod (#586) |
 
 ## New Con concourse
 
@@ -64,7 +66,7 @@ source.
 | `newcon/` file | runs in | what |
 |---|---|---|
 | `scene.py` | Blender | camera match, proxy decks, holdout occluders, lights |
-| `actors.py` | Blender | procedural hover-car and pedestrian proxies + animation |
+| `actors.py` | Blender | procedural hover-car proxy; pedestrians come from `../walkers.py` |
 | `render_layers.py` | Blender | layer definitions |
 | `layers.json` | - | per-layer loop period and phase |
 | `bake_sky.py` | uv | window polygons -> sky mask, fill, star tiles |
@@ -581,6 +583,62 @@ uv run tools/room_anim/composite_preview.py --base pleasure --room landing --pla
   from horizon-relative screen targets (230 px above at x 900, 110 px above
   at x 250) at a 500 m altitude. It's drawn under the plate, so each
   composite's own block, towers and parked ship occlude it.
+
+## Pirate concourse (#586)
+
+A smugglers' rock tunnel: warm cage lanterns down the left wall, a cold wash
+across the metal floor, a fog-filled hall through the far arch and a side
+bay off the right wall behind a rock pillar. Its lanterns flicker, pirates
+cross between the far hall and the bay, and a grav pod (the game's
+`ships_wcnews/trailer.obj` cargo pod, grimed, on a blue hover glow with a red
+strobe) floats out of the bay and off into the hall.
+
+```sh
+blender --background --factory-startup \
+    --python tools/room_anim/pirate/render_layers.py -- --check      # camera-match overlay
+blender --background --factory-startup \
+    --python tools/room_anim/pirate/render_layers.py -- --layer all
+uv run tools/room_anim/bake_layer.py --base pirate --all
+uv run tools/room_anim/pirate/bake_lanterns.py
+uv run tools/room_anim/composite_preview.py --base pirate --seconds 46 \
+    --out build/room_anim/pirate/preview.mp4
+```
+
+**Camera.** One-point, level. The left wall's foot and the right kerb (the
+floor's lit edge strip) meet at (540, 430); the ceiling pipes converge
+further right (~630, 397), because the painter's tunnel bends, and the floor
+is what the actors touch. Eye height 2.7 m from the painted drums (0.9 m,
+about a third of their below-horizon distance tall). The focal length (1024
+px) hardly matters here: with a level camera, floor positions and upright
+sizes follow from the horizon and the eye height alone
+(`X = (px - vx) * eye / (py - hy)`); f only sets depth, i.e. how long things
+take to cross. `--check` puts the floor edges, 5 m cross lines and posts on
+the arch legs, pillar and drums over the plate.
+
+**Where actors come and go.** The tunnel has no side doors big enough, so
+everyone enters and leaves behind painted things, held out in every pass:
+the far arch's legs (32.5 m out), the rock pillar in front of the side bay
+(16.3 m) and the green drums. The pod stays 20 m+ out: nearer the camera the
+game mesh's facets show and it outshone the painting.
+
+**Lanterns** are 2D (`bake_lanterns.py`): a flame only changes how bright the
+painting already is around it. The plate is scaled in linear light by
+`1 + (m(t) - 1) * g`, g a Gaussian round the lantern and m a seamless wobble
+with the odd gutter, then `bake_layer.encode()` makes each frame a
+minimal-alpha sprite over the plate.
+
+| `pirate/` file | runs in | what |
+|---|---|---|
+| `scene.py` | Blender | camera match, deck, holdouts (arch legs, pillar, drums), lights |
+| `actors.py` | Blender | the grav pod (game mesh) and the pirates' looks |
+| `render_layers.py` | Blender | pod + pirate layers; `--check` overlay |
+| `layers.json` | - | loop period and phase |
+| `bake_lanterns.py` | uv | lantern flicker sheets, straight from the plate |
+
+Shared walker proxies (`build_walker`, `animate_walk_path`: a polyline
+walk that turns through corners) live in `walkers.py`; `stage.animate_path()`
+moves anything along a polyline, and `stage.overlay_on_plate()` makes a
+`--check` image.
 
 ## 3D patrons in any room (#577)
 

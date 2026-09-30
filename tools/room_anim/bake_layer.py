@@ -50,6 +50,7 @@ MAX_ATLAS_W = 4096
 # (the preview) will happily read a 1024x22586 atlas the engine can't load.
 MAX_ATLAS_H = 8192
 PAD = 1
+BORDER_INSET = 8        # px of each render border's edge the bake ignores (inset_border)
 
 
 def load_rgba(path):
@@ -130,10 +131,33 @@ def load_frame(path, max_px=BIG_FRAME_PX):
     return sprite, dst
 
 
+def inset_border(rendered, px=BORDER_INSET):
+    """Drop the outer `px` of a render border, except along the frame's own
+    edges. The denoiser sees nothing past the border, so its edge rows
+    differ from the full-frame empty pass by up to ~30 LSB: a faint line
+    along the border once turned into light (#586). Borders are padded well
+    past the actor, so nothing real lives there."""
+    box = bbox(rendered)
+    if box is None:
+        return rendered
+    x0, y0, x1, y1 = box
+    h, w = rendered.shape
+    out = rendered.copy()
+    if x0 > 0:
+        out[:, x0:x0 + px] = False
+    if y0 > 0:
+        out[y0:y0 + px] = False
+    if x1 < w:
+        out[:, x1 - px:x1] = False
+    if y1 < h:
+        out[y1 - px:y1] = False
+    return out
+
+
 def bake_frame(plate, empty, beauty_path, mask_path, gain):
     """One rendered frame -> (sprite RGBA, dst [x,y,w,h] in plate px) or None."""
     beauty = load_rgba(beauty_path)
-    rendered = beauty[..., 3] > 0.5
+    rendered = inset_border(beauty[..., 3] > 0.5)
     box = bbox(rendered)                       # only the render border can change
     if box is None:
         return None

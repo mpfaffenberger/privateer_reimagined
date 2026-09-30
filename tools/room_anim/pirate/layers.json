@@ -1,0 +1,7 @@
+{
+  "_doc": "Per-layer loop timing, seconds. period >= the pass length; the rest is a gap.",
+  "_choreography": "One shared 60 s loop so the pod and the pirates never cross paths: pod 0-9 s, pirate_to_bay 10-30 s, pirate_from_bay 31-55 s (offset = period - start).",
+  "cargo_pod": { "period": 60.0, "offset": 0.0 },
+  "pirate_to_bay": { "period": 60.0, "offset": 50.0 },
+  "pirate_from_bay": { "period": 60.0, "offset": 29.0 }
+}

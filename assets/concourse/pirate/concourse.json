@@ -8,6 +8,13 @@
         1008
       ],
       "overlays": [],
+      "layers": [
+        "anim/lantern_hanging.json",
+        "anim/lanterns_wall.json",
+        "anim/pirate_from_bay.json",
+        "anim/pirate_to_bay.json",
+        "anim/cargo_pod.json"
+      ],
       "links": [
         {
           "target": "LandingPad",

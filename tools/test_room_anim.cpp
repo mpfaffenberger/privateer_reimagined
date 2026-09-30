@@ -439,6 +439,22 @@ void shipped_mining_bar() {
     check(links.is_array() && links.as_array().empty(), "mining bar hotspots unchanged");
 }
 
+// #586: the pirate concourse's flickering lanterns, pirates and cargo pod.
+void shipped_pirate() {
+    const std::string dir = "assets/concourse/pirate/";
+    room_anim::RoomAnimDef def;
+    room_anim::parse_room_anim(json::parse_file(dir + "concourse.json")["rooms"]["concourse"],
+                               def);
+    check(!def.has_sky && def.layers.size() == 5,
+          "pirate concourse has its lantern, pirate and cargo-pod layers");
+    check_layers(dir, def.layers);
+    // Acceptance: the hotspots (links.json overrides) are untouched.
+    const json::Value links = json::parse_file(dir + "links.json")["concourse"];
+    check(links.as_array().size() == 5 &&
+              link_rect_is(links, "Bar", 0.54887f, 0.39229f, 0.205f, 0.22f),
+          "pirate keeps its five hotspots (Bar rect unchanged)");
+}
+
 // #553: every hull's landing composite gets a sky + a mouth anchor, and the
 // ship traffic layers are anchored and split under/over on shared timelines.
 void shipped_newcon_hangar() {
@@ -569,7 +585,7 @@ void other_archetypes_static() {
     for (const auto& entry : std::filesystem::directory_iterator("assets/concourse")) {
         const std::string base = entry.path().filename().string();
         if (!entry.is_directory() || base == "newcon" || base == "mining" ||
-            base == "agricultural" || base == "pleasure")
+            base == "agricultural" || base == "pleasure" || base == "pirate")
             continue;
         const json::Value root = json::parse_file((entry.path() / "concourse.json").string());
         const json::Value* rs = root.find("rooms");
@@ -604,6 +620,7 @@ int main() {
     shipped_pleasure_landing();
     shipped_mining_bar();
     shipped_pleasure();
+    shipped_pirate();
     shipped_newcon_hangar();
     cross_dir_layer_paths();
     shipped_mercguild();
