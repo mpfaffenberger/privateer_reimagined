@@ -121,6 +121,59 @@ def animate_straight_pass(obj, x, y_start, y_end, hover_z, frame_start, frame_en
         obj.keyframe_insert("location", frame=f)
 
 
+def _along(points, dist):
+    """(x, y) at `dist` metres along the polyline `points`, clamped to it."""
+    for i, ((x0, y0), (x1, y1)) in enumerate(zip(points, points[1:])):
+        seg = math.hypot(x1 - x0, y1 - y0)
+        if dist <= seg or i == len(points) - 2:
+            t = min(max(dist / seg, 0.0), 1.0) if seg else 0.0
+            return x0 + (x1 - x0) * t, y0 + (y1 - y0) * t
+        dist -= seg
+    return points[-1]
+
+
+def animate_path(obj, points, z, fps, speed, frame_start=1, turn_m=0.8, lift=None):
+    """Constant-speed trip along the polyline `points` [(x, y), ...] at
+    height `z`, keyed every frame from `frame_start`. The heading (+Y
+    forward) follows the path over `turn_m` metres, so corners turn
+    smoothly; `lift(frame)` adds a vertical offset (a gait, a hover bob).
+    Returns the last frame."""
+    length = sum(math.hypot(x1 - x0, y1 - y0)
+                 for (x0, y0), (x1, y1) in zip(points, points[1:]))
+    frame_end = frame_start + round(length / speed * fps)
+    heading = None
+    for f in range(frame_start, frame_end + 1):
+        dist = length * (f - frame_start) / (frame_end - frame_start)
+        x, y = _along(points, dist)
+        (ax, ay), (bx, by) = _along(points, dist - turn_m / 2), _along(points, dist + turn_m / 2)
+        want = math.atan2(-(bx - ax), by - ay)
+        if heading is not None:                     # the short way round, no spins
+            want = heading + (want - heading + math.pi) % (2.0 * math.pi) - math.pi
+        heading = want
+        obj.location = (x, y, z + (lift(f) if lift else 0.0))
+        obj.rotation_euler = (0.0, 0.0, heading)
+        obj.keyframe_insert("location", frame=f)
+        obj.keyframe_insert("rotation_euler", frame=f)
+    return frame_end
+
+
+def overlay_on_plate(plate_path, guides_path, out_png):
+    """Alpha-over a straight-alpha render (camera-match guides) onto the
+    plate and save it: a scene's `--check` image."""
+    plate = bpy.data.images.load(str(plate_path))
+    guides = bpy.data.images.load(str(guides_path))
+    w, h = plate.size
+    p, g = list(plate.pixels), list(guides.pixels)
+    for i in range(0, len(p), 4):
+        a = g[i + 3]
+        for c in range(3):
+            p[i + c] = g[i + c] * a + p[i + c] * (1.0 - a)
+    out = bpy.data.images.new("check", w, h, alpha=True)
+    out.pixels = p
+    out.filepath_raw, out.file_format = str(out_png), 'PNG'
+    out.save()
+
+
 def light(scene, name, kind, loc, color, energy, size=1.0, rot=(0.0, 0.0, 0.0)):
     data = bpy.data.lights.new(name, kind)
     data.color, data.energy = color, energy
