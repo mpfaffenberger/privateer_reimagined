@@ -201,6 +201,45 @@ plate to confirm.
 | `bake_landing.py` | uv | landing pad: sky masks + rim anchors, star tiles, freighter sheet |
 | `render_landing.py` | Blender | the Galaxy freighter pass over the landing pad |
 | `landing_layers.json` | - | landing sky layer timing |
+| `render_bar.py` | Blender | the bar's 3D patron (woman in orange), camera-matched |
+| `bake_bar.py` | uv | bar: clean-plate patch + patron sheet; `--preview` crops |
+| `sources/bar_orange_clean_gen.png` | - | AI clean-plate edit of her crop (she's painted out) |
+
+### Mining bar: a 3D patron (#564 spike)
+
+The painted woman in orange on the bench is replaced by a rigged 3D model
+(Meshy AI, `characters/rustbound_ranger_sit_cross_legged.glb`) idling on a
+seamless 9.6 s loop. `bar_bg.png` is untouched: a one-frame clean-plate patch
+paints her out, then her render draws over it. If the layers are missing,
+the painting shows as painted.
+
+```sh
+blender --background --factory-startup --python tools/room_anim/prep_character.py -- \
+    <meshy_clip.glb> tools/room_anim/characters/<name>.glb
+blender --background --factory-startup --python tools/room_anim/mining/render_bar.py
+uv run --with scipy tools/room_anim/mining/bake_bar.py
+uv run --with scipy tools/room_anim/mining/bake_bar.py --preview 0,114,228
+```
+
+- **Models.** Meshy exports are ~100k tris with 2K/4K textures, ~30 MB per
+  clip. `prep_character.py` shrinks textures to 1K (7.5 MB) and keeps the
+  full mesh: triangles cost nothing in a pre-rendered pipeline, and collapse
+  decimation tears the UVs (at 10% it shredded her face). The source zips
+  stay out of the repo.
+- **Camera.** One-point perspective with the horizon through the seated
+  heads (y 415) and the eye at seated head height (1.25 m). She's placed by
+  her hips over the painted bench (fitted live in the MCP Blender against the
+  clean plate), not by the painted woman's outstretched boots.
+- **Shadow catchers** (floor, bench, railing) are built from her measured
+  pose. Catchers are holdouts to the camera, so one that intersects her cuts
+  her out; they also don't cast shadows, so only hers lands on the set.
+- **Clean plate.** An AI edit of her crop; only her region is taken
+  (differences from the plate inside her box, plus the whole seat box),
+  feathered, and never below the bar counter's edge, which is in front of
+  her. Her render is clipped at that edge too.
+- **Tone** is tuned against the painted woman (`build/room_anim/bar_tone.py`
+  scratch): luminance p10/p50/p90 17/45/74 vs the painting's 16/46/73,
+  saturation 0.62 vs 0.63.
 
 ### Mining landing pad (#561)
 
