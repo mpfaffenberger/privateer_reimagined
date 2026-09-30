@@ -2,7 +2,7 @@
 
 Run inside Blender (headless):
     blender --background --factory-startup --python tools/room_anim/prep_character.py -- \\
-        <source.glb> <out.glb> [--texture 1024] [--ratio 1.0]
+        <source.glb> <out.glb> [--texture 1024] [--ratio 1.0] [--clip-from <other.glb>]
 
 Meshy exports ~100k-tri skinned meshes with 2K/4K textures, ~30 MB per clip.
 Room layers are pre-rendered sprites, so the engine never sees the mesh, but
@@ -12,6 +12,9 @@ reproducible. This keeps one clip per file and:
     31.7 MB -> 7.5 MB on the Rustbound Ranger),
   - drops unskinned meshes (Blender's glTF importer adds an "Icosphere"
     bone-display shape on every import),
+  - with --clip-from, swaps in another character's clip: every Meshy rig is
+    the same 28-bone Mixamo skeleton, and a straight copy of the action
+    tested clean (a world-space retarget twisted the body; #566),
   - optionally decimates to RATIO. Triangles cost nothing in a pre-rendered
     pipeline, so the default is 1.0 (none): collapse decimation ignores UV
     islands, and at 0.1 it shredded her face and suit texture along the
@@ -28,12 +31,33 @@ def is_skinned(obj):
     return any(m.type == 'ARMATURE' for m in obj.modifiers)
 
 
+def transplant_clip(clip_glb):
+    """Replace the scene's action with the one in `clip_glb`, keyed to the
+    same bone names. Everything else that file brings is deleted."""
+    arm = next(o for o in bpy.data.objects if o.type == 'ARMATURE')
+    own = set(bpy.data.actions)
+    before = set(bpy.data.objects)
+    bpy.ops.import_scene.gltf(filepath=clip_glb)
+    for obj in [o for o in bpy.data.objects if o not in before]:
+        bpy.data.objects.remove(obj)
+    clip = next(a for a in bpy.data.actions if a not in own)
+    for act in own:
+        bpy.data.actions.remove(act)
+    arm.animation_data_create().action = clip
+    if hasattr(arm.animation_data, "action_slot"):         # Blender 4.4+: slotted actions
+        arm.animation_data.action_slot = clip.slots[0]
+    for block in (bpy.data.meshes, bpy.data.armatures, bpy.data.materials, bpy.data.images):
+        for data in [d for d in block if d.users == 0]:
+            block.remove(data)
+
+
 def main(argv):
     ap = argparse.ArgumentParser()
     ap.add_argument("src")
     ap.add_argument("out")
     ap.add_argument("--ratio", type=float, default=1.0)
     ap.add_argument("--texture", type=int, default=1024)
+    ap.add_argument("--clip-from", help="take the animation from this Meshy GLB instead")
     args = ap.parse_args(argv)
 
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -42,6 +66,8 @@ def main(argv):
         if obj.type == 'MESH' and not is_skinned(obj):
             print(f"[prep_character] dropping unskinned mesh {obj.name}")
             bpy.data.meshes.remove(obj.data)            # the data too, or glTF keeps it
+    if args.clip_from:
+        transplant_clip(args.clip_from)
     meshes = [o for o in bpy.data.objects if o.type == 'MESH']
     before = sum(len(o.data.polygons) for o in meshes)
     if args.ratio < 1.0:

@@ -1,22 +1,23 @@
-"""Bake the mining bar's 3D patron into over-plate layers (#564 spike).
+"""Bake the mining bar's 3D patrons into over-plate layers (#564, #566).
 
 Usage (from the repo root, after render_bar.py):
-    uv run tools/room_anim/mining/bake_bar.py
-    uv run tools/room_anim/mining/bake_bar.py --preview 0,60,120 --out build/room_anim/mining/bar_fit.png
+    uv run --with scipy tools/room_anim/mining/bake_bar.py              # every patron
+    uv run --with scipy tools/room_anim/mining/bake_bar.py --patron patron_orange \\
+        --preview 0,60,120 --out build/room_anim/mining/bar_fit.png
 
-bar_bg.png stays untouched, so the painted woman in orange is still in the
-plate. Two layers go on top of it, drawn in order:
-    patron_orange_patch  one static frame on a one-slot loop: her painted out
-    patron_orange        her 3D idle (render_bar.py), straight alpha
+bar_bg.png stays untouched, so the painted patrons are still in the plate.
+Each 3D patron (bar_patrons.json) adds two layers on top of it, drawn in
+order:
+    <patron>_patch  one static frame on a one-slot loop: the painted one out
+    <patron>        the 3D idle (render_bar.py), straight alpha
 If the layers are missing, the painting shows as painted.
 
-The patch comes from an AI clean-plate edit of her crop
-(sources/bar_orange_clean_gen.png, 1024 px for the 320 px crop). The
-generator repaints everything, so only her region is taken: strong
-differences from the plate inside her box, closed and hole-filled, plus the
-whole seat box (the regenerated bench differs slightly in shape), grown and
-feathered. The bar counter's corner is in front of her: nothing below its
-edge is ever replaced, and her render is clipped there too.
+Each patch comes from an AI clean-plate edit of the patron's crop
+(sources/). The generator repaints everything, so only the patron's region is
+taken: strong differences from the plate inside their box, closed and
+hole-filled, plus any `keep` rects (e.g. a regenerated seat that differs
+slightly in shape), grown and feathered. Occluders in front of the patron
+(`front`) are never replaced, and the render is clipped at them too.
 """
 import argparse
 import json
@@ -24,114 +25,121 @@ import sys
 from pathlib import Path
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw
 from scipy import ndimage
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE.parent))
 from bake_layer import load_frame, write_sheet  # noqa: E402
 from base import paths  # noqa: E402
 
 MINING = paths("mining")
 BUILD = MINING.build / "bar"
 OUT = MINING.anim / "bar"
-LAYER = "patron_orange"
-CLEAN_GEN = MINING.tools / "sources" / "bar_orange_clean_gen.png"
+SOURCES = MINING.tools / "sources"
 CANVAS = (1536, 1024)
+PATRONS = {k: v for k, v in json.loads((HERE / "bar_patrons.json").read_text()).items()
+           if not k.startswith("_")}
 
-CROP = (840, 340, 1160, 660)            # plate px; the clean-plate edit's frame
-BOX = (80, 50, 275, 300)                # crop px: her, head to boots
-SEAT = (170, 165, 275, 262)             # crop px: the painted seat box, all of it
-COUNTER = ((75, 320), (300, 225))       # crop px: the counter's top edge
-MAX_REGISTRATION_ERROR = 6.0            # mean |diff| on the wall, 0-255
+MAX_REGISTRATION_ERROR = 6.0            # mean |diff| in the `reg` rect, 0-255
 # The shadow catchers leave a faint alpha across the whole render region
 # (soft light falloff): below ~2% it's invisible on this dark plate, but it
 # stretched every frame to the full crop (a 4096x6419 atlas). Dropped.
 SHADOW_FLOOR = 6
 
 
-def _below_counter(h, w, origin=(0, 0)):
-    """Mask of crop-space pixels in front of (below) the counter's edge.
-    `origin` offsets for arrays that start elsewhere in the crop."""
+def front_mask(p, h, w):
+    """Crop-space mask of the occluders in front of the patron."""
     yy, xx = np.mgrid[:h, :w]
-    xx, yy = xx + origin[0], yy + origin[1]
-    (x0, y0), (x1, y1) = COUNTER
-    return yy >= y0 + (xx - x0) * (y1 - y0) / (x1 - x0) - 2
+    mask = np.zeros((h, w), bool)
+    for occ in p["front"]:
+        if "below_line" in occ:
+            (x0, y0), (x1, y1) = occ["below_line"]
+            mask |= yy >= y0 + (xx - x0) * (y1 - y0) / (x1 - x0) - 2
+        else:
+            img = Image.new("L", (w, h), 0)
+            ImageDraw.Draw(img).polygon([tuple(v) for v in occ["polygon"]], fill=255)
+            mask |= np.asarray(img) > 0
+    return mask
 
 
-def clean_patch(plate):
-    """-> RGBA patch (crop-sized) that paints her out, feathered alpha."""
-    x0, y0, x1, y1 = CROP
-    orig = plate.crop(CROP)
+def clean_patch(p, plate):
+    """-> RGBA patch (crop-sized) that paints the patron out, feathered alpha."""
+    orig = plate.crop(p["crop"])
     w, h = orig.size
-    gen = Image.open(CLEAN_GEN).convert("RGB").resize((w, h), Image.LANCZOS)
+    gen = Image.open(SOURCES / p["clean_gen"]).convert("RGB").resize((w, h), Image.LANCZOS)
     o, g = np.asarray(orig, np.int16), np.asarray(gen, np.int16)
-    wall = np.abs(g[20:150, 10:180] - o[20:150, 10:180]).mean()
+    rx0, ry0, rx1, ry1 = p["reg"]
+    wall = np.abs(g[ry0:ry1, rx0:rx1] - o[ry0:ry1, rx0:rx1]).mean()
     if wall > MAX_REGISTRATION_ERROR:
-        raise SystemExit(f"clean plate doesn't register with the plate (wall error {wall:.1f})")
+        raise SystemExit(f"clean plate doesn't register with the plate (error {wall:.1f})")
     diff = np.abs(g - o).max(axis=2)
     smooth = ndimage.uniform_filter(diff.astype(float), 5)
     yy, xx = np.mgrid[:h, :w]
-    inside = (xx >= BOX[0]) & (xx < BOX[2]) & (yy >= BOX[1]) & (yy < BOX[3])
-    her = ndimage.binary_opening((smooth > 16) & inside, iterations=1)
-    her = ndimage.binary_closing(her, iterations=10)
-    lab, n = ndimage.label(her)
-    her = lab == (1 + int(np.argmax(ndimage.sum(her, lab, range(1, n + 1)))))
-    her = ndimage.binary_fill_holes(her)
-    her |= (xx >= SEAT[0]) & (xx < SEAT[2]) & (yy >= SEAT[1]) & (yy < SEAT[3])
-    her = ndimage.binary_dilation(her, iterations=5) & ~_below_counter(h, w)
-    alpha = ndimage.gaussian_filter(her.astype(float), 3)
-    alpha[_below_counter(h, w)] = 0.0
-    rgba = np.dstack([np.asarray(gen, np.uint8), (alpha * 255).round().astype(np.uint8)])
-    return rgba
+    bx0, by0, bx1, by1 = p["box"]
+    inside = (xx >= bx0) & (xx < bx1) & (yy >= by0) & (yy < by1)
+    them = ndimage.binary_opening((smooth > 16) & inside, iterations=1)
+    them = ndimage.binary_closing(them, iterations=10)
+    lab, n = ndimage.label(them)
+    them = lab == (1 + int(np.argmax(ndimage.sum(them, lab, range(1, n + 1)))))
+    them = ndimage.binary_fill_holes(them)
+    for kx0, ky0, kx1, ky1 in p["keep"]:
+        them |= (xx >= kx0) & (xx < kx1) & (yy >= ky0) & (yy < ky1)
+    front = front_mask(p, h, w)
+    them = ndimage.binary_dilation(them, iterations=5) & ~front
+    alpha = ndimage.gaussian_filter(them.astype(float), 3)
+    alpha[front] = 0.0
+    return np.dstack([np.asarray(gen, np.uint8), (alpha * 255).round().astype(np.uint8)])
 
 
-def patron_frame(path):
-    """-> (sprite RGBA, dst) of one render, clipped at the counter, or None."""
+def patron_frame(p, path):
+    """-> (sprite RGBA, dst) of one render, clipped at the occluders, or None."""
     rgba = np.asarray(Image.open(path).convert("RGBA")).copy()
-    x0, y0, x1, y1 = CROP
-    front = _below_counter(y1 - y0, x1 - x0)
-    rgba[y0:y1, x0:x1, 3][front] = 0
+    x0, y0, x1, y1 = p["crop"]
+    rgba[y0:y1, x0:x1, 3][front_mask(p, y1 - y0, x1 - x0)] = 0
     rgba[..., 3][rgba[..., 3] < SHADOW_FLOOR] = 0
     tmp = BUILD / "_clipped.png"
     Image.fromarray(rgba).save(tmp)
-    return load_frame(tmp, max_px=None)        # she's the point: keep her sharp
+    return load_frame(tmp, max_px=None)        # the patron is the point: keep them sharp
 
 
-def bake():
+def bake(name):
+    p = PATRONS[name]
     plate = Image.open(MINING.room / "bar_bg.png").convert("RGB")
-    info = json.loads((BUILD / LAYER / "pass.json").read_text())
+    info = json.loads((BUILD / name / "pass.json").read_text())
     fps, frames = float(info["fps"]), int(info["frames"])
-    patch = clean_patch(plate)
+    patch = clean_patch(p, plate)
     ys, xs = np.nonzero(patch[..., 3])
     px0, py0 = int(xs.min()), int(ys.min())
     sprite = patch[py0:ys.max() + 1, px0:xs.max() + 1]
-    dst = [CROP[0] + px0, CROP[1] + py0, sprite.shape[1], sprite.shape[0]]
+    dst = [p["crop"][0] + px0, p["crop"][1] + py0, sprite.shape[1], sprite.shape[0]]
     # A one-slot loop: slots without a frame draw nothing, so on the patron's
-    # 230-slot loop the painted woman would flicker back 229 slots in 230.
-    write_sheet(OUT, f"{LAYER}_patch", [(sprite, dst)], [0], CANVAS, fps, 1, 0)
+    # loop the painted one would flicker back every other slot.
+    write_sheet(OUT, f"{name}_patch", [(sprite, dst)], [0], CANVAS, fps, 1, 0)
     sprites, slots = [], []
-    for path in sorted((BUILD / LAYER).glob("[0-9]*.png")):
-        baked = patron_frame(path)
+    for path in sorted((BUILD / name).glob("[0-9]*.png")):
+        baked = patron_frame(p, path)
         if baked is not None:
             sprites.append(baked)
             slots.append(int(path.stem) - int(info["first"]))
-    write_sheet(OUT, LAYER, sprites, slots, CANVAS, fps, frames, 0)
+    write_sheet(OUT, name, sprites, slots, CANVAS, fps, frames, int(p["phase"]))
 
 
-def preview(frames, out):
-    """Crops of plate + patch + her at `frames`, beside the painted original."""
+def preview(name, frames, out):
+    """Crops of plate + patch + patron at `frames`, beside the painted original."""
+    p = PATRONS[name]
     plate = Image.open(MINING.room / "bar_bg.png").convert("RGBA")
     patched = plate.copy()
-    patch = Image.fromarray(clean_patch(plate.convert("RGB")))
-    patched.alpha_composite(patch, CROP[:2])
-    tiles = [plate.crop(CROP)]
+    patched.alpha_composite(Image.fromarray(clean_patch(p, plate.convert("RGB"))),
+                            tuple(p["crop"][:2]))          # PIL wants a tuple, JSON gives a list
+    tiles = [plate.crop(tuple(p["crop"]))]
     for f in frames:
         tile = patched.copy()
-        baked = patron_frame(BUILD / LAYER / f"{f:04d}.png")
+        baked = patron_frame(p, BUILD / name / f"{f:04d}.png")
         if baked is not None:                  # scaled to dst, as the engine draws it
             sprite, (x, y, w, h) = baked
             tile.alpha_composite(Image.fromarray(sprite).resize((w, h), Image.LANCZOS), (x, y))
-        tiles.append(tile.crop(CROP))
+        tiles.append(tile.crop(tuple(p["crop"])))
     w, h = tiles[0].size
     sheet = Image.new("RGB", (w * len(tiles), h))
     for i, t in enumerate(tiles):
@@ -142,13 +150,19 @@ def preview(frames, out):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("--patron", action="append", choices=sorted(PATRONS),
+                    help="repeatable; default: every patron")
     ap.add_argument("--preview", help="comma-separated frames to preview instead of baking")
     ap.add_argument("--out", default=str(MINING.build / "bar_fit.png"))
     args = ap.parse_args()
+    names = args.patron or list(PATRONS)
     if args.preview:
-        preview([int(f) for f in args.preview.split(",")], args.out)
+        if len(names) != 1:
+            raise SystemExit("--preview needs exactly one --patron")
+        preview(names[0], [int(f) for f in args.preview.split(",")], args.out)
     else:
-        bake()
+        for name in names:
+            bake(name)
 
 
 if __name__ == "__main__":

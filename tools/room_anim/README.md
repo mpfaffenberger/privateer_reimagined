@@ -201,25 +201,59 @@ plate to confirm.
 | `bake_landing.py` | uv | landing pad: sky masks + rim anchors, star tiles, freighter sheet |
 | `render_landing.py` | Blender | the Galaxy freighter pass over the landing pad |
 | `landing_layers.json` | - | landing sky layer timing |
-| `render_bar.py` | Blender | the bar's 3D patron (woman in orange), camera-matched |
-| `bake_bar.py` | uv | bar: clean-plate patch + patron sheet; `--preview` crops |
-| `sources/bar_orange_clean_gen.png` | - | AI clean-plate edit of her crop (she's painted out) |
+| `bar_patrons.json` | - | the bar's 3D patrons: model, placement, clean plate, occluders |
+| `render_bar.py` | Blender | the bar's 3D patrons, camera-matched (`--patron`) |
+| `bake_bar.py` | uv | bar: clean-plate patch + patron sheet each; `--preview` crops |
+| `sources/bar_*_clean_gen.png` | - | AI clean-plate edits of each patron's crop (painted out) |
 
-### Mining bar: a 3D patron (#564 spike)
+### Mining bar: 3D patrons (#564, #566)
 
-The painted woman in orange on the bench is replaced by a rigged 3D model
-(Meshy AI, `characters/rustbound_ranger_sit_cross_legged.glb`) idling on a
-seamless 9.6 s loop. `bar_bg.png` is untouched: a one-frame clean-plate patch
-paints her out, then her render draws over it. If the layers are missing,
-the painting shows as painted.
+Painted patrons are replaced by rigged 3D models (Meshy AI, `characters/`)
+idling on seamless loops: the woman in orange on the bench (#564) and the
+man at the back table (#566). `bar_bg.png` is untouched: per patron, a
+one-frame clean-plate patch paints them out, then their render draws over
+it. If the layers are missing, the painting shows as painted. Each patron is
+one entry in `bar_patrons.json`; the camera and lighting are the room's.
 
 ```sh
 blender --background --factory-startup --python tools/room_anim/prep_character.py -- \
-    <meshy_clip.glb> tools/room_anim/characters/<name>.glb
-blender --background --factory-startup --python tools/room_anim/mining/render_bar.py
-uv run --with scipy tools/room_anim/mining/bake_bar.py
-uv run --with scipy tools/room_anim/mining/bake_bar.py --preview 0,114,228
+    <meshy_clip.glb> tools/room_anim/characters/<name>.glb [--clip-from <other_clip.glb>]
+blender --background --factory-startup --python tools/room_anim/mining/render_bar.py \
+    [-- --patron patron_backtable]
+uv run --with scipy tools/room_anim/mining/bake_bar.py [--patron ...]
+uv run --with scipy tools/room_anim/mining/bake_bar.py --patron patron_orange --preview 0,114,228
 ```
+
+- **Borrowed clips.** All six Meshy characters share one 28-bone Mixamo
+  skeleton, so `--clip-from` puts any character's clip on any other's mesh
+  by a straight copy of the action. Their rest poses differ by up to ~24 deg
+  at hands and feet, but the copy still looked right, and a world-space
+  retarget twisted the whole body. The Mechanic borrows `Chair_Sit_Idle_M`
+  from the Blue Jacket Worker; the woman's loop is phase-shifted from his so
+  the bar doesn't idle in sync.
+- **Painted furniture** in front of or under a patron is modelled as
+  cylinder catchers (`props`): they hold the patron out exactly where the
+  painted table/stool is and catch their shadow (hands resting on the
+  tabletop). Flat occluders (the counter edge, the back table's mug) are
+  `front` masks instead: never patched, and clipped out of the render.
+- **Only real catchers.** `set` lists what the painted patron actually sits
+  on / against. A railing catcher just behind the back-table man (the
+  woman's bench is against the rail; his table is ~2 m from it) printed a
+  big shadow wedge across the painted railing, and a seat catcher under his
+  hidden stool a grey box: he gets the floor only.
+- **Painters cheat.** The back-table man is painted ~1.3x broader than a
+  model at his depth, so a patron can be `scale`d; and a model's clothes
+  needn't match the painted ones, so its textures can be `tint`ed (his grey
+  work jacket towards the painting's navy denim: saturation 0.17 -> 0.21 vs
+  the painting's 0.25, midtones matched at lum 18).
+- **Borrowed clips can overact.** `lean` damps the torso's rotation keys
+  towards the clip's (upright) first frame: `Chair_Sit_Idle_M` dives over
+  the table; at 0.65 its deepest lean is the painted man's hunch. At 0.4 he
+  sat bolt upright and his hands, still fully animated, hovered at his
+  chest. The clip starts and ends upright, so the loop stays seamless.
+- **Blender MCP gotcha:** a freshly `images.load()`ed camera background can
+  sit at 0x0 and draw nothing until its pixels are touched
+  (`img.pixels[0]`).
 
 - **Models.** Meshy exports are ~100k tris with 2K/4K textures, ~30 MB per
   clip. `prep_character.py` shrinks textures to 1K (7.5 MB) and keeps the
