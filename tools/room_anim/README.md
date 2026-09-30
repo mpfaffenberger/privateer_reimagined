@@ -42,7 +42,7 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `newdetroit/` | | New Detroit: concourse walkers on the platform and plaza (#590), aircars past the landing pad (#591) |
 | `oxford/` | | Oxford: concourse air-cars in the garden square (#592), landing pad departure at dusk (#593) |
 | `refinery/` | | Refinery concourse: stars, ships over the dome, the ore train (#584) |
-| `military/` | | Military base concourse: stars, a fighter pair, the munitions train (#588) |
+| `military/` | | Military: concourse stars, a fighter pair, the munitions train (#588), landing bay lamp chase (#589) |
 
 ## New Con concourse
 
@@ -1117,6 +1117,41 @@ uv run tools/room_anim/composite_preview.py --base newdetroit --room landing --p
   `PASSES` are where the car is seen, not world metres.
 - **Orientation.** `nd_airca`'s canopy is at -Y and its fins and drive glow
   at +Y, so `ships.FIX_EULER` turns it 180 degrees, like the Galaxy.
+
+## Military landing pad (#589)
+
+The military landing pad is a closed hangar bay: no sky, no mouth, nothing
+for stars or traffic to show through. What the original game animated here
+was its landing lights (the legacy `landing_lbl` overlay blinked the red
+lamps set into the bay floor's edge). They're rebuilt as a "rabbit" chase:
+each lamp flares in turn from the far end toward the camera, with a red
+glow and a spill along the floor, then rests as painted.
+
+```sh
+uv run tools/room_anim/military/bake_landing.py --debug build/room_anim/military/lamps.png
+uv run tools/room_anim/composite_preview.py --base military --room landing --plate tarsus \
+    --crop 300 620 1000 400 --seconds 6 --out build/room_anim/military/lamps.mp4
+```
+
+- **No Blender.** A lamp's flare is a point glow, so it's made in 2D: added
+  in linear light over the composite and encoded with `bake_layer.encode()`.
+  The engine's plain alpha-over reproduces it exactly.
+- **One sheet per composite.** The 17 composites are painted separately:
+  the 3-5 lamps sit somewhere different in each, and the spacing differs,
+  so no single anchor maps them onto each other. Each composite gets
+  `anim/landing/<hull>_lights.json`, found and encoded from its own paint.
+  The room names it once, as `{plate}_lights.json` (`for_plate()`
+  substitutes layer paths too).
+- **Finding the lamps.** Hulls carry red too (strakha is red all over), so a
+  lamp is a small red blob below the deck line that sits on a line of 3+
+  blobs sloping like the bay's edge (dy/dx 0.25-0.6), 140-380 px apart.
+  Gothri's lamps are painted dim and orange, so if the strict colour test
+  finds no line, a looser one tries again.
+- **Sizes.** The painted lamps range from specks to 10 px smudges
+  (drayman's include their painted bloom), so flares scale with the lamp's
+  radius, clamped to 2.5-5 px. The fade is quick (0.14 s): with a slower
+  one every lamp glowed at once, and each frame's sprite spanned the whole
+  row.
 
 ## Adding a layer
 
