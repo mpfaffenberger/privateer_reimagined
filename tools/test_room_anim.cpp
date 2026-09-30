@@ -289,6 +289,30 @@ void shipped_mining_landing() {
           "mining landing keeps its Launch + Concourse hotspots");
 }
 
+// #583: the Agricultural landing pad: aircraft in the dusk sky behind the
+// tower and pylons, anchored to the big moon on every composite.
+void shipped_agricultural_landing() {
+    const std::string dir = "assets/concourse/agricultural/";
+    room_anim::RoomAnimDef def;
+    room_anim::parse_room_anim(
+        json::parse_file(dir + "concourse.json")["rooms"]["landing"]["composite"], def);
+    check(def.has_sky && !def.anchors.empty(), "agricultural landing has a sky and moon anchors");
+    check_composite_skies(dir, def, "agricultural landing");
+    check(def.layers.size() == 2, "agricultural landing has its two aircraft layers");
+    check_layers(dir, def.layers);
+    for (const std::string& layer : def.layers) {
+        room_anim::SpriteSheet s;
+        std::string err;
+        check(room_anim::parse_sprite_sheet(json::parse_file(dir + layer), s, err) && s.under &&
+                  s.anchored,
+              "  " + layer + " flies under the plate (tower and pylons occlude it), anchored");
+    }
+    const json::Value links = json::parse_file(dir + "links.json")["landing"];
+    check(links.as_array().size() == 2 &&
+              link_rect_is(links, "Launch", -0.105f, 0.50167f, 0.8975f, 0.54f),
+          "agricultural landing keeps its Launch + Concourse hotspots");
+}
+
 // #558: the mining concourse's ore train.
 void shipped_mining() {
     const std::string dir = "assets/concourse/mining/";
@@ -533,6 +557,7 @@ int main() {
     shipped_mining();
     shipped_agricultural();
     shipped_mining_landing();
+    shipped_agricultural_landing();
     shipped_mining_bar();
     shipped_newcon_hangar();
     cross_dir_layer_paths();
