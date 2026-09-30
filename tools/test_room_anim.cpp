@@ -303,6 +303,32 @@ void shipped_mining() {
           "mining keeps its eight hotspots (ShipDealer rect unchanged)");
 }
 
+// #564: the mining bar's woman in orange is a 3D patron. A one-frame
+// clean-plate patch paints the painted woman out, then her idle loops over it;
+// the patch must draw first, and bar_bg.png itself is untouched.
+void shipped_mining_bar() {
+    const std::string dir = "assets/concourse/mining/";
+    room_anim::RoomAnimDef def;
+    room_anim::parse_room_anim(json::parse_file(dir + "concourse.json")["rooms"]["bar"], def);
+    check(!def.has_sky && def.layers.size() == 2, "mining bar has its patch + patron layers");
+    check_layers(dir, def.layers);
+    room_anim::SpriteSheet patch, patron;
+    std::string err;
+    const bool ok =
+        def.layers.size() == 2 &&
+        room_anim::parse_sprite_sheet(json::parse_file(dir + def.layers[0]), patch, err) &&
+        room_anim::parse_sprite_sheet(json::parse_file(dir + def.layers[1]), patron, err);
+    check(ok && patch.frames.size() == 1 && patron.frames.size() > 1,
+          "  the one-frame patch draws before the patron");
+    // Slots without a frame draw nothing: on any longer loop the painted
+    // woman would flicker back between patch frames.
+    check(ok && patch.period == 1 && room_anim::slot_at(patch, 12.34f) == 0,
+          "  the patch is on screen at every moment (a one-slot loop)");
+    check(ok && !patch.under && !patron.under, "  both draw over the plate");
+    const json::Value links = json::parse_file(dir + "links.json")["bar"];
+    check(links.is_array() && links.as_array().empty(), "mining bar hotspots unchanged");
+}
+
 // #553: every hull's landing composite gets a sky + a mouth anchor, and the
 // ship traffic layers are anchored and split under/over on shared timelines.
 void shipped_newcon_hangar() {
@@ -371,6 +397,7 @@ int main() {
     shipped_newcon();
     shipped_mining();
     shipped_mining_landing();
+    shipped_mining_bar();
     shipped_newcon_hangar();
     other_archetypes_static();
     std::printf("\n%s\n", failures == 0 ? "ALL PASS" : "FAILURES DETECTED");
