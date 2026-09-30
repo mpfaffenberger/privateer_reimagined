@@ -1,14 +1,25 @@
 {
   "_doc": [
-    "Mining bar 3D patrons (render_bar.py, bake_bar.py). Plate px unless noted. Listed back to front: each clean plate is made from the plate with the earlier patrons painted out, and patrons draw in this order.",
+    "room.lights: key = the warm table lamps, up and to the left; fill = the glowing bar counter, low right; ambient = the dim room beyond the lamps. Tuned against the painted woman's tone (#564): a soft 180 W key left the highlights at lum 53 vs the painting's 73 and the contrast at 3.0 vs 4.5 (hazy), so the key is harder and brighter, with less fill.",
+    "Mining bar 3D patrons (render_patrons.py, bake_patrons.py --room this file; the format is in patron_room.py). Plate px unless noted. Listed back to front: each clean plate is made from the plate with the earlier patrons painted out, and patrons draw in this order.",
     "model: tools/room_anim/characters/<model> (prep_character.py output).",
     "crop: plate rect rendered and patched; clean_gen: sources/<file>, an AI edit of that crop with the painted patron removed.",
     "hip_px / hip_depth (m) / yaw (deg, 0 = facing camera, -90 = screen-left): fitted live against the clean plate. A bust whose feet are hidden is placed by head [px, y, depth] (the crown at frame 0) instead of the hips.",
     "pitch (deg): leans the whole body towards the camera. aim: {bone: [px, depth, z]} points bones at fixed spots (hands planted on a counter while the idle sways the body). head_up (deg): raises the chin through the neck/head keys, undoing pitch's downward gaze. light: {key, fill, rim} energy multipliers on the room's lights.",
     "seat_reach: seat catcher (sideways, back) m from the hips. phase: loop offset, frames. scale (optional): for painted patrons burlier than the model at their depth; a list is [width, depth, height] (a painted body with other proportions). tint (optional): multiplies the model's textures, when its clothes don't match the painted ones. saturation (optional): scales their saturation (a painter's vivid palette). hold (optional): bone-name prefixes frozen at the clip's first frame, e.g. an aimed arm whose clip still twists it. half_size (optional): store the sprites at half size (the engine scales them back), for a patron too big for one atlas at full size. lean (optional, 0-1): damps the torso's motion towards the clip's first frame (a borrowed clip that moves more than the painted patron would). set (default [floor, seat, railing]): the shadow catchers built from the pose; list only what the painted patron really sits on / against.",
     "Crop px: box = where the painted patron is; keep = rects always taken from the clean plate; reg = a rect away from the patron where the clean plate must match the plate (registration check); front = occluders in front of the patron, never patched and clipped out of the render ({below_line: [[x0, y0], [x1, y1]]} or {polygon: [[x, y], ...]}).",
-    "props: painted furniture as catchers (render_bar._props): they hold the patron out where the prop is and catch its shadow. px = plate x of the centre, depth/z0/z1 in m, and radius (a cylinder) or size [w, d] (a box), fitted from the prop's floor contact and outline."
+    "props: painted furniture as catchers (render_patrons._props): they hold the patron out where the prop is and catch its shadow. px = plate x of the centre, depth/z0/z1 in m, and radius (a cylinder) or size [w, d] (a box), fitted from the prop's floor contact and outline."
   ],
+  "room": {
+    "name": "Bar",
+    "plate": "assets/concourse/mining/bar_bg.png",
+    "build": "build/room_anim/mining/bar",
+    "out": "assets/concourse/mining/anim/bar",
+    "sources": "tools/room_anim/mining/sources",
+    "camera": {"horizon_y": 415.0, "eye": 1.25, "focal_px": 1200.0},
+    "lights": {"key": [1.0, 0.78, 0.55], "fill": [0.62, 0.72, 1.0], "key_w": 350.0, "key_size": 0.6,
+               "fill_w": 6.0, "rim_w": 40.0, "ambient": [0.008, 0.007, 0.006]}
+  },
   "patron_orange": {
     "model": "rustbound_ranger_sit_cross_legged.glb",
     "crop": [840, 340, 1160, 660],
