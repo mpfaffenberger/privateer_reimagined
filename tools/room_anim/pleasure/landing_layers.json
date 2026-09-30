@@ -1,0 +1,4 @@
+{
+  "_doc": "Per-layer loop timing, seconds. period >= the pass length; the rest is a gap.",
+  "transport_arrival": { "period": 45.0, "offset": 0.0 }
+}

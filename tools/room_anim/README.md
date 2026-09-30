@@ -34,7 +34,7 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `newcon/` | | New Constantinople: concourse (#515) and hangar (#553) |
 | `mining/` | | Mining base concourse: the ore train (#558) |
 | `agricultural/` | | Agricultural: concourse clouds and aircraft (#582), landing pad sky traffic (#583) |
-| `pleasure/` | | Pleasure concourse: skylight stars, marquee chase, neon (#594) |
+| `pleasure/` | | Pleasure: concourse skylight stars, marquee chase, neon (#594), landing pad transport (#595) |
 
 ## New Con concourse
 
@@ -539,6 +539,48 @@ uv run tools/room_anim/composite_preview.py --base pleasure --seconds 18 \
 |---|---|---|
 | `bake_sky.py` | uv | skylight panes -> sky mask, fill, star tiles |
 | `bake_lights.py` | uv | marquee chase (both canopies) and neon stutter sprites |
+| `bake_landing.py` | uv | landing pad: sky masks, half-size fills, horizon anchors; layer sheet |
+| `render_landing.py` | Blender | the transport over the sea |
+| `landing_layers.json` | - | landing layer timing |
+
+### Pleasure landing pad (#595)
+
+An open-air pad on a resort world at dusk: two towers, a brick tower block on
+an island, the sea, and a purple sky with two moons, in 18 per-hull
+composites. A liner-sized transport (`ships_wcnews/transprt.obj`) comes out
+from behind the block and cruises away toward a spaceport beyond the left
+tower. At a constant altitude it sinks toward the horizon and shrinks as it
+goes, blinking its nav lights and strobe. It crosses every 45 s.
+
+```sh
+uv run tools/room_anim/pleasure/bake_landing.py --debug build/room_anim/pleasure/skies.png
+# (bake the skies first: render_landing.py reads tarsus's horizon from anchors.json)
+blender --background --factory-startup --python tools/room_anim/pleasure/render_landing.py
+uv run tools/room_anim/pleasure/bake_landing.py --layers-only
+uv run tools/room_anim/composite_preview.py --base pleasure --room landing --plate tarsus \
+    --seconds 14 --out build/room_anim/pleasure/landing.mp4
+```
+
+- **Sky.** The sky and the sea are the same saturated blue-purple, and the
+  sunset glow is pink, so the colour test is blue over *green* (blue over red
+  fails in the glow). The sky is also smooth (within 14 of a 60 px median),
+  which the moons, brickwork, tower edges and sea are not. The mask is that
+  region above the horizon and connected to the top of the frame. The fill is
+  the painted sky itself at half size, so the moons and gradient are exact,
+  with holes extrapolated by `sky.sky_fill()`.
+- **Horizon (the anchor).** It's soft paint, and no cue finds it on all 18:
+  the sky pinkens toward it on most composites but not all, and the far sea
+  can be as glassy as the sky. Ripples are the safe cue (the first sustained
+  run of row-to-row change). Checked by eye on all 18, that lands up to ~70 px
+  *below* the painted horizon where the sea is glassy, but never more than a
+  few px above it. So the path's lowest point is 110 px above the anchor:
+  the error only ever moves the ship toward open sky, and it never gets
+  pushed up into the moons.
+- **Transport.** It's rendered against tarsus, with a level f = 1024 px
+  camera lens-shifted so its horizon is tarsus's anchor. The path is solved
+  from horizon-relative screen targets (230 px above at x 900, 110 px above
+  at x 250) at a 500 m altitude. It's drawn under the plate, so each
+  composite's own block, towers and parked ship occlude it.
 
 ## 3D patrons in any room (#577)
 
