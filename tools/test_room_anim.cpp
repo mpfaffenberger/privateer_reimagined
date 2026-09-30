@@ -304,28 +304,29 @@ void shipped_mining() {
           "mining keeps its eight hotspots (ShipDealer rect unchanged)");
 }
 
-// #564, #566, #568: the mining bar's 3D patrons. Each is a (patch, patron) layer
-// pair: a one-frame clean-plate patch paints the painted one out, then the
-// idle loops over it. The patch must draw first; bar_bg.png is untouched.
+// #564, #566, #568, #570: the mining bar's 3D patrons. Each has a one-frame
+// clean-plate patch that paints the painted one out, and an idle loop. The
+// patrons overlap (the left table), so every patch draws first, then every
+// patron back to front: patch i belongs to patron i. bar_bg.png is untouched.
 void shipped_mining_bar() {
     const std::string dir = "assets/concourse/mining/";
     room_anim::RoomAnimDef def;
     room_anim::parse_room_anim(json::parse_file(dir + "concourse.json")["rooms"]["bar"], def);
     const size_t pairs = def.layers.size() / 2;
-    check(!def.has_sky && pairs == 3 && def.layers.size() % 2 == 0,
-          "mining bar has three (patch, patron) layer pairs");
+    check(!def.has_sky && pairs == 4 && def.layers.size() % 2 == 0,
+          "mining bar has four patrons (patches first, then patrons)");
     check_layers(dir, def.layers);
     std::vector<int> phases;
     for (size_t i = 0; i < pairs; ++i) {
         room_anim::SpriteSheet patch, patron;
         std::string err;
-        const std::string& name = def.layers[2 * i + 1];
+        const std::string& name = def.layers[pairs + i];
         const bool ok =
-            def.layers[2 * i] == name.substr(0, name.size() - 5) + "_patch.json" &&
-            room_anim::parse_sprite_sheet(json::parse_file(dir + def.layers[2 * i]), patch, err) &&
+            def.layers[i] == name.substr(0, name.size() - 5) + "_patch.json" &&
+            room_anim::parse_sprite_sheet(json::parse_file(dir + def.layers[i]), patch, err) &&
             room_anim::parse_sprite_sheet(json::parse_file(dir + name), patron, err);
         check(ok && patch.frames.size() == 1 && patron.frames.size() > 1,
-              "  " + name + ": its one-frame patch draws first");
+              "  " + name + ": its one-frame patch draws before every patron");
         // Slots without a frame draw nothing: on any longer loop the painted
         // patron would flicker back between patch frames.
         check(ok && patch.period == 1 && room_anim::slot_at(patch, 12.34f) == 0,

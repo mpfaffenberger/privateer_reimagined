@@ -1,4 +1,4 @@
-"""Bake the mining bar's 3D patrons into over-plate layers (#564, #566).
+"""Bake the mining bar's 3D patrons into over-plate layers (#564, #566, #570).
 
 Usage (from the repo root, after render_bar.py):
     uv run --with scipy tools/room_anim/mining/bake_bar.py              # every patron
@@ -6,11 +6,16 @@ Usage (from the repo root, after render_bar.py):
         --preview 0,60,120 --out build/room_anim/mining/bar_fit.png
 
 bar_bg.png stays untouched, so the painted patrons are still in the plate.
-Each 3D patron (bar_patrons.json) adds two layers on top of it, drawn in
-order:
+Each 3D patron (bar_patrons.json) adds two layers on top of it:
     <patron>_patch  one static frame on a one-slot loop: the painted one out
     <patron>        the 3D idle (render_bar.py), straight alpha
 If the layers are missing, the painting shows as painted.
+
+Patrons overlap (the left table), so they're listed back to front and
+stacked: each clean plate is made from the plate with every earlier
+patron already painted out (`cleaned_plate`), so a nearer patron's patch
+never paints a farther one back in. The room draws every patch first, then
+every patron in list order.
 
 Each patch comes from an AI clean-plate edit of the patron's crop
 (sources/). The generator repaints everything, so only the patron's region is
@@ -103,9 +108,22 @@ def patron_frame(p, path):
     return load_frame(tmp, max_px=None)        # the patron is the point: keep them sharp
 
 
+def cleaned_plate(name):
+    """-> the plate (RGB) with every patron listed before `name` painted out:
+    what `name`'s clean-plate source must be made from, and registered to."""
+    plate = Image.open(MINING.room / "bar_bg.png").convert("RGBA")
+    for other in PATRONS:
+        if other == name:
+            break
+        q = PATRONS[other]
+        plate.alpha_composite(Image.fromarray(clean_patch(q, plate.convert("RGB"))),
+                              tuple(q["crop"][:2]))
+    return plate.convert("RGB")
+
+
 def bake(name):
     p = PATRONS[name]
-    plate = Image.open(MINING.room / "bar_bg.png").convert("RGB")
+    plate = cleaned_plate(name)
     info = json.loads((BUILD / name / "pass.json").read_text())
     fps, frames = float(info["fps"]), int(info["frames"])
     patch = clean_patch(p, plate)
@@ -126,19 +144,24 @@ def bake(name):
 
 
 def preview(name, frames, out):
-    """Crops of plate + patch + patron at `frames`, beside the painted original."""
+    """Crops of the room as the engine draws it at `frames` (patches, then the
+    patrons up to `name`, back to front), beside the painted original."""
     p = PATRONS[name]
-    plate = Image.open(MINING.room / "bar_bg.png").convert("RGBA")
-    patched = plate.copy()
-    patched.alpha_composite(Image.fromarray(clean_patch(p, plate.convert("RGB"))),
-                            tuple(p["crop"][:2]))          # PIL wants a tuple, JSON gives a list
-    tiles = [plate.crop(tuple(p["crop"]))]
+    upto = list(PATRONS)[:list(PATRONS).index(name) + 1]
+    patched = Image.open(MINING.room / "bar_bg.png").convert("RGBA")
+    tiles = [patched.crop(tuple(p["crop"]))]    # PIL wants a tuple, JSON gives a list
+    for other in upto:
+        q = PATRONS[other]
+        patched.alpha_composite(Image.fromarray(clean_patch(q, patched.convert("RGB"))),
+                                tuple(q["crop"][:2]))
     for f in frames:
         tile = patched.copy()
-        baked = patron_frame(p, BUILD / name / f"{f:04d}.png")
-        if baked is not None:                  # scaled to dst, as the engine draws it
-            sprite, (x, y, w, h) = baked
-            tile.alpha_composite(Image.fromarray(sprite).resize((w, h), Image.LANCZOS), (x, y))
+        for other in upto:
+            path = BUILD / other / f"{f:04d}.png"
+            baked = patron_frame(PATRONS[other], path) if path.exists() else None
+            if baked is not None:              # scaled to dst, as the engine draws it
+                sprite, (x, y, w, h) = baked
+                tile.alpha_composite(Image.fromarray(sprite).resize((w, h), Image.LANCZOS), (x, y))
         tiles.append(tile.crop(tuple(p["crop"])))
     w, h = tiles[0].size
     sheet = Image.new("RGB", (w * len(tiles), h))
