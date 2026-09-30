@@ -37,6 +37,14 @@ class LandingBatchTests(unittest.TestCase):
         self.assertIn("centurion", request["prompt"])
         self.assertIn("mining", request["prompt"])
 
+    def test_repaint_drops_the_old_composite_reference(self):
+        request = batch.request_for(batch.Pair("agricultural", "tarsus"), repaint=True)
+        self.assertFalse(request["references"]["composite_installed"])
+        self.assertEqual({k: v for k, v in request["references"].items()
+                          if k != "composite_installed"},
+                         {k: v for k, v in batch.DEFAULT_REFERENCES.items()
+                          if k != "composite_installed"})
+
     def test_batch_installs_and_records_progress(self):
         pairs = [batch.Pair("mining", "centurion"), batch.Pair("mining", "talon")]
         with tempfile.TemporaryDirectory() as directory:
