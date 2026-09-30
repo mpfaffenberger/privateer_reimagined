@@ -593,12 +593,30 @@ void shipped_merchguild() {
               std::to_string(smoke.period) + " slots)");
 }
 
+// #590: New Detroit's concourse: a walker along the hangar platform, between
+// its pillars and across the wet plaza, and one out of the platform's lit door.
+void shipped_newdetroit() {
+    const std::string dir = "assets/concourse/newdetroit/";
+    room_anim::RoomAnimDef def;
+    room_anim::parse_room_anim(json::parse_file(dir + "concourse.json")["rooms"]["concourse"],
+                               def);
+    check(!def.has_sky && def.layers.size() == 2, "New Detroit concourse has its two walkers");
+    check_layers(dir, def.layers);
+    // Acceptance: the hotspots (links.json overrides) are untouched.
+    const json::Value links = json::parse_file(dir + "links.json")["concourse"];
+    check(links.as_array().size() == 8 &&
+              link_rect_is(links, "ShipDealer", 0.66875f, 0.0f, 0.32812f, 0.45f) &&
+              link_rect_is(links, "LandingPad", 0.20039f, 0.45562f, 0.08652f, 0.27417f),
+          "New Detroit keeps its eight hotspots (ShipDealer, LandingPad rects unchanged)");
+}
+
 void other_archetypes_static() {
     int animated = 0, rooms = 0;
     for (const auto& entry : std::filesystem::directory_iterator("assets/concourse")) {
         const std::string base = entry.path().filename().string();
         if (!entry.is_directory() || base == "newcon" || base == "mining" ||
-            base == "agricultural" || base == "pleasure" || base == "pirate")
+            base == "agricultural" || base == "pleasure" || base == "pirate" ||
+            base == "newdetroit")
             continue;
         const json::Value root = json::parse_file((entry.path() / "concourse.json").string());
         const json::Value* rs = root.find("rooms");
@@ -639,6 +657,7 @@ int main() {
     cross_dir_layer_paths();
     shipped_mercguild();
     shipped_merchguild();
+    shipped_newdetroit();
     other_archetypes_static();
     std::printf("\n%s\n", failures == 0 ? "ALL PASS" : "FAILURES DETECTED");
     return failures == 0 ? 0 : 1;

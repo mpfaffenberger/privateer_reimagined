@@ -8,6 +8,10 @@
         200
       ],
       "overlays": [],
+      "layers": [
+        "anim/walker_platform.json",
+        "anim/walker_door.json"
+      ],
       "links": [
         {
           "target": "LandingPad",

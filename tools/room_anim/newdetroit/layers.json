@@ -1,0 +1,5 @@
+{
+  "_doc": "Per-layer loop timing, seconds. period >= the pass length; the rest is a gap. Mismatched periods keep the two walkers from visibly repeating together.",
+  "walker_platform": { "period": 41.0, "offset": 0.0 },
+  "walker_door":     { "period": 29.0, "offset": -9.0 }
+}

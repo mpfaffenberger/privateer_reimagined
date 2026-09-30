@@ -24,7 +24,7 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `sky.py` | uv | star removal, mask solidify, sky fill, painted-star stats, star tiles |
 | `composite_preview.py` | uv | engine-faithful preview from `concourse.json` (`--base`) |
 | `stage.py` | Blender | render settings, boxes, materials, lights, straight/polyline paths |
-| `walkers.py` | Blender | pedestrian proxies and their walk (New Con, pirate) |
+| `walkers.py` | Blender | pedestrian proxies and their walk (New Con, pirate); rigged walkers (New Detroit) |
 | `patron_room.py` | both | loads a room file: camera, lights, paths, patrons (#577) |
 | `render_patrons.py` | Blender | a room's 3D patrons, camera-matched (`--room`, `--patron`) |
 | `bake_patrons.py` | uv | clean-plate patch + patron sheet each (`--room`); `--preview` crops |
@@ -39,6 +39,7 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `agricultural/` | | Agricultural: concourse clouds and aircraft (#582), landing pad sky traffic (#583) |
 | `pleasure/` | | Pleasure: concourse skylight stars, marquee chase, neon (#594), landing pad transport (#595) |
 | `pirate/` | | Pirate base concourse: lanterns, pirates, a grav pod (#586) |
+| `newdetroit/` | | New Detroit concourse: walkers on the platform and plaza (#590) |
 
 ## New Con concourse
 
@@ -682,6 +683,61 @@ Shared walker proxies (`build_walker`, `animate_walk_path`: a polyline
 walk that turns through corners) live in `walkers.py`; `stage.animate_path()`
 moves anything along a polyline, and `stage.overlay_on_plate()` makes a
 `--check` image.
+
+## New Detroit concourse (#590)
+
+A wet plaza between towers: a bar under a red awning on the left, stairs to a
+second level at the back, and on the right a raised platform under the
+hangar building, its pillars lit by blue kerb lamps. Two people walk it:
+
+* `walker_platform` comes in along the platform from frame-right, passes
+  behind both pillars (a peek between them), steps down the kerb and crosses
+  the plaza, reflected in the wet floor, into a side passage past the left
+  building's corner.
+* `walker_door` steps out of the platform's lit doorway, silhouetted, and
+  walks off frame-right.
+
+```sh
+blender --background --factory-startup \
+    --python tools/room_anim/newdetroit/render_layers.py -- --check
+blender --background --factory-startup \
+    --python tools/room_anim/newdetroit/render_layers.py -- --layer all
+uv run tools/room_anim/bake_layer.py --base newdetroit --all
+uv run tools/room_anim/composite_preview.py --base newdetroit --seconds 41 \
+    --out build/room_anim/newdetroit/preview.mp4
+```
+
+**Camera.** Loose one-point perspective: the left wall's lamp strip, the
+floor's grate channel and the platform kerb meet the horizon at y 555, but
+scatter in x from ~190 to ~430 (the painting isn't strict), so the vanishing
+point is their middle, x 330, with lens shift. Eye 2.8 m puts the bar
+stools' seats at 0.9 m and the platform door at 2.0 m; f 1100 px keeps the
+pillars ~1.5 m across. `scene.floor_point()` maps plate pixels to the floor,
+and every landmark (kerb, pillars, back wall, doorway, the building corner)
+is written in `scene.py` as the plate pixel it was measured at. `--check`
+draws the holdouts, kerb and walker paths over the plate.
+
+**Rigged walkers.** At 90-160 px tall the box proxies read as walking
+crates, so these are the rigged characters from `characters/` (the Blue
+Jacket Worker and the Ironclad Wanderer) with a procedural walk cycle
+(`walkers.rigged_gait`) keyed onto their shared Mixamo skeleton: no paid
+walk clip (`build_rigged_walker`, `animate_rigged_walk`). Every swing is a
+rotation about the model's side axis, converted into each bone's rest
+frame, so bone roll doesn't matter and parents carry children: stride, knee
+fold, a sole kept near level, opposing arm swing, pelvis sway and drop.
+
+- **Clearing a clip leaves its pose.** `animation_data_clear()` keeps each
+  bone's last evaluated pose; the idle's hunched shoulders held both arms
+  out like a tray. Every pose bone is reset to identity first.
+- **Occluded, not faded.** Walkers enter and leave behind holdouts (pillars,
+  the back wall either side of the doorway, the left building block), so
+  nothing pops. Paths are polylines (`stage.animate_path`), whose floor
+  height can be a function: the walker steps down the platform's kerb.
+- **Lights are never seen.** Every light is hidden from the camera and from
+  glossy rays. A lamp visible behind a walker clipped to white and haloed
+  him (the bake's maths assumes nothing clips), and the proxy deck's mirror
+  images of the lamps only added noise, printed as coloured specks. They
+  cancel in A - B anyway; the painting has its own reflections.
 
 ## 3D patrons in any room (#577)
 

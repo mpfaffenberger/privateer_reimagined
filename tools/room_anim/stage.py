@@ -134,10 +134,10 @@ def _along(points, dist):
 
 def animate_path(obj, points, z, fps, speed, frame_start=1, turn_m=0.8, lift=None):
     """Constant-speed trip along the polyline `points` [(x, y), ...] at
-    height `z`, keyed every frame from `frame_start`. The heading (+Y
-    forward) follows the path over `turn_m` metres, so corners turn
-    smoothly; `lift(frame)` adds a vertical offset (a gait, a hover bob).
-    Returns the last frame."""
+    height `z` (or a function (x, y) -> height: a kerb, a platform), keyed
+    every frame from `frame_start`. The heading (+Y forward) follows the
+    path over `turn_m` metres, so corners turn smoothly; `lift(frame)` adds
+    a vertical offset (a gait, a hover bob). Returns the last frame."""
     length = sum(math.hypot(x1 - x0, y1 - y0)
                  for (x0, y0), (x1, y1) in zip(points, points[1:]))
     frame_end = frame_start + round(length / speed * fps)
@@ -150,7 +150,8 @@ def animate_path(obj, points, z, fps, speed, frame_start=1, turn_m=0.8, lift=Non
         if heading is not None:                     # the short way round, no spins
             want = heading + (want - heading + math.pi) % (2.0 * math.pi) - math.pi
         heading = want
-        obj.location = (x, y, z + (lift(f) if lift else 0.0))
+        floor = z(x, y) if callable(z) else z
+        obj.location = (x, y, floor + (lift(f) if lift else 0.0))
         obj.rotation_euler = (0.0, 0.0, heading)
         obj.keyframe_insert("location", frame=f)
         obj.keyframe_insert("rotation_euler", frame=f)
