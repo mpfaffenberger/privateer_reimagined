@@ -107,6 +107,14 @@ def nav_lights(ship, frames, radius, strength, strobe_radius, strobe_strength,
         strobe.keyframe_insert("hide_render", frame=f)
 
 
+def hull_nav_lights(ship, frames, every_s=1.5, phase_s=0.0):
+    """nav_lights() sized for the hull: a 100 m ship gets the crater
+    freighter's 1.3 m lamps (#561), a strobe every `every_s` from `phase_s`."""
+    k = ship["size"][1] / 100.0
+    nav_lights(ship, frames, 1.3 * k, 30.0, 1.5 * k, 60.0,
+               strobe_every_s=every_s, strobe_phase=round(phase_s * FPS))
+
+
 def frame_range(spec):
     """"first:last[:step]" -> the frame numbers, for a quick look."""
     first, last, *step = (int(v) for v in spec.split(":"))

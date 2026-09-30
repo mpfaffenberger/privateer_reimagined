@@ -1,0 +1,6 @@
+{
+  "_doc": "Loop timing for the landing pad's ship layers, seconds (bake_landing.py --layers-only, via ../bake_crater.py). period >= the pass; the rest is a gap.",
+  "_star_seed": 585,
+  "transport_pass": { "period": 61.0, "offset": 0.0 },
+  "tug_liftoff":    { "period": 44.0, "offset": -9.0 }
+}

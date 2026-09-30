@@ -133,7 +133,10 @@ def find_sky(plate, rim_smooth=RIM_SMOOTH, level_band=None, warm_margin=None):
     return mask, [w / 2, round(float(np.median(rim)), 1), w / 2]
 
 
-def _where(base):
+def landing_paths(base):
+    """A crater-style landing pad's inputs and outputs (landing_ships/,
+    anim/landing/, build/.../landing/, landing_layers.json with its optional
+    "_sky" find_sky() options): what the bake_*() functions take."""
     where = paths(base)
     timing = where.tools / "landing_layers.json"
     return SimpleNamespace(composites=where.room / "landing_ships",
@@ -141,13 +144,16 @@ def _where(base):
                            timing=timing, sky=json.loads(timing.read_text()).get("_sky", {}))
 
 
-def bake_skies(where, debug):
+def bake_skies(where, debug, find=None):
+    """Each composite's sky mask, fill and anchor. `find(plate)` -> (mask,
+    [cx, cy, r]) replaces find_sky() for a pad whose sky isn't above a rim
+    (the Refinery's hangar door, #585)."""
     out = where.out
     out.mkdir(parents=True, exist_ok=True)
     anchors, thumbs = {}, []
     for path in sorted(where.composites.glob("*.png")):
         plate = Image.open(path).convert("RGB")
-        mask, anchor = find_sky(plate, **where.sky)
+        mask, anchor = find(plate) if find else find_sky(plate, **where.sky)
         hull = path.stem
         mask.save(out / f"{hull}_mask.png", optimize=True)
         fill = sky_fill(plate, mask)
@@ -219,7 +225,7 @@ def main():
     only.add_argument("--stars-only", action="store_true", help="just re-make the star tiles")
     only.add_argument("--layers-only", action="store_true", help="just bake the sky layers")
     args = ap.parse_args()
-    where = _where(args.base)
+    where = landing_paths(args.base)
     if not (args.stars_only or args.layers_only):
         bake_skies(where, args.debug)
     if not args.layers_only:

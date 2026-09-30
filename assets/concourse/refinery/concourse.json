@@ -256,6 +256,21 @@
           "real_frames": 1
         }
       ],
+      "composite": {
+        "sky": {
+          "mask": "anim/landing/{plate}_mask.png",
+          "fill": "anim/landing/{plate}_fill.png",
+          "stars": [
+            { "tile": "anim/landing/stars_far.png", "velocity": [-1.2, 0.0] },
+            { "tile": "anim/landing/stars_near.png", "velocity": [-2.0, 0.0] }
+          ]
+        },
+        "anchors": "anim/landing/anchors.json",
+        "layers": [
+          "anim/landing/transport_pass.json",
+          "anim/landing/tug_liftoff.json"
+        ]
+      },
       "links": [
         {
           "target": "Concourse",
