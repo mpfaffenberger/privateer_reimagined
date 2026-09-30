@@ -10,6 +10,8 @@
       "overlays": [],
       "layers": [
         "anim/aircar_top.json",
+        "anim/walker_student.json",
+        "anim/walker_don.json",
         "anim/aircar_avenue.json"
       ],
       "links": [

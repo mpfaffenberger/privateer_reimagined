@@ -81,6 +81,14 @@ def at_depth(px, py, d):
 STREET_ORIGIN = ground_point(548.0, 675.0)
 
 
+def on_upright(px, py, y):
+    """World (x, y, z) on plate pixel (px, py)'s ray where it meets the
+    upright plane at world `y`, square to the camera's heading (#610)."""
+    rx, ry, rz = ray(px, py)
+    t = y / ry
+    return (rx * t, y, EYE_HEIGHT + rz * t)
+
+
 def to_world(u, v):
     """Street frame (u, v) metres -> world (x, y)."""
     cg, sg = math.cos(_G), math.sin(_G)

@@ -40,7 +40,7 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `pleasure/` | | Pleasure: concourse skylight stars, marquee chase, neon (#594), landing pad transport (#595) |
 | `pirate/` | | Pirate base concourse: lanterns, pirates, a grav pod (#586) |
 | `newdetroit/` | | New Detroit: concourse walkers on the platform and plaza (#590), aircars past the landing pad (#591) |
-| `oxford/` | | Oxford: concourse air-cars in the garden square (#592), landing pad departure at dusk (#593) |
+| `oxford/` | | Oxford: concourse air-cars and pedestrians in the garden square (#592, #610), landing pad departure at dusk (#593) |
 | `refinery/` | | Refinery: concourse stars, ships over the dome, the ore train (#584), landing pad door and ships (#585) |
 | `military/` | | Military: concourse stars, a fighter pair, the munitions train (#588), landing bay lamp chase (#589) |
 
@@ -748,13 +748,17 @@ The university town's garden square, seen from high up. Two of the original
 game's air-cars (`ships_wcnews/aircar.obj`) glide down its streets: an
 oxblood one down the lamp-lit avenue toward the camera, slipping past the
 striped market tents, and a racing-green one along the banner street, out
-from under a roof, behind the clock tower and off to the right.
+from under a roof, behind the clock tower and off to the right. Two people
+walk the square (#610): a don in a black gown comes out from behind the
+market tents, along the pavement by the central bed and up the walkway into
+the clock tower's shadow, passing a student in tweed on his way down it and
+off up the street behind the hall.
 
 ```sh
 uv run tools/room_anim/oxford/check_camera.py          # street grid + routes over the plate
 blender --background --factory-startup \
     --python tools/room_anim/oxford/render_layers.py -- --check --layer all
-uv run tools/room_anim/bake_layer.py --base oxford --all
+uv run tools/room_anim/bake_layer.py --base oxford --all      # or one layer by name
 uv run tools/room_anim/composite_preview.py --base oxford --seconds 48 \
     --out build/room_anim/oxford/preview.mp4
 ```
@@ -794,15 +798,30 @@ uv run tools/room_anim/composite_preview.py --base oxford --seconds 48 \
 - **They never crash.** The routes cross, so the loops are locked (48 s is
   twice 24 s) with offsets that put the two cars at the crossing 12 s apart
   every time; `test_room_anim` checks the lock.
+- **Pedestrians (#610)** are `walkers.py` proxies (`actors.LOOKS`): at ~40
+  px, 1.75 m at 130 m, the silhouette, gait and lamplight carry them, and
+  12 fps is plenty. Each comes and goes behind a holdout, never popping in:
+  the don from under the south tent (he crosses the avenue there, unseen,
+  timed 8 s behind the car) to behind the clock tower; the student from the
+  tower to behind the hall's roof, a new `FrontHall` silhouette, stood at the
+  hall's street-side wall so the street behind it is hidden and the pavement
+  in front isn't. Those two cards stand upright (`scene.UPRIGHT`): the camera
+  looks 34 deg down, so a camera-facing card leans toward it at the top and
+  a walker crossing one vanished feet first, sinking into the pavement; the
+  cars' cards stay as signed off (no car comes within 36 m of either). Paths
+  were checked before rendering by projecting a 1.75 m box every metre
+  against every silhouette. Their loops lock to
+  the avenue car's too (48 s), and phase them to pass each other mid-walkway;
+  the student, a metre farther off, is drawn first.
 
 | `oxford/` file | runs in | what |
 |---|---|---|
 | `camera_match.py` | both | the fitted camera and the street frame, pure math |
 | `check_camera.py` | uv | street grid, lamp posts and routes over the plate |
 | `scene.py` | Blender | camera, street deck + beds, silhouette holdouts, lights |
-| `actors.py` | Blender | the air-car (game mesh, clean shaders, lamps) and its drive |
-| `render_layers.py` | Blender | one layer per route; `--check` camera vs `camera_match` |
-| `routes.json` | - | each car's route, hover, speed and paint |
+| `actors.py` | Blender | the air-car (game mesh, clean shaders, lamps) and its drive; walker looks |
+| `render_layers.py` | Blender | one layer per route, by its `kind`; `--check` camera vs `camera_match` |
+| `routes.json` | - | each route: kind, uv path, speed; a car's hover + paint, a walker's look |
 | `layers.json` | - | loop period, phase, `max_px` |
 | `bake_landing.py` | uv | landing pad: sky masks, half-size fills, moon anchors; layer sheet |
 | `render_landing.py` | Blender | the Oxford ship lifting off (`../flyover.py`, dusk `lights=`) |

@@ -9,8 +9,8 @@ Run inside Blender (headless):
 --check asserts that the Blender camera projects exactly like
 camera_match.py, which check_camera.py draws over the plate.
 
-Every route in routes.json is one air-car layer. Passes (see ../render.py) go
-to build/room_anim/oxford/<layer>/; bake_layer.py --base oxford then turns
+Every route in routes.json is one layer: an air-car or, #610, a pedestrian
+(its "kind"). Passes (see ../render.py) go to build/room_anim/oxford/<layer>/; bake_layer.py --base oxford then turns
 them into plate-aware RGBA sprites.
 """
 import argparse
@@ -32,8 +32,10 @@ import camera_match as cm  # noqa: E402
 import render  # noqa: E402
 import scene as town  # noqa: E402
 from base import paths  # noqa: E402
+from walkers import animate_walk_path  # noqa: E402
 
 OXFORD = paths("oxford")
+WALK_FPS = 12              # plenty for a ~40 px figure, half the atlas of 24 fps
 ROUTES = {k: v for k, v in json.loads((HERE / "routes.json").read_text()).items()
           if not k.startswith("_")}
 
@@ -44,6 +46,18 @@ def _aircar(sc, name):
     last = actors.animate_drive(car, route["uv"][0], route["uv"][-1], route["hover"],
                                 route["speed"], sc.render.fps)
     return [car], (1, last)
+
+
+def _walker(sc, name):
+    route = ROUTES[name]
+    sc.render.fps = WALK_FPS
+    root, limbs = actors.build_pedestrian(name, route["look"])
+    last = animate_walk_path(root, limbs, [cm.to_world(*p) for p in route["uv"]], 0.0,
+                             WALK_FPS, speed=route["speed"])
+    return [root], (1, last)
+
+
+KINDS = {"aircar": _aircar, "walker": _walker}   # routes.json "kind" -> builder
 
 
 def _build_town():
@@ -59,7 +73,7 @@ def _build_town():
 
 def build(layer):
     sc, decks = _build_town()
-    roots, frames = _aircar(sc, layer)
+    roots, frames = KINDS[ROUTES[layer]["kind"]](sc, layer)
     sc.frame_start, sc.frame_end = frames
     return sc, decks, roots
 
