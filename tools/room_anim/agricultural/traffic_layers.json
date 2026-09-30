@@ -1,0 +1,5 @@
+{
+  "_doc": "Aircraft outside the windows (bake_traffic.py). Loop timing, seconds: period >= the pass; the rest is empty sky. The engine adds offset to the clock.",
+  "freighter_departure": { "period": 61.0, "offset": 0.0 },
+  "aircar_crossing": { "period": 37.0, "offset": -20.0 }
+}
