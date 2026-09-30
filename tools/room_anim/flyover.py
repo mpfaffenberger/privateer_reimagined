@@ -15,10 +15,12 @@ the tightest composites), so paths are solved from screen targets relative
 to the rim (screen_path()).
 
 A base's render_landing.py builds its ships and calls run(), which writes
-build/room_anim/<base>/landing/<layer>/:
+build/room_anim/<base>/landing/<layer>/ (render_frames()):
     NNNN.png   straight-alpha RGBA, rendered inside a border around the ships
     pass.json  {"frames", "fps", "anchor"}
-bake_crater.py --layers-only then packs them.
+bake_crater.py --layers-only then packs them. render_frames() and
+nav_lights() also serve other straight-alpha sky passes (the Refinery
+concourse's dome, #584).
 """
 import argparse
 import json
@@ -105,6 +107,32 @@ def nav_lights(ship, frames, radius, strength, strobe_radius, strobe_strength,
         strobe.keyframe_insert("hide_render", frame=f)
 
 
+def frame_range(spec):
+    """"first:last[:step]" -> the frame numbers, for a quick look."""
+    first, last, *step = (int(v) for v in spec.split(":"))
+    return range(first, last + 1, step[0] if step else 1)
+
+
+def render_frames(sc, roots, out, frames, todo=None, info=None):
+    """Straight-alpha NNNN.png frames into `out`, each rendered inside a
+    border around `roots` (off-screen frames write nothing), and pass.json
+    {"frames", "fps", **info}. `todo` renders just those frames; a full pass
+    first clears stale ones."""
+    out.mkdir(parents=True, exist_ok=True)
+    if todo is None:
+        for old in out.glob("*.png"):           # off-screen frames write nothing,
+            old.unlink()                        # so stale ones must not survive
+        todo = range(1, frames + 1)
+    for f in todo:
+        sc.frame_set(f)
+        if not render.set_border(sc, roots, margin=0.15, footprint=False):
+            continue
+        sc.render.filepath = str(out / f"{f:04d}.png")
+        bpy.ops.render.render(write_still=True)
+    (out / "pass.json").write_text(json.dumps(
+        {"frames": frames, "fps": FPS, **(info or {})}) + "\n")
+
+
 def build(samples, frames, lights=None):
     """The empty sky stage: camera, then `lights(sc)`: by default the sun
     and crater bounce."""
@@ -130,21 +158,6 @@ def run(argv, base, layer, seconds, build_ships, doc=None, lights=None):
     sc = build(args.samples, frames, lights)
     rim = anchor(base)
     roots = build_ships(frames, rim[1])
-    out = paths(base).build / "landing" / layer
-    out.mkdir(parents=True, exist_ok=True)
-    if args.frames:
-        first, last, *step = (int(v) for v in args.frames.split(":"))
-        todo = range(first, last + 1, step[0] if step else 1)
-    else:
-        for old in out.glob("*.png"):           # off-screen frames write nothing,
-            old.unlink()                        # so stale ones must not survive
-        todo = range(1, frames + 1)
-    for f in todo:
-        sc.frame_set(f)
-        if not render.set_border(sc, roots, margin=0.15, footprint=False):
-            continue
-        sc.render.filepath = str(out / f"{f:04d}.png")
-        bpy.ops.render.render(write_still=True)
-    (out / "pass.json").write_text(json.dumps(
-        {"frames": frames, "fps": FPS, "anchor": rim}) + "\n")
+    render_frames(sc, roots, paths(base).build / "landing" / layer, frames,
+                  frame_range(args.frames) if args.frames else None, {"anchor": rim})
     print(f"[render_landing] {layer} done", flush=True)

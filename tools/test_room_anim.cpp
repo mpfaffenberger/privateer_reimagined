@@ -569,6 +569,35 @@ void shipped_newcon_hangar() {
           "landing keeps its Launch + Concourse hotspots");
 }
 
+// #584: the Refinery concourse's drifting stars, ships crossing the dome
+// (under the plate, so the arches and towers occlude them) and the ore train
+// on the ring floor.
+void shipped_refinery() {
+    const std::string dir = "assets/concourse/refinery/";
+    room_anim::RoomAnimDef def;
+    room_anim::parse_room_anim(json::parse_file(dir + "concourse.json")["rooms"]["concourse"],
+                               def);
+    check(def.has_sky && def.sky.stars.size() >= 2, "refinery concourse has a sky with parallax");
+    for (const std::string* p : {&def.sky.mask, &def.sky.fill})
+        check(std::filesystem::exists(dir + *p), "sky asset exists: " + *p);
+    for (const room_anim::StarLayerDef& s : def.sky.stars)
+        check(std::filesystem::exists(dir + s.tile), "star tile exists: " + s.tile);
+    check_layers(dir, def.layers);
+    int under = 0, over = 0;
+    for (const std::string& layer : def.layers) {
+        room_anim::SpriteSheet s;
+        std::string err;
+        if (room_anim::parse_sprite_sheet(json::parse_file(dir + layer), s, err))
+            (s.under ? under : over)++;
+    }
+    check(under >= 2 && over >= 1, "ships cross the sky under the plate; the ore train drives over it");
+    // Acceptance: the hotspots (links.json overrides) are untouched.
+    const json::Value links = json::parse_file(dir + "links.json")["concourse"];
+    check(links.as_array().size() == 8 &&
+              link_rect_is(links, "ShipDealer", 0.26523f, 0.65063f, 0.17355f, 0.16833f),
+          "refinery keeps its eight hotspots (ShipDealer rect unchanged)");
+}
+
 // #577: rooms shared by every base (the guilds) name their layers relative to
 // the base dir, "../../shared_rooms/<room>/<layer>.json". The engine joins
 // dir + path as-is and finds the atlas next to the manifest, as check_layers
@@ -708,7 +737,7 @@ void other_archetypes_static() {
         if (!entry.is_directory() || base == "newcon" || base == "mining" ||
             base == "agricultural" || base == "pleasure" || base == "pirate" ||
             base == "newdetroit" ||
-            base == "oxford")
+            base == "oxford" || base == "refinery")
             continue;
         const json::Value root = json::parse_file((entry.path() / "concourse.json").string());
         const json::Value* rs = root.find("rooms");
@@ -747,6 +776,7 @@ int main() {
     shipped_mining_bar();
     shipped_pleasure();
     shipped_pirate();
+    shipped_refinery();
     shipped_newcon_hangar();
     shipped_oxford();
     cross_dir_layer_paths();

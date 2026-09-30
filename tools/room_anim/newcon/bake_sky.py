@@ -30,11 +30,11 @@ import sys
 from pathlib import Path
 
 import numpy as np
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from base import paths  # noqa: E402
-from sky import RNG_SEED, PaintedStars, sky_fill, solidify, star_removed, star_tile  # noqa: E402
+from sky import RNG_SEED, PaintedStars, sky_fill, star_tile, window_mask  # noqa: E402
 
 NEWCON = paths("newcon")
 
@@ -62,20 +62,6 @@ WINDOWS = [
 FLOOR_SEED = (768, 1000)   # a pixel that is certainly not sky (the deck)
 
 
-def sky_mask(plate):
-    lum = plate.convert("L")
-    base = np.asarray(star_removed(lum), dtype=np.float32)
-    limit = Image.new("L", plate.size, 0)            # per-pixel threshold, 0 = never sky
-    draw = ImageDraw.Draw(limit)
-    for poly, darkness in WINDOWS:
-        draw.polygon(poly, fill=darkness)
-    limit = np.asarray(limit, dtype=np.float32)
-    dark = Image.fromarray(((base <= limit) & (limit > 0)).astype(np.uint8) * 255)
-    # Opening drops thin dark rib seams inside a window.
-    return solidify(dark.filter(ImageFilter.MinFilter(7)).filter(ImageFilter.MaxFilter(7)),
-                    FLOOR_SEED)
-
-
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--debug", help="write a mask-over-plate visualisation here")
@@ -83,7 +69,7 @@ def main():
 
     out = NEWCON.anim
     plate = Image.open(NEWCON.plate).convert("RGB")
-    mask = sky_mask(plate)
+    mask = window_mask(plate, WINDOWS, FLOOR_SEED)
     out.mkdir(parents=True, exist_ok=True)
     mask.save(out / "sky_mask.png", optimize=True)
     sky_fill(plate, mask).save(out / "sky_fill.png", optimize=True)

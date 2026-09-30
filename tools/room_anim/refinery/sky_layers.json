@@ -1,0 +1,5 @@
+{
+  "_doc": "Loop timing for the sky's ship layers, seconds (bake_sky.py --layers-only). period >= the pass; the rest is a gap. Mismatched periods keep them from repeating in step.",
+  "hauler_pass": { "period": 71.0, "offset": 0.0 },
+  "shuttle_in":  { "period": 43.0, "offset": -6.0 }
+}

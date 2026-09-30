@@ -41,6 +41,7 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `pirate/` | | Pirate base concourse: lanterns, pirates, a grav pod (#586) |
 | `newdetroit/` | | New Detroit: concourse walkers on the platform and plaza (#590), aircars past the landing pad (#591) |
 | `oxford/` | | Oxford: concourse air-cars in the garden square (#592), landing pad departure at dusk (#593) |
+| `refinery/` | | Refinery concourse: stars, ships over the dome, the ore train (#584) |
 
 ## New Con concourse
 
@@ -851,6 +852,75 @@ uv run tools/room_anim/composite_preview.py --base oxford --room landing --plate
   (200 m to 420 m, ~43 m/s). The mesh has the old game's
   afterburner baked in as solid red and yellow flames: `ships.STRIP_MATERIALS`
   drops those faces at import, before the bbox sets the scale.
+
+## Refinery concourse (#584)
+
+The painting looks down from a high balcony into a round atrium: a ring of
+floor round a sunken garden, shopfronts and cargo bays round the wall, a
+column on a bridge in front. Above, the dome's glass looks out on space and
+the refinery. The original game had ships crossing the dome (legacy
+`sh0`/`sh1`); now stars drift through all three windows, a Galaxy freighter
+crosses far out and a Demon shuttle drops in behind the towers (both *under*
+the plate), and the mining base's ore train (#558) comes round the ring
+floor and delivers into the cargo bay.
+
+```sh
+uv run tools/room_anim/refinery/bake_sky.py --debug build/room_anim/refinery/sky_debug.png
+blender --background --factory-startup \
+    --python tools/room_anim/refinery/render_sky.py -- --layer all
+uv run tools/room_anim/refinery/bake_sky.py --layers-only
+blender --background --factory-startup \
+    --python tools/room_anim/refinery/render_layers.py -- --check      # camera-match overlay
+blender --background --factory-startup \
+    --python tools/room_anim/refinery/render_layers.py -- --layer all
+uv run tools/room_anim/bake_layer.py --base refinery --all
+uv run tools/room_anim/composite_preview.py --base refinery --seconds 48 \
+    --out build/room_anim/refinery/preview.mp4
+```
+
+**Camera: fit to circles.** No straight floor lines here, but the column and
+its cable are vertical at x ~1135 and the floor's rings are symmetric about
+it, so that's the lens-shifted principal column and the atrium's axis. The
+wall's foot and the ring of floor lamps were fitted as two concentric
+circles by least squares. Rings alone can't separate focal length from pitch,
+so f is fixed at 1100 px (pitch 9.5 deg down). The check the fit never
+saw: the axis's foot lands at y 984, right under the painted column. The cargo bay door
+(~120 px, taken as 4.7 m) sets the scale: wall radius 20 m. `scene.to_plate()`
+and `plate_point()` map world and plate both ways, so routes and flight paths
+are planned in plate pixels.
+
+**Hazy sky.** Round the sun the sky is haze up to luminance ~70, not black.
+`sky.window_mask()` (New Con's polygons + per-window threshold, now shared,
+with `holes` for painted rocks and ships in the sky) keeps the glare
+painted, and `sky.hazy_sky_fill()` fills with the plate's own star-removed
+sky at full resolution: `sky_fill()`'s broad average of the masked sky came out
+darker than the haze and outlined the mask. Hairlines crossing the sky (the
+hanging cable, antennas) are cut back out of the mask as long vertical runs
+of bright residual; the mask's opening would erase them. Holes and hairlines
+are cut after `solidify()`, whose hole fill would take them back.
+
+**Ships over the dome** use `flyover.py`'s crater-landing helpers (#587):
+`nav_lights()`, sized per hull, and `render_frames()`, the straight-alpha
+render loop that `flyover.run()` now calls too. Only the camera (the
+plate's, from `scene.py`) and the lights (the painted sun) are the dome's own.
+
+**Ore train on a ring.** `refinery/actors.py` loads `mining/actors.py` by
+path (both bases have a `scene` module, so it can't share `sys.path`) and
+drives the same tug and hopper along a Chaikin-smoothed curve: 15 m out
+round the ring, through the bay door (-38 to -16 deg), then left behind the
+wall. The garden (a drum) and the wall beside the door are holdouts, so the
+hopper vanishes past the painted jamb. The tug is grimed darker than on the
+mining base; the stock yellow glared in this dimmer, browner room.
+
+| `refinery/` file | runs in | what |
+|---|---|---|
+| `scene.py` | Blender | circle-fit camera, floor ring deck, garden + bay wall holdouts, lights |
+| `actors.py` | Blender | the mining ore train on a curved floor path |
+| `render_layers.py` | Blender | the ore-train layer; `--check` overlay |
+| `layers.json` | - | ore-train loop timing |
+| `bake_sky.py` | uv | window mask, hazy fill, star tiles; `--layers-only` bakes the ships |
+| `render_sky.py` | Blender | the ships over the dome, straight alpha |
+| `sky_layers.json` | - | the ships' loop timing |
 
 ## 3D patrons in any room (#577)
 
