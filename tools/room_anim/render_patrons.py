@@ -338,11 +338,42 @@ def _patron(sc, p):
     return root, body, act
 
 
+def _grip(arm, bone, a, b):
+    """-> (mesh, three vertex indices): where `bone`'s skin grips segment
+    a-b at the current frame. The vertex nearest the segment, plus the two
+    around it (within 4 cm) that span the widest triangle, so the frame
+    they define is stable."""
+    dg = bpy.context.evaluated_depsgraph_get()
+    best = None
+    for body in (o for o in arm.children if o.type == 'MESH' and not o.hide_render):
+        group = body.vertex_groups.get(bone)
+        if group is None:
+            continue
+        weighted = {v.index for v in body.data.vertices
+                    if any(g.group == group.index and g.weight > 0.5 for g in v.groups)}
+        ev = body.evaluated_get(dg)
+        me = ev.to_mesh()
+        pts = {v.index: ev.matrix_world @ v.co for v in me.vertices if v.index in weighted}
+        ev.to_mesh_clear()
+        for i, q in pts.items():
+            t = max(0.0, min(1.0, (q - a).dot(b - a) / (b - a).length_squared))
+            d = (q - (a + (b - a) * t)).length
+            if best is None or d < best[0]:
+                best = (d, body, i, pts)
+    _, body, i0, pts = best
+    near = [i for i, q in pts.items() if (q - pts[i0]).length < 0.04]
+    i1 = max(near, key=lambda i: (pts[i] - pts[i0]).length)
+    i2 = max(near, key=lambda i: (pts[i1] - pts[i0]).cross(pts[i] - pts[i0]).length)
+    return body, (i0, i1, i2)
+
+
 def _held(sc, arm, p):
     """Props in a hand (#579; the merchant's cigar): a cylinder from `from`
-    to `to` ([plate px, depth, z], where the painting has it at frame 0),
-    parented to `bone` as posed then, so it follows the hand. `ember`
-    ([[t s, strength], ...] over the fidget cycle) lights the `to` end."""
+    to `to` ([plate px, depth, z], where the painting has it at frame 0).
+    It rides the skin, not the bone (vertex parent, _grip): the rig
+    weights the fingers only partly to the hand, so a bone-parented cigar
+    slid off them as the hand turned. `ember` ([[t s, strength], ...] over
+    the fidget cycle) lights the `to` end."""
     sc.frame_set(0)
     bpy.context.view_layer.update()
     for held in p.get("held", []):
@@ -366,10 +397,15 @@ def _held(sc, arm, p):
                 glow.default_value = strength
                 glow.keyframe_insert("default_value", frame=round(t * sc.render.fps))
             placed.append((ember, Matrix.Translation(b)))
-        for obj, world in placed:        # onto the bone, where the painting has it
-            obj.parent, obj.parent_type = arm, 'BONE'
-            obj.parent_bone = _bone(arm, held["bone"]).name
-            obj.matrix_world = world
+        body, verts = _grip(arm, _bone(arm, held["bone"]).name, a, b)
+        for obj, world in placed:        # onto the fingers, where the painting has it
+            obj.parent, obj.parent_type = body, 'VERTEX_3'
+            obj.parent_vertices = verts
+            # Solve the local transform against the parent frame Blender
+            # evaluates (the matrix_world setter misplaces a vertex child).
+            obj.matrix_parent_inverse = obj.matrix_basis = Matrix.Identity(4)
+            bpy.context.view_layer.update()
+            obj.matrix_basis = obj.matrix_world.inverted() @ world
 
 
 def fidget_frames(still, fps):

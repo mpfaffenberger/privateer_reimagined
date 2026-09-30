@@ -2,8 +2,8 @@
   "_doc": [
     "Merchants' Guild 3D patron (#579): the merchant at his desk, smoking a cigar. Room file for render_patrons.py / bake_patrons.py (format: patron_room.py; still: still.py). Shared by every base, like the merc guild (#578): renders against mining's copy of the painting and bakes to assets/shared_rooms/merchguild/.",
     "camera: one-point, measured (LSD + RANSAC over the ceiling beams, right wall base and floor tiles): the vanishing point is (753, 363), on his head. f and eye come from him and the desk as the ruler: his head (0.24 m) is 78 px and his shoulders (0.45 m) 143 px, so he's at D ~ 0.0031 f; the desk top's back/front edges (y 517/585) with a 0.77 m deep desk put it at 2.5/1.73 m, so f ~ 900 and he's at ~2.75 m; the desk top then sits 0.43 m below the eye, so a 0.76 m desk puts the eye at 1.19 m (his seated eyes, 15 px below the horizon, at 1.14 m).",
-    "Pose: seated behind the desk (a bust: the desk hides him below its top), from Chair_Sit_Idle_M's first frame, held still. His right forearm lies along the desk to the notepad; his left elbow is down by the chair arm and his left hand holds the cigar at his mouth. The aim points his cigar hand's fingers at his lips, and twist turns its palm (it came out as a palm-out wave).",
-    "The drag (still.fidget, one 8 s cycle rendered): his wrist and fingers' aim targets are keyed from his lips down to his chest and back (0-1.5 s at his lips, lowering to 2.3 s, low to 5.5 s, back by 6.4 s); the cigar is a held prop parented to his hand, and its ember glows up while he draws (to 1.2 s) and fades. He exhales one puff as the hand settles (still.smoke, its own layer: 44 seeded faint splats that leave his lips towards screen right, over the dark wall (across his face it read as a smudge), slow, rise, sway into wisps, grow and fade over 3.6 s; denser or brighter reads as a glowing blob on his face). Everything else holds.",
+    "Pose: seated behind the desk (a bust: the desk hides him below its top), from Chair_Sit_Idle_M's first frame, held still. His right forearm lies along the desk to the notepad; his left elbow is down by the chair arm and his left hand holds the cigar at his mouth. His rig has no finger bones, so the fingers are straight; the pose is the one where straight fingers are natural: the hand up beside his mouth, fingers pointing up-left, back of the hand to camera (twist -90), the cigar crossing mid-finger, the way a cigarette is held at the lips. (Palm to camera read as a wave, fingers level at the mouth as a karate chop.) The cigar is 0.13 m (the painted one's 0.19 m read as a stick).",
+    "The drag (still.fidget, one 8 s cycle rendered): his forearm and hand aim targets are keyed off his lips to the corner of his mouth and back (0-1.5 s at his lips, away by 2.3 s, held to 5.5 s, back by 6.4 s). Both targets move by the same offset, so the hand slides without turning: the fingers only touch the cigar at their tips, and a turning hand pivots it on one fingertip, swinging it into the air (further away turns the hand too; lowered to his chest, the flat hand read as a wave). The cigar is a held prop riding his finger skin, and its ember glows up while he draws (to 1.2 s) and fades. He exhales one puff as the hand settles (still.smoke, its own layer: 44 seeded faint splats that leave his lips fast towards screen right, clearing his cheek before they rise over the dark wall (across his face it read as a smudge, rising over his eye as a glowing eye), slow, rise, sway into wisps, grow and fade over 3.6 s; denser or brighter reads as a glowing blob on his face). Everything else holds.",
     "inpaint: no AI clean plate (the image model was out of reach in this session). The 3D merchant sits over the painted one, so only the painted pixels inside this polygon that some render frame leaves uncovered (his painted cigar hand while the 3D one is lowered, silhouette slivers) are filled, from the chair and wall around the polygon."
   ],
   "room": {
@@ -25,13 +25,13 @@
       "RightForeArm": [795, 2.3, 0.80],
       "RightHand": [830, 2.25, 0.78],
       "LeftArm": [875, 2.75, 0.85],
-      "LeftForeArm": [842, 2.64, 1.01],
-      "LeftHand": [812, 2.66, 1.08]
+      "LeftForeArm": [842, 2.64, 1.06],
+      "LeftHand": [812, 2.66, 1.16]
     },
     "hold": ["RightForeArm", "RightHand", "LeftForeArm", "LeftHand"],
-    "twist": {"LeftHand": 90.0},
+    "twist": {"LeftHand": -90.0},
     "held": [
-      {"name": "Cigar", "bone": "LeftHand", "from": [800, 2.58, 1.072], "to": [866, 2.62, 1.114],
+      {"name": "Cigar", "bone": "LeftHand", "from": [800, 2.58, 1.072], "to": [845, 2.607, 1.1],
        "radius": 0.0065, "color": [0.07, 0.04, 0.02],
        "ember": [[0.0, 3.0], [0.3, 3.0], [1.2, 30.0], [1.6, 8.0], [2.4, 3.0], [8.0, 3.0]]}
     ],
@@ -41,16 +41,16 @@
         "cycle_s": 8.0,
         "at": [[0.0, 8.0]],
         "aims": {
-          "LeftForeArm": [[0.0, 842, 2.64, 1.01], [1.5, 842, 2.64, 1.01], [2.3, 866, 2.6, 0.92],
-                          [5.5, 866, 2.6, 0.92], [6.4, 842, 2.64, 1.01], [8.0, 842, 2.64, 1.01]],
-          "LeftHand": [[0.0, 812, 2.66, 1.08], [1.5, 812, 2.66, 1.08], [2.3, 852, 2.5, 1.02],
-                       [5.5, 852, 2.5, 1.02], [6.4, 812, 2.66, 1.08], [8.0, 812, 2.66, 1.08]]
+          "LeftForeArm": [[0.0, 842, 2.64, 1.06], [1.5, 842, 2.64, 1.06], [2.3, 862, 2.64, 0.98],
+                          [5.5, 862, 2.64, 0.98], [6.4, 842, 2.64, 1.06], [8.0, 842, 2.64, 1.06]],
+          "LeftHand": [[0.0, 812, 2.66, 1.16], [1.5, 812, 2.66, 1.16], [2.3, 832, 2.66, 1.08],
+                       [5.5, 832, 2.66, 1.08], [6.4, 812, 2.66, 1.16], [8.0, 812, 2.66, 1.16]]
         }
       },
       "smoke": {
         "puffs": [{"at": 2.3, "from": [797, 404]}],
         "particles": 44, "emit_s": 0.8, "life_s": 3.6,
-        "velocity": [26.0, -8.0], "rise_px_s": 12.0, "drift_px_s": 4.0, "wobble_px": 5.0,
+        "velocity": [48.0, -3.0], "rise_px_s": 10.0, "drift_px_s": 6.0, "wobble_px": 5.0,
         "radius_px": [2.0, 14.0], "alpha": 0.08, "color": [172, 170, 168], "seed": 7
       }
     },

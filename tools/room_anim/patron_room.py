@@ -20,8 +20,9 @@ forward through every key, and `hip_sway` (0-1) scales the hips' travel
 (`lean` only damps rotations). `still` holds one pose with very small
 moves (still.py has its format; its fidget may key `aims` over the cycle).
 For the merchant (#579): `twist` ({bone: deg}, about the bone's own axis,
-the one an aim leaves free), `held` (a prop in a hand, e.g. a cigar with a
-keyed ember: render_patrons._held), and `inpaint` (a plate-px polygon around
+the one an aim leaves free), `held` (a prop in a hand, riding the skin of
+`bone`'s vertices where they grip it, e.g. a cigar with a keyed ember:
+render_patrons._held), and `inpaint` (a plate-px polygon around
 the painted patron: a clean plate without an AI edit, bake_patrons.
 inpaint_patch). Room files name bones the Mixamo way; the
 Meshy API's own 24-bone rig is mapped (render_patrons._bone).

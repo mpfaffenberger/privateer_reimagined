@@ -461,10 +461,13 @@ cd tools/room_anim && uv run wire_room.py mercguild \
 ### Merchants' Guild (#579)
 
 `guild/merchguild_patrons.json`: the merchant at his desk, smoking. He holds
-one pose and takes a slow drag on a loop: his cigar hand (animated `aim`
-targets) goes to his lips, the ember (a keyed emissive tip on a `held`
-cigar, parented to his hand) glows, the hand lowers, and he exhales a puff
-(`still.smoke`, its own layer over him). Its bake needs OpenCV: his clean
+one pose and takes a slow drag on a loop: the ember (a keyed emissive tip on
+a `held` cigar, riding his finger skin) glows, his hand (animated `aim`
+targets) takes the cigar off his lips, and he exhales a puff (`still.smoke`,
+its own layer over him). With no finger bones, his fingers are straight: the
+pose that works is the back of the hand to camera, fingers up beside his
+mouth (probe hand poses over a clean plate, never the painting: the painted
+hand passes for a grip). Its bake needs OpenCV: his clean
 plate is `inpaint`ed, not an AI edit (the image model was out of reach).
 
 ```sh
