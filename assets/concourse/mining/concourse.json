@@ -145,7 +145,7 @@
       "overlays": [],
       "layers": [
         "anim/bar/patron_orange_patch.json",
-        "anim/bar/patron_orange.json", "anim/bar/patron_backtable_patch.json", "anim/bar/patron_backtable.json"
+        "anim/bar/patron_orange.json", "anim/bar/patron_backtable_patch.json", "anim/bar/patron_backtable.json", "anim/bar/patron_bartender_patch.json", "anim/bar/patron_bartender.json"
       ]
     },
     "commodity": {

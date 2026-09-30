@@ -35,7 +35,7 @@ import sys
 from pathlib import Path
 
 import bpy
-from mathutils import Vector
+from mathutils import Quaternion, Vector
 
 HERE = Path(__file__).resolve().parent
 for path in (HERE, HERE.parent):
@@ -97,17 +97,22 @@ def _catcher(name, size, loc, sc):
 
 
 def _props(sc, p):
-    """Painted furniture in front of / under the patron, as vertical cylinder
-    catchers: they hold the patron out exactly where the painted prop is and
-    catch their shadow (hands on a tabletop). Each: px (plate x of the axis),
-    depth, radius, z0..z1 (m)."""
+    """Painted furniture in front of / under the patron, as catchers: they
+    hold the patron out exactly where the painted prop is and catch their
+    shadow (hands on a tabletop). Each: px (plate x of the centre), depth
+    (m, centre), z0..z1 (m), and either radius (a round table, stool) or
+    size [w, d] (a box: the bar counter)."""
     for prop in p.get("props", []):
-        bpy.ops.mesh.primitive_cylinder_add(vertices=48, radius=prop["radius"],
-                                            depth=prop["z1"] - prop["z0"])
+        x, y = plate_to_world_x(prop["px"], prop["depth"]), prop["depth"]
+        z0, z1 = prop["z0"], prop["z1"]
+        if "size" in prop:
+            w, d = prop["size"]
+            _catcher(prop["name"], (w, d, z1 - z0), (x, y, (z0 + z1) / 2), sc)
+            continue
+        bpy.ops.mesh.primitive_cylinder_add(vertices=48, radius=prop["radius"], depth=z1 - z0)
         obj = bpy.context.active_object
         obj.name = prop["name"]
-        obj.location = (plate_to_world_x(prop["px"], prop["depth"]), prop["depth"],
-                        (prop["z0"] + prop["z1"]) / 2)
+        obj.location = (x, y, (z0 + z1) / 2)
         obj.data.materials.append(stage.material(prop["name"], (0.2, 0.2, 0.2)))
         _as_catcher(obj)
 
@@ -140,9 +145,11 @@ def _set(sc, root, body, p):
     return seat
 
 
-def _tint(body, rgb):
-    """Multiply every body texture by `rgb`, spliced into the glTF material's
-    base-colour link (a model's clothes needn't match the painted ones)."""
+def _grade(body, rgb=(1.0, 1.0, 1.0), saturation=1.0):
+    """Grade every body texture, spliced into the glTF material's base-colour
+    link: multiply by `rgb` (a model's clothes needn't match the painted
+    ones), then scale saturation (the painter's bartender is far more vivid
+    than any render: blue denim and tanned skin, sat 0.46 vs 0.24)."""
     for mat in {slot.material for obj in body for slot in obj.material_slots if slot.material}:
         nodes, links = mat.node_tree.nodes, mat.node_tree.links
         bsdf = next(n for n in nodes if n.type == 'BSDF_PRINCIPLED')
@@ -150,12 +157,19 @@ def _tint(body, rgb):
         if not base.is_linked:
             continue
         src = base.links[0].from_socket
-        mul = nodes.new("ShaderNodeMix")
-        mul.data_type, mul.blend_type = 'RGBA', 'MULTIPLY'
-        mul.inputs["Factor"].default_value = 1.0
-        links.new(src, mul.inputs["A"])
-        mul.inputs["B"].default_value = (*rgb, 1.0)
-        links.new(mul.outputs["Result"], base)
+        if tuple(rgb) != (1.0, 1.0, 1.0):
+            mul = nodes.new("ShaderNodeMix")
+            mul.data_type, mul.blend_type = 'RGBA', 'MULTIPLY'
+            mul.inputs["Factor"].default_value = 1.0
+            links.new(src, mul.inputs["A"])
+            mul.inputs["B"].default_value = (*rgb, 1.0)
+            src = mul.outputs["Result"]
+        if saturation != 1.0:
+            hsv = nodes.new("ShaderNodeHueSaturation")
+            hsv.inputs["Saturation"].default_value = saturation
+            links.new(src, hsv.inputs["Color"])
+            src = hsv.outputs["Color"]
+        links.new(src, base)
 
 
 TORSO = ("Hips", "Spine", "Spine01", "Spine02", "Spine1", "Spine2", "Neck", "Head")
@@ -187,6 +201,47 @@ def _calm(arm, k):
         fc.update()
 
 
+def _anchor_head(root, arm, px, py, depth):
+    """Move root until the crown (frame 0) projects to plate (px, py) at `depth`."""
+    crown = arm.pose.bones["mixamorig:HeadTop_End"]
+    for _ in range(25):                 # the pose is rigid: converges in a few steps
+        bpy.context.view_layer.update()
+        t = arm.matrix_world @ crown.head
+        root.location.x += plate_to_world_x(px, t.y) - t.x
+        root.location.y += depth - t.y
+        root.location.z += EYE - (py - HORIZON_Y) * t.y / FOCAL_PX - t.z
+
+
+def _aim(sc, arm, aims):
+    """Point bones at fixed world spots: {bone: [plate px, depth, z]}. The
+    bartender's arms aim at his painted elbows and hands on the counter, so
+    his hands stay planted while the idle sways his body over them (no
+    Meshy clip leans on a bar). Damped Track, not IK: nothing to flip."""
+    for bone, (px, depth, z) in aims.items():
+        spot = bpy.data.objects.new(f"Aim_{bone}", None)
+        sc.collection.objects.link(spot)
+        spot.location = (plate_to_world_x(px, depth), depth, z)
+        track = arm.pose.bones[f"mixamorig:{bone}"].constraints.new('DAMPED_TRACK')
+        track.target, track.track_axis = spot, 'TRACK_Y'
+
+
+def _nod(arm, degrees):
+    """Raise the chin by `degrees` through every neck and head key (half
+    each), about the bones' local X: undoes a `pitch` lean tipping the gaze
+    down, while keeping the idle's head motion."""
+    fcs = [fc for fc in _fcurves(arm) if fc.data_path.endswith("rotation_quaternion")]
+    offset = Quaternion((1.0, 0.0, 0.0), math.radians(-degrees / 2))
+    for bone in ("Neck", "Head"):
+        path = f'pose.bones["mixamorig:{bone}"].rotation_quaternion'
+        quat = sorted((fc for fc in fcs if fc.data_path == path), key=lambda fc: fc.array_index)
+        for keys in zip(*(fc.keyframe_points for fc in quat)):
+            turned = Quaternion([k.co[1] for k in keys]) @ offset
+            for k, value in zip(keys, turned):
+                k.co[1] = k.handle_left[1] = k.handle_right[1] = value
+        for fc in quat:
+            fc.update()
+
+
 def _patron(sc, p):
     before = set(bpy.data.objects)
     bpy.ops.import_scene.gltf(filepath=str(CHARACTERS / p["model"]))
@@ -201,25 +256,36 @@ def _patron(sc, p):
     # bone-display shape, which is hidden.
     sc.frame_set(0)
     body = [o for o in new if o.type == 'MESH' and prep_character.is_skinned(o)]
+    arm = next(o for o in new if o.type == 'ARMATURE')
     feet = min(p.z for p in _skin_points(body))
     for obj in new:
         if obj.type == 'MESH' and obj not in body:
             obj.hide_render = obj.hide_viewport = True
-    if "tint" in p:
-        _tint(body, p["tint"])
+    if "tint" in p or "saturation" in p:
+        _grade(body, p.get("tint", (1.0, 1.0, 1.0)), p.get("saturation", 1.0))
     if "lean" in p:
-        _calm(next(o for o in new if o.type == 'ARMATURE'), p["lean"])
+        _calm(arm, p["lean"])
+    if "head_up" in p:
+        _nod(arm, p["head_up"])
     # `scale`: painters cheat, and some painted patrons are burlier than any
     # model at their depth (the back-table man is ~1.3x broad, ~1.13x tall).
     s = p.get("scale", 1.0)
     root.scale = (s, s, s)
-    root.location = (plate_to_world_x(p["hip_px"], p["hip_depth"]), p["hip_depth"], -feet * s)
-    root.rotation_euler = (0.0, 0.0, math.radians(p["yaw"]))
+    # pitch: leans the whole body towards the camera, from the feet.
+    root.rotation_euler = (math.radians(p.get("pitch", 0.0)), 0.0, math.radians(p["yaw"]))
+    if "head" in p:            # a bust (feet hidden): the crown is the anchor
+        _anchor_head(root, arm, *p["head"])
+    else:                       # seated: the hips, feet on the floor
+        root.location = (plate_to_world_x(p["hip_px"], p["hip_depth"]), p["hip_depth"], -feet * s)
+    _aim(sc, arm, p.get("aim", {}))
     act = bpy.data.actions[0]
     return root, body, act
 
 
-def _lights(sc, target):
+def _lights(sc, target, mix):
+    """The room's key/fill/rim, placed around `target`. `mix` scales their
+    energies per patron ({key, fill, rim}): the room's light isn't uniform,
+    and the bartender's corner is soft and lit from the glowing counter."""
     world = bpy.data.worlds.new("Bar")
     world.use_nodes = True
     world.node_tree.nodes["Background"].inputs["Color"].default_value = (*AMBIENT, 1.0)
@@ -228,10 +294,12 @@ def _lights(sc, target):
     def aim(obj):
         obj.rotation_euler = (target - obj.location).to_track_quat('-Z', 'Y').to_euler()
 
-    aim(stage.light(sc, "Key", 'AREA', target + Vector((-2.0, -1.5, 2.2)), KEY, KEY_W,
-                    size=KEY_SIZE))
-    aim(stage.light(sc, "Fill", 'AREA', target + Vector((1.5, -2.0, -0.2)), FILL, FILL_W, size=2.0))
-    aim(stage.light(sc, "Rim", 'AREA', target + Vector((1.0, 1.0, 1.8)), KEY, RIM_W, size=1.0))
+    aim(stage.light(sc, "Key", 'AREA', target + Vector((-2.0, -1.5, 2.2)), KEY,
+                    KEY_W * mix.get("key", 1.0), size=KEY_SIZE))
+    aim(stage.light(sc, "Fill", 'AREA', target + Vector((1.5, -2.0, -0.2)), FILL,
+                    FILL_W * mix.get("fill", 1.0), size=2.0))
+    aim(stage.light(sc, "Rim", 'AREA', target + Vector((1.0, 1.0, 1.8)), KEY,
+                    RIM_W * mix.get("rim", 1.0), size=1.0))
 
 
 def build(samples, name=next(iter(PATRONS))):
@@ -249,7 +317,7 @@ def build(samples, name=next(iter(PATRONS))):
     root, body, act = _patron(sc, p)
     _set(sc, root, body, p)
     _props(sc, p)
-    _lights(sc, Vector((root.location.x, root.location.y, 0.8)))
+    _lights(sc, Vector((root.location.x, root.location.y, 0.8)), p.get("light", {}))
     f0, f1 = (int(v) for v in act.frame_range)
     sc.frame_start, sc.frame_end = f0, f1
     return sc, f0, f1

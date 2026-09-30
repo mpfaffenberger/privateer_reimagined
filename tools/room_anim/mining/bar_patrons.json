@@ -3,8 +3,9 @@
     "Mining bar 3D patrons (render_bar.py, bake_bar.py). Plate px unless noted.",
     "model: tools/room_anim/characters/<model> (prep_character.py output).",
     "crop: plate rect rendered and patched; clean_gen: sources/<file>, an AI edit of that crop with the painted patron removed.",
-    "hip_px / hip_depth (m) / yaw (deg, 0 = facing camera, -90 = screen-left): fitted live against the clean plate.",
-    "seat_reach: seat catcher (sideways, back) m from the hips. phase: loop offset, frames. scale (optional): for painted patrons burlier than the model at their depth. tint (optional): multiplies the model's textures, when its clothes don't match the painted ones. lean (optional, 0-1): damps the torso's motion towards the clip's first frame (a borrowed clip that moves more than the painted patron would). set (default [floor, seat, railing]): the shadow catchers built from the pose; list only what the painted patron really sits on / against.",
+    "hip_px / hip_depth (m) / yaw (deg, 0 = facing camera, -90 = screen-left): fitted live against the clean plate. A bust whose feet are hidden is placed by head [px, y, depth] (the crown at frame 0) instead of the hips.",
+    "pitch (deg): leans the whole body towards the camera. aim: {bone: [px, depth, z]} points bones at fixed spots (hands planted on a counter while the idle sways the body). head_up (deg): raises the chin through the neck/head keys, undoing pitch's downward gaze. light: {key, fill, rim} energy multipliers on the room's lights.",
+    "seat_reach: seat catcher (sideways, back) m from the hips. phase: loop offset, frames. scale (optional): for painted patrons burlier than the model at their depth. tint (optional): multiplies the model's textures, when its clothes don't match the painted ones. saturation (optional): scales their saturation (a painter's vivid palette). lean (optional, 0-1): damps the torso's motion towards the clip's first frame (a borrowed clip that moves more than the painted patron would). set (default [floor, seat, railing]): the shadow catchers built from the pose; list only what the painted patron really sits on / against.",
     "Crop px: box = where the painted patron is; keep = rects always taken from the clean plate; reg = a rect away from the patron where the clean plate must match the plate (registration check); front = occluders in front of the patron, never patched and clipped out of the render ({below_line: [[x0, y0], [x1, y1]]} or {polygon: [[x, y], ...]}).",
     "props: painted furniture as cylinder catchers (render_bar._props): they hold the patron out where the prop is and catch its shadow. px = plate x of the axis, depth/radius/z0/z1 in m, fitted from the prop's floor contact and outline."
   ],
@@ -47,5 +48,29 @@
       {"name": "StoolSeat", "px": 600, "depth": 8.06, "radius": 0.17, "z0": 0.34, "z1": 0.42},
       {"name": "StoolPost", "px": 600, "depth": 8.06, "radius": 0.035, "z0": 0.0, "z1": 0.34}
     ]
+  },
+  "patron_bartender": {
+    "model": "blue_jacket_worker_idle_3.glb",
+    "crop": [1170, 340, 1490, 660],
+    "head": [1360, 367, 2.6],
+    "pitch": 18.0,
+    "head_up": 22.0,
+    "light": {"key": 0.75, "fill": 17.0, "rim": 0.0},
+    "tint": [0.92, 0.98, 1.12],
+    "saturation": 1.35,
+    "yaw": 0.0,
+    "aim": {"RightArm": [1222, 2.5, 0.87], "RightForeArm": [1302, 2.28, 0.87],
+            "LeftArm": [1458, 2.5, 0.87], "LeftForeArm": [1398, 2.28, 0.87]},
+    "props": [{"name": "Counter", "px": 1330, "depth": 2.21, "size": [1.4, 0.7], "z0": 0.0, "z1": 0.83}],
+    "set": [],
+    "seat_reach": [0.2, 0.3],
+    "phase": 151,
+    "clean_gen": "bar_bartender_clean_gen.png",
+    "box": [40, 15, 300, 300],
+    "keep": [],
+    "reg": [5, 20, 40, 120],
+    "front": [{"polygon": [[0, 254], [31, 254], [31, 299], [0, 299]]},
+              {"polygon": [[204, 245], [246, 245], [246, 301], [204, 301]]},
+              {"polygon": [[257, 209], [270, 209], [272, 245], [287, 262], [287, 320], [231, 320], [231, 262], [255, 245]]}]
   }
 }

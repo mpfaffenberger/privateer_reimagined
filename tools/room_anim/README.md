@@ -206,11 +206,11 @@ plate to confirm.
 | `bake_bar.py` | uv | bar: clean-plate patch + patron sheet each; `--preview` crops |
 | `sources/bar_*_clean_gen.png` | - | AI clean-plate edits of each patron's crop (painted out) |
 
-### Mining bar: 3D patrons (#564, #566)
+### Mining bar: 3D patrons (#564, #566, #568)
 
 Painted patrons are replaced by rigged 3D models (Meshy AI, `characters/`)
-idling on seamless loops: the woman in orange on the bench (#564) and the
-man at the back table (#566). `bar_bg.png` is untouched: per patron, a
+idling on seamless loops: the woman in orange on the bench (#564), the
+man at the back table (#566) and the bartender (#568). `bar_bg.png` is untouched: per patron, a
 one-frame clean-plate patch paints them out, then their render draws over
 it. If the layers are missing, the painting shows as painted. Each patron is
 one entry in `bar_patrons.json`; the camera and lighting are the room's.
@@ -251,6 +251,26 @@ uv run --with scipy tools/room_anim/mining/bake_bar.py --patron patron_orange --
   the table; at 0.65 its deepest lean is the painted man's hunch. At 0.4 he
   sat bolt upright and his hands, still fully animated, hovered at his
   chest. The clip starts and ends upright, so the loop stays seamless.
+- **The bartender: leaning on a bar with no leaning clip.** Meshy has no
+  such clip, so he plays his own standing `Idle_3` with his arms `aim`ed
+  (Damped Track) at his painted elbows and hands on the counter: they stay
+  planted while the idle sways his body over them. IK straightened his
+  arms into zombie arms, because the targets sat at the edge of his reach;
+  aiming has nothing to flip. He's a bust (feet hidden), so he's placed by
+  his crown (`head`), leaned forward from the feet (`pitch` 18) and his chin
+  raised back (`head_up`, through the neck and head keys, keeping the
+  idle's glances). Fit lesson: the clean plate puts the counter's back edge
+  at ~2.56 m, so he must lean *over* it (crown ~2.6 m), not stand at the
+  2.8 m his painted head size suggests. The model's upper arm is too short
+  for his painted elbows, so his hands rest on the bar with elbows bent.
+- **Per-patron light and grade.** The bartender's corner is lit softly from
+  the glowing counter, not by the room's lamps: `light` scales the room's
+  key/fill/rim (0.75 / 17 / 0), taking his contrast from 20 to 5 (painting
+  4.7). No rim: the room's rim sits behind each patron, which for him is
+  behind the bar, so it threw his shadow forward across the painted counter
+  (the painting's counter is evenly lit). The painter's palette is vivid, so he also gets `saturation` 1.35
+  plus a cool `tint`: that gives blue denim instead of a dull navy, without
+  the tangerine skin that saturation alone produced (sat 0.45 vs 0.46).
 - **Blender MCP gotcha:** a freshly `images.load()`ed camera background can
   sit at 0x0 and draw nothing until its pixels are touched
   (`img.pixels[0]`).
