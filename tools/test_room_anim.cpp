@@ -304,7 +304,7 @@ void shipped_mining() {
           "mining keeps its eight hotspots (ShipDealer rect unchanged)");
 }
 
-// #564, #566, #568, #570, #572: the mining bar's 3D patrons. Each has a one-frame
+// #564, #566, #568, #570, #572, #571: the mining bar's 3D patrons (all six). Each has a one-frame
 // clean-plate patch that paints the painted one out, and an idle loop. The
 // patrons overlap (the left table), so every patch draws first, then every
 // patron back to front: patch i belongs to patron i. bar_bg.png is untouched.
@@ -313,8 +313,8 @@ void shipped_mining_bar() {
     room_anim::RoomAnimDef def;
     room_anim::parse_room_anim(json::parse_file(dir + "concourse.json")["rooms"]["bar"], def);
     const size_t pairs = def.layers.size() / 2;
-    check(!def.has_sky && pairs == 5 && def.layers.size() % 2 == 0,
-          "mining bar has five patrons (patches first, then patrons)");
+    check(!def.has_sky && pairs == 6 && def.layers.size() % 2 == 0,
+          "mining bar has six patrons (patches first, then patrons)");
     check_layers(dir, def.layers);
     std::vector<int> phases;
     for (size_t i = 0; i < pairs; ++i) {

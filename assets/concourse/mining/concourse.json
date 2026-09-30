@@ -149,11 +149,13 @@
         "anim/bar/patron_bartender_patch.json",
         "anim/bar/patron_woman_left_patch.json",
         "anim/bar/patron_bald_patch.json",
+        "anim/bar/patron_foreground_patch.json",
         "anim/bar/patron_orange.json",
         "anim/bar/patron_backtable.json",
         "anim/bar/patron_bartender.json",
         "anim/bar/patron_woman_left.json",
-        "anim/bar/patron_bald.json"
+        "anim/bar/patron_bald.json",
+        "anim/bar/patron_foreground.json"
       ]
     },
     "commodity": {
