@@ -109,6 +109,55 @@ def patron_frame(p, src):
     return load_frame(tmp, max_px=1 if p.get("half_size") else None)
 
 
+# A frame repeats the one before it if fewer than SAME_PX pixels differ by
+# more than SAME_LEVEL: a held pose renders the same image give or take GPU
+# sampling jitter (<= 3 levels, a few stray px). Real motion is far above
+# it: her nail fidget changes ~200 px a frame.
+SAME_PX, SAME_LEVEL = 24, 6
+
+
+def load_renders(name, crop):
+    """The patron's render frames as plate-sized RGBA. A frame that
+    repeats the one before it (SAME_PX) is that same array, so a held pose
+    is baked and packed once (the merchant holds his cigar low for 3 s).
+    Only the crop is compared and kept (renders are transparent outside)."""
+    x0, y0, x1, y1 = crop
+    frames, last = [], None
+    for path in sorted((ROOM.build / name).glob("[0-9]*.png")):
+        img = Image.open(path).convert("RGBA")
+        part = np.asarray(img.crop((x0, y0, x1, y1)))
+        if last is None or (np.abs(part.astype(np.int16) - last).max(-1) > SAME_LEVEL).sum() >= SAME_PX:
+            full = np.zeros((img.height, img.width, 4), np.uint8)
+            full[y0:y1, x0:x1] = part
+            frames.append(full)
+            last = part.astype(np.int16)
+        else:
+            frames.append(frames[-1])
+    return frames
+
+
+def inpaint_patch(p, plate, renders):
+    """-> RGBA patch (crop-sized) for a patron without an AI clean plate
+    (#579: the image model was out of reach). The 3D patron sits over the
+    painted one, so only the painted pixels (`inpaint`, a plate-px polygon
+    around him) that some render frame leaves uncovered are patched. They're
+    filled from the room around the polygon (OpenCV Telea, the whole
+    polygon unknown so the fill never samples him); the rest shows through."""
+    import cv2                          # only this path needs OpenCV
+    x0, y0, x1, y1 = p["crop"]
+    orig = np.asarray(plate.crop((x0, y0, x1, y1)).convert("RGB"))
+    img = Image.new("L", (x1 - x0, y1 - y0), 0)
+    ImageDraw.Draw(img).polygon([(x - x0, y - y0) for x, y in p["inpaint"]], fill=255)
+    painted = np.asarray(img) > 0
+    covered = np.logical_and.reduce([r[y0:y1, x0:x1, 3] > 250 for r in renders])
+    hole = ndimage.binary_dilation(painted & ~covered, iterations=2)
+    unknown = ndimage.binary_dilation(painted, iterations=2).astype(np.uint8) * 255
+    fill = cv2.cvtColor(cv2.inpaint(cv2.cvtColor(orig, cv2.COLOR_RGB2BGR), unknown, 6,
+                                    cv2.INPAINT_TELEA), cv2.COLOR_BGR2RGB)
+    alpha = ndimage.gaussian_filter(hole.astype(float), 1.0)
+    return np.dstack([fill, (alpha * 255).round().astype(np.uint8)])
+
+
 def cleaned_plate(name):
     """-> the plate (RGB) with every patron listed before `name` painted out:
     what `name`'s clean-plate source must be made from, and registered to."""
@@ -127,7 +176,8 @@ def bake(name):
     plate = cleaned_plate(name)
     info = json.loads((ROOM.build / name / "pass.json").read_text())
     fps, frames = float(info["fps"]), int(info["frames"])
-    patch = clean_patch(p, plate)
+    renders = load_renders(name, p["crop"]) if "still" in p or "inpaint" in p else None
+    patch = inpaint_patch(p, plate, renders) if "inpaint" in p else clean_patch(p, plate)
     ys, xs = np.nonzero(patch[..., 3])
     px0, py0 = int(xs.min()), int(ys.min())
     sprite = patch[py0:ys.max() + 1, px0:xs.max() + 1]
@@ -136,11 +186,13 @@ def bake(name):
     # loop the painted one would flicker back every other slot.
     write_sheet(ROOM.out, f"{name}_patch", [(sprite, dst)], [0], CANVAS, fps, 1, 0)
     if "still" in p:            # one held pose with small moves: still.py
-        cycle = [np.asarray(Image.open(path).convert("RGBA"))
-                 for path in sorted((ROOM.build / name).glob("[0-9]*.png"))]
-        sprites, slots, frames = still.timeline(p["still"], fps, cycle,
+        sprites, slots, frames = still.timeline(p["still"], fps, renders,
                                                 lambda rgba: patron_frame(p, rgba))
         write_sheet(ROOM.out, name, sprites, slots, CANVAS, fps, frames, int(p["phase"]))
+        if "smoke" in p["still"]:        # its own layer, over the patron
+            puffs, slots = still.smoke(p["still"]["smoke"], fps, frames)
+            write_sheet(ROOM.out, f"{name}_smoke", puffs, slots, CANVAS, fps, frames,
+                        int(p["phase"]))
         return
     sprites, slots = [], []
     for path in sorted((ROOM.build / name).glob("[0-9]*.png")):

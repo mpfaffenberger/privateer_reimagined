@@ -30,7 +30,7 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `still.py` | uv | a still patron's small moves: glances, a smile, the fidget timeline |
 | `wire_room.py` | uv | point one room's `layers` at a bake, in every base's `concourse.json` |
 | `characters/` | | prepped, rigged 3D characters |
-| `guild/` | | the guild rooms every base shares: Mercenaries' (#578) |
+| `guild/` | | the guild rooms every base shares: Mercenaries' (#578), Merchants' (#579) |
 | `newcon/` | | New Constantinople: concourse (#515) and hangar (#553) |
 | `mining/` | | Mining base concourse: the ore train (#558) |
 
@@ -456,6 +456,25 @@ blender --background --factory-startup --python tools/room_anim/render_patrons.p
 uv run --with scipy tools/room_anim/bake_patrons.py --room tools/room_anim/guild/mercguild_patrons.json
 cd tools/room_anim && uv run wire_room.py mercguild \
     ../../shared_rooms/mercguild/merc_woman_patch.json ../../shared_rooms/mercguild/merc_woman.json
+```
+
+### Merchants' Guild (#579)
+
+`guild/merchguild_patrons.json`: the merchant at his desk, smoking. He holds
+one pose and takes a slow drag on a loop: the ember (a keyed emissive tip on
+a `held` cigar, riding his finger skin) glows, his hand (animated `aim`
+targets) takes the cigar off his lips, and he exhales a puff (`still.smoke`,
+its own layer over him). With no finger bones, his fingers are straight: the
+pose that works is the back of the hand to camera, fingers up beside his
+mouth (probe hand poses over a clean plate, never the painting: the painted
+hand passes for a grip). Its bake needs OpenCV: his clean
+plate is `inpaint`ed, not an AI edit (the image model was out of reach).
+
+```sh
+uv run --with scipy --with opencv-python-headless tools/room_anim/bake_patrons.py \
+    --room tools/room_anim/guild/merchguild_patrons.json
+cd tools/room_anim && uv run wire_room.py merchguild ../../shared_rooms/merchguild/merch_man_patch.json \
+    ../../shared_rooms/merchguild/merch_man.json ../../shared_rooms/merchguild/merch_man_smoke.json
 ```
 
 **Rooms shared by every base** (the guild paintings are byte-identical in

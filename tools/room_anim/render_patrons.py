@@ -36,7 +36,7 @@ import sys
 from pathlib import Path
 
 import bpy
-from mathutils import Quaternion, Vector
+from mathutils import Matrix, Quaternion, Vector
 
 HERE = Path(__file__).resolve().parent
 if str(HERE) not in sys.path:
@@ -219,14 +219,20 @@ def _anchor_head(root, arm, px, py, depth):
         root.location.z += cam.eye - (py - cam.horizon_y) * t.y / cam.focal_px - t.z
 
 
-def _aim(sc, arm, aims):
+def _aim(sc, arm, aims, keys=None):
     """Point bones at fixed world spots: {bone: [plate px, depth, z]}. The
     bartender's arms aim at his painted elbows and hands on the counter, so
     his hands stay planted while the idle sways his body over them (no
-    Meshy clip leans on a bar). Damped Track, not IK: nothing to flip."""
+    Meshy clip leans on a bar). Damped Track, not IK: nothing to flip.
+    `keys` ({bone: [[t s, px, depth, z], ...]}, a still patron's
+    fidget.aims) move a spot over the cycle, eased: the merchant's cigar
+    hand goes from his lips down and back (#579). Start them at the aim."""
     for bone, (px, depth, z) in aims.items():
         spot = bpy.data.objects.new(f"Aim_{bone}", None)
         sc.collection.objects.link(spot)
+        for t, kpx, kdepth, kz in (keys or {}).get(bone, ()):
+            spot.location = (plate_to_world_x(kpx, kdepth), kdepth, kz)
+            spot.keyframe_insert("location", frame=round(t * sc.render.fps))
         spot.location = (plate_to_world_x(px, depth), depth, z)
         track = _bone(arm, bone).constraints.new('DAMPED_TRACK')
         track.target, track.track_axis = spot, 'TRACK_Y'
@@ -238,7 +244,7 @@ def _nod(arm, degrees):
     _tip(arm, ("Neck", "Head"), -degrees)
 
 
-def _tip(arm, bones, degrees, rest_frame=False):
+def _tip(arm, bones, degrees, rest_frame=False, axis=(1.0, 0.0, 0.0)):
     """Tip `bones` forward (chin down) by `degrees` in all, shared evenly,
     through every key: the clip's motion rides on top. `bend` tips the
     spine, folding a standing idle at the hips over a counter (the merc
@@ -251,7 +257,7 @@ def _tip(arm, bones, degrees, rest_frame=False):
     the tip into a sideways roll (the merc woman's idle twists her spine:
     a 15 deg bend rolled her 11 deg sideways)."""
     fcs = [fc for fc in _fcurves(arm) if fc.data_path.endswith("rotation_quaternion")]
-    offset = Quaternion((1.0, 0.0, 0.0), math.radians(degrees / len(bones)))
+    offset = Quaternion(axis, math.radians(degrees / len(bones)))
     for bone in bones:
         path = f'pose.bones["{_bone(arm, bone).name}"].rotation_quaternion'
         quat = sorted((fc for fc in fcs if fc.data_path == path), key=lambda fc: fc.array_index)
@@ -306,6 +312,11 @@ def _patron(sc, p):
              p["bend"], rest_frame=True)
     if "head_up" in p:
         _nod(arm, p["head_up"])
+    # `twist`: {bone: deg} about the bone's own axis, the one an `aim`
+    # leaves free: which way a hand's palm faces (the merchant's cigar hand
+    # came out as a palm-out wave).
+    for bone, degrees in p.get("twist", {}).items():
+        _tip(arm, [bone], degrees, axis=(0.0, 1.0, 0.0))
     if "still" in p:
         _still(arm, p["still"], sc.render.fps)
     # `scale`: painters cheat, and some painted patrons are burlier than any
@@ -321,9 +332,80 @@ def _patron(sc, p):
     else:                       # seated: the hips, feet on the floor
         root.location = (plate_to_world_x(p["hip_px"], p["hip_depth"]), p["hip_depth"],
                          -feet * root.scale.z)
-    _aim(sc, arm, p.get("aim", {}))
+    _aim(sc, arm, p.get("aim", {}), p.get("still", {}).get("fidget", {}).get("aims"))
+    _held(sc, arm, p)
     act = bpy.data.actions[0]
     return root, body, act
+
+
+def _grip(arm, bone, a, b):
+    """-> (mesh, three vertex indices): where `bone`'s skin grips segment
+    a-b at the current frame. The vertex nearest the segment, plus the two
+    around it (within 4 cm) that span the widest triangle, so the frame
+    they define is stable."""
+    dg = bpy.context.evaluated_depsgraph_get()
+    best = None
+    for body in (o for o in arm.children if o.type == 'MESH' and not o.hide_render):
+        group = body.vertex_groups.get(bone)
+        if group is None:
+            continue
+        weighted = {v.index for v in body.data.vertices
+                    if any(g.group == group.index and g.weight > 0.5 for g in v.groups)}
+        ev = body.evaluated_get(dg)
+        me = ev.to_mesh()
+        pts = {v.index: ev.matrix_world @ v.co for v in me.vertices if v.index in weighted}
+        ev.to_mesh_clear()
+        for i, q in pts.items():
+            t = max(0.0, min(1.0, (q - a).dot(b - a) / (b - a).length_squared))
+            d = (q - (a + (b - a) * t)).length
+            if best is None or d < best[0]:
+                best = (d, body, i, pts)
+    _, body, i0, pts = best
+    near = [i for i, q in pts.items() if (q - pts[i0]).length < 0.04]
+    i1 = max(near, key=lambda i: (pts[i] - pts[i0]).length)
+    i2 = max(near, key=lambda i: (pts[i1] - pts[i0]).cross(pts[i] - pts[i0]).length)
+    return body, (i0, i1, i2)
+
+
+def _held(sc, arm, p):
+    """Props in a hand (#579; the merchant's cigar): a cylinder from `from`
+    to `to` ([plate px, depth, z], where the painting has it at frame 0).
+    It rides the skin, not the bone (vertex parent, _grip): the rig
+    weights the fingers only partly to the hand, so a bone-parented cigar
+    slid off them as the hand turned. `ember` ([[t s, strength], ...] over
+    the fidget cycle) lights the `to` end."""
+    sc.frame_set(0)
+    bpy.context.view_layer.update()
+    for held in p.get("held", []):
+        a, b = (Vector((plate_to_world_x(px, d), d, z)) for px, d, z in (held["from"], held["to"]))
+        bpy.ops.mesh.primitive_cylinder_add(vertices=16, radius=held["radius"], depth=(b - a).length)
+        stick = bpy.context.active_object
+        stick.name = held["name"]
+        stick.data.materials.append(stage.material(held["name"], tuple(held["color"]), roughness=0.7))
+        bpy.ops.object.shade_smooth()
+        placed = [(stick, Matrix.Translation((a + b) / 2) @
+                   (b - a).to_track_quat('Z', 'Y').to_matrix().to_4x4())]
+        if "ember" in held:
+            bpy.ops.mesh.primitive_uv_sphere_add(radius=held["radius"] * 1.05)
+            ember = bpy.context.active_object
+            ember.name = f"{held['name']}Ember"
+            mat = stage.material(ember.name, (0.05, 0.02, 0.0), emission=(1.0, 0.32, 0.06))
+            ember.data.materials.append(mat)
+            glow = next(n for n in mat.node_tree.nodes
+                        if n.type == 'BSDF_PRINCIPLED').inputs["Emission Strength"]
+            for t, strength in held["ember"]:
+                glow.default_value = strength
+                glow.keyframe_insert("default_value", frame=round(t * sc.render.fps))
+            placed.append((ember, Matrix.Translation(b)))
+        body, verts = _grip(arm, _bone(arm, held["bone"]).name, a, b)
+        for obj, world in placed:        # onto the fingers, where the painting has it
+            obj.parent, obj.parent_type = body, 'VERTEX_3'
+            obj.parent_vertices = verts
+            # Solve the local transform against the parent frame Blender
+            # evaluates (the matrix_world setter misplaces a vertex child).
+            obj.matrix_parent_inverse = obj.matrix_basis = Matrix.Identity(4)
+            bpy.context.view_layer.update()
+            obj.matrix_basis = obj.matrix_world.inverted() @ world
 
 
 def fidget_frames(still, fps):
@@ -345,7 +427,7 @@ def _still(arm, still, fps):
     if "fidget" not in still:
         return
     n, fcs = fidget_frames(still, fps), _fcurves(arm)
-    for bone, move in still["fidget"]["bones"].items():
+    for bone, move in still["fidget"].get("bones", {}).items():
         path = f'pose.bones["{_bone(arm, bone).name}"].rotation_quaternion'
         quat = sorted((fc for fc in fcs if fc.data_path == path), key=lambda fc: fc.array_index)
         rest = Quaternion([fc.evaluate(0) for fc in quat])

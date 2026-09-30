@@ -216,6 +216,11 @@
         200
       ],
       "overlays": [],
+      "layers": [
+        "../../shared_rooms/merchguild/merch_man_patch.json",
+        "../../shared_rooms/merchguild/merch_man.json",
+        "../../shared_rooms/merchguild/merch_man_smoke.json"
+      ],
       "links": [
         {
           "target": "OpenMenu",
