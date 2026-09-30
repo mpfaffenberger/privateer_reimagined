@@ -313,6 +313,29 @@ void shipped_agricultural_landing() {
           "agricultural landing keeps its Launch + Concourse hotspots");
 }
 
+// #595: a transport coming in over the sea behind the Pleasure landing pad.
+void shipped_pleasure_landing() {
+    const std::string dir = "assets/concourse/pleasure/";
+    room_anim::RoomAnimDef def;
+    room_anim::parse_room_anim(
+        json::parse_file(dir + "concourse.json")["rooms"]["landing"]["composite"], def);
+    check(def.has_sky && !def.anchors.empty(), "Pleasure landing has a sky and horizon anchors");
+    check_composite_skies(dir, def, "Pleasure landing");
+    check(def.layers.size() == 1, "Pleasure landing has its transport layer");
+    check_layers(dir, def.layers);
+    for (const std::string& layer : def.layers) {
+        room_anim::SpriteSheet s;
+        std::string err;
+        check(room_anim::parse_sprite_sheet(json::parse_file(dir + layer), s, err) && s.under &&
+                  s.anchored,
+              "  the transport flies under the plate (the block and towers occlude it), anchored");
+    }
+    const json::Value links = json::parse_file(dir + "links.json")["landing"];
+    check(links.as_array().size() == 2 &&
+              link_rect_is(links, "Launch", -0.105f, 0.50167f, 0.8975f, 0.54f),
+          "Pleasure landing keeps its Launch + Concourse hotspots");
+}
+
 // #558: the mining concourse's ore train.
 void shipped_mining() {
     const std::string dir = "assets/concourse/mining/";
@@ -578,6 +601,7 @@ int main() {
     shipped_agricultural();
     shipped_mining_landing();
     shipped_agricultural_landing();
+    shipped_pleasure_landing();
     shipped_mining_bar();
     shipped_pleasure();
     shipped_newcon_hangar();
