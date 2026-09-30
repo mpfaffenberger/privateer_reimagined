@@ -265,28 +265,41 @@ void check_composite_skies(const std::string& dir, const room_anim::RoomAnimDef&
           "every " + what + " composite has a mask, fill, star tiles + anchor");
 }
 
-// #561: the mining landing pad's starry sky and the Galaxy freighter overhead.
-void shipped_mining_landing() {
-    const std::string dir = "assets/concourse/mining/";
+// A crater landing pad (#561, #587): every composite has a starry sky over
+// its rim, and one anchored ship layer flies under the plate so the rim
+// occludes it. The Launch + Concourse hotspots are untouched.
+void check_crater_landing(const std::string& base, const std::string& ship, float lx, float ly,
+                          float lw, float lh) {
+    const std::string dir = "assets/concourse/" + base + "/";
+    const std::string what = base + " landing";
     room_anim::RoomAnimDef def;
     room_anim::parse_room_anim(
         json::parse_file(dir + "concourse.json")["rooms"]["landing"]["composite"], def);
     check(def.has_sky && def.sky.stars.size() >= 2 && !def.anchors.empty(),
-          "mining landing has a starry sky and rim anchors");
-    check_composite_skies(dir, def, "mining landing");
-    check(def.layers.size() == 1, "mining landing has its freighter layer");
+          what + " has a starry sky and rim anchors");
+    check_composite_skies(dir, def, what);
+    check(def.layers.size() == 1, what + " has its " + ship + " layer");
     check_layers(dir, def.layers);
     for (const std::string& layer : def.layers) {
         room_anim::SpriteSheet s;
         std::string err;
         check(room_anim::parse_sprite_sheet(json::parse_file(dir + layer), s, err) && s.under &&
                   s.anchored,
-              "  the freighter flies under the plate (the rim occludes it), anchored");
+              "  the " + ship + " layer flies under the plate (the rim occludes it), anchored");
     }
     const json::Value links = json::parse_file(dir + "links.json")["landing"];
-    check(links.as_array().size() == 2 &&
-              link_rect_is(links, "Launch", 0.08844f, 0.53458f, 0.69063f, 0.39458f),
-          "mining landing keeps its Launch + Concourse hotspots");
+    check(links.as_array().size() == 2 && link_rect_is(links, "Launch", lx, ly, lw, lh),
+          what + " keeps its Launch + Concourse hotspots");
+}
+
+// #561: the mining landing pad's starry sky and the Galaxy freighter overhead.
+void shipped_mining_landing() {
+    check_crater_landing("mining", "freighter", 0.08844f, 0.53458f, 0.69063f, 0.39458f);
+}
+
+// #587: the pirate landing pad's starry sky and two Talons buzzing it.
+void shipped_pirate_landing() {
+    check_crater_landing("pirate", "Talons", -0.155f, 0.41f, 0.8025f, 0.76f);
 }
 
 // #583: the Agricultural landing pad: aircraft in the dusk sky behind the
@@ -618,6 +631,7 @@ int main() {
     shipped_mining_landing();
     shipped_agricultural_landing();
     shipped_pleasure_landing();
+    shipped_pirate_landing();
     shipped_mining_bar();
     shipped_pleasure();
     shipped_pirate();
