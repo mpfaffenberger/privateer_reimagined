@@ -1,0 +1,50 @@
+{
+  "_doc": [
+    "Mining bar 3D patrons (render_bar.py, bake_bar.py). Plate px unless noted.",
+    "model: tools/room_anim/characters/<model> (prep_character.py output).",
+    "crop: plate rect rendered and patched; clean_gen: sources/<file>, an AI edit of that crop with the painted patron removed.",
+    "hip_px / hip_depth (m) / yaw (deg, 0 = facing camera, -90 = screen-left): fitted live against the clean plate.",
+    "seat_reach: seat catcher (sideways, back) m from the hips. phase: loop offset, frames. scale (optional): for painted patrons burlier than the model at their depth. tint (optional): multiplies the model's textures, when its clothes don't match the painted ones. set (default [floor, seat, railing]): the shadow catchers built from the pose; list only what the painted patron really sits on / against.",
+    "Crop px: box = where the painted patron is; keep = rects always taken from the clean plate; reg = a rect away from the patron where the clean plate must match the plate (registration check); front = occluders in front of the patron, never patched and clipped out of the render ({below_line: [[x0, y0], [x1, y1]]} or {polygon: [[x, y], ...]}).",
+    "props: painted furniture as cylinder catchers (render_bar._props): they hold the patron out where the prop is and catch its shadow. px = plate x of the axis, depth/radius/z0/z1 in m, fitted from the prop's floor contact and outline."
+  ],
+  "patron_orange": {
+    "model": "rustbound_ranger_sit_cross_legged.glb",
+    "crop": [840, 340, 1160, 660],
+    "hip_px": 1090.0,
+    "hip_depth": 7.8,
+    "yaw": -75.0,
+    "seat_reach": [0.25, 0.3],
+    "phase": 0,
+    "clean_gen": "bar_orange_clean_gen.png",
+    "box": [80, 50, 275, 300],
+    "keep": [[170, 165, 275, 262]],
+    "reg": [10, 20, 180, 150],
+    "front": [{"below_line": [[75, 320], [300, 225]]}]
+  },
+  "patron_backtable": {
+    "model": "mechanic_chair_sit_idle_m.glb",
+    "crop": [500, 320, 820, 640],
+    "hip_px": 588.0,
+    "hip_depth": 9.6,
+    "yaw": 0.0,
+    "scale": 1.15,
+    "tint": [0.8, 0.92, 1.12],
+    "set": ["floor"],
+    "seat_reach": [0.2, 0.3],
+    "phase": 97,
+    "clean_gen": "bar_backtable_clean_gen.png",
+    "box": [50, 65, 155, 280],
+    "keep": [],
+    "reg": [200, 10, 310, 60],
+    "front": [{"polygon": [[119, 146], [142, 146], [142, 167], [119, 167]]},
+              {"polygon": [[117, 205], [140, 196], [180, 192], [320, 192], [320, 320], [265, 320],
+                            [265, 250], [160, 250], [125, 240], [117, 228]]}],
+    "props": [
+      {"name": "TableTop", "px": 649, "depth": 9.15, "radius": 0.56, "z0": 0.62, "z1": 0.71},
+      {"name": "TablePost", "px": 649, "depth": 9.15, "radius": 0.05, "z0": 0.0, "z1": 0.62},
+      {"name": "StoolSeat", "px": 600, "depth": 8.06, "radius": 0.17, "z0": 0.34, "z1": 0.42},
+      {"name": "StoolPost", "px": 600, "depth": 8.06, "radius": 0.035, "z0": 0.0, "z1": 0.34}
+    ]
+  }
+}

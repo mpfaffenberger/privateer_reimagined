@@ -303,28 +303,36 @@ void shipped_mining() {
           "mining keeps its eight hotspots (ShipDealer rect unchanged)");
 }
 
-// #564: the mining bar's woman in orange is a 3D patron. A one-frame
-// clean-plate patch paints the painted woman out, then her idle loops over it;
-// the patch must draw first, and bar_bg.png itself is untouched.
+// #564, #566: the mining bar's 3D patrons. Each is a (patch, patron) layer
+// pair: a one-frame clean-plate patch paints the painted one out, then the
+// idle loops over it. The patch must draw first; bar_bg.png is untouched.
 void shipped_mining_bar() {
     const std::string dir = "assets/concourse/mining/";
     room_anim::RoomAnimDef def;
     room_anim::parse_room_anim(json::parse_file(dir + "concourse.json")["rooms"]["bar"], def);
-    check(!def.has_sky && def.layers.size() == 2, "mining bar has its patch + patron layers");
+    const size_t pairs = def.layers.size() / 2;
+    check(!def.has_sky && pairs == 2 && def.layers.size() % 2 == 0,
+          "mining bar has two (patch, patron) layer pairs");
     check_layers(dir, def.layers);
-    room_anim::SpriteSheet patch, patron;
-    std::string err;
-    const bool ok =
-        def.layers.size() == 2 &&
-        room_anim::parse_sprite_sheet(json::parse_file(dir + def.layers[0]), patch, err) &&
-        room_anim::parse_sprite_sheet(json::parse_file(dir + def.layers[1]), patron, err);
-    check(ok && patch.frames.size() == 1 && patron.frames.size() > 1,
-          "  the one-frame patch draws before the patron");
-    // Slots without a frame draw nothing: on any longer loop the painted
-    // woman would flicker back between patch frames.
-    check(ok && patch.period == 1 && room_anim::slot_at(patch, 12.34f) == 0,
-          "  the patch is on screen at every moment (a one-slot loop)");
-    check(ok && !patch.under && !patron.under, "  both draw over the plate");
+    std::vector<int> phases;
+    for (size_t i = 0; i < pairs; ++i) {
+        room_anim::SpriteSheet patch, patron;
+        std::string err;
+        const std::string& name = def.layers[2 * i + 1];
+        const bool ok =
+            def.layers[2 * i] == name.substr(0, name.size() - 5) + "_patch.json" &&
+            room_anim::parse_sprite_sheet(json::parse_file(dir + def.layers[2 * i]), patch, err) &&
+            room_anim::parse_sprite_sheet(json::parse_file(dir + name), patron, err);
+        check(ok && patch.frames.size() == 1 && patron.frames.size() > 1,
+              "  " + name + ": its one-frame patch draws first");
+        // Slots without a frame draw nothing: on any longer loop the painted
+        // patron would flicker back between patch frames.
+        check(ok && patch.period == 1 && room_anim::slot_at(patch, 12.34f) == 0,
+              "  " + name + ": the patch is always on screen (a one-slot loop)");
+        check(ok && !patch.under && !patron.under, "  " + name + ": both over the plate");
+        phases.push_back(patron.offset);
+    }
+    check(phases.size() == 2 && phases[0] != phases[1], "  patrons idle out of phase");
     const json::Value links = json::parse_file(dir + "links.json")["bar"];
     check(links.is_array() && links.as_array().empty(), "mining bar hotspots unchanged");
 }
