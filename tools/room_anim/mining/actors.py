@@ -56,9 +56,10 @@ def _ore_pile(parent, size, seed=558):
     return obj
 
 
-def build_ore_train():
-    """-> (tug root, hopper root). Both face +Y (nose), origin on the floor."""
-    tug = ships.import_ship("truck", TUG_LENGTH, "Tug", grounded=True, tint=TUG_GRIME)
+def build_ore_train(tug_tint=TUG_GRIME, hopper_tint=HOPPER_GRIME):
+    """-> (tug root, hopper root, beacon). Both face +Y (nose), origin on the
+    floor. The tints multiply the stock textures (grime for the lighting)."""
+    tug = ships.import_ship("truck", TUG_LENGTH, "Tug", grounded=True, tint=tug_tint)
     w, length, h = tug["size"]
     nose = Vector((0.0, length / 2, h * 0.45))
     for side in (-1, 1):
@@ -74,7 +75,7 @@ def build_ore_train():
                    BEACON_AMBER, 60.0, 40.0, blend=0.6)
 
     hopper = ships.import_ship("cart", HOPPER_LENGTH, "Hopper", grounded=True,
-                               tint=HOPPER_GRIME)
+                               tint=hopper_tint)
     _ore_pile(hopper, hopper["size"])
     return tug, hopper, beacon
 

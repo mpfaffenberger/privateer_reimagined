@@ -129,6 +129,19 @@
           "real_frames": 63
         }
       ],
+      "sky": {
+        "mask": "anim/sky_mask.png",
+        "fill": "anim/sky_fill.png",
+        "stars": [
+          { "tile": "anim/stars_far.png", "velocity": [-3.5, 0.6] },
+          { "tile": "anim/stars_near.png", "velocity": [-5.5, 0.9] }
+        ]
+      },
+      "layers": [
+        "anim/hauler_pass.json",
+        "anim/shuttle_in.json",
+        "anim/ore_train.json"
+      ],
       "links": [
         {
           "target": "LandingPad",

@@ -2,7 +2,9 @@
 
     star_removed()  luminance with stars opened away (sky/haze level)
     solidify()      binary sky -> hole-filled, antialiased mask
+    window_mask()   hand-drawn window polygons refined by darkness -> mask
     sky_fill()      starless sky colour, extrapolated past the mask edge
+    hazy_sky_fill() the plate's own starless sky, full res, for glare and haze
     PaintedStars    a painting's own star population (density, brightness, colour)
     star_tile()     tileable star field drawn from such a population
 
@@ -33,6 +35,31 @@ def solidify(sky, outside_seed):
             .filter(ImageFilter.GaussianBlur(0.8)))
 
 
+def window_mask(plate, windows, outside_seed, holes=()):
+    """Sky mask from coarse window polygons, each refined per pixel by its
+    own darkness threshold: star-removed luminance at or below it is sky.
+    `windows` is [(polygon, threshold), ...]; anything outside every window,
+    or inside a `holes` polygon (a painted ship or rock in the sky), is never
+    sky however dark. An opening drops thin dark seams inside a window.
+    Holes are cut after solidify(), whose hole fill would take them back."""
+    base = np.asarray(star_removed(plate.convert("L")), dtype=np.float32)
+    limit = Image.new("L", plate.size, 0)            # per-pixel threshold, 0 = never sky
+    draw = ImageDraw.Draw(limit)
+    for poly, darkness in windows:
+        draw.polygon(poly, fill=darkness)
+    limit = np.asarray(limit, dtype=np.float32)
+    dark = Image.fromarray(((base <= limit) & (limit > 0)).astype(np.uint8) * 255)
+    mask = solidify(dark.filter(ImageFilter.MinFilter(7)).filter(ImageFilter.MaxFilter(7)),
+                    outside_seed)
+    if not holes:
+        return mask
+    cut = Image.new("L", plate.size, 0)
+    for poly in holes:
+        ImageDraw.Draw(cut).polygon(poly, fill=255)
+    keep = 1.0 - np.asarray(cut.filter(ImageFilter.GaussianBlur(0.8)), dtype=np.float32) / 255.0
+    return Image.fromarray((np.asarray(mask, dtype=np.float32) * keep + 0.5).astype(np.uint8))
+
+
 def sky_fill(plate, mask):
     """Starless sky colour, extrapolated past the mask edge so bilinear
     stretching never pulls rib colour into the windows."""
@@ -52,6 +79,17 @@ def sky_fill(plate, mask):
     fallback = np.array([6.0, 8.0, 14.0])                  # deep space blue-black
     fill = np.where(den > 0.02, fill, fallback)
     return Image.fromarray(np.clip(fill, 0, 255).astype(np.uint8))
+
+
+def hazy_sky_fill(plate, blur=1.5):
+    """Starless sky at full resolution: the plate itself with its stars
+    opened away, lightly blurred. For skies with glare or haze, where
+    sky_fill()'s broad average of the masked sky is darker than the haze
+    beside it and outlines the mask. The painting's own values reach right
+    to the mask's edge, so the edge is seamless wherever it falls."""
+    rgb = plate.convert("RGB")
+    return Image.merge("RGB", [star_removed(c).filter(ImageFilter.GaussianBlur(blur))
+                               for c in rgb.split()])
 
 
 class PaintedStars:
