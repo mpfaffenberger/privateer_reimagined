@@ -3,12 +3,13 @@
 # requires-python = ">=3.10"
 # dependencies = ["pillow", "numpy"]
 # ///
-"""Find the open sky above the crater in every mining landing composite (#561).
+"""Find the open sky above the crater in every crater landing composite (#561;
+shared in #587 by the mining and pirate bases).
 
-The mining landing pad is an open crater: each of the 18 per-hull composites
-(assets/concourse/mining/landing_ships/<hull>.png, framed differently) shows a
-strip of black sky above a jagged rock rim. For every composite this writes
-to assets/concourse/mining/anim/landing/:
+A crater landing pad is an open crater: each of the 18 per-hull composites
+(assets/concourse/<base>/landing_ships/<hull>.png, framed differently) shows
+a strip of black sky above a jagged rock rim. For every composite this writes
+to assets/concourse/<base>/anim/landing/:
 
     <hull>_mask.png   L8, 255 = open sky
     <hull>_fill.png   the sky colour (small, drawn stretched)
@@ -16,35 +17,31 @@ to assets/concourse/mining/anim/landing/:
     stars_far.png, stars_near.png
                       star tiles shared by every hull. The painted sky is
                       starless, so these are a deliberate, sparse addition.
-    galaxy_flyover.{json,png}
-                      the freighter (render_landing.py), under the plate and
-                      anchored, so the rim and dish occlude it on every hull.
+    <layer>.{json,png}
+                      each sky layer in <base>/landing_layers.json (rendered by
+                      <base>/render_landing.py), under the plate and anchored,
+                      so the rim and dish occlude it on every hull.
+
+landing_layers.json's "_star_seed" gives each base its own star field.
 
 Usage (from the repo root):
-    uv run tools/room_anim/mining/bake_landing.py [--debug build/room_anim/mining/skies.png]
-    uv run tools/room_anim/mining/bake_landing.py --stars-only
-    uv run tools/room_anim/mining/bake_landing.py --layers-only    # after render_landing.py
+    uv run tools/room_anim/bake_crater.py --base mining [--debug build/room_anim/mining/skies.png]
+    uv run tools/room_anim/bake_crater.py --base pirate --stars-only
+    uv run tools/room_anim/bake_crater.py --base pirate --layers-only  # after render_landing.py
 """
 import argparse
 import json
 import math
-import sys
 from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
 from PIL import Image, ImageDraw
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from base import paths  # noqa: E402
-from bake_layer import load_frame, write_sheet  # noqa: E402
-from sky import RNG_SEED, sky_fill, solidify, star_tile  # noqa: E402
+from base import paths
+from bake_layer import load_frame, write_sheet
+from sky import RNG_SEED, sky_fill, solidify, star_tile
 
-MINING = paths("mining")
-COMPOSITES = MINING.room / "landing_ships"
-OUT = MINING.anim / "landing"
-BUILD = MINING.build / "landing"
-TIMING = MINING.tools / "landing_layers.json"
 CANVAS = (1536, 1024)
 
 # The sky is painted near-black, but each composite has its own black level
@@ -84,18 +81,42 @@ def _open_profile(values, width):
     return windows(np.pad(eroded, pad, mode="edge"), width).max(axis=1)
 
 
-def find_sky(plate):
+def _sky_level(values, band):
+    """The sky's level of `values` (H x W) from its top rows: one number, or
+    with `band` px one per column, interpolated between column bands (for a
+    sky shaded across the frame)."""
+    top = values[:SKY_LEVEL_ROWS]
+    overall = float(np.percentile(top, SKY_LEVEL_PERCENTILE))
+    if not band:
+        return overall
+    w = values.shape[1]
+    starts = np.arange(0, w, band)
+    # A band whose top rows are mostly rock (a wall reaching the frame's top
+    # corner) must not lift the level there: at most one margin over overall.
+    levels = [min(np.percentile(top[:, s:s + band], SKY_LEVEL_PERCENTILE),
+                  overall + ROCK_MARGIN) for s in starts]
+    return np.interp(np.arange(w), starts + band / 2, levels)[None, :]
+
+
+def find_sky(plate, rim_smooth=RIM_SMOOTH, level_band=None, warm_margin=None):
     """-> (mask L image, [cx, cy, r]). The sky is everything above the rim,
-    column by column (see ROCK_MARGIN)."""
+    column by column (see ROCK_MARGIN). Options for skies a plain
+    brightness margin can't separate (the pirate pad, #587): `level_band`
+    measures the sky level per column band, for a sky shaded across the
+    frame; `warm_margin` also calls rock anything that much warmer (red
+    minus blue) than the sky, for a navy sky over dim brown rock."""
     w, h = plate.size
-    peak = np.asarray(plate, dtype=np.uint8).max(axis=2).astype(np.int16)
-    level = float(np.percentile(peak[:SKY_LEVEL_ROWS], SKY_LEVEL_PERCENTILE))
-    bright = peak > level + ROCK_MARGIN
+    rgb = np.asarray(plate, dtype=np.uint8).astype(np.int16)
+    peak = rgb.max(axis=2)
+    bright = peak > _sky_level(peak, level_band) + ROCK_MARGIN
+    if warm_margin is not None:
+        warm = rgb[..., 0] - rgb[..., 2]
+        bright |= warm > _sky_level(warm, level_band) + warm_margin
     rock = bright[:h - ROCK_RUN + 1].copy()
     for k in range(1, ROCK_RUN):                         # a sustained run, not a speck
         rock &= bright[k:h - ROCK_RUN + 1 + k]
     rim = np.where(rock.any(axis=0), rock.argmax(axis=0), h)   # first rock row per column
-    rim = _open_profile(rim, RIM_SMOOTH)
+    rim = _open_profile(rim, rim_smooth)
     sky = np.arange(h)[:, None] < rim[None, :]
     mask = solidify(Image.fromarray(sky.astype(np.uint8) * 255), (w // 2, h - 1))
     m = np.asarray(mask) > 127
@@ -112,17 +133,26 @@ def find_sky(plate):
     return mask, [w / 2, round(float(np.median(rim)), 1), w / 2]
 
 
-def bake_skies(debug):
-    OUT.mkdir(parents=True, exist_ok=True)
+def _where(base):
+    where = paths(base)
+    timing = where.tools / "landing_layers.json"
+    return SimpleNamespace(composites=where.room / "landing_ships",
+                           out=where.anim / "landing", build=where.build / "landing",
+                           timing=timing, sky=json.loads(timing.read_text()).get("_sky", {}))
+
+
+def bake_skies(where, debug):
+    out = where.out
+    out.mkdir(parents=True, exist_ok=True)
     anchors, thumbs = {}, []
-    for path in sorted(COMPOSITES.glob("*.png")):
+    for path in sorted(where.composites.glob("*.png")):
         plate = Image.open(path).convert("RGB")
-        mask, anchor = find_sky(plate)
+        mask, anchor = find_sky(plate, **where.sky)
         hull = path.stem
-        mask.save(OUT / f"{hull}_mask.png", optimize=True)
+        mask.save(out / f"{hull}_mask.png", optimize=True)
         fill = sky_fill(plate, mask)
         fill.resize((fill.width // 2, fill.height // 2), Image.BOX).save(
-            OUT / f"{hull}_fill.png", optimize=True)
+            out / f"{hull}_fill.png", optimize=True)
         anchors[hull] = anchor
         print(f"{hull:<11} sky anchor {anchor}  covers {np.mean(np.asarray(mask) > 127):.1%}")
         if debug:
@@ -136,7 +166,7 @@ def bake_skies(debug):
             d.line([0, cy, w, cy], fill=(255, 60, 60), width=5)
             d.text((12, 12), hull, fill=(255, 255, 0))
             thumbs.append(thumb.resize((384, 256)))
-    (OUT / "anchors.json").write_text(json.dumps(anchors, indent=1) + "\n")
+    (out / "anchors.json").write_text(json.dumps(anchors, indent=1) + "\n")
     if debug and thumbs:
         cols = 6
         sheet = Image.new("RGB", (cols * 384, math.ceil(len(thumbs) / cols) * 256))
@@ -146,26 +176,28 @@ def bake_skies(debug):
         sheet.save(debug)
 
 
-def bake_stars():
-    rng = np.random.default_rng(RNG_SEED + 561)
+def bake_stars(where):
+    out = where.out
+    seed = json.loads(where.timing.read_text())["_star_seed"]
+    rng = np.random.default_rng(RNG_SEED + seed)
     stars = SimpleNamespace(
         density=STAR_DENSITY,
         contrast=0.12 + 0.8 * rng.random(STAR_POPULATION) ** 3,        # mostly faint
         tint=np.asarray(STAR_TINTS, np.float32)[
             rng.choice(len(STAR_TINTS), STAR_POPULATION, p=STAR_TINT_ODDS)])
-    OUT.mkdir(parents=True, exist_ok=True)
-    star_tile(stars, 0.7, (0.32, 0.55), rng).save(OUT / "stars_far.png", optimize=True)
-    star_tile(stars, 0.3, (0.45, 0.8), rng).save(OUT / "stars_near.png", optimize=True)
+    out.mkdir(parents=True, exist_ok=True)
+    star_tile(stars, 0.7, (0.32, 0.55), rng).save(out / "stars_far.png", optimize=True)
+    star_tile(stars, 0.3, (0.45, 0.8), rng).save(out / "stars_near.png", optimize=True)
     print("stars: far + near tiles")
 
 
-def bake_layers():
+def bake_layers(where):
     """Rendered sky passes -> under-plate, anchored sprite sheets."""
-    timing = json.loads(TIMING.read_text())
+    timing = json.loads(where.timing.read_text())
     for layer, t in timing.items():
         if layer.startswith("_"):
             continue
-        src = BUILD / layer
+        src = where.build / layer
         info = json.loads((src / "pass.json").read_text())
         sprites, slots = [], []
         for path in sorted(src.glob("*.png")):
@@ -175,23 +207,25 @@ def bake_layers():
                 slots.append(int(path.stem) - 1)          # frame N -> slot N-1
         fps = float(info["fps"])
         period_frames = max(int(info["frames"]), int(math.ceil(t["period"] * fps)))
-        write_sheet(OUT, layer, sprites, slots, CANVAS, fps, period_frames,
+        write_sheet(where.out, layer, sprites, slots, CANVAS, fps, period_frames,
                     int(round(t["offset"] * fps)), under=True, anchor=info["anchor"])
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("--base", required=True, help="assets/concourse/<base>")
     ap.add_argument("--debug", help="contact sheet of every detected sky")
     only = ap.add_mutually_exclusive_group()
     only.add_argument("--stars-only", action="store_true", help="just re-make the star tiles")
     only.add_argument("--layers-only", action="store_true", help="just bake the sky layers")
     args = ap.parse_args()
+    where = _where(args.base)
     if not (args.stars_only or args.layers_only):
-        bake_skies(args.debug)
+        bake_skies(where, args.debug)
     if not args.layers_only:
-        bake_stars()
+        bake_stars(where)
     if not args.stars_only:
-        bake_layers()
+        bake_layers(where)
 
 
 if __name__ == "__main__":

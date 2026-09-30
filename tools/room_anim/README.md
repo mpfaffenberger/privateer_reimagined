@@ -17,6 +17,8 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 |---|---|---|
 | `base.py` | both | per-base paths |
 | `render.py` | Blender | beauty / mask / empty passes, render border |
+| `bake_crater.py` | uv | crater landing pads: rim sky masks + anchors, star tiles, sky sheets (`--base`) |
+| `flyover.py` | Blender | crater landing pads: canonical sky camera, rim-relative ship paths, render loop |
 | `ships.py` | Blender | game-mesh import, sidecar materials, orientation |
 | `bake_layer.py` | uv | plate-aware sprite encoding + atlas packing (`--base`) |
 | `sky.py` | uv | star removal, mask solidify, sky fill, painted-star stats, star tiles |
@@ -211,9 +213,8 @@ plate to confirm.
 | `actors.py` | Blender | tug + ore hopper (game meshes), ore pile, headlights, beacon |
 | `render_layers.py` | Blender | the ore-train layer; `--check` overlay |
 | `layers.json` | - | loop period and phase |
-| `bake_landing.py` | uv | landing pad: sky masks + rim anchors, star tiles, freighter sheet |
-| `render_landing.py` | Blender | the Galaxy freighter pass over the landing pad |
-| `landing_layers.json` | - | landing sky layer timing |
+| `render_landing.py` | Blender | the Galaxy freighter pass over the landing pad (`../flyover.py`) |
+| `landing_layers.json` | - | landing sky layer timing, star seed (`../bake_crater.py`) |
 | `bar_patrons.json` | - | the bar's room file: camera, lights, and each 3D patron |
 | `sources/bar_*_clean_gen.png` | - | AI clean-plate edits of each patron's crop (painted out) |
 
@@ -368,10 +369,10 @@ climbs out from behind the right rim and crosses overhead, the original
 game's `landing_shp` beat.
 
 ```sh
-uv run tools/room_anim/mining/bake_landing.py --debug build/room_anim/mining/skies.png
+uv run tools/room_anim/bake_crater.py --base mining --debug build/room_anim/mining/skies.png
 # (bake the skies first: render_landing.py reads tarsus's rim from anchors.json)
 blender --background --factory-startup --python tools/room_anim/mining/render_landing.py
-uv run tools/room_anim/mining/bake_landing.py --layers-only
+uv run tools/room_anim/bake_crater.py --base mining --layers-only
 uv run tools/room_anim/composite_preview.py --base mining --room landing --plate tarsus \
     --crop 0 0 1536 400 --seconds 55 --out build/room_anim/mining/landing.mp4
 ```
@@ -393,6 +394,48 @@ uv run tools/room_anim/composite_preview.py --base mining --room landing --plate
   path is solved from rim-relative screen targets: its centre goes from
   rim + 10 to rim - 30, which keeps the ~50 px ship inside even the
   tightest sky (~61 px).
+
+The crater machinery is shared (#587): `bake_crater.py --base <base>` finds
+the skies, anchors, star tiles and packs the sky layers listed in
+`<base>/landing_layers.json` (which also holds the base's `_star_seed` and
+any `_sky` detection options); `flyover.py` is the Blender side (canonical
+camera, sun and crater bounce, `screen_path()` from rim-relative targets,
+nav lights, the render loop). A base's `render_landing.py` only builds its
+ships. Mining's masks, anchors and tiles re-bake byte-identical, and its
+freighter scene matches the pre-refactor script frame for frame.
+
+### Pirate landing pad (#587)
+
+The pirate pad is the same crater, and so gets the same stars. Its ship is
+its own, though: every 45 s two pirate Talons (`ships_wcnews/talon5.obj`,
+orange exhaust, nav lights) come in low and fast from behind the left rim in
+echelon and climb out behind the right one, a 5.5 s buzz.
+
+```sh
+uv run tools/room_anim/bake_crater.py --base pirate --debug build/room_anim/pirate/skies.png
+blender --background --factory-startup --python tools/room_anim/pirate/render_landing.py
+uv run tools/room_anim/bake_crater.py --base pirate --layers-only
+uv run tools/room_anim/composite_preview.py --base pirate --room landing --plate tarsus \
+    --crop 0 0 1536 400 --seconds 45 --out build/room_anim/pirate/landing.mp4
+```
+
+- **Sky.** The pirate composites are harder than the mining ones: some skies
+  are navy over dim brown rock (broadsword: sky 30, rim rock 35-45), and some
+  are shaded across the frame (drayman: 9 at the left, 25 at the right).
+  A single brightness margin drips down crevices on the first kind and eats the
+  bright side of the second. `landing_layers.json` turns on two
+  `find_sky()` options (both off for mining):
+  - `level_band` measures the sky level per 128 px column band, capped at one
+    margin over the overall level, so a rock wall reaching the top corner
+    can't lift it.
+  - `warm_margin` also calls rock anything 8 warmer (red minus blue) than the
+    sky. Navy sky runs -17 and brown rock +5 to +15, even where the rock is
+    as dark as the sky (stiletto's top-right wall).
+- **Talons.** They're 24 m long and 100 m up. The leader's centre goes from
+  rim - 28 to rim - 48 px. The wingman sits 32 m back, 18 m out to port (away
+  from the camera, so ~14 px lower) and 4 m up. Both are banked 10 degrees.
+  On the starboard side the wingman was nearer the camera, so it flew higher
+  on screen and clipped the top edge of the tightest skies.
 
 ## Agricultural concourse (#582)
 

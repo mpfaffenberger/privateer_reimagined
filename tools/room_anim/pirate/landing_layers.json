@@ -1,0 +1,7 @@
+{
+  "_doc": "Landing-pad sky layers (../bake_crater.py). Loop timing, seconds: period >= the pass; the rest is empty sky.",
+  "_star_seed": 587,
+  "_sky": { "level_band": 128, "warm_margin": 8 },
+  "_offset": "The engine adds offset to the clock, so 40 of 45 starts the pass 5 s into the loop.",
+  "talon_raid": { "period": 45.0, "offset": 40.0 }
+}
