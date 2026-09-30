@@ -36,6 +36,8 @@ import argparse
 import json
 import math
 
+from pathlib import Path
+
 import numpy as np
 from PIL import Image
 
@@ -278,6 +280,40 @@ def write_sheet(out_dir, name, sprites, slots, canvas, fps, period_frames, offse
     (out_dir / f"{name}.json").write_text(json.dumps(manifest, separators=(",", ":")) + "\n")
     print(f"{name}: {len(unique)} sprites, atlas {width}x{height}, "
           f"loop {period_frames} frames @ {fps:g} fps")
+
+
+
+def bake_passes(timing_path, build_dir, out_dir, canvas, under=True, anchor=None,
+                max_px=BIG_FRAME_PX):
+    """Straight-alpha sky passes -> sprite sheets: landing pads, sky windows (#627).
+
+    Every non-"_" key of `timing_path` ({"<layer>": {"period": s, "offset":
+    s}}) names a pass in `build_dir`/<layer>/: NNNN.png frames plus
+    pass.json {"frames", "fps"[, "anchor"]} (flyover.render_frames() and the
+    bases' render scripts write them). A frame N lands in slot N-1; the loop
+    is the pass or `period`, whichever is longer. Sheets are drawn under the
+    plate, seen through its sky mask, unless `under` is False; anchored on
+    `anchor`, else the pass's own if it has one (a single-plate sky has
+    none); frames over `max_px` stored at half size (see load_frame)."""
+    for layer, t in json.loads(Path(timing_path).read_text()).items():
+        if layer.startswith("_"):
+            continue
+        src = Path(build_dir) / layer
+        info = json.loads((src / "pass.json").read_text())
+        sprites, slots = [], []
+        for path in sorted(src.glob("[0-9]*.png")):
+            baked = load_frame(path, max_px)
+            if baked is not None:
+                sprites.append(baked)
+                slots.append(int(path.stem) - 1)          # frame N -> slot N-1
+        fps = float(info["fps"])
+        period_frames = max(int(info["frames"]), int(math.ceil(t["period"] * fps)))
+        placement = {"under": True} if under else {}      # over: the manifest default
+        own = anchor if anchor is not None else info.get("anchor")
+        if own is not None:
+            placement["anchor"] = own
+        write_sheet(Path(out_dir), layer, sprites, slots, canvas, fps, period_frames,
+                    int(round(t["offset"] * fps)), **placement)
 
 
 if __name__ == "__main__":

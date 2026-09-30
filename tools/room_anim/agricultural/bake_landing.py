@@ -13,7 +13,7 @@ assets/concourse/agricultural/anim/landing/:
 
     <hull>_mask.png   L8, 255 = open sky (moons included)
     <hull>_fill.png   the painted sky at half resolution, moons and all,
-                      extrapolated past the mask edge
+                      extrapolated past the mask edge (sky.half_fill)
     anchors.json      {"<hull>": [cx, cy, r]}: the big moon's centre (r fixed)
     <layer>.{json,png}
                       aircraft (render_landing.py), under the plate and
@@ -26,7 +26,6 @@ Usage (from the repo root):
 """
 import argparse
 import json
-import math
 import sys
 from pathlib import Path
 
@@ -36,8 +35,9 @@ from scipy import ndimage
 
 HERE = Path(__file__).resolve().parent
 sys.path[:0] = [str(HERE), str(HERE.parent)]         # this base's modules, then shared ones
-from bake_layer import load_frame, write_sheet  # noqa: E402
+from bake_layer import bake_passes  # noqa: E402
 from base import paths  # noqa: E402
+from sky import contact_sheet, half_fill  # noqa: E402
 
 AGRI = paths("agricultural")
 COMPOSITES = AGRI.room / "landing_ships"
@@ -95,22 +95,6 @@ def find_sky(plate):
     return img, anchor
 
 
-def half_fill(plate, mask):
-    """The painted sky at half resolution, extrapolated past the mask edge so
-    the engine's bilinear stretch never pulls tower or pylon into it."""
-    h, w = plate.height // 2, plate.width // 2
-    rgb = np.asarray(plate, np.float32)[:h * 2, :w * 2].reshape(h, 2, w, 2, 3).mean(axis=(1, 3))
-    sky = (np.asarray(mask)[:h * 2, :w * 2] > 127).reshape(h, 2, w, 2).mean(axis=(1, 3))
-    known = sky > 0.99
-    fill = np.where(known[..., None], rgb, 0.0)
-    for sigma in (2.0, 6.0, 18.0):                # widening rings past the edge
-        den = ndimage.gaussian_filter(known.astype(np.float32), sigma)
-        num = np.dstack([ndimage.gaussian_filter(fill[..., c] * known, sigma) for c in range(3)])
-        grow = ~known & (den > 1e-3)
-        fill[grow] = num[grow] / den[grow][:, None]
-        known = known | grow
-    return Image.fromarray(np.clip(fill, 0, 255).astype(np.uint8))
-
 
 def bake_skies(debug):
     OUT.mkdir(parents=True, exist_ok=True)
@@ -134,33 +118,14 @@ def bake_skies(debug):
             d.text((12, 12), hull, fill=(255, 255, 255))
             thumbs.append(thumb.resize((384, 256)))
     (OUT / "anchors.json").write_text(json.dumps(anchors, indent=1) + "\n")
-    if debug and thumbs:
-        cols = 6
-        sheet = Image.new("RGB", (cols * 384, math.ceil(len(thumbs) / cols) * 256))
-        for i, t in enumerate(thumbs):
-            sheet.paste(t, ((i % cols) * 384, (i // cols) * 256))
-        Path(debug).parent.mkdir(parents=True, exist_ok=True)
-        sheet.save(debug)
+    if debug:
+        contact_sheet(thumbs, debug)
 
 
 def bake_layers():
     """Rendered sky passes -> under-plate, anchored sprite sheets."""
-    timing = json.loads(TIMING.read_text())
-    for layer, t in timing.items():
-        if layer.startswith("_"):
-            continue
-        src = BUILD / layer
-        info = json.loads((src / "pass.json").read_text())
-        sprites, slots = [], []
-        for path in sorted(src.glob("[0-9]*.png")):
-            baked = load_frame(path)
-            if baked is not None:
-                sprites.append(baked)
-                slots.append(int(path.stem) - 1)          # frame N -> slot N-1
-        fps = float(info["fps"])
-        period_frames = max(int(info["frames"]), int(math.ceil(t["period"] * fps)))
-        write_sheet(OUT, layer, sprites, slots, CANVAS, fps, period_frames,
-                    int(round(t["offset"] * fps)), under=True, anchor=info["anchor"])
+    bake_passes(TIMING, BUILD, OUT, CANVAS)
+
 
 
 def main():

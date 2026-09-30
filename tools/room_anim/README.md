@@ -20,8 +20,8 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `bake_crater.py` | uv | crater landing pads: rim sky masks + anchors, star tiles, sky sheets (`--base`) |
 | `flyover.py` | Blender | crater landing pads: canonical sky camera, rim-relative ship paths, render loop |
 | `ships.py` | Blender | game-mesh import, sidecar materials, orientation |
-| `bake_layer.py` | uv | plate-aware sprite encoding + atlas packing (`--base`) |
-| `sky.py` | uv | star removal, mask solidify, sky fill, painted-star stats, star tiles |
+| `bake_layer.py` | uv | plate-aware sprite encoding + atlas packing (`--base`); `bake_passes()`: landing-pad sky passes -> sheets |
+| `sky.py` | uv | star removal, mask solidify, sky fill, `half_fill()` for smooth skies, painted-star stats, star tiles, `--debug` contact sheets |
 | `composite_preview.py` | uv | engine-faithful preview from `concourse.json` (`--base`) |
 | `stage.py` | Blender | render settings, boxes, materials, lights, straight/polyline paths |
 | `walkers.py` | Blender | pedestrian proxies and their walk (New Con, pirate); rigged walkers (New Detroit) |
@@ -1224,3 +1224,10 @@ uv run tools/room_anim/composite_preview.py --base refinery --room landing --pla
 2. Scripts in `<base>/` put `tools/room_anim/` on `sys.path` to import the
    shared modules (see the top of `newcon/render_layers.py`).
 3. Then follow *Adding a layer*.
+4. A landing pad (per-hull composites) reuses the shared pieces rather than
+   copying another base's (#627): `bake_crater.py` outright for a black
+   crater sky; otherwise a `<base>/bake_landing.py` that finds its own sky
+   and anchor, fills a smooth painted sky with `sky.half_fill()`, draws its
+   `--debug` grid with `sky.contact_sheet()` and packs the passes with
+   `bake_layer.bake_passes()`; its `render_landing.py` builds ships on
+   `flyover.py`'s stage (`lights=` for its own light).

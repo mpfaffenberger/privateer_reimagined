@@ -11,7 +11,7 @@ little differently, under a purple-to-orange sky with a big moon and a small
 one. For every composite this writes to assets/concourse/oxford/anim/landing/:
 
     <hull>_mask.png   L8, 255 = open sky the ship may show through
-    <hull>_fill.png   that sky, the plate's own pixels at half size
+    <hull>_fill.png   that sky, the plate's own pixels at half size (sky.half_fill)
     anchors.json      {"<hull>": [cx, cy, r]}: the big moon (find_moons)
     <layer>.{json,png}
                       ship passes (render_landing.py), under the plate and
@@ -34,7 +34,8 @@ from scipy import ndimage as ndi
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from base import paths  # noqa: E402
-from bake_layer import load_frame, write_sheet  # noqa: E402
+from bake_layer import bake_passes  # noqa: E402
+from sky import contact_sheet, half_fill  # noqa: E402
 
 OXFORD = paths("oxford")
 COMPOSITES = OXFORD.room / "landing_ships"
@@ -206,25 +207,6 @@ def sky_mask(sky, moons):
     return Image.fromarray(rounded.astype(np.uint8) * 255).filter(ImageFilter.GaussianBlur(0.8))
 
 
-def sky_fill(rgb, mask):
-    """The plate's own sky at half size (box-averaged inside the mask, so no
-    blur where it shows), extrapolated outward so the feathered edge and the
-    bilinear stretch never pull in skyline or moon colour."""
-    w = np.asarray(mask, np.float32) / 255.0
-    h2, w2 = rgb.shape[0] // 2, rgb.shape[1] // 2
-
-    def half(a):
-        return a[:h2 * 2, :w2 * 2].reshape(h2, 2, w2, 2, *a.shape[2:]).mean(axis=(1, 3))
-    num, den = half(rgb.astype(np.float32) * w[..., None]), half(w)[..., None]
-    fill = np.where(den > 0.5, num / np.maximum(den, 1e-6), 0.0)
-    for sigma in (2.0, 8.0, 32.0, 128.0):                  # grow outward, near first
-        blur_n = np.dstack([ndi.gaussian_filter(num[..., c], sigma) for c in range(3)])
-        blur_d = ndi.gaussian_filter(den[..., 0], sigma)[..., None]
-        fill = np.where(den > 0.5, fill,
-                        np.where(blur_d > 1e-3, blur_n / np.maximum(blur_d, 1e-6), fill))
-        den = np.maximum(den, np.where(blur_d > 1e-3, 1.0, 0.0))
-    return Image.fromarray(np.clip(fill, 0, 255).astype(np.uint8))
-
 
 def bake_skies(debug):
     OUT.mkdir(parents=True, exist_ok=True)
@@ -236,7 +218,7 @@ def bake_skies(debug):
         big, small = find_moons(rgb, sky, seed=593 + i)
         mask = sky_mask(sky, (big, small))
         mask.save(OUT / f"{hull}_mask.png", optimize=True)
-        sky_fill(rgb, mask).save(OUT / f"{hull}_fill.png", optimize=True)
+        half_fill(Image.fromarray(rgb), mask).save(OUT / f"{hull}_fill.png", optimize=True)
         anchors[hull] = [round(float(v), 1) for v in big]
         cover = np.mean(np.asarray(mask) > 127)
         print(f"{hull:<11} edge {step}  moon {anchors[hull]}  "
@@ -253,32 +235,14 @@ def bake_skies(debug):
             d.text((12, 12), hull, fill=(255, 255, 0))
             thumbs.append(thumb.resize((512, 341)))
     (OUT / "anchors.json").write_text(json.dumps(anchors, indent=1) + "\n")
-    if debug and thumbs:
-        cols = 6
-        sheet = Image.new("RGB", (cols * 512, math.ceil(len(thumbs) / cols) * 341))
-        for i, t in enumerate(thumbs):
-            sheet.paste(t, ((i % cols) * 512, (i // cols) * 341))
-        Path(debug).parent.mkdir(parents=True, exist_ok=True)
-        sheet.save(debug)
+    if debug:
+        contact_sheet(thumbs, debug)
 
 
 def bake_layers():
-    """Rendered sky passes -> under-plate, anchored sprite sheets (as mining's)."""
-    for layer, t in json.loads(TIMING.read_text()).items():
-        if layer.startswith("_"):
-            continue
-        src = BUILD / layer
-        info = json.loads((src / "pass.json").read_text())
-        sprites, slots = [], []
-        for path in sorted(src.glob("*.png")):
-            baked = load_frame(path)
-            if baked is not None:
-                sprites.append(baked)
-                slots.append(int(path.stem) - 1)          # frame N -> slot N-1
-        fps = float(info["fps"])
-        period_frames = max(int(info["frames"]), int(math.ceil(t["period"] * fps)))
-        write_sheet(OUT, layer, sprites, slots, CANVAS, fps, period_frames,
-                    int(round(t["offset"] * fps)), under=True, anchor=info["anchor"])
+    """Rendered sky passes -> under-plate, anchored sprite sheets."""
+    bake_passes(TIMING, BUILD, OUT, CANVAS)
+
 
 
 def main():

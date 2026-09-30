@@ -40,6 +40,7 @@ from scipy import ndimage
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from base import paths  # noqa: E402
 from bake_layer import encode, to_linear, to_srgb, write_sheet  # noqa: E402
+from sky import contact_sheet  # noqa: E402
 
 MILITARY = paths("military")
 COMPOSITES = MILITARY.room / "landing_ships"
@@ -212,13 +213,8 @@ def main():
                 d.ellipse([x - 4 * r, y - 4 * r, x + 4 * r, y + 4 * r], outline=(0, 255, 255), width=4)
             d.text((12, 12), path.stem, fill=(255, 255, 0))
             thumbs.append(im.resize((384, 256)))
-    if args.debug and thumbs:
-        cols = 6
-        sheet = Image.new("RGB", (cols * 384, math.ceil(len(thumbs) / cols) * 256))
-        for i, t in enumerate(thumbs):
-            sheet.paste(t, ((i % cols) * 384, (i // cols) * 256))
-        Path(args.debug).parent.mkdir(parents=True, exist_ok=True)
-        sheet.save(args.debug)
+    if args.debug:
+        contact_sheet(thumbs, args.debug)
 
 
 if __name__ == "__main__":

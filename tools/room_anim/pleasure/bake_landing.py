@@ -12,7 +12,7 @@ framed a little differently. For every composite this writes to
 assets/concourse/pleasure/anim/landing/:
 
     <hull>_mask.png   L8, 255 = open sky (moons, towers and the block excluded)
-    <hull>_fill.png   the painted sky itself at half size, holes extrapolated
+    <hull>_fill.png   the painted sky itself at half size, holes extrapolated (sky.half_fill)
     anchors.json      {"<hull>": [cx, cy, r]}: cy is the sea horizon
     transport_arrival.{json,png}
                       the transport (render_landing.py), under the plate and
@@ -24,7 +24,6 @@ Usage (from the repo root):
 """
 import argparse
 import json
-import math
 import sys
 from pathlib import Path
 
@@ -33,9 +32,9 @@ from PIL import Image, ImageDraw, ImageFilter
 from scipy import ndimage
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from bake_layer import load_frame, write_sheet  # noqa: E402
+from bake_layer import bake_passes  # noqa: E402
 from base import paths  # noqa: E402
-from sky import sky_fill  # noqa: E402
+from sky import contact_sheet, half_fill  # noqa: E402
 
 PLEASURE = paths("pleasure")
 COMPOSITES = PLEASURE.room / "landing_ships"
@@ -118,17 +117,6 @@ def find_sky(plate):
     return mask, [w / 2, round(hz, 1), w / 2]
 
 
-def fill(plate, mask):
-    """The painted sky itself (it's a smooth gradient, so half size loses
-    nothing), with every non-sky pixel extrapolated from around it."""
-    m = (np.asarray(mask, dtype=np.float32) / 255.0)[..., None]
-    grown = Image.fromarray((m[..., 0] * 255).astype(np.uint8)).filter(ImageFilter.MaxFilter(5))
-    g = (np.asarray(grown, dtype=np.float32) / 255.0)[..., None]
-    rgb = np.asarray(plate, dtype=np.float32)
-    ext = np.asarray(sky_fill(plate, mask).resize(plate.size, Image.BILINEAR), dtype=np.float32)
-    out = Image.fromarray((rgb * g + ext * (1.0 - g)).astype(np.uint8))
-    return out.resize((plate.width // 2, plate.height // 2), Image.BOX)
-
 
 def bake_skies(debug):
     OUT.mkdir(parents=True, exist_ok=True)
@@ -138,7 +126,7 @@ def bake_skies(debug):
         mask, anchor = find_sky(plate)
         hull = path.stem
         mask.save(OUT / f"{hull}_mask.png", optimize=True)
-        fill(plate, mask).save(OUT / f"{hull}_fill.png", optimize=True)
+        half_fill(plate, mask).save(OUT / f"{hull}_fill.png", optimize=True)
         anchors[hull] = anchor
         print(f"{hull:<11} horizon {anchor[1]:6.1f}  sky {np.mean(np.asarray(mask) > 127):.1%}")
         if debug:
@@ -151,33 +139,14 @@ def bake_skies(debug):
             d.text((12, 12), hull, fill=(255, 255, 0))
             thumbs.append(thumb.resize((384, 256)))
     (OUT / "anchors.json").write_text(json.dumps(anchors, indent=1) + "\n")
-    if debug and thumbs:
-        cols = 6
-        sheet = Image.new("RGB", (cols * 384, math.ceil(len(thumbs) / cols) * 256))
-        for i, t in enumerate(thumbs):
-            sheet.paste(t, ((i % cols) * 384, (i // cols) * 256))
-        Path(debug).parent.mkdir(parents=True, exist_ok=True)
-        sheet.save(debug)
+    if debug:
+        contact_sheet(thumbs, debug)
 
 
 def bake_layers():
     """Rendered sky passes -> under-plate, anchored sprite sheets."""
-    timing = json.loads(TIMING.read_text())
-    for layer, t in timing.items():
-        if layer.startswith("_"):
-            continue
-        src = BUILD / layer
-        info = json.loads((src / "pass.json").read_text())
-        sprites, slots = [], []
-        for path in sorted(src.glob("*.png")):
-            baked = load_frame(path)
-            if baked is not None:
-                sprites.append(baked)
-                slots.append(int(path.stem) - 1)          # frame N -> slot N-1
-        fps = float(info["fps"])
-        period_frames = max(int(info["frames"]), int(math.ceil(t["period"] * fps)))
-        write_sheet(OUT, layer, sprites, slots, CANVAS, fps, period_frames,
-                    int(round(t["offset"] * fps)), under=True, anchor=info["anchor"])
+    bake_passes(TIMING, BUILD, OUT, CANVAS)
+
 
 
 def main():

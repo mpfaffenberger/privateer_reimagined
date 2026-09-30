@@ -5,11 +5,15 @@
     window_mask()   hand-drawn window polygons refined by darkness -> mask
     sky_fill()      starless sky colour, extrapolated past the mask edge
     hazy_sky_fill() the plate's own starless sky, full res, for glare and haze
+    half_fill()     the painted sky itself at half size, extrapolated (#627)
     PaintedStars    a painting's own star population (density, brightness, colour)
     star_tile()     tileable star field drawn from such a population
+    contact_sheet() the --debug grid of per-composite sky detections (#627)
 
 Per-base cut-outs live with each base (newcon/bake_sky.py, newcon/bake_hangar.py).
 """
+from pathlib import Path
+
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 
@@ -90,6 +94,52 @@ def hazy_sky_fill(plate, blur=1.5):
     rgb = plate.convert("RGB")
     return Image.merge("RGB", [star_removed(c).filter(ImageFilter.GaussianBlur(blur))
                                for c in rgb.split()])
+
+def half_fill(plate, mask, band=5):
+    """The painted sky itself at half size, for skies that are smooth
+    gradients (dusk, daylight), so half size loses little. Unlike
+    sky_fill() it keeps the painting's own detail: use it where there are no
+    stars to remove (#583, #593, #595; shared in #627).
+
+    With nothing passing, plate * (1 - m) + fill * m must look like the
+    plate, so the feathered edge matters. The plate is box-averaged inside
+    the mask grown by `band` px, so the feather composites back to the
+    painting rather than to sky extrapolated into it, then grown outward in
+    widening rings until every pixel is filled (the bilinear stretch never
+    pulls in black). Scored against the paintings (composited error over
+    the sky, 18 plates each) it beat or tied the three per-base versions it
+    replaced on mean and p99 for agricultural's, pleasure's and oxford's
+    masks; only pleasure's extreme tail got slightly worse (max 15 -> 18
+    LSB, 0.02% -> 0.04% of sky pixels over 8 LSB)."""
+    from scipy import ndimage   # here, not at the top: most sky users don't need scipy
+    rgb = np.asarray(plate.convert("RGB"), dtype=np.float32)
+    w = np.asarray(mask.filter(ImageFilter.MaxFilter(band)), dtype=np.float32) / 255.0
+    h2, w2 = rgb.shape[0] // 2, rgb.shape[1] // 2
+
+    def half(a):
+        return a[:h2 * 2, :w2 * 2].reshape(h2, 2, w2, 2, *a.shape[2:]).mean(axis=(1, 3))
+    num, den = half(rgb * w[..., None]), half(w)[..., None]
+    fill = np.where(den > 0.5, num / np.maximum(den, 1e-6), 0.0)
+    for sigma in (2.0, 8.0, 32.0, 128.0):                  # grow outward, near first
+        blur_n = np.dstack([ndimage.gaussian_filter(num[..., c], sigma) for c in range(3)])
+        blur_d = ndimage.gaussian_filter(den[..., 0], sigma)[..., None]
+        fill = np.where(den > 0.5, fill,
+                        np.where(blur_d > 1e-3, blur_n / np.maximum(blur_d, 1e-6), fill))
+        den = np.maximum(den, np.where(blur_d > 1e-3, 1.0, 0.0))
+    return Image.fromarray(np.clip(fill, 0, 255).astype(np.uint8))
+
+
+def contact_sheet(thumbs, path, cols=6):
+    """The --debug grid: equal-size thumbnails (one per composite), `cols`
+    across, saved to `path`. Nothing to do without thumbs."""
+    if not thumbs:
+        return
+    tw, th = thumbs[0].size
+    sheet = Image.new("RGB", (cols * tw, -(-len(thumbs) // cols) * th))
+    for i, t in enumerate(thumbs):
+        sheet.paste(t, ((i % cols) * tw, (i // cols) * th))
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    sheet.save(path)
 
 
 class PaintedStars:
