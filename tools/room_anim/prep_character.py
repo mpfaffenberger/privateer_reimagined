@@ -15,6 +15,12 @@ reproducible. This keeps one clip per file and:
   - with --clip-from, swaps in another character's clip: every Meshy rig is
     the same 28-bone Mixamo skeleton, and a straight copy of the action
     tested clean (a world-space retarget twisted the body; #566),
+  - fixes the Meshy API's materials (#578): its export is fully metallic
+    (a constant 1.0, no metallic-roughness map) with the colour texture also
+    wired into Emission, so skin and cloth render like glowing chrome. A
+    constant metallic becomes 0 (roughness MATTE) and the emission link
+    goes; web-app exports carry a real metallic-roughness map and are left
+    alone,
   - optionally decimates to RATIO. Triangles cost nothing in a pre-rendered
     pipeline, so the default is 1.0 (none): collapse decimation ignores UV
     islands, and at 0.1 it shredded her face and suit texture along the
@@ -29,6 +35,28 @@ import bpy
 
 def is_skinned(obj):
     return any(m.type == 'ARMATURE' for m in obj.modifiers)
+
+
+MATTE = 0.65          # skin and cloth roughness, for a material that had none
+
+
+def fix_materials():
+    """Un-chrome the Meshy API's export (see the module doc)."""
+    for mat in bpy.data.materials:
+        if not mat.node_tree:
+            continue
+        bsdf = next((n for n in mat.node_tree.nodes if n.type == 'BSDF_PRINCIPLED'), None)
+        if bsdf is None or bsdf.inputs["Metallic"].is_linked:
+            continue                                    # a real metallic-roughness map
+        if bsdf.inputs["Metallic"].default_value > 0.5:
+            bsdf.inputs["Metallic"].default_value = 0.0
+            if not bsdf.inputs["Roughness"].is_linked:
+                bsdf.inputs["Roughness"].default_value = MATTE
+            print(f"[prep_character] {mat.name}: metallic 1 -> 0, roughness {MATTE}")
+        for link in list(bsdf.inputs["Emission Color"].links):
+            mat.node_tree.links.remove(link)
+            bsdf.inputs["Emission Strength"].default_value = 0.0
+            print(f"[prep_character] {mat.name}: emission unlinked")
 
 
 def transplant_clip(clip_glb):
@@ -68,6 +96,7 @@ def main(argv):
             bpy.data.meshes.remove(obj.data)            # the data too, or glTF keeps it
     if args.clip_from:
         transplant_clip(args.clip_from)
+    fix_materials()
     meshes = [o for o in bpy.data.objects if o.type == 'MESH']
     before = sum(len(o.data.polygons) for o in meshes)
     if args.ratio < 1.0:
