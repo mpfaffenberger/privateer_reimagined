@@ -36,6 +36,7 @@ from scipy import ndimage
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import patron_room  # noqa: E402
+import still  # noqa: E402
 from bake_layer import load_frame, write_sheet  # noqa: E402
 
 CANVAS = (1536, 1024)
@@ -93,9 +94,10 @@ def clean_patch(p, plate):
     return np.dstack([np.asarray(gen, np.uint8), (alpha * 255).round().astype(np.uint8)])
 
 
-def patron_frame(p, path):
-    """-> (sprite RGBA, dst) of one render, clipped at the occluders, or None."""
-    rgba = np.asarray(Image.open(path).convert("RGBA")).copy()
+def patron_frame(p, src):
+    """-> (sprite RGBA, dst) of one render (a path or a plate-sized RGBA
+    array), clipped at the occluders, or None."""
+    rgba = (np.asarray(Image.open(src).convert("RGBA")) if isinstance(src, Path) else src).copy()
     x0, y0, x1, y1 = p["crop"]
     rgba[y0:y1, x0:x1, 3][front_mask(p, y1 - y0, x1 - x0)] = 0
     rgba[..., 3][rgba[..., 3] < SHADOW_FLOOR] = 0
@@ -133,6 +135,13 @@ def bake(name):
     # A one-slot loop: slots without a frame draw nothing, so on the patron's
     # loop the painted one would flicker back every other slot.
     write_sheet(ROOM.out, f"{name}_patch", [(sprite, dst)], [0], CANVAS, fps, 1, 0)
+    if "still" in p:            # one held pose with small moves: still.py
+        cycle = [np.asarray(Image.open(path).convert("RGBA"))
+                 for path in sorted((ROOM.build / name).glob("[0-9]*.png"))]
+        sprites, slots, frames = still.timeline(p["still"], fps, cycle,
+                                                lambda rgba: patron_frame(p, rgba))
+        write_sheet(ROOM.out, name, sprites, slots, CANVAS, fps, frames, int(p["phase"]))
+        return
     sprites, slots = [], []
     for path in sorted((ROOM.build / name).glob("[0-9]*.png")):
         baked = patron_frame(p, path)

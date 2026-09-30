@@ -254,6 +254,10 @@
         200
       ],
       "overlays": [],
+      "layers": [
+        "../../shared_rooms/mercguild/merc_woman_patch.json",
+        "../../shared_rooms/mercguild/merc_woman.json"
+      ],
       "links": [
         {
           "target": "OpenMenu",

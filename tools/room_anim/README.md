@@ -27,7 +27,10 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `bake_patrons.py` | uv | clean-plate patch + patron sheet each (`--room`); `--preview` crops |
 | `prep_character.py` | Blender | Meshy GLB -> committable model (1K textures, one clip) |
 | `meshy.py` | uv | Meshy API: image-to-3D + rig (`character`), clips (`animate`) |
+| `still.py` | uv | a still patron's small moves: glances, a smile, the fidget timeline |
+| `wire_room.py` | uv | point one room's `layers` at a bake, in every base's `concourse.json` |
 | `characters/` | | prepped, rigged 3D characters |
+| `guild/` | | the guild rooms every base shares: Mercenaries' (#578) |
 | `newcon/` | | New Constantinople: concourse (#515) and hangar (#553) |
 | `mining/` | | Mining base concourse: the ore train (#558) |
 
@@ -440,6 +443,20 @@ blender --background --factory-startup --python tools/room_anim/prep_character.p
   plant hands on furniture (the bartender, #568; the foreground man, #571).
   `Sit_and_Drink` (343) is the library's only hand-to-mouth gesture, and
   Meshy's Text to Motion can make custom clips.
+
+### Mercenaries' Guild (#578)
+
+`guild/mercguild_patrons.json`: the woman behind the counter, from Meshy
+(`sources/merc_woman_ref.png` -> `characters/merc_woman_hand_rub.glb`). The
+room file's `_doc` has the camera match and every fitting decision.
+
+```sh
+blender --background --factory-startup --python tools/room_anim/render_patrons.py -- \
+    --room tools/room_anim/guild/mercguild_patrons.json
+uv run --with scipy tools/room_anim/bake_patrons.py --room tools/room_anim/guild/mercguild_patrons.json
+cd tools/room_anim && uv run wire_room.py mercguild \
+    ../../shared_rooms/mercguild/merc_woman_patch.json ../../shared_rooms/mercguild/merc_woman.json
+```
 
 **Rooms shared by every base** (the guild paintings are byte-identical in
 all nine) bake once to `assets/shared_rooms/<room>/`, and each base's

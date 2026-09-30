@@ -390,6 +390,62 @@ void cross_dir_layer_paths() {
     check_layers(dir, {"../../concourse/mining/anim/bar/patron_orange_patch.json"});
 }
 
+// Rooms whose painting every base shares, animated once in
+// assets/shared_rooms/<room>/ (#577).
+const std::vector<std::string> kSharedRooms = {"mercguild"};
+
+// #578: the Mercenaries' Guild woman. Every base shows the same painting and
+// names the same two shared layers: her clean-plate patch, then her idle.
+void shipped_mercguild() {
+    std::vector<std::string> first;
+    int bases = 0;
+    for (const auto& entry : std::filesystem::directory_iterator("assets/concourse")) {
+        if (!entry.is_directory()) continue;
+        const std::string dir = entry.path().generic_string() + "/";
+        room_anim::RoomAnimDef def;
+        room_anim::parse_room_anim(json::parse_file(dir + "concourse.json")["rooms"]["mercguild"],
+                                   def);
+        const std::string base = entry.path().filename().string();
+        check(def.layers.size() == 2 &&
+                  def.layers[0] == "../../shared_rooms/mercguild/merc_woman_patch.json" &&
+                  def.layers[1] == "../../shared_rooms/mercguild/merc_woman.json",
+              base + " mercguild: her patch, then her idle, from the shared bake");
+        if (bases++ == 0) {
+            first = def.layers;
+            check_layers(dir, def.layers);   // one base resolves them; the rest match it
+        }
+        check(def.layers == first, "  " + base + " names the same layers as every base");
+    }
+    check(bases == 9, "all nine bases checked");
+    room_anim::SpriteSheet patch;
+    std::string err;
+    check(room_anim::parse_sprite_sheet(
+              json::parse_file("assets/shared_rooms/mercguild/merc_woman_patch.json"), patch,
+              err) &&
+              patch.frames.size() == 1 && patch.period == 1,
+          "  her patch is one frame on a one-slot loop (always on screen)");
+    // Mike's review: she holds one pose; only small things move (her
+    // fingers at her nails, her eyes, a little smile). So no frame's sprite
+    // lands more than a few px from the rest frame's, and the distinct
+    // images stay few (write_sheet packs each once).
+    room_anim::SpriteSheet idle;
+    const bool ok = room_anim::parse_sprite_sheet(
+        json::parse_file("assets/shared_rooms/mercguild/merc_woman.json"), idle, err);
+    std::vector<std::vector<float>> srcs;
+    float drift = 0.0f;
+    for (const room_anim::SpriteFrame& f : idle.frames) {
+        const std::vector<float> src(f.src, f.src + 4);
+        if (std::find(srcs.begin(), srcs.end(), src) == srcs.end()) srcs.push_back(src);
+        for (int i = 0; i < 4; ++i)
+            drift = std::max(drift, std::fabs(f.dst[i] - idle.frames[0].dst[i]));
+    }
+    check(ok && idle.frames.size() == static_cast<size_t>(idle.period) && drift <= 4.0f,
+          "  she holds one pose: every slot drawn, sprites within 4 px (" +
+              std::to_string(static_cast<int>(drift)) + " px)");
+    check(ok && srcs.size() <= 64,
+          "  her small moves are few images (" + std::to_string(srcs.size()) + ")");
+}
+
 void other_archetypes_static() {
     int animated = 0, rooms = 0;
     for (const auto& entry : std::filesystem::directory_iterator("assets/concourse")) {
@@ -399,13 +455,15 @@ void other_archetypes_static() {
         const json::Value* rs = root.find("rooms");
         if (!rs || !rs->is_object()) continue;
         for (const auto& [name, room] : rs->as_object()) {
+            if (std::find(kSharedRooms.begin(), kSharedRooms.end(), name) != kSharedRooms.end())
+                continue;                   // every base's, checked above
             room_anim::RoomAnimDef def;
             room_anim::parse_room_anim(room, def);
             ++rooms;
             if (!def.empty()) ++animated;
         }
     }
-    check(rooms > 0 && animated == 0, "no other archetype's room gains animation");
+    check(rooms > 0 && animated == 0, "no other archetype's own room gains animation");
 }
 
 }  // namespace
@@ -424,6 +482,7 @@ int main() {
     shipped_mining_bar();
     shipped_newcon_hangar();
     cross_dir_layer_paths();
+    shipped_mercguild();
     other_archetypes_static();
     std::printf("\n%s\n", failures == 0 ? "ALL PASS" : "FAILURES DETECTED");
     return failures == 0 ? 0 : 1;

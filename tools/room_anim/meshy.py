@@ -1,17 +1,18 @@
-"""Make a rigged, animated character with the Meshy AI API (#577).
+﻿"""Make a rigged, animated character with the Meshy AI API (#577).
 
     uv run --with requests tools/room_anim/meshy.py character <name> --image ref.png [--height 1.7]
     uv run --with requests tools/room_anim/meshy.py animate <name> --action 33 --action 343
     uv run --with requests tools/room_anim/meshy.py library [--search sit]
 
-`character` runs image-to-3D (A-pose, textured) and then auto-rigging.
+`character` runs image-to-3D (A-pose, textured), remeshes it (meshy-7.1 makes
+0.5-1.3M faces and rigging takes at most 300k), then auto-rigs it.
 `animate` puts one library action on the rig per task, so every clip lands in
 its own GLB: prep_character.py keeps one clip per file, and auditioning idles
 side by side is the point. Feed a clip to prep_character.py to commit it.
 
 Every task id is saved in build/room_anim/meshy/<name>/state.json before it
 is polled, so a rerun resumes the task instead of paying for a new one
-(image-to-3D 30 credits, rigging 5, each action 3).
+(image-to-3D 30 credits, remesh 5, rigging 5, each action 3).
 
 The API key comes from MESHY_API_KEY or ~/.config/meshy/api_key and is never
 printed or written anywhere else. Keep it out of the repo.
@@ -69,24 +70,24 @@ class Character:
         if slot not in self.state:
             self.state[slot] = _call("POST", feature, json=body).json()["result"]
             self.ledger.write_text(json.dumps(self.state, indent=2))
-            print(f"[meshy] {slot}: created {feature} task {self.state[slot]}")
+            print(f"[meshy] {slot}: created {feature} task {self.state[slot]}", flush=True)
         while True:
             t = _call("GET", f"{feature}/{self.state[slot]}").json()
             if t["status"] == "SUCCEEDED":
-                print(f"[meshy] {slot}: done ({t.get('consumed_credits', '?')} credits)")
+                print(f"[meshy] {slot}: done ({t.get('consumed_credits', '?')} credits)", flush=True)
                 return t
             if t["status"] in ("FAILED", "CANCELED"):
                 # Drop the id so a rerun tries again (failed tasks are refunded).
                 del self.state[slot]
                 self.ledger.write_text(json.dumps(self.state, indent=2))
                 sys.exit(f"[meshy] {slot}: {t['status']} {t.get('task_error', {}).get('message', '')}")
-            print(f"[meshy] {slot}: {t['status']} {t.get('progress', 0)}%")
+            print(f"[meshy] {slot}: {t['status']} {t.get('progress', 0)}%", flush=True)
             time.sleep(POLL_S)
 
     def fetch(self, url, filename):
         path = self.dir / filename
         path.write_bytes(requests.get(url, timeout=300).content)
-        print(f"[meshy] saved {path.relative_to(REPO)}")
+        print(f"[meshy] saved {path.relative_to(REPO)}", flush=True)
         return path
 
 
@@ -101,7 +102,11 @@ def character(args):
         "target_formats": ["glb"],
     })
     ch.fetch(model["model_urls"]["glb"], "model.glb")
-    rig = ch.task("rig", "rigging", {"input_task_id": ch.state["model"],
+    mesh = ch.task("remesh", "remesh", {"input_task_id": ch.state["model"],
+                                        "target_polycount": args.polycount,
+                                        "topology": "triangle", "target_formats": ["glb"]})
+    ch.fetch(mesh["model_urls"]["glb"], "remeshed.glb")
+    rig = ch.task("rig", "rigging", {"input_task_id": ch.state["remesh"],
                                      "height_meters": args.height})
     ch.fetch(rig["result"]["rigged_character_glb_url"], "rigged.glb")
 
@@ -136,6 +141,8 @@ def main():
     c.add_argument("name")
     c.add_argument("--image", required=True, help="full-body, front-facing reference")
     c.add_argument("--height", type=float, default=1.7, help="metres")
+    c.add_argument("--polycount", type=int, default=100_000,
+                   help="remesh target, faces (rigging takes at most 300k)")
     a = sub.add_parser("animate", help="one GLB per library action")
     a.add_argument("name")
     a.add_argument("--action", type=int, action="append", required=True)
@@ -147,3 +154,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
