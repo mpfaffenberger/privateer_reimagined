@@ -34,7 +34,7 @@ import numpy as np
 from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from bake_layer import BIG_FRAME_PX, bbox, shrink, write_sheet  # noqa: E402
+from bake_layer import load_frame, write_sheet  # noqa: E402
 from base import paths  # noqa: E402
 
 NEWCON = paths("newcon")
@@ -44,20 +44,6 @@ TIMING = NEWCON.tools / "hangar_layers.json"
 CANVAS = (1536, 1024)
 OVER_FLOOR = -0.25       # over-plate sprites end above cy + OVER_FLOOR * r
 VISIBLE_ALPHA = 8        # alpha below this is motion-blur haze, ignored by the check
-
-
-def load_frame(path):
-    """-> (sprite RGBA, dst [x, y, w, h]) trimmed to its alpha, or None."""
-    rgba = np.asarray(Image.open(path).convert("RGBA"))
-    box = bbox(rgba[..., 3])
-    if box is None:
-        return None
-    x0, y0, x1, y1 = box
-    sprite = rgba[y0:y1, x0:x1]
-    dst = [x0, y0, x1 - x0, y1 - y0]
-    if sprite.shape[0] * sprite.shape[1] > BIG_FRAME_PX:
-        sprite = shrink(sprite)
-    return sprite, dst
 
 
 def visible_bottom(path):

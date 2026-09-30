@@ -238,6 +238,56 @@ void shipped_newcon() {
           "Bar hotspot rect unchanged");
 }
 
+// Every per-hull landing composite (landing_ships/<hull>.png) has its sky
+// mask, fill, star tiles and an on-plate anchor.
+void check_composite_skies(const std::string& dir, const room_anim::RoomAnimDef& def,
+                           const std::string& what) {
+    const json::Value anchors = json::parse_file(dir + def.anchors);
+    int plates = 0, complete = 0;
+    for (const auto& entry : std::filesystem::directory_iterator(dir + "landing_ships")) {
+        if (entry.path().extension() != ".png") continue;
+        ++plates;
+        const std::string ship = entry.path().stem().string();
+        const room_anim::RoomAnimDef p = room_anim::for_plate(def, ship);
+        float a[3];
+        bool tiles = true;
+        for (const room_anim::StarLayerDef& s : p.sky.stars)
+            tiles = tiles && std::filesystem::exists(dir + s.tile);
+        if (tiles && std::filesystem::exists(dir + p.sky.mask) &&
+            std::filesystem::exists(dir + p.sky.fill) && room_anim::read_anchor(anchors, ship, a) &&
+            a[0] > 0 && a[0] < 1536 && a[1] > 0 && a[1] < 1024)
+            ++complete;
+        else
+            check(false, "  " + what + " sky/stars/anchor for " + ship);
+    }
+    check(plates >= 18 && complete == plates,
+          "every " + what + " composite has a mask, fill, star tiles + anchor");
+}
+
+// #561: the mining landing pad's starry sky and the Galaxy freighter overhead.
+void shipped_mining_landing() {
+    const std::string dir = "assets/concourse/mining/";
+    room_anim::RoomAnimDef def;
+    room_anim::parse_room_anim(
+        json::parse_file(dir + "concourse.json")["rooms"]["landing"]["composite"], def);
+    check(def.has_sky && def.sky.stars.size() >= 2 && !def.anchors.empty(),
+          "mining landing has a starry sky and rim anchors");
+    check_composite_skies(dir, def, "mining landing");
+    check(def.layers.size() == 1, "mining landing has its freighter layer");
+    check_layers(dir, def.layers);
+    for (const std::string& layer : def.layers) {
+        room_anim::SpriteSheet s;
+        std::string err;
+        check(room_anim::parse_sprite_sheet(json::parse_file(dir + layer), s, err) && s.under &&
+                  s.anchored,
+              "  the freighter flies under the plate (the rim occludes it), anchored");
+    }
+    const json::Value links = json::parse_file(dir + "links.json")["landing"];
+    check(links.as_array().size() == 2 &&
+              link_rect_is(links, "Launch", 0.08844f, 0.53458f, 0.69063f, 0.39458f),
+          "mining landing keeps its Launch + Concourse hotspots");
+}
+
 // #558: the mining concourse's ore train.
 void shipped_mining() {
     const std::string dir = "assets/concourse/mining/";
@@ -262,26 +312,7 @@ void shipped_newcon_hangar() {
     room_anim::parse_room_anim(root["rooms"]["landing"]["composite"], def);
     check(def.has_sky && def.sky.stars.size() >= 2 && !def.anchors.empty(),
           "hangar composite has a starry sky and mouth anchors");
-    const json::Value anchors = json::parse_file(dir + def.anchors);
-    int plates = 0, complete = 0;
-    for (const auto& entry : std::filesystem::directory_iterator(dir + "landing_ships")) {
-        if (entry.path().extension() != ".png") continue;
-        ++plates;
-        const std::string ship = entry.path().stem().string();
-        const room_anim::RoomAnimDef p = room_anim::for_plate(def, ship);
-        float a[3];
-        bool tiles = true;
-        for (const room_anim::StarLayerDef& s : p.sky.stars)
-            tiles = tiles && std::filesystem::exists(dir + s.tile);
-        if (tiles && std::filesystem::exists(dir + p.sky.mask) &&
-            std::filesystem::exists(dir + p.sky.fill) && room_anim::read_anchor(anchors, ship, a) &&
-            a[0] > 0 && a[0] < 1536 && a[1] > 0 && a[1] < 1024)
-            ++complete;
-        else
-            check(false, "  hangar sky/stars/anchor for " + ship);
-    }
-    check(plates >= 18 && complete == plates,
-          "every landing composite has a mask, fill, star tiles + anchor");
+    check_composite_skies(dir, def, "hangar");
     bool spins = !def.sky.stars.empty();
     for (const room_anim::StarLayerDef& s : def.sky.stars) spins = spins && s.spin != 0.0f;
     check(spins, "hangar stars spin about the mouth");
@@ -304,14 +335,9 @@ void shipped_newcon_hangar() {
 
     // Acceptance: the landing pad's hotspots (links.json overrides) are untouched.
     const json::Value links = json::parse_file(dir + "links.json")["landing"];
-    bool launch = false;
-    for (const json::Value& l : links.as_array())
-        if (l["target"].string_or("") == "Launch") {
-            const json::Value& r = l["rect"];
-            launch = r[size_t{0}].as_float() == -0.105f && r[size_t{1}].as_float() == 0.50167f &&
-                     r[size_t{2}].as_float() == 0.8975f && r[size_t{3}].as_float() == 0.54f;
-        }
-    check(links.as_array().size() == 2 && launch, "landing keeps its Launch + Concourse hotspots");
+    check(links.as_array().size() == 2 &&
+              link_rect_is(links, "Launch", -0.105f, 0.50167f, 0.8975f, 0.54f),
+          "landing keeps its Launch + Concourse hotspots");
 }
 
 void other_archetypes_static() {
@@ -344,6 +370,7 @@ int main() {
     star_spin();
     shipped_newcon();
     shipped_mining();
+    shipped_mining_landing();
     shipped_newcon_hangar();
     other_archetypes_static();
     std::printf("\n%s\n", failures == 0 ? "ALL PASS" : "FAILURES DETECTED");

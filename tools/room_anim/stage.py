@@ -93,6 +93,20 @@ def material(name, base, metallic=0.0, roughness=0.5, emission=None, strength=0.
     return mat
 
 
+def emitter(name, parent, loc, radius, rgb, strength):
+    """A small glowing sphere (lamp glass, nav light) parented to `parent`."""
+    mesh = bpy.data.meshes.new(name)
+    bm = bmesh.new()
+    bmesh.ops.create_uvsphere(bm, u_segments=12, v_segments=8, radius=radius)
+    bm.to_mesh(mesh)
+    bm.free()
+    mesh.materials.append(material(name, (0.0, 0.0, 0.0), emission=rgb, strength=strength))
+    obj = bpy.data.objects.new(name, mesh)
+    bpy.context.scene.collection.objects.link(obj)
+    obj.parent, obj.location = parent, loc
+    return obj
+
+
 def animate_straight_pass(obj, x, y_start, y_end, hover_z, frame_start, frame_end,
                           bob=0.06, heading_deg=0.0):
     """Constant-speed pass along Y with a gentle vertical bob (hover, or
