@@ -3,6 +3,7 @@
 #include "json.h"
 #include "room_anim_data.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <filesystem>
@@ -303,7 +304,7 @@ void shipped_mining() {
           "mining keeps its eight hotspots (ShipDealer rect unchanged)");
 }
 
-// #564, #566: the mining bar's 3D patrons. Each is a (patch, patron) layer
+// #564, #566, #568: the mining bar's 3D patrons. Each is a (patch, patron) layer
 // pair: a one-frame clean-plate patch paints the painted one out, then the
 // idle loops over it. The patch must draw first; bar_bg.png is untouched.
 void shipped_mining_bar() {
@@ -311,8 +312,8 @@ void shipped_mining_bar() {
     room_anim::RoomAnimDef def;
     room_anim::parse_room_anim(json::parse_file(dir + "concourse.json")["rooms"]["bar"], def);
     const size_t pairs = def.layers.size() / 2;
-    check(!def.has_sky && pairs == 2 && def.layers.size() % 2 == 0,
-          "mining bar has two (patch, patron) layer pairs");
+    check(!def.has_sky && pairs == 3 && def.layers.size() % 2 == 0,
+          "mining bar has three (patch, patron) layer pairs");
     check_layers(dir, def.layers);
     std::vector<int> phases;
     for (size_t i = 0; i < pairs; ++i) {
@@ -332,7 +333,10 @@ void shipped_mining_bar() {
         check(ok && !patch.under && !patron.under, "  " + name + ": both over the plate");
         phases.push_back(patron.offset);
     }
-    check(phases.size() == 2 && phases[0] != phases[1], "  patrons idle out of phase");
+    std::sort(phases.begin(), phases.end());
+    check(phases.size() == pairs &&
+              std::adjacent_find(phases.begin(), phases.end()) == phases.end(),
+          "  patrons idle out of phase (no two share a loop phase)");
     const json::Value links = json::parse_file(dir + "links.json")["bar"];
     check(links.is_array() && links.as_array().empty(), "mining bar hotspots unchanged");
 }
