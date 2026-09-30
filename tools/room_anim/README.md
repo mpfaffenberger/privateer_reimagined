@@ -1073,8 +1073,7 @@ all nine) bake once to `assets/shared_rooms/<room>/`, and each base's
 `concourse.json` names the layers as `../../shared_rooms/<room>/<layer>.json`.
 The engine joins the base dir and that path as-is, and the atlas resolves
 next to its manifest. They stay out of `assets/concourse/`, whose every
-subdirectory is treated as a base (archetype walkers, and
-`other_archetypes_static` in `test_room_anim`).
+subdirectory is treated as a base (archetype walkers).
 
 ## New Detroit landing pad (#591)
 

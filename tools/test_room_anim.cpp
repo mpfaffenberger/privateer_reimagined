@@ -641,10 +641,6 @@ void cross_dir_layer_paths() {
     check_layers(dir, {"../../concourse/mining/anim/bar/patron_orange_patch.json"});
 }
 
-// Rooms whose painting every base shares, animated once in
-// assets/shared_rooms/<room>/ (#577).
-const std::vector<std::string> kSharedRooms = {"mercguild", "merchguild"};
-
 // A shared room (#577): every base shows the same painting and names exactly
 // `layers` (each <name>.json under assets/shared_rooms/<room>/), in order;
 // they resolve, and the first, the clean-plate patch, is always on screen.
@@ -762,31 +758,6 @@ void shipped_oxford() {
           "Oxford keeps its nine hotspots (Library rect unchanged)");
 }
 
-void other_archetypes_static() {
-    int animated = 0, rooms = 0;
-    for (const auto& entry : std::filesystem::directory_iterator("assets/concourse")) {
-        const std::string base = entry.path().filename().string();
-        if (!entry.is_directory() || base == "newcon" || base == "mining" ||
-            base == "agricultural" || base == "pleasure" || base == "pirate" ||
-            base == "newdetroit" ||
-            base == "oxford" || base == "refinery" ||
-            base == "military")
-            continue;
-        const json::Value root = json::parse_file((entry.path() / "concourse.json").string());
-        const json::Value* rs = root.find("rooms");
-        if (!rs || !rs->is_object()) continue;
-        for (const auto& [name, room] : rs->as_object()) {
-            if (std::find(kSharedRooms.begin(), kSharedRooms.end(), name) != kSharedRooms.end())
-                continue;                   // every base's, checked above
-            room_anim::RoomAnimDef def;
-            room_anim::parse_room_anim(room, def);
-            ++rooms;
-            if (!def.empty()) ++animated;
-        }
-    }
-    check(rooms > 0 && animated == 0, "no other archetype's own room gains animation");
-}
-
 }  // namespace
 
 int main() {
@@ -817,7 +788,6 @@ int main() {
     shipped_mercguild();
     shipped_merchguild();
     shipped_newdetroit();
-    other_archetypes_static();
     std::printf("\n%s\n", failures == 0 ? "ALL PASS" : "FAILURES DETECTED");
     return failures == 0 ? 0 : 1;
 }
