@@ -1,6 +1,6 @@
 """The Oxford concourse's traffic (#592): the original game's air-car
 (ships_wcnews/aircar.obj, the bubble-canopy runabout) gliding down the
-university town's streets, lamps lit.
+university town's streets, lamps lit; and its pedestrians (#610, at the end).
 
 At 50-70 px on screen its stock textures (low-res gold on everything) smear
 into an orange blob, so each material slot gets a clean shader instead: the
@@ -17,6 +17,7 @@ from mathutils import Vector
 import camera_match as cm
 import ships
 from stage import emitter, light, material
+from walkers import build_walker
 
 CAR_LENGTH = 4.0                    # m; ~1.3x the painted lamp posts
 HEADLIGHT = (1.0, 0.88, 0.7)
@@ -85,3 +86,19 @@ def animate_drive(root, start_uv, end_uv, hover, speed, fps, bob=0.04):
                          hover + bob * math.sin(2.0 * math.pi * 0.4 * (f - 1) / fps))
         root.keyframe_insert("location", frame=f)
     return last
+
+
+# Pedestrians (#610): walkers.build_walker() proxies. At ~40 px (1.75 m at
+# 130 m) the silhouette, the gait and the lamps' light carry them.
+GOWN = (0.012, 0.012, 0.016)        # a don's black gown
+TWEED = (0.11, 0.065, 0.035)
+LOOKS = {                            # routes.json "look": coat, trousers, skin, head
+    "gown": (GOWN, (0.03, 0.03, 0.035), (0.45, 0.32, 0.25), None),
+    "tweed": (TWEED, (0.05, 0.05, 0.06), (0.4, 0.28, 0.22), None),
+}
+
+
+def build_pedestrian(name, look):
+    """-> (root, limbs): a walker proxy in one of the LOOKS."""
+    coat, trousers, skin, head = LOOKS[look]
+    return build_walker(name, coat, trousers, skin_rgb=skin, head_rgb=head)

@@ -1,5 +1,8 @@
 {
   "_doc": "Loop timing per baked layer (#592), seconds; period >= the pass, the rest is a gap. The two air-car routes cross at (u 21, v 50.5): the avenue car is there 1.07 s into its pass, the top car 10.8 s into its. With periods 24 and 48 (one a multiple of the other) and these offsets, they cross 12 s apart on every loop, so they never meet. max_px null: the cars are 60-90 px heroes whose frames (car + light on the street) run just over bake_layer's half-size threshold, which blurred them to mush.",
   "aircar_avenue": { "period": 24.0, "offset": 0.0, "max_px": null },
-  "aircar_top":    { "period": 48.0, "offset": -2.27, "max_px": null }
+  "aircar_top":    { "period": 48.0, "offset": -2.27, "max_px": null },
+  "_walkers": "#610. Both 48 s, a multiple of the avenue car's 24. The don crosses the avenue (hidden under the south tent) 4.6-7.7 s into his 44.5 s walk; offset -10.8 puts that at 17 s on the car's clock, ~8 s after it has passed. The student's 14.0 puts both at v 10 at once: they pass each other mid-walkway, the student a metre further off.",
+  "walker_don":     { "period": 48.0, "offset": -10.8 },
+  "walker_student": { "period": 48.0, "offset": 14.0 }
 }

@@ -787,31 +787,37 @@ void shipped_newdetroit() {
 }
 
 // #592: the Oxford concourse's air-cars, down the avenue and along the
-// banner street. Their routes cross, so their loops are locked: one period is
-// a whole multiple of the other (see tools/room_anim/oxford/layers.json).
+// banner street, and (#610) two pedestrians. The car routes cross and the
+// don crosses the avenue, so every loop is locked to the avenue car's: a whole
+// multiple of its period, in seconds (see tools/room_anim/oxford/layers.json).
 void shipped_oxford() {
     const std::string dir = "assets/concourse/oxford/";
     room_anim::RoomAnimDef def;
     room_anim::parse_room_anim(json::parse_file(dir + "concourse.json")["rooms"]["concourse"],
                                def);
-    check(!def.has_sky && def.layers.size() == 2, "Oxford concourse has its two air-car layers");
+    const std::vector<std::string> order = {"anim/aircar_top.json", "anim/walker_student.json",
+                                            "anim/walker_don.json", "anim/aircar_avenue.json"};
+    check(!def.has_sky && def.layers == order,
+          "Oxford concourse has its air-cars and walkers, the student drawn before the nearer don");
     check_layers(dir, def.layers);
-    std::vector<int> periods;
+    std::vector<double> seconds;
     for (const std::string& layer : def.layers) {
         room_anim::SpriteSheet s;
         std::string err;
         if (room_anim::parse_sprite_sheet(json::parse_file(dir + layer), s, err))
-            periods.push_back(s.period);
+            seconds.push_back(s.period / static_cast<double>(s.fps));
     }
-    std::sort(periods.begin(), periods.end());
-    check(periods.size() == 2 && periods[0] > 0 && periods[1] % periods[0] == 0,
-          "  air-car loops locked: they never meet where their routes cross");
+    const double base = seconds.empty() ? 0.0 : *std::min_element(seconds.begin(), seconds.end());
+    bool locked = seconds.size() == order.size() && base > 0.0;
+    for (double s : seconds) locked = locked && std::fabs(std::remainder(s, base)) < 1e-6;
+    check(locked, "  every loop is a whole multiple of the avenue car's: no one meets at a crossing");
     // Acceptance: the hotspots (links.json overrides) are untouched.
     const json::Value links = json::parse_file(dir + "links.json")["concourse"];
     check(links.as_array().size() == 9 &&
               link_rect_is(links, "Library", 0.67141f, 0.04125f, 0.19719f, 0.29125f),
           "Oxford keeps its nine hotspots (Library rect unchanged)");
 }
+
 
 }  // namespace
 

@@ -1,11 +1,23 @@
 {
-  "_doc": "Traffic routes in camera_match's street frame (u down-right, v up-right on screen; metres), read off the rectified plate. Each runs from off-frame to off-frame. hover = underside height (m), speed m/s, paint = actors.PAINTS key.",
+  "_doc": "Routes in camera_match's street frame (u down-right, v up-right on screen; metres), read off the rectified plate. Each runs from off-frame or behind a holdout (scene.SILHOUETTES) to the same. kind aircar: uv = [start, end], hover = underside height (m), speed m/s, paint = actors.PAINTS key. kind walker (#610): uv = a polyline walked at speed m/s, look = actors.LOOKS key.",
   "aircar_avenue": {
+    "kind": "aircar",
     "_why": "Down the lamp-lit avenue toward the camera, between the central flower bed (u 20) and the market tents (u 23.5), which hide it as it passes.",
     "uv": [[21.0, 58.0], [21.0, -20.0]], "hover": 0.6, "speed": 7.0, "paint": "oxblood"
   },
   "aircar_top": {
+    "kind": "aircar",
     "_why": "Along the banner street in front of the college, out from under the roof at the top edge, behind the clock tower, and off to the right. Mid-street (v 50.5), behind the lamp at the avenue crossing.",
     "uv": [[-60.0, 50.5], [30.0, 50.5]], "hover": 0.6, "speed": 7.5, "paint": "racing_green"
+    },
+  "walker_don": {
+    "kind": "walker",
+    "_why": "Out from behind the south tent (crossing the avenue unseen, 6 s after the car), along the lit pavement between the central bed and the hall, then up the walkway between the central and left beds and in behind the clock tower.",
+    "uv": [[29.0, -3.0], [-2.8, -3.0], [-2.8, 23.0]], "speed": 1.3, "look": "gown"
+  },
+  "walker_student": {
+    "kind": "walker",
+    "_why": "Out from behind the clock tower, down the walkway a metre to the don's left (they pass mid-way), then up the street behind the hall, whose roof (FrontHall) hides him.",
+    "uv": [[-3.8, 23.0], [-3.8, -2.2], [-13.0, -2.2]], "speed": 1.15, "look": "tweed"
   }
 }

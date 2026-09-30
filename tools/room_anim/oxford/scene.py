@@ -98,16 +98,34 @@ SILHOUETTES = {
                                    (1250, 344), (1236, 346), (1237, 300), (1241, 300)]),
     # The lamp at the avenue crossing (base 1495, 428).
     "CrossingLamp": ((20.0, 47.1), [(1489, 348), (1511, 348), (1505, 430), (1490, 430)]),
+    # The brown-roofed hall at the bottom left (#610): roof ridge, rooftop
+    # vent, then its right wall down to the lower wing. The street behind it
+    # (v -2.2) runs under the roof from u -6 on: the student walks off there.
+    # Stood upright at the hall's street-side wall: the street is 1.5 m+
+    # behind it; the don's pavement, outside the outline, stays in view.
+    "FrontHall": ((-4.0, -4.5), [(0, 500), (150, 520), (262, 497), (300, 472), (388, 494),
+                                (413, 548), (413, 640), (433, 690), (520, 705), (520, 1024),
+                                (0, 1024)]),
 }
+# Cards people walk behind stand upright (#610). A camera-facing card leans
+# toward the camera at the top (it looks 34 deg down), so a walker crossing
+# one went feet first, as if sinking into the pavement, for ~0.75 s; an
+# upright one takes the whole figure at once, its bottom edge on the ground.
+# The rest only ever hide hovering cars, whose passes were signed off as is.
+UPRIGHT = {"ClockTower", "FrontHall"}
 
 
-def silhouette(name, anchor_uv, polygon_px, mat, collection):
-    """A flat camera-facing polygon covering `polygon_px` on the plate, at
-    the view depth of street point `anchor_uv`. Seen by the camera only, so
-    it casts no shadow and blocks no light."""
-    d = cm.depth(*cm.to_world(*anchor_uv))
+def silhouette(name, anchor_uv, polygon_px, mat, collection, upright=False):
+    """A flat polygon covering `polygon_px` on the plate, through street
+    point `anchor_uv`: camera-facing at its view depth, or `upright` (#610),
+    square to the camera's heading. Seen by the camera only, so it casts no
+    shadow and blocks no light."""
+    x, y = cm.to_world(*anchor_uv)
+    d = cm.depth(x, y)
+    corner = (lambda px, py: cm.on_upright(px, py, y)) if upright else \
+        (lambda px, py: cm.at_depth(px, py, d))
     mesh = bpy.data.meshes.new(name)
-    mesh.from_pydata([cm.at_depth(px, py, d) for px, py in polygon_px], [],
+    mesh.from_pydata([corner(px, py) for px, py in polygon_px], [],
                      [list(range(len(polygon_px)))])
     mesh.materials.append(mat)
     obj = bpy.data.objects.new(name, mesh)
@@ -121,7 +139,7 @@ def add_occluders(scene):
     """Holdouts: alpha 0 in every pass, so the bake leaves the painting as
     painted wherever they stand in front of an actor."""
     hold = material("Holdout", (0.0, 0.0, 0.0))
-    occluders = [silhouette(name, uv, poly, hold, scene.collection)
+    occluders = [silhouette(name, uv, poly, hold, scene.collection, name in UPRIGHT)
                  for name, (uv, poly) in SILHOUETTES.items()]
     for obj in occluders:
         obj.is_holdout = True
