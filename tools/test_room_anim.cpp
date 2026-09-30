@@ -304,6 +304,36 @@ void shipped_mining() {
           "mining keeps its eight hotspots (ShipDealer rect unchanged)");
 }
 
+// #582: the Agricultural concourse: dusk clouds drifting through the windows,
+// and a freighter and an aircar outside, drawn over the plate (clipped to the
+// glass in the bake) because they fly in front of the painted farmland.
+void shipped_agricultural() {
+    const std::string dir = "assets/concourse/agricultural/";
+    room_anim::RoomAnimDef def;
+    room_anim::parse_room_anim(json::parse_file(dir + "concourse.json")["rooms"]["concourse"],
+                               def);
+    check(def.has_sky && def.sky.stars.size() == 2, "agricultural concourse has two cloud tiles");
+    for (const std::string* p : {&def.sky.mask, &def.sky.fill})
+        check(std::filesystem::exists(dir + *p), "sky asset exists: " + *p);
+    for (const room_anim::StarLayerDef& s : def.sky.stars)
+        check(std::filesystem::exists(dir + s.tile) && s.velocity[1] == 0.0f && s.spin == 0.0f,
+              "cloud tile exists and drifts sideways only: " + s.tile);
+    check(def.layers.size() == 2, "agricultural concourse has its two aircraft layers");
+    check_layers(dir, def.layers);
+    for (const std::string& layer : def.layers) {
+        room_anim::SpriteSheet s;
+        std::string err;
+        check(room_anim::parse_sprite_sheet(json::parse_file(dir + layer), s, err) && !s.under &&
+                  !s.anchored,
+              "  " + layer + " flies over the plate, unanchored");
+    }
+    // Acceptance: the hotspots (links.json overrides) are untouched.
+    const json::Value links = json::parse_file(dir + "links.json")["concourse"];
+    check(links.as_array().size() == 8 &&
+              link_rect_is(links, "ShipDealer", 0.16169f, 0.60082f, 0.23133f, 0.26946f),
+          "agricultural keeps its eight hotspots (ShipDealer rect unchanged)");
+}
+
 // #564, #566, #568, #570, #572, #571: the mining bar's 3D patrons (all six). Each has a one-frame
 // clean-plate patch that paints the painted one out, and an idle loop. The
 // patrons overlap (the left table), so every patch draws first, then every
@@ -471,7 +501,9 @@ void other_archetypes_static() {
     int animated = 0, rooms = 0;
     for (const auto& entry : std::filesystem::directory_iterator("assets/concourse")) {
         const std::string base = entry.path().filename().string();
-        if (!entry.is_directory() || base == "newcon" || base == "mining") continue;
+        if (!entry.is_directory() || base == "newcon" || base == "mining" ||
+            base == "agricultural")
+            continue;
         const json::Value root = json::parse_file((entry.path() / "concourse.json").string());
         const json::Value* rs = root.find("rooms");
         if (!rs || !rs->is_object()) continue;
@@ -499,6 +531,7 @@ int main() {
     star_spin();
     shipped_newcon();
     shipped_mining();
+    shipped_agricultural();
     shipped_mining_landing();
     shipped_mining_bar();
     shipped_newcon_hangar();

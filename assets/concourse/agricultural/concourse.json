@@ -89,6 +89,18 @@
           "real_frames": 63
         }
       ],
+      "sky": {
+        "mask": "anim/sky_mask.png",
+        "fill": "anim/sky_fill.png",
+        "stars": [
+          { "tile": "anim/clouds_low.png", "velocity": [1.4, 0] },
+          { "tile": "anim/clouds_high.png", "velocity": [2.6, 0] }
+        ]
+      },
+      "layers": [
+        "anim/freighter_departure.json",
+        "anim/aircar_crossing.json"
+      ],
       "links": [
         {
           "target": "LandingPad",

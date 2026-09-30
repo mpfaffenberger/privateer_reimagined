@@ -33,6 +33,7 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `guild/` | | the guild rooms every base shares: Mercenaries' (#578), Merchants' (#579) |
 | `newcon/` | | New Constantinople: concourse (#515) and hangar (#553) |
 | `mining/` | | Mining base concourse: the ore train (#558) |
+| `agricultural/` | | Agricultural concourse: dusk clouds and aircraft outside (#582) |
 
 ## New Con concourse
 
@@ -389,6 +390,66 @@ uv run tools/room_anim/composite_preview.py --base mining --room landing --plate
   path is solved from rim-relative screen targets: its centre goes from
   rim + 10 to rim - 30, which keeps the ~50 px ship inside even the
   tightest sky (~61 px).
+
+## Agricultural concourse (#582)
+
+The concourse looks out through tall windows over farmland at dusk: long
+cloud streaks over a glass farm dome, a lit settlement and far ridges. The
+original game scrolled a band of clouds across its window view (the legacy
+`concourse_wtr` overlay); here the painted streaks themselves drift, and two
+craft pass outside: a Galaxy freighter (`mrchship`) climbing away from the
+spaceport right of the windows, and a yellow aircar (`aircar`) skimming the
+fields in front of the dome.
+
+```sh
+uv run tools/room_anim/agricultural/bake_sky.py --debug build/room_anim/agricultural/sky_debug.png
+blender --background --factory-startup \
+    --python tools/room_anim/agricultural/render_traffic.py -- --layer all
+uv run tools/room_anim/agricultural/bake_traffic.py --all
+uv run tools/room_anim/composite_preview.py --base agricultural --seconds 30 \
+    --out build/room_anim/agricultural/preview.mp4
+```
+
+- **Clouds through the sky machinery.** The engine's sky is a fill plus
+  alpha-over tiles, with no additive blend, so the painting is split into a
+  *fill* (a horizontal upper envelope of the painted sky: the glow between
+  the streaks) and *tiles* holding the streaks as darkening: per row one
+  colour, the row's darkest cloud tone, whose alpha pulls the envelope down
+  to the painting. The tiles scroll sideways only, so a per-row colour is
+  allowed, and darkening is a ratio, so a streak reads the same over the
+  brighter right pane. At t=0 the composite matches the plate (p99.9 error
+  6/255). Two tiles give parallax: the high streaks drift at 2.6 px/s,
+  the low ones by the horizon at 1.4.
+- **Tile layout.** Tile x = plate x mod 860, so the centre and right panes
+  (x 620..1480) sit side by side in one tile; gaps (mullion, frame bevels,
+  the arch) are filled from their neighbours *shifted*, not mirrored (a
+  mirror drew an X at every gap). The mask fades in below the starry top of
+  the sky and out above the far ridges, so the stars and the land stay put;
+  painted stars are kept in the fill, brightened so the streaks darken them
+  back to the painting at t=0.
+- **Gotchas.** In the dim upper sky the envelope is barely above the dark
+  tone, and the ratio turned brush noise into drifting grain (`SPAN_MIN`
+  fades it out). Bright specks inside the glow band are cloud texture, not
+  stars (`STAR_SKY_LUM`). The arch left of the centre pane has a lit grey
+  bevel as bright as the high sky, so the glass is hand-traced
+  (`windows.py`), not found by darkness.
+- **Aircraft.** Nothing outside is near enough to camera-match, so the
+  camera is matched to the horizon only: level, f = 1000 px, the far
+  ridges at y 172, 60 m above the fields (which makes the farm dome
+  ~370 m across). Paths are solved from screen targets. The sun is just
+  down behind the dome, so hulls are backlit; nav lights keep them
+  readable. They fly in front of the painted land, so they are drawn *over*
+  the plate: `bake_traffic.py` hazes each frame toward the painted horizon
+  glow by its depth and clips it to the window glass.
+
+| `agricultural/` file | runs in | what |
+|---|---|---|
+| `windows.py` | uv | hand-traced window glass (centre + right panes) |
+| `bake_sky.py` | uv | cloud fill, streak tiles, sky mask |
+| `flight.py` | Blender | horizon-matched camera, paths from screen targets, the render loop |
+| `render_traffic.py` | Blender | dusk light and the two craft |
+| `bake_traffic.py` | uv | haze, clip to the glass, pack |
+| `traffic_layers.json` | - | loop period and phase |
 
 Shared Blender helpers (render settings, boxes, materials, lights, emitters,
 straight passes) live in `stage.py`; `bake_layer.load_frame()` trims a
