@@ -128,21 +128,19 @@ def _set(sc, root, body, p):
     sc.frame_set(0)
     pts = _skin_points(body)
     hx, hy = root.location.x, root.location.y
-    hips = [p for p in pts if (p.x - hx) ** 2 + (p.y - hy) ** 2 < 0.18 ** 2 and 0.2 < p.z < 0.9]
-    seat = min(p.z for p in hips) - 0.005
-    back = max(p.y for p in pts)
-    reach, depth = p["seat_reach"]
     # Only what the painted patron really sits on / against: a phantom
     # catcher prints a shadow the painting doesn't have (#566: a railing
     # behind the back-table man caught a wedge across the painted rail).
     parts = p.get("set", ["floor", "seat", "railing"])
     if "floor" in parts:
         _catcher("Floor", (12.0, 12.0, 0.02), (hx, hy, -0.01), sc)
-    if "seat" in parts:
+    if "seat" in parts:             # under the hips: needs the root under them too
+        reach, depth = p["seat_reach"]
+        seat = min(v.z for v in pts
+                   if (v.x - hx) ** 2 + (v.y - hy) ** 2 < 0.18 ** 2 and 0.2 < v.z < 0.9) - 0.005
         _catcher("Seat", (2 * reach, depth, seat), (hx, hy + depth / 2 - 0.05, seat / 2), sc)
     if "railing" in parts:
-        _catcher("Railing", (6.0, 0.05, 1.2), (hx, back + 0.08, 0.6), sc)
-    return seat
+        _catcher("Railing", (6.0, 0.05, 1.2), (hx, max(v.y for v in pts) + 0.08, 0.6), sc)
 
 
 def _grade(body, rgb=(1.0, 1.0, 1.0), saturation=1.0):

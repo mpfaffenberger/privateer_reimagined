@@ -206,14 +206,24 @@ plate to confirm.
 | `bake_bar.py` | uv | bar: clean-plate patch + patron sheet each; `--preview` crops |
 | `sources/bar_*_clean_gen.png` | - | AI clean-plate edits of each patron's crop (painted out) |
 
-### Mining bar: 3D patrons (#564, #566, #568)
+### Mining bar: 3D patrons (#564, #566, #568, #570)
 
 Painted patrons are replaced by rigged 3D models (Meshy AI, `characters/`)
 idling on seamless loops: the woman in orange on the bench (#564), the
-man at the back table (#566) and the bartender (#568). `bar_bg.png` is untouched: per patron, a
+man at the back table (#566), the bartender (#568) and the woman at the left
+table (#570). `bar_bg.png` is untouched: per patron, a
 one-frame clean-plate patch paints them out, then their render draws over
 it. If the layers are missing, the painting shows as painted. Each patron is
 one entry in `bar_patrons.json`; the camera and lighting are the room's.
+
+**Overlapping patrons (the left table) are stacked.** `bar_patrons.json` lists
+patrons back to front. Each clean plate is an AI edit of the plate *with every
+earlier patron already painted out* (`bake_bar.cleaned_plate`): use that crop
+as the edit's reference, and it registers against it. So a nearer patron's
+patch never paints a farther one back in. The room draws every patch first,
+then every patron in list order, so nearer patrons cover farther ones. A
+nearer patron who's still painted is a `front` occluder of the farther one,
+until they go 3D too.
 
 ```sh
 blender --background --factory-startup --python tools/room_anim/prep_character.py -- \
@@ -271,6 +281,11 @@ uv run --with scipy tools/room_anim/mining/bake_bar.py --patron patron_orange --
   (the painting's counter is evenly lit). The painter's palette is vivid, so he also gets `saturation` 1.35
   plus a cool `tint`: that gives blue denim instead of a dull navy, without
   the tangerine skin that saturation alone produced (sat 0.45 vs 0.46).
+- **The left-table woman** borrows the Rustbound Ranger's `Chair_Sit_Idle_F`
+  and leans on the table like the bartender leans on his bar: placed by her
+  crown (her feet are hidden), `pitch` 12, arms `aim`ed at the painted
+  elbows and mug. The clip slumps her head almost to the table halfway
+  through; `lean` 0.25 (the fraction of torso motion *kept*) takes it out.
 - **Blender MCP gotcha:** a freshly `images.load()`ed camera background can
   sit at 0x0 and draw nothing until its pixels are touched
   (`img.pixels[0]`).
