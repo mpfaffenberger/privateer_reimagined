@@ -52,9 +52,16 @@ CHARACTERS = HERE / "characters"
 ROOM = None
 
 
+def _vp_x():
+    """Plate x of the vanishing point (the camera's optical axis). Optional
+    in a room file: the bar's is the plate centre, the merc guild's is off
+    to the right (a shifted, not a yawed, camera: its counter is square-on)."""
+    return getattr(ROOM.camera, "vp_x", stage.PLATE_W / 2)
+
+
 def plate_to_world_x(px, depth):
     """Plate x on the plane at `depth` -> world x."""
-    return (px - stage.PLATE_W / 2) * depth / ROOM.camera.focal_px
+    return (px - _vp_x()) * depth / ROOM.camera.focal_px
 
 
 def _camera(sc):
@@ -63,6 +70,7 @@ def _camera(sc):
     data.sensor_fit, data.sensor_width = 'HORIZONTAL', 36.0
     data.lens = cam_def.focal_px * 36.0 / stage.PLATE_W
     data.shift_y = -(stage.PLATE_H / 2 - cam_def.horizon_y) / stage.PLATE_W   # horizon above centre
+    data.shift_x = -(_vp_x() - stage.PLATE_W / 2) / stage.PLATE_W      # the axis appears left of a frame shifted right
     cam = bpy.data.objects.new(f"{ROOM.name}Cam", data)
     sc.collection.objects.link(cam)
     cam.location = (0.0, 0.0, cam_def.eye)
@@ -156,7 +164,21 @@ def _grade(body, rgb=(1.0, 1.0, 1.0), saturation=1.0):
         links.new(src, base)
 
 
-TORSO = ("Hips", "Spine", "Spine01", "Spine02", "Spine1", "Spine2", "Neck", "Head")
+SPINE = ("Spine", "Spine01", "Spine02", "Spine1", "Spine2")    # both skeletons' names
+TORSO = ("Hips", *SPINE, "Neck", "neck", "Head")
+
+# Two skeletons: the web app's Mixamo rig (28 bones, "mixamorig:Head") and
+# the API's Meshy rig (24 bones, no prefix, no fingers, its own names for
+# these two). Room files use the Mixamo names.
+BONE_ALIASES = {"HeadTop_End": "head_end", "Neck": "neck"}
+
+
+def _bone(arm, name):
+    """The pose bone called `name` (a Mixamo name) on either skeleton."""
+    for candidate in (f"mixamorig:{name}", name, BONE_ALIASES.get(name)):
+        if candidate in arm.pose.bones:
+            return arm.pose.bones[candidate]
+    raise KeyError(f"no bone {name!r} on {arm.name}")
 
 
 def _fcurves(arm):
@@ -167,14 +189,14 @@ def _fcurves(arm):
     return anim_utils.action_get_channelbag_for_slot(ad.action, ad.action_slot).fcurves
 
 
-def _calm(arm, k, bones=TORSO):
-    """Scale `bones`' rotation keys towards the clip's first frame by `k`
+def _calm(arm, k, bones=TORSO, channel="rotation_quaternion"):
+    """Scale `bones`' `channel` keys towards the clip's first frame by `k`
     (0 = frozen upright, 1 = as animated). The clip starts and ends upright,
     so the loop stays seamless; only the depth of a lean shrinks. Blender
     normalises pose quaternions, so a per-component lerp is safe."""
     f0 = arm.animation_data.action.frame_range[0]
     for fc in _fcurves(arm):
-        if not fc.data_path.endswith("rotation_quaternion"):
+        if not fc.data_path.endswith(channel):
             continue
         if fc.data_path.split('"')[1].split(":")[-1] not in bones:
             continue
@@ -187,7 +209,7 @@ def _calm(arm, k, bones=TORSO):
 
 def _anchor_head(root, arm, px, py, depth):
     """Move root until the crown (frame 0) projects to plate (px, py) at `depth`."""
-    crown = arm.pose.bones["mixamorig:HeadTop_End"]
+    crown = _bone(arm, "HeadTop_End")
     for _ in range(25):                 # the pose is rigid: converges in a few steps
         bpy.context.view_layer.update()
         t = arm.matrix_world @ crown.head
@@ -206,21 +228,36 @@ def _aim(sc, arm, aims):
         spot = bpy.data.objects.new(f"Aim_{bone}", None)
         sc.collection.objects.link(spot)
         spot.location = (plate_to_world_x(px, depth), depth, z)
-        track = arm.pose.bones[f"mixamorig:{bone}"].constraints.new('DAMPED_TRACK')
+        track = _bone(arm, bone).constraints.new('DAMPED_TRACK')
         track.target, track.track_axis = spot, 'TRACK_Y'
 
 
 def _nod(arm, degrees):
-    """Raise the chin by `degrees` through every neck and head key (half
-    each), about the bones' local X: undoes a `pitch` lean tipping the gaze
-    down, while keeping the idle's head motion."""
+    """Raise the chin by `degrees` through the neck and head: undoes a
+    `pitch` lean tipping the gaze down, keeping the idle's head motion."""
+    _tip(arm, ("Neck", "Head"), -degrees)
+
+
+def _tip(arm, bones, degrees, rest_frame=False):
+    """Tip `bones` forward (chin down) by `degrees` in all, shared evenly,
+    through every key: the clip's motion rides on top. `bend` tips the
+    spine, folding a standing idle at the hips over a counter (the merc
+    guild woman, on her elbows).
+
+    The axis is local X, which is the body's left-right on both skeletons
+    at rest. By default it's X *after* each key's rotation (`key @ offset`,
+    as the bar's `head_up` was tuned); with `rest_frame` it's the rest
+    pose's X (`offset @ key`), so a clip that twists the bone can't turn
+    the tip into a sideways roll (the merc woman's idle twists her spine:
+    a 15 deg bend rolled her 11 deg sideways)."""
     fcs = [fc for fc in _fcurves(arm) if fc.data_path.endswith("rotation_quaternion")]
-    offset = Quaternion((1.0, 0.0, 0.0), math.radians(-degrees / 2))
-    for bone in ("Neck", "Head"):
-        path = f'pose.bones["mixamorig:{bone}"].rotation_quaternion'
+    offset = Quaternion((1.0, 0.0, 0.0), math.radians(degrees / len(bones)))
+    for bone in bones:
+        path = f'pose.bones["{_bone(arm, bone).name}"].rotation_quaternion'
         quat = sorted((fc for fc in fcs if fc.data_path == path), key=lambda fc: fc.array_index)
         for keys in zip(*(fc.keyframe_points for fc in quat)):
-            turned = Quaternion([k.co[1] for k in keys]) @ offset
+            key = Quaternion([k.co[1] for k in keys])
+            turned = offset @ key if rest_frame else key @ offset
             for k, value in zip(keys, turned):
                 k.co[1] = k.handle_left[1] = k.handle_right[1] = value
         for fc in quat:
@@ -250,6 +287,11 @@ def _patron(sc, p):
         _grade(body, p.get("tint", (1.0, 1.0, 1.0)), p.get("saturation", 1.0))
     if "lean" in p:
         _calm(arm, p["lean"])
+    # `hip_sway`: scales the hips' travel, which `lean` (rotations only)
+    # can't touch. The merc woman's clip walks her hips ~13 cm sideways;
+    # leaning on her elbows, she'd lift them off the counter.
+    if "hip_sway" in p:
+        _calm(arm, p["hip_sway"], {"Hips"}, channel="location")
     # `hold`: bone-name prefixes frozen at the clip's first frame. `aim`
     # only points a bone; its twist still comes from the clip. The
     # foreground man's idle flips his hand up (a claw) and twists his
@@ -259,6 +301,9 @@ def _patron(sc, p):
     if "hold" in p:
         names = [b.name.split(":")[-1] for b in arm.pose.bones]
         _calm(arm, 0.0, {n for n in names if n.startswith(tuple(p["hold"]))})
+    if "bend" in p:            # before head_up: both only add to the keys
+        _tip(arm, [b for b in SPINE if b in {n.split(":")[-1] for n in arm.pose.bones.keys()}],
+             p["bend"], rest_frame=True)
     if "head_up" in p:
         _nod(arm, p["head_up"])
     # `scale`: painters cheat, and some painted patrons are burlier than any
