@@ -28,6 +28,7 @@ FIX_EULER = {
     "cart": (0.0, 0.0, 180.0),
     "mrchship": (0.0, 0.0, 180.0),     # Galaxy: cockpit spike at -Y, nacelles +Y
     "aircar": (0.0, 0.0, 180.0),       # yellow ND aircar: tail fins at +Y
+    "transprt": (0.0, 0.0, 180.0),     # transport: engine block at +Y
 }
 
 

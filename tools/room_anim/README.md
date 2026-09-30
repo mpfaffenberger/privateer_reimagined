@@ -33,7 +33,7 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `guild/` | | the guild rooms every base shares: Mercenaries' (#578), Merchants' (#579) |
 | `newcon/` | | New Constantinople: concourse (#515) and hangar (#553) |
 | `mining/` | | Mining base concourse: the ore train (#558) |
-| `agricultural/` | | Agricultural concourse: dusk clouds and aircraft outside (#582) |
+| `agricultural/` | | Agricultural: concourse clouds and aircraft (#582), landing pad sky traffic (#583) |
 
 ## New Con concourse
 
@@ -450,6 +450,50 @@ uv run tools/room_anim/composite_preview.py --base agricultural --seconds 30 \
 | `render_traffic.py` | Blender | dusk light and the two craft |
 | `bake_traffic.py` | uv | haze, clip to the glass, pack |
 | `traffic_layers.json` | - | loop period and phase |
+
+### Agricultural landing pad (#583)
+
+The pad sits by a lake under a violet dusk sky with two moons, a brick tower
+and two docking pylons against it, in 18 per-hull composites framed
+differently. Two craft pass in the sky, under the plate, so the tower and
+pylons occlude them on every hull: a transport (`transprt`) crossing right
+to left behind them, and a Galaxy freighter (`mrchship`) coming in high on
+the right and sliding down behind the tower's top.
+
+```sh
+uv run tools/room_anim/agricultural/bake_landing.py --debug build/room_anim/agricultural/skies.png
+# (bake the skies first: render_landing.py reads tarsus's anchor from anchors.json)
+blender --background --factory-startup \
+    --python tools/room_anim/agricultural/render_landing.py -- --layer all
+uv run tools/room_anim/agricultural/bake_landing.py --layers-only
+uv run tools/room_anim/composite_preview.py --base agricultural --room landing --plate tarsus \
+    --crop 0 0 1536 560 --seconds 45 --out build/room_anim/agricultural/landing.mp4
+```
+
+- **Sky.** It's a saturated blue-to-violet-to-pink gradient, and the moons
+  are bluish too, while green stays low in all of it. The tower, pylons,
+  hulls and far shore have no blue lead over green, so sky = pixels well
+  bluer than green, flooded from the top edge. The dark far shore runs all
+  the way across, so the lake, which mirrors the sky's colour, is never
+  reached. Dralthi's darker top sky dithers around blue 120, so the floor
+  is blue 90.
+- **Moons in the fill.** The moons are inside the mask and the fill is the
+  painted sky at half resolution (not the usual blurred quarter-res fill),
+  so a craft passing in front of a moon covers it. No star tiles: the
+  painted sky has none.
+- **Anchor.** Layers follow the big moon's centre (the largest blob that
+  stands out from its row's sky colour; lit pink on gladius, shaded on the
+  rest). Translation only: a shaded limb melts into the sky, so the
+  detected size isn't a reliable zoom, and `r` is fixed.
+- **Aircraft** use `flight.py` (above): a level f = 1024 px camera with tarsus's
+  far shore (y 505) on the horizon, and paths solved from tarsus screen
+  targets. Dusk light: a blue sky dome and a low pink key from behind.
+
+| `agricultural/` file | runs in | what |
+|---|---|---|
+| `bake_landing.py` | uv | per-composite sky mask, half-res fill, moon anchors; layer sheets |
+| `render_landing.py` | Blender | dusk light, the transport and the freighter |
+| `landing_layers.json` | - | loop period and phase |
 
 Shared Blender helpers (render settings, boxes, materials, lights, emitters,
 straight passes) live in `stage.py`; `bake_layer.load_frame()` trims a

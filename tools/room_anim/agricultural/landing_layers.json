@@ -1,0 +1,5 @@
+{
+  "_doc": "Landing-pad sky layers (bake_landing.py). Loop timing, seconds: period >= the pass; the rest is empty sky. The engine adds offset to the clock.",
+  "transport_crossing": { "period": 41.0, "offset": 0.0 },
+  "freighter_arrival": { "period": 53.0, "offset": -22.0 }
+}
