@@ -111,7 +111,9 @@ def lookdev(stems, out_dir, length_m=20.0):
     """Top + side renders with the nose (+Y, red) and top (+Z, blue) marked,
     to find FIX_EULER by eye."""
     sc = bpy.context.scene
-    out_dir = Path(out_dir)
+    # Absolute: Blender resolves a relative render filepath against the drive
+    # root, not the working directory, so build/... landed in C:\build (#608).
+    out_dir = Path(out_dir).resolve()
     for stem in stems:
         root = import_ship(stem, length_m)
         marks = []
