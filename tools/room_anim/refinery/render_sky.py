@@ -46,14 +46,6 @@ SUN = (1.0, 0.86, 0.66)             # its warm white-gold glare
 REFINERY_GLOW = (1.0, 0.7, 0.42)    # sodium light from the plant below
 
 
-def _nav_lights(ship, frames, every_s=1.5, phase_s=0.0):
-    """flyover's running lights and strobe, sized for the hull: a 100 m ship
-    gets the crater freighter's 1.3 m lamps (#561)."""
-    k = ship["size"][1] / 100.0
-    flyover.nav_lights(ship, frames, 1.3 * k, 30.0, 1.5 * k, 60.0,
-                       strobe_every_s=every_s, strobe_phase=round(phase_s * FPS))
-
-
 def _fly(ship, start, end, frames, pitch_deg=0.0):
     """Constant-speed straight flight, nose along the travel."""
     (x0, y0, z0), (x1, y1, z1) = start, end
@@ -71,7 +63,7 @@ def _hauler_pass(sc):
     refinery's tall towers, and out the right edge."""
     frames = 30 * FPS
     ship = ships.import_ship("mrchship", 100.0, "Galaxy")
-    _nav_lights(ship, frames)
+    flyover.hull_nav_lights(ship, frames)
     _fly(ship, hall.plate_point(-140.0, 100.0, 2400.0), hall.plate_point(1700.0, 50.0, 2400.0),
          frames)
     return ship, frames
@@ -82,7 +74,7 @@ def _shuttle_in(sc):
     and gone behind its towers before it lands."""
     frames = 14 * FPS
     ship = ships.import_ship("demon", 26.0, "Shuttle")
-    _nav_lights(ship, frames, every_s=1.1, phase_s=0.4)
+    flyover.hull_nav_lights(ship, frames, every_s=1.1, phase_s=0.4)
     _fly(ship, hall.plate_point(1600.0, -30.0, 700.0), hall.plate_point(1040.0, 190.0, 1300.0),
          frames, pitch_deg=-6.0)
     return ship, frames

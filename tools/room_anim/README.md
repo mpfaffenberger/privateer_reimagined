@@ -41,7 +41,7 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `pirate/` | | Pirate base concourse: lanterns, pirates, a grav pod (#586) |
 | `newdetroit/` | | New Detroit: concourse walkers on the platform and plaza (#590), aircars past the landing pad (#591) |
 | `oxford/` | | Oxford: concourse air-cars in the garden square (#592), landing pad departure at dusk (#593) |
-| `refinery/` | | Refinery concourse: stars, ships over the dome, the ore train (#584) |
+| `refinery/` | | Refinery: concourse stars, ships over the dome, the ore train (#584), landing pad door and ships (#585) |
 | `military/` | | Military: concourse stars, a fighter pair, the munitions train (#588), landing bay lamp chase (#589) |
 
 ## New Con concourse
@@ -901,8 +901,9 @@ of bright residual; the mask's opening would erase them. Holes and hairlines
 are cut after `solidify()`, whose hole fill would take them back.
 
 **Ships over the dome** use `flyover.py`'s crater-landing helpers (#587):
-`nav_lights()`, sized per hull, and `render_frames()`, the straight-alpha
-render loop that `flyover.run()` now calls too. Only the camera (the
+`hull_nav_lights()` (its `nav_lights()` sized per hull) and
+`render_frames()`, the straight-alpha render loop that `flyover.run()` now
+calls too. Only the camera (the
 plate's, from `scene.py`) and the lights (the painted sun) are the dome's own.
 
 **Ore train on a ring.** `refinery/actors.py` loads `mining/actors.py` by
@@ -1152,6 +1153,58 @@ uv run tools/room_anim/composite_preview.py --base military --room landing --pla
   radius, clamped to 2.5-5 px. The fade is quick (0.14 s): with a slower
   one every lamp glowed at once, and each frame's sprite spanned the whole
   row.
+
+## Refinery landing pad (#585)
+
+The refinery's hangar opens through one big door under a truss gantry onto
+a dark city under the stars, in 18 per-hull composites framed differently.
+Stars drift slowly through the door (the legacy `lst` overlay's drifting
+points of light), a transport crosses high and far, and a heavy tug
+(`ships_wcnews/dd_tug.obj`) lifts off from behind the skyline and climbs
+away, all under the plate and anchored to each composite's door.
+
+```sh
+uv run tools/room_anim/refinery/bake_landing.py --debug build/room_anim/refinery/doors.png
+# (bake the doors first: render_landing.py reads tarsus's door from anchors.json)
+blender --background --factory-startup \
+    --python tools/room_anim/refinery/render_landing.py -- --layer all
+uv run tools/room_anim/refinery/bake_landing.py --layers-only
+uv run tools/room_anim/composite_preview.py --base refinery --room landing --plate tarsus \
+    --crop 300 120 1000 560 --seconds 44 --out build/room_anim/refinery/landing.mp4
+```
+
+- **The door, by its lamps.** Threshold scans leak: the wall above the
+  gantry is nearly as dark as the door, and on some hulls the city through
+  it is lit. But five lamps hang under the truss's bottom chord in every
+  composite, the brightest pinpoints in the upper middle. The anchor comes
+  from the largest subset of peaks on one row forming a regular grid (~175
+  px pitch, at most five slots; side-column lights on the same row fall
+  off it): `[middle lamp x, row y, two pitches]`. If an end lamp is lost,
+  the grid is placed so the door's centre is nearest the usual x ~810.
+  The composites differ mainly in height (the row sits at y 162-312); the
+  door's half width is 290-370 px.
+- **The sky inside it** is `bake_crater.find_sky()`'s rim scan on the
+  door's crop, from the lamps down: sky until the first sustained bright
+  run. That's the pad's edge, a big hull, or the city's lit skyline. The
+  crop is 1.12 half-widths wide, past the end lamps; a lit side beam is
+  "rock" from its first row and the scan's opening drops the lattice's
+  narrow gaps. The painted pinpoints (city lights, the lamps) are cut back
+  out, so they stay painted. Everything else is `bake_crater.py`'s: the door
+  finder plugs into `bake_skies(where, debug, find=door_sky)`, and the star
+  tiles (`_star_seed` 585) and layer bake are the crater pads' own.
+- **Ships** are `flyover.run()` passes (its level f = 1024 px camera and
+  canonical tarsus, with night lights through `lights=` and
+  `flyover.hull_nav_lights()`). Paths are in door units (u across, -1 to +1 lamp to
+  lamp; v down, in half-widths), so they land in the doorway on every
+  composite. The tug starts below the skyline (v ~1.05) and rises into view
+  from behind the buildings; `transprt` gets a 180 deg `FIX_EULER` (engine
+  pods at +Y).
+
+| `refinery/` file | runs in | what |
+|---|---|---|
+| `bake_landing.py` | uv | door anchors from the lamp row, door skies, star tiles, ship sheets |
+| `render_landing.py` | Blender | the transport and the tug, straight alpha, canonical door |
+| `landing_layers.json` | - | the ships' loop timing |
 
 ## Adding a layer
 

@@ -442,6 +442,32 @@ void shipped_military_landing() {
           "military landing keeps its Launch + Concourse hotspots");
 }
 
+// #585: the Refinery landing pad: stars through the hangar door and ships
+// passing outside, under the plate so the gantry occludes them, anchored to
+// each composite's door (the lamp row under the truss).
+void shipped_refinery_landing() {
+    const std::string dir = "assets/concourse/refinery/";
+    room_anim::RoomAnimDef def;
+    room_anim::parse_room_anim(
+        json::parse_file(dir + "concourse.json")["rooms"]["landing"]["composite"], def);
+    check(def.has_sky && def.sky.stars.size() >= 2 && !def.anchors.empty(),
+          "refinery landing has a starry door and door anchors");
+    check_composite_skies(dir, def, "refinery landing");
+    check(def.layers.size() == 2, "refinery landing has its transport + tug layers");
+    check_layers(dir, def.layers);
+    for (const std::string& layer : def.layers) {
+        room_anim::SpriteSheet s;
+        std::string err;
+        check(room_anim::parse_sprite_sheet(json::parse_file(dir + layer), s, err) && s.under &&
+                  s.anchored,
+              "  the ship flies under the plate (the gantry occludes it), anchored");
+    }
+    const json::Value links = json::parse_file(dir + "links.json")["landing"];
+    check(links.as_array().size() == 2 &&
+              link_rect_is(links, "Launch", 0.26516f, 0.35854f, 0.44906f, 0.53125f),
+          "refinery landing keeps its Launch + Concourse hotspots");
+}
+
 // #558: the mining concourse's ore train.
 void shipped_mining() {
     const std::string dir = "assets/concourse/mining/";
@@ -802,6 +828,7 @@ int main() {
     shipped_agricultural();
     shipped_mining_landing();
     shipped_agricultural_landing();
+    shipped_refinery_landing();
     shipped_pleasure_landing();
     shipped_pirate_landing();
     shipped_newdetroit_landing();
