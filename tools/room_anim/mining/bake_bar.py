@@ -105,7 +105,10 @@ def patron_frame(p, path):
     rgba[..., 3][rgba[..., 3] < SHADOW_FLOOR] = 0
     tmp = BUILD / "_clipped.png"
     Image.fromarray(rgba).save(tmp)
-    return load_frame(tmp, max_px=None)        # the patron is the point: keep them sharp
+    # The patron is the point: keep them sharp, unless they're too big for
+    # one atlas at full size (`half_size`: the foreground man, 258 frames of
+    # ~350x580 px, needs 4096x25799; the limit is 8192).
+    return load_frame(tmp, max_px=1 if p.get("half_size") else None)
 
 
 def cleaned_plate(name):

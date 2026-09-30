@@ -5,7 +5,7 @@
     "crop: plate rect rendered and patched; clean_gen: sources/<file>, an AI edit of that crop with the painted patron removed.",
     "hip_px / hip_depth (m) / yaw (deg, 0 = facing camera, -90 = screen-left): fitted live against the clean plate. A bust whose feet are hidden is placed by head [px, y, depth] (the crown at frame 0) instead of the hips.",
     "pitch (deg): leans the whole body towards the camera. aim: {bone: [px, depth, z]} points bones at fixed spots (hands planted on a counter while the idle sways the body). head_up (deg): raises the chin through the neck/head keys, undoing pitch's downward gaze. light: {key, fill, rim} energy multipliers on the room's lights.",
-    "seat_reach: seat catcher (sideways, back) m from the hips. phase: loop offset, frames. scale (optional): for painted patrons burlier than the model at their depth; a list is [width, depth, height] (a painted body with other proportions). tint (optional): multiplies the model's textures, when its clothes don't match the painted ones. saturation (optional): scales their saturation (a painter's vivid palette). lean (optional, 0-1): damps the torso's motion towards the clip's first frame (a borrowed clip that moves more than the painted patron would). set (default [floor, seat, railing]): the shadow catchers built from the pose; list only what the painted patron really sits on / against.",
+    "seat_reach: seat catcher (sideways, back) m from the hips. phase: loop offset, frames. scale (optional): for painted patrons burlier than the model at their depth; a list is [width, depth, height] (a painted body with other proportions). tint (optional): multiplies the model's textures, when its clothes don't match the painted ones. saturation (optional): scales their saturation (a painter's vivid palette). half_size (optional): store the sprites at half size (the engine scales them back), for a patron too big for one atlas at full size. lean (optional, 0-1): damps the torso's motion towards the clip's first frame (a borrowed clip that moves more than the painted patron would). set (default [floor, seat, railing]): the shadow catchers built from the pose; list only what the painted patron really sits on / against.",
     "Crop px: box = where the painted patron is; keep = rects always taken from the clean plate; reg = a rect away from the patron where the clean plate must match the plate (registration check); front = occluders in front of the patron, never patched and clipped out of the render ({below_line: [[x0, y0], [x1, y1]]} or {polygon: [[x, y], ...]}).",
     "props: painted furniture as catchers (render_bar._props): they hold the patron out where the prop is and catch its shadow. px = plate x of the centre, depth/z0/z1 in m, and radius (a cylinder) or size [w, d] (a box), fitted from the prop's floor contact and outline."
   ],
@@ -97,8 +97,7 @@
     "reg": [10, 5, 110, 50],
     "front": [{"polygon": [[147, 186], [174, 186], [174, 218], [147, 218]]},
               {"polygon": [[186, 261], [210, 261], [212, 276], [226, 292], [226, 320], [177, 320], [177, 292], [188, 276]]},
-              {"polygon": [[96, 300], [148, 300], [148, 320], [96, 320]]},
-              {"polygon": [[0, 160], [18, 162], [22, 200], [12, 240], [42, 268], [62, 320], [0, 320]]}]
+              {"polygon": [[96, 300], [148, 300], [148, 320], [96, 320]]}]
   },
   "patron_bald": {
     "model": "weathered_enforcer_sitting_answering_questions.glb",
@@ -117,7 +116,28 @@
     "reg": [10, 5, 100, 40],
     "front": [{"polygon": [[111, 229], [128, 229], [129, 252], [142, 266], [144, 320], [97, 320], [99, 266], [110, 252]]},
               {"polygon": [[9, 272], [69, 272], [69, 320], [9, 320]]},
-              {"below_line": [[0, 278], [320, 296]]},
-              {"polygon": [[0, 150], [12, 150], [12, 320], [0, 320]]}]
+              {"below_line": [[0, 278], [320, 296]]}]
+  },
+  "patron_foreground": {
+    "model": "weathered_sentinel_chair_sit_idle_m.glb",
+    "crop": [0, 424, 600, 1024],
+    "head": [175, 454, 2.3],
+    "yaw": 150.0,
+    "lean": 0.3,
+    "scale": [1.25, 1.25, 1.0],
+    "half_size": true,
+    "light": {"key": 0.7, "fill": 1.6, "rim": 1.0},
+    "aim": {"RightArm": [230, 2.45, 0.66], "RightForeArm": [300, 2.53, 0.65],
+            "RightUpLeg": [360, 2.3, 0.36], "RightLeg": [300, 2.36, 0.0],
+            "LeftUpLeg": [400, 2.45, 0.36], "LeftLeg": [345, 2.5, 0.0]},
+    "props": [{"name": "TableTop", "px": 378, "depth": 2.68, "radius": 0.5, "z0": 0.55, "z1": 0.62},
+              {"name": "TablePost", "px": 378, "depth": 2.68, "radius": 0.07, "z0": 0.0, "z1": 0.55}],
+    "set": [],
+    "phase": 33,
+    "clean_gen": "bar_fg_clean_gen.png",
+    "box": [0, 20, 330, 600],
+    "keep": [],
+    "reg": [400, 540, 600, 600],
+    "front": []
   }
 }

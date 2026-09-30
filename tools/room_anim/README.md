@@ -206,12 +206,13 @@ plate to confirm.
 | `bake_bar.py` | uv | bar: clean-plate patch + patron sheet each; `--preview` crops |
 | `sources/bar_*_clean_gen.png` | - | AI clean-plate edits of each patron's crop (painted out) |
 
-### Mining bar: 3D patrons (#564, #566, #568, #570, #572)
+### Mining bar: 3D patrons (#564, #566, #568, #570, #572, #571)
 
 Painted patrons are replaced by rigged 3D models (Meshy AI, `characters/`)
 idling on seamless loops: the woman in orange on the bench (#564), the
 man at the back table (#566), the bartender (#568), and the woman at the left
-table (#570) with the bald man across from her (#572). `bar_bg.png` is untouched: per patron, a
+table (#570) with the bald man across from her (#572), and the big man in
+the foreground (#571): every patron in the room. `bar_bg.png` is untouched: per patron, a
 one-frame clean-plate patch paints them out, then their render draws over
 it. If the layers are missing, the painting shows as painted. Each patron is
 one entry in `bar_patrons.json`; the camera and lighting are the room's.
@@ -296,6 +297,24 @@ uv run --with scipy tools/room_anim/mining/bake_bar.py --patron patron_orange --
   foreground's glass bottle (a `front` occluder is never patched): the same
   glass compromise as the bartender's bottle. Going 3D, he leaves the
   woman's `front` list, so her sheet is re-baked here.
+- **The foreground man** (Weathered Sentinel, borrowing `Chair_Sit_Idle_M`)
+  sits on the stool with his forearm `aim`ed along his table's rim. Crown
+  anchoring puts his hips at 0.50 m, right on the painted stool. Fit
+  lesson: size a table from its post's floor contact, not an assumed
+  height. Assuming 0.75 m put it at 2.25 m; the base on the floor says
+  2.68 m, with the top at 0.62 m and a 0.5 m radius. `pitch` -10 to sit him
+  up hunched him into a ball; `lean` 0.3 alone tames the clip's slump.
+  His legs are `aim`ed too: thighs *down* to knees under the table edge
+  (z 0.36), shins to the floor. Aiming the thighs level raised the knees
+  to the tabletop. His scale is [1.25, 1.25, 1.0] for the broad back. Never
+  scale z on a crown-anchored patron: a taller body drops the hips into
+  the stool. No floor catcher (`set: []`): his shadow on the dark floor
+  rendered as a black slab over the painted floor. He's in the darkest
+  corner: key x0.7, fill x1.6 to keep detail in the legs. At full size his 258 frames
+  (~350x580 px) need a 4096x25799 atlas, past the 8192 limit, so he's
+  `half_size`: sprites stored at half size and scaled back by the engine.
+  That's fine in the softest, darkest part of the painting; everyone else
+  stays full size.
 - **Blender MCP gotcha:** a freshly `images.load()`ed camera background can
   sit at 0x0 and draw nothing until its pixels are touched
   (`img.pixels[0]`).
