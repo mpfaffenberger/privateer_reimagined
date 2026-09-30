@@ -504,12 +504,16 @@ uv run tools/room_anim/composite_preview.py --base agricultural --seconds 30 \
 
 ### Agricultural landing pad (#583)
 
-The pad sits by a lake under a violet dusk sky with two moons, a brick tower
-and two docking pylons against it, in 18 per-hull composites framed
-differently. Two craft pass in the sky, under the plate, so the tower and
-pylons occlude them on every hull: a transport (`transprt`) crossing right
-to left behind them, and a Galaxy freighter (`mrchship`) coming in high on
-the right and sliding down behind the tower's top.
+The pad sits by a lake under a violet-to-pink dusk sky with two moons, a
+glass-and-brick farm tower and two docking pylons against it, in 18 per-hull
+composites framed differently. The bay was repainted in #631 (base art
+studio, original as reference), then the hulls were regenerated from it:
+`tools/batch_generate_landing_ships.py --archetype agricultural --force
+--repaint` (`--repaint` drops the old composite as a reference, since it
+shows the old bay). Two craft pass in the sky, under the plate, so the
+tower and pylons occlude them on every hull: a transport (`transprt`)
+crossing right to left behind them, and a Galaxy freighter (`mrchship`)
+coming in high on the right and sliding down behind the tower's top.
 
 ```sh
 uv run tools/room_anim/agricultural/bake_landing.py --debug build/room_anim/agricultural/skies.png
@@ -521,21 +525,22 @@ uv run tools/room_anim/composite_preview.py --base agricultural --room landing -
     --crop 0 0 1536 560 --seconds 45 --out build/room_anim/agricultural/landing.mp4
 ```
 
-- **Sky.** It's a saturated blue-to-violet-to-pink gradient, and the moons
-  are bluish too, while green stays low in all of it. The tower, pylons,
-  hulls and far shore have no blue lead over green, so sky = pixels well
-  bluer than green, flooded from the top edge. The dark far shore runs all
-  the way across, so the lake, which mirrors the sky's colour, is never
-  reached. Dralthi's darker top sky dithers around blue 120, so the floor
-  is blue 90.
+- **Sky.** Green is the sky's weakest channel everywhere (blue leads it up
+  high, red low down), while the pylons are neutral grey, the tower brick
+  and glass, the fields green. Colour alone leaks into the tower's windows,
+  which mirror the sky, so sky = violet/pink pixels with little local
+  texture (the buildings are all edges), flooded from the top edge and
+  grown back to the silhouettes by colour. Below tarsus's y 470 (moved per
+  hull) nothing is sky: the lake mirrors it.
 - **Moons in the fill.** The moons are inside the mask and the fill is the
   painted sky at half resolution (not the usual blurred quarter-res fill),
   so a craft passing in front of a moon covers it. No star tiles: the
   painted sky has none.
-- **Anchor.** Layers follow the big moon's centre (the largest blob that
-  stands out from its row's sky colour; lit pink on gladius, shaded on the
-  rest). Translation only: a shaded limb melts into the sky, so the
-  detected size isn't a reliable zoom, and `r` is fixed.
+- **Anchor.** The paths are aimed at tarsus's silhouettes, so each hull's
+  layers follow its silhouettes: the translation that best lines up the sky
+  mask's outline with tarsus's (FFT cross-correlation). Not the moons: each
+  composite was painted separately and the moons wander (300 px on
+  paradigm while the tower moves 70). Translation only, `r` fixed.
 - **Aircraft** use `flight.py` (above): a level f = 1024 px camera with tarsus's
   far shore (y 505) on the horizon, and paths solved from tarsus screen
   targets. Dusk light: a blue sky dome and a low pink key from behind.

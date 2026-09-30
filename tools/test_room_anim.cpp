@@ -310,7 +310,7 @@ void shipped_agricultural_landing() {
     room_anim::RoomAnimDef def;
     room_anim::parse_room_anim(
         json::parse_file(dir + "concourse.json")["rooms"]["landing"]["composite"], def);
-    check(def.has_sky && !def.anchors.empty(), "agricultural landing has a sky and moon anchors");
+    check(def.has_sky && !def.anchors.empty(), "agricultural landing has a sky and anchors");
     check_composite_skies(dir, def, "agricultural landing");
     check(def.layers.size() == 2, "agricultural landing has its two aircraft layers");
     check_layers(dir, def.layers);
