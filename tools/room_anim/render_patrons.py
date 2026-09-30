@@ -1,14 +1,15 @@
-"""Render 3D patrons into the mining bar painting (#564, #566).
+"""Render 3D patrons into a room painting (#564, #566; any room since #577).
 
 Run inside Blender (headless):
-    blender --background --factory-startup \\
-        --python tools/room_anim/mining/render_bar.py -- --patron patron_orange --frames 0:229:46
-    ... --                                  # every patron's full loop
+    blender --background --factory-startup --python tools/room_anim/render_patrons.py -- \\
+        --room tools/room_anim/mining/bar_patrons.json --patron patron_orange --frames 0:229:46
+    ... -- --room <file>                    # every patron's full loop
 
-Per-patron placement lives in bar_patrons.json; the camera and the lighting
-are the room's, shared by everyone.
+A room file (patron_room.py) holds the room's camera, lighting and paths,
+shared by everyone, and each patron's placement.
 
-The bar is one-point perspective: the back wall faces the camera, and the
+The mining bar, the first room, shows how a camera is fitted. It's
+one-point perspective: the back wall faces the camera, and the
 seated patrons' heads all sit near y = 405-420, so the eye is at seated head
 height and the horizon runs through them. For a level camera,
     y = HORIZON + f (EYE - z) / depth,
@@ -23,10 +24,10 @@ She's rendered with straight alpha. The floor, the bench she sits on and the
 railing behind her are Cycles shadow catchers, so her contact shadows land on
 the painted set. Catchers are holdouts to the camera, so they're built from
 her measured pose (seat top = the underside of her hips, railing just behind
-her back) and can never cut into her. bake_bar.py composites her over the
-clean-plate patch.
+her back) and can never cut into her. bake_patrons.py composites her over
+the clean-plate patch.
 
-Writes build/room_anim/mining/bar/<patron>/NNNN.png (+ pass.json).
+Writes <room build>/<patron>/NNNN.png (+ pass.json).
 """
 import argparse
 import json
@@ -38,51 +39,36 @@ import bpy
 from mathutils import Quaternion, Vector
 
 HERE = Path(__file__).resolve().parent
-for path in (HERE, HERE.parent):
-    if str(path) not in sys.path:
-        sys.path.insert(0, str(path))
+if str(HERE) not in sys.path:
+    sys.path.insert(0, str(HERE))
 
+import patron_room  # noqa: E402
 import prep_character  # noqa: E402
 import stage  # noqa: E402
-from base import paths  # noqa: E402
 
-MINING = paths("mining")
-BUILD = MINING.build / "bar"
-CHARACTERS = HERE.parent / "characters"
-PATRONS = {k: v for k, v in json.loads((HERE / "bar_patrons.json").read_text()).items()
-           if not k.startswith("_")}
-
-HORIZON_Y = 415.0
-EYE = 1.25                          # m: seated head height
-FOCAL_PX = 1200.0
-
-KEY = (1.0, 0.78, 0.55)             # warm table lamps, up and to the left
-FILL = (0.62, 0.72, 1.0)            # the glowing bar counter, low right
-# Tuned against the painted woman's tone (build/room_anim/bar_tone.py): her
-# shadows matched from the start, but a soft 180 W key left the highlights
-# at lum 53 vs the painting's 73 and the contrast at 3.0 vs 4.5 (hazy). A
-# harder, brighter key with less fill restores the painting's punch.
-KEY_W, KEY_SIZE = 350.0, 0.6
-FILL_W, RIM_W = 6.0, 40.0
-AMBIENT = (0.008, 0.007, 0.006)     # world: the dim room beyond the lamps
+CHARACTERS = HERE / "characters"
+# The room being rendered (patron_room.load), set by build(). One room per
+# process: every helper below reads its camera and lights from here.
+ROOM = None
 
 
 def plate_to_world_x(px, depth):
     """Plate x on the plane at `depth` -> world x."""
-    return (px - stage.PLATE_W / 2) * depth / FOCAL_PX
+    return (px - stage.PLATE_W / 2) * depth / ROOM.camera.focal_px
 
 
 def _camera(sc):
-    data = bpy.data.cameras.new("BarCam")
+    cam_def = ROOM.camera
+    data = bpy.data.cameras.new(f"{ROOM.name}Cam")
     data.sensor_fit, data.sensor_width = 'HORIZONTAL', 36.0
-    data.lens = FOCAL_PX * 36.0 / stage.PLATE_W
-    data.shift_y = -(stage.PLATE_H / 2 - HORIZON_Y) / stage.PLATE_W   # horizon above centre
-    cam = bpy.data.objects.new("BarCam", data)
+    data.lens = cam_def.focal_px * 36.0 / stage.PLATE_W
+    data.shift_y = -(stage.PLATE_H / 2 - cam_def.horizon_y) / stage.PLATE_W   # horizon above centre
+    cam = bpy.data.objects.new(f"{ROOM.name}Cam", data)
     sc.collection.objects.link(cam)
-    cam.location = (0.0, 0.0, EYE)
+    cam.location = (0.0, 0.0, cam_def.eye)
     cam.rotation_euler = (math.radians(90.0), 0.0, 0.0)
     sc.camera = cam
-    stage.attach_plate_reference(cam, str(MINING.room / "bar_bg.png"))
+    stage.attach_plate_reference(cam, str(ROOM.plate))
 
 
 def _as_catcher(obj):
@@ -207,7 +193,8 @@ def _anchor_head(root, arm, px, py, depth):
         t = arm.matrix_world @ crown.head
         root.location.x += plate_to_world_x(px, t.y) - t.x
         root.location.y += depth - t.y
-        root.location.z += EYE - (py - HORIZON_Y) * t.y / FOCAL_PX - t.z
+        cam = ROOM.camera
+        root.location.z += cam.eye - (py - cam.horizon_y) * t.y / cam.focal_px - t.z
 
 
 def _aim(sc, arm, aims):
@@ -296,24 +283,29 @@ def _lights(sc, target, mix):
     """The room's key/fill/rim, placed around `target`. `mix` scales their
     energies per patron ({key, fill, rim}): the room's light isn't uniform,
     and the bartender's corner is soft and lit from the glowing counter."""
-    world = bpy.data.worlds.new("Bar")
+    lit = ROOM.lights
+    world = bpy.data.worlds.new(ROOM.name)
     world.use_nodes = True
-    world.node_tree.nodes["Background"].inputs["Color"].default_value = (*AMBIENT, 1.0)
+    world.node_tree.nodes["Background"].inputs["Color"].default_value = (*lit.ambient, 1.0)
     sc.world = world
 
     def aim(obj):
         obj.rotation_euler = (target - obj.location).to_track_quat('-Z', 'Y').to_euler()
 
-    aim(stage.light(sc, "Key", 'AREA', target + Vector((-2.0, -1.5, 2.2)), KEY,
-                    KEY_W * mix.get("key", 1.0), size=KEY_SIZE))
-    aim(stage.light(sc, "Fill", 'AREA', target + Vector((1.5, -2.0, -0.2)), FILL,
-                    FILL_W * mix.get("fill", 1.0), size=2.0))
-    aim(stage.light(sc, "Rim", 'AREA', target + Vector((1.0, 1.0, 1.8)), KEY,
-                    RIM_W * mix.get("rim", 1.0), size=1.0))
+    aim(stage.light(sc, "Key", 'AREA', target + Vector((-2.0, -1.5, 2.2)), tuple(lit.key),
+                    lit.key_w * mix.get("key", 1.0), size=lit.key_size))
+    aim(stage.light(sc, "Fill", 'AREA', target + Vector((1.5, -2.0, -0.2)), tuple(lit.fill),
+                    lit.fill_w * mix.get("fill", 1.0), size=2.0))
+    aim(stage.light(sc, "Rim", 'AREA', target + Vector((1.0, 1.0, 1.8)), tuple(lit.key),
+                    lit.rim_w * mix.get("rim", 1.0), size=1.0))
 
 
-def build(samples, name=next(iter(PATRONS))):
-    p = PATRONS[name]
+def build(room_file, samples, name=None):
+    """Load `room_file` and build one patron's scene (default: the first)."""
+    global ROOM
+    ROOM = patron_room.load(room_file)
+    name = name or next(iter(ROOM.patrons))
+    p = ROOM.patrons[name]
     sc = stage.reset()
     stage.setup_render(sc, samples=samples)
     sc.render.use_motion_blur = False           # an idle: nothing moves fast
@@ -333,11 +325,11 @@ def build(samples, name=next(iter(PATRONS))):
     return sc, f0, f1
 
 
-def render(name, frames, samples, save_blend=None):
-    sc, f0, f1 = build(samples, name)
+def render(room_file, name, frames, samples, save_blend=None):
+    sc, f0, f1 = build(room_file, samples, name)
     if save_blend:
         bpy.ops.wm.save_as_mainfile(filepath=str(Path(save_blend).resolve()))
-    out = BUILD / name
+    out = ROOM.build / name
     out.mkdir(parents=True, exist_ok=True)
     if frames:
         first, last, *step = (int(v) for v in frames.split(":"))
@@ -352,20 +344,24 @@ def render(name, frames, samples, save_blend=None):
         bpy.ops.render.render(write_still=True)
     (out / "pass.json").write_text(json.dumps(
         {"frames": f1 - f0 + 1, "first": f0, "fps": sc.render.fps,
-         "crop": list(PATRONS[name]["crop"])}) + "\n")
-    print(f"[render_bar] {name} done", flush=True)
+         "crop": list(ROOM.patrons[name]["crop"])}) + "\n")
+    print(f"[render_patrons] {name} done", flush=True)
 
 
 def main(argv):
     ap = argparse.ArgumentParser()
-    ap.add_argument("--patron", action="append", choices=sorted(PATRONS),
-                    help="repeatable; default: every patron")
+    ap.add_argument("--room", required=True, help="room file (patron_room.py)")
+    ap.add_argument("--patron", action="append", help="repeatable; default: every patron")
     ap.add_argument("--frames", help="first:last[:step]")
     ap.add_argument("--samples", type=int, default=64)
     ap.add_argument("--save-blend", help="also save the scene for inspection (one patron)")
     args = ap.parse_args(argv)
-    for name in args.patron or PATRONS:
-        render(name, args.frames, args.samples, args.save_blend)
+    patrons = patron_room.load(args.room).patrons
+    unknown = set(args.patron or ()) - set(patrons)
+    if unknown:
+        ap.error(f"unknown patron(s) {sorted(unknown)}; the room has {sorted(patrons)}")
+    for name in args.patron or patrons:
+        render(args.room, name, args.frames, args.samples, args.save_blend)
 
 
 if __name__ == "__main__":

@@ -379,6 +379,17 @@ void shipped_newcon_hangar() {
           "landing keeps its Launch + Concourse hotspots");
 }
 
+// #577: rooms shared by every base (the guilds) name their layers relative to
+// the base dir, "../../shared_rooms/<room>/<layer>.json". The engine joins
+// dir + path as-is and finds the atlas next to the manifest, as check_layers
+// does, so a layer reached through ".." from another base (here the mining
+// bar's, from New Con) must resolve like a local one, at the same depth too.
+void cross_dir_layer_paths() {
+    const std::string dir = "assets/concourse/newcon/";
+    check_layers(dir, {"../mining/anim/bar/patron_orange.json"});
+    check_layers(dir, {"../../concourse/mining/anim/bar/patron_orange_patch.json"});
+}
+
 void other_archetypes_static() {
     int animated = 0, rooms = 0;
     for (const auto& entry : std::filesystem::directory_iterator("assets/concourse")) {
@@ -412,6 +423,7 @@ int main() {
     shipped_mining_landing();
     shipped_mining_bar();
     shipped_newcon_hangar();
+    cross_dir_layer_paths();
     other_archetypes_static();
     std::printf("\n%s\n", failures == 0 ? "ALL PASS" : "FAILURES DETECTED");
     return failures == 0 ? 0 : 1;

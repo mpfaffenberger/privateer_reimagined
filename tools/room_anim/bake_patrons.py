@@ -1,14 +1,14 @@
-"""Bake the mining bar's 3D patrons into over-plate layers (#564, #566, #570).
+"""Bake a room's 3D patrons into over-plate layers (#564, #566, #570; any room since #577).
 
-Usage (from the repo root, after render_bar.py):
-    uv run --with scipy tools/room_anim/mining/bake_bar.py              # every patron
-    uv run --with scipy tools/room_anim/mining/bake_bar.py --patron patron_orange \\
+Usage (from the repo root, after render_patrons.py):
+    uv run --with scipy tools/room_anim/bake_patrons.py --room tools/room_anim/mining/bar_patrons.json
+    uv run --with scipy tools/room_anim/bake_patrons.py --room <file> --patron patron_orange \\
         --preview 0,60,120 --out build/room_anim/mining/bar_fit.png
 
-bar_bg.png stays untouched, so the painted patrons are still in the plate.
-Each 3D patron (bar_patrons.json) adds two layers on top of it:
+The plate stays untouched, so the painted patrons are still in it. Each 3D
+patron (the room file, patron_room.py) adds two layers on top of it:
     <patron>_patch  one static frame on a one-slot loop: the painted one out
-    <patron>        the 3D idle (render_bar.py), straight alpha
+    <patron>        the 3D idle (render_patrons.py), straight alpha
 If the layers are missing, the painting shows as painted.
 
 Patrons overlap (the left table), so they're listed back to front and
@@ -34,17 +34,13 @@ from PIL import Image, ImageDraw
 from scipy import ndimage
 
 HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE.parent))
+sys.path.insert(0, str(HERE))
+import patron_room  # noqa: E402
 from bake_layer import load_frame, write_sheet  # noqa: E402
-from base import paths  # noqa: E402
 
-MINING = paths("mining")
-BUILD = MINING.build / "bar"
-OUT = MINING.anim / "bar"
-SOURCES = MINING.tools / "sources"
 CANVAS = (1536, 1024)
-PATRONS = {k: v for k, v in json.loads((HERE / "bar_patrons.json").read_text()).items()
-           if not k.startswith("_")}
+# The room being baked (patron_room.load), set by main(). One room per process.
+ROOM = None
 
 MAX_REGISTRATION_ERROR = 6.0            # mean |diff| in the `reg` rect, 0-255
 # The shadow catchers leave a faint alpha across the whole render region
@@ -72,7 +68,7 @@ def clean_patch(p, plate):
     """-> RGBA patch (crop-sized) that paints the patron out, feathered alpha."""
     orig = plate.crop(p["crop"])
     w, h = orig.size
-    gen = Image.open(SOURCES / p["clean_gen"]).convert("RGB").resize((w, h), Image.LANCZOS)
+    gen = Image.open(ROOM.sources / p["clean_gen"]).convert("RGB").resize((w, h), Image.LANCZOS)
     o, g = np.asarray(orig, np.int16), np.asarray(gen, np.int16)
     rx0, ry0, rx1, ry1 = p["reg"]
     wall = np.abs(g[ry0:ry1, rx0:rx1] - o[ry0:ry1, rx0:rx1]).mean()
@@ -103,7 +99,7 @@ def patron_frame(p, path):
     x0, y0, x1, y1 = p["crop"]
     rgba[y0:y1, x0:x1, 3][front_mask(p, y1 - y0, x1 - x0)] = 0
     rgba[..., 3][rgba[..., 3] < SHADOW_FLOOR] = 0
-    tmp = BUILD / "_clipped.png"
+    tmp = ROOM.build / "_clipped.png"
     Image.fromarray(rgba).save(tmp)
     # The patron is the point: keep them sharp, unless they're too big for
     # one atlas at full size (`half_size`: the foreground man, 258 frames of
@@ -114,20 +110,20 @@ def patron_frame(p, path):
 def cleaned_plate(name):
     """-> the plate (RGB) with every patron listed before `name` painted out:
     what `name`'s clean-plate source must be made from, and registered to."""
-    plate = Image.open(MINING.room / "bar_bg.png").convert("RGBA")
-    for other in PATRONS:
+    plate = Image.open(ROOM.plate).convert("RGBA")
+    for other in ROOM.patrons:
         if other == name:
             break
-        q = PATRONS[other]
+        q = ROOM.patrons[other]
         plate.alpha_composite(Image.fromarray(clean_patch(q, plate.convert("RGB"))),
                               tuple(q["crop"][:2]))
     return plate.convert("RGB")
 
 
 def bake(name):
-    p = PATRONS[name]
+    p = ROOM.patrons[name]
     plate = cleaned_plate(name)
-    info = json.loads((BUILD / name / "pass.json").read_text())
+    info = json.loads((ROOM.build / name / "pass.json").read_text())
     fps, frames = float(info["fps"]), int(info["frames"])
     patch = clean_patch(p, plate)
     ys, xs = np.nonzero(patch[..., 3])
@@ -136,32 +132,33 @@ def bake(name):
     dst = [p["crop"][0] + px0, p["crop"][1] + py0, sprite.shape[1], sprite.shape[0]]
     # A one-slot loop: slots without a frame draw nothing, so on the patron's
     # loop the painted one would flicker back every other slot.
-    write_sheet(OUT, f"{name}_patch", [(sprite, dst)], [0], CANVAS, fps, 1, 0)
+    write_sheet(ROOM.out, f"{name}_patch", [(sprite, dst)], [0], CANVAS, fps, 1, 0)
     sprites, slots = [], []
-    for path in sorted((BUILD / name).glob("[0-9]*.png")):
+    for path in sorted((ROOM.build / name).glob("[0-9]*.png")):
         baked = patron_frame(p, path)
         if baked is not None:
             sprites.append(baked)
             slots.append(int(path.stem) - int(info["first"]))
-    write_sheet(OUT, name, sprites, slots, CANVAS, fps, frames, int(p["phase"]))
+    write_sheet(ROOM.out, name, sprites, slots, CANVAS, fps, frames, int(p["phase"]))
 
 
 def preview(name, frames, out):
     """Crops of the room as the engine draws it at `frames` (patches, then the
     patrons up to `name`, back to front), beside the painted original."""
-    p = PATRONS[name]
-    upto = list(PATRONS)[:list(PATRONS).index(name) + 1]
-    patched = Image.open(MINING.room / "bar_bg.png").convert("RGBA")
+    patrons = ROOM.patrons
+    p = patrons[name]
+    upto = list(patrons)[:list(patrons).index(name) + 1]
+    patched = Image.open(ROOM.plate).convert("RGBA")
     tiles = [patched.crop(tuple(p["crop"]))]    # PIL wants a tuple, JSON gives a list
     for other in upto:
-        q = PATRONS[other]
+        q = patrons[other]
         patched.alpha_composite(Image.fromarray(clean_patch(q, patched.convert("RGB"))),
                                 tuple(q["crop"][:2]))
     for f in frames:
         tile = patched.copy()
         for other in upto:
-            path = BUILD / other / f"{f:04d}.png"
-            baked = patron_frame(PATRONS[other], path) if path.exists() else None
+            path = ROOM.build / other / f"{f:04d}.png"
+            baked = patron_frame(patrons[other], path) if path.exists() else None
             if baked is not None:              # scaled to dst, as the engine draws it
                 sprite, (x, y, w, h) = baked
                 tile.alpha_composite(Image.fromarray(sprite).resize((w, h), Image.LANCZOS), (x, y))
@@ -175,17 +172,23 @@ def preview(name, frames, out):
 
 
 def main():
+    global ROOM
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--patron", action="append", choices=sorted(PATRONS),
-                    help="repeatable; default: every patron")
+    ap.add_argument("--room", required=True, help="room file (patron_room.py)")
+    ap.add_argument("--patron", action="append", help="repeatable; default: every patron")
     ap.add_argument("--preview", help="comma-separated frames to preview instead of baking")
-    ap.add_argument("--out", default=str(MINING.build / "bar_fit.png"))
+    ap.add_argument("--out", help="preview path (default: <room build>_fit.png)")
     args = ap.parse_args()
-    names = args.patron or list(PATRONS)
+    ROOM = patron_room.load(args.room)
+    unknown = set(args.patron or ()) - set(ROOM.patrons)
+    if unknown:
+        ap.error(f"unknown patron(s) {sorted(unknown)}; the room has {sorted(ROOM.patrons)}")
+    names = args.patron or list(ROOM.patrons)
     if args.preview:
         if len(names) != 1:
             raise SystemExit("--preview needs exactly one --patron")
-        preview(names[0], [int(f) for f in args.preview.split(",")], args.out)
+        out = args.out or f"{ROOM.build}_fit.png"          # the bar: build/room_anim/mining/bar_fit.png
+        preview(names[0], [int(f) for f in args.preview.split(",")], out)
     else:
         for name in names:
             bake(name)

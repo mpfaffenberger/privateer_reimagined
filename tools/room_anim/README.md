@@ -22,6 +22,12 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `sky.py` | uv | star removal, mask solidify, sky fill, painted-star stats, star tiles |
 | `composite_preview.py` | uv | engine-faithful preview from `concourse.json` (`--base`) |
 | `stage.py` | Blender | render settings, boxes, materials, lights, straight passes |
+| `patron_room.py` | both | loads a room file: camera, lights, paths, patrons (#577) |
+| `render_patrons.py` | Blender | a room's 3D patrons, camera-matched (`--room`, `--patron`) |
+| `bake_patrons.py` | uv | clean-plate patch + patron sheet each (`--room`); `--preview` crops |
+| `prep_character.py` | Blender | Meshy GLB -> committable model (1K textures, one clip) |
+| `meshy.py` | uv | Meshy API: image-to-3D + rig (`character`), clips (`animate`) |
+| `characters/` | | prepped, rigged 3D characters |
 | `newcon/` | | New Constantinople: concourse (#515) and hangar (#553) |
 | `mining/` | | Mining base concourse: the ore train (#558) |
 
@@ -201,9 +207,7 @@ plate to confirm.
 | `bake_landing.py` | uv | landing pad: sky masks + rim anchors, star tiles, freighter sheet |
 | `render_landing.py` | Blender | the Galaxy freighter pass over the landing pad |
 | `landing_layers.json` | - | landing sky layer timing |
-| `bar_patrons.json` | - | the bar's 3D patrons: model, placement, clean plate, occluders |
-| `render_bar.py` | Blender | the bar's 3D patrons, camera-matched (`--patron`) |
-| `bake_bar.py` | uv | bar: clean-plate patch + patron sheet each; `--preview` crops |
+| `bar_patrons.json` | - | the bar's room file: camera, lights, and each 3D patron |
 | `sources/bar_*_clean_gen.png` | - | AI clean-plate edits of each patron's crop (painted out) |
 
 ### Mining bar: 3D patrons (#564, #566, #568, #570, #572, #571)
@@ -215,11 +219,12 @@ table (#570) with the bald man across from her (#572), and the big man in
 the foreground (#571): every patron in the room. `bar_bg.png` is untouched: per patron, a
 one-frame clean-plate patch paints them out, then their render draws over
 it. If the layers are missing, the painting shows as painted. Each patron is
-one entry in `bar_patrons.json`; the camera and lighting are the room's.
+one entry in `bar_patrons.json`, the bar's room file (see "3D patrons in any
+room" below); the camera and lighting are the room's.
 
 **Overlapping patrons (the left table) are stacked.** `bar_patrons.json` lists
 patrons back to front. Each clean plate is an AI edit of the plate *with every
-earlier patron already painted out* (`bake_bar.cleaned_plate`): use that crop
+earlier patron already painted out* (`bake_patrons.cleaned_plate`): use that crop
 as the edit's reference, and it registers against it. So a nearer patron's
 patch never paints a farther one back in. The room draws every patch first,
 then every patron in list order, so nearer patrons cover farther ones. A
@@ -229,10 +234,11 @@ until they go 3D too.
 ```sh
 blender --background --factory-startup --python tools/room_anim/prep_character.py -- \
     <meshy_clip.glb> tools/room_anim/characters/<name>.glb [--clip-from <other_clip.glb>]
-blender --background --factory-startup --python tools/room_anim/mining/render_bar.py \
-    [-- --patron patron_backtable]
-uv run --with scipy tools/room_anim/mining/bake_bar.py [--patron ...]
-uv run --with scipy tools/room_anim/mining/bake_bar.py --patron patron_orange --preview 0,114,228
+blender --background --factory-startup --python tools/room_anim/render_patrons.py -- \
+    --room tools/room_anim/mining/bar_patrons.json [--patron patron_backtable]
+uv run --with scipy tools/room_anim/bake_patrons.py --room tools/room_anim/mining/bar_patrons.json [--patron ...]
+uv run --with scipy tools/room_anim/bake_patrons.py --room tools/room_anim/mining/bar_patrons.json \
+    --patron patron_orange --preview 0,114,228
 ```
 
 - **Borrowed clips.** All six Meshy characters share one 28-bone Mixamo
@@ -385,6 +391,63 @@ Shared Blender helpers (render settings, boxes, materials, lights, emitters,
 straight passes) live in `stage.py`; `bake_layer.load_frame()` trims a
 straight-alpha pass for sky layers; `ships.import_ship()` takes `grounded=` (origin on
 the underside, for vehicles) and `tint=` (multiply the textures, e.g. grime).
+
+## 3D patrons in any room (#577)
+
+The bar's patron pipeline works for any room with painted people in it. A
+**room file** (format in `patron_room.py`) holds a top-level `"room"`
+block and the patrons, back to front:
+
+- **paths:** `plate`, `build` (raw renders), `out` (baked layers), `sources`
+  (clean-plate edits), all repo-relative;
+- **`camera`:** a level camera, `horizon_y` (plate px), `eye` (m), `focal_px`;
+- **`lights`:** key/fill colours, key/fill/rim watts, key size, ambient.
+
+`render_patrons.py --room <file>` and `bake_patrons.py --room <file>` do the
+rest. The camera and world are named after the room (`BarCam`). Fit a new
+room's camera the way the bar's was: pick the horizon from where the
+painting's level lines converge, set `eye` from a head or counter of known
+height, and check a patron's crown and hips land on the painting.
+
+**New characters come from Meshy** (`meshy.py`):
+
+```sh
+uv run --with requests tools/room_anim/meshy.py character <name> --image <full-body ref.png> --height 1.7
+uv run --with requests tools/room_anim/meshy.py library --search sit
+uv run --with requests tools/room_anim/meshy.py animate <name> --action 33 --action 343
+blender --background --factory-startup --python tools/room_anim/prep_character.py -- \
+    build/room_anim/meshy/<name>/<Clip>.glb tools/room_anim/characters/<name>_<clip>.glb
+```
+
+- **Reference image:** Meshy wants one person, full body, front-facing,
+  A-pose, plain background, flat light, nothing in their hands (a held prop
+  fuses into the hand and wrecks the rig). A painted bust has no legs, so
+  make the reference with an image model conditioned on the painted crop,
+  and keep it in the room's `sources/`.
+- **Costs** (credits): image-to-3D 30 (meshy-7.1, 2K textures), rigging 5,
+  each clip 3. `animate` makes one task per clip, so every clip is its own
+  GLB (`prep_character.py` keeps one clip per file) and idles can be
+  auditioned side by side.
+- **Resumable:** every task id goes into `build/room_anim/meshy/<name>/
+  state.json` before it's polled, so a rerun polls the same task instead of
+  paying for a new one. A failed task is refunded and dropped from the
+  ledger, so a rerun retries it.
+- **The key** comes from `MESHY_API_KEY` or `~/.config/meshy/api_key` and is
+  never printed. A `402 "API key credit limit reached"` with credits in the
+  account means the key's own monthly cap (Meshy Developer Platform) is
+  spent.
+- **No library clip** leans on a counter, types or smokes. `aim`/`hold`
+  plant hands on furniture (the bartender, #568; the foreground man, #571).
+  `Sit_and_Drink` (343) is the library's only hand-to-mouth gesture, and
+  Meshy's Text to Motion can make custom clips.
+
+**Rooms shared by every base** (the guild paintings are byte-identical in
+all nine) bake once to `assets/shared_rooms/<room>/`, and each base's
+`concourse.json` names the layers as `../../shared_rooms/<room>/<layer>.json`.
+The engine joins the base dir and that path as-is, and the atlas resolves
+next to its manifest. They stay out of `assets/concourse/`, whose every
+subdirectory is treated as a base (archetype walkers, and
+`other_archetypes_static` in `test_room_anim`).
 
 ## Adding a layer
 
