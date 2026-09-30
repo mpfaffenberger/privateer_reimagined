@@ -17,7 +17,8 @@ A room file is JSON:
 Patron keys are documented in mining/bar_patrons.json's _doc, plus two for
 standing patrons who lean on something (#578): `bend` (deg) folds the spine
 forward through every key, and `hip_sway` (0-1) scales the hips' travel
-(`lean` only damps rotations). Room files name bones the Mixamo way; the
+(`lean` only damps rotations). `still` holds one pose with very small
+moves (still.py has its format). Room files name bones the Mixamo way; the
 Meshy API's own 24-bone rig is mapped (render_patrons._bone).
 
 render_patrons.py and bake_patrons.py both take `--room <file>`. Pure stdlib,

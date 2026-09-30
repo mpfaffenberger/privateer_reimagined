@@ -424,25 +424,26 @@ void shipped_mercguild() {
               err) &&
               patch.frames.size() == 1 && patch.period == 1,
           "  her patch is one frame on a one-slot loop (always on screen)");
-    // Mike's review: she holds one pose, and only her eyes glance now and
-    // then. So her idle is at most three images (rest, left, right) and the
-    // rest one fills nearly the whole loop.
+    // Mike's review: she holds one pose; only small things move (her
+    // fingers at her nails, her eyes, a little smile). So no frame's sprite
+    // lands more than a few px from the rest frame's, and the distinct
+    // images stay few (write_sheet packs each once).
     room_anim::SpriteSheet idle;
     const bool ok = room_anim::parse_sprite_sheet(
         json::parse_file("assets/shared_rooms/mercguild/merc_woman.json"), idle, err);
     std::vector<std::vector<float>> srcs;
-    size_t rest = 0;
+    float drift = 0.0f;
     for (const room_anim::SpriteFrame& f : idle.frames) {
         const std::vector<float> src(f.src, f.src + 4);
         if (std::find(srcs.begin(), srcs.end(), src) == srcs.end()) srcs.push_back(src);
-        if (src == std::vector<float>(idle.frames[0].src, idle.frames[0].src + 4)) ++rest;
+        for (int i = 0; i < 4; ++i)
+            drift = std::max(drift, std::fabs(f.dst[i] - idle.frames[0].dst[i]));
     }
-    check(ok && srcs.size() <= 3 && idle.frames.size() == static_cast<size_t>(idle.period),
-          "  her idle is one held pose plus glances (" + std::to_string(srcs.size()) +
-              " images, every slot drawn)");
-    check(ok && rest * 10 >= idle.frames.size() * 8,
-          "  she rests >= 80% of the loop (" + std::to_string(rest) + "/" +
-              std::to_string(idle.frames.size()) + ")");
+    check(ok && idle.frames.size() == static_cast<size_t>(idle.period) && drift <= 4.0f,
+          "  she holds one pose: every slot drawn, sprites within 4 px (" +
+              std::to_string(static_cast<int>(drift)) + " px)");
+    check(ok && srcs.size() <= 64,
+          "  her small moves are few images (" + std::to_string(srcs.size()) + ")");
 }
 
 void other_archetypes_static() {

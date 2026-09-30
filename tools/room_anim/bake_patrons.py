@@ -36,6 +36,7 @@ from scipy import ndimage
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import patron_room  # noqa: E402
+import still  # noqa: E402
 from bake_layer import load_frame, write_sheet  # noqa: E402
 
 CANVAS = (1536, 1024)
@@ -108,45 +109,6 @@ def patron_frame(p, src):
     return load_frame(tmp, max_px=1 if p.get("half_size") else None)
 
 
-def glance(rgba, eyes, dx):
-    """The render with what's inside each eye opening nudged `dx` px to
-    screen right: the iris moves between the lids, which stay put. `eyes`:
-    [cx, cy, rx, ry] ellipses, plate px. Each row inside one is resampled
-    with its ends held, so a corner never pulls in skin."""
-    out = rgba.copy()
-    for cx, cy, rx, ry in eyes:
-        for y in range(int(cy - ry), int(np.ceil(cy + ry)) + 1):
-            t = 1.0 - ((y - cy) / ry) ** 2
-            if t <= 0.0:
-                continue
-            x0, x1 = int(np.ceil(cx - rx * t ** 0.5)), int(cx + rx * t ** 0.5)
-            if x1 - x0 < 2:
-                continue
-            xs = np.arange(x0, x1 + 1, dtype=float)
-            for c in range(4):
-                row = rgba[y, x0:x1 + 1, c].astype(float)
-                out[y, x0:x1 + 1, c] = np.interp(xs - dx, xs, row).round()   # clamps at the ends
-    return out
-
-
-def still(name, p, fps):
-    """-> (sprites, slots, period) for a patron frozen at the clip's first
-    frame whose eyes glance now and then (`still`, #578): every slot shows
-    the one render, except each glance's, which show it with the eyes
-    shifted. Eyes jump (saccades), so there are no in-betweens."""
-    s = p["still"]
-    first = json.loads((ROOM.build / name / "pass.json").read_text())["first"]
-    rgba = np.asarray(Image.open(ROOM.build / name / f"{first:04d}.png").convert("RGBA"))
-    rest = patron_frame(p, rgba)
-    period = round(s["period_s"] * fps)
-    shown = [rest] * period
-    for start, hold, direction in s["glances"]:
-        look = patron_frame(p, glance(rgba, s["eyes"], direction * s["shift_px"]))
-        for slot in range(round(start * fps), round((start + hold) * fps)):
-            shown[slot % period] = look
-    return shown, list(range(period)), period
-
-
 def cleaned_plate(name):
     """-> the plate (RGB) with every patron listed before `name` painted out:
     what `name`'s clean-plate source must be made from, and registered to."""
@@ -173,8 +135,11 @@ def bake(name):
     # A one-slot loop: slots without a frame draw nothing, so on the patron's
     # loop the painted one would flicker back every other slot.
     write_sheet(ROOM.out, f"{name}_patch", [(sprite, dst)], [0], CANVAS, fps, 1, 0)
-    if "still" in p:
-        sprites, slots, frames = still(name, p, fps)
+    if "still" in p:            # one held pose with small moves: still.py
+        cycle = [np.asarray(Image.open(path).convert("RGBA"))
+                 for path in sorted((ROOM.build / name).glob("[0-9]*.png"))]
+        sprites, slots, frames = still.timeline(p["still"], fps, cycle,
+                                                lambda rgba: patron_frame(p, rgba))
         write_sheet(ROOM.out, name, sprites, slots, CANVAS, fps, frames, int(p["phase"]))
         return
     sprites, slots = [], []

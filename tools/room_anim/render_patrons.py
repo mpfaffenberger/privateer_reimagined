@@ -306,6 +306,8 @@ def _patron(sc, p):
              p["bend"], rest_frame=True)
     if "head_up" in p:
         _nod(arm, p["head_up"])
+    if "still" in p:
+        _still(arm, p["still"], sc.render.fps)
     # `scale`: painters cheat, and some painted patrons are burlier than any
     # model at their depth (the back-table man is ~1.3x broad, ~1.13x tall).
     # A list is [width, depth, height] in the body's frame: the bald man is
@@ -322,6 +324,49 @@ def _patron(sc, p):
     _aim(sc, arm, p.get("aim", {}))
     act = bpy.data.actions[0]
     return root, body, act
+
+
+def fidget_frames(still, fps):
+    """Frames rendered for a `still` patron: one fidget cycle, or just one."""
+    return round(still["fidget"]["cycle_s"] * fps) if "fidget" in still else 1
+
+
+def _still(arm, still, fps):
+    """`still` (#578): hold the first frame's pose everywhere, then rock
+    each `fidget` bone about a local axis by `deg`, `harmonic` sine
+    periods per cycle (her fingers picking at her nails: the rig has hand
+    bones, no finger bones). The sine is 0 at both ends, so frame 0 is the
+    rest pose and the cycle loops. An `aim`ed bone only takes twist (its
+    local Y): the Damped Track owns where it points, and a flex about X
+    moved her aimed hand by 1 px."""
+    names = {b.name.split(":")[-1] for b in arm.pose.bones}
+    _calm(arm, 0.0, names)
+    _calm(arm, 0.0, names, channel="location")
+    if "fidget" not in still:
+        return
+    n, fcs = fidget_frames(still, fps), _fcurves(arm)
+    for bone, move in still["fidget"]["bones"].items():
+        path = f'pose.bones["{_bone(arm, bone).name}"].rotation_quaternion'
+        quat = sorted((fc for fc in fcs if fc.data_path == path), key=lambda fc: fc.array_index)
+        rest = Quaternion([fc.evaluate(0) for fc in quat])
+        for fc in quat:
+            fc.keyframe_points.clear()
+        for k in range(n + 1):
+            angle = math.radians(move["deg"]) * math.sin(2 * math.pi * move.get("harmonic", 1) * k / n)
+            for fc, value in zip(quat, rest @ Quaternion(Vector(move["axis"]), angle)):
+                fc.keyframe_points.insert(k, value, options={'FAST'})
+        for fc in quat:
+            fc.update()
+
+
+def _set_border(sc, box):
+    """Render only plate rect `box` (x0, y0, x1, y1), in place in a
+    plate-sized image."""
+    x0, y0, x1, y1 = box
+    sc.render.use_border, sc.render.use_crop_to_border = True, False
+    sc.render.border_min_x, sc.render.border_max_x = x0 / stage.PLATE_W, x1 / stage.PLATE_W
+    sc.render.border_min_y = 1.0 - y1 / stage.PLATE_H
+    sc.render.border_max_y = 1.0 - y0 / stage.PLATE_H
 
 
 def _lights(sc, target, mix):
@@ -355,11 +400,7 @@ def build(room_file, samples, name=None):
     stage.setup_render(sc, samples=samples)
     sc.render.use_motion_blur = False           # an idle: nothing moves fast
     sc.render.film_transparent = True
-    x0, y0, x1, y1 = p["crop"]
-    sc.render.use_border, sc.render.use_crop_to_border = True, False
-    sc.render.border_min_x, sc.render.border_max_x = x0 / stage.PLATE_W, x1 / stage.PLATE_W
-    sc.render.border_min_y = 1.0 - y1 / stage.PLATE_H
-    sc.render.border_max_y = 1.0 - y0 / stage.PLATE_H
+    _set_border(sc, p["crop"])
     _camera(sc)
     root, body, act = _patron(sc, p)
     _set(sc, root, body, p)
@@ -382,8 +423,9 @@ def render(room_file, name, frames, samples, save_blend=None):
     else:                                        # a full pass: no stale frames
         for old in out.glob("*.png"):
             old.unlink()
-        # still: frozen at the first frame; the bake makes the glances.
-        todo = range(f0, f0 + 1) if "still" in ROOM.patrons[name] else range(f0, f1 + 1)
+        # still: the held pose (+ one fidget cycle); the bake does the rest.
+        still = ROOM.patrons[name].get("still")
+        todo = range(f0, f0 + fidget_frames(still, sc.render.fps)) if still else range(f0, f1 + 1)
     for f in todo:
         sc.frame_set(f)
         sc.render.filepath = str(out / f"{f:04d}.png")
