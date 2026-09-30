@@ -2,13 +2,21 @@
 #586). Runs inside Blender.
 
 Deliberately low-detail: walkers are 30-100 px tall on screen, so
-silhouette, swing and rim light sell them, not modelling detail.
+silhouette, swing and rim light sell them, not modelling detail. Bigger
+than that (New Detroit's 90-160 px, #590), boxes read as walking crates:
+build_rigged_walker() walks one of the rigged characters in characters/
+instead, with a procedural walk cycle on their shared Mixamo skeleton.
 """
 import math
 
 import bpy
+from mathutils import Quaternion, Vector
 
+from base import TOOLS
 from stage import animate_path, box_object, material
+
+CHARACTERS = TOOLS / "characters"
+RIGGED_STEP_M = 0.62      # the step rigged_gait's default stride takes
 
 
 def shaped_box(name, size, loc, mat, bevel=0.0, parent=None, nose_taper=1.0, nose_drop=0.0,
@@ -98,3 +106,90 @@ def animate_walk(root, limbs, start, end, z, fps, speed=1.3, step_m=0.72, swing_
     """Walk in a straight line from `start` to `end` (x, y). Returns the last
     frame."""
     return animate_walk_path(root, limbs, [start, end], z, fps, speed, step_m, swing_deg)
+
+
+def build_rigged_walker(name, model, height=1.75):
+    """A rigged character from characters/<model> with its clip removed,
+    scaled to `height` and turned to face +Y, origin at the feet. The clips
+    are idles and sits, so no paid walk clip: see rigged_gait().
+    Returns (root, gait)."""
+    before = set(bpy.data.objects)
+    bpy.ops.import_scene.gltf(filepath=str(CHARACTERS / model))
+    new = [o for o in bpy.data.objects if o not in before]
+    arm = next(o for o in new if o.type == 'ARMATURE')
+    # Rest pose: arms down, standing. Clearing the clip leaves its last
+    # evaluated pose on every bone (shoulders hunched forward), so reset them.
+    arm.animation_data_clear()
+    for pb in arm.pose.bones:
+        pb.rotation_mode = 'QUATERNION'
+        pb.rotation_quaternion, pb.location, pb.scale = (1, 0, 0, 0), (0, 0, 0), (1, 1, 1)
+    for obj in new:
+        if obj.type == 'MESH' and not any(m.type == 'ARMATURE' for m in obj.modifiers):
+            obj.hide_render = obj.hide_viewport = True   # the importer's bone shape
+    root = bpy.data.objects.new(name, None)
+    bpy.context.scene.collection.objects.link(root)
+    top = (arm.matrix_world @ arm.data.bones["mixamorig:HeadTop_End"].head_local).z
+    rig = bpy.data.objects.new(f"{name}Rig", None)   # the model faces -Y, feet at 0
+    bpy.context.scene.collection.objects.link(rig)
+    rig.parent, rig.rotation_euler = root, (0.0, 0.0, math.pi)
+    rig.scale = (height / top,) * 3
+    for obj in new:
+        if obj.parent is None:
+            obj.parent = rig
+    return root, rigged_gait(arm)
+
+
+def rigged_gait(arm, stride_deg=24.0, knee_deg=55.0, arm_deg=14.0):
+    """A procedural walk cycle on the Mixamo skeleton: a function (phase,
+    frame) that keys it. Every swing is about the model's side axis (world X
+    in its rest frame), converted into each bone's rest frame, so bone roll
+    doesn't matter and parents carry children. The model faces -Y, so
+    "forward" (toward -Y) is a negative angle."""
+    bones = arm.pose.bones
+    side, fwd, up = Vector((1.0, 0.0, 0.0)), Vector((0.0, 1.0, 0.0)), Vector((0.0, 0.0, 1.0))
+
+    def turn(bone, *parts):
+        """Pose `bone` as the product of (world axis, degrees) rotations."""
+        rest = arm.data.bones[f"mixamorig:{bone}"].matrix_local.to_3x3().inverted()
+        q = Quaternion()
+        for world_axis, deg in parts:
+            q = q @ Quaternion((rest @ world_axis).normalized(), math.radians(deg))
+        pb = bones[f"mixamorig:{bone}"]
+        pb.rotation_quaternion = q
+        return pb
+
+    def pose(phase, frame):
+        posed = []
+        for s, offset in (("Left", 0.0), ("Right", math.pi)):
+            p = phase + offset
+            hip = stride_deg * math.sin(p) + 4.0            # + = thigh forward
+            # The knee folds while the leg swings through (thigh moving forward).
+            knee = 6.0 + knee_deg * max(0.0, math.cos(p - 0.35)) ** 2
+            ankle = 0.6 * (knee - hip) - 4.0                 # keeps the sole near level
+            posed.append(turn(f"{s}UpLeg", (side, -hip)))
+            posed.append(turn(f"{s}Leg", (side, knee)))
+            posed.append(turn(f"{s}Foot", (side, -ankle)))
+            swing = -arm_deg * math.sin(p)                   # arms oppose the legs
+            tuck = 9.0 if s == "Left" else -9.0              # A-pose arms to the sides
+            posed.append(turn(f"{s}Arm", (fwd, tuck), (side, -swing)))
+            posed.append(turn(f"{s}ForeArm", (side, -(12.0 + 0.4 * max(0.0, swing)))))
+        # The pelvis sways with the stride and drops at double support; the
+        # torso counter-turns and leans a touch into the walk.
+        hips = turn("Hips", (up, 5.0 * math.sin(phase)))
+        hips.location = (0.0, -0.02 * abs(math.sin(phase)), 0.0)   # bone Y is world up
+        hips.keyframe_insert("location", frame=frame)
+        posed += [hips, turn("Spine", (side, -3.0), (up, -4.0 * math.sin(phase)))]
+        for pb in posed:
+            pb.keyframe_insert("rotation_quaternion", frame=frame)
+    return pose
+
+
+def animate_rigged_walk(root, gait, points, z, fps, speed=1.3, step_m=RIGGED_STEP_M):
+    """A rigged walker along the polyline `points` (see stage.animate_path;
+    `z` may be a floor-height function), its gait keyed in step with
+    `speed`, so the feet don't slide. Returns the last frame."""
+    frame_end = animate_path(root, points, z, fps, speed)
+    stride_hz = speed / (2.0 * step_m)                      # one cycle = two steps
+    for f in range(1, frame_end + 1):
+        gait(2.0 * math.pi * stride_hz * (f - 1) / fps, f)
+    return frame_end
