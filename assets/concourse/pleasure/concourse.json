@@ -8,6 +8,19 @@
         200
       ],
       "overlays": [],
+      "sky": {
+        "mask": "anim/sky_mask.png",
+        "fill": "anim/sky_fill.png",
+        "stars": [
+          { "tile": "anim/stars_far.png", "velocity": [-2.5, 0.6] },
+          { "tile": "anim/stars_near.png", "velocity": [-4.0, 1.0] }
+        ]
+      },
+      "layers": [
+        "anim/marquee_left.json",
+        "anim/marquee_right.json",
+        "anim/neon_flicker.json"
+      ],
       "links": [
         {
           "target": "Bar",

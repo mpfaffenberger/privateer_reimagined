@@ -57,15 +57,17 @@ def sky_fill(plate, mask):
 class PaintedStars:
     """The painting's own star population: density per sky pixel (one per
     local maximum), and each star's contrast over the sky and its colour.
-    New stars are drawn from this, so they match the paint, not a guess."""
+    New stars are drawn from this, so they match the paint, not a guess.
+    A star stands `rise` (8-bit luminance) over the sky; lower it for a
+    painting whose stars are mostly faint."""
 
-    def __init__(self, plate, mask):
+    def __init__(self, plate, mask, rise=18):
         grey = plate.convert("L")
         lum = np.asarray(grey, dtype=np.float32)
         base = np.asarray(star_removed(grey), dtype=np.float32)
         local_max = lum >= np.asarray(grey.filter(ImageFilter.MaxFilter(3)), dtype=np.float32)
         sky = np.asarray(mask) > 200
-        peaks = (lum - base > 18) & sky & local_max
+        peaks = (lum - base > rise) & sky & local_max
         rgb = np.asarray(plate, dtype=np.float32)[peaks]
         self.density = peaks.sum() / max(sky.sum(), 1)
         self.contrast = (lum - base)[peaks] / 255.0
