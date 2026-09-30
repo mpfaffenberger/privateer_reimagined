@@ -5,7 +5,7 @@
     "crop: plate rect rendered and patched; clean_gen: sources/<file>, an AI edit of that crop with the painted patron removed.",
     "hip_px / hip_depth (m) / yaw (deg, 0 = facing camera, -90 = screen-left): fitted live against the clean plate. A bust whose feet are hidden is placed by head [px, y, depth] (the crown at frame 0) instead of the hips.",
     "pitch (deg): leans the whole body towards the camera. aim: {bone: [px, depth, z]} points bones at fixed spots (hands planted on a counter while the idle sways the body). head_up (deg): raises the chin through the neck/head keys, undoing pitch's downward gaze. light: {key, fill, rim} energy multipliers on the room's lights.",
-    "seat_reach: seat catcher (sideways, back) m from the hips. phase: loop offset, frames. scale (optional): for painted patrons burlier than the model at their depth; a list is [width, depth, height] (a painted body with other proportions). tint (optional): multiplies the model's textures, when its clothes don't match the painted ones. saturation (optional): scales their saturation (a painter's vivid palette). half_size (optional): store the sprites at half size (the engine scales them back), for a patron too big for one atlas at full size. lean (optional, 0-1): damps the torso's motion towards the clip's first frame (a borrowed clip that moves more than the painted patron would). set (default [floor, seat, railing]): the shadow catchers built from the pose; list only what the painted patron really sits on / against.",
+    "seat_reach: seat catcher (sideways, back) m from the hips. phase: loop offset, frames. scale (optional): for painted patrons burlier than the model at their depth; a list is [width, depth, height] (a painted body with other proportions). tint (optional): multiplies the model's textures, when its clothes don't match the painted ones. saturation (optional): scales their saturation (a painter's vivid palette). hold (optional): bone-name prefixes frozen at the clip's first frame, e.g. an aimed arm whose clip still twists it. half_size (optional): store the sprites at half size (the engine scales them back), for a patron too big for one atlas at full size. lean (optional, 0-1): damps the torso's motion towards the clip's first frame (a borrowed clip that moves more than the painted patron would). set (default [floor, seat, railing]): the shadow catchers built from the pose; list only what the painted patron really sits on / against.",
     "Crop px: box = where the painted patron is; keep = rects always taken from the clean plate; reg = a rect away from the patron where the clean plate must match the plate (registration check); front = occluders in front of the patron, never patched and clipped out of the render ({below_line: [[x0, y0], [x1, y1]]} or {polygon: [[x, y], ...]}).",
     "props: painted furniture as catchers (render_bar._props): they hold the patron out where the prop is and catch its shadow. px = plate x of the centre, depth/z0/z1 in m, and radius (a cylinder) or size [w, d] (a box), fitted from the prop's floor contact and outline."
   ],
@@ -124,6 +124,7 @@
     "head": [175, 454, 2.3],
     "yaw": 150.0,
     "lean": 0.3,
+    "hold": ["RightShoulder", "RightArm", "RightForeArm", "RightHand"],
     "scale": [1.25, 1.25, 1.0],
     "half_size": true,
     "light": {"key": 0.7, "fill": 1.6, "rim": 1.0},

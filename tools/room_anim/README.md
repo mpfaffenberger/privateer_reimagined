@@ -310,7 +310,14 @@ uv run --with scipy tools/room_anim/mining/bake_bar.py --patron patron_orange --
   scale z on a crown-anchored patron: a taller body drops the hips into
   the stool. No floor catcher (`set: []`): his shadow on the dark floor
   rendered as a black slab over the painted floor. He's in the darkest
-  corner: key x0.7, fill x1.6 to keep detail in the legs. At full size his 258 frames
+  corner: key x0.7, fill x1.6 to keep detail in the legs.
+  `aim` only points a bone; its **twist** still comes from the clip. His
+  idle flipped his hand into a claw and twisted his forearm, and the bent
+  wrist turned that twist into a 75 px sweep of the fingers onto the
+  bottle, even though the elbow moved only 14 px. `hold` freezes the
+  whole right-arm chain (`RightShoulder`, `RightArm`, `RightForeArm`,
+  `RightHand`) at frame 0: the hand rests beside the mug with 25 px of
+  drift from the hips. At full size his 258 frames
   (~350x580 px) need a 4096x25799 atlas, past the 8192 limit, so he's
   `half_size`: sprites stored at half size and scaled back by the engine.
   That's fine in the softest, darkest part of the painting; everyone else

@@ -181,8 +181,8 @@ def _fcurves(arm):
     return anim_utils.action_get_channelbag_for_slot(ad.action, ad.action_slot).fcurves
 
 
-def _calm(arm, k):
-    """Scale the torso's rotation keys towards the clip's first frame by `k`
+def _calm(arm, k, bones=TORSO):
+    """Scale `bones`' rotation keys towards the clip's first frame by `k`
     (0 = frozen upright, 1 = as animated). The clip starts and ends upright,
     so the loop stays seamless; only the depth of a lean shrinks. Blender
     normalises pose quaternions, so a per-component lerp is safe."""
@@ -190,7 +190,7 @@ def _calm(arm, k):
     for fc in _fcurves(arm):
         if not fc.data_path.endswith("rotation_quaternion"):
             continue
-        if fc.data_path.split('"')[1].split(":")[-1] not in TORSO:
+        if fc.data_path.split('"')[1].split(":")[-1] not in bones:
             continue
         ref = fc.evaluate(f0)
         for kp in fc.keyframe_points:
@@ -263,6 +263,15 @@ def _patron(sc, p):
         _grade(body, p.get("tint", (1.0, 1.0, 1.0)), p.get("saturation", 1.0))
     if "lean" in p:
         _calm(arm, p["lean"])
+    # `hold`: bone-name prefixes frozen at the clip's first frame. `aim`
+    # only points a bone; its twist still comes from the clip. The
+    # foreground man's idle flips his hand up (a claw) and twists his
+    # forearm, and the bent wrist turns that twist into a 75 px sweep of the
+    # fingers onto the bottle. Holding the whole right-arm chain keeps his
+    # hand resting on the table (25 px of drift, from the hips).
+    if "hold" in p:
+        names = [b.name.split(":")[-1] for b in arm.pose.bones]
+        _calm(arm, 0.0, {n for n in names if n.startswith(tuple(p["hold"]))})
     if "head_up" in p:
         _nod(arm, p["head_up"])
     # `scale`: painters cheat, and some painted patrons are burlier than any
