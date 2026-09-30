@@ -413,6 +413,35 @@ void shipped_oxford_landing() {
           "oxford landing keeps its Launch + Concourse hotspots");
 }
 
+// #589: the military landing bay is closed (no sky); every per-hull composite
+// gets its own sheet chasing the red landing lamps, found in its own paint.
+void shipped_military_landing() {
+    const std::string dir = "assets/concourse/military/";
+    room_anim::RoomAnimDef def;
+    room_anim::parse_room_anim(
+        json::parse_file(dir + "concourse.json")["rooms"]["landing"]["composite"], def);
+    check(!def.has_sky && def.layers.size() == 1 &&
+              def.layers[0].find("{plate}") != std::string::npos,
+          "military landing has one per-composite lamp layer");
+    int plates = 0;
+    for (const auto& entry : std::filesystem::directory_iterator(dir + "landing_ships")) {
+        if (entry.path().extension() != ".png") continue;
+        ++plates;
+        const room_anim::RoomAnimDef p = room_anim::for_plate(def, entry.path().stem().string());
+        check_layers(dir, p.layers);
+        room_anim::SpriteSheet s;
+        std::string err;
+        check(room_anim::parse_sprite_sheet(json::parse_file(dir + p.layers[0]), s, err) &&
+                  !s.under && !s.anchored,
+              "  lamps are encoded against their own composite (over, unanchored)");
+    }
+    check(plates >= 17, "every military composite was checked");
+    const json::Value links = json::parse_file(dir + "links.json")["landing"];
+    check(links.as_array().size() == 2 &&
+              link_rect_is(links, "Launch", 0.55957f, 0.34283f, 0.3535f, 0.34045f),
+          "military landing keeps its Launch + Concourse hotspots");
+}
+
 // #558: the mining concourse's ore train.
 void shipped_mining() {
     const std::string dir = "assets/concourse/mining/";
@@ -777,6 +806,7 @@ int main() {
     shipped_pirate_landing();
     shipped_newdetroit_landing();
     shipped_oxford_landing();
+    shipped_military_landing();
     shipped_mining_bar();
     shipped_pleasure();
     shipped_military();
