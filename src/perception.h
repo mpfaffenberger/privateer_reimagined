@@ -87,8 +87,7 @@ namespace perception {
 // vector walk.
 void tick(ShipRegistry& ships, const PlayerReputation& player_rep);
 
-// The ONE radar/sensor radius for any ship, player included: its fitted
-// scanner's range (#143, player only), else its hull's
+// The ONE radar/sensor radius for any ship, player included: its hull's
 // ShipClass::radar_range, or k_default_radar_range_m when class-less --
 // then scaled down by radar component damage (#141). Perception, target
 // locking, the T-cycle, and the radar MFD all read this, so what you can

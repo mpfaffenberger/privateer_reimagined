@@ -172,10 +172,6 @@ struct PlayerState {
     // purchasable upgrade, so new games / fresh hulls start empty.
     std::string              armor_name;
     bool                     cargo_expansion = false;
-    // Fitted scanner by scanner.h catalog id ("hunter_aw_6i"); empty = none
-    // fitted (hull-default range, monochrome, no lock, no ITTS). New games
-    // start with k_starting_scanner. Survives hull swaps (#143).
-    std::string              scanner_id;
     // Turret HARDWARE owned on this hull (#145, save v10): TurretSlot ids
     // ("rear", "top", ...) from the ShipClass. A turret mount in gun_mounts
     // only takes (and fires) a gun once its slot is listed here. New games
@@ -332,11 +328,6 @@ PlayerState new_game(const std::string& start_system);
 // gameplay-tuning knob, not a fact — the 1995 game handed you a small
 // bankroll barely covering one cargo run, which is the feel we want.
 constexpr int64_t k_new_game_credits = 2000;
-
-// Scanner a new pilot starts with (#143): the canonical bottom rung,
-// monochrome with no Target Lock or ITTS. Also what a pre-scanner save
-// (no scanner_id key) loads with, so old pilots aren't left radar-blind.
-inline constexpr const char* k_starting_scanner = "iris_mk1";
 
 // ---- guild join fees (#16) ----------------------------------------------
 // One-time membership dues, deducted via spend_credits() the first time the

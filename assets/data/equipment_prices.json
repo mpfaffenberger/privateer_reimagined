@@ -69,28 +69,6 @@
 
   "cargo_expansion_price": 5000,
 
-  // Scanner / radar product line (#143, scanner.cpp). Vendors, tiers,
-  // prices and features are canonical (gamefaq 4.6.6): Iris is monochrome,
-  // Hunter AW is friend-or-foe colour, B&S is fully colour-coded; tier 2
-  // adds Target Lock (guided missiles only guide with it) and tier 3 adds
-  // ITTS (the lead-prediction pip + aim gimbal). range_m is [I] invented
-  // and tunable — Iris Mk I matches the 15 km hull default NPCs keep.
-  // Selling (or buying over) a scanner refunds its full price, like guns.
-  // identify_pct_per_s is gamefaq 4.6.6's "% chance per second of
-  // identifying target" (#516): the target reads UNKNOWN until it rolls.
-  // A new game starts with player.h's k_starting_scanner (Iris Mk I).
-  "scanners": [
-    { "id": "iris_mk1",           "name": "Iris Mk I",          "price":  10000, "range_m": 15000, "color_iff": false, "target_lock": false, "itts": false, "identify_pct_per_s":  5 },
-    { "id": "iris_mk2",           "name": "Iris Mk II",         "price":  30000, "range_m": 17500, "color_iff": false, "target_lock": true,  "itts": false, "identify_pct_per_s": 15 },
-    { "id": "iris_mk3",           "name": "Iris Mk III",        "price":  60000, "range_m": 20000, "color_iff": false, "target_lock": true,  "itts": true,  "identify_pct_per_s": 25 },
-    { "id": "hunter_aw_6",        "name": "Hunter AW 6",        "price":  30000, "range_m": 17500, "color_iff": true,  "target_lock": false, "itts": false, "identify_pct_per_s":  5 },
-    { "id": "hunter_aw_6i",       "name": "Hunter AW 6i",       "price":  50000, "range_m": 20000, "color_iff": true,  "target_lock": true,  "itts": false, "identify_pct_per_s": 15 },
-    { "id": "hunter_aw_infinity", "name": "Hunter AW Infinity", "price":  80000, "range_m": 22500, "color_iff": true,  "target_lock": true,  "itts": true,  "identify_pct_per_s": 25 },
-    { "id": "bs_tripwire",        "name": "B&S Tripwire",       "price":  40000, "range_m": 20000, "color_iff": true,  "target_lock": false, "itts": false, "identify_pct_per_s": 15 },
-    { "id": "bs_eye",             "name": "B&S E.Y.E.",         "price":  70000, "range_m": 25000, "color_iff": true,  "target_lock": true,  "itts": false, "identify_pct_per_s": 25 },
-    { "id": "bs_omni",            "name": "B&S Omni",           "price": 100000, "range_m": 30000, "color_iff": true,  "target_lock": true,  "itts": true,  "identify_pct_per_s": 35 }
-  ],
-
   // Turret hardware (#145): price per turret POSITION a hull supports
   // (ship.json turret_slot: Centurion/Orion rear, Galaxy top/bottom).
   // Buys the empty turret; each gun fitted into it is bought separately at

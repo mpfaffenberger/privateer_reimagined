@@ -65,7 +65,6 @@
 #include "commodity.h"
 #include "economy.h"
 #include "outfitting.h"
-#include "scanner.h"
 #include "inventory.h"
 #include "missions.h"
 #include "mission_tracker.h"
@@ -545,8 +544,6 @@ struct AppState {
     // any future ship-array reshuffles. Resolved to a pointer each frame
     // when we need to display it.
     uint32_t player_target_id = 0;
-    // Once-per-second identify-roll clock for player_target_id (#516).
-    scanner::IdentifyTimer target_identify;
 
     // Navmap overlay. N opens it when closed; while open, N cycles
     // through nav points in place (no close). Esc or the X button
@@ -952,14 +949,6 @@ void init_cb() {
     }
 }
 
-// Guided missiles only acquire a lock through a Target Lock scanner (#143,
-// gamefaq 4.6.6); without one HS/IR launch unguided, like a dumbfire.
-// One predicate for the lock state machine, the launch, and the MFD.
-static bool player_scanner_can_lock() {
-    const Ship* pl = g.ships.player();
-    return pl && scanner::target_lock(pl->fitted_scanner);
-}
-
 // ---- runtime-rerunnable scene build (np-6al.1) ------------------------------
 //
 // Builds the live scene from g.system (already parsed by the caller). Split
@@ -1010,12 +999,6 @@ static void apply_player_loadout(Ship& pl, const PlayerState& p, bool heal = tru
     if (!p.armor_name.empty() && !pl.fitted_armor) {
         std::printf("[outfit] WARN: armor '%s' not found; using hull default\n",
                     p.armor_name.c_str());
-    }
-    // Fitted scanner (#143): radar range, colour IFF, missile lock, ITTS.
-    pl.fitted_scanner = scanner::find(p.scanner_id);
-    if (!p.scanner_id.empty() && !pl.fitted_scanner) {
-        std::printf("[outfit] WARN: scanner '%s' not found; flying without one\n",
-                    p.scanner_id.c_str());
     }
     // Energy regen bookkeeping (np-3dp.27, np-3dp.28). Engine upgrade
     // ADDS GJ/s to the recharge rate (more power); shield gen DRAINS GJ/s
@@ -1159,8 +1142,6 @@ void build_system_scene(bool first_time, bool show_progress) {
     outfitting::load("assets/data/ship_prices.json",
                      "assets/data/equipment_prices.json");
     outfitting::register_screens();
-    // Scanner catalog (#143) lives in the same equipment price file.
-    scanner::load("assets/data/equipment_prices.json");
     // Loot pricing + the Cargo Hold sell screen (Phase 4f, #95/96/97):
     // value table for salvage/loot, and the CargoHold screen body registered
     // via the same np-9cu.4 hook seam. Missing prices file is non-fatal.
@@ -5020,8 +5001,7 @@ void frame_cb() {
     // within a small cone — same lead math as the on-screen ITTS
     // reticle, so the player sees "green crosshair → tracers go
     // there". Outside the cone, falls back to camera-forward and the
-    // player has to rotate the ship to engage. The gimbal IS the ITTS, so
-    // it needs an ITTS-capable scanner, same as the reticle (#143).
+    // player has to rotate the ship to engage.
     if (Ship* player_p = g.ships.player(); player_p) {
         Ship& player = *player_p;
 
@@ -5044,17 +5024,6 @@ void frame_cb() {
             }
         }
 
-        // Scanner identification (#516): the held target stays UNKNOWN
-        // until the fitted scanner wins a once-per-second roll on it.
-        if (Ship* t = g.ships.find_by_id(g.player_target_id);
-            t && !t->identified_by_player) {
-            if (scanner::tick_identify(g.target_identify, t->id, player.fitted_scanner, dt,
-                                       [] { return (float)(std::rand() % 10000) / 10000.0f; })) {
-                t->identified_by_player = true;
-                std::printf("[target] identified id=%u\n", t->id);
-            }
-        }
-
         player.controller.fire_guns = player_trigger_held(g);
         if (g.show_title)    player.controller.fire_guns = false;   // frozen on briefing
         // Navmap overlay owns the click — left-mouse would otherwise fire guns
@@ -5062,7 +5031,7 @@ void frame_cb() {
         if (g.show_navmap)   player.controller.fire_guns = false;
 
         HMM_Vec3 aim = g.camera.forward();
-        if (g.player_target_id != 0 && scanner::itts(player.fitted_scanner)) {
+        if (g.player_target_id != 0) {
             const Ship* target = g.ships.find_by_id(g.player_target_id);
             if (target && !target->alive) target = nullptr;
             if (target) {
@@ -5135,9 +5104,8 @@ void frame_cb() {
                         ? g.ships.find_by_id(g.player_target_id) : nullptr;
         const bool have_target = tgt && tgt->alive;
 
-        if (!sel.needs_lock || !have_target || !player_scanner_can_lock()) {
-            // Dumbfire selected, nothing to lock onto, or a scanner with no
-            // Target Lock (#143): drop any lock.
+        if (!sel.needs_lock || !have_target) {
+            // Dumbfire selected, or nothing to lock onto: drop any lock.
             lk = AppState::MissileLock{};
         } else {
             // Target changed since last frame -> restart the acquire.
@@ -5182,10 +5150,7 @@ void frame_cb() {
             const bool has_hardware =
                 launcher_modes::has_compatible_hardware(g.player, ti);
             const bool has_ammo = player::missile_count(g.player, ti) > 0;
-            // A guided type without a Target Lock scanner still launches,
-            // it just flies straight (#143: "missiles won't guide").
-            const bool guided   = sel.needs_lock && player_scanner_can_lock();
-            const bool lock_ok  = !guided || g.missile_lock.locked;
+            const bool lock_ok  = !sel.needs_lock || g.missile_lock.locked;
             if (!has_hardware) {
                 sfx::out_of_ammo();
                 std::printf("[missile] FIRE refused: no compatible %s launcher\n",
@@ -5201,7 +5166,7 @@ void frame_cb() {
                 std::printf("[missile] FIRE refused: %s needs a lock (none)\n", sel.short_name);
             } else {
                 player::consume_missile(g.player, ti);
-                const uint32_t target_id = guided ? g.missile_lock.locked_id : 0;
+                const uint32_t target_id = sel.needs_lock ? g.missile_lock.locked_id : 0;
                 const HMM_Vec3 muzzle = HMM_AddV3(pl->position,
                                           HMM_MulV3F(g.camera.forward(), 30.0f));
                 Missile m = missile::spawn((MissileType)ti, muzzle,
@@ -6645,15 +6610,12 @@ void frame_cb() {
             // (DF) and TORPEDO apart at a glance.
             if ((MissileType)g.selected_missile == MissileType::TORPEDO)
                 w.no_lock_label = "TORPEDO";
-            // FF seeks by transponder, not reticle lock, so it needs no
-            // Target Lock scanner either (#144 x #143).
+            // FF seeks by transponder, not reticle lock (#144).
             else if (sel.auto_acquire)
                 w.no_lock_label = "IFF SEEK";
-            // No Target Lock scanner (#143): guided types fire unguided.
-            w.needs_lock    = sel.needs_lock && player_scanner_can_lock();
-            if (sel.needs_lock && !w.needs_lock) w.no_lock_label = "UNGUIDED";
+            w.needs_lock    = sel.needs_lock;
             w.lock_state    = g.missile_lock.locked ? 2
-                            : (g.player_target_id != 0 && w.needs_lock ? 1 : 0);
+                            : (g.player_target_id != 0 && sel.needs_lock ? 1 : 0);
             w.lock_progress = sel.lock_buildup ? (g.missile_lock.progress_s / 1.5f) : 1.0f;
             cockpit_hud::build_weapons_status(w);
             // Inbound-missile banner (#523): shown even with an empty rack.
@@ -6927,11 +6889,9 @@ void frame_cb() {
 
             // Stance from the player's perception entry for this ship.
             // Drives indicator color via the shared HUD palette (red=hostile,
-            // yellow=neutral, green=allied) — only on a colour-IFF scanner;
-            // monochrome scanners get one tint (#143). Default hostile if not
-            // in perception (e.g. the moment after acquisition before the
-            // next perception tick).
-            const bool iff = scanner::color_iff(g.ships.player()->fitted_scanner);
+            // yellow=neutral, green=allied). Default hostile if not in
+            // perception (e.g. the moment after acquisition before the next
+            // perception tick).
             Stance stance = Stance::Hostile;
             float distance_m = HMM_LenV3(HMM_SubV3(target->position, g.ships.player()->position));
             const ShipPerception& pp = g.ships.player()->perception;
@@ -6942,11 +6902,9 @@ void frame_cb() {
                     break;
                 }
             }
-            const ImU32 color = cockpit_hud::contact_color(stance, iff);
-            // Bracket / edge-arrow label: UNKNOWN until the scanner IDs it (#516).
-            const bool  known = target->identified_by_player;
-            const char* tname = !known ? "UNKNOWN"
-                              : target->klass ? target->klass->name.c_str()
+            const ImU32 color = cockpit_hud::contact_color(stance);
+            // Bracket / edge-arrow label: the hull class name.
+            const char* tname = target->klass ? target->klass->name.c_str()
                               : target->is_player ? "player" : "?";
 
             // Target brackets, labels, edge arrows and lead pips belong to
@@ -6978,10 +6936,10 @@ void frame_cb() {
                     dl->AddCircle(ImVec2(sx, sy), r + 9.0f, ace_purple, 28, 2.5f);
                 }
 
-                // Label below the bracket. Identified aces read "<Faction>
-                // Ace"; every other target reads tname.
+                // Label below the bracket. Aces read "<Faction> Ace"; every
+                // other target reads tname.
                 char buf[96];
-                if (target->is_ace && known) {
+                if (target->is_ace) {
                     char fac[24];
                     std::snprintf(fac, sizeof(fac), "%s", faction::to_name(target->faction));
                     if (fac[0] >= 'a' && fac[0] <= 'z') fac[0] -= 32;   // capitalise
@@ -7046,9 +7004,8 @@ void frame_cb() {
             // Drawn ONLY when on-screen (in the camera's view frustum)
             // — an off-screen ITTS would be confusing because it isn't
             // the target itself, just where to aim. Off-screen targets
-            // already have the directional arrow above. And only with an
-            // ITTS-capable scanner (#143) — lesser scanners show no lead.
-            if (!offscreen && scanner::itts(g.ships.player()->fitted_scanner)) {
+            // already have the directional arrow above.
+            if (!offscreen) {
                 const Ship& player = *g.ships.player();
                 HMM_Vec3 t_pos = target->sprite ? target->sprite->position
                                                  : target->position;

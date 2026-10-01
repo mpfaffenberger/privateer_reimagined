@@ -170,8 +170,6 @@ void write_loadout(JsonWriter& w, const PlayerState& p) {
     w.key("engine_level");    w.value_int(p.engine_level);
     w.key("armor_name");      w.value_string(p.armor_name);
     w.key("cargo_expansion"); w.value_bool(p.cargo_expansion);
-    // fitted scanner (#143, v9). "" = none fitted (sold).
-    w.key("scanner_id");      w.value_string(p.scanner_id);
     // turret hardware (#145, v10): owned TurretSlot ids.
     w.member_string_array("turrets", p.turrets);
     w.key("has_jump_drive");   w.value_bool(p.has_jump_drive);

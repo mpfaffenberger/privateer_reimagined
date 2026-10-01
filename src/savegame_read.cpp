@@ -114,10 +114,8 @@ void read_loadout(const json::Value& pl, PlayerState& out) {
     out.engine_level    = pl.contains("engine_level")    ? (int)pl["engine_level"].number_or(0)  : 0;
     out.armor_name      = pl.contains("armor_name")      ? pl["armor_name"].string_or("")       : "";
     out.cargo_expansion = pl.contains("cargo_expansion") ? pl["cargo_expansion"].bool_or(false)  : false;
-    // scanner (#143, v9). A pre-v9 save never had one to lose, so it gets
-    // the new-game scanner; a present "" means the pilot sold it.
-    out.scanner_id      = pl.contains("scanner_id")      ? pl["scanner_id"].string_or("")
-                                                         : player::k_starting_scanner;
+    // v9-v11 saves also carry "scanner_id" (#143); scanner tiers are gone
+    // (#639), so that key is deliberately ignored.
     // turret hardware (#145, v10). Pre-v10 saves have no key: grandfather
     // every turret slot that already carries a fitted gun.
     if (!read_string_list(pl, "turrets", out.turrets)) grandfather_turrets(out);

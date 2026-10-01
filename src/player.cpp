@@ -40,9 +40,6 @@ PlayerState new_game(const std::string& start_system) {
     // Start fitted with Shield Generator 1 (10cm / facing). Privateer
     // never drops you WITHOUT a shield gen — np-3dp.28.
     p.shield_level = 1;
-    // Bottom-rung Iris Mk I (#143): no colour IFF, no Target Lock, no ITTS
-    // until the pilot pays for a better scanner.
-    p.scanner_id = k_starting_scanner;
     // Starter missile loadout (np-zte.2): 4 heat-seekers, nothing else.
     // Afterburner shares the ship's energy bank (no separate fuel tank).
     for (int i = 0; i < k_missile_rack_types; ++i) p.missiles[i] = k_new_game_missiles[i];

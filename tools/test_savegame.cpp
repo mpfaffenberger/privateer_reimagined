@@ -34,6 +34,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <iterator>
 #include <string>
 
 namespace {
@@ -81,7 +82,6 @@ PlayerState make_mutated() {
     p.shield_level    = 3;
     p.engine_level    = 2;
     p.cargo_expansion = true;
-    p.scanner_id      = "hunter_aw_6i";           // #143: not the new-game default
     p.turrets         = { "rear" };               // #145 (v10) turret hardware
     // #16: guild memberships should survive the round-trip.
     p.merc_guild_member     = true;
@@ -297,7 +297,6 @@ int main() {
     CHECK_EQ("shield_level",    dst.shield_level,    src.shield_level);
     CHECK_EQ("engine_level",    dst.engine_level,    src.engine_level);
     CHECK_EQ("cargo_expansion", dst.cargo_expansion, src.cargo_expansion);
-    CHECK_EQ("scanner_id",      dst.scanner_id,      src.scanner_id);
     CHECK_EQ("turrets",         dst.turrets,         src.turrets);
     CHECK_EQ("merc_guild_member",     dst.merc_guild_member,     src.merc_guild_member);
     CHECK_EQ("merchant_guild_member", dst.merchant_guild_member, src.merchant_guild_member);
@@ -546,24 +545,26 @@ int main() {
                     ok ? "OK  " : "FAIL");
     }
 
-    // 3g'. (#143) a v8 save has no scanner_id and loads with the new-game
-    //      scanner; a v9 save that SOLD its scanner ("") stays scannerless.
+    // 3g'. (#639) scanner tiers (#143) are gone. A v9-v11 save that still
+    //      carries scanner_id loads with the key ignored, and saving no
+    //      longer writes it.
     {
         const std::string path = savegame::slot_path(kOldNoMissSlot);
         { std::ofstream f(path, std::ios::trunc);
-          f << "{ \"version\": 8, \"label\": \"v8-pre-scanner\",\n"
-               "  \"player\": { \"credits\": \"999\", \"current_system\": \"troy\" } }"; }
-        PlayerState p;
-        bool ok = savegame::load(p, kOldNoMissSlot) &&
-                  p.scanner_id == player::k_starting_scanner;
-        { std::ofstream f(path, std::ios::trunc);
-          f << "{ \"version\": 9, \"label\": \"v9-sold-scanner\",\n"
+          f << "{ \"version\": 11, \"label\": \"v11-with-scanner\",\n"
                "  \"player\": { \"credits\": \"999\", \"current_system\": \"troy\",\n"
-               "    \"scanner_id\": \"\" } }"; }
-        PlayerState q;
-        ok = ok && savegame::load(q, kOldNoMissSlot) && q.scanner_id.empty();
+               "    \"cargo_expansion\": true, \"scanner_id\": \"hunter_aw_6i\",\n"
+               "    \"has_jump_drive\": true } }"; }
+        PlayerState p;
+        bool ok = savegame::load(p, kOldNoMissSlot) && p.credits == 999 &&
+                  p.cargo_expansion && p.has_jump_drive;
+        ok = ok && savegame::save(p, kOldNoMissSlot);
+        std::ifstream in(path);
+        const std::string written((std::istreambuf_iterator<char>(in)),
+                                  std::istreambuf_iterator<char>());
+        ok = ok && !written.empty() && written.find("scanner_id") == std::string::npos;
         if (!ok) ++g_fail;
-        std::printf("  [%s] v8 save -> starting scanner; sold scanner stays sold\n",
+        std::printf("  [%s] old save with scanner_id loads; re-save drops the key\n",
                     ok ? "OK  " : "FAIL");
     }
 
