@@ -21,7 +21,6 @@ import sys
 from pathlib import Path
 
 import bpy
-import numpy as np
 
 HERE = Path(__file__).resolve().parent
 for path in (HERE, HERE.parent):              # this base's modules, then shared ones
@@ -32,6 +31,7 @@ import actors  # noqa: E402
 import render  # noqa: E402
 import scene as hall  # noqa: E402
 from base import paths  # noqa: E402
+from stage import overlay_on_plate  # noqa: E402
 
 REFINERY = paths("refinery")
 TRAIN_SPEED = 3.0          # m/s, a loaded ore tug's crawl (as on the mining base)
@@ -109,16 +109,7 @@ def check(out_png):
     tmp = REFINERY.build / "check_guides.png"
     sc.render.filepath = str(tmp)
     bpy.ops.render.render(write_still=True)
-
-    plate, guides = (bpy.data.images.load(str(p)) for p in (REFINERY.plate, tmp))
-    w, h = plate.size
-    p = np.array(plate.pixels[:], dtype=np.float32).reshape(-1, 4)
-    g = np.array(guides.pixels[:], dtype=np.float32).reshape(-1, 4)
-    p[:, :3] = g[:, :3] * g[:, 3:] + p[:, :3] * (1.0 - g[:, 3:])
-    out = bpy.data.images.new("check", w, h, alpha=True)
-    out.pixels = p.ravel().tolist()
-    out.filepath_raw, out.file_format = str(out_png), 'PNG'
-    out.save()
+    overlay_on_plate(REFINERY.plate, tmp, out_png)
 
 
 def main(argv):
