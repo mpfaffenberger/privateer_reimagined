@@ -148,8 +148,8 @@ void Camera::integrate(float dt) {
     v_fwd += step_fwd;
     v_fwd  = std::clamp(v_fwd, -max_speed, max_speed);
 
-    // Arcade strafe damping: 4/s decay means velocity halves every ~175 ms
-    // — snappy stop feel. Cruise boost makes strafe feel floatier at top speed.
+    // Arcade strafe damping: 8/s decay means velocity halves every ~87 ms
+    // — snappy stop feel and a short post-turn slide (#643). Cruise boost makes strafe feel floatier at top speed.
     const float d_div  = 1.0f + (cruise_damp_div - 1.0f) * cruise_level;
     const float damp   = linear_damping / d_div;
     if (damp > 0.0f) {
