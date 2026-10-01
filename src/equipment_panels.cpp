@@ -7,7 +7,6 @@
 #include "outfitting.h"
 #include "player.h"
 #include "repair.h"
-#include "scanner.h"
 #include "ship.h"
 #include "ship_class.h"
 #include "sfx.h"
@@ -301,45 +300,9 @@ bool discrete_owned(const PlayerState& p, const char* id) {
     return false;
 }
 
-// Scanner bay (#143): one scanner fitted at a time. Fitting over the
-// current unit trades it in at full price, so each row shows the NET charge.
-void draw_scanners(PlayerState& p) {
-    const ScannerType* fitted = scanner::find(p.scanner_id);
-    ImGui::Spacing();
-    heading("SCANNER", fitted ? fitted->name.c_str() : "No scanner fitted");
-    if (fitted) {
-        char sell[80]; std::snprintf(sell, sizeof sell, "SELL %s   +%lld CR",
-                                     fitted->name.c_str(), (long long)fitted->price);
-        if (ImGui::Button(sell, ImVec2(-1.0f, 36.0f)) && scanner::sell(p)) sfx::ui_click();
-    }
-    const int64_t trade_in = fitted ? fitted->price : 0;
-    for (const ScannerType& s : scanner::catalog()) {
-        ImGui::PushID(s.id.c_str());
-        ImGui::TextUnformatted(s.name.c_str());
-        ImGui::TextColored(kDim, "%.1f km  %s%s%s", s.range_m * 0.001f,
-                           s.color_iff ? "COLOUR IFF" : "MONOCHROME",
-                           s.target_lock ? "  LOCK" : "", s.itts ? "  ITTS" : "");
-        ImGui::SameLine(ImGui::GetWindowWidth() - 145.0f);
-        if (&s == fitted) {
-            ImGui::TextColored(kGood, "FITTED");
-        } else {
-            const int64_t net = s.price - trade_in;
-            char buy[48];
-            if (net >= 0) std::snprintf(buy, sizeof buy, "FIT  %lld", (long long)net);
-            else          std::snprintf(buy, sizeof buy, "FIT  +%lld", (long long)-net);
-            ImGui::BeginDisabled(net > 0 && !player::can_afford(p, net));
-            if (ImGui::Button(buy, ImVec2(125.0f, 34.0f)) && scanner::buy(p, s.id))
-                sfx::ui_click();
-            ImGui::EndDisabled();
-        }
-        ImGui::Separator();
-        ImGui::PopID();
-    }
-}
-
 void draw_systems(const PanelContext& ctx) {
     PlayerState& p = ctx.player;
-    heading("SHIP SYSTEMS", "Avionics, navigation, ECM, damage control, and scanners");
+    heading("SHIP SYSTEMS", "Avionics, navigation, ECM, and damage control");
     struct Item { const char* id; const char* label; const char* detail; };
     constexpr std::array<Item, 6> items{{
         {"jump_drive", "Jump Drive", "Enables inter-system jump points"},
@@ -368,7 +331,6 @@ void draw_systems(const PanelContext& ctx) {
         ImGui::Separator();
         ImGui::PopID();
     }
-    draw_scanners(p);
 }
 
 void draw_service(const PanelContext& ctx) {

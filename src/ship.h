@@ -47,7 +47,6 @@
 #include <vector>
 
 struct ArmorType;
-struct ScannerType;
 struct ShipClass;
 struct ShipSpriteObject;
 
@@ -111,12 +110,6 @@ struct Ship {
     // Authored identity for named NPCs ("Old Mack", "Reesa Kort"). Empty
     // for procedural traffic, whose UI label falls back to the hull class.
     std::string       display_name;
-
-    // Player-scanner identification (#516, scanner.h). Until the player's
-    // fitted scanner wins an identify roll on this contact, the target panel
-    // and bracket label read UNKNOWN (no class/faction). Sticky until
-    // death/despawn. Transient — not serialized.
-    bool              identified_by_player = false;
 
     // Player grievance (np): repeated player hits on an otherwise non-hostile
     // ship provoke it. Once player_hit_count reaches k_provoke_hits the ship
@@ -226,12 +219,6 @@ struct Ship {
     // (Plasteel/Tungsten/Isometal) and it lands here; NPCs always stay null.
     // Per-instance so it never mutates the shared ShipClass.
     const ArmorType* fitted_armor = nullptr;
-
-    // Per-instance fitted scanner (#143, scanner.h). Only the player fits
-    // one (apply_player_loadout, from PlayerState::scanner_id); null means
-    // the hull's class radar_range and no colour IFF / lock / ITTS, which
-    // is how every NPC flies.
-    const ScannerType* fitted_scanner = nullptr;
 
     // Engine recharge — additive ABSOLUTE GJ/s from the engine upgrade
     // ladder (np-3dp.27 / gamefaq 4.6.2). Refreshed on the player in

@@ -148,14 +148,11 @@ NPC-buffed repair hull, one fixed mission-board seed) now match the game.
    needs no lock and seeks the nearest ship the shooter's IFF reads as
    hostile, re-acquiring when its mark dies. Sold at the dealer, saved
    under the `ff` key, and carried by pirates.
-3. **Scanner/radar tiers** ([#143]) **(done)**. All nine gamefaq scanners
-   (Iris, Hunter AW, and B&S) are in the `scanners` list in
-   `equipment_prices.json` and sold on the Equipment SYSTEMS page. The fitted
-   scanner sets the player's `perception::radar_range_m()` ([#492]), while NPCs
-   keep their hull's default range. Stance colours need a colour-IFF scanner,
-   guided missiles need Target Lock or they fire unguided, and the ITTS pip and
-   aim gimbal need ITTS. Still missing: the per-scanner chance to identify a
-   target ([#516]).
+3. **Scanner/radar tiers** ([#143]) **(removed)**. Built, then taken out
+   again with the identify chance ([#516]) by [#639]: starting on the
+   bottom rung cost every pilot the ITTS lead pip. ITTS, missile lock and
+   colour IFF are standard on every ship, radar range is the hull's, and
+   old saves ignore their `scanner_id` key.
 4. **Turrets** **(done)**. Firing is done. Turret hardware is bought per hull
    position (`turret_slot` in ship.json: Centurion/Orion rear, Galaxy
    top/bottom) before a gun can be fitted into it ([#145]), and player
@@ -327,3 +324,4 @@ judgment call ([#323] was a duplicate of [#322]).
 [#493]: https://github.com/mpfaffenberger/privateer_reimagined/issues/493
 [#497]: https://github.com/mpfaffenberger/privateer_reimagined/issues/497
 [#516]: https://github.com/mpfaffenberger/privateer_reimagined/issues/516
+[#639]: https://github.com/mpfaffenberger/privateer_reimagined/issues/639

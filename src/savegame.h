@@ -72,8 +72,8 @@ namespace savegame {
 // loading (and playing) exactly as before.
 // v8 (Gemini Lives #171) added the persistent `day` counter. Older saves
 // default to day zero (stardate 2669.135).
-// v9 (#143) added the fitted `scanner_id`. Older saves load with
-// player::k_starting_scanner (a v8 pilot never had one to sell).
+// v9 (#143) added the fitted `scanner_id`. Scanner tiers were removed
+// again (#639): the key is no longer written, and loading ignores it.
 // v10 (#145) added `turrets`, the owned turret-hardware slot ids. A pre-v10
 // save is grandfathered: every turret slot with a gun already fitted in one
 // of its mounts counts as owned, so an old Centurion keeps its rear turret.
