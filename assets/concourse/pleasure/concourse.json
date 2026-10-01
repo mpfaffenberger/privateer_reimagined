@@ -18,6 +18,8 @@
       },
       "layers": [
         "anim/marquee_left.json",
+        "anim/billboard_screen.json",
+        "anim/billboard_ad.json",
         "anim/marquee_right.json",
         "anim/neon_flicker.json"
       ],

@@ -39,7 +39,7 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `newcon/` | | New Constantinople: concourse (#515) and hangar (#553) |
 | `mining/` | | Mining base concourse: the ore train (#558) |
 | `agricultural/` | | Agricultural: concourse clouds and aircraft (#582), landing pad sky traffic (#583) |
-| `pleasure/` | | Pleasure: concourse skylight stars, marquee chase, neon (#594), landing pad transport (#595) |
+| `pleasure/` | | Pleasure: concourse skylight stars, marquee chase, neon (#594), billboard ad (#599), landing pad transport (#595) |
 | `pirate/` | | Pirate base concourse: lanterns, pirates, a grav pod (#586) |
 | `newdetroit/` | | New Detroit: concourse walkers on the platform and plaza (#590), aircars past the landing pad (#591) |
 | `oxford/` | | Oxford: concourse air-cars and pedestrians in the garden square (#592, #610), landing pad departure at dusk (#593) |
@@ -590,9 +590,56 @@ uv run tools/room_anim/composite_preview.py --base pleasure --seconds 18 \
 |---|---|---|
 | `bake_sky.py` | uv | skylight panes -> sky mask, fill, star tiles |
 | `bake_lights.py` | uv | marquee chase (both canopies) and neon stutter sprites |
+| `billboard.py` | uv | billboard: fit the screen, paint out its ships; warp the ad onto it (`--ad`) |
+| `render_billboard.py` | Blender | the billboard's ad on its flat canvas |
 | `bake_landing.py` | uv | landing pad: sky masks, half-size fills, horizon anchors; layer sheet |
 | `render_landing.py` | Blender | the transport over the sea |
 | `landing_layers.json` | - | landing layer timing |
+
+### Pleasure billboard (#599)
+
+The ship-rental billboard over the right canopy is a two-panel video wall
+(a thin mullion splits it) that showed two painted ships on a starfield. It
+now runs an ad: a Demon banks across the wall from the plate's edge, over the
+mullion and out the left, then a Galaxy cruises back the other way, turning
+to show off its hull, in a 16 s loop.
+
+```sh
+uv run tools/room_anim/pleasure/billboard.py --debug build/room_anim/pleasure/billboard.png
+# (fit the screen first: render_billboard.py reads its canvas from build/)
+blender --background --factory-startup --python tools/room_anim/pleasure/render_billboard.py
+uv run tools/room_anim/pleasure/billboard.py --ad
+uv run tools/room_anim/composite_preview.py --base pleasure --seconds 16 \
+    --out build/room_anim/pleasure/billboard.mp4
+```
+
+- **Screen.** Its right end is off the plate, so two corners are too: the
+  panels are fitted as lines. Inside the bezel the screen is saturated blue,
+  so its pixels are the two biggest blue blobs; lines go through their top,
+  bottom and left edges and both sides of the mullion's gap. Top and bottom
+  meet at one vanishing point, the left edge and mullion at the other, and
+  those two directions being at right angles (principal point at the plate
+  centre) gives the focal length (~710 px) and so the panels' true aspect
+  (~1.6). A homography maps a flat canvas of two such panels onto the plate.
+- **Occlusion is the mask.** The bezel, the mullion and the canopy below are
+  outside the fitted panels, so they stay painted in front of the ad. The
+  marquee_right sprites never reach the screen (no alpha inside it), so the
+  chase didn't need a re-bake; the billboard layers just draw before it.
+- **Painting the ships out** (`billboard_screen`, one always-on sprite, like
+  a patron's patch). The starfield has next to no red and the ships' metal
+  has plenty, even where it mirrors the blue, so red blobs bigger than a star
+  are ship. Each hole is covered with patches of the painted starfield moved
+  from elsewhere on the wall (the shift landing most of the hole on sky,
+  then again for the rest), with their tone swapped for the hole's own:
+  a starless blur of the sky round it, carried smoothly across the hole by a
+  harmonic fill. Stopping the blur at growing radii instead left a visible
+  seam where one radius took over from the next.
+- **The ad** (`billboard_ad`) is straight alpha on the canvas, warped
+  premultiplied at 3x3 samples a plate px after a light blur (the far panel
+  packs ~4 canvas px into one) and clipped by the mask. The ship that isn't
+  on is parked behind the camera; the shutter opens on the frame and the
+  keys in and out of the car park hold, so getting on the air never blurs
+  into a streak.
 
 ### Pleasure landing pad (#595)
 
