@@ -25,7 +25,7 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `sky.py` | uv | star removal, mask solidify, sky fill, `half_fill()` for smooth skies, painted-star stats, star tiles, `--debug` contact sheets |
 | `composite_preview.py` | uv | engine-faithful preview from `concourse.json` (`--base`) |
 | `stage.py` | Blender | render settings, boxes, materials, lights (`spot()`: a parented lamp), straight/polyline paths, the `--check` overlay |
-| `walkers.py` | Blender | pedestrian proxies and their walk (New Con, pirate); rigged walkers (New Detroit) |
+| `walkers.py` | Blender | pedestrian proxies and their walk (New Con, pirate); rigged walkers (New Detroit, Agricultural) |
 | `vehicles.py` | Blender | the tow tug the floor trains hitch to (mining, refinery, military): headlights, beacon sweep, hitch distance (#603) |
 | `patron_room.py` | both | loads a room file: camera, lights, paths, patrons (#577) |
 | `render_patrons.py` | Blender | a room's 3D patrons, camera-matched (`--room`, `--patron`) |
@@ -38,7 +38,7 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `guild/` | | the guild rooms every base shares: Mercenaries' (#578), Merchants' (#579) |
 | `newcon/` | | New Constantinople: concourse (#515) and hangar (#553) |
 | `mining/` | | Mining base concourse: the ore train (#558) |
-| `agricultural/` | | Agricultural: concourse clouds and aircraft (#582), landing pad sky traffic (#583) |
+| `agricultural/` | | Agricultural: concourse clouds and aircraft (#582), atrium walkers (#605), landing pad sky traffic (#583) |
 | `pleasure/` | | Pleasure: concourse skylight stars, marquee chase, neon (#594), billboard ad (#599), landing pad transport (#595), sea shimmer and tower beacons (#606) |
 | `pirate/` | | Pirate base concourse: lanterns, pirates, a grav pod (#586) |
 | `newdetroit/` | | New Detroit: concourse walkers on the platform and plaza (#590), aircars past the landing pad (#591) |
@@ -514,6 +514,65 @@ uv run tools/room_anim/composite_preview.py --base agricultural --seconds 30 \
 | `render_traffic.py` | Blender | dusk light and the two craft |
 | `bake_traffic.py` | uv | haze, clip to the glass, pack |
 | `traffic_layers.json` | - | loop period and phase |
+
+### Agricultural atrium walkers (#605)
+
+Two people cross the atrium under the windows (the original game had three
+walkers here, the legacy `concourse_wk*` overlays): a mechanic comes up the
+bridge from below the frame, round the near side of the kiosk and off along
+its arm; a woman in orange comes out of the glass lobby behind the kiosk and
+down the lower ring's tiled floor, under a cantilevered beam's end and behind
+the balcony's lip.
+
+```sh
+blender --background --factory-startup \
+    --python tools/room_anim/agricultural/render_layers.py -- --check
+blender --background --factory-startup \
+    --python tools/room_anim/agricultural/render_layers.py -- --layer all
+uv run tools/room_anim/bake_layer.py --base agricultural --all
+uv run tools/room_anim/composite_preview.py --base agricultural --seconds 44 \
+    --out build/room_anim/agricultural/walkers.mp4
+```
+
+- **Camera from circles.** Nothing in the atrium is straight but the bridge,
+  so the fit is to circles round the kiosk's axis. The verticals are
+  vertical, so the camera is level with lens shift, looking straight at the
+  axis (the pole, x 1090: the upper ring's crest sits over it), with the
+  horizon on the far ridges (y 175). A least-squares fit of the platform's
+  rim, the kiosk's canopy and the lower ring's kerb as circles round that one
+  axis gives f 1380 px and the axis 1.89 eye heights out (~3 px residual; the
+  canopy is painted ~8 px rounder). Cross-checks: the bridge's and the arm's
+  centrelines back-project as radial lines (-148 and 24 deg), and the tiled
+  floor's outer edge as a circle (r 20.5 m at points 18 deg apart).
+- **Scale from the kiosk.** An eye 14 m above the deck makes the platform
+  5.7 m across, its column 1.6 m, its canopy 2.6 m up and the bridge 1.9 m
+  wide, with the lower ring 5.6 m below. Walkers are then 110 px tall at the
+  foot of the bridge, ~80 on the arm and 75-45 px on the lower ring. The
+  glass lobby comes out a 6 m entrance hall: the painting has no one scale,
+  and the kiosk, where the biggest walker is, wins.
+- **Rigged, not proxies.** At 45-110 px box proxies read as walking crates
+  (#590), so these are the Mechanic and the Rustbound Ranger from
+  `characters/` on `walkers.rigged_gait`: no new characters, no paid clips.
+- **Holdouts.** The lobby walker starts inside, behind the lobby's wall
+  panel, and shows through its glass at 60% (a part-holdout shader on the
+  glass's card) until she steps out. The beam's end and the balcony's lip
+  are on the upper floor, far in front of the lower ring, so each is a plate
+  silhouette on an upright card at the deck's depth there. The bridge walker
+  needs none: he comes in below the frame and leaves past its right edge.
+- **Proxies calibrated to the paint.** The empty decks render within
+  1-1.4x of the painting in linear light on the bridge, the platform, the arm
+  and the tiles (the bridge is painted darker than the platform, so it gets
+  its own albedo). A deck proxy brighter than the paint prints a light
+  fringe round the walker. The lower ring's shadowed corners stay 4-6x
+  bright: the balcony overhead isn't modelled, and she's soon behind it.
+
+| `agricultural/` file | runs in | what |
+|---|---|---|
+| `camera_match.py` | both | the fitted level camera, floor points, positions round the kiosk's axis |
+| `routes.py` | both | the walkers' routes round the axis, their characters and speeds |
+| `scene.py` | Blender | camera, decks, silhouette holdouts (and the lobby's glass), dusk light |
+| `render_layers.py` | Blender | one layer per route; `--check` decks, holdouts and routes over the plate |
+| `layers.json` | - | the walkers' loop period and phase |
 
 ### Agricultural landing pad (#583)
 

@@ -530,6 +530,8 @@ void shipped_mining() {
 // #582: the Agricultural concourse: dusk clouds drifting through the windows,
 // and a freighter and an aircar outside, drawn over the plate (clipped to the
 // glass in the bake) because they fly in front of the painted farmland.
+// #605: two walkers in the atrium below, drawn after the far-off traffic, the
+// lower ring's before the nearer bridge's.
 void shipped_agricultural() {
     const std::string dir = "assets/concourse/agricultural/";
     room_anim::RoomAnimDef def;
@@ -541,14 +543,17 @@ void shipped_agricultural() {
     for (const room_anim::StarLayerDef& s : def.sky.stars)
         check(std::filesystem::exists(dir + s.tile) && s.velocity[1] == 0.0f && s.spin == 0.0f,
               "cloud tile exists and drifts sideways only: " + s.tile);
-    check(def.layers.size() == 2, "agricultural concourse has its two aircraft layers");
+    const std::vector<std::string> order = {"anim/freighter_departure.json",
+                                            "anim/aircar_crossing.json", "anim/walker_lobby.json",
+                                            "anim/walker_bridge.json"};
+    check(def.layers == order, "agricultural concourse has its two aircraft, then its two walkers");
     check_layers(dir, def.layers);
     for (const std::string& layer : def.layers) {
         room_anim::SpriteSheet s;
         std::string err;
         check(room_anim::parse_sprite_sheet(json::parse_file(dir + layer), s, err) && !s.under &&
                   !s.anchored,
-              "  " + layer + " flies over the plate, unanchored");
+              "  " + layer + " is drawn over the plate, unanchored");
     }
     // Acceptance: the hotspots (links.json overrides) are untouched.
     const json::Value links = json::parse_file(dir + "links.json")["concourse"];

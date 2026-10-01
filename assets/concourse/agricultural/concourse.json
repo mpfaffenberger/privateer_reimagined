@@ -99,7 +99,9 @@
       },
       "layers": [
         "anim/freighter_departure.json",
-        "anim/aircar_crossing.json"
+        "anim/aircar_crossing.json",
+        "anim/walker_lobby.json",
+        "anim/walker_bridge.json"
       ],
       "links": [
         {
