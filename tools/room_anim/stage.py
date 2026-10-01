@@ -193,3 +193,12 @@ def light(scene, name, kind, loc, color, energy, size=1.0, rot=(0.0, 0.0, 0.0)):
     obj.location, obj.rotation_euler = loc, rot
     scene.collection.objects.link(obj)
     return obj
+
+
+def spot(name, parent, loc, rot, rgb, energy, angle_deg, blend=0.4):
+    """A small spot lamp parented to `parent` (a headlight, a beacon). Spots
+    shine down local -Z; `rot` aims them."""
+    obj = light(bpy.context.scene, name, 'SPOT', loc, rgb, energy, size=0.08, rot=rot)
+    obj.data.spot_size, obj.data.spot_blend = math.radians(angle_deg), blend
+    obj.parent = parent
+    return obj

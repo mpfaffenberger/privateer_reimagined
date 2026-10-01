@@ -3,7 +3,7 @@ ordnance trailer down the vehicle lane, the original game's beat here (the
 legacy concourse_car overlay: a tug towing a flatbed of munitions), rebuilt
 from the original base-vehicle meshes.
 
-    tug      ships_wcnews/truck.obj  yellow tow tug
+    tug      ships_wcnews/truck.obj  yellow tow tug (../vehicles.py, shared)
     trailer  ships_wcnews/cart.obj   the wheeled hopper, painted gunmetal and
                                      racked with missiles (trailer.obj is a
                                      wheelless pod: it floated over the lane)
@@ -19,12 +19,11 @@ import bpy
 from mathutils import Matrix, Vector
 
 import ships
-from stage import emitter, material
+from stage import material
+from vehicles import sweep_beacon, tow_tug, trail
 
-TUG_LENGTH, TRAILER_LENGTH = 3.0, 3.0       # m; the hopper is ~0.73 as wide as long
-COUPLING_GAP = 0.5                          # m between tug and trailer
+TRAILER_LENGTH = 3.0                        # m; the hopper is ~0.73 as wide as long
 HEADLIGHT = (1.0, 0.88, 0.7)
-BEACON_AMBER = (1.0, 0.45, 0.08)
 TUG_GRIME = (0.6, 0.54, 0.42)               # a worn, dusty hazard yellow, as dim as
                                             # the painting's own hazard stripes
 TRAILER_PAINT = (0.3, 0.33, 0.28)           # the stock hopper is near-white: gunmetal
@@ -66,16 +65,6 @@ class Route:
         return pos.x, pos.y, math.degrees(math.atan2(-d.x, d.y))
 
 
-def _spot(name, parent, loc, rot, rgb, energy, angle_deg, blend=0.4):
-    data = bpy.data.lights.new(name, 'SPOT')
-    data.color, data.energy = rgb, energy
-    data.spot_size, data.spot_blend, data.shadow_soft_size = math.radians(angle_deg), blend, 0.08
-    obj = bpy.data.objects.new(name, data)
-    bpy.context.scene.collection.objects.link(obj)
-    obj.parent, obj.location, obj.rotation_euler = parent, loc, rot
-    return obj
-
-
 def _missile(name, parent, loc, length, radius, mats):
     """A missile lying along Y, nose +Y: body, a red band, a dark nose cone."""
     body, band, nose = mats
@@ -114,20 +103,7 @@ def _missile_rack(parent, size):
 
 def build_munitions_train():
     """-> (tug root, trailer root, beacon). Both face +Y (nose), origin on the floor."""
-    tug = ships.import_ship("truck", TUG_LENGTH, "Tug", grounded=True, tint=TUG_GRIME)
-    w, length, h = tug["size"]
-    nose = Vector((0.0, length / 2, h * 0.45))
-    for side in (-1, 1):
-        lamp = nose + Vector((side * w * 0.3, 0.0, 0.0))
-        emitter(f"Headlamp{side}", tug, lamp, 0.07, HEADLIGHT, 6.0)
-        # Spots shine down local -Z; +80 deg about X aims them forward (+Y)
-        # and 10 deg down onto the floor ahead.
-        _spot(f"Headlight{side}", tug, lamp + Vector((0, 0.1, 0)),
-              (math.radians(80.0), 0.0, 0.0), HEADLIGHT, 30.0, 50.0)
-    beacon_at = Vector((0.0, -length * 0.1, h * 1.05))
-    emitter("BeaconGlass", tug, beacon_at, 0.09, BEACON_AMBER, 5.0)
-    beacon = _spot("Beacon", tug, beacon_at, (math.radians(60.0), 0.0, 0.0),
-                   BEACON_AMBER, 60.0, 40.0, blend=0.6)
+    tug, beacon = tow_tug(TUG_GRIME, HEADLIGHT)
     trailer = ships.import_ship("cart", TRAILER_LENGTH, "Trailer", grounded=True,
                                 tint=TRAILER_PAINT)
     _missile_rack(trailer, trailer["size"])
@@ -138,12 +114,12 @@ def animate_train(tug, trailer, beacon, route, speed, frame_start, frame_end, fp
                   beacon_rpm=40.0):
     """Drive the tug along `route` from its start at `speed` m/s; the trailer
     follows the coupling behind it on the same route; the beacon sweeps round."""
-    trail = (TUG_LENGTH + TRAILER_LENGTH) / 2 + COUPLING_GAP
+    gap = trail(TRAILER_LENGTH)
     last = {}
     for f in range(frame_start, frame_end + 1):
         s = speed * (f - frame_start) / fps
         rumble = 0.008 * math.sin(f * 0.35)      # ground vehicles jiggle, not bob
-        for obj, at in ((tug, s), (trailer, s - trail)):
+        for obj, at in ((tug, s), (trailer, s - gap)):
             x, y, heading = route.at(at)
             # Unwrap: +-180 deg flips would motion-blur into a full spin.
             prev = last.get(obj.name, heading)
@@ -153,6 +129,4 @@ def animate_train(tug, trailer, beacon, route, speed, frame_start, frame_end, fp
             obj.rotation_euler = (0.0, 0.0, math.radians(heading))
             obj.keyframe_insert("location", frame=f)
             obj.keyframe_insert("rotation_euler", frame=f)
-        turn = 2 * math.pi * beacon_rpm / 60.0 * (f - frame_start) / fps
-        beacon.rotation_euler = (math.radians(60.0), 0.0, turn)
-        beacon.keyframe_insert("rotation_euler", frame=f)
+    sweep_beacon(beacon, frame_start, frame_end, fps, beacon_rpm)

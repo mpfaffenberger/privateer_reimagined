@@ -28,6 +28,7 @@ for path in (HERE, HERE.parent):              # this base's modules, then shared
 import actors  # noqa: E402
 import render  # noqa: E402
 import scene as hall  # noqa: E402
+import vehicles  # noqa: E402
 from base import paths  # noqa: E402
 from stage import overlay_on_plate  # noqa: E402
 
@@ -49,7 +50,7 @@ def _route():
 def _munitions_train(sc):
     tug, trailer, beacon = actors.build_munitions_train()
     route = _route()
-    trail = actors.TUG_LENGTH + actors.TRAILER_LENGTH + actors.COUPLING_GAP
+    trail = vehicles.TUG_LENGTH + actors.TRAILER_LENGTH + vehicles.COUPLING_GAP
     frames = round((route.length + trail) / TRAIN_SPEED * sc.render.fps)
     actors.animate_train(tug, trailer, beacon, route, TRAIN_SPEED, 1, frames, sc.render.fps)
     return [tug, trailer], (1, frames)
