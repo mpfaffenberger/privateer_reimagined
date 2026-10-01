@@ -605,8 +605,25 @@ void shipped_pleasure() {
         check(std::filesystem::exists(dir + *p), "sky asset exists: " + *p);
     for (const room_anim::StarLayerDef& s : def.sky.stars)
         check(std::filesystem::exists(dir + s.tile), "star tile exists: " + s.tile);
-    check(def.layers.size() == 5, "Pleasure concourse has its marquee, billboard + neon layers");
+    const std::vector<std::string> walkers = {"anim/walker_enforcer.json",
+                                              "anim/walker_ranger.json"};
+    check(def.layers.size() == 7 &&
+              std::equal(walkers.begin(), walkers.end(), def.layers.end() - 2),
+          "Pleasure concourse has its marquee, billboard + neon layers, then its walkers (#598)");
     check_layers(dir, def.layers);
+    // The walkers' sprites are each encoded against the plate, so one drawn
+    // over the other would show it through: locked loops half a loop apart
+    // keep them from ever sharing the floor.
+    std::vector<room_anim::SpriteSheet> w(walkers.size());
+    bool parsed = true;
+    for (size_t i = 0; i < walkers.size(); ++i) {
+        std::string err;
+        parsed = parsed && room_anim::parse_sprite_sheet(json::parse_file(dir + walkers[i]),
+                                                         w[i], err);
+    }
+    check(parsed && w[0].period == w[1].period && w[0].fps == w[1].fps &&
+              (w[1].offset - w[0].offset + w[0].period) % w[0].period == w[0].period / 2,
+          "  the two walkers loop together, half a loop apart: they never meet");
     // Acceptance: the hotspots (links.json overrides) are untouched.
     const json::Value links = json::parse_file(dir + "links.json")["concourse"];
     check(links.as_array().size() == 8 &&

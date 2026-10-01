@@ -25,7 +25,7 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `sky.py` | uv | star removal, mask solidify, sky fill, `half_fill()` for smooth skies, painted-star stats, star tiles, `--debug` contact sheets |
 | `composite_preview.py` | uv | engine-faithful preview from `concourse.json` (`--base`) |
 | `stage.py` | Blender | render settings, boxes, materials, lights (`spot()`: a parented lamp), straight/polyline paths, the `--check` overlay |
-| `walkers.py` | Blender | pedestrian proxies and their walk (New Con, pirate); rigged walkers (New Detroit, Agricultural) |
+| `walkers.py` | Blender | pedestrian proxies and their walk (New Con, pirate); rigged walkers (New Detroit, Agricultural, Pleasure) |
 | `vehicles.py` | Blender | the tow tug the floor trains hitch to (mining, refinery, military): headlights, beacon sweep, hitch distance (#603) |
 | `patron_room.py` | both | loads a room file: camera, lights, paths, patrons (#577) |
 | `render_patrons.py` | Blender | a room's 3D patrons, camera-matched (`--room`, `--patron`) |
@@ -39,7 +39,7 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `newcon/` | | New Constantinople: concourse (#515) and hangar (#553) |
 | `mining/` | | Mining base concourse: the ore train (#558) |
 | `agricultural/` | | Agricultural: concourse clouds and aircraft (#582), atrium walkers (#605), landing pad sky traffic (#583) |
-| `pleasure/` | | Pleasure: concourse skylight stars, marquee chase, neon (#594), billboard ad (#599), landing pad transport (#595), sea shimmer and tower beacons (#606) |
+| `pleasure/` | | Pleasure: concourse skylight stars, marquee chase, neon (#594), billboard ad (#599), walkers behind the couches (#598), landing pad transport (#595), sea shimmer and tower beacons (#606) |
 | `pirate/` | | Pirate base concourse: lanterns, pirates, a grav pod (#586) |
 | `newdetroit/` | | New Detroit: concourse walkers on the platform and plaza (#590), aircars past the landing pad (#591) |
 | `oxford/` | | Oxford: concourse air-cars and pedestrians in the garden square (#592, #610), landing pad departure at dusk (#593) |
@@ -665,9 +665,6 @@ uv run tools/room_anim/composite_preview.py --base pleasure --seconds 18 \
   share of each pixel (red excess, plus the near-white tube cores) is dimmed
   in linear light. Only the stutter frames have sprites, and the painted sign
   shows the rest of the time.
-- Pedestrians were left out: the free floor is either a 1 m aisle behind the
-  painted couches or right under the camera, where the proxy walkers would
-  be 300+ px tall.
 
 | `pleasure/` file | runs in | what |
 |---|---|---|
@@ -675,10 +672,66 @@ uv run tools/room_anim/composite_preview.py --base pleasure --seconds 18 \
 | `bake_lights.py` | uv | marquee chase (both canopies) and neon stutter sprites |
 | `billboard.py` | uv | billboard: fit the screen, paint out its ships; warp the ad onto it (`--ad`) |
 | `render_billboard.py` | Blender | the billboard's ad on its flat canvas |
+| `trace_couches.py` | uv | the painted couches' skyline -> `couches.json` holdout polygons |
+| `scene.py` | Blender | camera, carpet deck, couch/table/arch/planter holdout cards, lights |
+| `render_layers.py` | Blender | the two walkers' lanes and layers; `--check` cards + lanes over the plate |
+| `couches.json` | - | couch-group polygons, plate px (written by `trace_couches.py`) |
+| `layers.json` | - | walker loop timing |
 | `bake_landing.py` | uv | landing pad: sky masks, half-size fills, horizon anchors; layer sheet |
 | `render_landing.py` | Blender | the transport over the sea |
 | `bake_landing_ambient.py` | uv | landing pad: per-composite sea shimmer and tower beacon sheets (#606) |
 | `landing_layers.json` | - | landing layer timing |
+
+### Pleasure concourse walkers (#598)
+
+Two people cross the carpet behind the couches, one at a time: a pilot in an
+orange flight suit (the Rustbound Ranger) steps out of the bar's archway,
+walks the hall and leaves behind the planter and pillar at the right;
+half a loop later a heavy in a grey leather jacket (the Weathered Enforcer)
+comes the other way on a lane a little farther back and turns into the bar.
+
+```sh
+uv run tools/room_anim/pleasure/trace_couches.py --debug build/room_anim/pleasure/couches.png
+blender --background --factory-startup \
+    --python tools/room_anim/pleasure/render_layers.py -- --check
+blender --background --factory-startup \
+    --python tools/room_anim/pleasure/render_layers.py -- --layer all
+uv run tools/room_anim/bake_layer.py --base pleasure --all
+uv run tools/room_anim/composite_preview.py --base pleasure --seconds 34 \
+    --out build/room_anim/pleasure/preview.mp4
+```
+
+- **Rigged, not proxies.** At ~140-190 px the box proxies are mannequins, so
+  these are rigged characters from `characters/` on `walkers.rigged_gait`,
+  like New Detroit's; no paid walk clip. Six of the eight share the Mixamo
+  skeleton the gait drives (the guild pair don't); New Detroit has the
+  other two.
+- **Painted couches as mattes.** The floor they walk is behind three round
+  couches, so each couch group's painted outline is a holdout card stood in
+  front of the lanes (`scene.COUCHES`). Only the top edge matters (nothing
+  walks in front of a couch), so `trace_couches.py` finds it per column:
+  the topmost velvet pixel (the lit rims read crisply against the gold wall
+  and the dim carpet behind) standing on a solid column down to the bases,
+  then a 1-D opening (slivers) and closing (seams, the pods' dark faces).
+  Three spans the colours can't read are measured by hand (`FIXES`). The
+  brass side tables and their candles are hand-traced cards of their own:
+  under a table top there's a post and open floor, so legs show past it.
+- **Coming and going.** Each walker starts or ends behind a card, never
+  popping: the arch's left jamb, cut to the arch's curve and stood at the
+  threshold, and the pillar, palm and plant pot at the right edge. Lanes
+  are written as the plate pixel under the feet, and ease forward past the
+  landing-pad door, whose threshold is nearer than the back wall.
+- **Eye height is a compromise.** #594 measured eye 1.7 m from the seats,
+  but that makes the landing-pad door 1.7 m tall (its top is on the
+  horizon), the arch's capitals 1.46 m and the kiosk's screen hip height,
+  and a walker as tall as the door. 1.9 m splits the painting's
+  disagreement. Card depths are plate rows (`scene.floor_depth`), so they
+  hold whatever the eye height.
+- **They never meet.** Each sprite is encoded against the plate with the
+  least alpha that reproduces it, so where one walker's colour is near the
+  paint's, the other drawn under it shows through. At Oxford's 40 px nobody
+  sees it; here the crossing was a mess. The loops are locked at 34 s, half
+  a loop apart, and `test_room_anim` holds them there.
 
 ### Pleasure billboard (#599)
 

@@ -1,0 +1,5 @@
+{
+  "_doc": "Per-layer loop timing, seconds (#598). period >= the pass length; the rest is a gap. Both loops are locked at 34 s and half a loop apart, so the two never share the floor: each sprite is encoded against the plate, and one drawn over the other shows it through wherever its colour is near the paint's.",
+  "walker_enforcer": { "period": 34.0, "offset": -17.0, "max_px": null },
+  "walker_ranger":   { "period": 34.0, "offset": 0.0, "max_px": null }
+}
