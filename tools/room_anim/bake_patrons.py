@@ -187,7 +187,7 @@ def bake(name):
     write_sheet(ROOM.out, f"{name}_patch", [(sprite, dst)], [0], CANVAS, fps, 1, 0)
     if "still" in p:            # one held pose with small moves: still.py
         sprites, slots, frames = still.timeline(p["still"], fps, renders,
-                                                lambda rgba: patron_frame(p, rgba))
+                                                lambda rgba: patron_frame(p, rgba), ROOM.sources)
         write_sheet(ROOM.out, name, sprites, slots, CANVAS, fps, frames, int(p["phase"]))
         if "smoke" in p["still"]:        # its own layer, over the patron
             puffs, slots = still.smoke(p["still"]["smoke"], fps, frames)
