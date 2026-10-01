@@ -564,8 +564,9 @@ void select(int n) {
         // (the recipient's own voice, or — via tick()'s fallback — any voice).
         const bool has_rumor = is_rumor_ask &&
                                (!reply_voice.empty() || !g_rumor_resp.empty());
-        // A voiceless recipient (Kilrathi, #640) never answers: without this
-        // gate the rumor fallback above would borrow some OTHER voice.
+        // A voiceless recipient (Kilrathi #640, the Steltek drone #650) never
+        // answers: without this gate the rumor fallback above would borrow
+        // some OTHER voice.
         if (voice::speaks(g_chosen_faction) &&
             (has_voice || has_faction || has_rumor)) {
             g_pending.active       = true;

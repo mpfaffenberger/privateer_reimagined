@@ -1,13 +1,14 @@
 // -----------------------------------------------------------------------------
 // tools/test_voice.cpp — voice-line selection proof (#640: no Kilrathi voices
-// in space). Links the REAL voice.cpp + faction.cpp + json.cpp against the
+// in space; #650: no generic Steltek voice — the drone is mute and the scout's
+// lines are authored). Links the REAL voice.cpp + faction.cpp + json.cpp against the
 // SHIPPED assets/data/voice_bank.json, with the audio mixer stubbed out below
 // so every play()/play_world() is counted instead of heard.
 //
-// Proves that a Kilrathi speaker resolves to NO voice line on every in-flight
-// entry point (faction-level say, per-ship say_ship, voice_for) even though
-// the bank still carries Kilrathi clips — i.e. the selection drops them, the
-// assets stay. A control faction (Pirate) must still speak, so a bank that
+// Proves that a voiceless speaker (Kilrathi, Steltek) resolves to NO voice
+// line on every in-flight entry point (faction-level say, per-ship say_ship,
+// voice_for) even though the bank still carries their clips — i.e. the
+// selection drops them, the assets stay. A control faction (Pirate) must still speak, so a bank that
 // silently failed to load can't pass the test by accident.
 //
 // Build + run (from the repo root):
@@ -68,13 +69,24 @@ static int plays_for(Faction f) {
     return g_plays - before;
 }
 
+// Factions with no generic in-flight voice, keyed by their bank name.
+struct Voiceless { Faction faction; const char* bank_key; };
+static constexpr Voiceless k_voiceless[] = {
+    {Faction::Kilrathi, "kilrathi"},   // #640
+    {Faction::Steltek,  "steltek"},    // #650
+};
+
 int main() {
     constexpr const char* k_bank = "assets/data/voice_bank.json";
+    char what[128];
 
     std::printf("== bank key mapping ==\n");
-    check(!voice::speaks(Faction::Kilrathi), "Kilrathi do not speak in flight");
-    check(voice::bank_faction(Faction::Kilrathi) == nullptr,
-          "Kilrathi resolve to no voice bank");
+    for (const Voiceless& v : k_voiceless) {
+        std::snprintf(what, sizeof what, "%s: speaks() is false", v.bank_key);
+        check(!voice::speaks(v.faction), what);
+        std::snprintf(what, sizeof what, "%s: resolves to no voice bank", v.bank_key);
+        check(voice::bank_faction(v.faction) == nullptr, what);
+    }
     check(voice::speaks(Faction::Pirate) &&
               std::strcmp(voice::bank_faction(Faction::Pirate), "pirate") == 0,
           "Pirate still maps to the 'pirate' bank");
@@ -83,25 +95,34 @@ int main() {
     check(voice::bank_faction(Faction::Civilian) == nullptr,
           "Civilian has no bank (bases stay silent)");
 
-    std::printf("== shipped bank still carries Kilrathi clips ==\n");
+    std::printf("== shipped bank still carries their clips ==\n");
     const json::Value root = json::parse_file(k_bank);
     const json::Value* fv  = root.is_object() ? root.find("faction_voices") : nullptr;
-    const json::Value* kv  = fv ? fv->find("kilrathi") : nullptr;
-    check(kv && kv->is_array() && !kv->as_array().empty(),
-          "voice_bank.json still lists Kilrathi voices (assets untouched)");
+    for (const Voiceless& v : k_voiceless) {
+        const json::Value* kv = fv ? fv->find(v.bank_key) : nullptr;
+        std::snprintf(what, sizeof what,
+                      "voice_bank.json still lists %s voices (assets untouched)",
+                      v.bank_key);
+        check(kv && kv->is_array() && !kv->as_array().empty(), what);
+    }
 
     std::printf("== selection against the shipped bank ==\n");
     check(voice::load(k_bank), "voice bank loads");
 
-    bool any_kilrathi_voice = false;
-    for (uint32_t id = 0; id < 64; ++id)
-        any_kilrathi_voice |= !voice::voice_for(Faction::Kilrathi, id).empty();
-    check(!any_kilrathi_voice, "voice_for(Kilrathi, *) resolves to no voice");
-    check(plays_for(Faction::Kilrathi) == 0,
-          "say / say_ship for a Kilrathi speaker play nothing");
+    for (const Voiceless& v : k_voiceless) {
+        bool any_voice = false;
+        for (uint32_t id = 0; id < 64; ++id)
+            any_voice |= !voice::voice_for(v.faction, id).empty();
+        std::snprintf(what, sizeof what, "voice_for(%s, *) resolves to no voice",
+                      v.bank_key);
+        check(!any_voice, what);
+        std::snprintf(what, sizeof what,
+                      "say / say_ship for a %s speaker play nothing", v.bank_key);
+        check(plays_for(v.faction) == 0, what);
+    }
 
     // Control: the same calls for a voiced faction DO play, so a zero above
-    // means "Kilrathi filtered", not "bank broken".
+    // means "filtered", not "bank broken".
     check(!voice::voice_for(Faction::Pirate, 1).empty(),
           "voice_for(Pirate, 1) resolves to a voice");
     check(plays_for(Faction::Pirate) > 0, "say / say_ship for a Pirate play lines");
