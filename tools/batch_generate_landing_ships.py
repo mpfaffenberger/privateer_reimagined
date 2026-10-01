@@ -83,14 +83,20 @@ def prompt_for(pair: Pair) -> str:
     )
 
 
-def request_for(pair: Pair, action: str = "generate") -> dict:
+def references_for(repaint: bool) -> dict:
+    """The F11 recipe. After a bay repaint the installed composite shows the
+    old bay, so it must not be a reference."""
+    return {**DEFAULT_REFERENCES, "composite_installed": not repaint}
+
+
+def request_for(pair: Pair, action: str = "generate", repaint: bool = False) -> dict:
     return {
         "target_kind": "landing_ship",
         "action": action,
         "archetype": pair.archetype,
         "ship": pair.ship,
         "prompt": prompt_for(pair),
-        "references": dict(DEFAULT_REFERENCES),
+        "references": references_for(repaint),
         "model": "gpt-image-2",
         "size": "1536x1024",
         "quality": "high",
@@ -98,14 +104,14 @@ def request_for(pair: Pair, action: str = "generate") -> dict:
     }
 
 
-def generate_pair(pair: Pair, install: bool) -> Result:
+def generate_pair(pair: Pair, install: bool, repaint: bool = False) -> Result:
     started = time.monotonic()
     try:
-        generated = studio.run(request_for(pair))
+        generated = studio.run(request_for(pair, repaint=repaint))
         output = str(generated.get("preview_path", ""))
         message = str(generated.get("message", "generation complete"))
         if install:
-            installed = studio.run(request_for(pair, "install"))
+            installed = studio.run(request_for(pair, "install", repaint))
             output = str(installed.get("preview_path", output))
             message += "; " + str(installed.get("message", "installed"))
         return Result(pair.archetype, pair.ship, "complete", message,
@@ -142,7 +148,7 @@ def load_results(path: Path) -> dict[str, Result]:
 
 
 def run_batch(pairs: list[Pair], workers: int, install: bool, force: bool,
-              manifest: Path = MANIFEST) -> int:
+              manifest: Path = MANIFEST, repaint: bool = False) -> int:
     prior = {} if force else load_results(manifest)
     results: dict[str, Result] = {}
     pending: list[Pair] = []
@@ -163,7 +169,7 @@ def run_batch(pairs: list[Pair], workers: int, install: bool, force: bool,
         return 0
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
-        futures = {pool.submit(generate_pair, pair, install): pair for pair in pending}
+        futures = {pool.submit(generate_pair, pair, install, repaint): pair for pair in pending}
         for future in concurrent.futures.as_completed(futures):
             result = future.result()
             key = f"{result.archetype}/{result.ship}"
@@ -190,6 +196,9 @@ def main(argv: list[str] | None = None) -> int:
                         help="stage outputs without installing them")
     parser.add_argument("--force", action="store_true",
                         help="regenerate existing successful/installed pairs")
+    parser.add_argument("--repaint", action="store_true",
+                        help="the bay was repainted: don't reference the old installed "
+                             "composite (use with --force)")
     parser.add_argument("--dry-run", action="store_true",
                         help="list the plan without making API requests")
     parser.add_argument("--manifest", type=Path, default=MANIFEST)
@@ -206,7 +215,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  {pair.archetype}/{pair.ship}")
         return 0
     return run_batch(pairs, args.workers, not args.generate_only,
-                     args.force, args.manifest)
+                     args.force, args.manifest, args.repaint)
 
 
 if __name__ == "__main__":
