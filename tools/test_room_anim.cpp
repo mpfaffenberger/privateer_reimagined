@@ -207,6 +207,23 @@ void check_layers(const std::string& dir, const std::vector<std::string>& layers
     }
 }
 
+// Layers whose routes cross must never meet: every loop is a whole multiple
+// of the shortest one, in seconds, so their phases (layers.json offsets)
+// repeat exactly (#592, #623).
+bool loops_locked(const std::string& dir, const std::vector<std::string>& layers) {
+    std::vector<double> seconds;
+    for (const std::string& layer : layers) {
+        room_anim::SpriteSheet s;
+        std::string err;
+        if (room_anim::parse_sprite_sheet(json::parse_file(dir + layer), s, err))
+            seconds.push_back(s.period / static_cast<double>(s.fps));
+    }
+    const double base = seconds.empty() ? 0.0 : *std::min_element(seconds.begin(), seconds.end());
+    bool locked = seconds.size() == layers.size() && base > 0.0;
+    for (double s : seconds) locked = locked && std::fabs(std::remainder(s, base)) < 1e-6;
+    return locked;
+}
+
 // The `target` link in a links list has exactly this rect.
 bool link_rect_is(const json::Value& links, const char* target, float x, float y, float w,
                   float h) {
@@ -689,7 +706,7 @@ void shipped_newcon_hangar() {
 
 // #584: the Refinery concourse's drifting stars, ships crossing the dome
 // (under the plate, so the arches and towers occlude them) and the ore train
-// on the ring floor.
+// on the ring floor; #623: two pedestrians crossing its ring to the cargo bay.
 void shipped_refinery() {
     const std::string dir = "assets/concourse/refinery/";
     room_anim::RoomAnimDef def;
@@ -700,6 +717,11 @@ void shipped_refinery() {
         check(std::filesystem::exists(dir + *p), "sky asset exists: " + *p);
     for (const room_anim::StarLayerDef& s : def.sky.stars)
         check(std::filesystem::exists(dir + s.tile), "star tile exists: " + s.tile);
+    const std::vector<std::string> floor = {"anim/ore_train.json", "anim/walker_bay.json",
+                                            "anim/walker_ring.json"};
+    check(def.layers.size() == 2 + floor.size() &&
+              std::equal(floor.begin(), floor.end(), def.layers.end() - floor.size()),
+          "refinery concourse has two ships, then the ore train and both walkers");
     check_layers(dir, def.layers);
     int under = 0, over = 0;
     for (const std::string& layer : def.layers) {
@@ -708,7 +730,8 @@ void shipped_refinery() {
         if (room_anim::parse_sprite_sheet(json::parse_file(dir + layer), s, err))
             (s.under ? under : over)++;
     }
-    check(under >= 2 && over >= 1, "ships cross the sky under the plate; the ore train drives over it");
+    check(under == 2 && over == 3, "ships cross the sky under the plate; the floor's layers go over it");
+    check(loops_locked(dir, floor), "  the walkers' loops lock to the ore train's: no one meets it");
     // Acceptance: the hotspots (links.json overrides) are untouched.
     const json::Value links = json::parse_file(dir + "links.json")["concourse"];
     check(links.as_array().size() == 8 &&
@@ -831,17 +854,8 @@ void shipped_oxford() {
     check(!def.has_sky && def.layers == order,
           "Oxford concourse has its air-cars and walkers, the student drawn before the nearer don");
     check_layers(dir, def.layers);
-    std::vector<double> seconds;
-    for (const std::string& layer : def.layers) {
-        room_anim::SpriteSheet s;
-        std::string err;
-        if (room_anim::parse_sprite_sheet(json::parse_file(dir + layer), s, err))
-            seconds.push_back(s.period / static_cast<double>(s.fps));
-    }
-    const double base = seconds.empty() ? 0.0 : *std::min_element(seconds.begin(), seconds.end());
-    bool locked = seconds.size() == order.size() && base > 0.0;
-    for (double s : seconds) locked = locked && std::fabs(std::remainder(s, base)) < 1e-6;
-    check(locked, "  every loop is a whole multiple of the avenue car's: no one meets at a crossing");
+    check(loops_locked(dir, def.layers),
+          "  every loop is a whole multiple of the avenue car's: no one meets at a crossing");
     // Acceptance: the hotspots (links.json overrides) are untouched.
     const json::Value links = json::parse_file(dir + "links.json")["concourse"];
     check(links.as_array().size() == 9 &&

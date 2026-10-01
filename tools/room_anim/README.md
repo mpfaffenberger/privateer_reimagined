@@ -43,7 +43,7 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `pirate/` | | Pirate base concourse: lanterns, pirates, a grav pod (#586) |
 | `newdetroit/` | | New Detroit: concourse walkers on the platform and plaza (#590), aircars past the landing pad (#591) |
 | `oxford/` | | Oxford: concourse air-cars and pedestrians in the garden square (#592, #610), landing pad departure at dusk (#593) |
-| `refinery/` | | Refinery: concourse stars, ships over the dome, the ore train (#584), landing pad door and ships (#585) |
+| `refinery/` | | Refinery: concourse stars, ships over the dome, the ore train (#584) and pedestrians (#623), landing pad door and ships (#585) |
 | `military/` | | Military: concourse stars, a fighter pair, the munitions train (#588), landing bay lamp chase (#589) |
 
 ## New Con concourse
@@ -931,7 +931,10 @@ the refinery. The original game had ships crossing the dome (legacy
 `sh0`/`sh1`); now stars drift through all three windows, a Galaxy freighter
 crosses far out and a Demon shuttle drops in behind the towers (both *under*
 the plate), and the mining base's ore train (#558) comes round the ring
-floor and delivers into the cargo bay.
+floor and delivers into the cargo bay. Two people cross the floor (#623): a
+refinery hand in a rust coverall walks in along the inner ring and into the
+cargo bay just ahead of the train, and a clerk steps out of it as the hopper
+vanishes and walks off along the shopfronts.
 
 ```sh
 uv run tools/room_anim/refinery/bake_sky.py --debug build/room_anim/refinery/sky_debug.png
@@ -942,8 +945,8 @@ blender --background --factory-startup \
     --python tools/room_anim/refinery/render_layers.py -- --check      # camera-match overlay
 blender --background --factory-startup \
     --python tools/room_anim/refinery/render_layers.py -- --layer all
-uv run tools/room_anim/bake_layer.py --base refinery --all
-uv run tools/room_anim/composite_preview.py --base refinery --seconds 48 \
+uv run tools/room_anim/bake_layer.py --base refinery --all      # or one layer by name
+uv run tools/room_anim/composite_preview.py --base refinery --seconds 47 \
     --out build/room_anim/refinery/preview.mp4
 ```
 
@@ -982,12 +985,27 @@ wall. The garden (a drum) and the wall beside the door are holdouts, so the
 hopper vanishes past the painted jamb. The tug is grimed darker than on the
 mining base; the stock yellow glared in this dimmer, browner room.
 
+**Pedestrians (#623)** are `walkers.py` proxies (`actors.LOOKS`) at 12 fps:
+50-70 px tall here, like New Con's. They keep off the train's 15 m ring
+except to cross it at the bay: the hand walks the inner ring at 12.5 m, just
+outside the floor lamps (painted at ~11 m) and clear of the garden drum; the
+clerk walks 16.3 m out, which passes in front of the painted drums by the
+left-hand bays (~17 m, measured with `plate_ray()`), not through them. The
+fit's wall circle runs in front of the painted wall on the left, so routes
+there are checked against the paint, not the red ring. Both come and go
+through the cargo bay, turning right inside, behind `BayWallR`, while the
+train turns left, or off the bottom-left edge: nothing pops. Layers don't
+occlude each other, so no two may overlap on screen: the walkers' loops lock
+to the train's 47 s and their phases (`layers.json`) were picked by
+projecting every actor's box each 0.25 s of the loop, keeping >140 px from
+the train and ~30 px apart. `test_room_anim` checks the lock.
+
 | `refinery/` file | runs in | what |
 |---|---|---|
 | `scene.py` | Blender | circle-fit camera, floor ring deck, garden + bay wall holdouts, lights |
-| `actors.py` | Blender | the mining ore train on a curved floor path |
-| `render_layers.py` | Blender | the ore-train layer; `--check` overlay |
-| `layers.json` | - | ore-train loop timing |
+| `actors.py` | Blender | the mining ore train on a curved floor path; the walkers' looks |
+| `render_layers.py` | Blender | the ore-train and walker layers; `--check` overlay |
+| `layers.json` | - | ore-train and walker loop timing |
 | `bake_sky.py` | uv | window mask, hazy fill, star tiles; `--layers-only` bakes the ships |
 | `render_sky.py` | Blender | the ships over the dome, straight alpha |
 | `sky_layers.json` | - | the ships' loop timing |

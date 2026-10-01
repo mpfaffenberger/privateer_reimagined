@@ -140,7 +140,9 @@
       "layers": [
         "anim/hauler_pass.json",
         "anim/shuttle_in.json",
-        "anim/ore_train.json"
+        "anim/ore_train.json",
+        "anim/walker_bay.json",
+        "anim/walker_ring.json"
       ],
       "links": [
         {

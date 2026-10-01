@@ -1,10 +1,12 @@
-"""Actors for the Refinery concourse's floor layers (#584).
+"""Actors for the Refinery concourse's floor layers (#584, #623).
 
 The ore train is the mining base's (#558, mining/actors.py): a yellow tug
 towing a hopper heaped with ore, headlights and a turning amber beacon. Here
 it delivers: in round the atrium's ring floor and into the cargo bay. The
 refinery's floor is a ring, so it follows a curved path (FloorPath) instead
 of the mining tunnel's straight line; the hopper follows the tug's tracks.
+
+The pedestrians (#623) are ../walkers.py proxies; only their looks live here.
 """
 import bisect
 import importlib.util
@@ -86,3 +88,15 @@ def ore_train_along(path, speed, fps, beacon_rpm=40.0):
     _key_along(hopper, path, TRAIL, speed, frames, fps, rumble=0.008)
     sweep_beacon(beacon, 1, frames, fps, beacon_rpm)
     return [tug, hopper], frames
+
+
+# Pedestrians (#623): walkers.build_walker() proxies, 50-70 px tall on the
+# ring floor. Dull, dirty working colours: the room is dim and brown, and
+# anything brighter glared like the stock tug did.
+LOOKS = {                            # layer: coat, trousers, skin, head
+    # a refinery hand in a rust coverall and a scuffed hard hat
+    "walker_ring": ((0.2, 0.075, 0.025), (0.17, 0.065, 0.022), (0.42, 0.3, 0.23),
+                    (0.36, 0.27, 0.06)),
+    # a clerk in a slate jacket, bareheaded
+    "walker_bay": ((0.05, 0.06, 0.08), (0.09, 0.09, 0.1), (0.3, 0.2, 0.15), None),
+}
