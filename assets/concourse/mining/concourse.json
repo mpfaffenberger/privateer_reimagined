@@ -144,18 +144,18 @@
       ],
       "overlays": [],
       "layers": [
-        "anim/bar/patron_orange_patch.json",
-        "anim/bar/patron_backtable_patch.json",
-        "anim/bar/patron_bartender_patch.json",
-        "anim/bar/patron_woman_left_patch.json",
-        "anim/bar/patron_bald_patch.json",
-        "anim/bar/patron_foreground_patch.json",
-        "anim/bar/patron_orange.json",
-        "anim/bar/patron_backtable.json",
-        "anim/bar/patron_bartender.json",
-        "anim/bar/patron_woman_left.json",
-        "anim/bar/patron_bald.json",
-        "anim/bar/patron_foreground.json"
+        "../../shared_rooms/bar/patron_orange_patch.json",
+        "../../shared_rooms/bar/patron_backtable_patch.json",
+        "../../shared_rooms/bar/patron_bartender_patch.json",
+        "../../shared_rooms/bar/patron_woman_left_patch.json",
+        "../../shared_rooms/bar/patron_bald_patch.json",
+        "../../shared_rooms/bar/patron_foreground_patch.json",
+        "../../shared_rooms/bar/patron_orange.json",
+        "../../shared_rooms/bar/patron_backtable.json",
+        "../../shared_rooms/bar/patron_bartender.json",
+        "../../shared_rooms/bar/patron_woman_left.json",
+        "../../shared_rooms/bar/patron_bald.json",
+        "../../shared_rooms/bar/patron_foreground.json"
       ]
     },
     "commodity": {

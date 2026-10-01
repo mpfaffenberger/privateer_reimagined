@@ -176,7 +176,21 @@
         320,
         200
       ],
-      "overlays": []
+      "overlays": [],
+      "layers": [
+        "../../shared_rooms/bar/patron_orange_patch.json",
+        "../../shared_rooms/bar/patron_backtable_patch.json",
+        "../../shared_rooms/bar/patron_bartender_patch.json",
+        "../../shared_rooms/bar/patron_woman_left_patch.json",
+        "../../shared_rooms/bar/patron_bald_patch.json",
+        "../../shared_rooms/bar/patron_foreground_patch.json",
+        "../../shared_rooms/bar/patron_orange.json",
+        "../../shared_rooms/bar/patron_backtable.json",
+        "../../shared_rooms/bar/patron_bartender.json",
+        "../../shared_rooms/bar/patron_woman_left.json",
+        "../../shared_rooms/bar/patron_bald.json",
+        "../../shared_rooms/bar/patron_foreground.json"
+      ]
     },
     "commodity": {
       "background": "commodity_bg.png",

@@ -33,7 +33,7 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `prep_character.py` | Blender | Meshy GLB -> committable model (1K textures, one clip) |
 | `meshy.py` | uv | Meshy API: image-to-3D + rig (`character`), clips (`animate`) |
 | `still.py` | uv | a still patron's small moves: glances, a smile, the fidget timeline |
-| `wire_room.py` | uv | point one room's `layers` at a bake, in every base's `concourse.json` |
+| `wire_room.py` | uv | point one room's `layers` at a bake, in every base's `concourse.json` (`--like`: the bases sharing its painting) |
 | `characters/` | | prepped, rigged 3D characters |
 | `guild/` | | the guild rooms every base shares: Mercenaries' (#578), Merchants' (#579) |
 | `newcon/` | | New Constantinople: concourse (#515) and hangar (#553) |
@@ -221,7 +221,7 @@ plate to confirm.
 | `layers.json` | - | loop period and phase |
 | `render_landing.py` | Blender | the Galaxy freighter pass over the landing pad (`../flyover.py`) |
 | `landing_layers.json` | - | landing sky layer timing, star seed (`../bake_crater.py`) |
-| `bar_patrons.json` | - | the bar's room file: camera, lights, and each 3D patron |
+| `bar_patrons.json` | - | the bar's room file: camera, lights, and each 3D patron (bakes to `assets/shared_rooms/bar/`) |
 | `sources/bar_*_clean_gen.png` | - | AI clean-plate edits of each patron's crop (painted out) |
 
 ### Mining bar: 3D patrons (#564, #566, #568, #570, #572, #571)
@@ -235,6 +235,15 @@ one-frame clean-plate patch paints them out, then their render draws over
 it. If the layers are missing, the painting shows as painted. Each patron is
 one entry in `bar_patrons.json`, the bar's room file (see "3D patrons in any
 room" below); the camera and lighting are the room's.
+
+**Six bases share the bar (#642).** Agricultural, military, mining, New Con,
+pleasure and refinery have the same `bar_bg.png`, byte for byte, so the
+patrons bake once to `assets/shared_rooms/bar/` and `wire_room.py --like
+mining` wires them into each of those bases (New Detroit, Oxford and pirate
+paint their own bars). Their legacy 2D bar overlays (`bar_mb*`, `bar_ag*`,
+`bar_rf*`, `bar_pe*`, `bar_btr`) were never drawn: every bar's `overlays` is
+empty and the engine ignores the key anyway (`base_screens.cpp`, #205), so nothing
+double-draws a patron.
 
 **Overlapping patrons (the left table) are stacked.** `bar_patrons.json` lists
 patrons back to front. Each clean plate is an AI edit of the plate *with every
@@ -253,6 +262,9 @@ blender --background --factory-startup --python tools/room_anim/render_patrons.p
 uv run --with scipy tools/room_anim/bake_patrons.py --room tools/room_anim/mining/bar_patrons.json [--patron ...]
 uv run --with scipy tools/room_anim/bake_patrons.py --room tools/room_anim/mining/bar_patrons.json \
     --patron patron_orange --preview 0,114,228
+cd tools/room_anim && uv run wire_room.py bar --like mining \
+    ../../shared_rooms/bar/patron_{orange,backtable,bartender,woman_left,bald,foreground}_patch.json \
+    ../../shared_rooms/bar/patron_{orange,backtable,bartender,woman_left,bald,foreground}.json
 ```
 
 - **Borrowed clips.** All six Meshy characters share one 28-bone Mixamo
@@ -1222,8 +1234,9 @@ cd tools/room_anim && uv run wire_room.py merchguild ../../shared_rooms/merchgui
 ```
 
 **Rooms shared by every base** (the guild paintings are byte-identical in
-all nine) bake once to `assets/shared_rooms/<room>/`, and each base's
-`concourse.json` names the layers as `../../shared_rooms/<room>/<layer>.json`.
+all nine; the mining bar's is in six, #642) bake once to
+`assets/shared_rooms/<room>/`, and each base with the painting names the
+layers in its `concourse.json` as `../../shared_rooms/<room>/<layer>.json`.
 The engine joins the base dir and that path as-is, and the atlas resolves
 next to its manifest. They stay out of `assets/concourse/`, whose every
 subdirectory is treated as a base (archetype walkers).

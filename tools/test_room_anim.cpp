@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
+#include <iterator>
 #include <string>
 #include <utility>
 #include <vector>
@@ -178,6 +179,12 @@ bool png_size(const std::string& path, unsigned& w, unsigned& h) {
     w = be32(16);
     h = be32(20);
     return b[1] == 'P' && b[2] == 'N' && b[3] == 'G';
+}
+
+// A whole file's bytes ("" if it can't be read).
+std::string file_bytes(const std::string& path) {
+    std::ifstream f(path, std::ios::binary);
+    return {std::istreambuf_iterator<char>(f), std::istreambuf_iterator<char>()};
 }
 
 // Atlases must load on the GPU (16384 max on D3D11/Metal); bake_layer.py
@@ -632,44 +639,6 @@ void shipped_pleasure_billboard() {
     check(on_screen, "  the ad draws over the plate, only on the billboard");
 }
 
-// #564, #566, #568, #570, #572, #571: the mining bar's 3D patrons (all six). Each has a one-frame
-// clean-plate patch that paints the painted one out, and an idle loop. The
-// patrons overlap (the left table), so every patch draws first, then every
-// patron back to front: patch i belongs to patron i. bar_bg.png is untouched.
-void shipped_mining_bar() {
-    const std::string dir = "assets/concourse/mining/";
-    room_anim::RoomAnimDef def;
-    room_anim::parse_room_anim(json::parse_file(dir + "concourse.json")["rooms"]["bar"], def);
-    const size_t pairs = def.layers.size() / 2;
-    check(!def.has_sky && pairs == 6 && def.layers.size() % 2 == 0,
-          "mining bar has six patrons (patches first, then patrons)");
-    check_layers(dir, def.layers);
-    std::vector<int> phases;
-    for (size_t i = 0; i < pairs; ++i) {
-        room_anim::SpriteSheet patch, patron;
-        std::string err;
-        const std::string& name = def.layers[pairs + i];
-        const bool ok =
-            def.layers[i] == name.substr(0, name.size() - 5) + "_patch.json" &&
-            room_anim::parse_sprite_sheet(json::parse_file(dir + def.layers[i]), patch, err) &&
-            room_anim::parse_sprite_sheet(json::parse_file(dir + name), patron, err);
-        check(ok && patch.frames.size() == 1 && patron.frames.size() > 1,
-              "  " + name + ": its one-frame patch draws before every patron");
-        // Slots without a frame draw nothing: on any longer loop the painted
-        // patron would flicker back between patch frames.
-        check(ok && patch.period == 1 && room_anim::slot_at(patch, 12.34f) == 0,
-              "  " + name + ": the patch is always on screen (a one-slot loop)");
-        check(ok && !patch.under && !patron.under, "  " + name + ": both over the plate");
-        phases.push_back(patron.offset);
-    }
-    std::sort(phases.begin(), phases.end());
-    check(phases.size() == pairs &&
-              std::adjacent_find(phases.begin(), phases.end()) == phases.end(),
-          "  patrons idle out of phase (no two share a loop phase)");
-    const json::Value links = json::parse_file(dir + "links.json")["bar"];
-    check(links.is_array() && links.as_array().empty(), "mining bar hotspots unchanged");
-}
-
 // #586: the pirate concourse's flickering lanterns, pirates and cargo pod.
 void shipped_pirate() {
     const std::string dir = "assets/concourse/pirate/";
@@ -762,31 +731,40 @@ void shipped_refinery() {
 // the base dir, "../../shared_rooms/<room>/<layer>.json". The engine joins
 // dir + path as-is and finds the atlas next to the manifest, as check_layers
 // does, so a layer reached through ".." from another base (here the mining
-// bar's, from New Con) must resolve like a local one, at the same depth too.
+// ore train, from New Con) must resolve like a local one, at the same depth too.
 void cross_dir_layer_paths() {
     const std::string dir = "assets/concourse/newcon/";
-    check_layers(dir, {"../mining/anim/bar/patron_orange.json"});
-    check_layers(dir, {"../../concourse/mining/anim/bar/patron_orange_patch.json"});
+    check_layers(dir, {"../mining/anim/ore_train.json"});
+    check_layers(dir, {"../../concourse/mining/anim/ore_train.json"});
 }
 
-// A shared room (#577): every base shows the same painting and names exactly
-// `layers` (each <name>.json under assets/shared_rooms/<room>/), in order;
-// they resolve, and the first, the clean-plate patch, is always on screen.
-void shipped_shared_room(const std::string& room, const std::vector<std::string>& names) {
+// A shared room (#577): every base whose painting of it is mining's, byte for
+// byte (all nine for the guilds, `sharing` of them otherwise: #642), names
+// exactly `layers` (each <name>.json under assets/shared_rooms/<room>/), in
+// order; they resolve, and the first, the clean-plate patch, is always on screen.
+void shipped_shared_room(const std::string& room, const std::vector<std::string>& names,
+                         int sharing = 9) {
     std::vector<std::string> want;
     for (const std::string& n : names)
         want.push_back("../../shared_rooms/" + room + "/" + n + ".json");
+    auto painting = [&](const std::string& dir) {
+        const json::Value cfg = json::parse_file(dir + "concourse.json")["rooms"][room];
+        return file_bytes(dir + cfg["background"].as_string());
+    };
+    const std::string mining = painting("assets/concourse/mining/");
     int bases = 0;
     for (const auto& entry : std::filesystem::directory_iterator("assets/concourse")) {
         if (!entry.is_directory()) continue;
         const std::string dir = entry.path().generic_string() + "/";
+        if (painting(dir) != mining) continue;      // its own painting: static (#630)
         room_anim::RoomAnimDef def;
         room_anim::parse_room_anim(json::parse_file(dir + "concourse.json")["rooms"][room], def);
         check(def.layers == want,
               entry.path().filename().string() + " " + room + ": the shared layers, in order");
         if (bases++ == 0) check_layers(dir, def.layers);   // one resolves them; all match
     }
-    check(bases == 9, "  all nine bases checked");
+    check(!mining.empty() && bases == sharing,
+          "  all " + std::to_string(sharing) + " bases with the painting checked");
     room_anim::SpriteSheet patch;
     std::string err;
     check(room_anim::parse_sprite_sheet(
@@ -840,6 +818,44 @@ void shipped_merchguild() {
               smoke.period == man.period,
           "  his smoke comes and goes on his loop (" + std::to_string(smoke.frames.size()) + "/" +
               std::to_string(smoke.period) + " slots)");
+}
+
+// #564, #566, #568, #570, #572, #571: the mining bar's 3D patrons (all six),
+// in every base with the mining bar's painting since #642. Each has a one-frame
+// clean-plate patch that paints the painted one out, and an idle loop. The
+// patrons overlap (the left table), so every patch draws first, then every
+// patron back to front: patch i belongs to patron i. bar_bg.png is untouched.
+void shipped_shared_bar() {
+    const std::vector<std::string> patrons = {"patron_orange",     "patron_backtable",
+                                              "patron_bartender",  "patron_woman_left",
+                                              "patron_bald",       "patron_foreground"};
+    std::vector<std::string> names;
+    for (const std::string suffix : {"_patch", ""})
+        for (const std::string& p : patrons) names.push_back(p + suffix);
+    shipped_shared_room("bar", names, 6);
+    const std::string dir = "assets/shared_rooms/bar/";
+    std::vector<int> phases;
+    for (const std::string& name : patrons) {
+        room_anim::SpriteSheet patch, patron;
+        std::string err;
+        const bool ok =
+            room_anim::parse_sprite_sheet(json::parse_file(dir + name + "_patch.json"), patch, err) &&
+            room_anim::parse_sprite_sheet(json::parse_file(dir + name + ".json"), patron, err);
+        check(ok && patch.frames.size() == 1 && patron.frames.size() > 1,
+              "  " + name + ": its one-frame patch draws before every patron");
+        // Slots without a frame draw nothing: on any longer loop the painted
+        // patron would flicker back between patch frames.
+        check(ok && patch.period == 1 && room_anim::slot_at(patch, 12.34f) == 0,
+              "  " + name + ": the patch is always on screen (a one-slot loop)");
+        check(ok && !patch.under && !patron.under, "  " + name + ": both over the plate");
+        phases.push_back(patron.offset);
+    }
+    std::sort(phases.begin(), phases.end());
+    check(phases.size() == patrons.size() &&
+              std::adjacent_find(phases.begin(), phases.end()) == phases.end(),
+          "  patrons idle out of phase (no two share a loop phase)");
+    const json::Value links = json::parse_file("assets/concourse/mining/links.json")["bar"];
+    check(links.is_array() && links.as_array().empty(), "mining bar hotspots unchanged");
 }
 
 // #590: New Detroit's concourse: a walker along the hangar platform, between
@@ -896,18 +912,22 @@ bool room_animates(const json::Value& room) {
 const std::vector<std::string> kSharedRooms = {"mercguild", "merchguild"};
 
 // Every base's own animated room, one {base, room} per line (#630). Animating
-// a room adds its line here, alongside its shipped_*() check.
+// a room adds its line here, alongside its shipped_*() check. The six bars
+// with the mining bar's painting share its patrons (#642, shipped_shared_bar()).
 using Room = std::pair<std::string, std::string>;   // {base, room}
 const std::vector<Room> kAnimatedRooms = {
     {"agricultural", "concourse"},
     {"agricultural", "landing"},
+    {"agricultural", "bar"},
     {"military", "concourse"},
     {"military", "landing"},
+    {"military", "bar"},
     {"mining", "concourse"},
     {"mining", "landing"},
     {"mining", "bar"},
     {"newcon", "concourse"},
     {"newcon", "landing"},
+    {"newcon", "bar"},
     {"newdetroit", "concourse"},
     {"newdetroit", "landing"},
     {"oxford", "concourse"},
@@ -916,8 +936,10 @@ const std::vector<Room> kAnimatedRooms = {
     {"pirate", "landing"},
     {"pleasure", "concourse"},
     {"pleasure", "landing"},
+    {"pleasure", "bar"},
     {"refinery", "concourse"},
     {"refinery", "landing"},
+    {"refinery", "bar"},
 };
 
 // #630: a room animates if and only if it's on kAnimatedRooms (or shared). A
@@ -975,7 +997,6 @@ int main() {
     shipped_newdetroit_landing();
     shipped_oxford_landing();
     shipped_military_landing();
-    shipped_mining_bar();
     shipped_pleasure();
     shipped_pleasure_billboard();
     shipped_military();
@@ -986,6 +1007,7 @@ int main() {
     cross_dir_layer_paths();
     shipped_mercguild();
     shipped_merchguild();
+    shipped_shared_bar();
     shipped_newdetroit();
     unlisted_rooms_static();
     std::printf("\n%s\n", failures == 0 ? "ALL PASS" : "FAILURES DETECTED");

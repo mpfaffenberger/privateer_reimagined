@@ -1,7 +1,7 @@
 {
   "_doc": [
     "room.lights: key = the warm table lamps, up and to the left; fill = the glowing bar counter, low right; ambient = the dim room beyond the lamps. Tuned against the painted woman's tone (#564): a soft 180 W key left the highlights at lum 53 vs the painting's 73 and the contrast at 3.0 vs 4.5 (hazy), so the key is harder and brighter, with less fill.",
-    "Mining bar 3D patrons (render_patrons.py, bake_patrons.py --room this file; the format is in patron_room.py). Plate px unless noted. Listed back to front: each clean plate is made from the plate with the earlier patrons painted out, and patrons draw in this order.",
+    "Mining bar 3D patrons (render_patrons.py, bake_patrons.py --room this file; the format is in patron_room.py). Plate px unless noted. Listed back to front: each clean plate is made from the plate with the earlier patrons painted out, and patrons draw in this order. Shared by the six bases whose bar_bg.png is this one, byte for byte (#642): bakes to assets/shared_rooms/bar/ (wire_room.py bar --like mining).",
     "model: tools/room_anim/characters/<model> (prep_character.py output).",
     "crop: plate rect rendered and patched; clean_gen: sources/<file>, an AI edit of that crop with the painted patron removed.",
     "hip_px / hip_depth (m) / yaw (deg, 0 = facing camera, -90 = screen-left): fitted live against the clean plate. A bust whose feet are hidden is placed by head [px, y, depth] (the crown at frame 0) instead of the hips.",
@@ -14,7 +14,7 @@
     "name": "Bar",
     "plate": "assets/concourse/mining/bar_bg.png",
     "build": "build/room_anim/mining/bar",
-    "out": "assets/concourse/mining/anim/bar",
+    "out": "assets/shared_rooms/bar",
     "sources": "tools/room_anim/mining/sources",
     "camera": {"horizon_y": 415.0, "eye": 1.25, "focal_px": 1200.0},
     "lights": {"key": [1.0, 0.78, 0.55], "fill": [0.62, 0.72, 1.0], "key_w": 350.0, "key_size": 0.6,
