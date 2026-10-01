@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <fstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -818,6 +819,77 @@ void shipped_oxford() {
           "Oxford keeps its nine hotspots (Library rect unchanged)");
 }
 
+// A room animates through its own "sky"/"layers" keys or, on a landing pad,
+// through its per-hull "composite" ones (base_screens.cpp load_room).
+bool room_animates(const json::Value& room) {
+    room_anim::RoomAnimDef own, composite;
+    room_anim::parse_room_anim(room, own);
+    if (const json::Value* c = room.find("composite")) room_anim::parse_room_anim(*c, composite);
+    return !own.empty() || !composite.empty();
+}
+
+// Rooms every base shares, animated once under assets/shared_rooms/<room>/
+// and checked by shipped_shared_room() (#577).
+const std::vector<std::string> kSharedRooms = {"mercguild", "merchguild"};
+
+// Every base's own animated room, one {base, room} per line (#630). Animating
+// a room adds its line here, alongside its shipped_*() check.
+using Room = std::pair<std::string, std::string>;   // {base, room}
+const std::vector<Room> kAnimatedRooms = {
+    {"agricultural", "concourse"},
+    {"agricultural", "landing"},
+    {"military", "concourse"},
+    {"military", "landing"},
+    {"mining", "concourse"},
+    {"mining", "landing"},
+    {"mining", "bar"},
+    {"newcon", "concourse"},
+    {"newcon", "landing"},
+    {"newdetroit", "concourse"},
+    {"newdetroit", "landing"},
+    {"oxford", "concourse"},
+    {"oxford", "landing"},
+    {"pirate", "concourse"},
+    {"pirate", "landing"},
+    {"pleasure", "concourse"},
+    {"pleasure", "landing"},
+    {"refinery", "concourse"},
+    {"refinery", "landing"},
+};
+
+// #630: a room animates if and only if it's on kAnimatedRooms (or shared). A
+// stray sky/layers/composite on, say, a pirate bar fails here, and so does a
+// stale allowlist line whose room no longer animates (or no longer exists).
+void unlisted_rooms_static() {
+    std::vector<Room> listed;               // allowlisted rooms seen animating
+    int unlisted = 0, still = 0;
+    for (const auto& entry : std::filesystem::directory_iterator("assets/concourse")) {
+        if (!entry.is_directory()) continue;
+        const std::string base = entry.path().filename().string();
+        const json::Value root = json::parse_file((entry.path() / "concourse.json").string());
+        const json::Value* rooms = root.find("rooms");
+        if (!rooms || !rooms->is_object()) continue;
+        for (const auto& [name, room] : rooms->as_object()) {
+            if (std::find(kSharedRooms.begin(), kSharedRooms.end(), name) != kSharedRooms.end())
+                continue;                   // every base's, checked by shipped_shared_room()
+            const Room key{base, name};
+            if (!room_animates(room)) ++still;
+            else if (std::find(kAnimatedRooms.begin(), kAnimatedRooms.end(), key) !=
+                     kAnimatedRooms.end())
+                listed.push_back(key);
+            else {
+                ++unlisted;
+                check(false, "  " + base + " " + name + ": animates, not on kAnimatedRooms");
+            }
+        }
+    }
+    for (const Room& r : kAnimatedRooms)
+        if (std::find(listed.begin(), listed.end(), r) == listed.end())
+            check(false, "  " + r.first + " " + r.second + ": on kAnimatedRooms, doesn't animate");
+    check(unlisted == 0 && listed.size() == kAnimatedRooms.size() && still > 0,
+          "only kAnimatedRooms animate (" + std::to_string(listed.size()) + " animated, " +
+              std::to_string(still) + " static)");
+}
 
 }  // namespace
 
@@ -851,6 +923,7 @@ int main() {
     shipped_mercguild();
     shipped_merchguild();
     shipped_newdetroit();
+    unlisted_rooms_static();
     std::printf("\n%s\n", failures == 0 ? "ALL PASS" : "FAILURES DETECTED");
     return failures == 0 ? 0 : 1;
 }
