@@ -9,6 +9,7 @@ import math
 
 import bmesh
 import bpy
+import numpy as np
 
 PLATE_W, PLATE_H = 1536, 1024
 
@@ -158,19 +159,25 @@ def animate_path(obj, points, z, fps, speed, frame_start=1, turn_m=0.8, lift=Non
     return frame_end
 
 
+def _rgba(img):
+    """An image's float pixels as an (N, 4) float64 array."""
+    px = np.empty(len(img.pixels), dtype=np.float32)
+    img.pixels.foreach_get(px)
+    return px.astype(np.float64).reshape(-1, 4)
+
+
 def overlay_on_plate(plate_path, guides_path, out_png):
     """Alpha-over a straight-alpha render (camera-match guides) onto the
-    plate and save it: a scene's `--check` image."""
+    plate and save it: a scene's `--check` image. Blends in float64, as the
+    per-pixel Python loop it replaced did (#617), so the PNG is unchanged."""
     plate = bpy.data.images.load(str(plate_path))
     guides = bpy.data.images.load(str(guides_path))
     w, h = plate.size
-    p, g = list(plate.pixels), list(guides.pixels)
-    for i in range(0, len(p), 4):
-        a = g[i + 3]
-        for c in range(3):
-            p[i + c] = g[i + c] * a + p[i + c] * (1.0 - a)
+    p, g = _rgba(plate), _rgba(guides)
+    a = g[:, 3:]
+    p[:, :3] = g[:, :3] * a + p[:, :3] * (1.0 - a)
     out = bpy.data.images.new("check", w, h, alpha=True)
-    out.pixels = p
+    out.pixels.foreach_set(p.astype(np.float32).ravel())
     out.filepath_raw, out.file_format = str(out_png), 'PNG'
     out.save()
 

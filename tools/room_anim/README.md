@@ -23,7 +23,7 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `bake_layer.py` | uv | plate-aware sprite encoding + atlas packing (`--base`); `bake_passes()`: landing-pad sky passes -> sheets |
 | `sky.py` | uv | star removal, mask solidify, sky fill, `half_fill()` for smooth skies, painted-star stats, star tiles, `--debug` contact sheets |
 | `composite_preview.py` | uv | engine-faithful preview from `concourse.json` (`--base`) |
-| `stage.py` | Blender | render settings, boxes, materials, lights, straight/polyline paths |
+| `stage.py` | Blender | render settings, boxes, materials, lights, straight/polyline paths, the `--check` overlay |
 | `walkers.py` | Blender | pedestrian proxies and their walk (New Con, pirate); rigged walkers (New Detroit) |
 | `patron_room.py` | both | loads a room file: camera, lights, paths, patrons (#577) |
 | `render_patrons.py` | Blender | a room's 3D patrons, camera-matched (`--room`, `--patron`) |

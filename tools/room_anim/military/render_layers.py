@@ -29,6 +29,7 @@ import actors  # noqa: E402
 import render  # noqa: E402
 import scene as hall  # noqa: E402
 from base import paths  # noqa: E402
+from stage import overlay_on_plate  # noqa: E402
 
 MILITARY = paths("military")
 TRAIN_SPEED = 4.5          # m/s, a loaded ordnance tug
@@ -121,19 +122,7 @@ def check(out_png):
     tmp = MILITARY.build / "check_guides.png"
     sc.render.filepath = str(tmp)
     bpy.ops.render.render(write_still=True)
-
-    plate = bpy.data.images.load(str(MILITARY.plate))
-    guides = bpy.data.images.load(str(tmp))
-    p, g = list(plate.pixels), list(guides.pixels)
-    for i in range(0, len(p), 4):                            # guides over the plate
-        a = g[i + 3]
-        for c in range(3):
-            p[i + c] = g[i + c] * a + p[i + c] * (1.0 - a)
-    w, h = plate.size
-    out = bpy.data.images.new("check", w, h, alpha=True)
-    out.pixels = p
-    out.filepath_raw, out.file_format = str(out_png), 'PNG'
-    out.save()
+    overlay_on_plate(MILITARY.plate, tmp, out_png)
 
 
 def main(argv):
