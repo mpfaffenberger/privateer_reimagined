@@ -13,8 +13,9 @@
 //
 // GOTCHA 1 (faction -> bank key): faction::to_name() returns "hunter"
 // for the hunter faction, but the bank uses "bounty_hunter". bank_faction()
-// handles that one outlier, and maps voiceless factions (Kilrathi, #640)
-// and Civilian to nullptr so every bank lookup resolves to no line.
+// handles that one outlier, and maps voiceless factions (see speaks():
+// Kilrathi #640, Steltek #650) and Civilian to nullptr so every bank lookup
+// resolves to no line.
 // GOTCHA 2 (category -> bank key): rumor/search/clear resolve to empty
 // pools in the bank for Phase 0 — say() then no-ops for those, which is
 // the desired behavior until those categories have actual clips.
@@ -39,7 +40,7 @@ namespace voice {
 // Public (see header): comms_menu keys its response banks off the same
 // mapping, so there's exactly one place deciding who has a voice.
 const char* bank_faction(Faction f) {
-    if (!speaks(f))             return nullptr;   // voiceless in flight (#640)
+    if (!speaks(f))             return nullptr;   // voiceless (#640, #650)
     if (f == Faction::Civilian) return nullptr;   // bases stay silent
     if (f == Faction::Hunter)   return "bounty_hunter";
     if ((int)f < 0 || (int)f >= kFactionCount) return nullptr;

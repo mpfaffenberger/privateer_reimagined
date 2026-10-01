@@ -63,12 +63,19 @@ enum class Category : uint8_t {
     Clear,      // clean scan / search passed ("Militia: 'You're clear, proceed.'")
 };
 
-// Whether faction `f` has an in-flight VOICE at all. The Kilrathi are
-// deliberately voiceless in space (#640): their comm TEXT still shows in the
-// feed, only the audio is dropped. Inline (no voice.cpp link dependency) so
-// headless harnesses compiling comm.cpp can call it too. Civilian is "voiced"
-// here — it simply has no bank of its own (see bank_faction).
-inline bool speaks(Faction f) { return f != Faction::Kilrathi; }
+// Whether faction `f` has a generic in-flight VOICE at all (barks, hail
+// replies, kill reactions). Voiceless factions:
+//   * Kilrathi (#640): their comm TEXT still shows in the feed, only the
+//     audio is dropped.
+//   * Steltek (#650): not a real faction — just the mute drone and the
+//     scout, whose interrogation is AUTHORED in scripted encounters (a
+//     separate path this predicate doesn't touch).
+// Inline (no voice.cpp link dependency) so headless harnesses compiling
+// comm.cpp can call it too. Civilian is "voiced" here — it simply has no
+// bank of its own (see bank_faction).
+inline bool speaks(Faction f) {
+    return f != Faction::Kilrathi && f != Faction::Steltek;
+}
 
 // Single source of truth for faction -> voice/response-bank key. Hunter is
 // the one outlier vs faction::to_name() ("bounty_hunter"). Returns nullptr
