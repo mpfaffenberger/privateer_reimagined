@@ -21,6 +21,7 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `flyover.py` | Blender | crater landing pads: canonical sky camera, rim-relative ship paths, render loop |
 | `ships.py` | Blender | game-mesh import, sidecar materials, orientation |
 | `bake_layer.py` | uv | plate-aware sprite encoding + atlas packing (`--base`); `bake_passes()`: landing-pad sky passes -> sheets |
+| `test_bake_layer.py` | uv | `write_sheet()` atlas sizing tests |
 | `sky.py` | uv | star removal, mask solidify, sky fill, `half_fill()` for smooth skies, painted-star stats, star tiles, `--debug` contact sheets |
 | `composite_preview.py` | uv | engine-faithful preview from `concourse.json` (`--base`) |
 | `stage.py` | Blender | render settings, boxes, materials, lights, straight/polyline paths, the `--check` overlay |
