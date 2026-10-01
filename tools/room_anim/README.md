@@ -39,7 +39,7 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `newcon/` | | New Constantinople: concourse (#515) and hangar (#553) |
 | `mining/` | | Mining base concourse: the ore train (#558) |
 | `agricultural/` | | Agricultural: concourse clouds and aircraft (#582), landing pad sky traffic (#583) |
-| `pleasure/` | | Pleasure: concourse skylight stars, marquee chase, neon (#594), billboard ad (#599), landing pad transport (#595) |
+| `pleasure/` | | Pleasure: concourse skylight stars, marquee chase, neon (#594), billboard ad (#599), landing pad transport (#595), sea shimmer and tower beacons (#606) |
 | `pirate/` | | Pirate base concourse: lanterns, pirates, a grav pod (#586) |
 | `newdetroit/` | | New Detroit: concourse walkers on the platform and plaza (#590), aircars past the landing pad (#591) |
 | `oxford/` | | Oxford: concourse air-cars and pedestrians in the garden square (#592, #610), landing pad departure at dusk (#593) |
@@ -594,6 +594,7 @@ uv run tools/room_anim/composite_preview.py --base pleasure --seconds 18 \
 | `render_billboard.py` | Blender | the billboard's ad on its flat canvas |
 | `bake_landing.py` | uv | landing pad: sky masks, half-size fills, horizon anchors; layer sheet |
 | `render_landing.py` | Blender | the transport over the sea |
+| `bake_landing_ambient.py` | uv | landing pad: per-composite sea shimmer and tower beacon sheets (#606) |
 | `landing_layers.json` | - | landing layer timing |
 
 ### Pleasure billboard (#599)
@@ -679,6 +680,41 @@ uv run tools/room_anim/composite_preview.py --base pleasure --room landing --pla
   from horizon-relative screen targets (230 px above at x 900, 110 px above
   at x 250) at a 500 m altitude. It's drawn under the plate, so each
   composite's own block, towers and parked ship occlude it.
+
+#### Shimmer and beacons (#606)
+
+The original pad's other two beats (the legacy `wtr` and `blt` overlays) come
+back as light added to each composite, in 2D like the military bay's lamps:
+the painted ripples shimmer and glints flare on the open sea, and a red
+beacon flashes on each tower's top, the two in turn.
+
+```sh
+uv run tools/room_anim/pleasure/bake_landing_ambient.py --debug build/room_anim/pleasure/ambient.png
+uv run tools/room_anim/composite_preview.py --base pleasure --room landing --plate tarsus \
+    --seconds 10 --out build/room_anim/pleasure/ambient.mp4
+```
+
+- **Per composite, not anchored.** The composites aren't one painting slid
+  up and down: the towers' tops sit up to ~60 px apart relative to the
+  horizon anchor, and every parked hull covers different sea. So each
+  composite gets `anim/landing/<hull>_shimmer.json` and `<hull>_beacons.json`,
+  found in and encoded against its own paint, drawn over the plate; the room
+  lists them once with `{plate}`.
+- **The sea** is blue-purple, outside the sky mask and below the anchor (the
+  glassy band the anchor can miss has no ripples to light anyway). The pad's
+  sky-blue puddles and some hulls' livery pass the colour test, so only
+  stretches that reach up to within 60 px of the anchor count.
+- **Crests** are paint brighter than its 9 px neighbourhood. An island's
+  shoreline passes that test all along its length, so crests fade where the
+  paint's large-scale slope is steep. The shimmer brightens each crest in
+  waves rolling toward the camera through a smooth random phase; glints
+  start on crests and drift right. 4 s loop at 8 fps: each frame spans the
+  whole sea, so the frame rate keeps the atlas modest (at most 2048x3137).
+- **Tower tops** are found by matching a patch of tarsus's blue channel
+  (dark tower, blue sky, whatever its tint) around the left roof's peak and
+  the right tower's panel corner. The sky mask's silhouettes don't work:
+  moons touch the roof on some composites and painted specks break it on
+  others. `--debug` circles them.
 
 ## Pirate concourse (#586)
 

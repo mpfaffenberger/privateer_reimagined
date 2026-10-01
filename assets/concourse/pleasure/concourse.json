@@ -144,7 +144,9 @@
         },
         "anchors": "anim/landing/anchors.json",
         "layers": [
-          "anim/landing/transport_arrival.json"
+          "anim/landing/transport_arrival.json",
+          "anim/landing/{plate}_shimmer.json",
+          "anim/landing/{plate}_beacons.json"
         ]
       },
       "links": [

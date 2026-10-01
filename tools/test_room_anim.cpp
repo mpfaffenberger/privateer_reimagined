@@ -328,6 +328,8 @@ void shipped_agricultural_landing() {
 }
 
 // #595: a transport coming in over the sea behind the Pleasure landing pad.
+// #606: glints on the sea and beacons on the towers, one sheet of each per
+// composite (the towers and the open sea sit differently on every one).
 void shipped_pleasure_landing() {
     const std::string dir = "assets/concourse/pleasure/";
     room_anim::RoomAnimDef def;
@@ -335,15 +337,32 @@ void shipped_pleasure_landing() {
         json::parse_file(dir + "concourse.json")["rooms"]["landing"]["composite"], def);
     check(def.has_sky && !def.anchors.empty(), "Pleasure landing has a sky and horizon anchors");
     check_composite_skies(dir, def, "Pleasure landing");
-    check(def.layers.size() == 1, "Pleasure landing has its transport layer");
-    check_layers(dir, def.layers);
-    for (const std::string& layer : def.layers) {
-        room_anim::SpriteSheet s;
-        std::string err;
-        check(room_anim::parse_sprite_sheet(json::parse_file(dir + layer), s, err) && s.under &&
-                  s.anchored,
-              "  the transport flies under the plate (the block and towers occlude it), anchored");
+    check(def.layers.size() == 3 && def.layers[0].find("{plate}") == std::string::npos &&
+              def.layers[1].find("{plate}") != std::string::npos &&
+              def.layers[2].find("{plate}") != std::string::npos,
+          "Pleasure landing has its transport, then per-composite shimmer + beacons");
+    if (def.layers.size() != 3) return;
+    check_layers(dir, {def.layers[0]});
+    room_anim::SpriteSheet transport;
+    std::string err;
+    check(room_anim::parse_sprite_sheet(json::parse_file(dir + def.layers[0]), transport, err) &&
+              transport.under && transport.anchored,
+          "  the transport flies under the plate (the block and towers occlude it), anchored");
+    int plates = 0;
+    for (const auto& entry : std::filesystem::directory_iterator(dir + "landing_ships")) {
+        if (entry.path().extension() != ".png") continue;
+        ++plates;
+        const room_anim::RoomAnimDef p = room_anim::for_plate(def, entry.path().stem().string());
+        const std::vector<std::string> ambient(p.layers.begin() + 1, p.layers.end());
+        check_layers(dir, ambient);
+        for (const std::string& layer : ambient) {
+            room_anim::SpriteSheet s;
+            check(room_anim::parse_sprite_sheet(json::parse_file(dir + layer), s, err) &&
+                      !s.under && !s.anchored,
+                  "  " + layer + " is encoded against its own composite (over, unanchored)");
+        }
     }
+    check(plates >= 18, "every Pleasure composite was checked");
     const json::Value links = json::parse_file(dir + "links.json")["landing"];
     check(links.as_array().size() == 2 &&
               link_rect_is(links, "Launch", -0.105f, 0.50167f, 0.8975f, 0.54f),
