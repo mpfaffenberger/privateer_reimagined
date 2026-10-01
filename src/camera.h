@@ -86,7 +86,10 @@ float mouse_dead_zone = 0.05f;
     // list. Damping bleeds velocity to zero on release for snappy stop
     // feel.
     float thrust_accel      = 200.0f;   // units / s^2, for strafe Q/E/R/F (legacy)
-    float linear_damping    = 4.0f;     // arcade stop feel on strafe release
+    // Also THE fly-by-wire slide knob: after a turn the off-nose velocity
+    // decays as e^(-k t), so sideways drift is v/k and lasts ~1/k s.
+    // Doubled from 4 to 8 to halve the slide for easier aiming (#643).
+    float linear_damping    = 8.0f;     // arcade stop feel on strafe release
     float desired_forward_speed = 0.0f; // set by + / - keys, lerped toward each frame
 
     // Ram tumble: angular velocity (world frame, rad/s) injected on a

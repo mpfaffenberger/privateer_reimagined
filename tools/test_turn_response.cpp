@@ -23,6 +23,29 @@ float run(int fps) {
     }
     return angle;
 }
+// Fly-by-wire slide (#643): sideways travel (velocity off the nose,
+// integrated over time) while a top-speed ship hauls through a 90 degree
+// turn and settles. Also reports the settled speed via out-param.
+float slide_distance(float damping, float* settled_speed) {
+    Camera ship;
+    ship.linear_damping = damping;
+    const float dt = 1.0f / 120;
+    ship.set_forward_input(ship.max_speed_cruise0);
+    for (int i = 0; i < 600; ++i) ship.integrate(dt);
+    const HMM_Vec3 start = ship.forward();
+    float slide = 0;
+    for (int i = 0; i < 1200; ++i) {
+        const bool turning = HMM_DotV3(ship.forward(), start) > 0;
+        ship.apply_mouse_aim(turning ? 1.0f : 0.0f, 0, dt);
+        ship.integrate(dt);
+        const HMM_Vec3 nose = ship.forward();
+        const HMM_Vec3 off_nose = HMM_SubV3(ship.velocity,
+            HMM_MulV3F(nose, HMM_DotV3(ship.velocity, nose)));
+        slide += HMM_LenV3(off_nose) * dt;
+    }
+    *settled_speed = HMM_LenV3(ship.velocity);
+    return slide;
+}
 }
 
 int main() {
@@ -72,5 +95,15 @@ int main() {
     const auto previous = cam.orientation;
     cam.apply_mouse_aim(0, 0, 1.0f / 60);
     check(near(previous.X, cam.orientation.X) && near(previous.W, cam.orientation.W), "no latent turn after control handoff");
+
+    float old_speed = 0, new_speed = 0;
+    const float old_slide = slide_distance(4.0f, &old_speed);  // pre-#643 tuning
+    const float new_slide = slide_distance(Camera{}.linear_damping, &new_speed);
+    const float slide_ratio = new_slide / old_slide;
+    std::printf("     90deg-turn slide: %.1f -> %.1f (x%.3f)\n", old_slide, new_slide, slide_ratio);
+    check(old_slide > 10.0f, "old tuning really slid sideways through a 90deg turn");
+    check(slide_ratio > 0.45f && slide_ratio < 0.55f, "fly-by-wire slide is about half the pre-#643 amount");
+    check(near(new_speed, Camera{}.max_speed_cruise0, 0.5f) && near(old_speed, new_speed, 0.5f),
+          "halving slide leaves top speed untouched");
     return failures ? 1 : 0;
 }
