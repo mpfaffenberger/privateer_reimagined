@@ -5,7 +5,7 @@ A room file is JSON:
     {"room": {"name": "Bar",
               "plate": "assets/concourse/mining/bar_bg.png",   # repo-relative
               "build": "build/room_anim/mining/bar",           # raw renders
-              "out": "assets/concourse/mining/anim/bar",       # baked layers
+              "out": "assets/shared_rooms/bar",                # baked layers
               "sources": "tools/room_anim/mining/sources",     # clean-plate edits
               "camera": {"horizon_y": 415.0, "eye": 1.25, "focal_px": 1200.0,
                          "vp_x": 768.0},               # optional: default the plate centre
