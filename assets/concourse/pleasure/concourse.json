@@ -21,7 +21,9 @@
         "anim/billboard_screen.json",
         "anim/billboard_ad.json",
         "anim/marquee_right.json",
-        "anim/neon_flicker.json"
+        "anim/neon_flicker.json",
+        "anim/walker_enforcer.json",
+        "anim/walker_ranger.json"
       ],
       "links": [
         {
