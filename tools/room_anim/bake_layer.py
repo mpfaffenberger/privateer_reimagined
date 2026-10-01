@@ -46,7 +46,7 @@ from base import paths
 NOISE = 5.0 / 255.0     # visible plate change below this is noise or invisible light
 SOURCE_LSB = 3.0 / 255.0  # A-B below this in the 8-bit render is quantisation, not light
 BIG_FRAME_PX = 40_000   # frames larger than this are stored at half resolution
-ATLAS_W = 1024          # atlas width to try first; doubled until the height fits
+ATLAS_W = 1024          # first width tried, or the widest sprite's; doubled till the height fits
 MAX_ATLAS_W = 4096
 # Keep atlases well inside GPU texture limits (16384 on D3D11/Metal): PIL
 # (the preview) will happily read a 1024x22586 atlas the engine can't load.
@@ -192,6 +192,19 @@ def shelf_pack(sizes, width):
     return pos, y + row_h
 
 
+def atlas_width(name, sizes):
+    """Narrowest power-of-two width from ATLAS_W that fits the widest sprite
+    (#615): shelf_pack puts an over-wide sprite at x = 0 regardless."""
+    need = max((w for w, _ in sizes), default=0) + PAD
+    if need > MAX_ATLAS_W:
+        raise SystemExit(f"{name}: a {need - PAD} px wide sprite won't fit the {MAX_ATLAS_W} px "
+                         f"atlas limit; store it at half size (load_frame max_px)")
+    width = ATLAS_W
+    while width < need:
+        width *= 2
+    return width
+
+
 def main():
     pre = argparse.ArgumentParser(add_help=False)
     pre.add_argument("--base", default="newcon", help="assets/concourse/<base>")
@@ -256,7 +269,7 @@ def write_sheet(out_dir, name, sprites, slots, canvas, fps, period_frames, offse
             unique.append(img)
         index.append(seen[id(img)])
     sizes = [(s.shape[1], s.shape[0]) for s in unique]
-    width = ATLAS_W
+    width = atlas_width(name, sizes)
     pos, height = shelf_pack(sizes, width)
     while height > MAX_ATLAS_H and width < MAX_ATLAS_W:
         width *= 2
