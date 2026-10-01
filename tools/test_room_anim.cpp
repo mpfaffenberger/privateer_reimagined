@@ -557,13 +557,43 @@ void shipped_pleasure() {
         check(std::filesystem::exists(dir + *p), "sky asset exists: " + *p);
     for (const room_anim::StarLayerDef& s : def.sky.stars)
         check(std::filesystem::exists(dir + s.tile), "star tile exists: " + s.tile);
-    check(def.layers.size() == 3, "Pleasure concourse has its marquee + neon layers");
+    check(def.layers.size() == 5, "Pleasure concourse has its marquee, billboard + neon layers");
     check_layers(dir, def.layers);
     // Acceptance: the hotspots (links.json overrides) are untouched.
     const json::Value links = json::parse_file(dir + "links.json")["concourse"];
     check(links.as_array().size() == 8 &&
               link_rect_is(links, "LandingPad", 0.80174f, 0.6784f, 0.10639f, 0.18281f),
           "Pleasure keeps its eight hotspots (LandingPad rect unchanged)");
+}
+
+// #599: the ship-rental billboard as a live ad screen. Its painted ships are
+// painted out by one always-on sprite, the ad flies over that, and both draw
+// before the right canopy's marquee chase, so the canopy stays in front.
+void shipped_pleasure_billboard() {
+    const std::string dir = "assets/concourse/pleasure/";
+    room_anim::RoomAnimDef def;
+    room_anim::parse_room_anim(json::parse_file(dir + "concourse.json")["rooms"]["concourse"],
+                               def);
+    const auto at = [&](const char* layer) {
+        return std::find(def.layers.begin(), def.layers.end(), layer) - def.layers.begin();
+    };
+    const auto screen_at = at("anim/billboard_screen.json"), ad_at = at("anim/billboard_ad.json");
+    check(screen_at < ad_at && ad_at < at("anim/marquee_right.json") &&
+              at("anim/marquee_right.json") < static_cast<long long>(def.layers.size()),
+          "billboard: painted-out screen, then the ad, then the canopy's chase");
+    room_anim::SpriteSheet screen, ad;
+    std::string err;
+    const bool ok = room_anim::parse_sprite_sheet(
+                        json::parse_file(dir + "anim/billboard_screen.json"), screen, err) &&
+                    room_anim::parse_sprite_sheet(
+                        json::parse_file(dir + "anim/billboard_ad.json"), ad, err);
+    check(ok && screen.period == 1 && screen.frames.size() == 1,
+          "  the painted-out screen is one sprite, always on");
+    bool on_screen = ok && !ad.under && !ad.frames.empty();
+    for (const room_anim::SpriteFrame& f : ad.frames)   // the billboard: x >= 1150, y 100..560
+        on_screen = on_screen && f.dst[0] >= 1150.0f && f.dst[1] >= 100.0f &&
+                    f.dst[1] + f.dst[3] <= 560.0f;
+    check(on_screen, "  the ad draws over the plate, only on the billboard");
 }
 
 // #564, #566, #568, #570, #572, #571: the mining bar's 3D patrons (all six). Each has a one-frame
@@ -914,6 +944,7 @@ int main() {
     shipped_military_landing();
     shipped_mining_bar();
     shipped_pleasure();
+    shipped_pleasure_billboard();
     shipped_military();
     shipped_pirate();
     shipped_refinery();
