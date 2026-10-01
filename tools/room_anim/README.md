@@ -24,8 +24,9 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `test_bake_layer.py` | uv | `write_sheet()` atlas sizing tests |
 | `sky.py` | uv | star removal, mask solidify, sky fill, `half_fill()` for smooth skies, painted-star stats, star tiles, `--debug` contact sheets |
 | `composite_preview.py` | uv | engine-faithful preview from `concourse.json` (`--base`) |
-| `stage.py` | Blender | render settings, boxes, materials, lights, straight/polyline paths, the `--check` overlay |
+| `stage.py` | Blender | render settings, boxes, materials, lights (`spot()`: a parented lamp), straight/polyline paths, the `--check` overlay |
 | `walkers.py` | Blender | pedestrian proxies and their walk (New Con, pirate); rigged walkers (New Detroit) |
+| `vehicles.py` | Blender | the tow tug the floor trains hitch to (mining, refinery, military): headlights, beacon sweep, hitch distance (#603) |
 | `patron_room.py` | both | loads a room file: camera, lights, paths, patrons (#577) |
 | `render_patrons.py` | Blender | a room's 3D patrons, camera-matched (`--room`, `--patron`) |
 | `bake_patrons.py` | uv | clean-plate patch + patron sheet each (`--room`); `--preview` crops |
@@ -215,7 +216,7 @@ plate to confirm.
 | `mining/` file | runs in | what |
 |---|---|---|
 | `scene.py` | Blender | two-point camera match, floor + guide-strip deck, lights |
-| `actors.py` | Blender | tug + ore hopper (game meshes), ore pile, headlights, beacon |
+| `actors.py` | Blender | ore hopper (game mesh) heaped with ore; the tug is `../vehicles.py` |
 | `render_layers.py` | Blender | the ore-train layer; `--check` overlay |
 | `layers.json` | - | loop period and phase |
 | `render_landing.py` | Blender | the Galaxy freighter pass over the landing pad (`../flyover.py`) |
@@ -1001,7 +1002,7 @@ uv run tools/room_anim/composite_preview.py --base military --seconds 38 \
 | `military/` file | runs in | what |
 |---|---|---|
 | `scene.py` | Blender | camera match, lane deck, ramp holdout, lights |
-| `actors.py` | Blender | tug + missile hopper, `Route` (filleted path by arc length) |
+| `actors.py` | Blender | missile hopper, `Route` (filleted path by arc length); the tug is `../vehicles.py` |
 | `render_layers.py` | Blender | the munitions-train layer; `--check` overlay |
 | `render_flyby.py` | Blender | the Stilettos beyond the window (straight alpha) |
 | `bake_sky.py` | uv | window mask, fill, star tiles; `--layers-only` bakes the flyby |

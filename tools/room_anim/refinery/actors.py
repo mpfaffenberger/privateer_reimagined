@@ -11,12 +11,13 @@ import importlib.util
 import math
 
 from base import TOOLS
+from vehicles import sweep_beacon, trail
 
 
 def _mining_actors():
     """mining/actors.py, loaded by path: both bases name their scene module
     `scene`, so it can't simply go on sys.path next to this one. It only
-    needs the shared ships and stage modules."""
+    needs the shared ships, stage and vehicles modules."""
     spec = importlib.util.spec_from_file_location("mining_actors",
                                                   TOOLS / "mining" / "actors.py")
     module = importlib.util.module_from_spec(spec)
@@ -25,7 +26,7 @@ def _mining_actors():
 
 
 MINING = _mining_actors()
-TRAIL = (MINING.TUG_LENGTH + MINING.HOPPER_LENGTH) / 2 + MINING.COUPLING_GAP   # m
+TRAIL = trail(MINING.HOPPER_LENGTH)       # m
 # The atrium is dimmer and browner than the mining tunnel: the stock yellow
 # glared against the painted drums, so the tug gets a heavier, cooler grime.
 TUG_GRIME = (0.42, 0.4, 0.4)
@@ -83,8 +84,5 @@ def ore_train_along(path, speed, fps, beacon_rpm=40.0):
     frames = 1 + math.ceil((path.length + TRAIL) / speed * fps)
     _key_along(tug, path, 0.0, speed, frames, fps, rumble=0.008)
     _key_along(hopper, path, TRAIL, speed, frames, fps, rumble=0.008)
-    for f in range(1, frames + 1):
-        beacon.rotation_euler = (math.radians(60.0), 0.0,
-                                 2 * math.pi * beacon_rpm / 60.0 * (f - 1) / fps)
-        beacon.keyframe_insert("rotation_euler", frame=f)
+    sweep_beacon(beacon, 1, frames, fps, beacon_rpm)
     return [tug, hopper], frames
