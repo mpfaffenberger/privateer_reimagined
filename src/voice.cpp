@@ -12,8 +12,9 @@
 // json, no allocation on the gameplay thread.
 //
 // GOTCHA 1 (faction -> bank key): faction::to_name() returns "hunter"
-// for the hunter faction, but the bank uses "bounty_hunter". The translation
-// below handles that one outlier; everything else passes through.
+// for the hunter faction, but the bank uses "bounty_hunter". bank_faction()
+// handles that one outlier, and maps voiceless factions (Kilrathi, #640)
+// and Civilian to nullptr so every bank lookup resolves to no line.
 // GOTCHA 2 (category -> bank key): rumor/search/clear resolve to empty
 // pools in the bank for Phase 0 — say() then no-ops for those, which is
 // the desired behavior until those categories have actual clips.
@@ -34,24 +35,18 @@
 
 namespace voice {
 
-namespace {
-
 // ---- faction -> bank-key translation (GOTCHA 1) -------------------------
-// The single divergence from faction::to_name() is "hunter" -> "bounty_hunter";
-// everything else passes through unchanged.
-const char* faction_to_bank_name(Faction f) {
-    switch (f) {
-        case Faction::Hunter:    return "bounty_hunter";
-        case Faction::Civilian:  return "civilian";   // not in the bank -> no-op
-        case Faction::Merchant:  return "merchant";
-        case Faction::Confed:    return "confed";
-        case Faction::Militia:   return "militia";
-        case Faction::Pirate:    return "pirate";
-        case Faction::Retro:     return "retro";
-        case Faction::Kilrathi:  return "kilrathi";
-        default:                 return nullptr;
-    }
+// Public (see header): comms_menu keys its response banks off the same
+// mapping, so there's exactly one place deciding who has a voice.
+const char* bank_faction(Faction f) {
+    if (!speaks(f))             return nullptr;   // voiceless in flight (#640)
+    if (f == Faction::Civilian) return nullptr;   // bases stay silent
+    if (f == Faction::Hunter)   return "bounty_hunter";
+    if ((int)f < 0 || (int)f >= kFactionCount) return nullptr;
+    return faction::to_name(f);
 }
+
+namespace {
 
 // ---- category -> bank-key translation (GOTCHA 2) -----------------------
 // rumor / search / clear resolve to empty pools in the bank — silent no-op.
@@ -286,8 +281,8 @@ void say(Faction speaker, Category cat,
          HMM_Vec3 world_pos, bool to_player) {
     if (!g_loaded || !audio::ready()) return;
 
-    const char* bankname = faction_to_bank_name(speaker);
-    if (!bankname) return;
+    const char* bankname = bank_faction(speaker);
+    if (!bankname) return;      // no bank / voiceless faction -> silent
     const char* catstr = category_to_bank_name(cat);
     if (!catstr) return;        // includes the rumor/search/clear silent no-op
 
@@ -338,16 +333,8 @@ void say(const std::string& voice_id, Category cat,
 }
 
 std::string voice_for(Faction f, uint32_t entity_id) {
-    // Map faction -> bank faction name. Hunter is the one outlier vs
-    // faction::to_name(); Civilian has no voice bank at all.
-    std::string bankname;
-    if (f == Faction::Hunter) {
-        bankname = "bounty_hunter";
-    } else if (f == Faction::Civilian) {
-        return "";
-    } else {
-        bankname = faction::to_name(f);
-    }
+    const char* bankname = bank_faction(f);
+    if (!bankname) return "";           // no bank / voiceless faction
 
     auto it = g_faction_voices.find(bankname);
     if (it == g_faction_voices.end() || it->second.empty()) return "";

@@ -132,24 +132,6 @@ std::unordered_map<std::string, CategoryBank> g_rumor_resp;
 // RNG for picking a random reply line. Module-static, seeded once.
 std::mt19937 g_rng{ std::random_device{}() };
 
-// Faction -> response-bank key. Same gotcha as voice.cpp: the engine's
-// Faction::Hunter maps to the bank's "bounty_hunter". Civilian has no bank
-// entry (bases stay silent for now). Returns nullptr for factions with no
-// bank presence.
-const char* faction_to_bank_name(Faction f) {
-    switch (f) {
-        case Faction::Hunter:   return "bounty_hunter";
-        case Faction::Merchant: return "merchant";
-        case Faction::Confed:   return "confed";
-        case Faction::Militia:  return "militia";
-        case Faction::Pirate:   return "pirate";
-        case Faction::Retro:    return "retro";
-        case Faction::Kilrathi: return "kilrathi";
-        case Faction::Civilian: return nullptr;   // bases stay silent
-        default:                return nullptr;
-    }
-}
-
 // Stable 32-bit hash of a base_id string (FNV-1a). Bases have no numeric
 // entity id of their own, so we synthesize one here to feed voice::voice_for
 // — same base_id always hashes to the same id, so a base ALWAYS speaks with
@@ -573,7 +555,7 @@ void select(int n) {
                                        : hash_base_id(g_chosen_base_id);
         const std::string reply_voice =
             voice::voice_for(g_chosen_faction, entity_id);
-        const char* bank = faction_to_bank_name(g_chosen_faction);
+        const char* bank = voice::bank_faction(g_chosen_faction);
         const bool has_voice = !reply_voice.empty() &&
                                g_resp_by_voice.count(reply_voice);
         const bool has_faction = bank && g_resp_by_faction.count(bank);
@@ -582,7 +564,10 @@ void select(int n) {
         // (the recipient's own voice, or — via tick()'s fallback — any voice).
         const bool has_rumor = is_rumor_ask &&
                                (!reply_voice.empty() || !g_rumor_resp.empty());
-        if (has_voice || has_faction || has_rumor) {
+        // A voiceless recipient (Kilrathi, #640) never answers: without this
+        // gate the rumor fallback above would borrow some OTHER voice.
+        if (voice::speaks(g_chosen_faction) &&
+            (has_voice || has_faction || has_rumor)) {
             g_pending.active       = true;
             g_pending.bank_faction = bank ? bank : "";
             g_pending.reply_voice  = reply_voice;

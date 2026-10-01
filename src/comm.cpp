@@ -234,8 +234,10 @@ void report_player_kill(PlayerState& player, Faction victim) {
             // Anger beats Praise (we'd rather hear the angrier faction),
             // and we cap at ONE spoken line per call no matter how many
             // factions react — so multiple anger/praise reactions in the
-            // same call don't pile on top of each other in audio.
-            if (!voice_chosen) {
+            // same call don't pile on top of each other in audio. A
+            // voiceless faction (Kilrathi, #640) keeps its text line above
+            // but never claims the one spoken slot.
+            if (!voice_chosen && voice::speaks(e.faction)) {
                 if (e.reaction == KillReaction::Anger) {
                     voice_speaker = e.faction;
                     voice_cat     = voice::Category::Hostile;

@@ -63,6 +63,19 @@ enum class Category : uint8_t {
     Clear,      // clean scan / search passed ("Militia: 'You're clear, proceed.'")
 };
 
+// Whether faction `f` has an in-flight VOICE at all. The Kilrathi are
+// deliberately voiceless in space (#640): their comm TEXT still shows in the
+// feed, only the audio is dropped. Inline (no voice.cpp link dependency) so
+// headless harnesses compiling comm.cpp can call it too. Civilian is "voiced"
+// here — it simply has no bank of its own (see bank_faction).
+inline bool speaks(Faction f) { return f != Faction::Kilrathi; }
+
+// Single source of truth for faction -> voice/response-bank key. Hunter is
+// the one outlier vs faction::to_name() ("bounty_hunter"). Returns nullptr
+// for factions with no bank: Civilian (bases stay silent) and any faction
+// that doesn't speak() — so every lookup keyed by it resolves to no line.
+const char* bank_faction(Faction f);
+
 // Load the voice-bank manifest from `path` (default
 // `assets/data/voice_bank.json`). Idempotent — replaces any prior table.
 // Missing/unparseable file is NON-fatal: say() then degrades to a silent
@@ -91,13 +104,12 @@ void say(Faction speaker, Category cat, HMM_Vec3 world_pos, bool to_player);
 void say(const std::string& voice_id, Category cat,
          HMM_Vec3 world_pos, bool to_player);
 
-// Resolve the STABLE voice_id a given entity speaks with. Maps `f` to its
-// bank faction name (Hunter -> "bounty_hunter", Civilian -> "" i.e. no
-// voice, else faction::to_name) and, if that faction has a non-empty
-// `faction_voices` list, returns the `entity_id % size`-th id — so a
-// given ship/base ALWAYS speaks with the same voice across its lifetime.
-// Returns "" when the faction has no voices (caller falls back to the
-// faction-level say()).
+// Resolve the STABLE voice_id a given entity speaks with. Maps `f` through
+// bank_faction() and, if that faction has a non-empty `faction_voices`
+// list, returns the `entity_id % size`-th id — so a given ship/base ALWAYS
+// speaks with the same voice across its lifetime. Returns "" when the
+// faction has no bank or no voices (caller falls back to the faction-level
+// say(), which is then a silent no-op for a faction with no bank).
 std::string voice_for(Faction f, uint32_t entity_id);
 
 // Per-entity voiced line: speak `cat` in `entity_id`'s OWN stable voice

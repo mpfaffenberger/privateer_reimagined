@@ -782,8 +782,12 @@ add_executable(test_salvage EXCLUDE_FROM_ALL
     tools/test_salvage.cpp src/economy.cpp src/commodity.cpp src/player.cpp
     src/json.cpp)
 target_compile_definitions(test_salvage PRIVATE ECONOMY_HEADLESS)
+# Voice-line selection (#640): real voice.cpp vs the shipped voice bank, with
+# the audio mixer stubbed in the harness so plays are counted, not heard.
+add_executable(test_voice EXCLUDE_FROM_ALL
+    tools/test_voice.cpp src/voice.cpp src/faction.cpp src/json.cpp)
 foreach(harness test_autopilot test_inventory112 test_missile test_ship_systems
-                test_reputation test_salvage)
+                test_reputation test_salvage test_voice)
     target_include_directories(${harness} PRIVATE
         ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/third_party)
 endforeach()
