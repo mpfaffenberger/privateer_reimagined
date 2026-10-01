@@ -532,6 +532,10 @@ uv run tools/room_anim/composite_preview.py --base agricultural --room landing -
   texture (the buildings are all edges), flooded from the top edge and
   grown back to the silhouettes by colour. Below tarsus's y 470 (moved per
   hull) nothing is sky: the lake mirrors it.
+  `TEXTURE_MAX` (20) sits between the cloud banks (median 13-15) and the
+  building faces (23+). At 9 it shut the crisper cloud banks out of the mask
+  on most hulls, so the craft blinked out behind hard-edged clouds (and
+  behind strakha's small moon).
 - **Moons in the fill.** The moons are inside the mask and the fill is the
   painted sky at half resolution (not the usual blurred quarter-res fill),
   so a craft passing in front of a moon covers it. No star tiles: the
@@ -540,14 +544,17 @@ uv run tools/room_anim/composite_preview.py --base agricultural --room landing -
   layers follow its silhouettes: the translation that best lines up the sky
   mask's outline with tarsus's (FFT cross-correlation). Not the moons: each
   composite was painted separately and the moons wander (300 px on
-  paradigm while the tower moves 70). Translation only, `r` fixed.
+  paradigm while the tower moves 10). Translation only, `r` fixed. A
+  complete mask matters here too: holes cut by clouds put false edges in
+  the outline (gladius registered 100 px off with them, 12 without).
+  Registering the plates' raw edges agrees within a few px on most hulls.
 - **Aircraft** use `flight.py` (above): a level f = 1024 px camera with tarsus's
   far shore (y 505) on the horizon, and paths solved from tarsus screen
   targets. Dusk light: a blue sky dome and a low pink key from behind.
 
 | `agricultural/` file | runs in | what |
 |---|---|---|
-| `bake_landing.py` | uv | per-composite sky mask, half-res fill, moon anchors; layer sheets |
+| `bake_landing.py` | uv | per-composite sky mask, half-res fill, silhouette anchors; layer sheets |
 | `render_landing.py` | Blender | dusk light, the transport and the freighter |
 | `landing_layers.json` | - | loop period and phase |
 

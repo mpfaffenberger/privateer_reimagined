@@ -63,14 +63,14 @@ SKY_LUM = 50                # shade on the pylons is darker than this
 BLUE_LEAD = 20              # violet-blue sky: blue this far above green
 PINK_LEAD = (25, -5)        # pink sky/clouds: red this far above green, blue at least this
 TEXTURE_SIGMA = 4.0         # px: blur of the luma gradient magnitude
-TEXTURE_MAX = 9.0           # sky and clouds measure 4-7; tower 12-20
+TEXTURE_MAX = 20.0          # open sky 4-7, cloud banks 13-15 (median); building faces 23+
 EDGE_GROW = 10              # px grown back toward the silhouettes
 # Anchors: the aircraft paths are aimed at tarsus's silhouettes (flight
 # past the pylons and behind the tower), so every hull's layers follow ITS
 # silhouettes: the translation that best lines up the sky mask's outline
 # with tarsus's (FFT cross-correlation at half resolution). Not the moons:
 # each hull composite was repainted separately and its moons wander (300 px
-# on paradigm, while the tower moves 70). Translation only, r fixed: the
+# on paradigm, while the tower moves 10). Translation only, r fixed: the
 # hulls are framed at nearly the same zoom.
 CANONICAL = "tarsus"
 CANON_ANCHOR = (768.0, 512.0)   # any fixed point in tarsus's frame
