@@ -2,14 +2,17 @@
 
 The merc guild woman holds her pose; over the loop she only fiddles with her
 nails (rendered: render_patrons._still rocks her hand bones for one cycle),
-glances left and right, and smiles a little. Her rig has no face or eye
+glances left and right, smiles and blinks. Her rig has no face or eye
 bones and her UVs are auto-unwrapped confetti, so the face moves are made
-here, in screen space, on the rendered frames:
+here, on the rendered frames:
 
     glance      pixels inside each eye opening shift sideways (the iris
                 moves between the lids)
-    smile       a smooth displacement field lifts her mouth corners and
-                lower lids, scaled 0..1 as it fades in and out
+    faces       AI expression frames (#601): an image model repaints her
+                face, rendered `scale` times sharper (render_patrons.py
+                --face), with a smile or closed eyes. Each is brought down
+                to plate px, checked to register with the render, and
+                blended in through feathered regions, 0..1 as it fades
 
 The room file's `still` block (plate px, seconds):
 
@@ -17,21 +20,28 @@ The room file's `still` block (plate px, seconds):
     fidget     {cycle_s, at: [[start, length]], bones}: when the rendered
                fidget cycle plays (lengths are whole cycles)
     glances    [[start, hold, -1 left | 1 right]], shift_px, eyes: [[cx, cy, rx, ry]]
-    smile      {corners: [[x, y]], lift_px, widen_px, lids: [[x, y]], lid_px,
-                sigma_px, at: [[start, rise, hold, fall]]}
+    faces      {scale, box: [x0, y0, x1, y1], feather_px, expressions:
+                {name: {src (in the room's sources/), regions: [[cx, cy, rx, ry]],
+                at: [[start, rise, hold, fall]]}}}: later expressions
+                blend over earlier ones
 
     smoke      {puffs: [{at, from: [x, y]}], particles, emit_s, life_s,
                 velocity: [vx, vy] px/s, rise_px_s, drift_px_s, wobble_px,
                 radius_px: [start, end], alpha, color, seed}: exhaled
                smoke (the merchant, #579), its own layer over the patron
 
-Every slot shows one composition of (fidget frame, glance, smile level);
+Every slot shows one composition of (fidget frame, glance, expression levels);
 each distinct one is built once and packed once (write_sheet).
 """
 import numpy as np
+from PIL import Image
 from scipy import ndimage
 
-SMILE_LEVELS = 6        # fade steps: the rise and fall share them
+LEVELS = 6              # fade steps: the rise and fall share them
+# An expression frame's mean |diff| from the render away from its regions,
+# 0-255 (bake_patrons' clean-plate check). The model repaints everything, so
+# a frame that moved or rescaled her face shows up here; a good one is ~2.
+MAX_FACE_ERROR = 6.0
 
 
 def glance(rgba, eyes, dx):
@@ -54,33 +64,41 @@ def glance(rgba, eyes, dx):
     return out
 
 
-def smile(rgba, spec, k):
-    """`rgba` warped a fraction `k` of the way into a small smile:
-    Gaussian bumps move the mouth corners up by lift_px and out by
-    widen_px, and the lower lids up by lid_px (smiling eyes), sub-pixel.
-    Only a box around the face is resampled."""
-    mid = sum(x for x, _ in spec["corners"]) / len(spec["corners"])
-    bumps = [(x, y, np.sign(x - mid) * spec.get("widen_px", 0.0), spec["lift_px"])
-             for x, y in spec["corners"]] + \
-            [(x, y, 0.0, spec["lid_px"]) for x, y in spec["lids"]]
-    sigma, reach = spec["sigma_px"], 3 * spec["sigma_px"]
-    xs0 = int(min(b[0] for b in bumps) - reach)
-    xs1 = int(max(b[0] for b in bumps) + reach) + 1
-    ys0 = int(min(b[1] for b in bumps) - reach)
-    ys1 = int(max(b[1] for b in bumps) + reach) + 1
-    yy, xx = np.mgrid[ys0:ys1, xs0:xs1].astype(float)
-    move_x, move_up = np.zeros_like(xx), np.zeros_like(xx)
-    for x, y, out_px, up_px in bumps:
-        g = np.exp(-((xx - x) ** 2 + (yy - y) ** 2) / (2 * sigma ** 2))
-        move_x += out_px * g
-        move_up += up_px * g
+def load_faces(spec, sources, rest):
+    """-> {name: (rgb, weight)}, crop-sized float arrays over `box`: each
+    expression frame at plate px and where it's blended in (its regions,
+    feathered, only where the render `rest` is opaque, so her outline
+    never changes). Exits if a frame doesn't register with `rest`."""
+    x0, y0, x1, y1 = spec["box"]
+    face = rest[y0:y1, x0:x1].astype(float)
+    opaque = ndimage.binary_erosion(face[..., 3] == 255, iterations=1)
+    yy, xx = np.mgrid[y0:y1, x0:x1].astype(float)
+    layers = {}
+    for name, expr in spec["expressions"].items():
+        src = Image.open(sources / expr["src"]).convert("RGB")
+        rgb = np.asarray(src.resize((x1 - x0, y1 - y0), Image.LANCZOS), float)
+        inside = np.zeros(yy.shape, bool)
+        for cx, cy, rx, ry in expr["regions"]:
+            inside |= ((xx - cx) / rx) ** 2 + ((yy - cy) / ry) ** 2 <= 1.0
+        away = opaque & ~ndimage.binary_dilation(inside, iterations=3)
+        error = np.abs(rgb - face[..., :3])[away].mean()
+        if error > MAX_FACE_ERROR:
+            raise SystemExit(f"{expr['src']} doesn't register with the render (error {error:.1f})")
+        layers[name] = (rgb, ndimage.gaussian_filter(inside.astype(float), spec["feather_px"]) * opaque)
+    return layers
+
+
+def wear(rgba, box, layers, levels):
+    """`rgba` with each (name, level) expression in `levels` blended in, in
+    order."""
+    x0, y0, x1, y1 = box
+    face = rgba[y0:y1, x0:x1, :3].astype(float)
+    for name, k in levels:
+        rgb, weight = layers[name]
+        a = k * weight[..., None]
+        face = face * (1.0 - a) + rgb * a
     out = rgba.copy()
-    # Sample where the content comes from: below, and nearer the middle.
-    coords = [yy - ys0 + k * move_up, xx - xs0 - k * move_x]
-    for c in range(4):
-        plane = rgba[ys0:ys1, xs0:xs1, c].astype(float)
-        out[ys0:ys1, xs0:xs1, c] = np.clip(
-            ndimage.map_coordinates(plane, coords, order=3, mode="nearest"), 0, 255).round()
+    out[y0:y1, x0:x1, :3] = np.clip(face, 0, 255).round()
     return out
 
 
@@ -137,7 +155,7 @@ def smoke(spec, fps, period):
     return sprites, slots
 
 
-def _smile_level(t, windows):
+def _level(t, windows):
     """0..1 at time `t`: eased up over rise, held, eased down over fall."""
     for start, rise, hold, fall in windows:
         u = t - start
@@ -149,16 +167,18 @@ def _smile_level(t, windows):
             k = 1.0 - (u - rise - hold) / fall
         else:
             continue
-        return round((3 * k * k - 2 * k * k * k) * SMILE_LEVELS) / SMILE_LEVELS   # smoothstep
+        return round((3 * k * k - 2 * k * k * k) * LEVELS) / LEVELS   # smoothstep
     return 0.0
 
 
-def timeline(still, fps, frames, bake):
+def timeline(still, fps, frames, bake, sources=None):
     """-> (sprites, slots, period). `frames`: the rendered fidget cycle
     (plate-sized RGBA; frames[0] is the rest pose; bit-identical frames
     may be one array). `bake`: RGBA -> (sprite, dst), the patron's
-    clip-and-trim."""
+    clip-and-trim. `sources`: the room's sources/ (expression frames)."""
     period = round(still["period_s"] * fps)
+    faces = still.get("faces")
+    layers = load_faces(faces, sources, frames[0]) if faces else {}
     cache, shown = {}, []
     for slot in range(period):
         t = slot / fps
@@ -167,12 +187,13 @@ def timeline(still, fps, frames, bake):
                      if start <= t < start + length), 0)
         look = next((d for start, hold, d in still.get("glances", [])
                      if start <= t < start + hold), 0)
-        k = _smile_level(t, still["smile"]["at"]) if "smile" in still else 0.0
-        key = (id(frames[pose]), look, k)       # identical frames share an array
+        levels = tuple((name, k) for name, expr in (faces or {}).get("expressions", {}).items()
+                       if (k := _level(t, expr["at"])))
+        key = (id(frames[pose]), look, levels)      # identical frames share an array
         if key not in cache:
             rgba = frames[pose]
-            if k:
-                rgba = smile(rgba, still["smile"], k)
+            if levels:
+                rgba = wear(rgba, faces["box"], layers, levels)
             if look:
                 rgba = glance(rgba, still["eyes"], look * still["shift_px"])
             cache[key] = bake(rgba)

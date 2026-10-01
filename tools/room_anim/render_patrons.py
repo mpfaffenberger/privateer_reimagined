@@ -4,6 +4,7 @@ Run inside Blender (headless):
     blender --background --factory-startup --python tools/room_anim/render_patrons.py -- \\
         --room tools/room_anim/mining/bar_patrons.json --patron patron_orange --frames 0:229:46
     ... -- --room <file>                    # every patron's full loop
+    ... -- --room <file> --face             # a still patron's hi-res face (#601)
 
 A room file (patron_room.py) holds the room's camera, lighting and paths,
 shared by everyone, and each patron's placement.
@@ -518,6 +519,22 @@ def render(room_file, name, frames, samples, save_blend=None):
     print(f"[render_patrons] {name} done", flush=True)
 
 
+def render_face(room_file, name, samples):
+    """The rest pose's face, `faces.scale` times sharper than the plate
+    (#601): the image model paints her expressions over it, and the bake
+    brings them back down to plate px (still.faces). Writes
+    <room build>/<patron>_face.png, the plate rect `faces.box` only."""
+    sc, f0, _ = build(room_file, samples, name)
+    faces = ROOM.patrons[name]["still"]["faces"]
+    _set_border(sc, faces["box"])
+    sc.render.use_crop_to_border = True
+    sc.render.resolution_percentage = 100 * faces["scale"]
+    sc.frame_set(f0)
+    sc.render.filepath = str(ROOM.build / f"{name}_face.png")
+    bpy.ops.render.render(write_still=True)
+    print(f"[render_patrons] {name} face done", flush=True)
+
+
 def main(argv):
     ap = argparse.ArgumentParser()
     ap.add_argument("--room", required=True, help="room file (patron_room.py)")
@@ -525,13 +542,18 @@ def main(argv):
     ap.add_argument("--frames", help="first:last[:step]")
     ap.add_argument("--samples", type=int, default=64)
     ap.add_argument("--save-blend", help="also save the scene for inspection (one patron)")
+    ap.add_argument("--face", action="store_true",
+                    help="render a still patron's hi-res face (still.faces) instead")
     args = ap.parse_args(argv)
     patrons = patron_room.load(args.room).patrons
     unknown = set(args.patron or ()) - set(patrons)
     if unknown:
         ap.error(f"unknown patron(s) {sorted(unknown)}; the room has {sorted(patrons)}")
     for name in args.patron or patrons:
-        render(args.room, name, args.frames, args.samples, args.save_blend)
+        if args.face:
+            render_face(args.room, name, args.samples)
+        else:
+            render(args.room, name, args.frames, args.samples, args.save_blend)
 
 
 if __name__ == "__main__":

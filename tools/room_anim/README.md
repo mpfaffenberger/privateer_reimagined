@@ -1062,9 +1062,27 @@ blender --background --factory-startup --python tools/room_anim/prep_character.p
 (`sources/merc_woman_ref.png` -> `characters/merc_woman_hand_rub.glb`). The
 room file's `_doc` has the camera match and every fitting decision.
 
+**Her smile and blink are AI expression frames** (#601, `still.faces`). With
+no face bones and confetti UVs, her face can't move in 3D or in texture
+space, so it's repainted in screen space:
+
+1. `render_patrons.py --face` renders the rest pose's `faces.box` at
+   `faces.scale` (8x: 720x800 for her 90x100 px face).
+2. An image model (`codex_imagegen`, the render flattened over the plate as
+   the reference) changes only the expression; the results are committed in
+   `sources/` (`merc_woman_face_smile.png`, `merc_woman_face_blink.png`).
+3. The bake brings each one down to plate px, checks it registers with the
+   render away from its `regions` (`still.MAX_FACE_ERROR`; hers are ~2), and
+   blends it in through the feathered regions, faded on its `at` windows.
+
+The image model keeps the framing well: her two frames needed no shift or
+scale. Her fingers still can't fiddle (no finger bones; option 2 in #601).
+
 ```sh
 blender --background --factory-startup --python tools/room_anim/render_patrons.py -- \
     --room tools/room_anim/guild/mercguild_patrons.json
+blender --background --factory-startup --python tools/room_anim/render_patrons.py -- \
+    --room tools/room_anim/guild/mercguild_patrons.json --face --samples 128   # her 8x face
 uv run --with scipy tools/room_anim/bake_patrons.py --room tools/room_anim/guild/mercguild_patrons.json
 cd tools/room_anim && uv run wire_room.py mercguild \
     ../../shared_rooms/mercguild/merc_woman_patch.json ../../shared_rooms/mercguild/merc_woman.json

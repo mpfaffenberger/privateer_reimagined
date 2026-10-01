@@ -3,7 +3,7 @@
     "Mercenaries' Guild 3D patron (#578): the woman behind the counter. Room file for render_patrons.py / bake_patrons.py (format: patron_room.py; patron keys: mining/bar_patrons.json's _doc).",
     "mercguild_bg.png is byte-identical in every base, so this renders against mining's copy and bakes once to assets/shared_rooms/mercguild/; each base's concourse.json names the layers as ../../shared_rooms/mercguild/<layer>.json.",
     "camera: one-point, measured (build-time LSD + RANSAC over the receding ceiling, wall and floor edges): the vanishing point is (856, 330), on her eyes, right of the plate centre with the counter square-on, so a shifted camera (vp_x), not a yawed one. f and eye come from her and the counter as the ruler: f ~ 1000 from her head size, eye 1.43 m from her head just above the horizon while leaning. Her depth comes from her arms: the painted upper arms are vertical (shoulders x 767/935 right above elbows 785/925, her weight on the counter), and a vertical 0.29 m upper arm spanning y 385-520 puts her at ~2.15 m (her face size agrees; the first guess from it, 2.7 m, left the arms too short to reach the counter). Her elbows on the counter top at 2.12 m (y 525) put it at 1.02 m, and its back/front edges (y 517/577) at 2.21/1.67 m deep, 1.65 m wide. Her hands are in front of her chest, at 2.0 m.",
-    "Her clip is Scheming_Hand_Rub (318): of the three idles tried it's the only one square to the camera (Idle stands 38 deg turned and looks 81 deg away mid-loop; Idle_02 is 16 deg turned) and its hands rub together at her chest, which is her painted fiddling. Its arms hang with the forearms level, so the upper arms aim at the painted elbows on the counter and the forearms at the painted wrists (where a 0.26 m forearm from the elbow lands: aimed at the hands, forearm + hand overshot to her forehead); the hands' aims pinch her fingers towards the painted object. She is still (Mike's review: even a damped idle was far too much motion): one held pose, the clip's first frame, with very small moves over a 12 s loop (format: still.py). She fiddles with her nails: her hands roll about their own axes (twist is all an aimed bone takes), the left at double tempo, rendered as one 2 s cycle and played for 4 s. Then she glances left, smiles a little, and glances right. The rig has no face or eye bones and her UVs are auto-unwrapped confetti, so the face moves are screen space: the glance shifts the pixels inside each eye opening (ellipses measured at 12x) sideways, and the smile is a displacement field that curls her mouth corners up 2.5 px and out 1 px and lifts her lower lids 1 px, eased in and out. bend folds her at the hips over the counter (pitch would tip her rigidly from the feet and leave her waist above it), and head_up raises her head back from the bend's full tilt to the painted downward gaze.",
+    "Her clip is Scheming_Hand_Rub (318): of the three idles tried it's the only one square to the camera (Idle stands 38 deg turned and looks 81 deg away mid-loop; Idle_02 is 16 deg turned) and its hands rub together at her chest, which is her painted fiddling. Its arms hang with the forearms level, so the upper arms aim at the painted elbows on the counter and the forearms at the painted wrists (where a 0.26 m forearm from the elbow lands: aimed at the hands, forearm + hand overshot to her forehead); the hands' aims pinch her fingers towards the painted object. She is still (Mike's review: even a damped idle was far too much motion): one held pose, the clip's first frame, with very small moves over a 12 s loop (format: still.py). She fiddles with her nails: her hands roll about their own axes (twist is all an aimed bone takes), the left at double tempo, rendered as one 2 s cycle and played for 4 s. Then she glances left, smiles, and glances right, and she blinks three times a loop: after the fidget, as each glance ends. Blinks sit where nothing else moves and start half a frame before a frame (n - 0.5) / 24 s, so all three are the same two images (half shut, shut): a blink on a fidget frame or at another sub-frame phase would be new images (test_room_anim caps her at 64). The rig has no face or eye bones and her UVs are auto-unwrapped confetti, so the face moves are made on the rendered frames: the glance shifts the pixels inside each eye opening (ellipses measured at 12x) sideways. The smile and the blink are AI expression frames (#601, still.faces): her face box rendered at 8x (render_patrons.py --face), repainted by an image model (gpt-image via codex_imagegen, the flattened render as the reference: 'keep everything, change only the expression') into sources/merc_woman_face_smile.png (closed-mouth smile, cheeks and lower lids up) and merc_woman_face_blink.png (eyes closed). Both registered with no shift or scale (mean error ~2 away from the changes). Regions are where they differ from the render at plate px: the smile's mouth and cheeks plus her lower lids, the blink's two eyes. A blink is 4 frames at 24 fps: half shut, shut, shut, half shut. bend folds her at the hips over the counter (pitch would tip her rigidly from the feet and leave her waist above it), and head_up raises her head back from the bend's full tilt to the painted downward gaze.",
     "room.lights: she's lit warm and frontal, with no hard shadows (the bar's high hard key cast her hair's shadow across her face): a big soft key and a warm fill, not the bar's blue counter glow. Tuned to the painted woman's brightness (chest/arm lum 129 vs 112 at 170/120 W) once her model was matte (prep_character.fix_materials).",
     "front: the counter top in front of her elbows. It's glossy and carries her painted reflection, which a transparent render can't make: it's never patched, so the reflection stays."
   ],
@@ -37,14 +37,22 @@
       "glances": [[5.0, 0.9, -1], [10.6, 0.7, 1]],
       "shift_px": 2.0,
       "eyes": [[831.5, 365.5, 9.0, 3.5], [860.5, 363.0, 7.5, 3.5]],
-      "smile": {
-        "corners": [[839, 393.5], [857, 392]],
-        "lift_px": 2.5,
-        "widen_px": 1.0,
-        "lids": [[832, 369], [861, 366]],
-        "lid_px": 1.0,
-        "sigma_px": 2.0,
-        "at": [[6.2, 0.5, 3.0, 0.5]]
+      "faces": {
+        "scale": 8,
+        "box": [800, 320, 890, 420],
+        "feather_px": 1.5,
+        "expressions": {
+          "smile": {
+            "src": "merc_woman_face_smile.png",
+            "regions": [[849, 395, 24, 11], [831, 369, 10, 6], [860, 362, 9, 6]],
+            "at": [[6.2, 0.6, 3.0, 0.6]]
+          },
+          "blink": {
+            "src": "merc_woman_face_blink.png",
+            "regions": [[831, 365.5, 12, 7], [860.5, 361.5, 10, 7]],
+            "at": [[4.6042, 0.06, 0.04, 0.08], [5.9375, 0.06, 0.04, 0.08], [11.3958, 0.06, 0.04, 0.08]]
+          }
+        }
       }
     },
     "aim": {
