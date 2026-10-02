@@ -1,0 +1,79 @@
+{
+  "_doc": [
+    "New Detroit bar 3D patrons (#676; render_patrons.py, bake_patrons.py --room this file; the format is in patron_room.py, the keys in mining/bar_patrons.json's _doc). The bar is painted empty, so every patron sits in an empty seat: no clean_gen/inpaint, no _patch layer. All four reuse the mining bar's models and clips (no new Meshy work), re-dressed with tint/saturation. Listed back to front, the order they draw in.",
+    "Camera: level, fitted from the painted tables. A table's post foot and the middle of its top give (foot y - horizon) / (foot y - top y) = eye / table height for both tables, which puts the horizon at y 410 and the eye at 2.4 table heights: 1.65 m for 0.68 m tables. The booths' backrests then come out 1.0 m tall (back right: floor y 597, top y 487 at 10.6 m) and the seats 0.46 m.",
+    "room.lights: key = warm, up front left; rim = warm from behind, the lanterns on the ledges behind the booths (and only the real surfaces under the patrons catch shadows); fill = the blue glow of the table strips and the bar counter. The painter's leather is vivid (saturation 0.6-0.7) and the bare renders came out grey (0.2-0.35), so the patrons get saturation and a warm lantern tint.",
+    "patron_backbooth: the Mechanic, alone on the back right sofa, facing the room. Placed by the hips (his feet show, on the floor in front of the sofa's base); the clip's hips sit 0.39 m behind the root, so hip_depth 9.95 puts them at 10.34 m. Only the floor catches his shadow (a contact pool and a faint streak to the right: the crop runs wide so it fades out, not cut square), softened (rim x0.3: the warm rim, i.e. the lantern behind him, throws it forward). Seat and backrest boxes caught the fill's 2 m-wide penumbra as a grey haze over their whole faces, cut off square at the boxes' edges (and a seat box at 10.3 m swallowed his shins). Re-dressed warm (his mining-bar jacket is navy).",
+    "patron_booth_woman / patron_booth_talker: a pair in the big booth's back seat, behind the octagonal table, turned towards each other; the Weathered Enforcer's Sitting_Answering_Questions gestures read as him talking to her. Placed by the crown (the table hides their hips). The table is a catcher (TableTop/TablePost: fitted from its post's foot at y 965 and top at y 683-790) that holds them out behind it. No backrest catcher: it caught a hard key-shadow wedge and the fill's haze (see patron_backbooth). Her clip slumps her head halfway through: lean 0.25, as in the mining bar.",
+    "patron_bartender: the Blue Jacket Worker behind the counter, hands planted on it (aim, as the mining bartender's), re-dressed in a brown jacket so he isn't the mining bartender's twin. Standing behind a counter with nothing to sit on looked like floating at 6.8 m (the back wall's foot lines up with the counter's rim); the counter's back rim (y 652-662) at a 0.95 m counter top is 3.4 m out, so he stands just behind it at 3.8 m and the Counter catcher hides him below the waist. No rim, as for the mining bartender: from behind him it threw his shadow forward across the whole painted counter."
+  ],
+  "room": {
+    "name": "Bar",
+    "plate": "assets/concourse/newdetroit/bar_bg.png",
+    "build": "build/room_anim/newdetroit/bar",
+    "out": "assets/concourse/newdetroit/anim/bar",
+    "camera": {"horizon_y": 410.0, "eye": 1.65, "focal_px": 1200.0},
+    "lights": {"key": [1.0, 0.78, 0.55], "fill": [0.55, 0.68, 1.0], "key_w": 140.0, "key_size": 0.6,
+               "fill_w": 6.0, "rim_w": 150.0, "ambient": [0.005, 0.006, 0.009]}
+  },
+  "patron_backbooth": {
+    "model": "mechanic_chair_sit_idle_m.glb",
+    "crop": [860, 400, 1240, 650],
+    "hip_px": 985.0,
+    "hip_depth": 9.95,
+    "yaw": 0.0,
+    "lean": 0.65,
+    "tint": [1.05, 0.9, 0.75],
+    "saturation": 1.4,
+    "light": {"key": 1.0, "fill": 1.0, "rim": 0.3},
+    "set": ["floor"],
+    "phase": 40,
+    "front": []
+  },
+  "patron_booth_woman": {
+    "model": "ironclad_wanderer_chair_sit_idle_f.glb",
+    "crop": [150, 380, 470, 760],
+    "head": [300, 520, 5.0],
+    "yaw": 45.0,
+    "lean": 0.25,
+    "tint": [1.05, 0.95, 0.85],
+    "saturation": 1.3,
+    "light": {"key": 0.8, "fill": 1.0, "rim": 1.0},
+    "set": [],
+    "props": [{"name": "TableTop", "px": 375, "depth": 3.6, "radius": 0.65, "z0": 0.62, "z1": 0.68},
+              {"name": "TablePost", "px": 375, "depth": 3.6, "radius": 0.08, "z0": 0.0, "z1": 0.62}],
+    "phase": 0,
+    "front": []
+  },
+  "patron_booth_talker": {
+    "model": "weathered_enforcer_sitting_answering_questions.glb",
+    "crop": [380, 380, 700, 760],
+    "head": [530, 504, 4.9],
+    "yaw": -45.0,
+    "tint": [1.05, 0.95, 0.85],
+    "saturation": 1.3,
+    "set": [],
+    "props": [{"name": "TableTop", "px": 375, "depth": 3.6, "radius": 0.65, "z0": 0.62, "z1": 0.68},
+              {"name": "TablePost", "px": 375, "depth": 3.6, "radius": 0.08, "z0": 0.0, "z1": 0.62}],
+    "phase": 90,
+    "front": []
+  },
+  "patron_bartender": {
+    "model": "blue_jacket_worker_idle_3.glb",
+    "crop": [1240, 380, 1536, 700],
+    "hip_px": 1425.0,
+    "hip_depth": 3.8,
+    "yaw": -15.0,
+    "pitch": 8.0,
+    "head_up": 8.0,
+    "tint": [1.0, 0.82, 0.72],
+    "saturation": 1.1,
+    "light": {"key": 0.6, "fill": 10.0, "rim": 0.0},
+    "aim": {"RightArm": [1340, 3.45, 0.97], "RightForeArm": [1385, 3.25, 0.97],
+            "LeftArm": [1510, 3.45, 0.97], "LeftForeArm": [1465, 3.25, 0.97]},
+    "set": [],
+    "props": [{"name": "Counter", "px": 1400, "depth": 2.97, "size": [2.6, 0.93], "z0": 0.0, "z1": 0.95}],
+    "phase": 150,
+    "front": []
+  }
+}

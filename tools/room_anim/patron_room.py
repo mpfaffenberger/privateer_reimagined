@@ -6,7 +6,8 @@ A room file is JSON:
               "plate": "assets/concourse/mining/bar_bg.png",   # repo-relative
               "build": "build/room_anim/mining/bar",           # raw renders
               "out": "assets/shared_rooms/bar",                # baked layers
-              "sources": "tools/room_anim/mining/sources",     # clean-plate edits
+              "sources": "tools/room_anim/mining/sources",     # clean-plate edits (optional:
+                                                               # a room painted empty, #676)
               "camera": {"horizon_y": 415.0, "eye": 1.25, "focal_px": 1200.0,
                          "vp_x": 768.0},               # optional: default the plate centre
               "lights": {"key": [r, g, b], "fill": [r, g, b], "key_w": 350.0,
@@ -24,7 +25,9 @@ the one an aim leaves free), `held` (a prop in a hand, riding the skin of
 `bone`'s vertices where they grip it, e.g. a cigar with a keyed ember:
 render_patrons._held), and `inpaint` (a plate-px polygon around
 the painted patron: a clean plate without an AI edit, bake_patrons.
-inpaint_patch). Room files name bones the Mixamo way; the
+inpaint_patch). A patron with neither `clean_gen` nor `inpaint` sits in an
+empty seat (#676, New Detroit's bar): nothing painted to take out, so no
+patch, and no `box`/`keep`/`reg`. Room files name bones the Mixamo way; the
 Meshy API's own 24-bone rig is mapped (render_patrons._bone).
 
 render_patrons.py and bake_patrons.py both take `--room <file>`. Pure stdlib,
@@ -46,7 +49,7 @@ def load(path):
         plate=REPO / room["plate"],
         build=REPO / room["build"],
         out=REPO / room["out"],
-        sources=REPO / room["sources"],
+        sources=REPO / room["sources"] if "sources" in room else None,
         camera=SimpleNamespace(**room["camera"]),
         lights=SimpleNamespace(**room["lights"]),
         patrons={k: v for k, v in data.items() if k != "room" and not k.startswith("_")})

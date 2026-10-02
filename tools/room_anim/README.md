@@ -24,6 +24,7 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `test_bake_layer.py` | uv | `write_sheet()` atlas sizing tests |
 | `sky.py` | uv | star removal, mask solidify, sky fill, `half_fill()` for smooth skies, painted-star stats, star tiles, `--debug` contact sheets |
 | `composite_preview.py` | uv | engine-faithful preview from `concourse.json` (`--base`) |
+| `flicker.py` | uv | lights relit straight from a plate: lantern flicker (`flame`), beacon blink (`blink`) (#586, #676) |
 | `stage.py` | Blender | render settings, boxes, materials, lights (`spot()`: a parented lamp), straight/polyline paths, the `--check` overlay |
 | `walkers.py` | Blender | pedestrian proxies and their walk (New Con, pirate); rigged walkers (New Detroit, Agricultural, Pleasure) |
 | `vehicles.py` | Blender | the tow tug the floor trains hitch to (mining, refinery, military): headlights, beacon sweep, hitch distance (#603) |
@@ -41,7 +42,7 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `agricultural/` | | Agricultural: concourse clouds and aircraft (#582), atrium walkers (#605), landing pad sky traffic (#583) |
 | `pleasure/` | | Pleasure: concourse skylight stars, marquee chase, neon (#594), billboard ad (#599), walkers behind the couches (#598), landing pad transport (#595), sea shimmer and tower beacons (#606) |
 | `pirate/` | | Pirate base concourse: lanterns, pirates, a grav pod (#586) |
-| `newdetroit/` | | New Detroit: concourse walkers on the platform and plaza (#590), aircars past the landing pad (#591) |
+| `newdetroit/` | | New Detroit: concourse walkers on the platform and plaza (#590), aircars past the landing pad (#591), bar patrons, lanterns and beacons (#676) |
 | `oxford/` | | Oxford: concourse air-cars and pedestrians in the garden square (#592, #610), landing pad departure at dusk (#593) |
 | `refinery/` | | Refinery: concourse stars, ships over the dome, the ore train (#584) and pedestrians (#623), landing pad door and ships (#585) |
 | `military/` | | Military: concourse stars, a fighter pair, the munitions train (#588), landing bay lamp chase (#589) |
@@ -901,7 +902,7 @@ minimal-alpha sprite over the plate.
 | `actors.py` | Blender | the grav pod (game mesh) and the pirates' looks |
 | `render_layers.py` | Blender | pod + pirate layers; `--check` overlay |
 | `layers.json` | - | loop period and phase |
-| `bake_lanterns.py` | uv | lantern flicker sheets, straight from the plate |
+| `bake_lanterns.py` | uv | lantern flicker sheets, straight from the plate (`flicker.py`) |
 
 Shared walker proxies (`build_walker`, `animate_walk_path`: a polyline
 walk that turns through corners) live in `walkers.py`; `stage.animate_path()`
@@ -1395,6 +1396,69 @@ uv run tools/room_anim/composite_preview.py --base newdetroit --room landing --p
   `PASSES` are where the car is seen, not world metres.
 - **Orientation.** `nd_airca`'s canopy is at -Y and its fins and drive glow
   at +Y, so `ships.FIX_EULER` turns it 180 degrees, like the Galaxy.
+
+## New Detroit bar (#676)
+
+New Detroit paints its own bar (`bar_bg.png`, not the mining bar's), and
+paints it empty: leather booths, a long counter, nobody in them. Four 3D
+patrons sit in its empty seats, all reused from the mining bar's
+`characters/` (no new Meshy work), re-dressed with `tint`/`saturation`: the
+Mechanic alone on the back right sofa, a pair talking in the big booth's
+back seat behind the octagonal table (the Ironclad Wanderer and the
+Weathered Enforcer, whose `Sitting_Answering_Questions` reads as him
+talking to her), and the Blue Jacket Worker tending bar, hands planted on
+the counter. Its glass lanterns flicker and the red beacons on the towers
+out the windows blink (`bake_bar_lights.py`, `flicker.py`).
+
+`newdetroit/bar_patrons.json` is the room file; its `_doc` has the camera
+fit and every placement decision. With nobody painted, the patrons have no
+`clean_gen`/`inpaint` and `bake_patrons.py` writes no `_patch` layers.
+
+```sh
+blender --background --factory-startup --python tools/room_anim/render_patrons.py -- \
+    --room tools/room_anim/newdetroit/bar_patrons.json
+uv run --with scipy tools/room_anim/bake_patrons.py --room tools/room_anim/newdetroit/bar_patrons.json
+uv run tools/room_anim/newdetroit/bake_bar_lights.py
+cd tools/room_anim && uv run wire_room.py bar --like newdetroit anim/bar/beacon_tower.json ...
+uv run tools/room_anim/composite_preview.py --base newdetroit --room bar --seconds 12 \
+    --out build/room_anim/newdetroit/bar.mp4
+```
+
+- **Camera from two tables.** For a level camera a table's post foot and
+  the middle of its top give `(foot - horizon) / (foot - top) = eye / height`.
+  Both tables agree on a horizon at y 410 and an eye 2.4 table heights up
+  (1.65 m). The booths then measure 1.0 m backrests and 0.46 m seats,
+  which is what booths are.
+- **Holdouts, and only real catchers.** The table in front of the booth
+  pair and the bartender's counter are `props`: they hold the patrons out
+  exactly where the painting has them. Boxes for the sofas' seats and
+  backrests caught the 2 m fill's penumbra as a grey haze over their whole
+  faces, cut off square at the boxes' edges, plus a hard key-shadow wedge:
+  dropped (the Mechanic keeps the floor, his rim at x0.3). The bartender has
+  no rim, as in the mining bar: from behind him it printed his shadow as a
+  solid band across the counter. Check a new catcher's alpha on its own.
+- **Pad the crops.** The denoiser sees nothing past a render border, so
+  the border's edge comes out as stray specks of alpha, and one speck
+  stretched every sprite to the whole crop (a 2048x7292 atlas for the
+  Mechanic, ~70x160 px). `bake_patrons.py` now drops each crop's outer 8 px
+  (`bake_layer.inset_border`, as for the concourse passes), so keep a patron
+  and their shadow at least that far inside it.
+- **No floating bartender.** Standing well back behind the counter, he read
+  as standing *on* it: the back wall's foot and the counter's rim line up,
+  so no floor shows between them. The rim at y 655 is a 0.95 m counter top
+  3.4 m out; he stands right behind it, the counter hides him below the
+  waist, and his arms are `aim`ed onto it.
+- **The painter's palette.** The leather is vivid (saturation 0.6-0.7) and
+  the bare renders came out grey (0.2-0.35): the booth pair get saturation
+  1.3 and a warm lantern `tint`, the Mechanic 1.4.
+- **Lights are 2D** (`flicker.py`, the pirate lanterns' flicker, shared
+  since): the plate is relit in linear light round each light by a loop of
+  levels, `flame()` for a lantern, `blink()` for a beacon. One layer per
+  lantern, each on its own seed, so no two flicker in step. A beacon's lit
+  frames are the painting, so they encode to nothing and draw nothing.
+- **Not yet:** the ceiling fan. Its painted blades don't fit one
+  perspective and its right-hand tips hide behind the balcony pillar, so
+  spinning it needs a 3D fan and a clean plate, not a cheap 2D layer (#683).
 
 ## Military landing pad (#589)
 
