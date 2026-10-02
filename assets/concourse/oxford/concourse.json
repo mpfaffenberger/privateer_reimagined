@@ -133,7 +133,16 @@
         320,
         200
       ],
-      "overlays": []
+      "overlays": [],
+      "layers": [
+        "anim/bar/lantern_middle.json",
+        "anim/bar/lantern_left.json",
+        "anim/bar/lantern_back.json",
+        "anim/bar/lantern_floor.json",
+        "anim/bar/patron_window.json",
+        "anim/bar/patron_listener.json",
+        "anim/bar/patron_talker.json"
+      ]
     },
     "commodity": {
       "background": "commodity_bg.png",
