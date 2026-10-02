@@ -30,6 +30,18 @@ const SkyPropCatalogEntry k_catalog[] = {
     { "sky/props/anomaly_supernova_remnant", 11.0f, 0.70f,  0.0f, 0.08f, 0.15f },
 };
 constexpr int k_catalog_count = (int)(sizeof(k_catalog) / sizeof(k_catalog[0]));
+
+// Gas clouds (#704): monochrome art, tinted at draw time.
+const char* const k_cloud_sprites[] = {
+    "sky/clouds/cloud_wisp_drift",
+    "sky/clouds/cloud_billow",
+    "sky/clouds/cloud_filament_arc",
+    "sky/clouds/cloud_tattered",
+};
+constexpr int   k_cloud_sprite_count = (int)(sizeof(k_cloud_sprites) / sizeof(k_cloud_sprites[0]));
+// ~1.2 Mm: beyond every nav in the catalog, close enough that an autopilot
+// leg (~100 km) shifts a cloud by a few degrees against the skybox.
+constexpr float k_cloud_parallax_m = 1.2e6f;
 static_assert(k_sky_prop_galaxy_count < k_catalog_count, "need anomalies too");
 
 void apply_catalog(SkyPropDef& p, const SkyPropCatalogEntry& cat) {
@@ -91,6 +103,45 @@ std::vector<SkyPropDef> autogen_sky_props(const std::string& skybox_seed) {
         out.push_back(p);
     }
     return out;
+}
+
+std::vector<SkyPropDef> autogen_sky_clouds(const std::string& skybox_seed, int count,
+                                           HMM_Vec3 tint_a, HMM_Vec3 tint_b) {
+    SkyRng rng(sky_seed_hash(skybox_seed, "#sky_clouds"));
+    const int seeded = 3 + (int)(rng.u32() % 3u);
+    const int n = count < 0 ? seeded : count;
+
+    std::vector<SkyPropDef> out;
+    out.reserve((size_t)std::max(n, 0));
+    for (int i = 0; i < n; ++i) {
+        SkyPropDef p;
+        p.sprite      = k_cloud_sprites[rng.u32() % (uint32_t)k_cloud_sprite_count];
+        p.direction   = sky_random_direction(rng);
+        p.angular_deg = rng.range(25.0f, 45.0f);
+        p.roll_rad    = rng.range(0.0f, k_two_pi);
+        p.intensity   = rng.range(0.50f, 0.75f);
+        p.spin_dps    = rng.range(-0.15f, 0.15f);
+        p.parallax_m  = k_cloud_parallax_m * rng.range(0.7f, 1.3f);
+        // Somewhere between the two nebula anchors, renormalised so the
+        // brightest channel is 1 and intensity alone sets the brightness.
+        const HMM_Vec3 mix = HMM_LerpV3(tint_a, rng.unit(), tint_b);
+        const float peak = std::max({ mix.X, mix.Y, mix.Z, 1e-3f });
+        p.tint = HMM_MulV3F(mix, 1.0f / peak);
+        out.push_back(p);
+    }
+    return out;
+}
+
+void sky_prop_apparent(const SkyPropDef& p, HMM_Vec3 camera_pos,
+                       HMM_Vec3& out_dir, float& out_deg) {
+    out_dir = p.direction;
+    out_deg = p.angular_deg;
+    if (p.parallax_m <= 0.0f) return;
+    const HMM_Vec3 v    = HMM_SubV3(HMM_MulV3F(p.direction, p.parallax_m), camera_pos);
+    const float    dist = HMM_LenV3(v);
+    if (dist < 1.0f) return;   // camera at the virtual spot; keep the defaults
+    out_dir = HMM_DivV3F(v, dist);
+    out_deg = std::min(p.angular_deg * p.parallax_m / dist, 2.0f * k_sky_prop_max_deg);
 }
 
 SkyPropDef parse_sky_prop(const json::Value& v) {

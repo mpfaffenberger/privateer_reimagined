@@ -1,6 +1,7 @@
 // -----------------------------------------------------------------------------
 // test_sky_props.cpp — backdrop seeding + override parsing: far-field
-// galaxies / anomalies (#693), comets and the meteor schedule (#701). Headless. Run from the repo root so assets/ resolves:
+// galaxies / anomalies (#693), comets and the meteor schedule (#701), gas
+// clouds and parallax (#704). Headless. Run from the repo root so assets/ resolves:
 //
 //   cmake --build build --target test_sky_props && ./build/test_sky_props
 // -----------------------------------------------------------------------------
@@ -137,6 +138,46 @@ void check_motion(const std::vector<std::string>& seeds) {
     for (int f = 0; f < 6000; ++f) any |= sky_meteor_at(off, (float)f * 0.01f, unused);
     expect("meteors_per_minute 0 = none", !any);
 }
+
+void check_clouds() {
+    std::printf("clouds\n");
+    const HMM_Vec3 a = HMM_V3(1.0f, 0.55f, 0.20f), b = HMM_V3(0.35f, 0.90f, 0.50f);
+    const auto seeded = autogen_sky_clouds("troy", -1, a, b);
+    expect("seeded cloud count is 3-5", seeded.size() >= 3 && seeded.size() <= 5);
+    expect("clouds: 0 = none", autogen_sky_clouds("troy", 0, a, b).empty());
+    expect("clouds: N forces N", autogen_sky_clouds("troy", 7, a, b).size() == 7);
+    bool valid = true, art = true;
+    for (const SkyPropDef& c : seeded) {
+        const float peak = std::fmax(c.tint.X, std::fmax(c.tint.Y, c.tint.Z));
+        valid &= approx(peak, 1.0f, 1e-3f) && c.parallax_m > 0.0f &&
+                 c.intensity > 0.0f && c.intensity <= 0.8f &&
+                 approx(HMM_LenV3(c.direction), 1.0f, 1e-3f);
+        art &= std::filesystem::exists("assets/" + c.sprite + ".png");
+    }
+    expect("clouds are faint, tinted, and parallaxed", valid);
+    expect("cloud art exists", art);
+
+    SkyPropDef far;
+    far.direction = HMM_V3(0, 0, 1);
+    far.angular_deg = 30.0f;
+    HMM_Vec3 dir;
+    float deg;
+    sky_prop_apparent(far, HMM_V3(1e5f, 0, 0), dir, deg);
+    expect("parallax 0 ignores the camera", approx(dir.Z, 1.0f) && approx(deg, 30.0f));
+
+    SkyPropDef near_cloud = far;
+    near_cloud.parallax_m = 1e6f;
+    sky_prop_apparent(near_cloud, HMM_V3(0, 0, 0), dir, deg);
+    expect("parallax from the origin = authored", approx(dir.Z, 1.0f) && approx(deg, 30.0f));
+    sky_prop_apparent(near_cloud, HMM_V3(1e5f, 0, 0), dir, deg);
+    const float shift_deg = std::acos(dir.Z) * 57.29578f;
+    std::printf("    100 km sideways at 1 Mm -> %.2f deg shift\n", shift_deg);
+    expect("100 km sideways shifts a 1 Mm cloud ~5.7 deg the other way",
+           approx(shift_deg, 5.71f, 0.05f) && dir.X < 0.0f);
+    sky_prop_apparent(near_cloud, HMM_V3(0, 0, 5e5f), dir, deg);
+    expect("flying toward a cloud grows it (capped)",
+           deg > 30.0f && deg <= 2.0f * k_sky_prop_max_deg);
+}
 } // namespace
 
 int main() {
@@ -202,6 +243,7 @@ int main() {
     expect("non-object rejected", parse_sky_prop(json::parse("[1, 2]")).sprite.empty());
 
     check_motion(seeds);
+    check_clouds();
 
     std::printf("\n=== %s ===\n", failures == 0 ? "ALL CHECKS PASSED" : "FAILURES DETECTED");
     return failures == 0 ? 0 : 1;

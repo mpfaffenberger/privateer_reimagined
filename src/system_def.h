@@ -329,6 +329,9 @@ struct StarSystem {
     // `sky.comet` / `sky.meteors_per_minute`. See sky_motion.h.
     SkyCometDef             sky_comet;
     SkyMeteorsDef           sky_meteors;
+    // Gas-cloud count (#704); -1 = seeded. Clouds themselves are seeded in
+    // main because they take the sky family's palette.
+    int                     sky_cloud_count = -1;
 
     // Studio-lighting flag for debug/inspection scenes. When true, main.cpp
     // dims the sun and parks it off-axis (same effect as --capture-clean's

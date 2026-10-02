@@ -1498,7 +1498,20 @@ void build_system_scene(bool first_time, bool show_progress) {
     if (first_time && (!g.sky_prop_render.init() || !g.sky_motion_render.init())) {
         std::fprintf(stderr, "[main] sky prop init failed\n"); std::exit(1);
     }
-    g.sky_prop_render.set_props(g.system.sky_props);
+    {
+        // Galaxies/anomalies from the system, plus gas clouds tinted to the
+        // nebula palette picked above (#704).
+        std::vector<SkyPropDef> backdrop = g.system.sky_props;
+        const std::vector<SkyPropDef> clouds = autogen_sky_clouds(
+            g.system.skybox_seed, g.system.sky_cloud_count, cfg.target_a, cfg.target_b);
+        backdrop.insert(backdrop.end(), clouds.begin(), clouds.end());
+        for (const SkyPropDef& c : clouds) {
+            std::printf("[sky]   %s  ang=%.1f deg  dir=(%.2f, %.2f, %.2f)  parallax=%.0f km\n",
+                        c.sprite.c_str(), c.angular_deg, c.direction.X, c.direction.Y,
+                        c.direction.Z, c.parallax_m / 1000.0f);
+        }
+        g.sky_prop_render.set_props(backdrop);
+    }
     g.sky_motion_render.set(g.system.sky_comet, g.system.sky_meteors);
 
     // Mesh renderer + placed mesh instances. Load OBJs from disk now; any

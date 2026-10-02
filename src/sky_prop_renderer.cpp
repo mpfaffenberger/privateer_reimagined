@@ -143,13 +143,18 @@ void SkyPropRenderer::draw(const Camera& cam, float aspect, float time_sec) cons
 
     for (const SkyPropDef& p : props_) {
         const float roll = p.roll_rad + p.spin_dps * k_deg_to_rad * time_sec;
+        HMM_Vec3 dir;
+        float deg;
+        sky_prop_apparent(p, cam.position, dir, deg);
         fs_params_t fsp{};
         const float k = p.intensity * pulse(p, time_sec);
-        fsp.tint[0] = fsp.tint[1] = fsp.tint[2] = k;
+        fsp.tint[0] = p.tint.X * k;
+        fsp.tint[1] = p.tint.Y * k;
+        fsp.tint[2] = p.tint.Z * k;
 
         b.views[VIEW_u_tex] = textures_.at(p.sprite).view;
         sg_apply_bindings(&b);
         sg_apply_uniforms(UB_fs_params, SG_RANGE(fsp));
-        draw_sky_card(sky_card_at(p.direction, p.angular_deg, p.angular_deg, roll), vp);
+        draw_sky_card(sky_card_at(dir, deg, deg, roll), vp);
     }
 }
