@@ -247,6 +247,7 @@ std::function<void()>                                       g_cinematic_stop_hoo
 std::thread       g_thread;
 std::atomic<bool> g_running{false};
 int               g_listen_fd = -1;
+int               g_port      = k_default_port;   // set once in start()
 
 // The currently-pending screenshot request. Written only from the main
 // thread in drain_commands(); read/cleared only from the main thread in
@@ -1456,14 +1457,19 @@ void handle_project(int fd, const std::string& body) {
 // Where /screenshot writes its PNG. macOS keeps the historical /tmp path.
 // Windows has no /tmp, so use %TEMP% with forward slashes: Win32 accepts
 // them, and the path drops straight into the JSON reply unescaped.
+// A non-default port (NP_DEV_REMOTE_PORT, #718) gets its own file name so
+// parallel games don't overwrite each other's shots.
 std::string screenshot_path() {
+    const std::string name = (g_port == k_default_port)
+        ? std::string("np_shot.png")
+        : "np_shot_" + std::to_string(g_port) + ".png";
 #ifdef _WIN32
     const char* tmp = std::getenv("TEMP");
-    std::string p = std::string(tmp ? tmp : ".") + "/np_shot.png";
+    std::string p = std::string(tmp ? tmp : ".") + "/" + name;
     std::replace(p.begin(), p.end(), '\\', '/');
     return p;
 #else
-    return "/tmp/np_shot.png";
+    return "/tmp/" + name;
 #endif
 }
 
@@ -1656,6 +1662,12 @@ void server_loop(int port) {
 // ---------------------------------------------------------------------------
 void start(int port) {
     if (g_running.exchange(true)) return;
+    if (const char* env = std::getenv("NP_DEV_REMOTE_PORT")) {
+        const int p = std::atoi(env);
+        if (p > 0 && p < 65536) port = p;
+        else std::fprintf(stderr, "[dev_remote] ignoring bad NP_DEV_REMOTE_PORT='%s'\n", env);
+    }
+    g_port   = port;
     g_thread = std::thread(server_loop, port);
 }
 
