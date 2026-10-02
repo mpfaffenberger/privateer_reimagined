@@ -81,7 +81,7 @@ endfunction()
 
 compile_shader(skybox)
 compile_shader(skybox_gen)
-compile_shader(sky_prop)
+compile_shader(sky_card)
 compile_shader(sun)
 compile_shader(sun_glow)
 compile_shader(sun_gas)
@@ -168,10 +168,11 @@ set(IMGUI_SRC
 # The savegame module: public API + its PlayerState <-> JSON codec (#525).
 # Every target that links savegame links all three.
 # Star-system loading plus what it seeds from skybox_seed (sky props, #693).
-# Every target that links system_def links all three.
+# Every target that links system_def links all of these.
 set(SYSTEM_DEF_SRC
     src/system_def.cpp
     src/sky_props.cpp
+    src/sky_motion.cpp
     src/sky_family.cpp
 )
 
@@ -192,7 +193,9 @@ add_executable(new_privateer
     src/camera.cpp
     src/skybox.cpp
     src/skybox_gen.cpp
+    src/sky_card.cpp
     src/sky_prop_renderer.cpp
+    src/sky_motion_renderer.cpp
     src/sun.cpp
     src/sun_corona.cpp
     src/sun_gas.cpp
@@ -688,11 +691,12 @@ target_include_directories(test_load_progress PRIVATE
     ${CMAKE_SOURCE_DIR}/src
 )
 
-# Far-field sky prop seeding + override parsing (#693). Headless.
+# Backdrop seeding, override parsing, meteor schedule (#693, #701). Headless.
 #   cmake --build build --target test_sky_props && ./build/test_sky_props
 add_executable(test_sky_props EXCLUDE_FROM_ALL
     tools/test_sky_props.cpp
     src/sky_props.cpp
+    src/sky_motion.cpp
     src/sky_family.cpp
     src/json.cpp
 )

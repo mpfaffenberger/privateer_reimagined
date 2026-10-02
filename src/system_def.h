@@ -33,6 +33,7 @@
 // -----------------------------------------------------------------------------
 
 #include "HandmadeMath.h"
+#include "sky_motion.h"
 #include "sky_props.h"
 
 #include <cstdint>
@@ -324,6 +325,10 @@ struct StarSystem {
     // otherwise the loader seeds them from skybox_seed. See sky_props.h.
     bool                    sky_props_authored = false;
     std::vector<SkyPropDef> sky_props;
+    // Things that move in the backdrop (#701). Seeded unless the JSON has
+    // `sky.comet` / `sky.meteors_per_minute`. See sky_motion.h.
+    SkyCometDef             sky_comet;
+    SkyMeteorsDef           sky_meteors;
 
     // Studio-lighting flag for debug/inspection scenes. When true, main.cpp
     // dims the sun and parks it off-axis (same effect as --capture-clean's
