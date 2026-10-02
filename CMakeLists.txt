@@ -194,6 +194,8 @@ add_executable(new_privateer
     src/star_presets.cpp
     src/title_screen.cpp
     src/title_scene.cpp
+    src/load_progress.cpp
+    src/loading_present.cpp
     src/mesh.cpp
     src/mesh_cache.cpp
     src/material.cpp
@@ -661,6 +663,16 @@ add_executable(test_world_clock EXCLUDE_FROM_ALL
     src/world_clock.cpp
 )
 target_include_directories(test_world_clock PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+# Loading-bar stage timing (#694). No engine dependencies.
+#   cmake --build build --target test_load_progress && ./build/test_load_progress
+add_executable(test_load_progress EXCLUDE_FROM_ALL
+    tools/test_load_progress.cpp
+    src/load_progress.cpp
+)
+target_include_directories(test_load_progress PRIVATE
     ${CMAKE_SOURCE_DIR}/src
 )
 

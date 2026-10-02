@@ -12,6 +12,7 @@
 // -----------------------------------------------------------------------------
 
 #include "audio.h"
+#include "busy_hook.h"
 
 #include "sokol_audio.h"
 
@@ -663,6 +664,7 @@ SampleId load(const std::string& path) {
         return it->second;
     }
 
+    busy_hook::tick();   // startup decodes hundreds of clips (#694)
     std::vector<int16_t> pcm;
     int channels = 0, rate = 0;
     if (ends_with_ext_ci(path, "mp3")) {

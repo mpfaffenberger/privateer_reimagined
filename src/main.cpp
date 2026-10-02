@@ -89,6 +89,9 @@
 #include "cinematic_studio.h"    // in-game Studio panel, Ctrl+K (Studio B)
 #include "dust.h"
 #include "loot.h"
+#include "busy_hook.h"
+#include "load_progress.h"
+#include "loading_present.h"
 #include "objectives.h"
 #include "warp_streaks.h"
 #include "jump_gate.h"
@@ -815,7 +818,12 @@ static bool cinematic_play_located(const std::string& id, std::string& err) {
 
 // ---- sokol callbacks --------------------------------------------------------
 
-void present_startup_progress(float progress, const char* stage) {
+// Loading-bar state shared by the stage presents and the heartbeat (#694).
+load_progress::Timeline g_load_timeline;
+double                  g_load_last_present_ms = 0.0;
+
+// Render one loading-bar frame into the swapchain and commit it.
+void draw_loading_frame(float progress, const char* stage) {
     debug_panel::build_loading(progress, stage);
 
     sg_pass pass{};
@@ -827,6 +835,49 @@ void present_startup_progress(float progress, const char* stage) {
     sg_end_pass();
     sg_commit();
 }
+
+// Draw one loading-bar frame from inside a blocking load and get it onto the
+// window (#694). Each call also logs how long the previous stage took, so a
+// slow stage stands out in the log.
+void present_startup_progress(float progress, const char* stage) {
+    const double now_ms = stm_ms(stm_now());
+    const load_progress::StageEnd ended =
+        g_load_timeline.advance(now_ms, progress, stage);
+    if (ended.valid) {
+        std::printf("[loading] '%s' took %.1f ms (%.1f ms into the load)\n",
+                    ended.label.c_str(), ended.stage_ms, ended.load_ms);
+    }
+
+    draw_loading_frame(progress, stage);
+    loading_present::flush();
+    g_load_last_present_ms = now_ms;
+}
+
+// busy_hook target during a blocking load: at most every 100 ms, redraw the
+// running stage with a gentle creep, so a stage that decodes files for tens
+// of seconds keeps the bar moving and the window answering Windows.
+void loading_heartbeat() {
+    constexpr double k_interval_ms = 100.0;
+    const double now_ms = stm_ms(stm_now());
+    if (now_ms - g_load_last_present_ms < k_interval_ms) return;
+    const double stage_ms = now_ms - g_load_timeline.stage_start_ms();
+    draw_loading_frame(load_progress::creep(g_load_timeline.progress(), stage_ms),
+                       g_load_timeline.label().c_str());
+    loading_present::flush();
+    g_load_last_present_ms = now_ms;
+}
+
+// Installs loading_heartbeat for one blocking load that is already showing
+// the bar. Scoped so loaders running mid-render later can never trigger it.
+struct LoadingHeartbeatScope {
+    explicit LoadingHeartbeatScope(bool enabled = true) {
+        if (enabled && loading_present::needs_heartbeat())
+            busy_hook::set(loading_heartbeat);
+    }
+    ~LoadingHeartbeatScope() { busy_hook::set(nullptr); }
+    LoadingHeartbeatScope(const LoadingHeartbeatScope&)            = delete;
+    LoadingHeartbeatScope& operator=(const LoadingHeartbeatScope&) = delete;
+};
 
 void init_cb() {
     sg_desc desc{};
@@ -880,6 +931,7 @@ void init_cb() {
     debug_panel::init();
     base_art_studio::init();
     present_startup_progress(0.08f, "Initializing renderer...");
+    const LoadingHeartbeatScope loading_heartbeat_scope;
 
     // Clear color only shows if everything else fails to draw.
     g.scene_pass_action.colors[0].load_action = SG_LOADACTION_CLEAR;
@@ -3962,6 +4014,12 @@ void frame_cb() {
     // sim the same way the title screen does so the world reads still.
     if (g.paused)      dt = 0.0f;
 
+    // A menu load (NEW, or a save-picker row) was clicked last frame: put the
+    // loading bar up FIRST, before the title teardown below, so it appears
+    // on the very next frame (#694). The pending_goto block runs the load.
+    if (!g.pending_goto.empty() && !g.pending_goto_loading_label.empty())
+        present_startup_progress(0.08f, g.pending_goto_loading_label.c_str());
+
     // Title scene (np-3dp): advance the patrol ships even while the sim
     // is frozen, otherwise the title would render static ships and the
     // 'fly by' feel wouldn't read. Lazy-init on the first frame the
@@ -3984,6 +4042,13 @@ void frame_cb() {
             constexpr int k_n = 5;   // Category count
             const int cat = (int)(h % (uint64_t)k_n);
             title_scene::Category chosen = (title_scene::Category)cat;
+            // On the very first frame this is the tail of startup: the title
+            // decodes its own ship atlases, so keep the loading bar up and
+            // the window responsive until it is ready (#694).
+            const bool startup_tail = sapp_frame_count() == 0;
+            if (startup_tail)
+                present_startup_progress(1.0f, "Preparing title screen...");
+            const LoadingHeartbeatScope loading_heartbeat_scope(startup_tail);
             title_scene::init(chosen, g.sprite_art);
             // Apply the category's star preset so the sun reads as canonical
             // (e.g. red sun for Kilrathi, yellow for the rest). NPC + the
@@ -4127,9 +4192,8 @@ void frame_cb() {
         g.pending_goto.clear();
         g.pending_goto_loading_label.clear();
         g.switch_clock_s = 0.0f;
+        // Labelled (menu) loads already put the bar up at the top of frame_cb.
         const bool show_progress = !loading_label.empty();
-        if (show_progress)
-            present_startup_progress(0.08f, loading_label.c_str());
         // The title scene holds SpriteArt/atlas pointers into the CURRENT
         // system's caches; switching underneath it leaves them dangling
         // (std::length_error reading freed GunMount/atlas memory — seen
@@ -4140,6 +4204,7 @@ void frame_cb() {
             title_scene::shutdown();
             g.title_scene_inited = false;
         }
+        const LoadingHeartbeatScope loading_heartbeat_scope(show_progress);
         load_and_build_system(target, /*first_time=*/false, show_progress);
         // Arrive like a jump: at the first gate, drifting inward — NEVER
         // at player_start, which on base-dense systems (Perry) sits inside
@@ -4157,6 +4222,11 @@ void frame_cb() {
             break;
         }
         g.keys_down.fill(false);   // no key ghosts across the switch
+        // sokol_app presents once more when we return. Every progress frame
+        // was already presented, so on D3D11's flip model the back buffer
+        // now holds stale contents; hand it the finished bar instead (#694).
+        if (show_progress)
+            draw_loading_frame(1.0f, g_load_timeline.label().c_str());
         return;
     }
 
