@@ -10,6 +10,7 @@
 // -----------------------------------------------------------------------------
 
 #include "sprite.h"
+#include "busy_hook.h"
 #include "render_config.h"
 #include "stb_image.h"
 
@@ -38,6 +39,7 @@ bool load_lights_sidecar(const std::string& sprite_base_path,
 // material.cpp but records pixel dims so callers can compute aspect.
 static bool load_png_slot(const std::string& path, TextureSlot& slot,
                           int& out_w, int& out_h) {
+    busy_hook::tick();   // ship atlases decode hundreds of PNGs (#694)
     int w = 0, h = 0, c = 0;
     uint8_t* px = stbi_load(path.c_str(), &w, &h, &c, 4);
     if (!px) {
