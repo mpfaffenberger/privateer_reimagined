@@ -128,7 +128,21 @@
         320,
         200
       ],
-      "overlays": []
+      "overlays": [],
+      "layers": [
+        "anim/bar/beacon_tower.json",
+        "anim/bar/beacon_mast.json",
+        "anim/bar/lantern_left.json",
+        "anim/bar/lantern_sconce.json",
+        "anim/bar/lantern_middle.json",
+        "anim/bar/lantern_right.json",
+        "anim/bar/lantern_wall.json",
+        "anim/bar/lantern_booth.json",
+        "anim/bar/patron_backbooth.json",
+        "anim/bar/patron_booth_woman.json",
+        "anim/bar/patron_booth_talker.json",
+        "anim/bar/patron_bartender.json"
+      ]
     },
     "commodity": {
       "background": "commodity_bg.png",

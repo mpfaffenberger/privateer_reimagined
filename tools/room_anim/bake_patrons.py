@@ -9,7 +9,9 @@ The plate stays untouched, so the painted patrons are still in it. Each 3D
 patron (the room file, patron_room.py) adds two layers on top of it:
     <patron>_patch  one static frame on a one-slot loop: the painted one out
     <patron>        the 3D idle (render_patrons.py), straight alpha
-If the layers are missing, the painting shows as painted.
+If the layers are missing, the painting shows as painted. A patron added to an
+empty seat (#676: New Detroit's bar is painted empty) has neither a
+`clean_gen` nor an `inpaint`: there's nobody to paint out, so no _patch layer.
 
 Patrons overlap (the left table), so they're listed back to front and
 stacked: each clean plate is made from the plate with every earlier
@@ -37,7 +39,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import patron_room  # noqa: E402
 import still  # noqa: E402
-from bake_layer import load_frame, write_sheet  # noqa: E402
+from bake_layer import inset_border, load_frame, write_sheet  # noqa: E402
 
 CANVAS = (1536, 1024)
 # The room being baked (patron_room.load), set by main(). One room per process.
@@ -100,6 +102,13 @@ def patron_frame(p, src):
     rgba = (np.asarray(Image.open(src).convert("RGBA")) if isinstance(src, Path) else src).copy()
     x0, y0, x1, y1 = p["crop"]
     rgba[y0:y1, x0:x1, 3][front_mask(p, y1 - y0, x1 - x0)] = 0
+    # Only the crop renders, and the denoiser sees nothing past it: its edge
+    # rows come out as stray specks of alpha, and one speck stretches every
+    # sprite to the whole crop (#676: a 2048x7292 atlas for a 70x160 px
+    # patron). Dropped like the concourse passes' (keep crops padded).
+    region = np.zeros(rgba.shape[:2], bool)
+    region[y0:y1, x0:x1] = True
+    rgba[..., 3][~inset_border(region)] = 0
     rgba[..., 3][rgba[..., 3] < SHADOW_FLOOR] = 0
     tmp = ROOM.build / "_clipped.png"
     Image.fromarray(rgba).save(tmp)
@@ -158,6 +167,12 @@ def inpaint_patch(p, plate, renders):
     return np.dstack([fill, (alpha * 255).round().astype(np.uint8)])
 
 
+def has_patch(p):
+    """Does `p` replace a painted patron (a clean-plate patch), or sit in an
+    empty seat (#676: nothing to paint out)?"""
+    return "clean_gen" in p or "inpaint" in p
+
+
 def cleaned_plate(name):
     """-> the plate (RGB) with every patron listed before `name` painted out:
     what `name`'s clean-plate source must be made from, and registered to."""
@@ -166,25 +181,19 @@ def cleaned_plate(name):
         if other == name:
             break
         q = ROOM.patrons[other]
-        plate.alpha_composite(Image.fromarray(clean_patch(q, plate.convert("RGB"))),
-                              tuple(q["crop"][:2]))
+        if has_patch(q):
+            plate.alpha_composite(Image.fromarray(clean_patch(q, plate.convert("RGB"))),
+                                  tuple(q["crop"][:2]))
     return plate.convert("RGB")
 
 
 def bake(name):
     p = ROOM.patrons[name]
-    plate = cleaned_plate(name)
     info = json.loads((ROOM.build / name / "pass.json").read_text())
     fps, frames = float(info["fps"]), int(info["frames"])
     renders = load_renders(name, p["crop"]) if "still" in p or "inpaint" in p else None
-    patch = inpaint_patch(p, plate, renders) if "inpaint" in p else clean_patch(p, plate)
-    ys, xs = np.nonzero(patch[..., 3])
-    px0, py0 = int(xs.min()), int(ys.min())
-    sprite = patch[py0:ys.max() + 1, px0:xs.max() + 1]
-    dst = [p["crop"][0] + px0, p["crop"][1] + py0, sprite.shape[1], sprite.shape[0]]
-    # A one-slot loop: slots without a frame draw nothing, so on the patron's
-    # loop the painted one would flicker back every other slot.
-    write_sheet(ROOM.out, f"{name}_patch", [(sprite, dst)], [0], CANVAS, fps, 1, 0)
+    if has_patch(p):
+        write_patch(name, p, fps, renders)
     if "still" in p:            # one held pose with small moves: still.py
         sprites, slots, frames = still.timeline(p["still"], fps, renders,
                                                 lambda rgba: patron_frame(p, rgba), ROOM.sources)
@@ -203,6 +212,19 @@ def bake(name):
     write_sheet(ROOM.out, name, sprites, slots, CANVAS, fps, frames, int(p["phase"]))
 
 
+def write_patch(name, p, fps, renders):
+    """The one-frame clean-plate patch that paints the painted `name` out."""
+    plate = cleaned_plate(name)
+    patch = inpaint_patch(p, plate, renders) if "inpaint" in p else clean_patch(p, plate)
+    ys, xs = np.nonzero(patch[..., 3])
+    px0, py0 = int(xs.min()), int(ys.min())
+    sprite = patch[py0:ys.max() + 1, px0:xs.max() + 1]
+    dst = [p["crop"][0] + px0, p["crop"][1] + py0, sprite.shape[1], sprite.shape[0]]
+    # A one-slot loop: slots without a frame draw nothing, so on the patron's
+    # loop the painted one would flicker back every other slot.
+    write_sheet(ROOM.out, f"{name}_patch", [(sprite, dst)], [0], CANVAS, fps, 1, 0)
+
+
 def preview(name, frames, out):
     """Crops of the room as the engine draws it at `frames` (patches, then the
     patrons up to `name`, back to front), beside the painted original."""
@@ -211,7 +233,7 @@ def preview(name, frames, out):
     upto = list(patrons)[:list(patrons).index(name) + 1]
     patched = Image.open(ROOM.plate).convert("RGBA")
     tiles = [patched.crop(tuple(p["crop"]))]    # PIL wants a tuple, JSON gives a list
-    for other in upto:
+    for other in (o for o in upto if has_patch(patrons[o])):
         q = patrons[other]
         patched.alpha_composite(Image.fromarray(clean_patch(q, patched.convert("RGB"))),
                                 tuple(q["crop"][:2]))

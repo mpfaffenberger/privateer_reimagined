@@ -897,6 +897,43 @@ void shipped_newdetroit() {
           "New Detroit keeps its eight hotspots (ShipDealer, LandingPad rects unchanged)");
 }
 
+// #676: New Detroit's own bar, painted empty: its lanterns flicker and the
+// beacons out the windows blink, then four 3D patrons sit in its empty seats,
+// back to front. Nobody painted to take out, so no clean-plate patches.
+void shipped_newdetroit_bar() {
+    const std::string dir = "assets/concourse/newdetroit/";
+    const std::vector<std::string> lights = {"beacon_tower",   "beacon_mast",    "lantern_left",
+                                             "lantern_sconce", "lantern_middle", "lantern_right",
+                                             "lantern_wall",   "lantern_booth"};
+    const std::vector<std::string> patrons = {"patron_backbooth", "patron_booth_woman",
+                                              "patron_booth_talker", "patron_bartender"};
+    std::vector<std::string> want;
+    for (const auto* group : {&lights, &patrons})
+        for (const std::string& name : *group) want.push_back("anim/bar/" + name + ".json");
+    room_anim::RoomAnimDef def;
+    room_anim::parse_room_anim(json::parse_file(dir + "concourse.json")["rooms"]["bar"], def);
+    check(!def.has_sky && def.layers == want,
+          "New Detroit bar: its lights, then its four patrons back to front");
+    check_layers(dir, def.layers);
+    std::vector<int> phases;
+    for (const std::string& name : want) {
+        room_anim::SpriteSheet s;
+        std::string err;
+        const bool ok = room_anim::parse_sprite_sheet(json::parse_file(dir + name), s, err);
+        check(ok && !s.under && s.period > 1, "  " + name + ": loops over the plate");
+        if (name.find("patron_") == std::string::npos) continue;
+        check(ok && s.frames.size() == static_cast<size_t>(s.period),
+              "  " + name + ": on screen in every slot of its idle");
+        phases.push_back(s.offset);
+    }
+    std::sort(phases.begin(), phases.end());
+    check(phases.size() == patrons.size() &&
+              std::adjacent_find(phases.begin(), phases.end()) == phases.end(),
+          "  patrons idle out of phase (no two share a loop phase)");
+    const json::Value links = json::parse_file(dir + "links.json")["bar"];
+    check(links.is_array() && links.as_array().empty(), "New Detroit bar hotspots unchanged");
+}
+
 // #592: the Oxford concourse's air-cars, down the avenue and along the
 // banner street, and (#610) two pedestrians. The car routes cross and the
 // don crosses the avenue, so every loop is locked to the avenue car's: a whole
@@ -952,6 +989,7 @@ const std::vector<Room> kAnimatedRooms = {
     {"newcon", "bar"},
     {"newdetroit", "concourse"},
     {"newdetroit", "landing"},
+    {"newdetroit", "bar"},
     {"oxford", "concourse"},
     {"oxford", "landing"},
     {"pirate", "concourse"},
@@ -1031,6 +1069,7 @@ int main() {
     shipped_merchguild();
     shipped_shared_bar();
     shipped_newdetroit();
+    shipped_newdetroit_bar();
     unlisted_rooms_static();
     std::printf("\n%s\n", failures == 0 ? "ALL PASS" : "FAILURES DETECTED");
     return failures == 0 ? 0 : 1;
