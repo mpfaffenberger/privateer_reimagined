@@ -31,7 +31,7 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `render_patrons.py` | Blender | a room's 3D patrons, camera-matched (`--room`, `--patron`) |
 | `bake_patrons.py` | uv | clean-plate patch + patron sheet each (`--room`); `--preview` crops |
 | `prep_character.py` | Blender | Meshy GLB -> committable model (1K textures, one clip) |
-| `meshy.py` | uv | Meshy API: image-to-3D + rig (`character`), clips (`animate`) |
+| `meshy.py` | uv | Meshy API: image-to-3D + rig (`character`), clips (`animate`), static ship hulls (`ship`, feeds `tools/render_blender_sprite_atlas.py`) |
 | `still.py` | uv | a still patron's small moves: glances, a smile, the fidget timeline |
 | `wire_room.py` | uv | point one room's `layers` at a bake, in every base's `concourse.json` (`--like`: the bases sharing its painting) |
 | `characters/` | | prepped, rigged 3D characters |
