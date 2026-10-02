@@ -104,7 +104,11 @@ void Sun::draw(const Camera& cam, float aspect, float time_sec) const {
 
     fs_params_t fsp{};
     fsp.core_color[0] = core_color.X; fsp.core_color[1] = core_color.Y;
-    fsp.core_color[2] = core_color.Z; fsp.core_color[3] = 1.0f;
+    fsp.core_color[2] = core_color.Z;
+    // HDR (#715): the disc is the brightest thing in the sky. In LDR it
+    // clipped to white for free; with a float target it would otherwise sit
+    // at ~1.0 and read DIMMER than its own additive halo. .a = intensity.
+    fsp.core_color[3] = kHdrScene ? 4.0f : 1.0f;
     fsp.glow_color[0] = glow_color.X; fsp.glow_color[1] = glow_color.Y;
     fsp.glow_color[2] = glow_color.Z; fsp.glow_color[3] = 1.0f;
     fsp.view_and_tightness[0] = cam.position.X;

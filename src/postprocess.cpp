@@ -76,6 +76,7 @@ void PostProcess::apply_bloom(const RenderTargets& rt) const {
         u.texel_and_dir[3] = 0.0f;
         u.blur_cfg[0] = bloom_blur_px;
         u.blur_cfg[1] = bloom_threshold;            // bright-pass on
+        u.blur_cfg[2] = bloom_clamp;
         sg_apply_uniforms(UB_post_blur_params, SG_RANGE(u));
 
         draw_fullscreen_triangle();

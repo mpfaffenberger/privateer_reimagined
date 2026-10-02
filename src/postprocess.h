@@ -19,6 +19,7 @@
 
 #include "sokol_gfx.h"
 #include "HandmadeMath.h"
+#include "render_config.h"
 
 #include <functional>
 
@@ -41,6 +42,15 @@ struct PostProcess {
     float bloom_blur_px   = 2.5f;   // blur radius multiplier (quarter-res)
     float bloom_strength  = 0.45f;  // how strongly bloom adds back
     float flare_strength  = 0.7f;   // overall flare intensity
+    // Peak brightness fed to bloom (0 = uncapped). HDR keeps the sun core
+    // at several x; without a cap its glow balloons past the painted size.
+    float bloom_clamp     = kHdrScene ? 2.5f : 0.0f;
+
+    // HDR tonemap (#715), applied in the composite. Only meaningful with
+    // kHdrScene; with an LDR scene nothing exceeds 1.0 for it to recover.
+    bool  tonemap      = kHdrScene;
+    float exposure     = 1.0f;     // linear scale before the shoulder
+    float tonemap_knee = 0.75f;    // below this, colours pass through as authored
 
     bool init();
     void destroy();

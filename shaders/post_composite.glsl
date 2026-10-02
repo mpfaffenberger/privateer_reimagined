@@ -23,6 +23,12 @@
 // Visibility is scaled by `flare_intensity`, which the CPU sets to 0 when
 // the sun is behind the camera or far off-screen (so no flare artifacts
 // ghost in from outside the view).
+//
+// TONEMAP (#715): the scene arrives HDR (RGBA16F). Scene + bloom + flare
+// are summed in linear HDR, scaled by exposure, then squeezed into [0,1]
+// by a highlight shoulder. Everything below the knee passes through
+// untouched, so the painted skybox / sprites look exactly as authored;
+// only energy above it rolls off smoothly instead of clipping.
 // -----------------------------------------------------------------------------
 
 @vs vs
@@ -42,6 +48,7 @@ layout(binding=0) uniform sampler   u_smp;
 layout(binding=0) uniform post_composite_params {
     vec4 sun_ndc_and_flare;   // .xy = sun NDC [-1,1] (y up), .z = flare intensity, .w = aspect (w/h)
     vec4 tint_and_bloom;      // .rgb = flare tint, .a = bloom blend amount
+    vec4 tone;                // .x = exposure, .y = shoulder knee, .z = 1 tonemap on / 0 off
 };
 
 in  vec2 v_uv;
@@ -84,6 +91,27 @@ vec3 procedural_flare(vec2 pixel_ndc, vec2 sun_ndc, float aspect, vec3 tint) {
     return halo + streaks + ghosts;
 }
 
+// Film-style "white-hot": once a pixel's peak channel climbs well past 1.0
+// its other channels start catching up, so a 4x-bright shield flash or the
+// sun's heart reads as a white core inside its coloured glow. Colours only
+// a little over 1.0 keep their hue.
+vec3 white_hot(vec3 c) {
+    float peak = max(max(c.r, c.g), c.b);
+    float t    = clamp((peak - 1.5) / 3.0, 0.0, 1.0);
+    return mix(c, vec3(peak), t * 0.4);
+}
+
+// Per-channel highlight shoulder: identity below `knee`, then an
+// exponential approach to 1.0 with matching slope at the knee (C1, so no
+// visible band where it kicks in). Per-channel on purpose: very hot
+// colours drift toward white like film, which keeps the bleached-hot read
+// the old RGBA8 clip gave the sun and explosions, minus the flat plateau.
+vec3 shoulder(vec3 x, float knee) {
+    float range = 1.0 - knee;
+    vec3  over  = max(x - knee, 0.0);
+    return min(x, vec3(knee)) + range * (1.0 - exp(-over / range));
+}
+
 void main() {
     vec3 scene = texture(sampler2D(u_scene, u_smp), v_uv).rgb;
     vec3 bloom = texture(sampler2D(u_bloom, u_smp), v_uv).rgb;
@@ -99,6 +127,9 @@ void main() {
     }
 
     vec3 color = scene + bloom * tint_and_bloom.a + flare;
+    if (tone.z > 0.5) {
+        color = shoulder(white_hot(color * tone.x), tone.y);
+    }
     frag_color = vec4(color, 1.0);
 }
 @end
