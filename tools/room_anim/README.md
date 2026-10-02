@@ -24,7 +24,7 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `test_bake_layer.py` | uv | `write_sheet()` atlas sizing tests |
 | `sky.py` | uv | star removal, mask solidify, sky fill, `half_fill()` for smooth skies, painted-star stats, star tiles, `--debug` contact sheets |
 | `composite_preview.py` | uv | engine-faithful preview from `concourse.json` (`--base`) |
-| `flicker.py` | uv | lights relit straight from a plate: lantern flicker (`flame`), beacon blink (`blink`) (#586, #676) |
+| `flicker.py` | uv | lights relit straight from a plate: lantern flicker (`flame`), beacon blink (`blink`) (#586, #676, #677) |
 | `stage.py` | Blender | render settings, boxes, materials, lights (`spot()`: a parented lamp), straight/polyline paths, the `--check` overlay |
 | `walkers.py` | Blender | pedestrian proxies and their walk (New Con, pirate); rigged walkers (New Detroit, Agricultural, Pleasure); a guided tour: walk, stop, present (Oxford ship dealer, #682) |
 | `pitched_camera.py` | both | a pitched plate camera as a class: rays, floor points, projection (#682) |
@@ -44,7 +44,7 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `pleasure/` | | Pleasure: concourse skylight stars, marquee chase, neon (#594), billboard ad (#599), walkers behind the couches (#598), landing pad transport (#595), sea shimmer and tower beacons (#606) |
 | `pirate/` | | Pirate base concourse: lanterns, pirates, a grav pod (#586) |
 | `newdetroit/` | | New Detroit: concourse walkers on the platform and plaza (#590), aircars past the landing pad (#591), bar patrons, lanterns and beacons (#676) |
-| `oxford/` | | Oxford: concourse air-cars and pedestrians in the garden square (#592, #610), landing pad departure at dusk (#593), the ship dealer's salesman (#682) |
+| `oxford/` | | Oxford: concourse air-cars and pedestrians in the garden square (#592, #610), landing pad departure at dusk (#593), the ship dealer's salesman (#682), the bar's patrons and lanterns (#677) |
 | `refinery/` | | Refinery: concourse stars, ships over the dome, the ore train (#584) and pedestrians (#623), landing pad door and ships (#585) |
 | `military/` | | Military: concourse stars, a fighter pair, the munitions train (#588), landing bay lamp chase (#589) |
 
@@ -1151,6 +1151,76 @@ uv run tools/room_anim/composite_preview.py --base oxford --room shipdealer \
   the screen and a little left, as the painted one does, over a warm, dim
   ambient.
 
+### Oxford bar (#677)
+
+The painter left this bar empty, so its 3D patrons fill empty seats
+instead of replacing painted ones: nobody is painted out (no clean plates,
+no `_patch` layers; `bake_patrons.has_patch()`), and their idles draw straight
+over the untouched `bar_bg.png`. Three regulars, all reused from the mining
+bar (models and clips; no new Meshy spend): a man alone on a high stool at
+the window, back to us, looking out at the docked ships (the Mechanic,
+`lean` 0.6); and a pair at the lantern table, the Enforcer telling a story
+(`Sitting_Answering_Questions`: his gestures read across the table) to the
+Ironclad Wanderer, chin in hand (`lean` 0.3: unlean, her clip folds her
+over her knees). Under them, the four table lanterns flicker on their own
+(`bake_bar_lanterns.py` on `flicker.py`, as in New Detroit's bar).
+
+```sh
+blender --background --factory-startup --python tools/room_anim/render_patrons.py -- \
+    --room tools/room_anim/oxford/bar_patrons.json
+uv run --with scipy tools/room_anim/bake_patrons.py --room tools/room_anim/oxford/bar_patrons.json
+uv run tools/room_anim/oxford/bake_bar_lanterns.py
+cd tools/room_anim && uv run wire_room.py bar --like oxford \
+    anim/bar/lantern_{middle,left,back,floor}.json anim/bar/patron_{window,listener,talker}.json
+uv run tools/room_anim/composite_preview.py --base oxford --room bar --seconds 12 \
+    --out build/room_anim/oxford/bar.mp4
+```
+
+- **Camera.** Long line segments (OpenCV LSD: the ceiling, the overhang,
+  the bottle shelves) vote for one vanishing point, (520, 430): one-point
+  perspective, square to the back wall, so that's `vp_x` and the horizon.
+  `eye` 1.5 m puts the window's high table at 1.08 m and its stools at
+  0.68 m, and `focal_px` 1150 comes from the round tables' ellipses. The
+  room file's `_doc` has the numbers.
+- **Seating by the hips.** These clips' roots aren't under the hips (the
+  Wanderer's hips sit 0.64 m beside hers), and the `seat` catcher looks for
+  skin over the root, so it finds none. Each pair patron's root is solved
+  so their Hips bone lands over the painted stool, at the depth where their
+  seat underside meets its top. The stools' feet are hidden (by the near
+  table, by the counter), so the seat height sets the depth, not the floor
+  contact. The window man is crown-anchored (`head`), because his high stool
+  is taller than a chair. Stools are `props` catchers: they take the
+  sitter's contact shadow.
+- **Painted furniture is approximate.** The lantern table's ellipse says
+  0.95 m radius, which would put the Enforcer's hips inside its top, so its
+  holdout is 0.75 m. The counter's rail is his `front` (below_line): it
+  hides his stool's feet in the painting, and his floor shadow on the
+  counter with them.
+- **The lantern lights them** (`room.lights.lamps`: point lights in the
+  room, at plate px, depth and height). The key/fill/rim rig always comes
+  from the upper left, which lit the back of the listener's head, since she
+  faces right, towards the lantern. A lamp on the table lights each of them
+  from their own side, and barely reaches the window man 6 m off. The room's
+  key is cut to a chandelier spill (x0.35), and warm `tint`s plus
+  `saturation` 1.3 match the painting around them: lum p50 24-25 vs 27, sat
+  0.48-0.53 vs 0.50 (render pixels vs the plate around them). The window
+  man is a cool silhouette against the stars: key x0.5, no lamp.
+- **No floor catchers** (`set: []`). On this near-black floor their shadows
+  were invisible, but they ran into each crop's edge (the pair's under the
+  lantern table) and stretched every sprite to the whole crop. The stool
+  catchers still ground them, and that's where a sitter's contact shadow
+  shows.
+- **Pad the crops** (as New Detroit's bar found, #676): the render border's
+  edge specks are dropped by `bake_patrons`' 8 px inset, so every patron
+  sits at least 10 px inside their crop. The listener's is widened to x 720:
+  her boot reaches x 668 when she stretches out, and crossed her first
+  crop's edge (cut square).
+- **Lanterns** are layers of their own, so they flicker independently, and
+  they draw under the patrons. Only the oil lanterns flicker: the chandelier,
+  sconces and bottle-shelf light are electric and hold steady. The flicker is
+  subtle (m 0.72-1.06), so the lantern-lit faces, which don't flicker, never
+  disagree with it visibly.
+
 ## Refinery concourse (#584)
 
 The painting looks down from a high balcony into a round atrium: a ring of
@@ -1309,9 +1379,10 @@ The bar's patron pipeline works for any room with painted people in it. A
 block and the patrons, back to front:
 
 - **paths:** `plate`, `build` (raw renders), `out` (baked layers), `sources`
-  (clean-plate edits), all repo-relative;
+  (clean-plate edits; none for an empty room's patrons, #677), all repo-relative;
 - **`camera`:** a level camera, `horizon_y` (plate px), `eye` (m), `focal_px`;
-- **`lights`:** key/fill colours, key/fill/rim watts, key size, ambient.
+- **`lights`:** key/fill colours, key/fill/rim watts, key size, ambient, and
+  optional `lamps`: practical point lights painted into the room (#677).
 
 `render_patrons.py --room <file>` and `bake_patrons.py --room <file>` do the
 rest. The camera and world are named after the room (`BarCam`). Fit a new

@@ -1,0 +1,70 @@
+{
+  "_doc": [
+    "Oxford bar 3D patrons (#677; render_patrons.py, bake_patrons.py --room this file; the format is in patron_room.py, patron keys in mining/bar_patrons.json's _doc). The painter left this bar empty, so nobody is painted out: no clean_gen, no patches, just the idles over the untouched plate. Every model and clip is reused from the mining bar, re-tinted so the regulars don't look like they commute. Bakes to assets/concourse/oxford/anim/bar/ (this painting is Oxford's alone).",
+    "room.camera: one-point perspective. Long line segments (the ceiling, the overhang, the bottle shelves) meet at (520, 430): the optical axis (vp_x) and the horizon. eye 1.5 m: it puts the window's high table at 1.08 m and its stools at 0.68 m (floor contact y 590 / 585, top 474 / 515). focal_px 1150 from the round tables' ellipses (near 1180, middle 1070).",
+    "Seated by the hips: these clips' roots aren't under the hips (the Wanderer's sit 0.64 m beside hers), so each pair patron's hip_px/hip_depth (the root) is solved so the Hips bone lands over the painted stool, at the depth where the seat underside meets its top (the stools' feet are hidden: by the near table, by the counter). The window man's high stool is taller than a chair, so he's crown-anchored (head). Stools are props catchers, for the contact shadow.",
+    "The lantern table: its ellipse says 0.95 m radius, which would put the Enforcer's hips inside it, so the holdout is 0.75 m. The counter's rail is his front (below_line): it hides his stool's feet, and his floor shadow on the counter.",
+    "room.lights.lamps: the lantern on that table, lighting the pair each from their own side (the rig's key comes from the upper left, which lit the back of the listener's head). The room key is cut to a chandelier spill (light.key 0.35); warm tints and saturation 1.3 match the painting around them (lum p50 24-25 vs 27, sat 0.48-0.53 vs 0.50). The window man is a cool silhouette against the stars: no lamp, key 0.5.",
+    "lean: the Wanderer's Chair_Sit_Idle_F folds her over her knees mid-loop (0.3 keeps a chin-in-hand); the Mechanic's Chair_Sit_Idle_M dives towards the window (0.6).",
+    "set []: no floor catchers. On this near-black floor their shadows were invisible, but they ran into each crop's edge (the pair's under the lantern table) and stretched every sprite to the whole crop (the render border's own specks are bake_patrons' 8 px inset: keep patrons inside it). The stool catchers (props) still ground them.",
+    "Listed back to front."
+  ],
+  "room": {
+    "name": "OxBar",
+    "plate": "assets/concourse/oxford/bar_bg.png",
+    "build": "build/room_anim/oxford/bar",
+    "out": "assets/concourse/oxford/anim/bar",
+    "camera": {"horizon_y": 430.0, "eye": 1.5, "focal_px": 1150.0, "vp_x": 520.0},
+    "lights": {"key": [1.0, 0.74, 0.48], "fill": [0.62, 0.72, 1.0], "key_w": 350.0, "key_size": 0.6,
+               "fill_w": 6.0, "rim_w": 40.0, "ambient": [0.008, 0.007, 0.006],
+               "lamps": [{"px": 690, "depth": 7.25, "z": 0.8, "color": [1.0, 0.7, 0.4], "watts": 40.0}]}
+  },
+  "patron_window": {
+    "model": "mechanic_chair_sit_idle_m.glb",
+    "crop": [10, 360, 230, 610],
+    "head": [113, 425, 11.1],
+    "yaw": 180.0,
+    "light": {"key": 0.5, "fill": 1.0, "rim": 1.0, "lamp": 0.0},
+    "tint": [0.85, 0.9, 1.0],
+    "lean": 0.6,
+    "set": [],
+    "phase": 0,
+    "props": [{"name": "StoolSeat", "px": 113, "depth": 11.05, "radius": 0.18, "z0": 0.6, "z1": 0.64}],
+    "front": []
+  },
+  "patron_listener": {
+    "model": "ironclad_wanderer_chair_sit_idle_f.glb",
+    "crop": [380, 400, 720, 700],
+    "hip_px": 636.0,
+    "hip_depth": 6.32,
+    "yaw": 70.0,
+    "light": {"key": 0.35, "fill": 1.0, "rim": 0.5},
+    "tint": [1.0, 0.88, 0.75],
+    "saturation": 1.3,
+    "lean": 0.3,
+    "set": [],
+    "phase": 120,
+    "props": [
+      {"name": "TableTop", "px": 690, "depth": 7.25, "radius": 0.75, "z0": 0.62, "z1": 0.69},
+      {"name": "StoolSeat", "px": 521, "depth": 6.82, "radius": 0.18, "z0": 0.38, "z1": 0.43}
+    ],
+    "front": []
+  },
+  "patron_talker": {
+    "model": "weathered_enforcer_sitting_answering_questions.glb",
+    "crop": [700, 400, 1000, 720],
+    "hip_px": 810.0,
+    "hip_depth": 6.66,
+    "yaw": -70.0,
+    "light": {"key": 0.35, "fill": 1.0, "rim": 0.5},
+    "tint": [1.0, 0.88, 0.75],
+    "saturation": 1.3,
+    "set": [],
+    "phase": 60,
+    "props": [
+      {"name": "TableTop", "px": 690, "depth": 7.25, "radius": 0.75, "z0": 0.62, "z1": 0.69},
+      {"name": "StoolSeat", "px": 843, "depth": 6.91, "radius": 0.18, "z0": 0.4, "z1": 0.44}
+    ],
+    "front": [{"below_line": [[63, 283], [300, 189]]}]
+  }
+}
