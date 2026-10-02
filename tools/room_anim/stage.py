@@ -122,7 +122,7 @@ def animate_straight_pass(obj, x, y_start, y_end, hover_z, frame_start, frame_en
         obj.keyframe_insert("location", frame=f)
 
 
-def _along(points, dist):
+def along(points, dist):
     """(x, y) at `dist` metres along the polyline `points`, clamped to it."""
     for i, ((x0, y0), (x1, y1)) in enumerate(zip(points, points[1:])):
         seg = math.hypot(x1 - x0, y1 - y0)
@@ -145,8 +145,8 @@ def animate_path(obj, points, z, fps, speed, frame_start=1, turn_m=0.8, lift=Non
     heading = None
     for f in range(frame_start, frame_end + 1):
         dist = length * (f - frame_start) / (frame_end - frame_start)
-        x, y = _along(points, dist)
-        (ax, ay), (bx, by) = _along(points, dist - turn_m / 2), _along(points, dist + turn_m / 2)
+        x, y = along(points, dist)
+        (ax, ay), (bx, by) = along(points, dist - turn_m / 2), along(points, dist + turn_m / 2)
         want = math.atan2(-(bx - ax), by - ay)
         if heading is not None:                     # the short way round, no spins
             want = heading + (want - heading + math.pi) % (2.0 * math.pi) - math.pi
