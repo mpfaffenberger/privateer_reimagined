@@ -189,6 +189,9 @@ namespace dev_remote {
 // even if the dev channel can't open.
 // 47001 avoids common local dev-server ports (3000, 5000, 8080, 8765, ...).
 // Scripts and docs assume it, so this is the only place it's spelled.
+// The NP_DEV_REMOTE_PORT env var overrides `port` (#718) so parallel
+// worktree builds can each run their own channel instead of racing for
+// 47001; non-default ports also get their own np_shot_<port>.png.
 constexpr int k_default_port = 47001;
 void start(int port = k_default_port);
 
