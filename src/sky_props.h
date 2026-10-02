@@ -19,6 +19,11 @@
 //   }
 //
 // An empty "props" array is an explicit opt-out.
+//
+// Gas clouds (#704) are props too: big, faint, tinted to the system's nebula
+// palette, with a finite `parallax_m` so they shift as you fly. They are
+// seeded in main (they need the sky family's palette); `"clouds": N` in the
+// "sky" object forces a count (0 = none).
 // -----------------------------------------------------------------------------
 
 #include "HandmadeMath.h"
@@ -40,6 +45,11 @@ struct SkyPropDef {
     float       pulse_hz    = 0.0f;
     float       pulse_depth = 0.0f;
     float       phase       = 0.0f;              // pulse phase offset [0, 1)
+    HMM_Vec3    tint        = { 1.0f, 1.0f, 1.0f };  // multiplies the art
+    // Virtual distance in metres. 0 = infinitely far (no parallax). Otherwise
+    // the prop sits at direction * parallax_m and is seen from the camera,
+    // but is still drawn on the far plane, so it can never be reached.
+    float       parallax_m  = 0.0f;
 };
 
 // Built-in art pack. Index order is part of the seed hash: entries
@@ -64,6 +74,16 @@ std::vector<SkyPropDef> autogen_sky_props(const std::string& skybox_seed);
 
 // Parse one authored prop. Returns a def with an empty sprite if invalid.
 SkyPropDef parse_sky_prop(const json::Value& v);
+
+// Deterministic gas clouds for `skybox_seed`, tinted between the sky
+// family's two palette anchors. `count` < 0 = seeded (3-5).
+std::vector<SkyPropDef> autogen_sky_clouds(const std::string& skybox_seed, int count,
+                                           HMM_Vec3 tint_a, HMM_Vec3 tint_b);
+
+// Where a prop appears from `camera_pos`: unit direction and apparent
+// diameter (degrees). Props with parallax_m == 0 ignore the camera.
+void sky_prop_apparent(const SkyPropDef& p, HMM_Vec3 camera_pos,
+                       HMM_Vec3& out_dir, float& out_deg);
 
 // Clamp range for angular_deg. Keeps a typo from filling the screen.
 constexpr float k_sky_prop_min_deg = 2.0f;

@@ -251,6 +251,8 @@ std::optional<StarSystem> load_system(const std::string& name_or_path) {
         if (auto* p = sky->find("meteors_per_minute"); p && p->is_number())
             s.sky_meteors.per_minute = std::max(0.0f, p->as_float());
         sky_comet = sky->find("comet");
+        if (auto* p = sky->find("clouds"); p && p->is_number())
+            s.sky_cloud_count = std::clamp(p->as_int(), 0, 8);
         if (auto* props = sky->find("props"); props && props->is_array()) {
             s.sky_props_authored = true;
             for (const auto& v : props->as_array()) {
