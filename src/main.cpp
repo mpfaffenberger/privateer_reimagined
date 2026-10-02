@@ -1415,7 +1415,10 @@ void build_system_scene(bool first_time, bool show_progress) {
         g.post.bloom_strength = 0.0f;
         g.post.flare_strength = 0.0f;
         g.post.tonemap        = false;   // atlas refs stay as-rendered (#715)
-        std::printf("[main] capture-clean studio sun enabled; bloom/flare/tonemap disabled\n");
+        g.post.vignette       = 0.0f;    // ...and deterministic (#726)
+        g.post.grain          = 0.0f;
+        g.post.dither         = false;
+        std::printf("[main] capture-clean studio sun enabled; bloom/flare/tonemap/grade disabled\n");
     } else if (g.system.studio_lighting) {
         apply_studio_sun(g.sun);
         std::printf("[main] system studio_lighting=true: dim sun enabled\n");
@@ -7208,7 +7211,7 @@ void frame_cb() {
     // the PNG over them. Must follow ALL ImGui building for this frame.
     cockpit_overlay::finalize();
     g.post.composite_to_swapchain(g.rt, g.sun.position, vp, flare_tint,
-                                  sapp_width(), sapp_height(),
+                                  sapp_width(), sapp_height(), time_sec,
                                   [] { debug_panel::render(); });
 
     sg_commit();

@@ -50,7 +50,7 @@ void PostProcess::composite_to_swapchain(const RenderTargets& rt,
                                          HMM_Vec3 sun_world_pos,
                                          const HMM_Mat4& view_proj,
                                          HMM_Vec3 flare_tint,
-                                         int fb_w, int fb_h,
+                                         int fb_w, int fb_h, float time_sec,
                                          const ExtraPassDraw& extra_pass_draw) const {
     // Project the sun into clip / NDC. Disable the flare when the sun is
     // behind the camera or far off-screen, so we don't get ghost images
@@ -90,6 +90,12 @@ void PostProcess::composite_to_swapchain(const RenderTargets& rt,
     u.tone[0] = exposure;
     u.tone[1] = tonemap_knee;
     u.tone[2] = tonemap ? 1.0f : 0.0f;
+    u.grade[0] = vignette;
+    u.grade[1] = grain;
+    u.grade[2] = dither ? 1.0f : 0.0f;
+    // Grain re-seeds per 60 Hz tick; wrapped so float precision holds up
+    // over long sessions.
+    u.grade[3] = std::fmod(std::floor(time_sec * 60.0f), 4096.0f);
     sg_apply_uniforms(UB_post_composite_params, SG_RANGE(u));
 
     sg_draw(0, 3, 1);
