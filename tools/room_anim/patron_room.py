@@ -12,7 +12,10 @@ A room file is JSON:
                          "vp_x": 768.0},               # optional: default the plate centre
               "lights": {"key": [r, g, b], "fill": [r, g, b], "key_w": 350.0,
                          "key_size": 0.6, "fill_w": 6.0, "rim_w": 40.0,
-                         "ambient": [r, g, b]}},
+                         "ambient": [r, g, b],
+                         "lamps": [{"px": 690, "depth": 7.25, "z": 0.8,   # optional:
+                                    "color": [r, g, b], "watts": 40.0,     # point lights
+                                    "radius": 0.05}]}},                    # in the room
      "<patron>": {...}, ...}                # back to front; "_" keys are docs
 
 Patron keys are documented in mining/bar_patrons.json's _doc, plus two for

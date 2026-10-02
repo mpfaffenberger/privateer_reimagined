@@ -231,6 +231,12 @@ bool loops_locked(const std::string& dir, const std::vector<std::string>& layers
     return locked;
 }
 
+// No two patrons idle in step: their loop phases (offset_frames) all differ.
+bool all_distinct(std::vector<int> phases) {
+    std::sort(phases.begin(), phases.end());
+    return std::adjacent_find(phases.begin(), phases.end()) == phases.end();
+}
+
 // The `target` link in a links list has exactly this rect.
 bool link_rect_is(const json::Value& links, const char* target, float x, float y, float w,
                   float h) {
@@ -872,9 +878,7 @@ void shipped_shared_bar() {
         check(ok && !patch.under && !patron.under, "  " + name + ": both over the plate");
         phases.push_back(patron.offset);
     }
-    std::sort(phases.begin(), phases.end());
-    check(phases.size() == patrons.size() &&
-              std::adjacent_find(phases.begin(), phases.end()) == phases.end(),
+    check(phases.size() == patrons.size() && all_distinct(phases),
           "  patrons idle out of phase (no two share a loop phase)");
     const json::Value links = json::parse_file("assets/concourse/mining/links.json")["bar"];
     check(links.is_array() && links.as_array().empty(), "mining bar hotspots unchanged");
@@ -926,9 +930,7 @@ void shipped_newdetroit_bar() {
               "  " + name + ": on screen in every slot of its idle");
         phases.push_back(s.offset);
     }
-    std::sort(phases.begin(), phases.end());
-    check(phases.size() == patrons.size() &&
-              std::adjacent_find(phases.begin(), phases.end()) == phases.end(),
+    check(phases.size() == patrons.size() && all_distinct(phases),
           "  patrons idle out of phase (no two share a loop phase)");
     const json::Value links = json::parse_file(dir + "links.json")["bar"];
     check(links.is_array() && links.as_array().empty(), "New Detroit bar hotspots unchanged");
@@ -990,6 +992,40 @@ void shipped_oxford_shipdealer() {
           "Oxford ship dealer keeps its OpenMenu hotspot");
 }
 
+// #677: the Oxford bar, which the painter left empty: four flickering table
+// lanterns, then three 3D patrons back to front (the man at the window, the
+// pair at the lantern table). Nobody is painted out, so no patches: bar_bg.png
+// shows as painted under them, and each patron is drawn in every slot.
+void shipped_oxford_bar() {
+    const std::string dir = "assets/concourse/oxford/";
+    room_anim::RoomAnimDef def;
+    room_anim::parse_room_anim(json::parse_file(dir + "concourse.json")["rooms"]["bar"], def);
+    const std::vector<std::string> lanterns = {
+        "anim/bar/lantern_middle.json", "anim/bar/lantern_left.json",
+        "anim/bar/lantern_back.json", "anim/bar/lantern_floor.json"};
+    const std::vector<std::string> patrons = {"anim/bar/patron_window.json",
+                                              "anim/bar/patron_listener.json",
+                                              "anim/bar/patron_talker.json"};
+    std::vector<std::string> order = lanterns;
+    order.insert(order.end(), patrons.begin(), patrons.end());
+    check(!def.has_sky && def.layers == order,
+          "Oxford bar has its lanterns, then its patrons back to front (no patches)");
+    check_layers(dir, def.layers);
+    std::vector<int> phases;
+    for (const std::string& layer : patrons) {
+        room_anim::SpriteSheet s;
+        std::string err;
+        const bool ok = room_anim::parse_sprite_sheet(json::parse_file(dir + layer), s, err);
+        check(ok && s.frames.size() == static_cast<size_t>(s.period) && !s.under,
+              "  " + layer + ": over the plate, drawn in every slot of its loop");
+        phases.push_back(s.offset);
+    }
+    check(phases.size() == patrons.size() && all_distinct(phases),
+          "  patrons idle out of phase (no two share a loop phase)");
+    const json::Value links = json::parse_file(dir + "links.json")["bar"];
+    check(links.is_array() && links.as_array().empty(), "Oxford bar hotspots unchanged");
+}
+
 // A room animates through its own "sky"/"layers" keys or, on a landing pad,
 // through its per-hull "composite" ones (base_screens.cpp load_room).
 bool room_animates(const json::Value& room) {
@@ -1026,6 +1062,7 @@ const std::vector<Room> kAnimatedRooms = {
     {"oxford", "concourse"},
     {"oxford", "landing"},
     {"oxford", "shipdealer"},
+    {"oxford", "bar"},
     {"pirate", "concourse"},
     {"pirate", "landing"},
     {"pleasure", "concourse"},
@@ -1099,6 +1136,7 @@ int main() {
     shipped_newcon_hangar();
     shipped_oxford();
     shipped_oxford_shipdealer();
+    shipped_oxford_bar();
     cross_dir_layer_paths();
     shipped_mercguild();
     shipped_merchguild();

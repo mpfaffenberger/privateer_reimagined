@@ -453,9 +453,10 @@ def _set_border(sc, box):
 
 
 def _lights(sc, target, mix):
-    """The room's key/fill/rim, placed around `target`. `mix` scales their
-    energies per patron ({key, fill, rim}): the room's light isn't uniform,
-    and the bartender's corner is soft and lit from the glowing counter."""
+    """The room's key/fill/rim, placed around `target`, and its lamps. `mix`
+    scales their energies per patron ({key, fill, rim, lamp}): the room's
+    light isn't uniform, and the bartender's corner is soft and lit from the
+    glowing counter."""
     lit = ROOM.lights
     world = bpy.data.worlds.new(ROOM.name)
     world.use_nodes = True
@@ -471,6 +472,13 @@ def _lights(sc, target, mix):
                     lit.fill_w * mix.get("fill", 1.0), size=2.0))
     aim(stage.light(sc, "Rim", 'AREA', target + Vector((1.0, 1.0, 1.8)), tuple(lit.key),
                     lit.rim_w * mix.get("rim", 1.0), size=1.0))
+    # Practical lamps painted into the room (#677): the Oxford bar's table
+    # lantern sits between two patrons and lights each from their own side,
+    # which the key/fill/rim rig (always from the upper left) can't.
+    for i, lamp in enumerate(getattr(lit, "lamps", [])):
+        loc = Vector((plate_to_world_x(lamp["px"], lamp["depth"]), lamp["depth"], lamp["z"]))
+        stage.light(sc, f"Lamp{i}", 'POINT', loc, tuple(lamp["color"]),
+                    lamp["watts"] * mix.get("lamp", 1.0), size=lamp.get("radius", 0.05))
 
 
 def build(room_file, samples, name=None):
