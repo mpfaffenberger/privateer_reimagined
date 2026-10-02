@@ -163,7 +163,7 @@
       ]
     },
     "equipment": {
-      "background": "../mining/equipment_bg.png",
+      "background": "equipment_bg.png",
       "bg_size": [
         1281,
         1024
