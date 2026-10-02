@@ -29,6 +29,10 @@
 // by a highlight shoulder. Everything below the knee passes through
 // untouched, so the painted skybox / sprites look exactly as authored;
 // only energy above it rolls off smoothly instead of clipping.
+//
+// GRADE (#726), in display space after the tonemap: a subtle vignette,
+// light animated film grain, and +-0.5 LSB dither so the 8-bit write
+// doesn't band the big dark nebula gradients.
 // -----------------------------------------------------------------------------
 
 @vs vs
@@ -49,6 +53,7 @@ layout(binding=0) uniform post_composite_params {
     vec4 sun_ndc_and_flare;   // .xy = sun NDC [-1,1] (y up), .z = flare intensity, .w = aspect (w/h)
     vec4 tint_and_bloom;      // .rgb = flare tint, .a = bloom blend amount
     vec4 tone;                // .x = exposure, .y = shoulder knee, .z = 1 tonemap on / 0 off
+    vec4 grade;               // .x = vignette, .y = grain, .z = 1 dither on, .w = grain frame seed
 };
 
 in  vec2 v_uv;
@@ -112,6 +117,31 @@ vec3 shoulder(vec3 x, float knee) {
     return min(x, vec3(knee)) + range * (1.0 - exp(-over / range));
 }
 
+// Interleaved gradient noise (Jimenez 2014): cheap, well-distributed
+// per-pixel noise in [0,1), no texture needed.
+float ign(vec2 px) {
+    return fract(52.9829189 * fract(dot(px, vec2(0.06711056, 0.00583715))));
+}
+
+vec3 apply_grade(vec3 c, vec2 uv, vec2 px, float aspect) {
+    // Vignette: 0 at the centre, 1 in the corners, aspect-corrected so it
+    // stays round on wide windows.
+    vec2  q = vec2((uv.x - 0.5) * aspect, uv.y - 0.5);
+    float d = length(q) / length(vec2(0.5 * aspect, 0.5));
+    c *= 1.0 - grade.x * pow(d, 2.2);
+
+    // Grain: multiplicative, so it lives in the image rather than floating
+    // over black space as grey static.
+    float n = ign(px + grade.w * vec2(5.588238, 3.191201)) - 0.5;
+    c *= 1.0 + 2.0 * grade.y * n;
+
+    // Dither: a different noise phase from the grain, +-0.5 of one 8-bit step.
+    if (grade.z > 0.5) {
+        c += (ign(px.yx + vec2(17.0, 31.0)) - 0.5) / 255.0;
+    }
+    return c;
+}
+
 void main() {
     vec3 scene = texture(sampler2D(u_scene, u_smp), v_uv).rgb;
     vec3 bloom = texture(sampler2D(u_bloom, u_smp), v_uv).rgb;
@@ -130,6 +160,7 @@ void main() {
     if (tone.z > 0.5) {
         color = shoulder(white_hot(color * tone.x), tone.y);
     }
+    color = apply_grade(color, v_uv, gl_FragCoord.xy, aspect);
     frag_color = vec4(color, 1.0);
 }
 @end

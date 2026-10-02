@@ -56,6 +56,11 @@ struct PostProcess {
     float exposure     = 1.0f;     // linear scale before the shoulder
     float tonemap_knee = 0.75f;    // below this, colours pass through as authored
 
+    // Final grade (#726), after the tonemap. 0 turns each one off.
+    float vignette = 0.18f;   // corner darkening (fraction at the very corner)
+    float grain    = 0.03f;   // animated luminance grain (+-fraction)
+    bool  dither   = true;    // +-0.5 LSB noise: kills 8-bit nebula banding
+
     bool init();
     void destroy();
 
@@ -63,7 +68,8 @@ struct PostProcess {
     void apply_bloom(const RenderTargets& rt) const;
 
     // Composite scene + bloom + flare to the swapchain. `sun_world_pos` and
-    // `view_proj` are used to project the sun into NDC for the flare.
+    // `view_proj` are used to project the sun into NDC for the flare;
+    // `time_sec` animates the film grain.
     //
     // `extra_pass_draw` (if set) is invoked INSIDE the swapchain pass just
     // before sg_end_pass, so callers can piggyback extra draws (HUD text,
@@ -74,6 +80,6 @@ struct PostProcess {
                                 HMM_Vec3 sun_world_pos,
                                 const HMM_Mat4& view_proj,
                                 HMM_Vec3 flare_tint,
-                                int fb_w, int fb_h,
+                                int fb_w, int fb_h, float time_sec,
                                 const ExtraPassDraw& extra_pass_draw = {}) const;
 };
