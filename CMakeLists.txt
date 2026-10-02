@@ -93,7 +93,7 @@ compile_shader(mesh)
 compile_shader(atmosphere)
 compile_shader(sprite)
 compile_shader(sprite_spot)
-compile_shader(post_blur)
+compile_shader(post_bloom)
 compile_shader(post_composite)
 
 # ---------------------------------------------------------------------------

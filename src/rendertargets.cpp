@@ -1,7 +1,9 @@
 #include "rendertargets.h"
 #include "render_config.h"
 
+#include <algorithm>
 #include <cstdio>
+#include <vector>
 
 namespace {
 
@@ -46,11 +48,7 @@ sg_view texture_view(sg_image img) {
 } // namespace
 
 bool RenderTargets::init(int width, int height) {
-    w  = width;  h  = height;
-    // Quarter-res bloom: 16× fewer fragments than full-res for the blur
-    // passes, and since bloom is low-frequency by design the visual
-    // quality cost is near-zero. Biggest single perf win in the post path.
-    bw = w / 4;  bh = h / 4;
+    w = width;  h = height;
 
     // --- scene -----------------------------------------------------------
     scene_color = make_color_image(w, h, kSceneColorFormat);
@@ -59,13 +57,22 @@ bool RenderTargets::init(int width, int height) {
     scene_depth_att = depth_attachment_view(scene_depth);
     scene_color_tex = texture_view(scene_color);
 
-    // --- bloom ping-pong -------------------------------------------------
-    bloom_a_color = make_color_image(bw, bh, kBloomColorFormat);
-    bloom_b_color = make_color_image(bw, bh, kBloomColorFormat);
-    bloom_a_att   = color_attachment_view(bloom_a_color);
-    bloom_b_att   = color_attachment_view(bloom_b_color);
-    bloom_a_tex   = texture_view(bloom_a_color);
-    bloom_b_tex   = texture_view(bloom_b_color);
+    // --- bloom mip chain (#724) ------------------------------------------
+    // Half res, then halving per level (clamped to 1 px). Bloom is low
+    // frequency by design, so even the half-res top level is plenty.
+    std::vector<sg_view> views = { scene_color_att, scene_depth_att, scene_color_tex };
+    int mw = w, mh = h;
+    for (BloomMip& m : bloom) {
+        mw = std::max(1, mw / 2);
+        mh = std::max(1, mh / 2);
+        m.w     = mw;
+        m.h     = mh;
+        m.color = make_color_image(mw, mh, kBloomColorFormat);
+        m.att   = color_attachment_view(m.color);
+        m.tex   = texture_view(m.color);
+        views.push_back(m.att);
+        views.push_back(m.tex);
+    }
 
     // --- sampler ---------------------------------------------------------
     sg_sampler_desc ss{};
@@ -75,10 +82,6 @@ bool RenderTargets::init(int width, int height) {
     ss.wrap_v     = SG_WRAP_CLAMP_TO_EDGE;
     linear_clamp  = sg_make_sampler(&ss);
 
-    const sg_view views[] = {
-        scene_color_att, scene_depth_att, scene_color_tex,
-        bloom_a_att, bloom_b_att, bloom_a_tex, bloom_b_tex,
-    };
     for (sg_view v : views) {
         if (sg_query_view_state(v) != SG_RESOURCESTATE_VALID) {
             std::fprintf(stderr, "[rendertargets] view creation failed\n");
@@ -90,12 +93,11 @@ bool RenderTargets::init(int width, int height) {
 
 void RenderTargets::destroy() {
     sg_destroy_sampler(linear_clamp);
-    sg_destroy_view(bloom_b_tex);
-    sg_destroy_view(bloom_a_tex);
-    sg_destroy_view(bloom_b_att);
-    sg_destroy_view(bloom_a_att);
-    sg_destroy_image(bloom_b_color);
-    sg_destroy_image(bloom_a_color);
+    for (BloomMip& m : bloom) {
+        sg_destroy_view(m.tex);
+        sg_destroy_view(m.att);
+        sg_destroy_image(m.color);
+    }
     sg_destroy_view(scene_color_tex);
     sg_destroy_view(scene_depth_att);
     sg_destroy_view(scene_color_att);

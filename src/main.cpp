@@ -6474,7 +6474,7 @@ void frame_cb() {
         sg_end_pass();
     }
 
-    // Pass 2+3: bright-pass + separable gaussian into bloom_b.
+    // Bloom chain (#724): bright-pass + mip down/up into rt.bloom[0].
     // Capture-clean atlas screenshots need deterministic object-only refs,
     // not stale bloom texture ghosts or lens flare artifacts.
     if (!g.capture_clean) {
