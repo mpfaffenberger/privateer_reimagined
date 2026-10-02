@@ -143,6 +143,7 @@ HMM_Mat4 model_matrix(HMM_Vec3 pos, HMM_Vec3 euler_deg, float s);
 #include "rendertargets.h"
 #include "skybox.h"
 #include "sky_family.h"
+#include "sky_prop_renderer.h"
 #include "star_presets.h"
 #include "sun.h"
 #include "system_def.h"
@@ -285,6 +286,7 @@ struct AppState {
 
     Camera         camera{};
     Skybox         skybox{};
+    SkyPropRenderer sky_prop_render{};   // far-field galaxies/anomalies (#693)
     Sun            sun{};
     DustField      dust{};
     WarpStreaks    warp_streaks{};   // autopilot cruise overlay (np-streaks)
@@ -1491,6 +1493,10 @@ void build_system_scene(bool first_time, bool show_progress) {
     if (first_time && !g.jump_gate.init()) {
         std::fprintf(stderr, "[main] jump_gate init failed\n"); std::exit(1);
     }
+    if (first_time && !g.sky_prop_render.init()) {
+        std::fprintf(stderr, "[main] sky prop init failed\n"); std::exit(1);
+    }
+    g.sky_prop_render.set_props(g.system.sky_props);
 
     // Mesh renderer + placed mesh instances. Load OBJs from disk now; any
     // file that fails to parse is skipped with a warning so one bad entry
@@ -6174,6 +6180,7 @@ void frame_cb() {
         const Camera& scene_cam = *scene_cam_ptr;
         // Draw order rationale:
         //   1. skybox   — no depth write, paints the background
+        //      + sky props (galaxies/anomalies) — additive, on the far plane
         //   2. dust     — additive particulate in "empty space"; drawn BEFORE
         //                 opaque geometry so rocks/sun paint over it cleanly.
         //                 (If drawn later, dust's depth test lets individual
@@ -6184,6 +6191,7 @@ void frame_cb() {
         //   5. sun gas + corona — additive halos, depth test but no write.
         if (!g.capture_clean) {
             g.skybox.draw(scene_cam, aspect);
+            g.sky_prop_render.draw(scene_cam, aspect, time_sec);
             // Camera velocity uses the same numeric convention exposed as kps.
             g.dust.draw(scene_cam, aspect, HMM_LenV3(g.camera.velocity));
             // Warp streaks layer over dust (additive). Self-gates on
@@ -7242,6 +7250,7 @@ void cleanup_cb() {
         g.dust.destroy();
         g.warp_streaks.destroy();
         g.jump_gate.destroy();
+        g.sky_prop_render.destroy();
     g.sun.destroy();
     g.skybox.destroy();
     sg_shutdown();

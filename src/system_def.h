@@ -20,6 +20,7 @@
 //     "description":  "...",
 //     "skybox_seed":  "troy",
 //     "star":         { "preset": "yellow" },
+//     "sky":          { "family": "blue", "props": [ ... ] },   // sky_props.h
 //     "asteroid_fields": [
 //        { "center": [x,y,z], "half_extent": [x,y,z],
 //          "count": N, "base_radius": R, "seed": uint }
@@ -32,6 +33,7 @@
 // -----------------------------------------------------------------------------
 
 #include "HandmadeMath.h"
+#include "sky_props.h"
 
 #include <cstdint>
 #include <optional>
@@ -316,6 +318,12 @@ struct StarSystem {
     float       star_corona_alpha       = -1.0f;
     float       star_corona_radius_mult = -1.0f;
     std::string sky_family;   // "" = auto; else warm/yellow/green/blue/purple
+
+    // Far-field galaxies / anomalies (#693). `sky_props_authored` is true
+    // when the JSON had a `sky.props` array (empty = explicit opt-out);
+    // otherwise the loader seeds them from skybox_seed. See sky_props.h.
+    bool                    sky_props_authored = false;
+    std::vector<SkyPropDef> sky_props;
 
     // Studio-lighting flag for debug/inspection scenes. When true, main.cpp
     // dims the sun and parks it off-axis (same effect as --capture-clean's
