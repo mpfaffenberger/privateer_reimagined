@@ -37,24 +37,12 @@ REPO     = Path(__file__).resolve().parents[1]
 SHIPS    = REPO / "assets" / "ships"
 OUT_PATH = REPO / "assets" / "systems" / "sprite_showroom.json"
 
-# Reuse the canonical ship roster (display names) from the mesh showroom
-# generator so the two scenes always cover the same set of ships.
-sys.path.insert(0, str(Path(__file__).parent))
-from regenerate_mesh_showroom import KEEP_AND_RENAME   # noqa: E402
 
 
 def discover_sprite_ships() -> list[str]:
-    """Display names that actually have an atlas_manifest_3d.json on disk."""
-    names = sorted(set(KEEP_AND_RENAME.values()))
-    out = []
-    for name in names:
-        manifest = SHIPS / name / "atlas_manifest_3d.json"
-        if manifest.exists():
-            out.append(name)
-        else:
-            print(f"note: no atlas_manifest_3d.json for {name!r}; skipping",
-                  file=sys.stderr)
-    return out
+    """Every ship with an atlas_manifest_3d.json, whatever made it: the wcnews
+    mesh captures and the Meshy/Blender ones (#699, #709) alike."""
+    return sorted(p.parent.name for p in SHIPS.glob("*/atlas_manifest_3d.json"))
 
 
 def build_layout(names: list[str], cols: int, spacing: float
