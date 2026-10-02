@@ -4,8 +4,9 @@
 // The HTTP server is deliberately tiny (~one-at-a-time connections, HTTP/1.0
 // style, no keep-alive). This is a dev tool, not a production service.
 // The code here avoids any third-party deps — it's just BSD sockets and
-// std::thread. Platform-specific bits (window screenshot) live in
-// dev_remote_macos.mm.
+// std::thread. Platform-specific bits live in dev_remote_socket.h (POSIX vs
+// Winsock) and the window screenshot in dev_remote_macos.mm /
+// dev_remote_win32.cpp.
 // -----------------------------------------------------------------------------
 
 #include "dev_remote.h"
@@ -15,10 +16,7 @@
 #include "voice.h"
 #include "world_clock.h"
 
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <unistd.h>
+#include "dev_remote_socket.h"
 
 #include <algorithm>   // std::clamp for the quat→euler arcsin guard
 #include <atomic>
@@ -34,9 +32,10 @@
 #include <thread>
 #include <vector>
 
-// Declared in dev_remote_macos.mm — captures the game's NSWindow via
-// screencapture -l<wid>. Returns true on success. Uses C linkage so
-// we don't have to coordinate C++ mangling with the .mm TU.
+// Defined per platform: dev_remote_macos.mm captures the game's NSWindow via
+// screencapture -l<wid>; dev_remote_win32.cpp reads back the D3D11 back
+// buffer. Returns true on success. Uses C linkage so we don't have to
+// coordinate C++ mangling with the .mm TU.
 extern "C" bool dev_remote_capture_window(const char* path);
 
 namespace dev_remote {
@@ -1454,9 +1453,23 @@ void handle_project(int fd, const std::string& body) {
     send_json(fd, out);
 }
 
+// Where /screenshot writes its PNG. macOS keeps the historical /tmp path.
+// Windows has no /tmp, so use %TEMP% with forward slashes: Win32 accepts
+// them, and the path drops straight into the JSON reply unescaped.
+std::string screenshot_path() {
+#ifdef _WIN32
+    const char* tmp = std::getenv("TEMP");
+    std::string p = std::string(tmp ? tmp : ".") + "/np_shot.png";
+    std::replace(p.begin(), p.end(), '\\', '/');
+    return p;
+#else
+    return "/tmp/np_shot.png";
+#endif
+}
+
 void handle_screenshot(int fd) {
     ScreenshotWaiter w;
-    w.path = "/tmp/np_shot.png";
+    w.path = screenshot_path();
 
     Command c;
     c.kind   = Command::Kind::Screenshot;
@@ -1499,7 +1512,7 @@ bool read_request(int fd, std::string& out) {
 
 void handle_connection(int fd) {
     std::string req;
-    if (!read_request(fd, req)) { ::close(fd); return; }
+    if (!read_request(fd, req)) { dev_remote_socket::close(fd); return; }
 
     // Parse first line: "METHOD PATH HTTP/1.x"
     auto first_crlf = req.find("\r\n");
@@ -1510,7 +1523,7 @@ void handle_connection(int fd) {
         auto sp2 = line.find(' ', sp1 + 1);
         if (sp1 == std::string::npos || sp2 == std::string::npos) {
             send_response(fd, 400, "Bad Request", "text/plain", "bad line\n");
-            ::close(fd);
+            dev_remote_socket::close(fd);
             return;
         }
         method = line.substr(0, sp1);
@@ -1588,20 +1601,23 @@ void handle_connection(int fd) {
     else if (method == "GET"  && path == "/cinematic/status") handle_cinematic_status(fd);
     else                                                send_404(fd);
 
-    ::close(fd);
+    dev_remote_socket::close(fd);
 }
 
 // ---------------------------------------------------------------------------
 // Accept loop
 // ---------------------------------------------------------------------------
 void server_loop(int port) {
-    g_listen_fd = ::socket(AF_INET, SOCK_STREAM, 0);
+    if (!dev_remote_socket::startup()) {
+        std::fprintf(stderr, "[dev_remote] socket stack init failed\n");
+        return;
+    }
+    g_listen_fd = (int)::socket(AF_INET, SOCK_STREAM, 0);
     if (g_listen_fd < 0) {
         std::fprintf(stderr, "[dev_remote] socket() failed\n");
         return;
     }
-    int yes = 1;
-    ::setsockopt(g_listen_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
+    dev_remote_socket::set_listen_options(g_listen_fd);
 
     sockaddr_in addr{};
     addr.sin_family      = AF_INET;
@@ -1609,13 +1625,13 @@ void server_loop(int port) {
     addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);   // 127.0.0.1 only
     if (::bind(g_listen_fd, (sockaddr*)&addr, sizeof(addr)) < 0) {
         std::fprintf(stderr, "[dev_remote] bind(%d) failed — port in use?\n", port);
-        ::close(g_listen_fd);
+        dev_remote_socket::close(g_listen_fd);
         g_listen_fd = -1;
         return;
     }
     if (::listen(g_listen_fd, 4) < 0) {
         std::fprintf(stderr, "[dev_remote] listen() failed\n");
-        ::close(g_listen_fd);
+        dev_remote_socket::close(g_listen_fd);
         g_listen_fd = -1;
         return;
     }
@@ -1624,7 +1640,7 @@ void server_loop(int port) {
     while (g_running.load()) {
         sockaddr_in peer{};
         socklen_t peer_len = sizeof(peer);
-        int fd = ::accept(g_listen_fd, (sockaddr*)&peer, &peer_len);
+        int fd = (int)::accept(g_listen_fd, (sockaddr*)&peer, &peer_len);
         if (fd < 0) {
             if (g_running.load()) continue;  // shutdown raced us
             break;
@@ -1646,8 +1662,8 @@ void start(int port) {
 void stop() {
     if (!g_running.exchange(false)) return;
     if (g_listen_fd >= 0) {
-        ::shutdown(g_listen_fd, SHUT_RDWR);
-        ::close(g_listen_fd);
+        dev_remote_socket::shutdown_both(g_listen_fd);
+        dev_remote_socket::close(g_listen_fd);
         g_listen_fd = -1;
     }
     if (g_thread.joinable()) g_thread.join();

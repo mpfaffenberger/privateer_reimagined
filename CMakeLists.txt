@@ -140,12 +140,14 @@ else()
     set(SOKOL_IMPL_SRC src/sokol_impl.cpp)
 endif()
 
-# dev_remote: macOS gets the real POSIX-sockets + Cocoa-screenshot pair
-# (dev_remote.cpp + dev_remote_macos.mm); other platforms get a tiny stub
-# that satisfies the namespace and no-ops every call. See
+# dev_remote: the HTTP server (dev_remote.cpp) runs on macOS and Windows,
+# each with its own window-screenshot TU (#696); Linux gets a tiny stub that
+# satisfies the namespace and no-ops every call. See
 # src/dev_remote_stub.cpp for the rationale + porting note.
 if(APPLE)
     set(DEV_REMOTE_SRC src/dev_remote.cpp src/dev_remote_macos.mm)
+elseif(WIN32)
+    set(DEV_REMOTE_SRC src/dev_remote.cpp src/dev_remote_win32.cpp)
 else()
     set(DEV_REMOTE_SRC src/dev_remote_stub.cpp)
 endif()
@@ -407,7 +409,8 @@ if(APPLE)
         "-framework AudioToolbox"
     )
 elseif(WIN32)
-    target_link_libraries(new_privateer PRIVATE d3d11 dxgi)
+    # ws2_32 + gdiplus: dev_remote's Winsock server and PNG screenshots.
+    target_link_libraries(new_privateer PRIVATE d3d11 dxgi ws2_32 gdiplus)
 else()
     find_package(OpenGL REQUIRED)
     find_package(X11    REQUIRED)
