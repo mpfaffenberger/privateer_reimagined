@@ -67,11 +67,14 @@ def front_mask(p, h, w):
     return mask
 
 
-def clean_patch(p, plate):
-    """-> RGBA patch (crop-sized) that paints the patron out, feathered alpha."""
+def clean_patch(p, plate, sources=None):
+    """-> RGBA patch (crop-sized) that paints the patron out, feathered alpha.
+    `sources` (default: the room's) holds `clean_gen`; a room without a
+    room file passes its own (the ship dealer's salesman, #682)."""
     orig = plate.crop(p["crop"])
     w, h = orig.size
-    gen = Image.open(ROOM.sources / p["clean_gen"]).convert("RGB").resize((w, h), Image.LANCZOS)
+    gen = Image.open((sources or ROOM.sources) / p["clean_gen"]).convert("RGB").resize(
+        (w, h), Image.LANCZOS)
     o, g = np.asarray(orig, np.int16), np.asarray(gen, np.int16)
     rx0, ry0, rx1, ry1 = p["reg"]
     wall = np.abs(g[ry0:ry1, rx0:rx1] - o[ry0:ry1, rx0:rx1]).mean()

@@ -1,0 +1,4 @@
+{
+  "_doc": "Loop timing for the Oxford ship dealer's layers (#682), seconds; see ../bake_layer.py. The salesman's tour (render_shipdealer.py) is one seamless 261-frame loop at 12 fps that starts and ends standing on his painted spot, so the period is exactly the pass. max_px null: he's an 81 px hero, kept sharp. over: he's encoded against the plate with the painted salesman painted out (bake_shipdealer_patch.py), which the room draws under him.",
+  "salesman": { "period": 21.75, "offset": 0.0, "max_px": null, "over": ["salesman_patch"] }
+}

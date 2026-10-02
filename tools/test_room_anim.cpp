@@ -957,6 +957,39 @@ void shipped_oxford() {
           "Oxford keeps its nine hotspots (Library rect unchanged)");
 }
 
+// #682: the Oxford ship dealer's salesman walks the floor and presents each
+// ship: his clean-plate patch (the painted one out), then his tour. The tour
+// is one seamless loop that starts and ends on his painted spot.
+void shipped_oxford_shipdealer() {
+    const std::string dir = "assets/concourse/oxford/";
+    room_anim::RoomAnimDef def;
+    room_anim::parse_room_anim(json::parse_file(dir + "concourse.json")["rooms"]["shipdealer"],
+                               def);
+    const std::vector<std::string> order = {"anim/shipdealer/salesman_patch.json",
+                                            "anim/shipdealer/salesman.json"};
+    check(!def.has_sky && def.layers == order,
+          "Oxford ship dealer has the salesman's patch, then the salesman");
+    check_layers(dir, def.layers);
+    room_anim::SpriteSheet patch, man;
+    std::string err;
+    check(room_anim::parse_sprite_sheet(json::parse_file(dir + order[0]), patch, err) &&
+              patch.frames.size() == 1 && patch.period == 1,
+          "  his patch is one frame on a one-slot loop (always on screen)");
+    const bool ok = room_anim::parse_sprite_sheet(json::parse_file(dir + order[1]), man, err);
+    check(ok && man.frames.size() == static_cast<size_t>(man.period),
+          "  he's drawn in every slot: the painted spot is never left empty");
+    // The painted salesman's feet, (781, 570) on the plate: where the loop
+    // starts and ends.
+    const float* d = ok && !man.frames.empty() ? man.frames.front().dst : nullptr;
+    check(d && d[0] <= 781.0f && 781.0f <= d[0] + d[2] && d[1] <= 570.0f && 570.0f <= d[1] + d[3],
+          "  the loop starts on his painted spot");
+    // Acceptance: the hotspot (links.json override) is untouched.
+    const json::Value links = json::parse_file(dir + "links.json")["shipdealer"];
+    check(links.as_array().size() == 1 &&
+              link_rect_is(links, "OpenMenu", 0.441f, 0.44875f, 0.12f, 0.18f),
+          "Oxford ship dealer keeps its OpenMenu hotspot");
+}
+
 // A room animates through its own "sky"/"layers" keys or, on a landing pad,
 // through its per-hull "composite" ones (base_screens.cpp load_room).
 bool room_animates(const json::Value& room) {
@@ -992,6 +1025,7 @@ const std::vector<Room> kAnimatedRooms = {
     {"newdetroit", "bar"},
     {"oxford", "concourse"},
     {"oxford", "landing"},
+    {"oxford", "shipdealer"},
     {"pirate", "concourse"},
     {"pirate", "landing"},
     {"pleasure", "concourse"},
@@ -1064,6 +1098,7 @@ int main() {
     shipped_refinery();
     shipped_newcon_hangar();
     shipped_oxford();
+    shipped_oxford_shipdealer();
     cross_dir_layer_paths();
     shipped_mercguild();
     shipped_merchguild();

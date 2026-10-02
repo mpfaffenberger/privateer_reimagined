@@ -25,12 +25,17 @@ Each frame is trimmed to its non-zero alpha and shelf-packed into one atlas.
 Big frames (near the camera, motion-blurred, soft anyway) are stored at half
 resolution; the manifest's src/dst rects let the engine scale them back up.
 
-Loop timing (period / phase) comes from tools/room_anim/<base>/layers.json.
+Loop timing (period / phase) comes from tools/room_anim/<base>/layers.json
+(<room>_layers.json for another room, `--room`; #682). A layer's optional
+"over" lists static patch layers drawn under it (a painted figure painted
+out): it's encoded against the plate as patched, which is what the engine
+draws it over.
 
 Usage (from the repo root; --base defaults to newcon):
     uv run tools/room_anim/bake_layer.py --base newcon --all
     uv run tools/room_anim/bake_layer.py car_receding
     uv run tools/room_anim/bake_layer.py car_receding --period 30   # try a timing
+    uv run tools/room_anim/bake_layer.py --base oxford --room shipdealer --all
 """
 import argparse
 import json
@@ -208,7 +213,9 @@ def atlas_width(name, sizes):
 def main():
     pre = argparse.ArgumentParser(add_help=False)
     pre.add_argument("--base", default="newcon", help="assets/concourse/<base>")
-    where = paths(pre.parse_known_args()[0].base)
+    pre.add_argument("--room", default="concourse", help="the room's plate: <room>_bg.png")
+    known = pre.parse_known_args()[0]
+    where = paths(known.base, known.room)
     timing = {k: v for k, v in json.loads(where.timing.read_text()).items()
               if not k.startswith("_")}
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0], parents=[pre])
@@ -225,18 +232,37 @@ def main():
         bake(where, layer,
              cfg["period"] if args.period is None else args.period,
              cfg["offset"] if args.offset is None else args.offset,
-             cfg.get("max_px", BIG_FRAME_PX))
+             cfg.get("max_px", BIG_FRAME_PX), cfg.get("over", ()))
 
 
-def bake(where, layer, period, offset, max_px=BIG_FRAME_PX):
+def patched_plate(where, plate, patches):
+    """`plate` (display sRGB) with each static layer in `patches` (names of
+    one-frame sheets in where.anim) alpha-over'd, as the engine draws them."""
+    out = plate.copy()
+    for name in patches:
+        manifest = json.loads((where.anim / f"{name}.json").read_text())
+        if len(manifest["frames"]) != 1:
+            raise SystemExit(f"{name}: an 'over' patch must be one static frame")
+        atlas = load_rgba(where.anim / manifest["atlas"])
+        (sx, sy, sw, sh), (dx, dy, dw, dh) = (manifest["frames"][0][k] for k in ("src", "dst"))
+        if (sw, sh) != (dw, dh):
+            raise SystemExit(f"{name}: an 'over' patch must be stored at full size")
+        sprite = atlas[sy:sy + sh, sx:sx + sw]
+        a = sprite[..., 3:]
+        out[dy:dy + dh, dx:dx + dw] = sprite[..., :3] * a + out[dy:dy + dh, dx:dx + dw] * (1.0 - a)
+    return out
+
+
+def bake(where, layer, period, offset, max_px=BIG_FRAME_PX, over=()):
     """`max_px` (layers.json, optional): frames larger than this are stored at
-    half size; null keeps a small hero actor sharp at every size."""
+    half size; null keeps a small hero actor sharp at every size. `over`
+    (optional): static patches under this layer (patched_plate)."""
     src = where.build / layer
     info = json.loads((src / "pass.json").read_text())   # written by render.render_passes
     if "exposure_ev" not in info:
         raise SystemExit(f"{layer}: pass.json predates exposure_ev; re-render the layer")
     fps, gain = float(info["fps"]), 2.0 ** -float(info["exposure_ev"])
-    plate = load_rgba(where.plate)[..., :3]
+    plate = patched_plate(where, load_rgba(where.plate)[..., :3], over)
     empty = load_rgba(src / "empty.png")[..., :3]
     sprites, slots = [], []
     for beauty_path in sorted((src / "beauty").glob("*.png")):

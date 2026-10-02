@@ -20,13 +20,14 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `bake_crater.py` | uv | crater landing pads: rim sky masks + anchors, star tiles, sky sheets (`--base`) |
 | `flyover.py` | Blender | crater landing pads: canonical sky camera, rim-relative ship paths, render loop |
 | `ships.py` | Blender | game-mesh import, sidecar materials, orientation |
-| `bake_layer.py` | uv | plate-aware sprite encoding + atlas packing (`--base`); `bake_passes()`: landing-pad sky passes -> sheets |
+| `bake_layer.py` | uv | plate-aware sprite encoding + atlas packing (`--base`, `--room`); `bake_passes()`: landing-pad sky passes -> sheets |
 | `test_bake_layer.py` | uv | `write_sheet()` atlas sizing tests |
 | `sky.py` | uv | star removal, mask solidify, sky fill, `half_fill()` for smooth skies, painted-star stats, star tiles, `--debug` contact sheets |
 | `composite_preview.py` | uv | engine-faithful preview from `concourse.json` (`--base`) |
 | `flicker.py` | uv | lights relit straight from a plate: lantern flicker (`flame`), beacon blink (`blink`) (#586, #676) |
 | `stage.py` | Blender | render settings, boxes, materials, lights (`spot()`: a parented lamp), straight/polyline paths, the `--check` overlay |
-| `walkers.py` | Blender | pedestrian proxies and their walk (New Con, pirate); rigged walkers (New Detroit, Agricultural, Pleasure) |
+| `walkers.py` | Blender | pedestrian proxies and their walk (New Con, pirate); rigged walkers (New Detroit, Agricultural, Pleasure); a guided tour: walk, stop, present (Oxford ship dealer, #682) |
+| `pitched_camera.py` | both | a pitched plate camera as a class: rays, floor points, projection (#682) |
 | `vehicles.py` | Blender | the tow tug the floor trains hitch to (mining, refinery, military): headlights, beacon sweep, hitch distance (#603) |
 | `patron_room.py` | both | loads a room file: camera, lights, paths, patrons (#577) |
 | `render_patrons.py` | Blender | a room's 3D patrons, camera-matched (`--room`, `--patron`) |
@@ -43,7 +44,7 @@ lives in `<base>/`. `base.py` is the single source of truth for paths:
 | `pleasure/` | | Pleasure: concourse skylight stars, marquee chase, neon (#594), billboard ad (#599), walkers behind the couches (#598), landing pad transport (#595), sea shimmer and tower beacons (#606) |
 | `pirate/` | | Pirate base concourse: lanterns, pirates, a grav pod (#586) |
 | `newdetroit/` | | New Detroit: concourse walkers on the platform and plaza (#590), aircars past the landing pad (#591), bar patrons, lanterns and beacons (#676) |
-| `oxford/` | | Oxford: concourse air-cars and pedestrians in the garden square (#592, #610), landing pad departure at dusk (#593) |
+| `oxford/` | | Oxford: concourse air-cars and pedestrians in the garden square (#592, #610), landing pad departure at dusk (#593), the ship dealer's salesman (#682) |
 | `refinery/` | | Refinery: concourse stars, ships over the dome, the ore train (#584) and pedestrians (#623), landing pad door and ships (#585) |
 | `military/` | | Military: concourse stars, a fighter pair, the munitions train (#588), landing bay lamp chase (#589) |
 
@@ -1094,6 +1095,61 @@ uv run tools/room_anim/composite_preview.py --base oxford --room landing --plate
   (200 m to 420 m, ~43 m/s). The mesh has the old game's
   afterburner baked in as solid red and yellow flames: `ships.STRIP_MATERIALS`
   drops those faces at import, before the bbox sets the scale.
+
+### Oxford ship dealer: the salesman (#682)
+
+The repainted ship dealer (#675) has a salesman on the walkway, presenting
+the needle-nosed fighter. Here he walks the showroom floor and presents each
+ship in turn: the fighter, the cockpit ship on the right, the heavy fighter
+at the bottom, then back to his painted spot. That's one seamless 21.75 s
+loop at 12 fps.
+
+```sh
+uv run --with scipy --with pillow --with numpy tools/room_anim/oxford/bake_shipdealer_patch.py
+blender --background --factory-startup \
+    --python tools/room_anim/oxford/render_shipdealer.py -- --check   # him at each ship
+blender --background --factory-startup \
+    --python tools/room_anim/oxford/render_shipdealer.py -- --layer salesman
+uv run tools/room_anim/bake_layer.py --base oxford --room shipdealer --all
+uv run tools/room_anim/composite_preview.py --base oxford --room shipdealer \
+    --seconds 21.75 --out build/room_anim/oxford/shipdealer/preview.mp4
+```
+
+- **Any room, not just the concourse.** `base.paths(base, room)` gives a
+  room its plate (`<room>_bg.png`), timing (`<room>_layers.json`), raw
+  renders (`build/room_anim/<base>/<room>/`) and bakes (`anim/<room>/`).
+  `bake_layer.py --room` uses them.
+- **Camera** (`pitched_camera.py`, the Oxford concourse's model as a class):
+  f = 5000 px, 50 deg down, eye 54 m. It's an AI painting that is close to
+  orthographic: the hazard lanes' rails stay parallel to within a pixel over
+  440 px, and the lamp posts at either side lean out from a nadir ~4500 px
+  below the centre. Scale: the painted salesman (head top y 489 over his
+  feet at (781, 570)) is a 1.75 m man. `--check` stands the model at each
+  ship over the plate.
+- **The salesman** is `weathered_sentinel` (dark hair, olive jacket; no
+  Meshy credits). His jacket's texels (a hue/saturation mask that leaves
+  skin and trousers alone) are lifted to the painted sage-green tweed.
+- **The tour** (`walkers.plan_tour` / `key_tour`, shared) is a list of
+  beats: `walk` through points, easing in and out, the gait's phase tied to
+  the distance walked so his feet don't slide; and `present`, which turns on
+  the spot (a small shuffle: `rigged_gait`'s `amp`), raises the nearer arm
+  straight at the ship (`rest_aim`) 15 deg high, turns the head to it, holds
+  and lowers. He presents side-on, with the ship 65 deg to whichever side
+  leaves him open to the viewer. An arm aimed down the screen, toward the
+  lens, only crossed his body, so he presents the heavy fighter from the
+  deck at its right, where it's beside him on screen. The loop starts
+  standing on his spot as the last walk leaves him, so it's planned twice,
+  the second time from the first one's final heading.
+- **The painted salesman** is painted out by a one-frame patch layer
+  (`bake_shipdealer_patch.py`, reusing `bake_patrons.clean_patch()`) from an
+  AI clean-plate edit of a square crop that takes in his whole shadow
+  (`sources/shipdealer_salesman_clean_gen.png`). His shadow's soft tail is
+  too faint for the difference threshold, so a `keep` rect takes it. The
+  salesman layer's `"over"` encodes him against the patched plate
+  (`bake_layer.patched_plate`), which is what the engine draws him over.
+- **Light:** a warm key from high behind the ships, so his shadow falls down
+  the screen and a little left, as the painted one does, over a warm, dim
+  ambient.
 
 ## Refinery concourse (#584)
 

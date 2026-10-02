@@ -150,6 +150,10 @@
         200
       ],
       "overlays": [],
+      "layers": [
+        "anim/shipdealer/salesman_patch.json",
+        "anim/shipdealer/salesman.json"
+      ],
       "links": [
         {
           "target": "OpenMenu",
