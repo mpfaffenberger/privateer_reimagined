@@ -67,6 +67,20 @@ def _blender() -> str:
     return str(installs[-1])
 
 
+def views(name: str) -> list[dict]:
+    """Every cell's file name and camera pose (engine frame).
+
+    The engine's sprite picker reads el > 0 as camera ABOVE the ship
+    (ship_sprite.cpp compute_cam_az_el), and the engine-captured atlases
+    agree: the Talon's el+60 cell shows its canopy. camera_for_orbit negates
+    el, which only comes out right for the engine capture scene's mesh
+    orientation. This scene keeps the hull upright, so it passes -el to
+    undo that negation, putting every el > 0 camera above the hull (#720)."""
+    return [{"file": cell_name(name, az, el),
+             "cam": camera_for_orbit(az, -el, ORBIT_RADIUS_M)}
+            for az, el in ALL_VIEWS]
+
+
 def render(name: str, blend: Path, lights: Path | None, raw_dir: Path) -> None:
     raw_dir.mkdir(parents=True, exist_ok=True)
     job = {
@@ -74,9 +88,7 @@ def render(name: str, blend: Path, lights: Path | None, raw_dir: Path) -> None:
         "length_m": CAPTURE_LENGTH_M, "radius_m": ORBIT_RADIUS_M,
         "sun_dir": STUDIO_SUN_DIR, "sun_energy": SUN_ENERGY, "ambient": AMBIENT,
         "lights": str(lights) if lights else None,
-        "views": [{"file": cell_name(name, az, el),
-                   "cam": camera_for_orbit(az, el, ORBIT_RADIUS_M)}
-                  for az, el in ALL_VIEWS],
+        "views": views(name),
     }
     # The job holds machine-local absolute paths: keep it out of the repo.
     job_path = REPO / "build" / "blender_atlas" / f"{name}_job.json"
