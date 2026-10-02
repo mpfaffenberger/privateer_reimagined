@@ -1,0 +1,46 @@
+{
+  // Black Sun 490 (#699, #711): Mike's original three-engine light freighter,
+  // built Meshy -> Blender -> 3D sprite atlas. Not a canon Privateer hull, so
+  // these are PLACEHOLDER stats pitched between the Tarsus and the Centurion
+  // until Mike tunes them. Dealer pricing / placement is still to come.
+  "name":           "blacksun490",
+  "display_name":   "Black Sun 490",
+  "class_label":    "Light Freighter",
+  "atlas_manifest": "ships/blacksun490/atlas_manifest_3d.json",
+  "default_faction": "merchant",
+
+  "armor_fore_cm": 30,
+  "armor_aft_cm":  30,
+  "armor_side_cm": 22,
+
+  // Three engine pods: a touch quicker than the Tarsus in a straight line,
+  // but the long cockpit neck keeps it from turning like a fighter.
+  "cruise_speed":      360,
+  "afterburner_speed": 720,
+  "acceleration":      "good",
+  "max_ypr":           "average",
+
+  "personality":       "standard",
+
+  "weapons_range": 5000,
+
+  "max_engine_level": 4,
+  "max_shield_level": 3,
+  "default_shield":   "Shield Generator 2",
+
+  // Twin lasers in the chin bubble under the cockpit (the blueprint's
+  // ventral turret). Body frame as in tarsus/ship.json: +X right, +Y down,
+  // -Z forward of the eye.
+  "default_guns": [
+    { "offset_body": [-1.50, 4.00, -20.00], "type": "laser" },
+    { "offset_body": [ 1.50, 4.00, -20.00], "type": "laser" }
+  ],
+
+  "default_missiles": { "DF": 3 },
+
+  "energy_max":      180,
+  "energy_recharge": 25,
+
+  "cargo_units":     75,
+  "cargo_units_max": 110
+}
