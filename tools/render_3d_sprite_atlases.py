@@ -62,6 +62,9 @@ SHOT_PATH  = Path("/tmp/np_shot.png")
 AZIMUTHS         = [i * 22.5 for i in range(16)]
 ELEVATIONS       = [-60.0, -30.0, 0.0, 30.0, 60.0]
 POLAR_ELEVATIONS = [-90.0, 90.0]                # bottom-up + top-down
+# Every cell in manifest order: the 16x5 grid row by row, then the poles.
+ALL_VIEWS = ([(az, el) for el in ELEVATIONS for az in AZIMUTHS] +
+             [(0.0, el) for el in POLAR_ELEVATIONS])
 
 # Mirror-symmetry optimization. Most ships are bilateral mirrors across
 # their nose-tail (X=0) plane, so views from az>180 are pixel-perfect
@@ -168,7 +171,7 @@ def _wait_for_api(deadline_s: float = 15.0) -> bool:
     return False
 
 
-def _camera_for_orbit(az_deg: float, el_deg: float, radius: float
+def camera_for_orbit(az_deg: float, el_deg: float, radius: float
                       ) -> tuple[float, float, float, float, float]:
     """Compute (x, y, z, yaw, pitch) so the camera sits on the viewing
     sphere at (az, el, r) and looks at the origin.
@@ -204,7 +207,7 @@ def _set_camera(az: float, el: float, radius: float,
     frame. A fixed sleep raced engine boot and captured stale poses, so we
     poll /state (which reads the live camera) until the position matches.
     """
-    x, y, z, yaw, pitch = _camera_for_orbit(az, el, radius)
+    x, y, z, yaw, pitch = camera_for_orbit(az, el, radius)
     _api_post("/camera/set", {"x": x, "y": y, "z": z,
                               "yaw": yaw, "pitch": pitch})
     end = time.time() + deadline_s
@@ -314,6 +317,16 @@ def _black_to_alpha_crop(src: Path, dst: Path, cell_size: int,
             r, g, b, _ = px[x, y]
             if r < black_thresh and g < black_thresh and b < black_thresh:
                 px[x, y] = (0, 0, 0, 0)
+    return fit_cell(im, dst, cell_size, margin_pct)
+
+
+def fit_cell(im: Image.Image, dst: Path, cell_size: int,
+             margin_pct: float = 0.06) -> dict | None:
+    """Crop an RGBA frame to its alpha bounding box, letterbox it centred
+    into a `cell_size` square and save it to `dst`. Returns the placement
+    transform `cell_uv` needs (None for an empty frame). Shared by every
+    capture backend so engine and Blender cells frame identically."""
+    w, h = im.size
     bbox = im.getbbox()
     if bbox is None:
         return None
@@ -342,6 +355,27 @@ def _black_to_alpha_crop(src: Path, dst: Path, cell_size: int,
             "img_w": w, "img_h": h}
 
 
+def cell_uv(sx: float, sy: float, xform: dict) -> tuple[float, float]:
+    """Frame pixel (x right, y down) -> cell UV through fit_cell's transform."""
+    cs = xform["cell_size"]
+    return ((xform["off_x"] + (sx - xform["bbox_x0"]) * xform["scale"]) / cs,
+            (xform["off_y"] + (sy - xform["bbox_y0"]) * xform["scale"]) / cs)
+
+
+def light_spot(spec: dict, u: float, v: float) -> dict | None:
+    """One LightSpot in the editor's .lights.json schema, or None when the
+    projected point lands well outside the cell (projection slop or a light
+    genuinely off-frame); small overshoots are clamped."""
+    if u < -0.05 or u > 1.05 or v < -0.05 or v > 1.05:
+        return None
+    return {
+        "u": round(min(1.0, max(0.0, u)), 6), "v": round(min(1.0, max(0.0, v)), 6),
+        "color": spec["color"], "size": spec.get("size", 5),
+        "hz": spec["hz"], "phase": spec.get("phase", 0),
+        "kind": spec["kind"],
+    }
+
+
 def _az_tag(az: float) -> str:
     if abs(az - round(az)) < 0.01:
         return f"{int(round(az)):03d}"
@@ -355,7 +389,7 @@ def _el_tag(el: float) -> str:
     return sign + f"{abs(el):04.1f}".replace(".", "p")
 
 
-def _cell_name(ship_name: str, az: float, el: float) -> str:
+def cell_name(ship_name: str, az: float, el: float) -> str:
     return f"{ship_name}_az{_az_tag(az)}_el{_el_tag(el)}_3d.png"
 
 
@@ -463,8 +497,6 @@ def _cell_lights_from_projection(proj: dict, lights3d: dict, xform: dict,
     # title bar. Derives the title-bar height exactly from the geometry.
     content_h  = img_w / WINDOW_ASPECT
     title_bar  = img_h - content_h
-    cs    = xform["cell_size"]
-    scale = xform["scale"]
     out: list[dict] = []
     for spec, r in zip(lights3d["lights"], proj["lights"]):
         if not (r["front"] and r["facing"]):
@@ -475,29 +507,17 @@ def _cell_lights_from_projection(proj: dict, lights3d: dict, xform: dict,
         # net mapping needs v inverted here to land lights right-side up.
         sx = r["u"] * img_w
         sy = title_bar + (1.0 - r["v"]) * content_h
-        # screenshot pixel → cell pixel (crop + resize + centre)
-        cell_x = xform["off_x"] + (sx - xform["bbox_x0"]) * scale
-        cell_y = xform["off_y"] + (sy - xform["bbox_y0"]) * scale
-        cell_u = cell_x / cs
-        cell_v = cell_y / cs
+        cell_u, cell_v = cell_uv(sx, sy, xform)
         if mirror:
             cell_u = 1.0 - cell_u
-        # Drop lights that land well outside the cell (projection slop or a
-        # light genuinely off-frame); keep small overshoots clamped.
-        if cell_u < -0.05 or cell_u > 1.05 or cell_v < -0.05 or cell_v > 1.05:
-            continue
-        cell_u = min(1.0, max(0.0, cell_u))
-        cell_v = min(1.0, max(0.0, cell_v))
-        out.append({
-            "u": round(cell_u, 6), "v": round(cell_v, 6),
-            "color": spec["color"], "size": 5,
-            "hz": spec["hz"], "phase": 0,
-            "kind": spec["kind"],
-        })
+        spot = light_spot(spec, cell_u, cell_v)
+        if spot is not None:
+            out.append(spot)
+
     return out
 
 
-def _write_cell_lights(cell_path: Path, lights: list[dict]) -> None:
+def write_cell_lights(cell_path: Path, lights: list[dict]) -> None:
     """Write a .lights.json sidecar next to a cell PNG, in the same compact
     one-light-per-line style the F2 editor writes (so hand-edits merge
     cleanly). Removes the file if there are no lights for this angle."""
@@ -552,7 +572,7 @@ def _render_one_ship(ship: dict, cell_size: int, skip_render: bool
                         if pr is not None:
                             projections[(az, el)] = pr
                     shot = _take_screenshot()
-                    out  = raw_dir / _cell_name(name, az, el)
+                    out  = raw_dir / cell_name(name, az, el)
                     shutil.copyfile(shot, out)
 
             # Phase B: polar caps. Azimuth is degenerate at ±90 elevation,
@@ -568,7 +588,7 @@ def _render_one_ship(ship: dict, cell_size: int, skip_render: bool
                     if pr is not None:
                         projections[(0.0, polar_el)] = pr
                 shot = _take_screenshot()
-                out  = raw_dir / _cell_name(name, 0.0, polar_el)
+                out  = raw_dir / cell_name(name, 0.0, polar_el)
                 shutil.copyfile(shot, out)
         finally:
             _kill_game(proc)
@@ -581,8 +601,8 @@ def _render_one_ship(ship: dict, cell_size: int, skip_render: bool
                 src_az = _mirror_source_az(az)
                 if src_az is None:
                     continue
-                src = raw_dir / _cell_name(name, src_az, el)
-                dst = raw_dir / _cell_name(name, az,     el)
+                src = raw_dir / cell_name(name, src_az, el)
+                dst = raw_dir / cell_name(name, az,     el)
                 if not src.exists():
                     continue
                 with Image.open(src) as im:
@@ -592,12 +612,10 @@ def _render_one_ship(ship: dict, cell_size: int, skip_render: bool
     # FULL 82-cell set including the polar caps and the mirror-derived
     # azimuths — the cells either exist (rendered or mirrored above) or
     # we count them as blank.
-    all_views = ([(az, el) for el in ELEVATIONS for az in AZIMUTHS] +
-                 [(0.0, el) for el in POLAR_ELEVATIONS])
     n_ok = n_blank = n_lit = 0
-    for az, el in all_views:
-        raw  = raw_dir  / _cell_name(name, az, el)
-        cell = cell_dir / _cell_name(name, az, el)
+    for az, el in ALL_VIEWS:
+        raw  = raw_dir  / cell_name(name, az, el)
+        cell = cell_dir / cell_name(name, az, el)
         if not raw.exists():
             n_blank += 1
             continue
@@ -621,29 +639,29 @@ def _render_one_ship(ship: dict, cell_size: int, skip_render: bool
             if proj is not None:
                 cell_lights = _cell_lights_from_projection(
                     proj, lights3d, xform, mirror)
-                _write_cell_lights(cell, cell_lights)
+                write_cell_lights(cell, cell_lights)
                 if cell_lights:
                     n_lit += 1
 
     if lights3d is not None:
-        print(f"  → auto-lit {n_lit}/{len(all_views)} cells "
+        print(f"  → auto-lit {n_lit}/{len(ALL_VIEWS)} cells "
               f"({len(lights3d['lights'])} feature lights/ship)")
 
-    # Atlas manifest — same shape every other ship in the engine uses,
-    # plus the two polar-cap samples appended at the end.
-    samples = []
-    for el in ELEVATIONS:
-        for az in AZIMUTHS:
-            rel = f"ships/{name}/sprites_3d/{_cell_name(name, az, el)}"
-            samples.append({"az": az, "el": el, "sprite": rel})
-    for polar_el in POLAR_ELEVATIONS:
-        rel = f"ships/{name}/sprites_3d/{_cell_name(name, 0.0, polar_el)}"
-        samples.append({"az": 0.0, "el": polar_el, "sprite": rel})
+    write_manifest(name, ship["codename"], cell_size)
+    return n_ok, n_blank
+
+
+def write_manifest(name: str, codename: str, cell_size: int) -> None:
+    """Atlas manifest — same shape every other ship in the engine uses,
+    with the two polar-cap samples appended at the end."""
+    samples = [{"az": az, "el": el,
+                "sprite": f"ships/{name}/sprites_3d/{cell_name(name, az, el)}"}
+               for az, el in ALL_VIEWS]
     manifest = {
         "ship":              name,
         "kind":              "view_sphere_sprite_atlas",
         "source":            "3d_mesh_capture",
-        "mesh_codename":     ship["codename"],
+        "mesh_codename":     codename,
         "forward_axis":      "+Z",
         "up_axis":           "+Y",
         "azimuth_degrees":   AZIMUTHS,
@@ -653,7 +671,6 @@ def _render_one_ship(ship: dict, cell_size: int, skip_render: bool
     }
     (SHIPS_DIR / name / "atlas_manifest_3d.json").write_text(
         json.dumps(manifest, indent=2) + "\n")
-    return n_ok, n_blank
 
 
 # ─────────────────────────────── main ────────────────────────────────────

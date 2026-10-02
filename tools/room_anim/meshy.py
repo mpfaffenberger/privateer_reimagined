@@ -1,18 +1,21 @@
-﻿"""Make a rigged, animated character with the Meshy AI API (#577).
+﻿"""Make rigged, animated characters and static ship meshes with the Meshy AI API (#577, #699).
 
     uv run --with requests tools/room_anim/meshy.py character <name> --image ref.png [--height 1.7]
     uv run --with requests tools/room_anim/meshy.py animate <name> --action 33 --action 343
     uv run --with requests tools/room_anim/meshy.py library [--search sit]
+    uv run --with requests tools/room_anim/meshy.py ship <name> --image hero.png --image side.png ...
 
 `character` runs image-to-3D (A-pose, textured), remeshes it (meshy-7.1 makes
 0.5-1.3M faces and rigging takes at most 300k), then auto-rigs it.
 `animate` puts one library action on the rig per task, so every clip lands in
 its own GLB: prep_character.py keeps one clip per file, and auditioning idles
 side by side is the point. Feed a clip to prep_character.py to commit it.
+`ship` runs multi-image-to-3D (1-4 views of one hull, e.g. a concept render
+plus blueprints), symmetric and textured, with no rig.
 
 Every task id is saved in build/room_anim/meshy/<name>/state.json before it
 is polled, so a rerun resumes the task instead of paying for a new one
-(image-to-3D 30 credits, remesh 5, rigging 5, each action 3).
+(image-to-3D 30 credits, remesh 5, rigging 5, each action 3, multi-image ~30).
 
 The API key comes from MESHY_API_KEY or ~/.config/meshy/api_key and is never
 printed or written anywhere else. Keep it out of the repo.
@@ -56,8 +59,8 @@ def _data_uri(image):
     return f"data:{mime};base64,{base64.b64encode(image.read_bytes()).decode()}"
 
 
-class Character:
-    """One character's working dir and task ledger."""
+class Job:
+    """One asset's working dir and task ledger."""
 
     def __init__(self, name):
         self.dir = OUT / name
@@ -92,7 +95,7 @@ class Character:
 
 
 def character(args):
-    ch = Character(args.name)
+    ch = Job(args.name)
     model = ch.task("model", "image-to-3d", {
         "image_url": _data_uri(Path(args.image)),
         "ai_model": "latest",
@@ -112,7 +115,7 @@ def character(args):
 
 
 def animate(args):
-    ch = Character(args.name)
+    ch = Job(args.name)
     if "rig" not in ch.state:
         sys.exit(f"no rig for {args.name}: run `character` first")
     names = {a["action_id"]: a["key"] for a in _library()}
@@ -122,6 +125,24 @@ def animate(args):
         t = ch.task(f"action_{action}", "animations",
                     {"rig_task_id": ch.state["rig"], "action_id": action})
         ch.fetch(t["result"]["animation_glb_url"], f"{names.get(action, action)}.glb")
+
+
+def ship(args):
+    job = Job(args.name)
+    body = {
+        "image_urls": [_data_uri(Path(p)) for p in args.image],
+        "ai_model": "latest",
+        "symmetry_mode": "on",                 # hulls are bilateral; blueprints agree
+        "should_remesh": True,
+        "topology": "triangle",
+        "target_polycount": args.polycount,
+        "should_texture": True,
+        "target_formats": ["glb"],
+    }
+    if args.texture_prompt:
+        body["texture_prompt"] = args.texture_prompt
+    model = job.task("model", "multi-image-to-3d", body)
+    job.fetch(model["model_urls"]["glb"], "model.glb")
 
 
 def _library():
@@ -148,8 +169,15 @@ def main():
     a.add_argument("--action", type=int, action="append", required=True)
     lib = sub.add_parser("library", help="list library actions")
     lib.add_argument("--search")
+    s = sub.add_parser("ship", help="multi-image-to-3D, static textured hull")
+    s.add_argument("name")
+    s.add_argument("--image", action="append", required=True,
+                   help="1-4 views of the same hull (first one drives the texture)")
+    s.add_argument("--polycount", type=int, default=60_000, help="remesh target, faces")
+    s.add_argument("--texture-prompt", help="optional texture hint, max 600 chars")
     args = ap.parse_args()
-    {"character": character, "animate": animate, "library": library}[args.cmd](args)
+    {"character": character, "animate": animate, "library": library,
+     "ship": ship}[args.cmd](args)
 
 
 if __name__ == "__main__":
