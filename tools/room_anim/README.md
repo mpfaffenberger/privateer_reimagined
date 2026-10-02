@@ -902,11 +902,35 @@ minimal-alpha sprite over the plate.
 | `render_layers.py` | Blender | pod + pirate layers; `--check` overlay |
 | `layers.json` | - | loop period and phase |
 | `bake_lanterns.py` | uv | lantern flicker sheets, straight from the plate |
+| `bar_patrons.json` | - | the bar's room file: camera, lights, each 3D patron (#678) |
+| `sources/bar_*_clean_gen.png` | - | AI clean-plate edits of each bar patron's crop |
 
 Shared walker proxies (`build_walker`, `animate_walk_path`: a polyline
 walk that turns through corners) live in `walkers.py`; `stage.animate_path()`
 moves anything along a polyline, and `stage.overlay_on_plate()` makes a
 `--check` image.
+
+### Pirate bar: 3D patrons (#678)
+
+The pirate bar paints its own `bar_bg.png`, so its patrons are its own: six
+of them, back to front (the far table, the two at the middle table, the
+woman and the top-knot man at the counter, the drinker in the foreground),
+baked to `assets/concourse/pirate/anim/bar/`. Same pipeline as the mining
+bar, with **no new Meshy characters or clips**: the existing models are
+re-posed, rescaled and re-tinted. Two stand at the counter on another
+character's standing idle (`clip`: borrowed at render time with
+`prep_character.transplant_clip`, since every Mixamo rig shares its bone
+names). The foreground drinker `hold`s his legs, so the idle never kicks a
+boot out from under the table.
+
+```sh
+blender --background --factory-startup --python tools/room_anim/render_patrons.py -- \
+    --room tools/room_anim/pirate/bar_patrons.json [--patron patron_red]
+uv run --with scipy tools/room_anim/bake_patrons.py --room tools/room_anim/pirate/bar_patrons.json
+cd tools/room_anim && uv run wire_room.py bar --like pirate \
+    anim/bar/patron_{back,headband,olive,red,topknot,fg}_patch.json \
+    anim/bar/patron_{back,headband,olive,red,topknot,fg}.json
+```
 
 ## New Detroit concourse (#590)
 

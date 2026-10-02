@@ -274,6 +274,10 @@ def _tip(arm, bones, degrees, rest_frame=False, axis=(1.0, 0.0, 0.0)):
 def _patron(sc, p):
     before = set(bpy.data.objects)
     bpy.ops.import_scene.gltf(filepath=str(CHARACTERS / p["model"]))
+    # `clip`: another character's clip on this one's mesh, borrowed at render
+    # time (#678): every Mixamo rig shares its bone names, so no new GLB.
+    if "clip" in p:
+        prep_character.transplant_clip(str(CHARACTERS / p["clip"]))
     new = [o for o in bpy.data.objects if o not in before]
     root = bpy.data.objects.new("Patron", None)
     sc.collection.objects.link(root)

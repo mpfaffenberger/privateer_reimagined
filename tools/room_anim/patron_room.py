@@ -24,7 +24,9 @@ the one an aim leaves free), `held` (a prop in a hand, riding the skin of
 `bone`'s vertices where they grip it, e.g. a cigar with a keyed ember:
 render_patrons._held), and `inpaint` (a plate-px polygon around
 the painted patron: a clean plate without an AI edit, bake_patrons.
-inpaint_patch). Room files name bones the Mixamo way; the
+inpaint_patch). For the pirate bar (#678): `clip` (another
+character's GLB in characters/, whose clip this one plays, borrowed at
+render time: prep_character.transplant_clip). Room files name bones the Mixamo way; the
 Meshy API's own 24-bone rig is mapped (render_patrons._bone).
 
 render_patrons.py and bake_patrons.py both take `--room <file>`. Pure stdlib,

@@ -155,7 +155,21 @@
         320,
         200
       ],
-      "overlays": []
+      "overlays": [],
+      "layers": [
+        "anim/bar/patron_back_patch.json",
+        "anim/bar/patron_headband_patch.json",
+        "anim/bar/patron_olive_patch.json",
+        "anim/bar/patron_red_patch.json",
+        "anim/bar/patron_topknot_patch.json",
+        "anim/bar/patron_fg_patch.json",
+        "anim/bar/patron_back.json",
+        "anim/bar/patron_headband.json",
+        "anim/bar/patron_olive.json",
+        "anim/bar/patron_red.json",
+        "anim/bar/patron_topknot.json",
+        "anim/bar/patron_fg.json"
+      ]
     },
     "commodity": {
       "background": "commodity_bg.png",

@@ -847,15 +847,18 @@ void shipped_merchguild() {
 // clean-plate patch that paints the painted one out, and an idle loop. The
 // patrons overlap (the left table), so every patch draws first, then every
 // patron back to front: patch i belongs to patron i. bar_bg.png is untouched.
-void shipped_shared_bar() {
-    const std::vector<std::string> patrons = {"patron_orange",     "patron_backtable",
-                                              "patron_bartender",  "patron_woman_left",
-                                              "patron_bald",       "patron_foreground"};
+// The manifests a bar's 3D patrons draw from (patron_room.py): every patch
+// first, then every patron, both back to front.
+std::vector<std::string> patron_layers(const std::vector<std::string>& patrons) {
     std::vector<std::string> names;
     for (const std::string suffix : {"_patch", ""})
         for (const std::string& p : patrons) names.push_back(p + suffix);
-    shipped_shared_room("bar", names, 6);
-    const std::string dir = "assets/shared_rooms/bar/";
+    return names;
+}
+
+// Each patron in `dir` has a one-frame clean-plate patch that paints the
+// painted one out, and an idle loop, out of phase with the others.
+void check_patrons(const std::string& dir, const std::vector<std::string>& patrons) {
     std::vector<int> phases;
     for (const std::string& name : patrons) {
         room_anim::SpriteSheet patch, patron;
@@ -876,8 +879,33 @@ void shipped_shared_bar() {
     check(phases.size() == patrons.size() &&
               std::adjacent_find(phases.begin(), phases.end()) == phases.end(),
           "  patrons idle out of phase (no two share a loop phase)");
+}
+
+void shipped_shared_bar() {
+    const std::vector<std::string> patrons = {"patron_orange",     "patron_backtable",
+                                              "patron_bartender",  "patron_woman_left",
+                                              "patron_bald",       "patron_foreground"};
+    shipped_shared_room("bar", patron_layers(patrons), 6);
+    check_patrons("assets/shared_rooms/bar/", patrons);
     const json::Value links = json::parse_file("assets/concourse/mining/links.json")["bar"];
     check(links.is_array() && links.as_array().empty(), "mining bar hotspots unchanged");
+}
+
+// #678: the pirate bar paints its own bar_bg.png, so its six 3D patrons are
+// its own too, under assets/concourse/pirate/anim/bar/ (same layout as above).
+void shipped_pirate_bar() {
+    const std::vector<std::string> patrons = {"patron_back", "patron_headband", "patron_olive",
+                                              "patron_red",  "patron_topknot",  "patron_fg"};
+    const std::string dir = "assets/concourse/pirate/";
+    room_anim::RoomAnimDef def;
+    room_anim::parse_room_anim(json::parse_file(dir + "concourse.json")["rooms"]["bar"], def);
+    std::vector<std::string> want;
+    for (const std::string& n : patron_layers(patrons)) want.push_back("anim/bar/" + n + ".json");
+    check(!def.has_sky && def.layers == want, "pirate bar draws its patches, then its patrons");
+    check_layers(dir, def.layers);
+    check_patrons(dir + "anim/bar/", patrons);
+    const json::Value links = json::parse_file(dir + "links.json")["bar"];
+    check(links.is_array() && links.as_array().empty(), "pirate bar hotspots unchanged");
 }
 
 // #590: New Detroit's concourse: a walker along the hangar platform, between
@@ -956,6 +984,7 @@ const std::vector<Room> kAnimatedRooms = {
     {"oxford", "landing"},
     {"pirate", "concourse"},
     {"pirate", "landing"},
+    {"pirate", "bar"},
     {"pleasure", "concourse"},
     {"pleasure", "landing"},
     {"pleasure", "bar"},
@@ -1030,6 +1059,7 @@ int main() {
     shipped_mercguild();
     shipped_merchguild();
     shipped_shared_bar();
+    shipped_pirate_bar();
     shipped_newdetroit();
     unlisted_rooms_static();
     std::printf("\n%s\n", failures == 0 ? "ALL PASS" : "FAILURES DETECTED");
