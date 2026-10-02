@@ -5,6 +5,7 @@
 #include "system_def.h"
 #include "json.h"
 
+#include <algorithm>
 #include <cstdio>
 #include <filesystem>
 #include <utility>
@@ -243,8 +244,13 @@ std::optional<StarSystem> load_system(const std::string& name_or_path) {
         if (auto* p = star->find("corona_alpha"))       s.star_corona_alpha       = p->as_float();
         if (auto* p = star->find("corona_radius_mult")) s.star_corona_radius_mult = p->as_float();
     }
+    s.sky_meteors = autogen_sky_meteors(s.skybox_seed);
+    const json::Value* sky_comet = nullptr;
     if (auto* sky = root.find("sky")) {
         if (auto* p = sky->find("family")) s.sky_family = p->as_string();
+        if (auto* p = sky->find("meteors_per_minute"); p && p->is_number())
+            s.sky_meteors.per_minute = std::max(0.0f, p->as_float());
+        sky_comet = sky->find("comet");
         if (auto* props = sky->find("props"); props && props->is_array()) {
             s.sky_props_authored = true;
             for (const auto& v : props->as_array()) {
@@ -254,6 +260,13 @@ std::optional<StarSystem> load_system(const std::string& name_or_path) {
         }
     }
     if (!s.sky_props_authored) s.sky_props = autogen_sky_props(s.skybox_seed);
+    if (sky_comet) {
+        s.sky_comet = parse_sky_comet(*sky_comet);
+    } else {
+        std::vector<HMM_Vec3> taken;
+        for (const SkyPropDef& p : s.sky_props) taken.push_back(p.direction);
+        s.sky_comet = autogen_sky_comet(s.skybox_seed, taken);
+    }
 
     if (auto* p = root.find("studio_lighting")) s.studio_lighting = p->as_bool();
 
@@ -312,6 +325,12 @@ std::optional<StarSystem> load_system(const std::string& name_or_path) {
                     p.sprite.c_str(), p.angular_deg,
                     p.direction.X, p.direction.Y, p.direction.Z);
     }
+    if (s.sky_comet.enabled) {
+        std::printf("[sky]   comet  tail=%.1f deg  dir=(%.2f, %.2f, %.2f)\n",
+                    s.sky_comet.tail_deg, s.sky_comet.direction.X,
+                    s.sky_comet.direction.Y, s.sky_comet.direction.Z);
+    }
+    std::printf("[sky]   meteors %.1f/min\n", s.sky_meteors.per_minute);
     if (!s.encounters.empty()) {
         std::printf("[system] '%s' has %zu encounter rule(s)\n",
                     s.name.c_str(), s.encounters.size());

@@ -3,25 +3,21 @@
 // -----------------------------------------------------------------------------
 
 #include "sky_prop_renderer.h"
-#include "render_config.h"
+#include "sky_card.h"
 #include "stb_image.h"
 
-#include "generated/sky_prop.glsl.h"
+#include "generated/sky_card.glsl.h"
 
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
-#include <cstring>
+#include <utility>
 
 namespace {
 
 constexpr float k_deg_to_rad = 0.01745329251f;
 constexpr float k_two_pi     = 6.28318530718f;
-
-constexpr float kQuadCorners[] = {
-    -1.0f, -1.0f,   1.0f, -1.0f,   -1.0f, 1.0f,   1.0f, 1.0f,
-};
 
 // Box-filter mip chain. A 512px galaxy lands at ~150-250px on screen, so
 // without mips it shimmers as the camera turns.
@@ -62,9 +58,7 @@ float pulse(const SkyPropDef& p, float time_sec) {
 } // namespace
 
 bool SkyPropRenderer::init() {
-    sg_buffer_desc vbd{};
-    vbd.data = SG_RANGE(kQuadCorners);
-    vbuf_ = sg_make_buffer(&vbd);
+    vbuf_ = make_sky_card_quad();
 
     sg_sampler_desc sd{};
     sd.min_filter    = SG_FILTER_LINEAR;
@@ -74,26 +68,8 @@ bool SkyPropRenderer::init() {
     sd.wrap_v        = SG_WRAP_CLAMP_TO_EDGE;
     sampler_ = sg_make_sampler(&sd);
 
-    shader_ = sg_make_shader(sky_prop_shader_desc(sg_query_backend()));
-
-    sg_pipeline_desc pd{};
-    pd.shader = shader_;
-    pd.layout.attrs[ATTR_sky_prop_a_corner].format = SG_VERTEXFORMAT_FLOAT2;
-    pd.primitive_type          = SG_PRIMITIVETYPE_TRIANGLE_STRIP;
-    pd.cull_mode               = SG_CULLMODE_NONE;
-    pd.depth.compare           = SG_COMPAREFUNC_LESS_EQUAL;
-    pd.depth.write_enabled     = false;
-    pd.depth.pixel_format      = kSceneDepthFormat;
-    pd.colors[0].pixel_format  = kSceneColorFormat;
-    // Additive: the art is painted on black, so black contributes nothing.
-    // Alpha is left untouched.
-    pd.colors[0].blend.enabled          = true;
-    pd.colors[0].blend.src_factor_rgb   = SG_BLENDFACTOR_ONE;
-    pd.colors[0].blend.dst_factor_rgb   = SG_BLENDFACTOR_ONE;
-    pd.colors[0].blend.src_factor_alpha = SG_BLENDFACTOR_ZERO;
-    pd.colors[0].blend.dst_factor_alpha = SG_BLENDFACTOR_ONE;
-    pd.sample_count            = kSceneSampleCount;
-    pipeline_ = sg_make_pipeline(&pd);
+    shader_   = sg_make_shader(sky_prop_shader_desc(sg_query_backend()));
+    pipeline_ = make_sky_card_pipeline(shader_);
 
     const bool ok = sg_query_pipeline_state(pipeline_) == SG_RESOURCESTATE_VALID;
     if (!ok) std::fprintf(stderr, "[sky] sky prop pipeline creation failed\n");
@@ -158,41 +134,22 @@ void SkyPropRenderer::set_props(const std::vector<SkyPropDef>& props) {
 
 void SkyPropRenderer::draw(const Camera& cam, float aspect, float time_sec) const {
     if (props_.empty()) return;
-    const HMM_Mat4 vp = HMM_MulM4(cam.projection(aspect), cam.view_rotation_only());
+    const HMM_Mat4 vp = sky_card_view_proj(cam, aspect);
 
     sg_apply_pipeline(pipeline_);
     sg_bindings b{};
     b.vertex_buffers[0] = vbuf_;
     b.samplers[SMP_u_smp] = sampler_;
 
-    vs_params_t vsp{};
-    std::memcpy(vsp.view_proj, &vp, sizeof(float) * 16);
-
     for (const SkyPropDef& p : props_) {
-        const HMM_Vec3 d = p.direction;
-        // Tangent basis at d; fall back to +X as the reference near the poles.
-        const HMM_Vec3 ref   = std::fabs(d.Y) > 0.99f ? HMM_V3(1, 0, 0) : HMM_V3(0, 1, 0);
-        const HMM_Vec3 right = HMM_NormV3(HMM_Cross(d, ref));
-        const HMM_Vec3 up    = HMM_Cross(right, d);
-
         const float roll = p.roll_rad + p.spin_dps * k_deg_to_rad * time_sec;
-        const float half = std::tan(p.angular_deg * 0.5f * k_deg_to_rad);
-        const float c = std::cos(roll) * half, s = std::sin(roll) * half;
-        const HMM_Vec3 u = HMM_AddV3(HMM_MulV3F(right,  c), HMM_MulV3F(up, s));
-        const HMM_Vec3 v = HMM_AddV3(HMM_MulV3F(right, -s), HMM_MulV3F(up, c));
-
-        vsp.center[0] = d.X; vsp.center[1] = d.Y; vsp.center[2] = d.Z;
-        vsp.axis_u[0] = u.X; vsp.axis_u[1] = u.Y; vsp.axis_u[2] = u.Z;
-        vsp.axis_v[0] = v.X; vsp.axis_v[1] = v.Y; vsp.axis_v[2] = v.Z;
-
         fs_params_t fsp{};
         const float k = p.intensity * pulse(p, time_sec);
         fsp.tint[0] = fsp.tint[1] = fsp.tint[2] = k;
 
         b.views[VIEW_u_tex] = textures_.at(p.sprite).view;
         sg_apply_bindings(&b);
-        sg_apply_uniforms(UB_vs_params, SG_RANGE(vsp));
         sg_apply_uniforms(UB_fs_params, SG_RANGE(fsp));
-        sg_draw(0, 4, 1);
+        draw_sky_card(sky_card_at(p.direction, p.angular_deg, p.angular_deg, roll), vp);
     }
 }

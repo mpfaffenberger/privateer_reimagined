@@ -1,11 +1,12 @@
 // -----------------------------------------------------------------------------
-// test_sky_props.cpp — far-field galaxy / anomaly seeding + override parsing
-// (#693). Headless. Run from the repo root so assets/ resolves:
+// test_sky_props.cpp — backdrop seeding + override parsing: far-field
+// galaxies / anomalies (#693), comets and the meteor schedule (#701). Headless. Run from the repo root so assets/ resolves:
 //
 //   cmake --build build --target test_sky_props && ./build/test_sky_props
 // -----------------------------------------------------------------------------
 
 #include "json.h"
+#include "sky_motion.h"
 #include "sky_props.h"
 
 #include <cmath>
@@ -72,6 +73,70 @@ std::vector<std::string> shipped_seeds() {
     }
     return seeds;
 }
+
+void check_motion(const std::vector<std::string>& seeds) {
+    std::printf("comets\n");
+    int with_comet = 0;
+    bool comets_clear = true, comets_valid = true;
+    for (const std::string& seed : seeds) {
+        const auto props = autogen_sky_props(seed);
+        std::vector<HMM_Vec3> taken;
+        for (const SkyPropDef& p : props) taken.push_back(p.direction);
+        const SkyCometDef c = autogen_sky_comet(seed, taken);
+        if (!c.enabled) continue;
+        ++with_comet;
+        comets_valid &= approx(HMM_LenV3(c.direction), 1.0f, 1e-3f) &&
+                        c.tail_deg >= k_sky_comet_min_tail_deg &&
+                        c.tail_deg <= k_sky_comet_max_tail_deg;
+        for (const HMM_Vec3& d : taken) comets_clear &= HMM_DotV3(c.direction, d) < 0.87f;
+    }
+    std::printf("    %d of %zu systems have a comet\n", with_comet, seeds.size());
+    expect("some systems have a comet, most don't",
+           with_comet > (int)seeds.size() / 5 && with_comet < (int)seeds.size() * 3 / 5);
+    expect("seeded comets are valid", comets_valid);
+    expect("comets never sit on a sky prop (>30 deg apart)", comets_clear);
+
+    expect("comet: false opts out", !parse_sky_comet(json::parse("false")).enabled);
+    const SkyCometDef c = parse_sky_comet(json::parse(R"({"dir": [3, 0, 0], "tail_deg": 90})"));
+    expect("authored comet enabled + normalised", c.enabled && approx(c.direction.X, 1.0f));
+    expect("authored tail clamped", approx(c.tail_deg, k_sky_comet_max_tail_deg));
+
+    std::printf("meteors\n");
+    const SkyMeteorsDef m = autogen_sky_meteors("troy");
+    expect("meteor schedule is deterministic",
+           m.seed == autogen_sky_meteors("troy").seed && m.per_minute == autogen_sky_meteors("troy").per_minute);
+    expect("seeded rate in range", m.per_minute >= 8.0f && m.per_minute <= 24.0f);
+
+    // Sample 10 minutes at 60 Hz. Count streaks by their rising edge.
+    int streaks = 0;
+    bool was_alive = false, all_sane = true, repeatable = true;
+    for (int f = 0; f < 600 * 60; ++f) {
+        const float t = (float)f / 60.0f;
+        SkyMeteor a{}, b{};
+        const bool alive = sky_meteor_at(m, t, a);
+        repeatable &= alive == sky_meteor_at(m, t, b) && (!alive || approx(a.head.X, b.head.X));
+        if (alive) {
+            const float arc_deg = std::acos(std::fmin(1.0f, HMM_DotV3(a.head, a.tail))) * 57.29578f;
+            all_sane &= approx(HMM_LenV3(a.head), 1.0f, 1e-3f) &&
+                        approx(HMM_LenV3(a.tail), 1.0f, 1e-3f) &&
+                        a.brightness > 0.0f && a.brightness <= 1.0f && arc_deg <= 20.0f;
+        }
+        if (alive && !was_alive) ++streaks;
+        was_alive = alive;
+    }
+    const float expected = m.per_minute * 10.0f * 0.75f;
+    std::printf("    %.1f/min -> %d streaks in 10 min (expected ~%.0f)\n", m.per_minute, streaks, expected);
+    expect("streak count tracks the rate", streaks > expected * 0.65f && streaks < expected * 1.35f);
+    expect("streaks are unit-sphere, short, and dim enough", all_sane);
+    expect("same time -> same streak", repeatable);
+
+    SkyMeteorsDef off = m;
+    off.per_minute = 0.0f;
+    SkyMeteor unused{};
+    bool any = false;
+    for (int f = 0; f < 6000; ++f) any |= sky_meteor_at(off, (float)f * 0.01f, unused);
+    expect("meteors_per_minute 0 = none", !any);
+}
 } // namespace
 
 int main() {
@@ -135,6 +200,8 @@ int main() {
            custom.sprite == "sky/props/mine" && custom.spin_dps == 0.0f && custom.pulse_hz == 0.0f);
     expect("missing sprite rejected", parse_sky_prop(json::parse(R"({"dir": [1,0,0]})")).sprite.empty());
     expect("non-object rejected", parse_sky_prop(json::parse("[1, 2]")).sprite.empty());
+
+    check_motion(seeds);
 
     std::printf("\n=== %s ===\n", failures == 0 ? "ALL CHECKS PASSED" : "FAILURES DETECTED");
     return failures == 0 ? 0 : 1;
