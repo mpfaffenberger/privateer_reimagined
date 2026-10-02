@@ -1,16 +1,14 @@
 // -----------------------------------------------------------------------------
-// dev_remote_stub.cpp — no-op dev_remote implementation for non-macOS builds.
+// dev_remote_stub.cpp — no-op dev_remote implementation for Linux builds.
 //
-// The real dev_remote.cpp uses POSIX sockets (<sys/socket.h>, <arpa/inet.h>,
-// etc) and dev_remote_macos.mm uses Cocoa to grab window screenshots. Both
-// are macOS-only conveniences for the Code-Puppy capture loop. On Windows /
-// Linux we just compile this stub instead so the link succeeds and main.cpp
-// doesn't have to #ifdef every call site.
+// The real dev_remote.cpp speaks sockets through dev_remote_socket.h and
+// grabs screenshots via dev_remote_macos.mm (macOS) or dev_remote_win32.cpp
+// (Windows, #696). Linux has no screenshot TU yet, so it compiles this stub
+// instead and main.cpp doesn't have to #ifdef every call site.
 //
-// If we ever want the HTTP control channel on Windows, this file gets
-// replaced with a winsock2 port (and the screenshot path with a D3D11 RT
-// readback) and dev_remote.cpp's POSIX guts get pulled into a unix-only
-// branch the same way.
+// Porting to Linux = add a dev_remote_linux.cpp with
+// dev_remote_capture_window() (e.g. a GL back-buffer readback) and switch
+// the CMake branch over.
 // -----------------------------------------------------------------------------
 
 #include "dev_remote.h"
