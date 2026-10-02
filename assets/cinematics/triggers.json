@@ -67,22 +67,6 @@
       }
     },
     {
-      "cinematic": "troy_merchant_tour",
-      "once": true,
-      "cooldown_s": 0,
-      "when": {
-        "system": "troy",
-        "near_nav": {
-          "nav": "Achilles Mining Base",
-          "radius_m": 20000
-        },
-        "requires_flags": [],
-        "forbids_flags": [
-          "troy_merchant_tour_seen"
-        ]
-      }
-    },
-    {
       "cinematic": "m03_troy_militia_bust",
       "once": true,
       "cooldown_s": 0,
