@@ -81,5 +81,20 @@ class PostTests(unittest.TestCase):
         self.assertEqual([], list((self.ships / SHIP / "sprites_3d").glob("*.lights.json")))
 
 
+class ViewTests(unittest.TestCase):
+    def test_positive_elevation_cameras_sit_above_the_hull(self) -> None:
+        # Engine picker: el > 0 = camera above (+Y). #720 shipped belly views
+        # in the el+ cells because the poses inherited the engine capture's
+        # negation.
+        for view, (az, el) in zip(capture.views(SHIP), capture.ALL_VIEWS):
+            y = view["cam"][1]
+            if el > 0:
+                self.assertGreater(y, 0, view["file"])
+            elif el < 0:
+                self.assertLess(y, 0, view["file"])
+            else:
+                self.assertAlmostEqual(0, y, places=6)
+
+
 if __name__ == "__main__":
     unittest.main()
