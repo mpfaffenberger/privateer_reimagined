@@ -22,9 +22,11 @@ constexpr sg_pixel_format kSceneColorFormat =
     kHdrScene ? SG_PIXELFORMAT_RGBA16F : SG_PIXELFORMAT_RGBA8;
 constexpr sg_pixel_format kSceneDepthFormat = SG_PIXELFORMAT_DEPTH;
 
-// Quarter-res target for the bloom ping-pong. Same format as the scene so
-// the bright-pass sees real HDR energy.
+// Bloom mip chain (#724): level 0 is half res, each next level halves
+// again. Same format as the scene so the bright-pass sees real HDR
+// energy. More levels = wider glow; each is a tiny extra pass.
 constexpr sg_pixel_format kBloomColorFormat = kSceneColorFormat;
+constexpr int kBloomLevels = 6;
 
 // Final composite targets the swapchain. On Metal/macOS that's BGRA8;
 // sokol's swapchain auto-detection gives us whatever the platform wants.

@@ -12,10 +12,10 @@
 // -----------------------------------------------------------------------------
 
 #include "sokol_gfx.h"
+#include "render_config.h"
 
 struct RenderTargets {
     int w = 0, h = 0;        // scene resolution
-    int bw = 0, bh = 0;      // bloom resolution (typically w/2, h/2)
 
     // ---- scene target ---------------------------------------------------
     sg_image scene_color{};
@@ -24,11 +24,15 @@ struct RenderTargets {
     sg_view  scene_depth_att{};
     sg_view  scene_color_tex{};   // read (texture for post)
 
-    // ---- bloom ping-pong (half-res, no depth) ---------------------------
-    sg_image bloom_a_color{};
-    sg_image bloom_b_color{};
-    sg_view  bloom_a_att{}, bloom_a_tex{};
-    sg_view  bloom_b_att{}, bloom_b_tex{};
+    // ---- bloom mip chain (#724, no depth) -------------------------------
+    // Level 0 is half res; each next level halves again. After
+    // PostProcess::apply_bloom, level 0 holds the finished bloom.
+    struct BloomMip {
+        int      w = 0, h = 0;
+        sg_image color{};
+        sg_view  att{}, tex{};
+    };
+    BloomMip bloom[kBloomLevels];
 
     // ---- shared sampler --------------------------------------------------
     sg_sampler linear_clamp{};

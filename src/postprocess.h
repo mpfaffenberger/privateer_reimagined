@@ -13,8 +13,9 @@
 //     post.apply_bloom(rt);
 //     post.composite_to_swapchain(rt, ...);
 //
-// Two passes for bloom (brightpass+blurH into bloom_a, then blurV into
-// bloom_b), one pass to composite and draw the flare.
+// Bloom is a progressive mip chain (#724): kBloomLevels downsample passes
+// (bright-pass on the first) then kBloomLevels-1 additive upsample passes,
+// leaving the result in rt.bloom[0]. One more pass composites + flares.
 // -----------------------------------------------------------------------------
 
 #include "sokol_gfx.h"
@@ -26,9 +27,12 @@
 struct RenderTargets;
 
 struct PostProcess {
-    // Bloom/blur pipeline — used twice per frame with different uniforms.
-    sg_shader   blur_shader{};
-    sg_pipeline blur_pipeline{};
+    // Bloom chain pipelines (post_bloom.glsl): plain-write downsample and
+    // additive-blend upsample.
+    sg_shader   bloom_down_shader{};
+    sg_pipeline bloom_down_pipeline{};
+    sg_shader   bloom_up_shader{};
+    sg_pipeline bloom_up_pipeline{};
 
     // Final composite pipeline — writes to the swapchain.
     sg_shader   composite_shader{};
@@ -38,9 +42,9 @@ struct PostProcess {
     // Defaults calibrated for "I can still see the scene" rather than
     // "whole screen is a nova." Crank bloom_strength to 0.9+ if you want
     // the more aggressive Freelancer-ads vibe.
-    float bloom_threshold = 0.85f;  // bright-pass cutoff before blur
-    float bloom_blur_px   = 2.5f;   // blur radius multiplier (quarter-res)
-    float bloom_strength  = 0.45f;  // how strongly bloom adds back
+    float bloom_threshold = 0.8f;   // energy above this glows (soft knee)
+    float bloom_radius    = 1.0f;   // upsample tent spread, in source texels
+    float bloom_strength  = 0.3f;   // how strongly the summed chain adds back
     float flare_strength  = 0.7f;   // overall flare intensity
     // Peak brightness fed to bloom (0 = uncapped). HDR keeps the sun core
     // at several x; without a cap its glow balloons past the painted size.
@@ -55,7 +59,7 @@ struct PostProcess {
     bool init();
     void destroy();
 
-    // Run the two bloom passes. Result lives in rt.bloom_b_color.
+    // Run the bloom chain. Result lives in rt.bloom[0].
     void apply_bloom(const RenderTargets& rt) const;
 
     // Composite scene + bloom + flare to the swapchain. `sun_world_pos` and

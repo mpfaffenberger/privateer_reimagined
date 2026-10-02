@@ -1,7 +1,7 @@
 // -----------------------------------------------------------------------------
 // postprocess_composite.cpp — final blit + lens-flare pass.
 //
-// Separate TU so post_composite.glsl.h doesn't collide with post_blur.glsl.h.
+// Separate TU so post_composite.glsl.h doesn't collide with post_bloom.glsl.h.
 // Exposes two free functions called by postprocess.cpp:
 //
 //     init_composite_pipeline / destroy_composite_pipeline
@@ -74,7 +74,7 @@ void PostProcess::composite_to_swapchain(const RenderTargets& rt,
 
     sg_bindings b{};
     b.views[0]    = rt.scene_color_tex;
-    b.views[1]    = rt.bloom_b_tex;
+    b.views[1]    = rt.bloom[0].tex;
     b.samplers[0] = rt.linear_clamp;
     sg_apply_bindings(&b);
 
