@@ -7,6 +7,7 @@
 
 #include <cstdio>
 #include <filesystem>
+#include <utility>
 
 namespace {
 
@@ -244,7 +245,15 @@ std::optional<StarSystem> load_system(const std::string& name_or_path) {
     }
     if (auto* sky = root.find("sky")) {
         if (auto* p = sky->find("family")) s.sky_family = p->as_string();
+        if (auto* props = sky->find("props"); props && props->is_array()) {
+            s.sky_props_authored = true;
+            for (const auto& v : props->as_array()) {
+                SkyPropDef p = parse_sky_prop(v);
+                if (!p.sprite.empty()) s.sky_props.push_back(std::move(p));
+            }
+        }
     }
+    if (!s.sky_props_authored) s.sky_props = autogen_sky_props(s.skybox_seed);
 
     if (auto* p = root.find("studio_lighting")) s.studio_lighting = p->as_bool();
 
@@ -292,11 +301,17 @@ std::optional<StarSystem> load_system(const std::string& name_or_path) {
         }
     }
 
-    std::printf("[system] loaded '%s' — %s (skybox=%s, star=%s, fields=%zu, meshes=%zu, sprites=%zu, ship_sprites=%zu, navs=%zu)\n",
+    std::printf("[system] loaded '%s' — %s (skybox=%s, star=%s, fields=%zu, meshes=%zu, sprites=%zu, ship_sprites=%zu, navs=%zu, sky_props=%zu%s)\n",
                 path.c_str(), s.name.c_str(), s.skybox_seed.c_str(),
                 s.star_preset.c_str(), s.asteroid_fields.size(),
                 s.placed_meshes.size(), s.placed_sprites.size(),
-                s.placed_ship_sprites.size(), s.nav_points.size());
+                s.placed_ship_sprites.size(), s.nav_points.size(),
+                s.sky_props.size(), s.sky_props_authored ? " authored" : " seeded");
+    for (const SkyPropDef& p : s.sky_props) {
+        std::printf("[sky]   %s  ang=%.1f deg  dir=(%.2f, %.2f, %.2f)\n",
+                    p.sprite.c_str(), p.angular_deg,
+                    p.direction.X, p.direction.Y, p.direction.Z);
+    }
     if (!s.encounters.empty()) {
         std::printf("[system] '%s' has %zu encounter rule(s)\n",
                     s.name.c_str(), s.encounters.size());

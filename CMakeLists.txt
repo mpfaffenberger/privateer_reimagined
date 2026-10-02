@@ -81,6 +81,7 @@ endfunction()
 
 compile_shader(skybox)
 compile_shader(skybox_gen)
+compile_shader(sky_prop)
 compile_shader(sun)
 compile_shader(sun_glow)
 compile_shader(sun_gas)
@@ -166,6 +167,14 @@ set(IMGUI_SRC
 
 # The savegame module: public API + its PlayerState <-> JSON codec (#525).
 # Every target that links savegame links all three.
+# Star-system loading plus what it seeds from skybox_seed (sky props, #693).
+# Every target that links system_def links all three.
+set(SYSTEM_DEF_SRC
+    src/system_def.cpp
+    src/sky_props.cpp
+    src/sky_family.cpp
+)
+
 set(SAVEGAME_SRC
     src/savegame.cpp
     src/savegame_read.cpp
@@ -183,7 +192,7 @@ add_executable(new_privateer
     src/camera.cpp
     src/skybox.cpp
     src/skybox_gen.cpp
-    src/sky_family.cpp
+    src/sky_prop_renderer.cpp
     src/sun.cpp
     src/sun_corona.cpp
     src/sun_gas.cpp
@@ -204,7 +213,7 @@ add_executable(new_privateer
     src/asteroid.cpp
     src/json.cpp
     src/obj_loader.cpp
-    src/system_def.cpp
+    ${SYSTEM_DEF_SRC}
     src/galaxy.cpp
     src/commodity.cpp
     src/economy.cpp
@@ -536,7 +545,7 @@ add_executable(test_full_loop EXCLUDE_FROM_ALL
     tools/test_full_loop.cpp
     src/game_state.cpp src/player.cpp src/faction.cpp src/comm.cpp
     src/commodity.cpp src/economy.cpp src/outfitting.cpp src/missions.cpp
-    src/galaxy.cpp src/system_def.cpp src/json.cpp ${SAVEGAME_SRC} src/world_clock.cpp
+    src/galaxy.cpp ${SYSTEM_DEF_SRC} src/json.cpp ${SAVEGAME_SRC} src/world_clock.cpp
     src/docking.cpp src/autopilot.cpp src/threat.cpp src/jump.cpp
     src/encounters.cpp src/repair.cpp src/missile.cpp src/ship.cpp
     src/ship_class.cpp src/ship_registry.cpp src/ship_ai.cpp
@@ -562,7 +571,7 @@ add_executable(test_ai_brain EXCLUDE_FROM_ALL
     tools/test_ai_brain.cpp
     src/game_state.cpp src/player.cpp src/faction.cpp src/comm.cpp
     src/commodity.cpp src/economy.cpp src/outfitting.cpp src/missions.cpp
-    src/galaxy.cpp src/system_def.cpp src/json.cpp ${SAVEGAME_SRC} src/world_clock.cpp
+    src/galaxy.cpp ${SYSTEM_DEF_SRC} src/json.cpp ${SAVEGAME_SRC} src/world_clock.cpp
     src/docking.cpp src/autopilot.cpp src/threat.cpp src/jump.cpp
     src/encounters.cpp src/repair.cpp src/missile.cpp src/ship.cpp
     src/ship_class.cpp src/ship_registry.cpp src/ship_ai.cpp
@@ -591,7 +600,7 @@ add_executable(test_missions EXCLUDE_FROM_ALL
     tools/test_missions.cpp
     src/missions.cpp src/comm.cpp src/player.cpp src/faction.cpp
     src/commodity.cpp
-    src/galaxy.cpp src/system_def.cpp src/json.cpp ${SAVEGAME_SRC} src/world_clock.cpp
+    src/galaxy.cpp ${SYSTEM_DEF_SRC} src/json.cpp ${SAVEGAME_SRC} src/world_clock.cpp
     src/ship_class.cpp src/ship_registry.cpp
     src/encounters.cpp
     src/mobility.cpp
@@ -620,7 +629,7 @@ add_executable(test_mission_tracker EXCLUDE_FROM_ALL
     src/mission_tracker.cpp
     src/missions.cpp src/comm.cpp src/player.cpp src/faction.cpp
     src/threat.cpp src/commodity.cpp
-    src/galaxy.cpp src/system_def.cpp src/json.cpp ${SAVEGAME_SRC} src/world_clock.cpp
+    src/galaxy.cpp ${SYSTEM_DEF_SRC} src/json.cpp ${SAVEGAME_SRC} src/world_clock.cpp
     src/ship_class.cpp src/ship_registry.cpp
     src/mobility.cpp
     src/gun.cpp src/armor.cpp src/shield.cpp
@@ -677,6 +686,19 @@ add_executable(test_load_progress EXCLUDE_FROM_ALL
 )
 target_include_directories(test_load_progress PRIVATE
     ${CMAKE_SOURCE_DIR}/src
+)
+
+# Far-field sky prop seeding + override parsing (#693). Headless.
+#   cmake --build build --target test_sky_props && ./build/test_sky_props
+add_executable(test_sky_props EXCLUDE_FROM_ALL
+    tools/test_sky_props.cpp
+    src/sky_props.cpp
+    src/sky_family.cpp
+    src/json.cpp
+)
+target_include_directories(test_sky_props PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/third_party
 )
 
 # Docking lifecycle proof, including the once-per-landing day advance. Save
