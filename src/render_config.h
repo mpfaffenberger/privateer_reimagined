@@ -9,15 +9,22 @@
 
 #include "sokol_gfx.h"
 
-// Offscreen scene color attachment. RGBA8 is LDR but matches stb_image
-// texture decoding + keeps bandwidth modest. Bump to RGBA16F later if we
-// want real HDR (requires shader output tone-mapping too).
-constexpr sg_pixel_format kSceneColorFormat = SG_PIXELFORMAT_RGBA8;
+// HDR scene (#715). On: the scene + bloom targets are RGBA16F, so additive
+// effects (tracers, explosions, the sun, shield flashes) keep their energy
+// above 1.0 instead of clipping to flat white, and the composite pass
+// tonemaps it back down (see PostProcess::tonemap). Off: the old RGBA8 LDR
+// path. Costs twice the scene-target bandwidth of RGBA8.
+constexpr bool kHdrScene = true;
+
+// Offscreen scene color attachment. Every scene pipeline declares this
+// format, so flipping kHdrScene is the whole switch.
+constexpr sg_pixel_format kSceneColorFormat =
+    kHdrScene ? SG_PIXELFORMAT_RGBA16F : SG_PIXELFORMAT_RGBA8;
 constexpr sg_pixel_format kSceneDepthFormat = SG_PIXELFORMAT_DEPTH;
 
-// Half-res target for the bloom ping-pong. Same format to keep things
-// compatible with a single blur pipeline.
-constexpr sg_pixel_format kBloomColorFormat = SG_PIXELFORMAT_RGBA8;
+// Quarter-res target for the bloom ping-pong. Same format as the scene so
+// the bright-pass sees real HDR energy.
+constexpr sg_pixel_format kBloomColorFormat = kSceneColorFormat;
 
 // Final composite targets the swapchain. On Metal/macOS that's BGRA8;
 // sokol's swapchain auto-detection gives us whatever the platform wants.

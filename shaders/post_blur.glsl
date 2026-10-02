@@ -27,7 +27,7 @@ layout(binding=0) uniform sampler   u_smp;
 
 layout(binding=0) uniform post_blur_params {
     vec4 texel_and_dir;    // .xy = 1 / src_size (texel size); .zw = blur direction (1,0) or (0,1)
-    vec4 blur_cfg;         // .x = radius (pixels), .y = threshold (0 = no brightpass), .z,.w unused
+    vec4 blur_cfg;         // .x = radius (pixels), .y = threshold (0 = no brightpass), .z = bright-pass peak clamp (0 = none), .w unused
 };
 
 in  vec2 v_uv;
@@ -44,8 +44,16 @@ out vec4 frag_color;
 // Soft-knee bright-pass. Two-sided smoothstep around the threshold means
 // pixels that waver across the boundary (animated noise, MSAA dithering)
 // no longer cause the sparkle/flicker you get from a hard cutoff.
-vec3 bright_pass(vec3 c, float threshold) {
+// `clamp_lum` (> 0) caps the peak channel fed to bloom. With an HDR scene
+// (#715) the sun core or a point-blank explosion can sit at 5-10x, which
+// would balloon the glow far past what the art was tuned for; the cap
+// keeps bloom size in the painted range while hue is preserved.
+vec3 bright_pass(vec3 c, float threshold, float clamp_lum) {
     float lum = max(max(c.r, c.g), c.b);
+    if (clamp_lum > 0.0 && lum > clamp_lum) {
+        c  *= clamp_lum / lum;
+        lum = clamp_lum;
+    }
     float t   = smoothstep(threshold * 0.85, threshold * 1.15, lum);
     return c * t;
 }
@@ -72,7 +80,7 @@ void main() {
     }
 
     if (threshold > 0.0) {
-        sum = bright_pass(sum, threshold);
+        sum = bright_pass(sum, threshold, blur_cfg.z);
     }
 
     frag_color = vec4(sum, 1.0);

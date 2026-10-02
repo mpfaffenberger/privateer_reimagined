@@ -42,7 +42,7 @@ void main() {
 
 @fs fs
 layout(binding=1) uniform fs_params {
-    vec4 core_color;               // .rgb = bright plasma base color
+    vec4 core_color;               // .rgb = bright plasma base color, .a = HDR intensity
     vec4 glow_color;               // .rgb = warm edge / corona color
     vec4 view_and_tightness;       // .xyz = camera world pos, .w = limb exponent
     vec4 plasma_params;            // .x = time (s), .y = granule scale, .z = flow speed, .w = contrast
@@ -124,7 +124,8 @@ void main() {
     // Tiny brightness pulse tied to large-scale noise — sells "it's alive."
     surface *= 0.9 + 0.2 * nA;
 
-    frag_color = vec4(surface, 1.0);
+    // core_color.a = HDR intensity (1 for an LDR scene; see sun.cpp).
+    frag_color = vec4(surface * core_color.a, 1.0);
 }
 @end
 

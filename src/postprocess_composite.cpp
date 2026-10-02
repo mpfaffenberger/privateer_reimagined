@@ -87,6 +87,9 @@ void PostProcess::composite_to_swapchain(const RenderTargets& rt,
     u.tint_and_bloom[1] = flare_tint.Y;
     u.tint_and_bloom[2] = flare_tint.Z;
     u.tint_and_bloom[3] = bloom_strength;
+    u.tone[0] = exposure;
+    u.tone[1] = tonemap_knee;
+    u.tone[2] = tonemap ? 1.0f : 0.0f;
     sg_apply_uniforms(UB_post_composite_params, SG_RANGE(u));
 
     sg_draw(0, 3, 1);

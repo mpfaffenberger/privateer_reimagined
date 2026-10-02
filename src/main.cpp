@@ -1414,7 +1414,8 @@ void build_system_scene(bool first_time, bool show_progress) {
         apply_studio_sun(g.sun);
         g.post.bloom_strength = 0.0f;
         g.post.flare_strength = 0.0f;
-        std::printf("[main] capture-clean studio sun enabled; bloom/flare disabled\n");
+        g.post.tonemap        = false;   // atlas refs stay as-rendered (#715)
+        std::printf("[main] capture-clean studio sun enabled; bloom/flare/tonemap disabled\n");
     } else if (g.system.studio_lighting) {
         apply_studio_sun(g.sun);
         std::printf("[main] system studio_lighting=true: dim sun enabled\n");
