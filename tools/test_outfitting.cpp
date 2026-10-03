@@ -137,6 +137,33 @@ static void test_no_overwrite() {
           "...then the new gun fits at its full price");
 }
 
+// The starter ship must be able to fight (#743): with its new-game shield
+// generator running, net energy regen covers sustained fire from its own
+// stock guns. Mirrors firing.cpp's regen (hull + engine bonus - shield
+// drain). "Above zero" was not enough: 10 GJ/s lost every opening fight.
+static void test_starter_energy() {
+    std::printf("\n== Starter energy budget (#743) ==\n");
+    const PlayerState p = player::new_game("troy");
+    const ShipClass* k = ship_class::find(p.ship_class_name);
+    check(k != nullptr, "starter hull catalog loaded");
+    if (!k) return;
+
+    const float net = k->energy_recharge
+                    + outfitting::engine_recharge_bonus_for(p.engine_level)
+                    - outfitting::shield_recharge_drain_for(p.shield_level);
+    float burn = 0.0f;
+    for (const MountSlot& m : p.gun_mounts) {
+        const GunType t = gun::from_name(m.gun_id);
+        if (t == GunType::Count) continue;
+        const GunStats& gs = g_gun_stats[(int)t];
+        if (gs.refire_delay_s > 0.0f) burn += gs.energy_cost_gj / gs.refire_delay_s;
+    }
+    std::printf("  %s: net regen %.1f GJ/s vs stock-gun burn %.1f GJ/s\n",
+                p.ship_class_name.c_str(), net, burn);
+    check(burn > 0.0f, "starter carries energy-using stock guns");
+    check(net >= burn, "starter net regen sustains its stock guns indefinitely");
+}
+
 static void show(const PlayerState& p, const char* tag) {
     const ShipClass* k = ship_class::find(p.ship_class_name);
     const outfitting::SpeedCaps caps = outfitting::effective_speed_caps(p);
@@ -227,6 +254,7 @@ int main() {
 
     test_turrets();
     test_no_overwrite();
+    test_starter_energy();
 
     std::printf("\nAll transaction paths exercised. %s\n",
                 g_fail == 0 ? "ALL CHECKS PASS" : "CHECK FAILURES");

@@ -340,10 +340,10 @@ constexpr int64_t k_merchant_guild_fee = 1000;
 
 // ---- afterburner energy drain (np-zte.2 / merged pool) ---------------------
 // Afterburner now spends from the player Ship's energy_gj (shared with the
-// guns). Drain rate matches the Tarsus's 50 GJ/s recharge so holding TAB
-// exactly cancels regen — sustained afterburn parks energy at zero (no
-// gun shots until you let off the boost), short bursts pop in and out as
-// the bank recovers. No separate fuel tank, no separate regen rate, no
+// guns). Drain outpaces the starter Tarsus's 30 GJ/s net regen (#743), so
+// sustained afterburn slowly empties the bank (no gun shots once it's dry
+// until you let off the boost); short bursts pop in and out as the bank
+// recovers. No separate fuel tank, no separate regen rate, no
 // base refuel service — simpler model, single resource decision.
 constexpr float k_afterburner_drain_per_s = 50.0f;  // GJ/s drained from energy_gj
 
