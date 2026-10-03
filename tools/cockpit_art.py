@@ -4,7 +4,7 @@
 Turns a generated cockpit painting into a game-ready RGBA overlay and
 measures its display glass for src/cockpit_overlay_layout.h.
 
-    python3 tools/cockpit_art.py finalize RAW.png OUT.png [--key RRGGBB]
+    python3 tools/cockpit_art.py finalize RAW.png OUT.png [--key RRGGBB] [--pad-top N]
     python3 tools/cockpit_art.py analyze  ART.png
 
 finalize
@@ -12,6 +12,11 @@ finalize
       alpha is kept, near-opaque snapped to 255 and specks to 0.
     * Keyed input (--key, RGB art on a flat colour): alpha comes from the
       colour distance to the key, with a soft 2-level ramp.
+    * --pad-top N: mirror the top N rows above the canvas. Use it for art whose
+      ceiling is solid metal but whose glass sits within ~24 px of the top:
+      the pilot-head overscan would crop that glass at narrow windows. The
+      mirrored band falls inside the overscan, and the 16:9 trim below takes
+      the same N rows off the bottom.
     * Canvas trimmed from the bottom to >= 16:9 (see finalize()).
     * Edge decontamination: every partially transparent pixel takes the RGB
       of the nearest fully opaque pixel. That strips whatever matte the edge
@@ -61,9 +66,20 @@ def key_alpha(img, key):
     return out
 
 
-def finalize(src_path, out_path, key=None):
+def pad_top(img, n):
+    """Grow the canvas upward by `n` rows mirrored from its top edge."""
+    w, h = img.size
+    out = Image.new("RGBA", (w, h + n))
+    out.paste(img.crop((0, 0, w, n)).transpose(Image.Transpose.FLIP_TOP_BOTTOM), (0, 0))
+    out.paste(img, (0, n))
+    return out
+
+
+def finalize(src_path, out_path, key=None, top=0):
     img = Image.open(src_path)
     img = key_alpha(img, key) if key else img.convert("RGBA")
+    if top:
+        img = pad_top(img, top)
     w, h = img.size
     # Generators emit near-16:9 canvases (1672x941 is 0.06% too tall). Trim
     # dash rows off the bottom until the art is >= 16:9, so a 16:9 window is
@@ -267,12 +283,14 @@ def main():
     f.add_argument("src")
     f.add_argument("out")
     f.add_argument("--key", help="RRGGBB chroma key for RGB input (omit for native alpha)")
+    f.add_argument("--pad-top", type=int, default=0, metavar="N",
+                   help="mirror N ceiling rows above the canvas (glass too close to the top)")
     a = sub.add_parser("analyze")
     a.add_argument("art")
     args = ap.parse_args()
     if args.cmd == "finalize":
         key = tuple(int(args.key[i:i + 2], 16) for i in (0, 2, 4)) if args.key else None
-        finalize(args.src, args.out, key)
+        finalize(args.src, args.out, key, args.pad_top)
     else:
         analyze(args.art)
 

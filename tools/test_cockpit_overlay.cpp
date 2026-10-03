@@ -319,6 +319,15 @@ int main() {
           "Tarsus silhouette: hanging upper-left CRT plus two separate lower monitors");
     check(!present(tarsus.display[3]) && !present(tarsus.display[4]) && !present(tarsus.display[5]),
           "Tarsus has three CRTs, not the fighter six-hole dashboard");
+    check(find_art("orion") != nullptr,     "Orion has its own reference-based cockpit");
+    const CockpitArt& orion = *find_art("orion");
+    check(orion.fit_entire_canvas &&
+          orion.display[1].p[2].y < orion.display[0].p[0].y &&   // radar hangs above the VDUs
+          orion.display[1].p[0].x > orion.display[2].p[0].x &&   // ...on the right
+          orion.display[4].p[1].x < orion.display[3].p[0].x &&   // SET upper-left, AUTO top strip
+          orion.display[3].p[1].x < orion.display[1].p[0].x &&
+          !present(orion.display[5]),
+          "Orion silhouette: two lower VDUs, upper SET + RADAR monitors, AUTO strip, no KPS");
     check(find_art("unmapped-hull") == nullptr, "hull without art keeps classic HUD");
     check(find_art(nullptr) == nullptr,     "null class is safe");
 

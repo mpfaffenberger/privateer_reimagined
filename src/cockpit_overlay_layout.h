@@ -95,6 +95,21 @@ inline constexpr CockpitArt kCockpitArts[] = {
         { { { 720.4f, 19.9f }, { 950.9f, 19.9f }, { 950.9f, 74.5f }, { 720.3f, 74.7f } } },
         { { { 351.7f, 525.2f }, { 493.3f, 521.9f }, { 493.4f, 555.3f }, { 351.5f, 561.0f } } },
         { { { 1178.4f, 522.0f }, { 1319.8f, 525.1f }, { 1319.7f, 560.9f }, { 1177.9f, 555.4f } } } } },
+    // Orion (#729/#730): Mike's "Clean" sample, conditioned on the original
+    // Privateer Orion cockpit + the Centurion house style. Five glass holes,
+    // mapped onto the original's layout (not analyze's area order): two big
+    // lower VDUs (STATUS left, NAV/TARGET right), RADAR in the canted
+    // upper-right monitor, SET in the upper-left one, AUTOPILOT in the top
+    // strip. No KPS strip, so speed lives in the radar flank. The monitors
+    // hang from a physical ceiling, so fit the entire canvas; finalize
+    // --pad-top 12 keeps the AUTO strip clear of the pilot-head overscan.
+    { "orion", "assets/cockpits/orion.png", 1672.0f, 940.0f, 322.9f,
+      { { { { 95.3f, 480.1f }, { 495.4f, 479.6f }, { 495.7f, 740.9f }, { 95.7f, 743.0f } } },
+        { { { 1339.6f, 50.4f }, { 1586.6f, 44.0f }, { 1571.9f, 182.0f }, { 1330.9f, 181.9f } } },
+        { { { 1175.6f, 479.6f }, { 1576.5f, 480.0f }, { 1575.7f, 743.0f }, { 1175.8f, 740.5f } } },
+        { { { 704.1f, 28.2f }, { 968.0f, 28.2f }, { 967.3f, 71.1f }, { 704.0f, 71.3f } } },
+        { { { 86.0f, 44.5f }, { 333.2f, 50.2f }, { 341.2f, 181.8f }, { 99.6f, 182.3f } } },
+        {} }, true },
 };
 
 inline const CockpitArt* find_art(const char* ship_class) {

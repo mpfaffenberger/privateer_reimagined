@@ -172,8 +172,8 @@ int main() {
     io.FontDefault = font;
 
     Camera cam;
-    for (const char* hull : { "centurion", "talon", "tarsus", "galaxy" })
-        check_hull(hull, cam);
+    for (const cockpit_overlay::CockpitArt& art : cockpit_overlay::kCockpitArts)
+        check_hull(art.ship_class, cam);
     check(g_old_overflow[0], "harness reproduces the pre-#430 TARGET faction-line overflow");
     check(g_old_overflow[1], "harness reproduces the pre-#430 ARMAMENTS header overflow");
     check_classic();
