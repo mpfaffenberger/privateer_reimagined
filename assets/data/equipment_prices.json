@@ -61,9 +61,10 @@
 
   // Shield generator drain (absolute GJ/s consumed whenever the gen is
   // installed). L0 = no shield gen, no drain. Hand-authored.
-  // L1 must stay below the starter Tarsus' 20 GJ/s hull recharge, or a
-  // new-game ship has zero net weapon/afterburner energy regen. Yes,
-  // balance bugs can be one rude number. L1=10, L2=45, L3=60, L4=80,
+  // L1 must leave the starter Tarsus (40 GJ/s hull recharge) enough net
+  // regen to sustain its stock guns -- test_outfitting checks exactly that
+  // (#743). Merely "above zero" was not enough: at 20 - 10 = 10 GJ/s a new
+  // pilot couldn't win a fight. Yes, balance bugs can be one rude number. L1=10, L2=45, L3=60, L4=80,
   // L5=100, L6=116.25, L7=132.5 GJ/s.
   "shield_recharge_drain_per_level": [0, 10, 45, 60, 80, 100, 116.25, 132.5],
 

@@ -48,8 +48,12 @@
   // Stock missile rack (#524), from privateer_ship_data.json "Weapons".
   "default_missiles": { "DF": 3 },
 
+  // Starter-hull energy (#743). Net new-game regen = 40 - 10 (shield L1
+  // drain) = 30 GJ/s, which covers the stock twin lasers' 26.7 GJ/s burn, so
+  // the stock guns never run dry. At 20 a new pilot netted 10 GJ/s and lost
+  // every fight on energy alone. test_outfitting guards this invariant.
   "energy_max":      150,
-  "energy_recharge": 20,
+  "energy_recharge": 40,
 
   "cargo_units":     100,
   "cargo_units_max": 150
