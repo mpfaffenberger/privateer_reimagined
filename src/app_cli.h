@@ -22,6 +22,7 @@ struct LaunchOptions {
     bool force_windowed = false;
     bool dev_invuln = false;
     bool dev_jump_drive = false;
+    bool dev_zone_editor = false;   // H in the equipment bay edits hardpoint zones (#748)
 
     int load_slot = -1;
     float dev_kill_at_s = -1.0f;

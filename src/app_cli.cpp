@@ -39,6 +39,8 @@ LaunchOptions parse(int argc, char* const* argv) {
             out.dev_invuln = true;
         } else if (std::strcmp(arg, "--dev-jump-drive") == 0) {
             out.dev_jump_drive = true;
+        } else if (std::strcmp(arg, "--dev-zone-editor") == 0) {
+            out.dev_zone_editor = true;
         } else if (std::strcmp(arg, "--dev-kill-at") == 0 && has_value) {
             out.dev_kill_at_s = (float)std::atof(argv[++i]);
         } else if (std::strcmp(arg, "--play-cinematic") == 0 && has_value) {

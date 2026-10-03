@@ -179,4 +179,11 @@ bool    buy_discrete(PlayerState& p, const std::string& item);
 // framework (np-9cu.4 seam). Call once at startup, after load().
 void register_screens();
 
+// The equipment bay's hardpoint zone editor (H key) is dev tooling: it edits
+// and saves assets/ships/<hull>/equipment_hardpoints.json. Off for players;
+// main.cpp enables it for --dev-zone-editor (#748).
+namespace equipment_ui {
+void set_zone_editor_enabled(bool enabled);
+}
+
 } // namespace outfitting
