@@ -104,7 +104,8 @@ bool buy_hull(PlayerState& p, const std::string& target);
 void fit_stock_guns(PlayerState& p, const ShipClass* klass, bool with_turrets);
 
 // Fit `gun_short_name` into mount slot `mount_index` (0-based). Refused if the
-// slot isn't player::mount_fittable (out of range / unbought turret) or the
+// slot isn't player::mount_fittable (out of range / unbought turret), already
+// carries a gun (sell_gun it first -- never overwrite unpaid, #741), or the
 // gun isn't for sale.
 bool buy_gun(PlayerState& p, const std::string& gun_short_name,
              int mount_index, const ShipClass* klass);

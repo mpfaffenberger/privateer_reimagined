@@ -330,6 +330,12 @@ bool buy_gun(PlayerState& p, const std::string& gun_short_name,
                            mount_index, mounts);
         return false;
     }
+    // Never overwrite a fitted gun: its value would vanish unpaid (#741).
+    if (player::mount_armed(p, mount_index)) {
+        std::printf("[outfit] BUY GUN refused: mount %d already holds %s (sell it first)\n",
+                    mount_index, p.gun_mounts[(size_t)mount_index].gun_id.c_str());
+        return false;
+    }
     if (gun::from_name(gun_short_name) == GunType::Count) {
         std::printf("[outfit] BUY GUN refused: unknown gun '%s'\n", gun_short_name.c_str());
         return false;
@@ -360,7 +366,8 @@ bool sell_gun(PlayerState& p, int mount_index, const ShipClass* klass) {
         return false;
     }
     if ((int)p.gun_mounts.size() < mounts) p.gun_mounts.resize(mounts, MountSlot{});
-    const std::string& name = p.gun_mounts[(size_t)mount_index].gun_id;
+    // A COPY: the slot is cleared below, and the log line still needs the name.
+    const std::string name = p.gun_mounts[(size_t)mount_index].gun_id;
     if (name.empty()) {
         std::printf("[outfit] SELL GUN refused: mount %d is empty\n", mount_index);
         return false;
@@ -408,7 +415,7 @@ bool sell_turret(PlayerState& p, const std::string& slot_id, const ShipClass* kl
         return false;
     }
     for (int m : slot->mounts) {
-        if (m < (int)p.gun_mounts.size() && !p.gun_mounts[(size_t)m].gun_id.empty()) {
+        if (player::mount_armed(p, m)) {
             std::printf("[outfit] TURRET sell refused: %s still carries a gun (mount %d)\n",
                         slot->label.c_str(), m);
             return false;

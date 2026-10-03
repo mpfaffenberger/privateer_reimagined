@@ -107,6 +107,36 @@ static void test_turrets() {
           "fit_stock_guns(with_turrets) = fully stocked hull (--ship override)");
 }
 
+// Fitting over a gun must never eat it (#741): buy_gun refuses an armed mount
+// without charging, sell_gun refunds + frees it, then the new gun fits.
+static void test_no_overwrite() {
+    std::printf("\n== No gun overwrite (#741) ==\n");
+    const ShipClass* tarsus = ship_class::find("tarsus");
+    check(tarsus != nullptr, "Tarsus catalog loaded");
+    if (!tarsus) return;
+
+    PlayerState p = player::new_game("troy");
+    p.credits = 300000;
+    const std::string stock = p.gun_mounts.empty() ? "" : p.gun_mounts[0].gun_id;
+    check(player::mount_armed(p, 0) && !stock.empty(),
+          "new-game Tarsus mount 0 carries its stock gun");
+    check(!player::mount_armed(p, -1) && !player::mount_armed(p, 99),
+          "out-of-range mounts read as unarmed");
+
+    const long long c0 = p.credits;
+    check(!outfitting::buy_gun(p, "tachyon_cannon", 0, tarsus) && p.credits == c0 &&
+          p.gun_mounts[0].gun_id == stock,
+          "FIT onto an armed mount refused: no charge, stock gun kept");
+    check(outfitting::sell_gun(p, 0, tarsus) && !player::mount_armed(p, 0) &&
+          p.credits == c0 + outfitting::gun_price(stock),
+          "selling the fitted gun refunds it and frees the mount");
+    const long long c1 = p.credits;
+    check(outfitting::buy_gun(p, "tachyon_cannon", 0, tarsus) &&
+          p.gun_mounts[0].gun_id == "tachyon_cannon" &&
+          p.credits == c1 - outfitting::gun_price("tachyon_cannon"),
+          "...then the new gun fits at its full price");
+}
+
 static void show(const PlayerState& p, const char* tag) {
     const ShipClass* k = ship_class::find(p.ship_class_name);
     const outfitting::SpeedCaps caps = outfitting::effective_speed_caps(p);
@@ -135,8 +165,9 @@ int main() {
     std::printf("\n== Start ==\n");
     show(p, "start");
 
-    std::printf("\n== Buy a gun into mount 0 (Tarsus has 2 mounts) ==\n");
+    std::printf("\n== Swap the gun in mount 0: sell stock, then fit (Tarsus has 2 mounts) ==\n");
     const long long c0 = p.credits;
+    outfitting::sell_gun(p, 0, tarsus);   // an armed mount refuses a buy (#741)
     outfitting::buy_gun(p, "tachyon_cannon", 0, tarsus);
     std::printf("  credits %lld -> %lld\n", c0, (long long)p.credits);
     std::printf("  mount0 now: %s\n", p.gun_mounts.empty() ? "(none)" : p.gun_mounts[0].gun_id.c_str());
@@ -195,6 +226,7 @@ int main() {
                 broke.ship_class_name.c_str(), (long long)broke.credits);
 
     test_turrets();
+    test_no_overwrite();
 
     std::printf("\nAll transaction paths exercised. %s\n",
                 g_fail == 0 ? "ALL CHECKS PASS" : "CHECK FAILURES");
