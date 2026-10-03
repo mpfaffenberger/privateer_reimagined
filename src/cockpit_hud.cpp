@@ -212,7 +212,8 @@ void draw_aim_cursor(float mouse_x, float mouse_y, bool fly_by_wire) {
 // ---- nav target reticle --------------------------------------------------
 //
 // Floats over the projected screen position of the selected nav point.
-// Edge-clamps with a chevron when off-screen / behind the camera.
+// Clamps with a chevron (cockpit_overlay::offscreen_anchor) when off-screen,
+// behind the camera, or hidden behind cockpit metal (#732).
 void draw_nav_reticle(const Camera& cam, const StarSystem& system, int selected_nav) {
     if (selected_nav < 0 || selected_nav >= (int)system.nav_points.size()) return;
 
@@ -233,6 +234,8 @@ void draw_nav_reticle(const Camera& cam, const StarSystem& system, int selected_
 
     float sx = cx, sy = cy;
     bool  clamped = behind;
+    constexpr float r = 14.0f;                       // reticle ring radius
+    constexpr float arr_d = r + 6.0f, arr_t = arr_d + 9.0f;   // chevron base / tip
 
     if (!behind) {
         // NOTE: NO (1 - ndc_y) flip here — engine quirk, see header.
@@ -245,27 +248,26 @@ void draw_nav_reticle(const Camera& cam, const StarSystem& system, int selected_
         sx = (ndc_x * 0.5f + 0.5f) * fb_w;
         sy = (ndc_y * 0.5f + 0.5f) * fb_h;
         clamped = !(sx >= margin && sx <= fb_w - margin &&
-                    sy >= margin && sy <= fb_h - margin);
+                    sy >= margin && sy <= fb_h - margin) ||
+                  !cockpit_overlay::canopy_clear({ sx, sy });
     }
 
+    // Unit screen direction toward the nav. In front: straight at its
+    // projection. Behind: the camera-frame offset, negated (engine Y quirk:
+    // no flip in either case).
+    float dx = behind ? -right_dot : sx - cx;
+    float dy = behind ? -up_dot    : sy - cy;
+    const float dlen = std::sqrt(dx * dx + dy * dy);
+    if (dlen < 1e-6f) { dx = 0.0f; dy = 1.0f; }
+    else              { dx /= dlen; dy /= dlen; }
+
     if (clamped) {
-        const float sign = behind ? -1.0f : 1.0f;
-        float dx = sign * right_dot;
-        float dy = sign * up_dot;          // engine Y quirk: no flip
-        const float dlen = std::sqrt(dx * dx + dy * dy);
-        if (dlen < 1e-6f) { dx = 0.0f; dy = 1.0f; }
-        else              { dx /= dlen; dy /= dlen; }
-        const float max_x = cx - margin;
-        const float max_y = cy - margin;
-        const float tx = std::abs(dx) > 1e-6f ? max_x / std::abs(dx) : 1e9f;
-        const float ty = std::abs(dy) > 1e-6f ? max_y / std::abs(dy) : 1e9f;
-        const float t  = std::min(tx, ty);
-        sx = cx + dx * t;
-        sy = cy + dy * t;
+        const cockpit_overlay::Vec2 a = cockpit_overlay::offscreen_anchor({ dx, dy }, margin, arr_t, r);
+        sx = a.x;
+        sy = a.y;
     }
 
     auto* dl = cockpit_overlay::world_draw_list();
-    constexpr float r = 14.0f;
     dl->AddCircle(ImVec2(sx, sy), r, kAmber, 0, 2.0f);
     const float tick_in = r * 0.45f, tick_out = r * 0.85f;
     dl->AddLine(ImVec2(sx - tick_out, sy), ImVec2(sx - tick_in, sy), kAmber, 2.0f);
@@ -274,11 +276,6 @@ void draw_nav_reticle(const Camera& cam, const StarSystem& system, int selected_
     dl->AddLine(ImVec2(sx, sy + tick_in),  ImVec2(sx, sy + tick_out), kAmber, 2.0f);
 
     if (clamped) {
-        const float sign = behind ? -1.0f : 1.0f;
-        float dx = sign * right_dot, dy = sign * up_dot;
-        const float dlen = std::sqrt(dx * dx + dy * dy);
-        if (dlen > 1e-6f) { dx /= dlen; dy /= dlen; }
-        const float arr_d = r + 6.0f, arr_t = arr_d + 9.0f;
         const float perp_x = -dy, perp_y = dx;
         const ImVec2 tip { sx + dx * arr_t, sy + dy * arr_t };
         const ImVec2 b1  { sx + dx * arr_d + perp_x * 5.0f,
@@ -292,8 +289,10 @@ void draw_nav_reticle(const Camera& cam, const StarSystem& system, int selected_
     if (len < 10000.0f) std::snprintf(buf, sizeof(buf), "%.0f u",   len);
     else                std::snprintf(buf, sizeof(buf), "%.1f k u", len * 0.001f);
     const ImVec2 ts = ImGui::CalcTextSize(buf);
-    const bool below_ok = (sy + r + 4.0f + ts.y) < (fb_h - 4.0f);
-    const float label_y = below_ok ? sy + r + 4.0f : sy - r - 4.0f - ts.y;
+    // A clamped label goes on the side facing the screen centre: that side
+    // is open canopy glass, the other may be the cockpit frame (#732).
+    const bool below = clamped ? sy < cy : (sy + r + 4.0f + ts.y) < (fb_h - 4.0f);
+    const float label_y = below ? sy + r + 4.0f : sy - r - 4.0f - ts.y;
     dl->AddText(ImVec2(sx - ts.x * 0.5f, label_y), kAmber, buf);
 }
 

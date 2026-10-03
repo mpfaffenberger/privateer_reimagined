@@ -11,6 +11,7 @@
 // (AddDrawListToDrawDataEx), and it is reset on the next NewFrame anyway.
 #include "cockpit_overlay.h"
 #include "camera.h"
+#include "canopy_mask.h"
 #include "pilot_head_motion.h"
 
 #include "material.h"      // TextureSlot + load_texture_png (shared PNG loader)
@@ -31,9 +32,10 @@ namespace {
 
 constexpr int kArtCount = (int)std::size(kCockpitArts);
 
-// Lazily-loaded GPU texture per art row. `tried` stops a missing/broken PNG
-// from re-hitting the disk (and the log) every frame.
-struct LoadedArt { TextureSlot tex; bool tried = false; };
+// Lazily-loaded GPU texture per art row, plus its CPU alpha for off-screen
+// pointers (#732). `tried` stops a missing/broken PNG from re-hitting the
+// disk (and the log) every frame.
+struct LoadedArt { TextureSlot tex; CanopyMask mask; bool tried = false; };
 LoadedArt  g_loaded[kArtCount];
 sg_sampler g_sampler{};
 
@@ -49,9 +51,11 @@ struct DisplayFrame {
 // Frame state published by draw() for the HUD panels and finalize().
 const CockpitArt*  g_art = nullptr;
 const TextureSlot* g_tex = nullptr;
+const CanopyMask*  g_mask = nullptr;
 Fit                g_fit;
 PilotHeadMotion    g_head;
 Homography         g_head_transform;
+Homography         g_to_art;          // screen -> art px, for g_mask
 int                g_frame = -1;
 DisplayFrame       g_displays[kDisplayCount];
 LightState         g_lights;
@@ -71,6 +75,8 @@ const TextureSlot* texture_for(const CockpitArt& art) {
         slot.tried = true;
         if (!load_texture_png(art.path, slot.tex))
             std::fprintf(stderr, "[cockpit] overlay art unavailable: %s\n", art.path);
+        else if (!load_canopy_mask(art.path, slot.mask))
+            std::fprintf(stderr, "[cockpit] no canopy mask (pointers use the screen edge): %s\n", art.path);
     }
     if (!slot.tex.valid) return nullptr;
     if (!g_sampler.id) {
@@ -176,7 +182,9 @@ void draw(const std::string& ship_class, const Camera& camera) {
         {vp->Pos.x, vp->Pos.y, vp->Size.x, vp->Size.y}, camera.cockpit_head_motion_strength);
     g_art   = art;
     g_tex   = tex;
+    g_mask  = &g_loaded[art - kCockpitArts].mask;
     g_fit   = fit_to_viewport(*art, vp->Pos.x, vp->Pos.y, vp->Size.x, vp->Size.y);
+    g_to_art = screen_to_art(g_fit, g_head_transform);
     g_frame = ImGui::GetFrameCount();
 
     for (int i = 0; i < kDisplayCount; ++i) {
@@ -266,6 +274,20 @@ bool active() {
 
 ImDrawList* world_draw_list() {
     return active() ? ImGui::GetBackgroundDrawList() : ImGui::GetForegroundDrawList();
+}
+
+bool canopy_clear(Vec2 screen) {
+    return !active() || !g_mask->solid(apply(g_to_art, screen));
+}
+
+Vec2 offscreen_anchor(Vec2 dir, float margin, float glyph, float half_width) {
+    static const CanopyMask kNoArt;   // classic HUD: the screen edge
+    const ImGuiViewport* vp = ImGui::GetMainViewport();
+    const Vec2 half{ vp->Size.x * 0.5f, vp->Size.y * 0.5f };
+    const Vec2 c{ vp->Pos.x + half.x, vp->Pos.y + half.y };
+    const float t = pointer_reach(active() ? *g_mask : kNoArt, g_to_art,
+                                  c, half, dir, margin, glyph, half_width);
+    return { c.x + dir.x * t, c.y + dir.y * t };
 }
 
 bool display_panel(Display d, Rect& out) {

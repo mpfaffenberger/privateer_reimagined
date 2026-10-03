@@ -51,6 +51,19 @@ bool active();
 // UI (cursor, warnings, menus) stays foreground. Call before finalize().
 ImDrawList* world_draw_list();
 
+// Off-screen pointers (#732), against the active art's alpha (logical px).
+// World glyphs sit behind the frame, so a pointer clamped to the screen edge
+// would vanish under it. With no art active everything is open canopy and
+// the classic HUD keeps its screen-edge pointers.
+//   canopy_clear     - `screen` looks through glass, not cockpit metal.
+//   offscreen_anchor - where a pointer toward unit screen direction `dir`
+//                      sits: the edge box `margin` px in, pulled back so a
+//                      glyph reaching `glyph` px further out and
+//                      `half_width` px to each side stays on glass. Shared
+//                      by the ship-target arrow and the nav reticle.
+bool canopy_clear(Vec2 screen);
+Vec2 offscreen_anchor(Vec2 dir, float margin, float glyph, float half_width);
+
 // ImGui window every panel targeting `d` must draw into (shared per display,
 // so later panels append; finalize() warps it).
 const char* display_window_id(Display d);

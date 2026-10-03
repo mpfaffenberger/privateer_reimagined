@@ -13,6 +13,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+#include "canopy_mask.h"
 #include "cockpit_overlay_layout.h"
 #include "pilot_head_motion.h"
 #include "cockpit_lights.h"
@@ -249,6 +250,61 @@ void check_art_alpha(const CockpitArt& art) {
     stbi_image_free(img.px);
 }
 
+// Off-screen pointers (#732). World glyphs draw behind the art (#429), so an
+// arrow on the classic screen-edge box is buried under the frame; the canopy
+// clamp must leave the whole arrow on real glass in every direction.
+void check_pointers(const CockpitArt& art) {
+    char label[128];
+    AlphaImage img;
+    int n = 0;
+    img.px = stbi_load(art.path, &img.w, &img.h, &n, 4);
+    if (!img.px) return;   // check_art_alpha already reported it
+    const CanopyMask mask = make_canopy_mask(img.px, img.w, img.h);
+
+    bool conservative = true;
+    for (int y = 0; y < img.h; ++y)
+        for (int x = 0; x < img.w; ++x)
+            if (img.at(x, y) >= 128) conservative &= mask.solid({ x + 0.5f, y + 0.5f });
+    std::snprintf(label, sizeof(label), "%s: canopy mask covers every opaque art px", art.ship_class);
+    check(conservative, label);
+
+    constexpr float kMargin = 80.0f, kArrow = 14.0f, kHalf = kArrow * 0.6f;   // main.cpp's arrow
+    int rays = 0, buried = 0, floored = 0;
+    bool on_glass = true;
+    for (const auto& s : kShapes) {
+        const Fit f = fit_to_viewport(art, 0, 0, s[0], s[1]);
+        const Homography to_art = screen_to_art(f, Homography{});
+        const Vec2 half{ s[0] * 0.5f, s[1] * 0.5f };
+        for (int deg = 0; deg < 360; deg += 5) {
+            const float a = (float)deg * 3.14159265f / 180.0f;
+            const Vec2 dir{ std::cos(a), std::sin(a) };
+            const float t = pointer_reach(mask, to_art, half, half, dir, kMargin, kArrow, kHalf);
+            const float edge = pointer_reach(CanopyMask{}, to_art, half, half, dir, kMargin, kArrow, kHalf);
+            const Vec2 old_tip = apply(to_art, { half.x + dir.x * (edge + kArrow), half.y + dir.y * (edge + kArrow) });
+            ++rays;
+            buried += !img.clear(old_tip.x, old_tip.y);
+            if (t <= kMinPointerReach + 0.01f && t < edge) { ++floored; continue; }
+            // Centre line to the tip, and both flanks past the base corners.
+            for (const float side : { -kHalf, 0.0f, kHalf })
+                for (float r = 0.0f; r <= t + kArrow; r += 1.0f) {
+                    const Vec2 p = apply(to_art, { half.x + dir.x * r - dir.y * side,
+                                                   half.y + dir.y * r + dir.x * side });
+                    on_glass &= img.clear(p.x, p.y) || p.x < 0 || p.y < 0 || p.x >= img.w || p.y >= img.h;
+                }
+        }
+    }
+    std::snprintf(label, sizeof(label), "%s: canopy-clamped arrows (tip + base) sit on glass", art.ship_class);
+    check(on_glass, label);
+    // The floor keeps a pointer off the gun crosshair where the dash rides
+    // high; only the Galaxy needs it today, for rays aimed below the sight.
+    std::snprintf(label, sizeof(label), "%s: most rays clear the crosshair floor (%d of %d floored)",
+                  art.ship_class, floored, rays);
+    check(floored * 2 < rays, label);
+    std::printf("  (%s: classic screen-edge arrow was buried on %d of %d rays)\n",
+                art.ship_class, buried, rays);
+    stbi_image_free(img.px);
+}
+
 } // namespace
 
 int main() {
@@ -474,6 +530,20 @@ int main() {
     for (const CockpitArt& a : kCockpitArts) {
         check_fit(a);
         check_art_alpha(a);
+        check_pointers(a);
+    }
+    {
+        // Head sway: screen_to_art undoes fit + sway exactly (#732).
+        const CockpitArt& a = *find_art("centurion");
+        const Fit f = fit_to_viewport(a, 0, 0, 1920, 1080);
+        Homography head;
+        head.m[0] = 1.01f; head.m[1] = 0.02f; head.m[2] = 12.0f; head.m[5] = -7.0f;
+        const Vec2 art_pt{ 700.0f, 300.0f };
+        const Vec2 back = apply(screen_to_art(f, head), apply(head, to_screen(f, art_pt)));
+        check(near(back.x, art_pt.x, 0.05f) && near(back.y, art_pt.y, 0.05f),
+              "screen_to_art inverts fit + head sway");
+        check(pointer_reach(CanopyMask{}, head, { 960, 540 }, { 960, 540 }, { 1, 0 }, 80, 14, 8) == 880.0f,
+              "no art: pointer rides the classic screen-edge box");
     }
 
     std::printf("\n%s\n", g_failures ? "FAIL" : "ALL PASS");

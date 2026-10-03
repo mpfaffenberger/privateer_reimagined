@@ -6942,8 +6942,9 @@ void frame_cb() {
     // contacts), draw a screen-space marker. On-screen targets get a
     // four-corner bracket; off-screen ones get an arrow on the screen
     // edge pointing toward where they are. Text below shows class
-    // name + distance + faction stance. Drawn into the simgui
-    // foreground draw list so it renders on top of everything.
+    // name + distance + faction stance. Drawn into the world layer
+    // (cockpit_overlay::world_draw_list): behind cockpit art when it is up
+    // (#429), so off-screen arrows clamp to the canopy glass (#732).
     // Suppressed during a cinematic (np-cinematic) so the shot is clean.
     if (!g.capture_clean && !cine_active && g.player_target_id != 0 && g.ships.player()) {
         const Ship* target = g.ships.find_by_id(g.player_target_id);
@@ -6984,9 +6985,18 @@ void frame_cb() {
             float ndc_x = clip.X / clip.W;
             float ndc_y = clip.Y / clip.W;
             if (behind) { ndc_x = -ndc_x; ndc_y = -ndc_y; }
+            // NDC -> screen. Engine convention: NDC y maps DIRECTLY to
+            // screen y (no `(1 - ndc_y)` flip — see cockpit_hud's header
+            // notes for the documented quirk).
+            const float sx = (ndc_x * 0.5f + 0.5f) * fb_w;
+            const float sy = (ndc_y * 0.5f + 0.5f) * fb_h;
+            // In view but behind cockpit metal counts as off-screen too: the
+            // bracket would be buried under the frame (#429), so point at it
+            // from the canopy glass instead (#732).
             const bool offscreen = behind
                                 || std::fabs(ndc_x) > 1.0f
-                                || std::fabs(ndc_y) > 1.0f;
+                                || std::fabs(ndc_y) > 1.0f
+                                || !cockpit_overlay::canopy_clear({ sx, sy });
 
             // Stance from the player's perception entry for this ship.
             // Drives indicator color via the shared HUD palette (red=hostile,
@@ -7012,11 +7022,6 @@ void frame_cb() {
             // the world behind cockpit metal, not the foreground UI (#429).
             ImDrawList* dl = cockpit_overlay::world_draw_list();
             if (!offscreen) {
-                // NDC -> screen. Engine convention: NDC y maps DIRECTLY
-                // to screen y (no `(1 - ndc_y)` flip — see cockpit_hud's
-                // header notes for the documented quirk).
-                const float sx = (ndc_x * 0.5f + 0.5f) * fb_w;
-                const float sy = (ndc_y * 0.5f + 0.5f) * fb_h;
                 const float r  = 30.0f;
                 const float k  = 10.0f;
                 const float th = 2.0f;
@@ -7050,40 +7055,38 @@ void frame_cb() {
                 }
                 dl->AddText(ImVec2(sx - r, sy + r + 6.0f), color, buf);
             } else {
-                // Off-screen: arrow on screen-edge box pointing in the
-                // (ndc_x, ndc_y) direction from screen center. Margin
-                // pulls the arrow inward so it doesn't get clipped.
-                const float cx = fb_w * 0.5f;
-                const float cy = fb_h * 0.5f;
-                const float margin = 80.0f;
-                const float half_w = fb_w * 0.5f - margin;
-                const float half_h = fb_h * 0.5f - margin;
-                const float dxlen = std::sqrt(ndc_x * ndc_x + ndc_y * ndc_y);
+                // Off-screen: arrow pointing from the screen centre toward
+                // the target, on the screen-edge box or, with cockpit art
+                // up, at the edge of the canopy glass (#732). Screen-space
+                // direction, so it aims straight at a target hidden behind
+                // the dash. NO Y-flip: NDC y already maps to screen y.
+                const float sdx = ndc_x * fb_w, sdy = ndc_y * fb_h;
+                const float dxlen = std::sqrt(sdx * sdx + sdy * sdy);
                 if (dxlen > 1e-6f) {
-                    const float dx = ndc_x / dxlen;
-                    const float dy = ndc_y / dxlen;
-                    // Scale to land on the rectangular edge. NO Y-flip
-                    // here either — same engine convention as the
-                    // bracket path: NDC y already maps to screen y.
-                    const float scale = std::min(
-                        half_w / std::max(std::fabs(dx), 1e-6f),
-                        half_h / std::max(std::fabs(dy), 1e-6f));
-                    const float ax = cx + dx * scale;
-                    const float ay = cy + dy * scale;
-                    const float arrow = 14.0f;
+                    const float dx = sdx / dxlen;
+                    const float dy = sdy / dxlen;
+                    const float arrow = 14.0f;          // tip length
+                    const float half  = arrow * 0.6f;   // base half-width
+                    const cockpit_overlay::Vec2 anchor =
+                        cockpit_overlay::offscreen_anchor({ dx, dy }, 80.0f, arrow, half);
+                    const float ax = anchor.x;
+                    const float ay = anchor.y;
                     const float perp_x = -dy;
                     const float perp_y =  dx;
-                    ImVec2 tip(   ax + dx * arrow,            ay + dy * arrow);
-                    ImVec2 base_l(ax + perp_x * arrow * 0.6f, ay + perp_y * arrow * 0.6f);
-                    ImVec2 base_r(ax - perp_x * arrow * 0.6f, ay - perp_y * arrow * 0.6f);
+                    ImVec2 tip(   ax + dx * arrow,     ay + dy * arrow);
+                    ImVec2 base_l(ax + perp_x * half,  ay + perp_y * half);
+                    ImVec2 base_r(ax - perp_x * half,  ay - perp_y * half);
                     dl->AddTriangleFilled(tip, base_l, base_r, color);
 
-                    // Label tucked just inside the arrow toward center.
+                    // Label centred just inside the arrow, toward the screen
+                    // centre (canopy glass), backed off by its own half-extent
+                    // along the pointing direction so it never covers the arrow.
                     char buf[96];
                     std::snprintf(buf, sizeof(buf), "%s  %.1f km", tname, distance_m * 0.001f);
-                    const float lx = ax - dx * 60.0f - 30.0f;
-                    const float ly = ay - dy * 60.0f - 7.0f;
-                    dl->AddText(ImVec2(lx, ly), color, buf);
+                    const ImVec2 ts = ImGui::CalcTextSize(buf);
+                    const float back = 8.0f + 0.5f * (std::fabs(dx) * ts.x + std::fabs(dy) * ts.y);
+                    dl->AddText(ImVec2(ax - dx * back - ts.x * 0.5f, ay - dy * back - ts.y * 0.5f),
+                                color, buf);
                 }
             }
 
