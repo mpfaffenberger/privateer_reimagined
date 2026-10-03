@@ -30,12 +30,13 @@ int main() {
           "defaults to Troy without marking an override");
     check(defaults.load_slot == -1 && defaults.dev_kill_at_s < 0.0f,
           "load and kill automation default off");
+    check(!defaults.dev_zone_editor, "hardpoint zone editor is off for players (#748)");
 
     const LaunchOptions full = parse({
         "game", "--system", "pyrenees", "--ship", "centurion",
         "--capture-clean", "--skip-title", "--dev-land", "helen",
         "--dev-missions", "--windowed", "--load", "7", "--dev-invuln",
-        "--dev-jump-drive", "--dev-kill-at", "3.5", "--play-cinematic",
+        "--dev-jump-drive", "--dev-zone-editor", "--dev-kill-at", "3.5", "--play-cinematic",
         "demo", "--cine-at", "1.25", "--goto", "troy", "--goto-at", "4",
         "--goto-soak", "12", "--goto-interval", "0.5",
         "--dev-jump-soak", "9", "--dev-jump-interval", "0.75"
@@ -45,7 +46,8 @@ int main() {
     check(full.player_ship == "centurion" && full.dev_land_base == "helen",
           "string options parse");
     check(full.capture_clean && full.skip_title && full.seed_missions &&
-          full.force_windowed && full.dev_invuln && full.dev_jump_drive,
+          full.force_windowed && full.dev_invuln && full.dev_jump_drive &&
+          full.dev_zone_editor,
           "boolean switches parse");
     check(full.load_slot == 7 && std::fabs(full.dev_kill_at_s - 3.5f) < 0.001f,
           "numeric launch options parse");

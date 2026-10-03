@@ -15,11 +15,7 @@
 namespace outfitting::equipment_ui {
 namespace {
 
-std::string g_pending_hull;
-constexpr ImVec4 kAccent(1.00f, 0.72f, 0.22f, 1.0f);
-constexpr ImVec4 kGood(0.48f, 0.92f, 0.56f, 1.0f);
-constexpr ImVec4 kBad(1.00f, 0.40f, 0.30f, 1.0f);
-constexpr ImVec4 kDim(0.55f, 0.58f, 0.65f, 1.0f);
+std::string g_pending_hull;   // palette: equipment_ui_internal.h
 
 } // namespace
 

@@ -25,17 +25,13 @@ using equipment_hardpoints::Kind;
 using equipment_hardpoints::Layout;
 using equipment_hardpoints::Zone;
 
-constexpr ImVec4 kAccent(1.00f, 0.72f, 0.22f, 1.0f);
-constexpr ImVec4 kDim(0.55f, 0.58f, 0.65f, 1.0f);
-constexpr ImVec4 kGood(0.48f, 0.92f, 0.56f, 1.0f);
-constexpr ImVec4 kBad(1.00f, 0.40f, 0.30f, 1.0f);
-
 Layout g_layout;
 std::string g_loaded_ship;
 std::string g_selected_id;
 std::string g_editor_ship;
 TextureSlot g_ship_texture;
 bool g_editing = false;
+bool g_zone_editor_enabled = false;   // --dev-zone-editor (#748)
 bool g_category_selected = true;
 Kind g_category = Kind::Service;
 enum class DragMode { None, Move, Resize };
@@ -239,8 +235,11 @@ void draw_ship_schematic(PlayerState& player, const ShipClass* ship,
                            ship ? ship->display_name.c_str() : g_layout.ship.c_str());
         ImGui::SameLine();
         ImGui::TextColored(kDim, "Top-down hardpoint schematic");
-        ImGui::SameLine(ImGui::GetWindowWidth() - 210.0f);
-        ImGui::TextColored(g_editing ? kBad : kDim, "%s", g_editing ? "EDITOR ACTIVE" : "H: EDIT ZONES");
+        if (g_zone_editor_enabled) {   // dev tooling only (#748)
+            ImGui::SameLine(ImGui::GetWindowWidth() - 210.0f);
+            ImGui::TextColored(g_editing ? kBad : kDim, "%s",
+                               g_editing ? "EDITOR ACTIVE" : "H: EDIT ZONES");
+        }
 
         const ImVec2 avail = ImGui::GetContentRegionAvail();
         const float side = std::max(100.0f, std::min(avail.x - 20.0f, avail.y - 18.0f));
@@ -361,6 +360,9 @@ void draw_editor_panel(const ShipClass* preview_ship) {
 
 const char* category_label(Kind kind) {
     switch (kind) {
+        case Kind::Gun:
+        case Kind::Turret:   return "GUNS";
+        case Kind::Launcher: return "LAUNCHERS";
         case Kind::Armor:   return "ARMOR";
         case Kind::Shield:  return "SHIELDS";
         case Kind::Engine:  return "ENGINE";
@@ -371,32 +373,63 @@ const char* category_label(Kind kind) {
     }
 }
 
+// Gun and turret hardpoints share the GUNS tab.
+Kind tab_kind(Kind kind) { return kind == Kind::Turret ? Kind::Gun : kind; }
+
+bool is_hardpoint(Kind kind) {
+    return kind == Kind::Gun || kind == Kind::Turret || kind == Kind::Launcher;
+}
+
+Zone* first_zone_for_tab(Kind tab) {
+    for (Zone& zone : g_layout.zones)
+        if (tab_kind(zone.kind) == tab) return &zone;
+    return nullptr;
+}
+
+// Tabs (#748): GUNS / LAUNCHERS jump to the first hardpoint of that kind and
+// stay lit while any such hardpoint is selected (from the tab OR the
+// schematic), so one tab always shows where you are.
 void draw_category_menu() {
-    constexpr Kind categories[] = {
-        Kind::Armor, Kind::Shield, Kind::Engine,
-        Kind::Cargo, Kind::Systems, Kind::Service,
+    constexpr Kind tabs[] = {
+        Kind::Gun,    Kind::Launcher, Kind::Armor,   Kind::Shield,
+        Kind::Engine, Kind::Cargo,    Kind::Systems, Kind::Service,
     };
+    const Zone* selected = g_category_selected ? nullptr : selected_zone();
+    const Kind active = selected ? tab_kind(selected->kind) : g_category;
     ImGui::TextColored(kDim, "SHIP EQUIPMENT");
     const float gap = ImGui::GetStyle().ItemSpacing.x;
-    const float width = (ImGui::GetContentRegionAvail().x - gap * 2.0f) / 3.0f;
-    for (int i = 0; i < (int)std::size(categories); ++i) {
-        if (i % 3) ImGui::SameLine();
-        const Kind kind = categories[i];
-        const bool selected = g_category_selected && g_category == kind;
-        if (selected)
+    const float width = (ImGui::GetContentRegionAvail().x - gap * 3.0f) / 4.0f;
+    for (int i = 0; i < (int)std::size(tabs); ++i) {
+        if (i % 4) ImGui::SameLine();
+        const Kind kind = tabs[i];
+        Zone* target = is_hardpoint(kind) ? first_zone_for_tab(kind) : nullptr;
+        const bool lit = kind == active;
+        ImGui::BeginDisabled(is_hardpoint(kind) && !target);   // hull has none
+        if (lit)
             ImGui::PushStyleColor(ImGuiCol_Button,
                 ImVec4(kind_color(kind).x * 0.38f, kind_color(kind).y * 0.38f,
                        kind_color(kind).z * 0.38f, 1.0f));
         if (ImGui::Button(category_label(kind), ImVec2(width, 32.0f))) {
-            g_category = kind;
-            g_category_selected = true;
+            if (target) {
+                if (!lit) g_selected_id = target->id;   // keep a hardpoint already in view
+                g_category_selected = false;
+            } else {
+                g_category = kind;
+                g_category_selected = true;
+            }
         }
-        if (selected) ImGui::PopStyleColor();
+        if (lit) ImGui::PopStyleColor();
+        ImGui::EndDisabled();
     }
     ImGui::Separator();
 }
 
 } // namespace
+
+void set_zone_editor_enabled(bool enabled) {
+    g_zone_editor_enabled = enabled;
+    if (!enabled) g_editing = false;
+}
 
 void draw_equipment_screen(BaseContext& ctx) {
     PlayerState& player = *ctx.player;
@@ -407,7 +440,7 @@ void draw_equipment_screen(BaseContext& ctx) {
         player.gun_mounts.resize(owned_mounts, MountSlot{});
 
     ImGuiIO& io = ImGui::GetIO();
-    if (!io.WantTextInput && ImGui::IsKeyPressed(ImGuiKey_H)) {
+    if (g_zone_editor_enabled && !io.WantTextInput && ImGui::IsKeyPressed(ImGuiKey_H)) {
         g_editing = !g_editing;
         g_editor_ship = g_editing ? player.ship_class_name : std::string();
         g_drag = DragMode::None;
@@ -441,18 +474,28 @@ void draw_equipment_screen(BaseContext& ctx) {
             draw_editor_panel(ship);
         } else {
             draw_category_menu();
-            if (g_category_selected) {
-                Zone category;
-                category.id = "ship_category";
-                category.label = category_label(g_category);
-                category.kind = g_category;
-                draw_purchase_panel({player, ctx.player_ship, ship, category});
-            } else if (Zone* zone = selected_zone()) {
-                draw_purchase_panel({player, ctx.player_ship, ship, *zone});
-            } else {
-                ImGui::TextDisabled("No weapon hardpoints are defined for this ship.");
-                ImGui::TextWrapped("Press H to open the editor and add one.");
+            // Purchase panel fills the middle; the ship summary is pinned
+            // underneath it (#748). Sized for its worst case (5 lines).
+            const float summary_h = ImGui::GetTextLineHeightWithSpacing() * 5.0f +
+                                    ImGui::GetStyle().ItemSpacing.y * 2.0f;
+            if (ImGui::BeginChild("##purchase", ImVec2(0.0f, -summary_h), false)) {
+                if (g_category_selected) {
+                    Zone category;
+                    category.id = "ship_category";
+                    category.label = category_label(g_category);
+                    category.kind = g_category;
+                    draw_purchase_panel({player, ctx.player_ship, ship, category});
+                } else if (Zone* zone = selected_zone()) {
+                    draw_purchase_panel({player, ctx.player_ship, ship, *zone});
+                } else {
+                    ImGui::TextDisabled("No weapon hardpoints are defined for this ship.");
+                    if (g_zone_editor_enabled)
+                        ImGui::TextWrapped("Press H to open the editor and add one.");
+                }
             }
+            ImGui::EndChild();
+            ImGui::Separator();
+            draw_ship_summary(player, owned_ship);
         }
     }
     ImGui::EndChild();

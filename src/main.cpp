@@ -7785,6 +7785,7 @@ sapp_desc sokol_main(int argc, char** argv) {
     g.load_slot             = options.load_slot;
     g.dev_invuln            = options.dev_invuln;
     g.dev_jump_drive        = options.dev_jump_drive;
+    outfitting::equipment_ui::set_zone_editor_enabled(options.dev_zone_editor);
     g.dev_kill_at_s         = options.dev_kill_at_s;
     g.dev_cinematic         = options.cinematic;
     g.dev_cinematic_at_s    = options.cinematic_at_s;

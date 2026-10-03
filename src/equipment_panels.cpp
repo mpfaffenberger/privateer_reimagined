@@ -24,11 +24,6 @@
 namespace outfitting::equipment_ui {
 namespace {
 
-constexpr ImVec4 kAccent(1.00f, 0.72f, 0.22f, 1.0f);
-constexpr ImVec4 kGood(0.48f, 0.92f, 0.56f, 1.0f);
-constexpr ImVec4 kBad(1.00f, 0.40f, 0.30f, 1.0f);
-constexpr ImVec4 kDim(0.55f, 0.58f, 0.65f, 1.0f);
-
 void heading(const char* title, const char* subtitle = nullptr) {
     ImGui::TextColored(kAccent, "%s", title);
     if (subtitle) ImGui::TextColored(kDim, "%s", subtitle);
@@ -73,11 +68,41 @@ bool buy_button(const PlayerState& p, const std::string& label, int64_t price,
     return clicked;
 }
 
-// Sell / refund-style button. One choke point so every sell in the bay looks
-// alike.
+// Sell / refund actions must not look like purchases (#748): amber outline
+// on a dark fill instead of the bright buy blue. RAII so every exit pops.
+class SellStyle {
+public:
+    SellStyle() {
+        ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4(0.10f, 0.07f, 0.02f, 0.85f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.30f, 0.20f, 0.05f, 0.95f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive,  ImVec4(0.45f, 0.30f, 0.07f, 1.00f));
+        ImGui::PushStyleColor(ImGuiCol_Border, kAccent);
+        ImGui::PushStyleColor(ImGuiCol_Text, kAccent);
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.5f);
+    }
+    ~SellStyle() {
+        ImGui::PopStyleVar();
+        ImGui::PopStyleColor(5);
+    }
+    SellStyle(const SellStyle&) = delete;
+    SellStyle& operator=(const SellStyle&) = delete;
+};
+
+// Sell / refund-style button: the one choke point, so every sell in the bay
+// looks alike.
 bool sell_button(const std::string& label, const ImVec2& size, bool blocked = false) {
+    const SellStyle style;
     ImGui::BeginDisabled(blocked);
     const bool clicked = ImGui::Button(label.c_str(), size);
+    ImGui::EndDisabled();
+    return clicked;
+}
+
+// Compact sibling for the per-round ordnance "SELL -1" buttons.
+bool sell_small_button(const char* label, bool blocked) {
+    const SellStyle style;
+    ImGui::BeginDisabled(blocked);
+    const bool clicked = ImGui::SmallButton(label);
     ImGui::EndDisabled();
     return clicked;
 }
@@ -252,10 +277,9 @@ void draw_guns(const PanelContext& ctx) {
         ImGui::TextColored(kDim, "Sell the fitted gun to free this mount for another.");
     }
     ImGui::Spacing();
-    const EnergyBudget budget = energy_budget(player, ctx.ship_class);
-    draw_energy_budget(budget);
-    ImGui::Spacing();
-    draw_gun_catalog(ctx, turret, fitted, budget);
+    // The budget itself is shown in the pinned ship summary (#748); the
+    // catalog uses it to flag guns that would out-burn regen.
+    draw_gun_catalog(ctx, turret, fitted, energy_budget(player, ctx.ship_class));
 }
 
 void draw_launcher(const PanelContext& ctx) {
@@ -316,9 +340,8 @@ void draw_launcher(const PanelContext& ctx) {
         if (ImGui::SmallButton("BUY +1") && repair::buy_missiles(p, type, 1)) sfx::ui_click();
         ImGui::EndDisabled();
         ImGui::SameLine();
-        ImGui::BeginDisabled(p.missiles[type] <= 0);
-        if (ImGui::SmallButton("SELL -1") && repair::sell_missile(p, type)) sfx::ui_click();
-        ImGui::EndDisabled();
+        if (sell_small_button("SELL -1", p.missiles[type] <= 0) && repair::sell_missile(p, type))
+            sfx::ui_click();
         ImGui::PopID();
     }
     ImGui::Text("TORPEDOES      %d / %d", p.torpedoes, repair::torpedo_rack_capacity(p));
@@ -328,9 +351,8 @@ void draw_launcher(const PanelContext& ctx) {
     if (ImGui::SmallButton("BUY +1##torp") && repair::buy_torpedo(p, 1)) sfx::ui_click();
     ImGui::EndDisabled();
     ImGui::SameLine();
-    ImGui::BeginDisabled(p.torpedoes <= 0);
-    if (ImGui::SmallButton("SELL -1##torp") && repair::sell_torpedo(p)) sfx::ui_click();
-    ImGui::EndDisabled();
+    if (sell_small_button("SELL -1##torp", p.torpedoes <= 0) && repair::sell_torpedo(p))
+        sfx::ui_click();
 }
 
 void draw_armor(const PanelContext& ctx) {
@@ -499,7 +521,30 @@ void draw_service(const PanelContext& ctx) {
     ImGui::PopStyleColor();
 }
 
+// "LABEL value" pair for the ship summary: dim label, bright value.
+void summary_field(const char* label, const std::string& value, bool first = false) {
+    if (!first) ImGui::SameLine(0.0f, 18.0f);
+    ImGui::TextColored(kDim, "%s", label);
+    ImGui::SameLine(0.0f, 6.0f);
+    ImGui::TextUnformatted(value.c_str());
+}
+
+std::string of(int have, int cap) { return std::to_string(have) + " / " + std::to_string(cap); }
+
 } // namespace
+
+void draw_ship_summary(const PlayerState& p, const ShipClass* klass) {
+    ImGui::TextColored(kAccent, "SHIP STATUS");
+    ImGui::SameLine();
+    ImGui::TextColored(kDim, "%s", klass ? klass->display_name.c_str() : p.ship_class_name.c_str());
+    draw_energy_budget(energy_budget(p, klass));
+    summary_field("SHIELDS", of(p.shield_level, klass ? klass->max_shield_level : 0), true);
+    summary_field("ENGINE",  of(p.engine_level, klass ? klass->max_engine_level : 0));
+    summary_field("ARMOR",   p.armor_name.empty() ? "Stock" : p.armor_name);
+    summary_field("CARGO",   of(player::cargo_units_used(p), player::cargo_capacity(p, klass)), true);
+    summary_field("MISSILES", of(repair::missiles_total(p), repair::missile_rack_capacity(p)));
+    summary_field("TORPEDOES", of(repair::torpedoes_total(p), repair::torpedo_rack_capacity(p)));
+}
 
 void draw_purchase_panel(const PanelContext& ctx) {
     switch (ctx.zone.kind) {
