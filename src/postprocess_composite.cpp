@@ -60,6 +60,12 @@ void PostProcess::composite_to_swapchain(const RenderTargets& rt,
     if (clip.W > 0.0f) {
         ndc_x = clip.X / clip.W;
         ndc_y = clip.Y / clip.W;
+        // The composite samples the scene with clip-space v_uv, so on
+        // top-left-origin backends (D3D11/Metal) the scene shows NDC +y
+        // DOWN the screen, the same mapping the HUD markers use. The flare
+        // shader compares against y-up pixel NDC, so mirror the sun to
+        // match, or the flare draws opposite the sun disc (#738).
+        if (sg_query_features().origin_top_left) ndc_y = -ndc_y;
         const float edge = std::max(std::abs(ndc_x), std::abs(ndc_y));
         flare_i = std::clamp(1.0f - (edge - 0.9f) / 0.3f, 0.0f, 1.0f) * flare_strength;
     }
