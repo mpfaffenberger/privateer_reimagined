@@ -175,3 +175,13 @@ const char* gun::to_name(GunType t) {
     if ((int)t < 0 || (int)t >= kGunTypeCount) return "?";
     return k_name_map[(int)t].short_name;
 }
+
+const char* gun::display_name(GunType t) {
+    if ((int)t < 0 || (int)t >= kGunTypeCount) return "?";
+    return k_name_map[(int)t].json_name;
+}
+
+std::string gun::display_name(std::string_view short_name) {
+    const GunType t = from_name(short_name);
+    return t == GunType::Count ? std::string(short_name) : std::string(display_name(t));
+}

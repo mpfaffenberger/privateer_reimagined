@@ -268,6 +268,31 @@ float shield_recharge_drain_for(int shield_level) {
     return g_shield_regen_drain[idx];
 }
 
+float gun_energy_burn(const std::string& gun_short_name,
+                      float fire_rate_mult, float energy_mult) {
+    const GunType t = gun::from_name(gun_short_name);
+    if (t == GunType::Count) return 0.0f;
+    const GunStats& gs = g_gun_stats[(int)t];
+    if (!gs.complete || gs.refire_delay_s <= 0.0f) return 0.0f;
+    const float rate = fire_rate_mult > 0.0f ? fire_rate_mult : 1.0f;   // firing.cpp's guard
+    return gs.energy_cost_gj * energy_mult * rate / gs.refire_delay_s;
+}
+
+EnergyBudget energy_budget(const PlayerState& p, const ShipClass* klass) {
+    EnergyBudget b;
+    if (!klass) return b;
+    b.bank_gj    = klass->energy_max;
+    b.regen_gj_s = klass->energy_recharge + engine_recharge_bonus_for(p.engine_level)
+                 - shield_recharge_drain_for(p.shield_level);
+    for (size_t i = 0; i < p.gun_mounts.size(); ++i) {
+        const bool turret = i < klass->default_guns.size() && klass->default_guns[i].is_turret;
+        if (turret) continue;   // turrets fire free
+        const MountSlot& m = p.gun_mounts[i];
+        b.gun_burn_gj_s += gun_energy_burn(m.gun_id, m.mods.fire_rate_mult, m.mods.energy_mult);
+    }
+    return b;
+}
+
 // ---- transactions (headless-safe; shared by UI + harness) -------------------
 
 bool buy_hull(PlayerState& p, const std::string& target) {

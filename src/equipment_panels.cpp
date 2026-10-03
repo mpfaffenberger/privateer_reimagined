@@ -2,6 +2,7 @@
 #include "equipment_ui_internal.h"
 
 #include "armor.h"
+#include "credits_format.h"
 #include "gun.h"
 #include "missile.h"
 #include "outfitting.h"
@@ -14,6 +15,9 @@
 
 #include <algorithm>
 #include <array>
+#include <cctype>
+#include <cfloat>
+#include <cmath>
 #include <cstdio>
 #include <string>
 
@@ -38,6 +42,70 @@ void status(bool installed, const char* installed_text = "INSTALLED") {
                        "%s", installed ? installed_text : "EMPTY");
 }
 
+// ---- price + action buttons (#747) -------------------------------------------
+// "LABEL   80,000 CR" / "LABEL   +2,500 CR": one price spelling for the bay.
+std::string priced(const char* label, int64_t credits, bool refund = false) {
+    return std::string(label) + "   " + (refund ? "+" : "") + format_credits(credits) + " CR";
+}
+
+// Buy-style button. An unaffordable price reads RED (an inert button with no
+// hover, and clicks are ignored). It is NOT ImGui-disabled, because disabling
+// fades the red into the same grey as everything else. So "can't afford"
+// always shows, even on a mount that's blocked for another reason. `blocked`
+// greys the button out (occupied mount, conflicting launcher, ...).
+bool buy_button(const PlayerState& p, const std::string& label, int64_t price,
+                const ImVec2& size, bool blocked = false) {
+    const bool for_sale = price > 0;
+    if (for_sale && !player::can_afford(p, price)) {
+        const ImVec4 inert(0.22f, 0.07f, 0.06f, 0.85f);
+        ImGui::PushStyleColor(ImGuiCol_Button, inert);
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, inert);
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, inert);
+        ImGui::PushStyleColor(ImGuiCol_Text, kBad);
+        ImGui::Button(label.c_str(), size);
+        ImGui::PopStyleColor(4);
+        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Not enough credits.");
+        return false;
+    }
+    ImGui::BeginDisabled(blocked || !for_sale);
+    const bool clicked = ImGui::Button(label.c_str(), size);
+    ImGui::EndDisabled();
+    return clicked;
+}
+
+// Sell / refund-style button. One choke point so every sell in the bay looks
+// alike.
+bool sell_button(const std::string& label, const ImVec2& size, bool blocked = false) {
+    ImGui::BeginDisabled(blocked);
+    const bool clicked = ImGui::Button(label.c_str(), size);
+    ImGui::EndDisabled();
+    return clicked;
+}
+
+// Small coloured delta under a catalog stat, vs the gun fitted in this mount:
+// green when the row is better, red when worse. ASCII signs only, because the
+// UI font (Inter, default glyph ranges) has no arrow glyphs.
+void stat_delta(float delta, bool higher_is_better, int decimals) {
+    if (std::fabs(delta) < 0.005f) { ImGui::TextColored(kDim, "same"); return; }
+    const bool better = higher_is_better ? delta > 0.0f : delta < 0.0f;
+    ImGui::TextColored(better ? kGood : kBad, decimals == 1 ? "%+.1f" : "%+.2f", delta);
+}
+
+// "ENERGY  guns 26.7 GJ/s vs regen 30.0 GJ/s": the budget that decides whether
+// a loadout can keep firing (#743/#747). Red with a time-to-empty when not.
+void draw_energy_budget(const EnergyBudget& b) {
+    const bool short_of_power = b.gun_burn_gj_s > b.regen_gj_s + 0.05f;
+    ImGui::TextColored(kDim, "ENERGY");
+    ImGui::SameLine();
+    ImGui::TextColored(short_of_power ? kBad : kGood, "guns %.1f GJ/s  vs  regen %.1f GJ/s",
+                       b.gun_burn_gj_s, b.regen_gj_s);
+    if (short_of_power) {
+        const float drain = b.gun_burn_gj_s - std::max(0.0f, b.regen_gj_s);
+        ImGui::TextColored(kBad, "Full fire empties the %.0f GJ bank in %.0f s.",
+                           b.bank_gj, b.bank_gj / drain);
+    }
+}
+
 // Turret HARDWARE block for a turret mount (#145). Returns true when the
 // turret is installed, i.e. its mounts can take a gun.
 bool draw_turret_hardware(const PanelContext& ctx, const TurretSlot& turret) {
@@ -49,24 +117,114 @@ bool draw_turret_hardware(const PanelContext& ctx, const TurretSlot& turret) {
     if (!owned) {
         ImGui::TextColored(kDim, "Install the turret to fit guns into its %zu mount%s.",
                            turret.mounts.size(), turret.mounts.size() == 1 ? "" : "s");
-        char buy[64]; std::snprintf(buy, sizeof buy, "INSTALL TURRET  %lld CR", (long long)price);
-        ImGui::BeginDisabled(price <= 0 || !player::can_afford(p, price));
-        if (ImGui::Button(buy, ImVec2(-1.0f, 36.0f)) &&
+        if (buy_button(p, priced("INSTALL TURRET", price), price, ImVec2(-1.0f, 36.0f)) &&
             buy_turret(p, turret.id, ctx.ship_class)) sfx::ui_click();
-        ImGui::EndDisabled();
         return false;
     }
     const bool armed = std::any_of(turret.mounts.begin(), turret.mounts.end(), [&](int m) {
         return player::mount_armed(p, m);
     });
-    char sell[64]; std::snprintf(sell, sizeof sell, "REMOVE TURRET  +%lld CR", (long long)price);
-    ImGui::BeginDisabled(armed);
-    if (ImGui::Button(sell, ImVec2(-1.0f, 32.0f)) &&
+    if (sell_button(priced("REMOVE TURRET", price, true), ImVec2(-1.0f, 32.0f), armed) &&
         sell_turret(p, turret.id, ctx.ship_class)) sfx::ui_click();
-    ImGui::EndDisabled();
     if (armed) ImGui::TextColored(kDim, "Sell the turret's guns before removing it.");
     ImGui::Separator();
     return true;
+}
+
+// One compact line: "GUN 2  · Forward ·  Meson Blaster" (#747).
+void draw_gun_header(const equipment_hardpoints::Zone& zone, const TurretSlot* turret, const std::string& fitted) {
+    std::string label = zone.label;
+    for (char& c : label) c = (char)std::toupper((unsigned char)c);
+    ImGui::TextColored(kAccent, "%s", label.c_str());
+    ImGui::SameLine();
+    ImGui::TextColored(kDim, "\xC2\xB7 %s \xC2\xB7", turret ? turret->label.c_str() : "Forward");
+    ImGui::SameLine();
+    if (fitted.empty()) ImGui::TextColored(kDim, "Empty");
+    else                ImGui::TextColored(kGood, "%s", gun::display_name(fitted).c_str());
+    ImGui::Separator();
+    ImGui::Spacing();
+}
+
+// Aligned catalog: WEAPON | DAMAGE | REFIRE | ENERGY | PRICE (#747). Deltas
+// compare each row with the gun fitted in this mount; ENERGY turns red when
+// fitting that gun here would make the guns out-burn the ship's regen.
+void draw_gun_catalog(const PanelContext& ctx, const TurretSlot* turret,
+                      const std::string& fitted, const EnergyBudget& budget) {
+    PlayerState& player = ctx.player;
+    const int slot = ctx.zone.slot;
+    const bool armed = !fitted.empty();
+    const GunType fitted_type = gun::from_name(fitted);
+    const GunStats* fitted_stats =
+        fitted_type == GunType::Count ? nullptr : &g_gun_stats[(int)fitted_type];
+    // What this mount burns today, so a row can show the ship's total burn
+    // with that gun fitted here instead. Turret mounts fire free.
+    const inventory::WeaponMods mods = player.gun_mounts[(size_t)slot].mods;
+    const float fitted_burn =
+        turret ? 0.0f : gun_energy_burn(fitted, mods.fire_rate_mult, mods.energy_mult);
+
+    constexpr ImGuiTableFlags kFlags = ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerH |
+                                       ImGuiTableFlags_ScrollY | ImGuiTableFlags_PadOuterX;
+    if (!ImGui::BeginTable("##gun_catalog", 5, kFlags, ImVec2(0.0f, 0.0f))) return;
+    // Units live in the headers and names wrap, so the table still fits a
+    // ~400 px panel at 1280x800 without starving the WEAPON column.
+    ImGui::TableSetupScrollFreeze(0, 1);
+    ImGui::TableSetupColumn("WEAPON",   ImGuiTableColumnFlags_WidthStretch);
+    ImGui::TableSetupColumn("DMG cm",   ImGuiTableColumnFlags_WidthFixed, 54.0f);
+    ImGui::TableSetupColumn("REFIRE s", ImGuiTableColumnFlags_WidthFixed, 62.0f);
+    ImGui::TableSetupColumn("GJ/S",     ImGuiTableColumnFlags_WidthFixed, 48.0f);
+    ImGui::TableSetupColumn("PRICE",    ImGuiTableColumnFlags_WidthFixed, 92.0f);
+    ImGui::TableHeadersRow();
+
+    for (int i = 0; i < kGunTypeCount; ++i) {
+        const GunType type = (GunType)i;
+        const char* id = gun::to_name(type);
+        const int64_t price = gun_price(id);
+        if (price <= 0) continue;
+        const GunStats& gs = g_gun_stats[i];
+        const bool is_fitted = fitted == id;
+        const bool compare = fitted_stats && !is_fitted;
+        ImGui::PushID(i);
+        ImGui::TableNextRow(ImGuiTableRowFlags_None, 46.0f);
+
+        ImGui::TableNextColumn();
+        if (is_fitted) ImGui::PushStyleColor(ImGuiCol_Text, kGood);
+        ImGui::TextWrapped("%s", gun::display_name(type));
+        if (is_fitted) ImGui::PopStyleColor();
+
+        ImGui::TableNextColumn();
+        ImGui::Text("%.1f", gs.damage_cm);
+        if (compare) stat_delta(gs.damage_cm - fitted_stats->damage_cm, true, 1);
+
+        ImGui::TableNextColumn();
+        ImGui::Text("%.2f", gs.refire_delay_s);
+        if (compare) stat_delta(gs.refire_delay_s - fitted_stats->refire_delay_s, false, 2);
+
+        ImGui::TableNextColumn();
+        if (turret) {
+            ImGui::TextColored(kDim, "free");
+            if (ImGui::IsItemHovered()) ImGui::SetTooltip("Turrets don't draw on the energy bank.");
+        } else {
+            const float burn = gun_energy_burn(id);
+            const float projected = budget.gun_burn_gj_s - fitted_burn + burn;
+            const bool over = !is_fitted && projected > budget.regen_gj_s + 0.05f;
+            ImGui::TextColored(over ? kBad : ImGui::GetStyleColorVec4(ImGuiCol_Text),
+                               "%.1f", burn);
+            if (ImGui::IsItemHovered())
+                ImGui::SetTooltip("Fitted here, your guns would burn %.1f GJ/s against "
+                                  "%.1f GJ/s of regen.", projected, budget.regen_gj_s);
+        }
+
+        ImGui::TableNextColumn();
+        if (is_fitted) {
+            ImGui::TextColored(kGood, "FITTED");
+        } else if (buy_button(player, format_credits(price) + " CR", price,
+                              ImVec2(-FLT_MIN, 32.0f), armed) &&
+                   buy_gun(player, id, slot, ctx.ship_class)) {
+            sfx::ui_click();
+        }
+        ImGui::PopID();
+    }
+    ImGui::EndTable();
 }
 
 void draw_guns(const PanelContext& ctx) {
@@ -77,57 +235,27 @@ void draw_guns(const PanelContext& ctx) {
     // schematic zone -- fallback layouts label every mount a forward gun.
     const TurretSlot* turret =
         ctx.ship_class ? ctx.ship_class->turret_slot_for_mount(slot) : nullptr;
-    heading(turret ? "TURRET HARDPOINT" : "FORWARD GUN HARDPOINT",
-            ctx.zone.label.c_str());
     if (!valid) {
+        heading(turret ? "TURRET HARDPOINT" : "FORWARD GUN HARDPOINT", ctx.zone.label.c_str());
         ImGui::TextColored(kBad, "Mount %d does not exist on this hull.", slot + 1);
         return;
     }
-    if (turret && !draw_turret_hardware(ctx, *turret)) return;
-
     // A COPY, not a reference: buy_gun/sell_gun below may resize gun_mounts.
     const std::string fitted = player.gun_mounts[(size_t)slot].gun_id;
-    const bool armed = !fitted.empty();
-    ImGui::Text("MOUNT %d", slot + 1);
-    status(armed, armed ? fitted.c_str() : "EMPTY");
-    if (armed) {
-        const int64_t refund = gun_price(fitted);
-        char sell[80];
-        std::snprintf(sell, sizeof sell, "SELL FITTED GUN  +%lld CR", (long long)refund);
-        if (ImGui::Button(sell, ImVec2(-1.0f, 36.0f)) &&
+    draw_gun_header(ctx.zone, turret, fitted);
+    if (turret && !draw_turret_hardware(ctx, *turret)) return;
+
+    if (!fitted.empty()) {
+        if (sell_button(priced("SELL FITTED GUN", gun_price(fitted), true), ImVec2(-1.0f, 36.0f)) &&
             sell_gun(player, slot, ctx.ship_class)) sfx::ui_click();
-        // buy_gun refuses an occupied mount (#741); say why FIT is greyed.
+        // buy_gun refuses an occupied mount (#741); say why the prices are greyed.
         ImGui::TextColored(kDim, "Sell the fitted gun to free this mount for another.");
     }
-
     ImGui::Spacing();
-    ImGui::TextColored(kDim, "COMPATIBLE WEAPONS");
-    if (ImGui::BeginChild("##gun_catalog", ImVec2(0, 0), false)) {
-        for (int i = 0; i < kGunTypeCount; ++i) {
-            const char* name = gun::to_name((GunType)i);
-            const int64_t price = gun_price(name);
-            if (price <= 0) continue;
-            ImGui::PushID(i);
-            ImGui::BeginGroup();
-            ImGui::TextUnformatted(name);
-            ImGui::TextColored(kDim, "Damage %.1f cm    Refire %.2fs",
-                               g_gun_stats[i].damage_cm, g_gun_stats[i].refire_delay_s);
-            ImGui::EndGroup();
-            ImGui::SameLine(ImGui::GetWindowWidth() - 145.0f);
-            if (fitted == name) {
-                ImGui::TextColored(kGood, "FITTED");
-            } else {
-                char buy[48]; std::snprintf(buy, sizeof buy, "FIT  %lld", (long long)price);
-                ImGui::BeginDisabled(armed || !player::can_afford(player, price));
-                if (ImGui::Button(buy, ImVec2(125.0f, 34.0f)) &&
-                    buy_gun(player, name, slot, ctx.ship_class)) sfx::ui_click();
-                ImGui::EndDisabled();
-            }
-            ImGui::Separator();
-            ImGui::PopID();
-        }
-    }
-    ImGui::EndChild();
+    const EnergyBudget budget = energy_budget(player, ctx.ship_class);
+    draw_energy_budget(budget);
+    ImGui::Spacing();
+    draw_gun_catalog(ctx, turret, fitted, budget);
 }
 
 void draw_launcher(const PanelContext& ctx) {
@@ -141,46 +269,38 @@ void draw_launcher(const PanelContext& ctx) {
     ImGui::TextUnformatted("MISSILE LAUNCHER");
     status(missile);
     if (missile) {
-        char sell[64]; std::snprintf(sell, sizeof sell, "SELL  +%lld CR",
-                                     (long long)repair::k_missile_launcher_sell_price);
-        if (ImGui::Button(sell, ImVec2(-1.0f, 34.0f))) {
+        if (sell_button(priced("SELL", repair::k_missile_launcher_sell_price, true),
+                        ImVec2(-1.0f, 34.0f))) {
             const bool ok = left ? repair::sell_missile_launcher_left(p)
                                  : repair::sell_missile_launcher_right(p);
             if (ok) sfx::ui_click();
         }
     } else {
-        ImGui::BeginDisabled(torpedo || !player::can_afford(p, repair::k_missile_launcher_price));
-        char buy[64]; std::snprintf(buy, sizeof buy, "INSTALL  %lld CR",
-                                    (long long)repair::k_missile_launcher_price);
-        if (ImGui::Button(buy, ImVec2(-1.0f, 34.0f))) {
+        if (buy_button(p, priced("INSTALL", repair::k_missile_launcher_price),
+                       repair::k_missile_launcher_price, ImVec2(-1.0f, 34.0f), torpedo)) {
             const bool ok = left ? repair::buy_missile_launcher_left(p)
                                  : repair::buy_missile_launcher_right(p);
             if (ok) sfx::ui_click();
         }
-        ImGui::EndDisabled();
     }
 
     ImGui::Spacing();
     ImGui::TextUnformatted("TORPEDO TUBE");
     status(torpedo);
     if (torpedo) {
-        char sell[64]; std::snprintf(sell, sizeof sell, "SELL  +%lld CR",
-                                     (long long)repair::k_torpedo_launcher_sell_price);
-        if (ImGui::Button(sell, ImVec2(-1.0f, 34.0f))) {
+        if (sell_button(priced("SELL", repair::k_torpedo_launcher_sell_price, true),
+                        ImVec2(-1.0f, 34.0f))) {
             const bool ok = left ? repair::sell_torpedo_launcher_left(p)
                                  : repair::sell_torpedo_launcher_right(p);
             if (ok) sfx::ui_click();
         }
     } else {
-        ImGui::BeginDisabled(missile || !player::can_afford(p, repair::k_torpedo_launcher_price));
-        char buy[64]; std::snprintf(buy, sizeof buy, "INSTALL  %lld CR",
-                                    (long long)repair::k_torpedo_launcher_price);
-        if (ImGui::Button(buy, ImVec2(-1.0f, 34.0f))) {
+        if (buy_button(p, priced("INSTALL", repair::k_torpedo_launcher_price),
+                       repair::k_torpedo_launcher_price, ImVec2(-1.0f, 34.0f), missile)) {
             const bool ok = left ? repair::buy_torpedo_launcher_left(p)
                                  : repair::buy_torpedo_launcher_right(p);
             if (ok) sfx::ui_click();
         }
-        ImGui::EndDisabled();
     }
 
     ImGui::Spacing();
@@ -227,17 +347,14 @@ void draw_armor(const PanelContext& ctx) {
         if (p.armor_name == armor.name) {
             ImGui::TextColored(kGood, "FITTED");
         } else {
-            char buy[48]; std::snprintf(buy, sizeof buy, "FIT  %lld", (long long)price);
-            ImGui::BeginDisabled(!player::can_afford(p, price));
-            if (ImGui::Button(buy, ImVec2(125.0f, 34.0f)) && buy_armor(p, armor.name))
+            if (buy_button(p, format_credits(price) + " CR", price, ImVec2(125.0f, 34.0f)) &&
+                buy_armor(p, armor.name))
                 sfx::ui_click();
-            ImGui::EndDisabled();
         }
         ImGui::Separator();
         ImGui::PopID();
     }
 }
-
 void draw_ladder(const PanelContext& ctx, bool shield) {
     PlayerState& p = ctx.player;
     const int level = shield ? p.shield_level : p.engine_level;
@@ -253,21 +370,18 @@ void draw_ladder(const PanelContext& ctx, bool shield) {
     }
     const int64_t next_price = shield ? shield_upgrade_price(level + 1)
                                       : engine_upgrade_price(level + 1);
-    ImGui::BeginDisabled(level >= cap || next_price <= 0 || !player::can_afford(p, next_price));
-    char upgrade[80]; std::snprintf(upgrade, sizeof upgrade, "UPGRADE TO LEVEL %d   %lld CR",
-                                    level + 1, (long long)next_price);
-    if (ImGui::Button(upgrade, ImVec2(-1.0f, 40.0f))) {
+    const std::string upgrade = "UPGRADE TO LEVEL " + std::to_string(level + 1);
+    if (buy_button(p, priced(upgrade.c_str(), next_price), next_price, ImVec2(-1.0f, 40.0f),
+                   level >= cap)) {
         const bool ok = shield ? upgrade_shield(p, ctx.ship_class)
                                : upgrade_engine(p, ctx.ship_class);
         if (ok) sfx::ui_click();
     }
-    ImGui::EndDisabled();
     if (level > 0) {
         const int64_t refund = shield ? shield_upgrade_price(level)
                                       : engine_upgrade_price(level);
-        char sell[80]; std::snprintf(sell, sizeof sell, "SELL LEVEL %d   +%lld CR",
-                                     level, (long long)refund);
-        if (ImGui::Button(sell, ImVec2(-1.0f, 36.0f))) {
+        const std::string sell = "SELL LEVEL " + std::to_string(level);
+        if (sell_button(priced(sell.c_str(), refund, true), ImVec2(-1.0f, 36.0f))) {
             const bool ok = shield ? sell_shield(p, ctx.ship_class)
                                    : sell_engine(p, ctx.ship_class);
             if (ok) sfx::ui_click();
@@ -283,17 +397,14 @@ void draw_cargo(const PanelContext& ctx) {
     ImGui::Text("HOLD USAGE    %d / %d units", used, capacity);
     if (p.cargo_expansion) {
         ImGui::TextColored(kGood, "EXPANSION INSTALLED");
-        char sell[64]; std::snprintf(sell, sizeof sell, "REMOVE   +%lld CR",
-                                     (long long)cargo_expansion_price());
-        if (ImGui::Button(sell, ImVec2(-1.0f, 38.0f)) && sell_cargo_expansion(p))
+        if (sell_button(priced("REMOVE", cargo_expansion_price(), true), ImVec2(-1.0f, 38.0f)) &&
+            sell_cargo_expansion(p))
             sfx::ui_click();
     } else {
         const int64_t price = cargo_expansion_price();
-        ImGui::BeginDisabled(price <= 0 || !player::can_afford(p, price));
-        char buy[64]; std::snprintf(buy, sizeof buy, "INSTALL   %lld CR", (long long)price);
-        if (ImGui::Button(buy, ImVec2(-1.0f, 40.0f)) && buy_cargo_expansion(p))
+        if (buy_button(p, priced("INSTALL", price), price, ImVec2(-1.0f, 40.0f)) &&
+            buy_cargo_expansion(p))
             sfx::ui_click();
-        ImGui::EndDisabled();
     }
 }
 
@@ -320,25 +431,33 @@ void draw_systems(const PanelContext& ctx) {
         {"repair_droid", "Repair Droid", "Fixes damaged non-weapon systems in flight"},
         {"adv_repair_droid", "Advanced Repair Droid", "Repairs 2x faster; requires standard droid"},
     }};
+    // Two columns, so a long detail line wraps instead of running under the
+    // price button.
+    if (!ImGui::BeginTable("##systems", 2, ImGuiTableFlags_BordersInnerH)) return;
+    ImGui::TableSetupColumn("item",  ImGuiTableColumnFlags_WidthStretch);
+    ImGui::TableSetupColumn("price", ImGuiTableColumnFlags_WidthFixed, 125.0f);
     for (const Item& item : items) {
         ImGui::PushID(item.id);
+        ImGui::TableNextRow(ImGuiTableRowFlags_None, 46.0f);
+        ImGui::TableNextColumn();
         ImGui::TextUnformatted(item.label);
-        ImGui::TextColored(kDim, "%s", item.detail);
-        ImGui::SameLine(ImGui::GetWindowWidth() - 145.0f);
+        ImGui::PushStyleColor(ImGuiCol_Text, kDim);
+        ImGui::TextWrapped("%s", item.detail);
+        ImGui::PopStyleColor();
+        ImGui::TableNextColumn();
         if (discrete_owned(p, item.id)) {
             ImGui::TextColored(kGood, "INSTALLED");
         } else {
             const int64_t price = discrete_price(item.id);
             const bool dependency = std::string(item.id) != "adv_repair_droid" || p.has_repair_droid;
-            char buy[48]; std::snprintf(buy, sizeof buy, "BUY  %lld", (long long)price);
-            ImGui::BeginDisabled(price <= 0 || !dependency || !player::can_afford(p, price));
-            if (ImGui::Button(buy, ImVec2(125.0f, 34.0f)) && buy_discrete(p, item.id))
+            if (buy_button(p, format_credits(price) + " CR", price, ImVec2(-FLT_MIN, 34.0f),
+                           !dependency) &&
+                buy_discrete(p, item.id))
                 sfx::ui_click();
-            ImGui::EndDisabled();
         }
-        ImGui::Separator();
         ImGui::PopID();
     }
+    ImGui::EndTable();
 }
 
 void draw_service(const PanelContext& ctx) {
@@ -348,13 +467,9 @@ void draw_service(const PanelContext& ctx) {
     if (!ctx.live_ship || !quote.hull_damaged) {
         ImGui::TextColored(kGood, "%s", ctx.live_ship ? "HULL AT FULL INTEGRITY" : "HULL STATUS UNAVAILABLE");
     } else {
-        char repair_label[80];
-        std::snprintf(repair_label, sizeof repair_label, "REPAIR HULL   %lld CR",
-                      (long long)quote.hull_cost);
-        ImGui::BeginDisabled(!player::can_afford(p, quote.hull_cost));
-        if (ImGui::Button(repair_label, ImVec2(-1.0f, 40.0f)) &&
+        if (buy_button(p, priced("REPAIR HULL", quote.hull_cost), quote.hull_cost,
+                       ImVec2(-1.0f, 40.0f)) &&
             repair::repair_hull(*ctx.live_ship, p)) sfx::ui_click();
-        ImGui::EndDisabled();
     }
     // Per-component repairs (#141): one button per damaged system, priced
     // by how much of it is missing.
@@ -366,14 +481,12 @@ void draw_service(const PanelContext& ctx) {
             const ShipSystem sys = ship_systems::at(i);
             const float left = ship_systems::integrity(ctx.live_ship->systems, sys);
             char label[96];
-            std::snprintf(label, sizeof label, "REPAIR %-10s %s   %lld CR##sys%d",
+            std::snprintf(label, sizeof label, "REPAIR %-10s %s   %s CR##sys%d",
                           ship_systems::label(sys),
                           left > 0.0f ? "DAMAGED  " : "DESTROYED",
-                          (long long)quote.system_cost[i], i);
-            ImGui::BeginDisabled(!player::can_afford(p, quote.system_cost[i]));
-            if (ImGui::Button(label, ImVec2(-1.0f, 28.0f)) &&
+                          format_credits(quote.system_cost[i]).c_str(), i);
+            if (buy_button(p, label, quote.system_cost[i], ImVec2(-1.0f, 28.0f)) &&
                 repair::repair_system(*ctx.live_ship, p, sys)) sfx::ui_click();
-            ImGui::EndDisabled();
         }
     }
     ImGui::Spacing();
@@ -381,7 +494,9 @@ void draw_service(const PanelContext& ctx) {
                 repair::missiles_total(p), repair::missile_rack_capacity(p));
     ImGui::Text("TORPEDO RACK    %d / %d",
                 repair::torpedoes_total(p), repair::torpedo_rack_capacity(p));
-    ImGui::TextColored(kDim, "Select a left or right launcher hardpoint to buy and sell ordnance.");
+    ImGui::PushStyleColor(ImGuiCol_Text, kDim);
+    ImGui::TextWrapped("Select a left or right launcher hardpoint to buy and sell ordnance.");
+    ImGui::PopStyleColor();
 }
 
 } // namespace
