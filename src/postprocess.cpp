@@ -90,6 +90,8 @@ void PostProcess::apply_bloom(const RenderTargets& rt) const {
         u.texel_and_cfg[1] = 1.0f / (float)src_h;
         u.texel_and_cfg[2] = (i == 0) ? bloom_threshold : 0.0f;
         u.texel_and_cfg[3] = (i == 0) ? bloom_clamp     : 0.0f;
+        u.dst_texel[0]     = 1.0f / (float)rt.bloom[i].w;
+        u.dst_texel[1]     = 1.0f / (float)rt.bloom[i].h;
         bloom_pass(bloom_down_pipeline, rt.bloom[i].att, src, rt.linear_clamp,
                    UB_bloom_down_params, u, false);
         src   = rt.bloom[i].tex;
@@ -104,6 +106,8 @@ void PostProcess::apply_bloom(const RenderTargets& rt) const {
         u.texel_and_radius[1] = 1.0f / (float)rt.bloom[i].h;
         u.texel_and_radius[2] = bloom_radius;
         u.texel_and_radius[3] = 1.0f;
+        u.dst_texel[0]        = 1.0f / (float)rt.bloom[i - 1].w;
+        u.dst_texel[1]        = 1.0f / (float)rt.bloom[i - 1].h;
         bloom_pass(bloom_up_pipeline, rt.bloom[i - 1].att, rt.bloom[i].tex,
                    rt.linear_clamp, UB_bloom_up_params, u, true);
     }

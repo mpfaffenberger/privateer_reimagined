@@ -14,6 +14,14 @@
 //                larger mip (the pipeline's blend state does the add).
 //                Walking the chain back up sums every mip, so the low mips
 //                give the wide soft glow and the high mips the tight core.
+//
+// ORIENTATION (#736): both passes take their UV from gl_FragCoord / target
+// size, NOT from the fullscreen triangle's v_uv. On D3D11 / Metal a v_uv
+// pass flips the image vertically (clip space is y-up, texture rows start
+// at the top), and with 11 chained passes the mips ended up with mixed
+// parity: every light bloomed twice, once mirrored. Pixel and texel
+// origins always agree, so FragCoord-based UV is an identity on every
+// backend.
 // -----------------------------------------------------------------------------
 
 @vs vs
@@ -32,6 +40,7 @@ layout(binding=0) uniform sampler   u_smp;
 
 layout(binding=0) uniform bloom_down_params {
     vec4 texel_and_cfg;   // .xy = 1/src size, .z = threshold (0 = no bright-pass), .w = peak clamp (0 = none)
+    vec4 dst_texel;       // .xy = 1/dst (render target) size
 };
 
 in  vec2 v_uv;
@@ -57,7 +66,7 @@ vec3 bright_pass(vec3 c, float threshold, float clamp_peak) {
 
 void main() {
     vec2 t = texel_and_cfg.xy;
-    vec2 uv = v_uv;
+    vec2 uv = gl_FragCoord.xy * dst_texel.xy;
 
     vec3 a = tap(uv + t * vec2(-2.0,  2.0));
     vec3 b = tap(uv + t * vec2( 0.0,  2.0));
@@ -91,6 +100,7 @@ layout(binding=0) uniform sampler   u_smp;
 
 layout(binding=0) uniform bloom_up_params {
     vec4 texel_and_radius;   // .xy = 1/src size, .z = tent radius in src texels, .w = level weight
+    vec4 dst_texel;          // .xy = 1/dst (render target) size
 };
 
 in  vec2 v_uv;
@@ -100,7 +110,7 @@ vec3 tap(vec2 uv) { return texture(sampler2D(u_src, u_smp), uv).rgb; }
 
 void main() {
     vec2 d  = texel_and_radius.xy * texel_and_radius.z;
-    vec2 uv = v_uv;
+    vec2 uv = gl_FragCoord.xy * dst_texel.xy;
 
     // 3x3 tent: 1-2-1 / 2-4-2 / 1-2-1, normalised by 16.
     vec3 sum = tap(uv) * 4.0;
