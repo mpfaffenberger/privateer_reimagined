@@ -2,18 +2,34 @@
 // allocation is stubbed; ImGui draw lists, glass and MFD warping are real.
 #include "camera.h"
 #include "cockpit_hud_internal.h"
+#include "canopy_mask.h"
 #include "cockpit_overlay.h"
 #include "material.h"
+#include "pilot_head_motion.h"
 #include "imgui.h"
 #include "sokol_app.h"
 #include "sokol_imgui.h"
+#include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <vector>
 
 bool load_texture_png(const std::string& path, TextureSlot& slot) {
     if (path.find("talon") != std::string::npos) return false;
     slot.valid = true;
     slot.view.id = 42;
+    return true;
+}
+// Centurion-sized stand-in for the art's alpha (#732): open canopy above art
+// row 600, cockpit metal from there down.
+constexpr float kStandInMetalRow = 600.0f;
+bool cockpit_overlay::load_canopy_mask(const std::string& path, CanopyMask& out) {
+    if (path.find("centurion") == std::string::npos) return false;
+    constexpr int w = 1672, h = 940;
+    std::vector<uint8_t> rgba((size_t)w * h * 4, 0);
+    for (int y = (int)kStandInMetalRow; y < h; ++y)
+        for (int x = 0; x < w; ++x) rgba[((size_t)y * w + x) * 4 + 3] = 255;
+    out = make_canopy_mask(rgba.data(), w, h);
     return true;
 }
 extern "C" sg_sampler sg_make_sampler(const sg_sampler_desc*) { return {1}; }
@@ -151,9 +167,34 @@ int main() {
           "cockpit back ON: HUD returns to the cockpit displays");
     ImGui::Render();
 
+    // Off-screen pointers (#732), through the live fit + head transform.
+    const float cx = io.DisplaySize.x * 0.5f, cy = io.DisplaySize.y * 0.5f;
+    ImGui::NewFrame();
+    draw("centurion", camera);
+    const Fit fit = fit_to_viewport(*find_art("centurion"), 0, 0, io.DisplaySize.x, io.DisplaySize.y);
+    // Through the rest-pose head sway too: its fixed overscan zoom moves art rows.
+    const Homography head = PilotHeadMotion{}.transform(
+        { 0.0f, 0.0f, io.DisplaySize.x, io.DisplaySize.y }, camera.cockpit_head_motion_strength);
+    const float metal_y = apply(head, to_screen(fit, Vec2{ 0.0f, kStandInMetalRow })).y;
+    check(canopy_clear({ cx, cy }) && !canopy_clear({ cx, metal_y + 4.0f }),
+          "canopy_clear reads the art alpha through the live fit");
+    const Vec2 down = offscreen_anchor({ 0.0f, 1.0f }, 80.0f, 14.0f, 8.4f);
+    check(std::fabs(down.x - cx) < 0.5f && down.y + 14.0f <= metal_y &&
+          down.y + 14.0f > metal_y - 8.0f && down.y < io.DisplaySize.y - 80.0f,
+          "pointer toward the dash stops on glass, its glyph clear of the metal");
+    const Vec2 up = offscreen_anchor({ 0.0f, -1.0f }, 80.0f, 14.0f, 8.4f);
+    check(std::fabs(up.x - cx) < 0.5f && std::fabs(up.y - 80.0f) < 0.5f,
+          "pointer through open canopy keeps the classic edge box");
+    finalize();
+    ImGui::Render();
+
     ImGui::NewFrame(); // draw skipped: autopilot/external camera
     check(!active() && world_draw_list() == ImGui::GetForegroundDrawList(),
           "skipped cockpit frame restores classic marker layer");
+    const Vec2 classic = offscreen_anchor({ 0.0f, 1.0f }, 80.0f, 14.0f, 8.4f);
+    check(canopy_clear({ cx, io.DisplaySize.y - 1.0f }) &&
+          std::fabs(classic.x - cx) < 0.5f && std::fabs(classic.y - (io.DisplaySize.y - 80.0f)) < 0.5f,
+          "no cockpit: pointers ride the classic screen-edge box");
     draw("unmapped-hull", camera);
     check(!active(), "unknown hull does not activate cockpit occlusion");
     draw("talon", camera);

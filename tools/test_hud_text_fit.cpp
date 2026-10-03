@@ -5,6 +5,7 @@
 // stubbed. Run from the repo root (loads assets/fonts/Inter-Regular.ttf).
 #include "camera.h"
 #include "cockpit_hud_internal.h"
+#include "canopy_mask.h"
 #include "cockpit_overlay.h"
 #include "hud_text_fit.h"
 #include "material.h"
@@ -21,6 +22,7 @@ bool load_texture_png(const std::string&, TextureSlot& slot) {
     slot.view.id = 42;
     return true;
 }
+bool cockpit_overlay::load_canopy_mask(const std::string&, CanopyMask&) { return false; }
 extern "C" sg_sampler sg_make_sampler(const sg_sampler_desc*) { return {1}; }
 extern "C" uint64_t simgui_imtextureid_with_sampler(sg_view, sg_sampler) { return 42; }
 
