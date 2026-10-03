@@ -25,7 +25,7 @@ The remaining gaps are:
    green again since [#314]), but nothing runs them automatically.
 2. **Combat-system fidelity.** Friend-or-Foe missiles, scanner tiers, and
    buying turrets for hulls that lack them.
-3. **Presentation polish.** HDR/bloom, normal maps, an Orion cockpit, and
+3. **Presentation polish.** HDR/bloom, normal maps, cockpits for the remaining hulls, and
    HUD pages that fit inside the cockpit MFDs.
 4. **The living world** (Gemini Lives phases 2–6) and **Righteous Fire**.
 
@@ -57,7 +57,7 @@ Rough completion: **sandbox ~92%, story ~100% (base game), combat systems
 | Comms: hails, taunts, contraband scans, in-flight rumors, voiced reply menu | Done | `comm.*`, `hailing.*`, `comms_menu.*` |
 | Navigation: hostile-gated autopilot, autodock, jumps (incl. escaping under fire), local nav map, **four-quadrant sector star chart** with canonical coordinates, unrevealed Fariss systems hidden | Done **(corrected)** | `autopilot.*`, `docking.*`, `jump.*`, `cockpit_hud.cpp` ([#339]) |
 | Flight feel: critically damped fly-by-wire turn response, pilot head lean, rigid cockpit slide | Done | `turn_response.h`, `pilot_head_motion.h`, `test_turn_response` |
-| Cockpits: painted overlays with live MFD instruments and lamps for **Tarsus, Galaxy, Centurion** (+ Talon for dev); world markers occluded by cockpit structure | Done **(corrected; the old doc said "deliberately not used")** | `cockpit_overlay*.{h,cpp}`, `assets/cockpits/`, `test_cockpit_overlay`, `test_cockpit_layers`, `test_hud_text_fit` (dense MFD text fits the glass, #430) |
+| Cockpits: painted overlays with live MFD instruments and lamps for **Tarsus, Galaxy, Centurion, Orion** (+ Talon for dev); world markers occluded by cockpit structure | Done **(corrected; the old doc said "deliberately not used")** | `cockpit_overlay*.{h,cpp}`, `assets/cockpits/`, `test_cockpit_overlay`, `test_cockpit_layers`, `test_hud_text_fit` (dense MFD text fits the glass, #430) |
 | Weapons/ARMAMENTS MFD: live arm mode, mounts, energy, turret markers, interactive schematic | Done | `cockpit_mfd.cpp`, `cockpit_armaments.*`, `test_armament_loadout` |
 | Saves: format **v8**, accumulating timestamped autosaves, `--continue` resumes newest, load-menu metadata, progress UI during rebuilds | Done **(corrected; was v6)** | `savegame.h` `k_format_version = 8` |
 | Calendar: stardate `2669.135`, +1 day per landing, persisted, shown on base screens | Done, including dev_remote `/state` day/stardate and `POST /advance_day` ([#171]) | `world_clock.*`, `docking.cpp`, `test_world_clock` |
@@ -162,9 +162,10 @@ NPC-buffed repair hull, one fixed mission-board seed) now match the game.
 
 ### P2 — Presentation and art
 
-- **Cockpits:** the Orion has no cockpit overlay, so it falls back to the
-  HUD-only view. The ticket to make "every flyable ship" have a cockpit is
-  [#168]. Dense HUD pages (TARGET faction line, STATUS Weapons) clip inside
+- **Cockpits:** every buyable hull now has a cockpit overlay. The other
+  hulls (Confed, pirate, merchant and Kilrathi) still fall back to the
+  HUD-only view. The work to give "every flyable ship" a cockpit is [#168],
+  tracked ship by ship in [#729]. Dense HUD pages (TARGET faction line, STATUS Weapons) clip inside
   the cockpit MFD holes ([#430]). The art-direction question ([#153]) is
   settled: commit to per-hull cockpits.
 - **Rendering:** HDR scene with highlight roll-off and dithering ([#488],
@@ -325,3 +326,4 @@ judgment call ([#323] was a duplicate of [#322]).
 [#497]: https://github.com/mpfaffenberger/privateer_reimagined/issues/497
 [#516]: https://github.com/mpfaffenberger/privateer_reimagined/issues/516
 [#639]: https://github.com/mpfaffenberger/privateer_reimagined/issues/639
+[#729]: https://github.com/mpfaffenberger/privateer_reimagined/issues/729
