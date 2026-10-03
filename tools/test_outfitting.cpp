@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// tools/test_outfitting.cpp — offline driver for np-9cu.3 outfitting: hull +
+// tools/test_outfitting.cpp �?" offline driver for np-9cu.3 outfitting: hull +
 // equipment pricing and the buy/upgrade transaction path. Links the REAL
 // outfitting.cpp (built with -DOUTFITTING_HEADLESS so the ImGui shop screens
 // are excluded), ship_class.cpp, gun.cpp, shield.cpp, armor.cpp, player.cpp,
@@ -30,7 +30,9 @@
 #include "armor.h"
 #include "faction.h"
 
+#include <cmath>
 #include <cstdio>
+#include <string>
 #include <vector>
 
 static int g_fail = 0;
@@ -139,29 +141,59 @@ static void test_no_overwrite() {
 
 // The starter ship must be able to fight (#743): with its new-game shield
 // generator running, net energy regen covers sustained fire from its own
-// stock guns. Mirrors firing.cpp's regen (hull + engine bonus - shield
-// drain). "Above zero" was not enough: 10 GJ/s lost every opening fight.
+// stock guns. "Above zero" was not enough: 10 GJ/s lost every opening fight.
+// Uses outfitting::energy_budget, the same numbers the equipment bay shows.
 static void test_starter_energy() {
     std::printf("\n== Starter energy budget (#743) ==\n");
     const PlayerState p = player::new_game("troy");
     const ShipClass* k = ship_class::find(p.ship_class_name);
     check(k != nullptr, "starter hull catalog loaded");
     if (!k) return;
+    const outfitting::EnergyBudget b = outfitting::energy_budget(p, k);
+    std::printf("  %s: net regen %.1f GJ/s vs stock-gun burn %.1f GJ/s (bank %.0f)\n",
+                p.ship_class_name.c_str(), b.regen_gj_s, b.gun_burn_gj_s, b.bank_gj);
+    check(b.gun_burn_gj_s > 0.0f, "starter carries energy-using stock guns");
+    check(b.regen_gj_s >= b.gun_burn_gj_s, "starter net regen sustains its stock guns indefinitely");
+}
 
-    const float net = k->energy_recharge
-                    + outfitting::engine_recharge_bonus_for(p.engine_level)
-                    - outfitting::shield_recharge_drain_for(p.shield_level);
-    float burn = 0.0f;
-    for (const MountSlot& m : p.gun_mounts) {
-        const GunType t = gun::from_name(m.gun_id);
-        if (t == GunType::Count) continue;
-        const GunStats& gs = g_gun_stats[(int)t];
-        if (gs.refire_delay_s > 0.0f) burn += gs.energy_cost_gj / gs.refire_delay_s;
+static bool near(float a, float b) { return std::fabs(a - b) < 0.01f; }
+
+// The equipment bay's energy numbers (#747) must be firing.cpp's numbers:
+// energy_cost * energy_mult per shot, every refire / fire_rate_mult; only
+// FIXED guns drain the bank (turrets fire free).
+static void test_energy_budget() {
+    std::printf("\n== Energy budget math (#747) ==\n");
+    check(near(outfitting::gun_energy_burn("laser"), 4.0f / 0.3f), "laser burns 4 GJ / 0.3 s");
+    check(near(outfitting::gun_energy_burn("laser", 1.1f, 0.9f), 4.0f * 0.9f * 1.1f / 0.3f),
+          "rarity mods scale the burn like firing.cpp (rare 1.1x rate, 0.9x energy)");
+    check(near(outfitting::gun_energy_burn("laser", 0.0f), 4.0f / 0.3f),
+          "fire_rate_mult <= 0 falls back to 1 (firing.cpp's guard)");
+    check(outfitting::gun_energy_burn("not_a_gun") == 0.0f && outfitting::gun_energy_burn("") == 0.0f,
+          "unknown / empty mounts burn nothing");
+
+    const ShipClass* cent = ship_class::find("centurion");
+    if (!cent) { check(false, "centurion catalog loaded"); return; }
+    PlayerState p = player::new_game("troy");
+    p.ship_class_name = "centurion";
+    outfitting::fit_stock_guns(p, cent, /*with_turrets=*/true);
+    float forward = 0.0f, turrets = 0.0f;
+    for (size_t i = 0; i < p.gun_mounts.size(); ++i) {
+        const float burn = outfitting::gun_energy_burn(p.gun_mounts[i].gun_id);
+        (cent->default_guns[i].is_turret ? turrets : forward) += burn;
     }
-    std::printf("  %s: net regen %.1f GJ/s vs stock-gun burn %.1f GJ/s\n",
-                p.ship_class_name.c_str(), net, burn);
-    check(burn > 0.0f, "starter carries energy-using stock guns");
-    check(net >= burn, "starter net regen sustains its stock guns indefinitely");
+    const outfitting::EnergyBudget b = outfitting::energy_budget(p, cent);
+    check(turrets > 0.0f && near(b.gun_burn_gj_s, forward),
+          "budget counts the forward guns only; turret guns fire free");
+    check(near(b.bank_gj, cent->energy_max), "bank is the hull's energy_max");
+    check(outfitting::energy_budget(p, nullptr).gun_burn_gj_s == 0.0f, "no hull -> empty budget");
+}
+
+// Player-facing gun names (#747): canonical spelling, ids never leak to UI.
+static void test_gun_display_names() {
+    std::printf("\n== Gun display names (#747) ==\n");
+    check(gun::display_name("meson_blaster") == "Meson Blaster", "meson_blaster -> Meson Blaster");
+    check(std::string(gun::display_name(GunType::Laser)) == "Laser", "GunType::Laser -> Laser");
+    check(gun::display_name("not_a_gun") == "not_a_gun", "unknown ids come back unchanged");
 }
 
 static void show(const PlayerState& p, const char* tag) {
@@ -255,6 +287,8 @@ int main() {
     test_turrets();
     test_no_overwrite();
     test_starter_energy();
+    test_energy_budget();
+    test_gun_display_names();
 
     std::printf("\nAll transaction paths exercised. %s\n",
                 g_fail == 0 ? "ALL CHECKS PASS" : "CHECK FAILURES");

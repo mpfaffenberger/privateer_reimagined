@@ -2,6 +2,8 @@
 #include "equipment_ui_internal.h"
 
 #include "base_screens.h"
+#include "credits_format.h"
+#include "gun.h"
 #include "material.h"
 #include "player.h"
 #include "ship_class.h"
@@ -89,12 +91,11 @@ std::string zone_state(const PlayerState& player, const Zone& zone,
         case Kind::Turret:
             if (g_editing && schematic_ship) {
                 if (zone.slot >= 0 && zone.slot < (int)schematic_ship->default_guns.size())
-                    return gun::to_name(schematic_ship->default_guns[(size_t)zone.slot].type);
+                    return gun::display_name(schematic_ship->default_guns[(size_t)zone.slot].type);
                 return "EMPTY";
             }
-            if (zone.slot >= 0 && zone.slot < (int)player.gun_mounts.size() &&
-                !player.gun_mounts[(size_t)zone.slot].gun_id.empty())
-                return player.gun_mounts[(size_t)zone.slot].gun_id;
+            if (player::mount_armed(player, zone.slot))
+                return gun::display_name(player.gun_mounts[(size_t)zone.slot].gun_id);
             if (const TurretSlot* t = schematic_ship
                     ? schematic_ship->turret_slot_for_mount(zone.slot) : nullptr;
                 t && !player::has_turret(player, t->id))
@@ -434,7 +435,7 @@ void draw_equipment_screen(BaseContext& ctx) {
                           ImVec2(total_w - schematic_w - gap, body_h), true)) {
         ImGui::TextColored(kAccent, "EQUIPMENT BAY");
         ImGui::SameLine();
-        ImGui::TextColored(kGood, "%lld CR", (long long)player.credits);
+        ImGui::TextColored(kGood, "%s CR", format_credits(player.credits).c_str());
         ImGui::Separator();
         if (g_editing) {
             draw_editor_panel(ship);

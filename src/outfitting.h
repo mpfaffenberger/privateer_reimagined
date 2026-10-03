@@ -86,6 +86,24 @@ float engine_recharge_bonus_for(int engine_level);
 // budget at the given upgrade level (hand-authored per-level table).
 float shield_recharge_drain_for(int shield_level);
 
+// ---- energy budget (#747) ---------------------------------------------------
+// Sustained GJ/s one FIXED gun draws firing flat out, exactly as firing.cpp
+// charges it: energy_cost * energy_mult per shot, one shot every
+// refire / fire_rate_mult. 0 for unknown or incomplete guns.
+float gun_energy_burn(const std::string& gun_short_name,
+                      float fire_rate_mult = 1.0f, float energy_mult = 1.0f);
+
+// The player's energy economy on `klass`. regen_gj_s is the NET rate (hull +
+// engine bonus - shield drain) and can be negative; firing.cpp clamps that to
+// no regen. gun_burn_gj_s sums every fitted FIXED gun at full fire with its
+// rarity mods. Turret mounts fire free (firing.cpp), so they never count.
+struct EnergyBudget {
+    float bank_gj       = 0.0f;
+    float regen_gj_s    = 0.0f;
+    float gun_burn_gj_s = 0.0f;
+};
+EnergyBudget energy_budget(const PlayerState& p, const ShipClass* klass);
+
 // ---- transactions (headless-safe; UI + harness share these) -----------------
 // All enforce affordability + catalog/hull limits and mutate ONLY through
 // player:: helpers. Return true on success (credits/equipment changed), false

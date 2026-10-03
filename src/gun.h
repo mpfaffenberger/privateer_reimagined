@@ -85,4 +85,10 @@ bool load_table(const std::string& json_path);
 GunType     from_name(std::string_view s);
 const char* to_name(GunType t);
 
+// Player-facing name, the canonical Privateer spelling ("Meson Blaster").
+// UI shows this, never the short id (#747). The string_view overload takes
+// a short id and hands unknown ids back unchanged.
+const char* display_name(GunType t);
+std::string display_name(std::string_view short_name);
+
 } // namespace gun
