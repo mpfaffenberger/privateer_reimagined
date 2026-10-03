@@ -58,7 +58,7 @@ void grandfather_turrets(PlayerState& p) {
     if (!klass) return;
     for (const TurretSlot& t : klass->turret_slots) {
         const bool armed = std::any_of(t.mounts.begin(), t.mounts.end(), [&](int m) {
-            return m < (int)p.gun_mounts.size() && !p.gun_mounts[(size_t)m].gun_id.empty();
+            return player::mount_armed(p, m);
         });
         if (armed) p.turrets.push_back(t.id);
     }

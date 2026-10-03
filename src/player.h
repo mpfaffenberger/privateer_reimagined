@@ -421,6 +421,11 @@ bool has_turret(const PlayerState& p, const std::string& slot_id);
 // launch-time loadout share.
 bool mount_fittable(const PlayerState& p, const ShipClass* klass, int mount);
 
+// True if gun_mounts[mount] currently carries a gun. Out-of-range (or
+// negative) mounts are simply unarmed. A fitted gun has to be sold before
+// anything else goes into its mount, so nothing is overwritten unpaid (#741).
+bool mount_armed(const PlayerState& p, int mount);
+
 // First fittable mount with no gun in it, or -1 when every usable mount is
 // full. Replaces the old "first empty slot" scans, which would happily drop
 // a gun into a turret the player never bought.

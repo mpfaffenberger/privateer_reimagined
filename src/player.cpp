@@ -141,12 +141,15 @@ bool mount_fittable(const PlayerState& p, const ShipClass* klass, int mount) {
     return !turret || has_turret(p, turret->id);
 }
 
+bool mount_armed(const PlayerState& p, int mount) {
+    return mount >= 0 && mount < (int)p.gun_mounts.size() &&
+           !p.gun_mounts[(size_t)mount].gun_id.empty();
+}
+
 int first_open_mount(const PlayerState& p, const ShipClass* klass) {
     const int mounts = klass ? (int)klass->default_guns.size() : (int)p.gun_mounts.size();
     for (int i = 0; i < mounts; ++i) {
-        const bool empty = i >= (int)p.gun_mounts.size() ||
-                           p.gun_mounts[(size_t)i].gun_id.empty();
-        if (empty && mount_fittable(p, klass, i)) return i;
+        if (!mount_armed(p, i) && mount_fittable(p, klass, i)) return i;
     }
     return -1;
 }

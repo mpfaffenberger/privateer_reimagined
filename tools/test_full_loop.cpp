@@ -447,6 +447,16 @@ int main() {
         // gun_mounts became MountSlot rows with the v7 unified-hold work.
         const std::string gun0 =
             player.gun_mounts.empty() ? "" : player.gun_mounts[0].gun_id;
+        // An armed mount refuses a buy (#741): no charge, nothing overwritten.
+        const long long pre_gun = player.credits;
+        check(gun0.empty() ||
+              (!outfitting::buy_gun(player, "tachyon_cannon", 0, tarsus) &&
+               player.credits == pre_gun && player.gun_mounts[0].gun_id == gun0),
+              "buy onto the armed mount 0 refused, wallet + gun untouched");
+        check(gun0.empty() ||
+              (outfitting::sell_gun(player, 0, tarsus) &&
+               player.credits == pre_gun + outfitting::gun_price(gun0)),
+              "sold the stock gun back at full price, freeing mount 0");
         check(outfitting::buy_gun(player, "tachyon_cannon", 0, tarsus),
               "bought a tachyon cannon into mount 0");
         check(!player.gun_mounts.empty() &&
@@ -476,7 +486,6 @@ int main() {
               "over-budget hull purchase refused");
 
         player = saved;   // restore the loop pilot (still a Tarsus, real wallet)
-        (void)gun0;
     }
     step_result("f", ff);
 

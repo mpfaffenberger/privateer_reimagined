@@ -57,7 +57,7 @@ bool draw_turret_hardware(const PanelContext& ctx, const TurretSlot& turret) {
         return false;
     }
     const bool armed = std::any_of(turret.mounts.begin(), turret.mounts.end(), [&](int m) {
-        return m < (int)p.gun_mounts.size() && !p.gun_mounts[(size_t)m].gun_id.empty();
+        return player::mount_armed(p, m);
     });
     char sell[64]; std::snprintf(sell, sizeof sell, "REMOVE TURRET  +%lld CR", (long long)price);
     ImGui::BeginDisabled(armed);
@@ -85,15 +85,19 @@ void draw_guns(const PanelContext& ctx) {
     }
     if (turret && !draw_turret_hardware(ctx, *turret)) return;
 
-    const std::string& fitted = player.gun_mounts[(size_t)slot].gun_id;
+    // A COPY, not a reference: buy_gun/sell_gun below may resize gun_mounts.
+    const std::string fitted = player.gun_mounts[(size_t)slot].gun_id;
+    const bool armed = !fitted.empty();
     ImGui::Text("MOUNT %d", slot + 1);
-    status(!fitted.empty(), fitted.empty() ? "EMPTY" : fitted.c_str());
-    if (!fitted.empty()) {
+    status(armed, armed ? fitted.c_str() : "EMPTY");
+    if (armed) {
         const int64_t refund = gun_price(fitted);
         char sell[80];
         std::snprintf(sell, sizeof sell, "SELL FITTED GUN  +%lld CR", (long long)refund);
         if (ImGui::Button(sell, ImVec2(-1.0f, 36.0f)) &&
             sell_gun(player, slot, ctx.ship_class)) sfx::ui_click();
+        // buy_gun refuses an occupied mount (#741); say why FIT is greyed.
+        ImGui::TextColored(kDim, "Sell the fitted gun to free this mount for another.");
     }
 
     ImGui::Spacing();
@@ -110,11 +114,15 @@ void draw_guns(const PanelContext& ctx) {
                                g_gun_stats[i].damage_cm, g_gun_stats[i].refire_delay_s);
             ImGui::EndGroup();
             ImGui::SameLine(ImGui::GetWindowWidth() - 145.0f);
-            char buy[48]; std::snprintf(buy, sizeof buy, "FIT  %lld", (long long)price);
-            ImGui::BeginDisabled(!player::can_afford(player, price));
-            if (ImGui::Button(buy, ImVec2(125.0f, 34.0f)) &&
-                buy_gun(player, name, slot, ctx.ship_class)) sfx::ui_click();
-            ImGui::EndDisabled();
+            if (fitted == name) {
+                ImGui::TextColored(kGood, "FITTED");
+            } else {
+                char buy[48]; std::snprintf(buy, sizeof buy, "FIT  %lld", (long long)price);
+                ImGui::BeginDisabled(armed || !player::can_afford(player, price));
+                if (ImGui::Button(buy, ImVec2(125.0f, 34.0f)) &&
+                    buy_gun(player, name, slot, ctx.ship_class)) sfx::ui_click();
+                ImGui::EndDisabled();
+            }
             ImGui::Separator();
             ImGui::PopID();
         }
